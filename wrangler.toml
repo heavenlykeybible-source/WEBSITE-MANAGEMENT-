@@ -1,0 +1,19 @@
+name = "website-management"
+main = "control-room-worker.js"
+compatibility_date = "2026-10-18"
+workers_dev = true
+
+[vars]
+SIGNUP_OPEN = "false"
+CONTROL_WORKER_NAME = "website-management"
+PROTECTED_WORKERS = "website-management"
+AI_DAILY_LIMIT = "10"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "website-management-db"
+database_id = "897d585c-ced1-4b08-a478-603547f242e5"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "website-management-files"

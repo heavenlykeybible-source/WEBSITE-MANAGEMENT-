@@ -1,7 +1,7 @@
 # Website Management
 
-Cloudflare Worker control room with D1 and R2 storage, content review, AI proposal tools and scoped maintenance.
+Isolated Cloudflare Worker CMS with D1 and R2. Secrets are configured in Cloudflare and must never be committed.
 
-This app deploys separately from Online Bible. Runtime secrets are configured in Cloudflare and must never be committed to this repository.
+Run checks: `node tests/run.mjs`. Deployment: `npx wrangler deploy`.
 
-Run regression checks: `node tests/run.mjs`.
+See the included audit, setup, login, release and maintenance guides for capabilities and limitations.
