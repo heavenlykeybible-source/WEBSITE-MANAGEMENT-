@@ -16,10 +16,14 @@ class Node {
 const body=new Node('body'),app=new Node('main');app.id='app';body.appendChild(app);
 function find(root,predicate){if(predicate(root))return root;for(const c of root.children){const n=find(c,predicate);if(n)return n}return null}
 const document={body,createElement:t=>new Node(t),createTextNode:t=>new Node('#text',String(t)),getElementById:id=>find(body,n=>n.id===id)};
-let publications=0,restores=0,lastLogin=null,addedUser=null;const alerts=[];
+let publications=0,restores=0,lastLogin=null,addedUser=null;const alerts=[];let chatSent=null;
 const fetch=async(input,init={})=>{
  const url=new URL(input,'https://room.test'),p=url.pathname;let data;
  if(p==='/api/owner/users'){if(init.method==='POST'){addedUser=JSON.parse(init.body);data={ok:true,status:'active',username:addedUser.username}}else data={users:[{id:1,username:'owner',role:'owner',status:'active',kind:'staff',has_password:true}]};}
+ else if(p==='/api/owner/ai'){if(init.method==='POST'){chatSent=JSON.parse(init.body);data={reply:'Submitted to Waiting.',proposals:[3],account:'Cloudflare AI'}}else data={enabled:true,accounts:[{id:'cloudflare',label:'Cloudflare AI',model:'test-model'}]};}
+ else if(p==='/api/owner/sites')data={sites:[{slug:'demo',name:'Demo',files:0}]};
+ else if(p==='/api/owner/github'||p==='/api/owner/remote')data={sites:[]};
+ else if(p==='/api/owner/attachments'){if(init.method==='PUT')data={attachment:{id:'11111111-1111-4111-8111-111111111111',name:'example.html',size:18,kind:'text'}};else data={ok:true};}
  else if(p==='/api/public/info')data={signup:false};
  else if(p==='/api/login'){lastLogin=JSON.parse(init.body);data={ok:true}}
  else if(p==='/api/owner/me')data={user:{id:1,role:'owner',kind:'staff',username:'owner'}};
@@ -57,3 +61,5 @@ assert.equal(context.lagosTime('2026-10-18 23:30:00'),context.lagosTime('2026-10
 assert.equal(context.lagosTime(null),'Not recorded');
 await context.waiting();const queueRow=find(body,n=>n.tag==='details'&&n.className==='queue-row');assert.ok(queueRow);assert.ok(body.textContent.includes('Review version'));assert.ok(body.textContent.includes('P-1'));const beforePreview=publications;queueRow.open=true;await queueRow.listeners.toggle();assert.ok(body.textContent.includes('General preview'));assert.equal(publications,beforePreview);
 console.log('PASS expandable queue rows load previews without publishing and format timestamps in Lagos time');
+
+await context.claude();const fileInput=find(body,n=>n.tag==='input'&&n.attributes.type==='file');assert.ok(fileInput);fileInput.files=[{name:'example.html',size:18}];await fileInput.onchange();assert.equal(context.CHAT_FILES.length,1);assert.ok(body.textContent.includes('example.html'));const destination=find(body,n=>n.tag==='select'&&n.attributes['aria-label']==='Attachment destination');destination.value='static:demo';find(body,n=>n.tag==='textarea').value='Send this file unchanged for approval.';button('Send').onclick();await flush();assert.equal(chatSent.attachments.length,1);assert.equal(chatSent.attachments[0],context.CHAT_FILES[0].id);assert.match(chatSent.messages.at(-1).content,/static:demo/);assert.ok(body.textContent.includes('Sent to Waiting'));await button('Clear private uploads').onclick();assert.equal(context.CHAT_FILES.length,0);console.log('PASS assistant attachment picker uploads privately, sends selected IDs/destination and clears originals');
