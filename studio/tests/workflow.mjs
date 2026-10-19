@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {radioSummary} from '../public/js/workspace.js';
+const settings=[{channel:'radio',playlist_enabled:1}],now=Date.parse('2026-10-19T18:00:00Z');
+const audio={media_type:'audio',status:'published',keep_media:1};
+assert.match(radioSummary({settings,media:[audio],live:{status:'live',title:'Prayer',destination:'radio'}},now).title,/Live radio/);
+assert.match(radioSummary({settings,media:[audio],live:{status:'live',destination:'video'}},now).title,/Automatic/);
+assert.match(radioSummary({settings,live:{status:'reconnecting',destination:'both'}},now).title,/reconnecting/);
+assert.match(radioSummary({settings,media:[audio],playout:[{status:'scheduled',starts_at:'2026-10-19 17:00:00',ends_at:'2026-10-19 19:00:00'}]},now).title,/Scheduled/);
+assert.match(radioSummary({settings:[],media:[audio]},now).title,/off/);
+assert.match(radioSummary({settings,media:[{...audio,keep_media:0,retention_until:'2026-10-18 18:00:00'}]},now).title,/needs a recording/);
+assert.match(radioSummary({settings,media:[{...audio,media_type:'video'}]},now).title,/fallback/);
+assert.match(radioSummary({settings,media:[audio]},now).description,/1 published audio recording/);
+console.log('PASS 8 radio workflow checks: channel isolation, live/reconnect/schedule priority, disabled playlists, expired files and audio fallback');

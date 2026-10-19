@@ -5,7 +5,7 @@
     "check": "tsc --noEmit",
     "deploy": "wrangler deploy",
     "preflight": "node scripts/preflight.mjs",
-    "test": "node --experimental-transform-types tests/auth.mjs"
+    "test": "node --experimental-transform-types tests/auth.mjs && node tests/workflow.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

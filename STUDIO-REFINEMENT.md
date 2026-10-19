@@ -42,3 +42,14 @@ For `studio.heavenlykey.org`, attach that custom domain to the SAME existing Acc
 - TypeScript compile and Account 2 preflight pass; frontend JavaScript parses.
 - Browser executable download was unavailable in this environment, so no browser-rendering or camera/microphone acceptance test is claimed. External CDN dependencies (LiveKit and optional MediaPipe effects), platform policy, network quality, quota and LiveKit egress availability remain live dependencies.
 - Live Worker bindings, actual secret values, DNS and end-to-end broadcast delivery have not been inspected or changed through a Cloudflare session in this task. Activation requires the configuration and deployment steps above.
+
+
+## Follow-up: simple navigation and radio workflow
+
+The workspace now has six distinct sections: Home, Live Studio, Radio, Media Library, Connections and Help. Only the selected section is shown; the broadcaster remains mounted while moving between sections. Browser back/forward and direct section links work through the URL fragment. Previous/Next links guide users through features, with short explanations and a mobile-friendly menu.
+
+Radio includes server programme status, an explicit microphone-only preparation route, an audio-library shortcut and a clearly named automatic-playback switch. Choosing the radio route turns the camera off and selects the radio destination, but does not request microphone access or start a broadcast. The existing preview/broadcast guards prevent changing an active source. The status respects live, scheduled and automatic playback priority and explains video-audio fallback without claiming that a listener device is playing sound. Television automatic playback remains in Media Library.
+
+The Studio has its own green header and calm patterned workspace. Final page artwork/templates can be developed separately. The main-website return link uses a new tab to keep Studio open. The five-column footer and ministry links are copied from the current onlinebible homepage source and footer-five-columns.css; relative links are rewritten to https://heavenlykey.org/. This is a local source snapshot, not a live automatic footer sync. Recent blog posts retain the homepage's link fallback; no third-party feed script runs inside the authenticated workspace. The reference app page inspected was heavenly-key-app/public/index.html, which has independent app navigation and a ministry website link.
+
+Additional validation: 8 radio workflow assertions pass. A full DOM simulation checks six-section navigation, form containment, audio filtering, camera-off radio selection without media permission/publishing, the five-column footer and the main-website link. This does not replace real browser/device/broadcast acceptance testing.
