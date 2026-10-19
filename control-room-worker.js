@@ -2074,7 +2074,7 @@ async function route(req, env) {
   if (m === 'GET' && (x = p.match(/^\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, false);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, true);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/work\/(w_[a-f0-9]{16})$/))) return publicWork(x[1], env);
-  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true' });
+  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'ai-connect-20261019-2' });
   if (m === 'POST' && p === '/api/signup') return signup(req, env);
   if (p === '/mcp') return m === 'POST' ? mcp(req, env) : new Response('Use POST', { status: 405 });
   if ((x = p.match(/^\/s\/([a-z0-9-]{1,60})(\/.*)?$/))) {
@@ -2427,9 +2427,11 @@ async function aiAccounts(){try{var d=await api('ai');var box=h('div');
   var lb=h('input',{placeholder:'Label, e.g. Gemini helper'}),md=h('input',{placeholder:'Model name, exactly as the provider shows it'}),bs=h('input',{placeholder:'Base URL (https)'}),ky=h('input',{type:'password',placeholder:'API key'});
   function preset(){var p=AIP[pv.value];bs.value=p.base;md.value=p.model;bs.style.display=p.provider==='anthropic'?'none':'';}
   pv.onchange=preset;preset();
+  var connectionStatus=h('p',{role:'status','aria-live':'polite',class:'tag'},'');
+  var connectButton=h('button',{onclick:async function(){connectButton.disabled=true;connectionStatus.textContent='Testing connection…';try{var p=AIP[pv.value];await api('ai/accounts','POST',{label:lb.value.trim(),provider:p.provider,model:md.value.trim(),base_url:bs.value.trim(),key:ky.value.trim()});ky.value='';await aiAccounts();}catch(e){connectionStatus.textContent=e.message||'Connection failed. Please try again.';}finally{connectButton.disabled=false;}}},'Connect and test');
   show(nav(),h('h3',{},'AI accounts'),h('p',{class:'tag'},'Connect as many as you like. Keys are stored encrypted. Every AI works the same way here: it can read and propose, and nothing goes live until you approve.'),box,
     h('b',{},'Add an AI account'),pv,lb,md,bs,ky,
-    h('button',{onclick:function(){var p=AIP[pv.value];api('ai/accounts','POST',{label:lb.value.trim(),provider:p.provider,model:md.value.trim(),base_url:bs.value.trim(),key:ky.value.trim()}).then(function(){alert('Connected and tested.');aiAccounts();}).catch(oops);}},'Connect and test'));}catch(e){oops(e);}}
+    connectButton,connectionStatus);}catch(e){oops(e);}}
 function frame(html){var f=h('iframe',{sandbox:'',class:'fr'});f.srcdoc='<base target="_blank"><style>body{font:16px/1.5 system-ui;padding:10px}img{max-width:100%}</style>'+html;return f;}
 async function remote(){try{var d=await api('remote');var idn=await api('identity');var rg=regSelect(idn.sites);var box=h('div');
   if(!d.sites.length)box.appendChild(h('p',{class:'tag'},'No WordPress or Blogger sites connected yet.'));
