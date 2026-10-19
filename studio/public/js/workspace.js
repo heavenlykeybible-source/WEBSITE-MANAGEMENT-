@@ -1,4 +1,4 @@
-export const sections=[['home','Home'],['live','Live Studio'],['radio','Radio'],['library','Media Library'],['connections','Connections'],['help','Help']];
+export const sections=[['home','Home'],['live','Live Studio'],['radio','24/7 Radio'],['library','Sources / Media Library'],['connections','Connections'],['editing','AI Editing'],['meetings','Live Meetings'],['autopost','Social Auto Post'],['automation','Social Automation'],['settings','Settings'],['help','Help']];
 export function initNavigation(doc=document,win=window){
  function show(focus=false){const requested=win.location.hash.slice(1),index=Math.max(0,sections.findIndex(([key])=>key===requested)),key=sections[index][0];
   for(const panel of doc.querySelectorAll('[data-view]'))panel.hidden=panel.dataset.view!==key;
@@ -6,7 +6,7 @@ export function initNavigation(doc=document,win=window){
   const previous=doc.getElementById('previous-feature'),next=doc.getElementById('next-feature');previous.hidden=index===0;previous.href='#'+sections[Math.max(0,index-1)][0];previous.textContent='← '+sections[Math.max(0,index-1)][1];next.hidden=index===sections.length-1;next.href='#'+sections[Math.min(sections.length-1,index+1)][0];next.textContent='Next: '+sections[Math.min(sections.length-1,index+1)][1]+' →';doc.getElementById('feature-position').textContent=(index+1)+' / '+sections.length;
   if(focus)doc.querySelector('#view-'+key+' h2')?.focus({preventScroll:true});
  }
- win.addEventListener('hashchange',()=>show(true));show();return key=>{if(sections.some(([id])=>id===key)){win.location.hash=key;show(true);}};
+ win.addEventListener('hashchange',()=>{doc.querySelector('.workspace-more')?.removeAttribute('open');show(true);});show();return key=>{if(sections.some(([id])=>id===key)){win.location.hash=key;show(true);}};
 }
 function date(value){if(!value)return NaN;return Date.parse(value.includes('T')?value:value.replace(' ','T')+'Z');}
 export function radioSummary({media=[],live=null,settings=[],playout=[]},now=Date.now()){

@@ -18,7 +18,7 @@ async function seal(env:Env,value:unknown){
 }
 async function open<T>(env:Env,stored:string|null):Promise<T|null>{
  if(!stored)return null;
- try{const {iv,data}=JSON.parse(stored);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Uint8Array.from(iv)},await key(env),Uint8Array.from(data));return JSON.parse(new TextDecoder().decode(plain)) as T;}catch{return null;}
+ try{const {iv,data}=JSON.parse(stored);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Uint8Array.from(iv)},await key(env),Uint8Array.from(data));return JSON.parse(new TextDecoder().decode(plain)) as T;}catch{throw new Error('Saved streaming destinations cannot be decrypted. Keep the original MEDIA_ENGINE_SHARED_SECRET; no saved destinations were changed.');}
 }
 type Destination={url:string;enabled:boolean;updatedAt:string};
 type Store=Record<string,Destination>;
@@ -65,7 +65,7 @@ async function callLiveKit(env:any,method:string,body:unknown){
  const endpoint=config.LIVEKIT_URL.replace('wss:','https:')+'/twirp/livekit.Egress/'+method;
  const r=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(15000)});
  const text=await r.text();let data:any={};try{data=text?JSON.parse(text):{};}catch{}
- if(!r.ok)throw new Error(data?.msg||data?.message||('LiveKit Egress returned HTTP '+r.status));
+ if(!r.ok){const status=r.status;throw new Error(status===401||status===403?'LiveKit rejected the streaming request. Check the matching project credentials and egress access.':status===404?'The LiveKit streaming endpoint was not found. Check the project URL and egress availability.':status===429?'LiveKit streaming quota was reached. Check the project limits.':'LiveKit could not start or update streaming (HTTP '+status+'). Check its egress logs; saved stream keys were preserved.');}
  return data;
 }
 export async function startRestream(env:any,input:{source:'live'|'247';sessionId?:number;programmeUrl?:string;format?:string;quality?:string;channel?:'radio'|'video'}){
@@ -89,11 +89,8 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  // Check all inputs before ending an existing on-air egress. An invalid
  // replacement must never silence the currently running programme.
  const previous=await reconcileActive(env);let replacedEgressId:string|null=null;
- if(previous.active?.egressId){
-  replacedEgressId=String(previous.active.egressId);
-  await callLiveKit(env,'StopEgress',{egress_id:replacedEgressId});
-  await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);
- }
+ if(previous.active?.egressId)throw new Error('Social streaming is already active or its status is uncertain. Check the current programme and use End broadcast before starting another distribution.');
+
  const result=await callLiveKit(env,'StartEgress',body);
  if(!result.egress_id)throw new Error('LiveKit did not return an egress ID.');
  await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify({egressId:result.egress_id,source:input.source,sessionId:input.source==='live'?input.sessionId:undefined,channel:input.source==='247'?(input.channel??'video'):undefined,format,quality:input.quality??'balanced',destinations:outputs.map(x=>x.destination),startedAt:new Date().toISOString()}));
@@ -111,7 +108,7 @@ async function reconcileActive(env:any){
   const item=(listed?.items||[]).find((x:any)=>String(x.egress_id||x.egressId||'')===String(active.egressId));
   if(item&&egressStillActive(item.status))return {active:{...active,providerStatus:item.status,providerUpdatedAt:item.updated_at||item.updatedAt||null},last:null};
   await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);
-  return {active:null,last:item?{egressId:active.egressId,status:item.status,error:item.error||item.details||null}:null};
+  return {active:null,last:item?{egressId:active.egressId,status:item.status,error:item.error||item.details?'Streaming ended at the provider. Inspect its egress logs for the delivery error.':null}:null};
  }catch{
   return {active:{...active,providerStatus:'UNKNOWN'},last:null};
  }

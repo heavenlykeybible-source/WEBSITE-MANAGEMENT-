@@ -1,3 +1,4 @@
+import {fetchStudioAsset} from './studio-assets';
 /** Passwordless owner access. Existing Account 1 signed capabilities remain supported. */
 export interface StudioAuthEnv {
  STUDIO_SSO_SECRET?:string; CONTROL_ROOM_URL?:string;
@@ -16,10 +17,29 @@ function configured(env:StudioAuthEnv){try{return typeof env.STUDIO_SSO_SECRET==
 export async function studioOwner(req:Request,env:StudioAuthEnv):Promise<StudioOwner|null>{
  const id=cookie(req,cookieName);if(!/^[a-f0-9]{64}$/.test(id))return null;
  const raw=await env.LIVE_STATUS_KV.get('studio-session:'+id);if(!raw)return null;
- try{const owner=JSON.parse(raw);if(owner.role!=='Super Administrator'||typeof owner.sub!=='string'||!owner.sub.startsWith('control-room:')||!Number.isSafeInteger(owner.exp)||owner.exp<=Math.floor(Date.now()/1000))return null;return owner;}catch{return null;}
+ try{const owner=JSON.parse(raw);if(!['Super Administrator','Administrator'].includes(owner.role)||typeof owner.sub!=='string'||!owner.sub.startsWith('control-room:')||!Number.isSafeInteger(owner.exp)||owner.exp<=Math.floor(Date.now()/1000))return null;return owner;}catch{return null;}
+}
+async function establishSession(owner:Partial<StudioOwner>,env:StudioAuthEnv):Promise<Response>{
+ if(!['Super Administrator','Administrator'].includes(String(owner.role))||typeof owner.sub!=='string'||!/^control-room:\d+$/.test(owner.sub)||typeof owner.name!=='string')return json({error:'Control room returned an invalid identity.'},502);
+ const now=Math.floor(Date.now()/1000),id=random();
+ await env.LIVE_STATUS_KV.put('studio-session:'+id,JSON.stringify({...owner,iat:now,exp:now+43200,nonce:id}),{expirationTtl:43200});
+ return redirect('/',[setCookie(cookieName,id,43200),setCookie('__Host-hk-studio-state','',0)]);
 }
 export async function studioAuthRoute(req:Request,env:StudioAuthEnv):Promise<Response|null>{
  const u=new URL(req.url),p=u.pathname;
+ if(p==='/auth/password'&&req.method==='POST'){
+  if(req.headers.get('origin')!==u.origin)return json({error:'Cross-origin request denied'},403);
+  if(!configured(env))return json({error:'Studio sign-in is not configured.'},503);
+  if(!req.body)return json({error:'Enter your username and password'},400);
+  const reader=req.body.getReader();let length=0,text='';const decoder=new TextDecoder();
+  while(true){const next=await reader.read();if(next.done)break;length+=next.value.length;if(length>2048){await reader.cancel();return json({error:'Sign-in request is too large'},413);}text+=decoder.decode(next.value,{stream:true});}text+=decoder.decode();
+  let input:any;try{input=JSON.parse(text);}catch{return json({error:'Enter your username and password'},400);}
+  if(!input||typeof input.user!=='string'||input.user.length>254||typeof input.pass!=='string'||!input.pass||input.pass.length>128)return json({error:'Enter your control room username and password'},400);
+  let response:Response;
+  try{response=await fetch(controlOrigin(env)+'/api/studio/password-login',{method:'POST',redirect:'error',signal:AbortSignal.timeout(15000),headers:{'content-type':'application/json',authorization:'Bearer '+env.STUDIO_SSO_SECRET,'x-studio-client-ip':req.headers.get('cf-connecting-ip')||'studio-unknown'},body:JSON.stringify({user:input.user,pass:input.pass,audience:u.origin})});}catch{return json({error:'Control room could not be reached. Please try again.'},502);}
+  if(!response.ok){if(response.status===429)return json({error:'Too many sign-in attempts. Wait ten minutes, then try again.'},429);if(response.status===403)return json({error:'Use an active control room owner or admin account.'},403);if(response.status===401)return json({error:'Username or password was not accepted, or the Studio connection needs setup.'},401);return json({error:'Studio sign-in could not complete. Check the control room connection.'},503);}
+  return establishSession(await response.json() as Partial<StudioOwner>,env);
+ }
  if(p==='/auth/start'&&req.method==='GET'){
   if(!configured(env))return json({error:'Studio sign-in needs CONTROL_ROOM_URL and STUDIO_SSO_SECRET configured on this existing Worker.'},503);
   const state=random(),target=new URL('/studio/connect',controlOrigin(env));target.searchParams.set('state',state);
@@ -32,10 +52,7 @@ export async function studioAuthRoute(req:Request,env:StudioAuthEnv):Promise<Res
   let response:Response;try{response=await fetch(controlOrigin(env)+'/api/studio/redeem',{method:'POST',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'content-type':'application/json',authorization:'Bearer '+env.STUDIO_SSO_SECRET},body:JSON.stringify({state,code,audience:u.origin})});}catch{return json({error:'Control room could not be reached. Open Studio again to retry.'},502);}
   if(!response.ok)return json({error:'Sign-in expired or was denied. Open Studio again from the control room.'},401);
   const owner=await response.json() as Partial<StudioOwner>;
-  if(owner.role!=='Super Administrator'||typeof owner.sub!=='string'||!/^control-room:\d+$/.test(owner.sub)||typeof owner.name!=='string')return json({error:'Control room returned an invalid identity.'},502);
-  const now=Math.floor(Date.now()/1000),id=random();
-  await env.LIVE_STATUS_KV.put('studio-session:'+id,JSON.stringify({...owner,iat:now,exp:now+43200,nonce:id}),{expirationTtl:43200});
-  return redirect('/',[setCookie(cookieName,id,43200),setCookie('__Host-hk-studio-state','',0)]);
+  return establishSession(owner,env);
  }
  if(p==='/auth/logout'&&req.method==='POST'){
   if(req.headers.get('origin')!==u.origin)return json({error:'Cross-origin request denied'},403);
@@ -44,9 +61,10 @@ export async function studioAuthRoute(req:Request,env:StudioAuthEnv):Promise<Res
  }
  if(p==='/api/studio/me'&&req.method==='GET'){const owner=await studioOwner(req,env);return owner?json({name:owner.name,expires_at:owner.exp}):json({error:'Open Studio from the control room to sign in.'},401);}
  if(p==='/'&&['GET','HEAD'].includes(req.method)){
-  if(await studioOwner(req,env))return env.ASSETS?env.ASSETS.fetch(req):json({error:'Studio assets are not configured'},503);
-  return new Response(req.method==='HEAD'?null:'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Heavenly Key Studio</title><body style="font:18px system-ui;max-width:640px;margin:12vh auto;padding:24px"><h1>Heavenly Key Studio</h1><p>Use your control room owner account to enter Studio.</p><a href="/auth/start">Continue with control room</a></body></html>',{headers:{...headers,'content-type':'text/html;charset=utf-8'}});
+  if(await studioOwner(req,env))return fetchStudioAsset(req,env);
+  return fetchStudioAsset(new Request(new URL('/signin.html',u.origin),{method:req.method}),env);
+
  }
- if(p.startsWith('/js/')||p.startsWith('/css/')||p.startsWith('/assets/'))return env.ASSETS?env.ASSETS.fetch(req):json({error:'Asset not found'},404);
+ if(p==='/signin.html'||p.startsWith('/js/')||p.startsWith('/css/')||p.startsWith('/assets/'))return fetchStudioAsset(req,env);
  return null;
 }

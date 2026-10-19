@@ -111,6 +111,22 @@ async function studioRedeem(req, env) {
   await audit(env, user.username, 'studio.signin.redeem', b.audience);
   return json({sub:'control-room:' + user.id, role:'Super Administrator', name:user.username});
 }
+async function studioPasswordLogin(req, env) {
+  const key = studioSecret(env);
+  if (!safeEq(req.headers.get('authorization') || '', 'Bearer ' + key)) fail('Unauthorized', 401);
+  const b = await body(req);
+  if (b.audience !== studioOrigin(env)) fail('Invalid Studio origin', 403);
+  if (typeof b.user !== 'string' || b.user.length > 254 || typeof b.pass !== 'string' || b.pass.length > 128 || !b.pass) fail('Enter your control room username and password');
+  // Studio forwards the visitor IP through this authenticated backchannel.
+  // Reuse the existing login throttle, password hashes and disabled-account checks.
+  const ip = req.headers.get('x-studio-client-ip') || 'studio-unknown';
+  const authenticated = await login(new Request(req.url, {method:'POST',headers:{'cf-connecting-ip':ip},body:JSON.stringify({user:b.user,pass:b.pass})}), env);
+  const identity = await getUser(new Request(req.url,{headers:{cookie:authenticated.headers.get('set-cookie') || ''}}), env);
+  if (!identity || identity.kind === 'member' || !['owner','admin'].includes(identity.role)) fail('Studio access requires an owner or admin account', 403);
+  await audit(env, identity.username, 'studio.password.signin', 'central credentials');
+  // The temporary control room cookie never goes to the browser or Studio.
+  return json({sub:'control-room:'+identity.id,role:identity.role==='owner'?'Super Administrator':'Administrator',name:identity.username});
+}
 function studioConnectPage() {
   return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Open Heavenly Key Studio</title><body><h1>Opening Heavenly Key Studio</h1><p id="status" role="status">Checking your control room session…</p><p><a href="/">Sign in to the control room</a></p><script>
   (async function(){try{const state=new URL(location.href).searchParams.get('state');if(!/^[a-f0-9]{64}$/.test(state||''))throw Error('Open Studio using the Studio button in the control room.');const r=await fetch('/api/owner/studio/signin',{method:'POST',headers:{'content-type':'application/json','x-cr':'1'},body:JSON.stringify({state})});const d=await r.json();if(!r.ok)throw Error(d.error||'Sign in to the control room, then open Studio again.');location.replace(d.url);}catch(e){document.getElementById('status').textContent=e.message;}})();
@@ -2342,6 +2358,7 @@ async function route(req, env) {
   const u = new URL(req.url);
   const p = u.pathname, m = req.method;
   if (!env.ADMIN_USER || !env.ADMIN_PASS) fail('Set ADMIN_USER and ADMIN_PASS secrets before using Control Room.', 503);
+  if (p === '/api/studio/password-login' && m === 'POST') return studioPasswordLogin(req, env);
   if (p === '/api/studio/redeem' && m === 'POST') return studioRedeem(req, env);
   if (p === '/studio' && m === 'GET') return Response.redirect(studioOrigin(env) + '/auth/start', 302);
   if (p === '/studio/connect' && m === 'GET') return studioConnectPage();

@@ -1,5 +1,6 @@
 import {mountProductionStudio} from './production-studio.js';
 import {initNavigation,radioSummary} from './workspace.js';
+import {createDeviceCheck} from './device-check.js';
 const $=id=>document.getElementById(id);let authorized=false,paused=false,studio;const navigate=initNavigation();let cachedMedia=[];
 function sessionEnded(){authorized=false;document.dispatchEvent(new CustomEvent('hk-admin-session',{detail:{profile:null}}));$('notice').textContent='Your Studio session ended. Use Renew sign-in to continue.';}
 async function request(path,method='GET',data,raw=false){
@@ -44,3 +45,12 @@ $('upload').onsubmit=async e=>{
  }catch(e){$('upload-status').textContent=e.message+' Select the same file and upload again to retry.';}finally{submit.disabled=false;$('pause-upload').disabled=true;}
 };
 try{const me=await request('/api/studio/me');authorized=true;$('notice').textContent='Signed in as '+me.name+' · Choose a task from the menu. Preview stays private until Go live.';studio=mountProductionStudio({container:$('studio'),api,refresh:$('refresh'),isAuthorized:()=>authorized});await refresh();setInterval(()=>{if(authorized)refresh().catch(showError);},30000);setInterval(()=>{if(authorized)request('/api/studio/me').catch(showError);},60000);}catch(e){showError(e);}
+
+const deviceCheck=createDeviceCheck({video:$('device-test-video'),meter:$('device-test-meter'),onStatus:text=>{$('device-test-status').textContent=text;}});
+$('test-devices').onclick=async()=>{if(!authorized){$('device-test-status').textContent='Sign in before testing your devices.';return;}if(studio?.isBusy()){$('device-test-status').textContent='Close the current preview and finish any live programme or recording before running this separate device test.';return;}await deviceCheck.start();};
+$('stop-device-test').onclick=()=>deviceCheck.stop();
+window.addEventListener('hashchange',()=>{if(location.hash!=='#settings')deviceCheck.stop(false);});
+window.addEventListener('pagehide',()=>deviceCheck.stop(false));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)deviceCheck.stop(false);});
+document.addEventListener('hk-admin-session',e=>{if(!e.detail.profile)deviceCheck.stop(false);});
+$('check-all-connections').onclick=async()=>{const b=$('check-all-connections');b.disabled=true;$('diagnostics-status').textContent='Checking saved connections…';$('diagnostics-results').replaceChildren();try{const result=await api('diagnostics');for(const check of result.checks||[]){const row=document.createElement('article'),title=document.createElement('h4'),detail=document.createElement('p');row.className='connection-check';title.textContent=check.name+' · '+check.state.replaceAll('_',' ');detail.textContent=check.detail;row.append(title,detail);$('diagnostics-results').append(row);}$('diagnostics-status').textContent='Check complete. Live camera transmission and Facebook public playback still require an on-air test.';}catch(e){$('diagnostics-status').textContent=e.message;}finally{b.disabled=false;}};

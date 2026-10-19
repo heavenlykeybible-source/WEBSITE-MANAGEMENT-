@@ -11,3 +11,5 @@ See the included audit, setup, login, release and maintenance guides for capabil
 ## Heavenly Key Studio
 
 Account 2 source and its dedicated Studio are in `studio/`. See [STUDIO-REFINEMENT.md](STUDIO-REFINEMENT.md) for changes, tests and activation on the existing Workers.
+
+The Studio module plan and prepared single-channel installation are in [studio/ROADMAP.md](studio/ROADMAP.md) and [studio/ACCOUNT4-INSTALLATION.md](studio/ACCOUNT4-INSTALLATION.md).

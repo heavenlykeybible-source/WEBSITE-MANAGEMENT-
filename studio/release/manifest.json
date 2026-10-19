@@ -1,0 +1,48 @@
+{
+  "format": "heavenly-key-studio-single-worker-v1",
+  "worker": "heavenlykey-media",
+  "bundle": "studio-worker.js",
+  "bytes": 282333,
+  "sha256": "7bd886faede01aeaf2f189a4f639e91dc0d6bb079a26359a0329626d1f271875",
+  "assetCount": 14,
+  "assets": {
+    "/assets/ministry/logo.svg": "95973432f94126d94294835f97d3d29a0e9806484784651a041e3d7d93f993a5",
+    "/css/ministry-footer.css": "b85055921e84d658bed4dd24d5f162db7480dc98bd6581fd2a801e4e997950fa",
+    "/css/production-studio.css": "49b29a382ebd48a61cb859373ea6c119455ae0b7c02f0baf834c541eb5f2c2e3",
+    "/css/shell.css": "a8c7db6f31afdff2240c51a82cef022df3d2aa050dd7f6715b530791e4863125",
+    "/css/studio-premium-overrides.css": "19b43a800db3aa6daf6819630480f404e6292377fcc9e3674cb16bf08698e92a",
+    "/index.html": "35ace3f66a7019e892d777e2fa01c93d7513f4d209ef6c85430d86cf1c0e8adf",
+    "/js/device-check.js": "036b7a9cd6d5811f106c8b6d89c73a46f1f5393fbd56053340a54161f27884dc",
+    "/js/production-studio.js": "6001ac5d2f49585e89c54decb860b51dfec695e347e631a2cdb56a9addf17ce4",
+    "/js/signin.js": "4d07a1ef681e7cb704bf9dbe2fda4f5845f95fc95e2db0ba89087e1fe5327327",
+    "/js/studio-app.js": "49805465d3647eb8c5e18ae05a0b6692940834b52927248f95d31229903b3987",
+    "/js/studio-effects.js": "30a875752a9730e7e0f4481e0913f5b0f33786685572bfcb9651aae6f1a5e3be",
+    "/js/studio-model.js": "25e491f5c950db5ac4213b5cc90d0b59d6d427e46ff6460ae091e344d1302a85",
+    "/js/workspace.js": "ce3f24d7754f939705bb2ee3800e9cf55aac46f9e48b8a3aea743dddb9acdc88",
+    "/signin.html": "3634f8917f826d0a4bcd4ef7e2763a95ee8e95dc0f2c1c6b60a73d80d1e407cb"
+  },
+  "sourceFiles": {
+    "src/diagnostics.ts": "a8f1072c38631f4d66429addf372272787086a04ef6da9be30a805e57074e98a",
+    "src/embedded-manifest.ts": "1ee866e24e17f33dd97ed3125261e1d54d915d736ecd8781117e4ce09ba1fe1c",
+    "src/index.ts": "387eef58e6a98deb884dd47c587a0706c8010265b63e160c6bcf5a934ea87e4c",
+    "src/livekit-config.ts": "307a86630f44721d1e51044958132565c9da5a92e686cd330cf3d72c11c71257",
+    "src/livekit.ts": "b27be488af22dd9c1db872d58b2c8bbd8cdc3ff94338a6cbc216403aad1ae2ad",
+    "src/public-broadcast.ts": "6c34811cd9e065084abf46ecf88012af31432b712660370c236bbadae6d0fdc0",
+    "src/restream.ts": "c13f6078b79959743e25178222d7cc18e0995c9282848942aaac7a300f669d47",
+    "src/studio/audio-processing.ts": "7209d79611066a948c6dfb47226436a317216cbf66bbb6a3f95f8c90197facd5",
+    "src/studio/formats.ts": "a4a1dd4b704fc8a71eea1d9a87ad0466eb4dfe7b965a083849d8f581169a79a5",
+    "src/studio-assets.ts": "2a9f0c999c8a8bf0078f3ae79232188268efb7e97424c6931e599fa126d8888e",
+    "src/studio-auth.ts": "de87cee5cc8be722245e8a44dfa55a3006f6666f967be5233efecc8ca26bc88f",
+    "src/uploads.ts": "618565546aa5e0cfc54aef36b435475a21733ad8c3dcd588fd6c8c8fa5b140e1"
+  },
+  "deployChannel": "Account 4 control room -> connected Account 2 -> existing heavenlykey-media Worker",
+  "preserve": [
+    "DB",
+    "MEDIA_R2",
+    "LIVE_STATUS_KV",
+    "MEDIA_ENGINE_SHARED_SECRET",
+    "all existing provider secrets"
+  ],
+  "databaseChange": "Control room ONLY: additive migrations/0003_studio_signin.sql",
+  "noNewAssetBindingRequired": true
+}

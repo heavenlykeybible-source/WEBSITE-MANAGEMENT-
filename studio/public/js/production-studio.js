@@ -294,7 +294,7 @@ export function mountProductionStudio({container,api,refresh,isAuthorized}){
  window.addEventListener('beforeunload',e=>{if(sessionId||recordingActive||Array.from(clips.children).some(row=>row.dataset.saved!=='true')){e.preventDefault();e.returnValue='';}});
  window.addEventListener('pagehide',()=>{if(sessionId)status.textContent='Studio page left unexpectedly. The server will preserve the live session through the reconnect grace period.';});
  document.addEventListener('hk-studio-prepare',()=>{if(isAuthorized()&&!prepared&&!liveConnecting)prepareButton.click();});
- applyPreset(preset);draw();return {close:closePreview,openRadio(){if(preparing||prepared||sessionId||liveConnecting||social247Active||recordingActive){status.textContent='An existing preview, recording or broadcast is active. Close it before preparing a different radio programme.';return false;}sourceSelect.value='radio';sourceSelect.dispatchEvent(new Event('change'));return true;}};
+ applyPreset(preset);draw();return {close:closePreview,isBusy:()=>Boolean(preparing||prepared||sessionId||liveConnecting||social247Active||recordingActive),openRadio(){if(preparing||prepared||sessionId||liveConnecting||social247Active||recordingActive){status.textContent='An existing preview, recording or broadcast is active. Close it before preparing a different radio programme.';return false;}sourceSelect.value='radio';sourceSelect.dispatchEvent(new Event('change'));return true;}};
 }
 
 

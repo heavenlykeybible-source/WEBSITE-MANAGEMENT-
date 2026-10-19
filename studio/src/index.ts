@@ -1,3 +1,4 @@
+import {connectionDiagnostics} from './diagnostics';
 import {studioAuthRoute,studioOwner,type StudioAuthEnv} from './studio-auth';
 import { multipartUpload, MAX_MEDIA_BYTES } from './uploads';
 import { LiveKitConnectionError, resolveLiveKitConfig, validateCloudConnection, checkLiveKitConnection, saveLiveKitConnection, liveKitConnectionStatus, recordLiveKitVerification, resetLiveKitConnection } from './livekit-config';
@@ -60,6 +61,7 @@ const engine = {
   if(url.pathname.startsWith('/api/admin/social/'))return json({error:'Manage social provider authorization in the ministry website. Studio RTMP connections are available in Streaming connections.'},409);
 
 
+  if(url.pathname==='/api/media-engine/diagnostics'&&request.method==='GET')return json(await connectionDiagnostics(env));
   const multipart=await multipartUpload(request,env,cap.sub);if(multipart)return multipart;
   {const m=url.pathname.match(/^\/api\/media\/(\d+)\/preview$/);if(m&&['GET','HEAD'].includes(request.method))return serveBroadcastMedia(request,env,Number(m[1]),true);}
   if(url.pathname==='/api/broadcast/playlist-order'&&request.method==='GET'){

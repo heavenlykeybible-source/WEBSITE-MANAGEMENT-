@@ -1,6 +1,7 @@
 import './resolve-ts.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {pbkdf2Sync} from 'node:crypto';
 import {DatabaseSync} from 'node:sqlite';
 const {studioAuthRoute,studioOwner}=await import('../src/studio-auth.ts');
 const {default:engine}=await import('../src/index.ts');
@@ -15,7 +16,7 @@ try{
  const kv=new Map(),LIVE_STATUS_KV={async get(k){return kv.get(k)||null;},async put(k,v){kv.set(k,v);},async delete(k){kv.delete(k);}};
  const secret='test-only-studio-bridge-secret-32-characters';
  const controlEnv={DB,ADMIN_USER:'owner',ADMIN_PASS:'sample-owner-password',SESSION_SECRET:'test-only-control-secret',STUDIO_URL:'https://studio.test',STUDIO_SSO_SECRET:secret};
- const env={DB,LIVE_STATUS_KV,STUDIO_SSO_SECRET:secret,CONTROL_ROOM_URL:'https://room.test',MEDIA_ENGINE_SHARED_SECRET:'media-test-secret'};
+ const env={DB,LIVE_STATUS_KV,ASSETS:{fetch:async()=>new Response(fs.readFileSync(new URL('../public/signin.html',import.meta.url),'utf8'),{headers:{'content-type':'text/html'}})},STUDIO_SSO_SECRET:secret,CONTROL_ROOM_URL:'https://room.test',MEDIA_ENGINE_SHARED_SECRET:'media-test-secret'};
  const req=(url,method='GET',data,headers={})=>new Request(url,{method,headers,body:data===undefined?undefined:JSON.stringify(data)});
  let count=0;async function test(name,fn){await fn();count++;console.log('PASS '+name);}
  let state,stateCookie,callback;
@@ -52,6 +53,39 @@ try{
   const list=await (await call('/api/media')).json();assert.equal(list.items[0].status,'published');
   assert.equal((await call('/api/broadcast/settings','POST',{channel:'video',enabled:true})).status,200);
   mediaDB.close();
+ });
+
+ await test('direct Studio sign-in uses the existing control room owner password',async()=>{
+  const realFetch=globalThis.fetch;try{globalThis.fetch=async(url,options)=>control.fetch(new Request(url,options),controlEnv);
+  const response=await studioAuthRoute(req('https://studio.test/auth/password','POST',{user:'owner',pass:controlEnv.ADMIN_PASS},{origin:'https://studio.test','cf-connecting-ip':'192.0.2.1'}),env);assert.equal(response.status,303);
+  const c=response.headers.getSetCookie().find(x=>x.startsWith('__Host-hk-studio=')).split(';')[0];const who=await studioOwner(req('https://studio.test/','GET',undefined,{cookie:c}),env);assert.equal(who.role,'Super Administrator');
+  assert.equal(raw.prepare("SELECT pass_hash FROM users WHERE username='owner'").get().pass_hash,null);
+  }finally{globalThis.fetch=realFetch;}
+ });
+ await test('direct admin sign-in retains admin role and uses the current password hash',async()=>{
+  const salt='test-admin-salt',password='sample-admin-password',hash=pbkdf2Sync(password,salt,100000,32,'sha256').toString('hex');
+  raw.prepare("INSERT INTO users(username,role,status,pass_ver,kind,pass_hash,salt,iters) VALUES('studioadmin','admin','active',1,'staff',?,?,100000)").run(hash,salt);
+  const realFetch=globalThis.fetch;try{globalThis.fetch=async(url,options)=>control.fetch(new Request(url,options),controlEnv);
+  const response=await studioAuthRoute(req('https://studio.test/auth/password','POST',{user:'studioadmin',pass:password},{origin:'https://studio.test','cf-connecting-ip':'192.0.2.2'}),env);assert.equal(response.status,303);
+  const c=response.headers.getSetCookie().find(x=>x.startsWith('__Host-hk-studio=')).split(';')[0];assert.equal((await studioOwner(req('https://studio.test/','GET',undefined,{cookie:c}),env)).role,'Administrator');
+  assert.equal(raw.prepare("SELECT pass_hash FROM users WHERE username='studioadmin'").get().pass_hash,hash);
+  const denied=await engine.fetch(req('https://studio.test/api/media-engine/livekit/connection','POST',{action:'reset'},{cookie:c,origin:'https://studio.test'}),env);assert.equal(denied.status,403);
+  }finally{globalThis.fetch=realFetch;}
+ });
+ await test('direct sign-in rejects wrong credentials, foreign origins and oversized bodies',async()=>{
+  const realFetch=globalThis.fetch;try{globalThis.fetch=async(url,options)=>control.fetch(new Request(url,options),controlEnv);
+  assert.equal((await studioAuthRoute(req('https://studio.test/auth/password','POST',{user:'owner',pass:'wrong-password'},{origin:'https://studio.test','cf-connecting-ip':'192.0.2.3'}),env)).status,401);
+  assert.equal((await studioAuthRoute(req('https://studio.test/auth/password','POST',{user:'owner',pass:controlEnv.ADMIN_PASS},{origin:'https://evil.test'}),env)).status,403);
+  assert.equal((await studioAuthRoute(req('https://studio.test/auth/password','POST',{user:'owner',pass:'x'.repeat(3000)},{origin:'https://studio.test'}),env)).status,413);
+  }finally{globalThis.fetch=realFetch;}
+ });
+ await test('the password backchannel requires authentication and preserves login throttling',async()=>{
+  const response=await control.fetch(req('https://room.test/api/studio/password-login','POST',{user:'owner',pass:controlEnv.ADMIN_PASS,audience:'https://studio.test'}),controlEnv);assert.equal(response.status,401);
+  const realFetch=globalThis.fetch;try{globalThis.fetch=async(url,options)=>control.fetch(new Request(url,options),controlEnv);
+  for(let i=0;i<10;i++)assert.equal((await studioAuthRoute(req('https://studio.test/auth/password','POST',{user:'nobody',pass:'wrong-password'},{origin:'https://studio.test','cf-connecting-ip':'192.0.2.4'}),env)).status,401);
+  assert.equal((await studioAuthRoute(req('https://studio.test/auth/password','POST',{user:'owner',pass:controlEnv.ADMIN_PASS},{origin:'https://studio.test','cf-connecting-ip':'192.0.2.4'}),env)).status,429);
+  assert.equal(raw.prepare("SELECT count(*) n FROM login_attempts WHERE ip='192.0.2.4'").get().n,10);
+  }finally{globalThis.fetch=realFetch;}
  });
  raw.close();console.log(count+' Studio authentication checks passed');
 }finally{fs.unlinkSync(target);}
