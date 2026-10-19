@@ -21,4 +21,4 @@ id = "REPLACE_ACCOUNT2_STAGING_KV_ID"
 MEDIA_ENGINE_VERSION = "staging"
 
 [triggers]
-crons = []
+crons = ["* * * * *"]
