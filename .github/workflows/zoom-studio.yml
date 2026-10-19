@@ -1,0 +1,46 @@
+name: Zoom Studio checks and deployment
+on:
+  push:
+    paths: ['zoom-studio/**', '.github/workflows/zoom-studio.yml']
+  pull_request:
+    paths: ['zoom-studio/**', '.github/workflows/zoom-studio.yml']
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy Zoom Studio to its dedicated Cloudflare Worker'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: zoom-studio-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify existing Control Room
+        run: node tests/run.mjs
+      - name: Verify Zoom Studio
+        run: npm test --prefix zoom-studio
+  deploy:
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: zoom-studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Deploy the dedicated studio
+        working-directory: zoom-studio
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          STUDIO_D1_DATABASE_ID: ${{ secrets.STUDIO_D1_DATABASE_ID }}
+        run: npm run deploy
