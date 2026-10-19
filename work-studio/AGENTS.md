@@ -1,0 +1,3 @@
+# Work Studio safety boundaries
+
+This is an imported baseline. Preserve source hashes until intentional cleanup commits. Do not deploy imported Wrangler configurations, activate the nested workflow, run remote migrations, delete Workers or alter production secrets as part of source cleanup. Keep the existing Account 2 Worker name heavenlykey-media and its persistent data. Keep Website Management code separate. Record changes and required shared dependencies before extracting the independent studio. Treat missing legacy image assets in IMPORT-MANIFEST.json honestly; never create empty replacements. Cross-account sign-in must validate identity and short-lived grants; never remove authentication.

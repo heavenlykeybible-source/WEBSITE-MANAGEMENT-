@@ -1,0 +1,2991 @@
+{
+  "source_repository": "heavenlykeybible-source/onlinebible",
+  "source_ref": "146ecd64321976344b08596beaf605e17e525ee0",
+  "destination_prefix": "work-studio/source/",
+  "verified_files": 422,
+  "unavailable_files": 4,
+  "files": [
+    {
+      "path": ".env.example",
+      "sha": "eb127906b604043ed2a896fb1a6cd50239fc0459",
+      "size": 910,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/.env.example"
+    },
+    {
+      "path": ".github/workflows/cloudflare-media-engine.yml",
+      "sha": "873d11eb17e0aef23216fd713806b0f7c2239308",
+      "size": 5201,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/.github/workflows/cloudflare-media-engine.yml"
+    },
+    {
+      "path": ".gitignore",
+      "sha": "4bcd7cf8d4df3b8c26b4fb9e71b1eeba277e1aff",
+      "size": 106,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/.gitignore"
+    },
+    {
+      "path": "README.md",
+      "sha": "1082c8c3861d654ebb44f786dee801f09958e457",
+      "size": 2308,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/README.md"
+    },
+    {
+      "path": "SPIRITUAL-MEDIA-WORKFLOW.md",
+      "sha": "90ee4b1bc0fb90172f32274eac4dec1efcfcf3df",
+      "size": 1131,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/SPIRITUAL-MEDIA-WORKFLOW.md"
+    },
+    {
+      "path": "STORAGE-RETENTION-POLICY.md",
+      "sha": "0d73c24d25a60da3528af65e2870bf558be06746",
+      "size": 4118,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/STORAGE-RETENTION-POLICY.md"
+    },
+    {
+      "path": "docs/ACCOUNT-2-DEPLOYMENT-GATE.md",
+      "sha": "322e93545796c756f605604f8506500406d433db",
+      "size": 1029,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/docs/ACCOUNT-2-DEPLOYMENT-GATE.md"
+    },
+    {
+      "path": "docs/ACCOUNT-2-IMPLEMENTATION-STATUS.md",
+      "sha": "b3b89347de936d5d385d64ea6c21fa362785a982",
+      "size": 1121,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/docs/ACCOUNT-2-IMPLEMENTATION-STATUS.md"
+    },
+    {
+      "path": "docs/ACCOUNT-2-PROXY-HARDENING.md",
+      "sha": "973dc695108d6d7e3cc539beed54a2ae28ef3c70",
+      "size": 1806,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/docs/ACCOUNT-2-PROXY-HARDENING.md"
+    },
+    {
+      "path": "docs/CLOUDFLARE-ACCOUNT-BOUNDARY.md",
+      "sha": "8e4945b587c4c7c7ba8c9401cae1203a7fbfc5ac",
+      "size": 4590,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/docs/CLOUDFLARE-ACCOUNT-BOUNDARY.md"
+    },
+    {
+      "path": "docs/PRODUCTION-STUDIO.md",
+      "sha": "6672edb5f9f34be6b4f22e9de28147bf770f5e41",
+      "size": 4117,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/docs/PRODUCTION-STUDIO.md"
+    },
+    {
+      "path": "heavenly-key-website/.assetsignore",
+      "sha": "f3575eb104b62c91a7bff84e8fe45e6a3f8a6b49",
+      "size": 88,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/.assetsignore"
+    },
+    {
+      "path": "heavenly-key-website/AI-PROVIDER-LAYER.md",
+      "sha": "3761e38b39009875c74bb01eac3efee5277c6013",
+      "size": 3403,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/AI-PROVIDER-LAYER.md"
+    },
+    {
+      "path": "heavenly-key-website/API-INTEGRATION.md",
+      "sha": "6108c231989f90ea4cfeb78e41e7ea8827b29325",
+      "size": 2164,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/API-INTEGRATION.md"
+    },
+    {
+      "path": "heavenly-key-website/API-PLACEHOLDER-REGISTRY.md",
+      "sha": "bdb51baeeb7d321a16b95da425842d82c0e43469",
+      "size": 1420,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/API-PLACEHOLDER-REGISTRY.md"
+    },
+    {
+      "path": "heavenly-key-website/ASSET-INVENTORY.md",
+      "sha": "20036cb6c504017b9c45909ecf20f8b0a603cc64",
+      "size": 4672,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/ASSET-INVENTORY.md"
+    },
+    {
+      "path": "heavenly-key-website/CHANGELOG.md",
+      "sha": "2faa36bf9bf5203e5e51482b731a7e9e103ab066",
+      "size": 12253,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/CHANGELOG.md"
+    },
+    {
+      "path": "heavenly-key-website/COMPARISON-REPORT.md",
+      "sha": "6372e49840e8b14b74be752f4bc228448cb4e179",
+      "size": 7219,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/COMPARISON-REPORT.md"
+    },
+    {
+      "path": "heavenly-key-website/COMPONENT-LIBRARY.md",
+      "sha": "f313b78b6b88176a10381ea1253895a2f359c05a",
+      "size": 10921,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/COMPONENT-LIBRARY.md"
+    },
+    {
+      "path": "heavenly-key-website/CONTENT-INTEGRATION-REPORT.md",
+      "sha": "dc28b2dcaa5ff9796cb7eab62580778cc4b16247",
+      "size": 5285,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/CONTENT-INTEGRATION-REPORT.md"
+    },
+    {
+      "path": "heavenly-key-website/CONTENT-PLACEHOLDER-REGISTRY.md",
+      "sha": "320b27176ce4f2758df68b07c8770176cb8f7eeb",
+      "size": 4555,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/CONTENT-PLACEHOLDER-REGISTRY.md"
+    },
+    {
+      "path": "heavenly-key-website/DATA-ARCHITECTURE.md",
+      "sha": "0f6c6272d18af25f5138b14d88e84dc39db6c4ad",
+      "size": 3858,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/DATA-ARCHITECTURE.md"
+    },
+    {
+      "path": "heavenly-key-website/DEPLOYMENT.md",
+      "sha": "8a38b27fee56811378a39874584db33a45b25f6e",
+      "size": 4304,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/DEPLOYMENT.md"
+    },
+    {
+      "path": "heavenly-key-website/DESIGN-TOKENS.md",
+      "sha": "ad11580fa4249a63d8086db227bd2b1559c6f26c",
+      "size": 5581,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/DESIGN-TOKENS.md"
+    },
+    {
+      "path": "heavenly-key-website/FINAL-APPROVAL-PASS.md",
+      "sha": "fce9ae3321915ac75062f7def1f245353e574b9b",
+      "size": 13056,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/FINAL-APPROVAL-PASS.md"
+    },
+    {
+      "path": "heavenly-key-website/FINAL-INDEPENDENT-AUDIT.md",
+      "sha": "8a4c18317ce8b9049c1d35981c4d77f782f553a9",
+      "size": 16561,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/FINAL-INDEPENDENT-AUDIT.md"
+    },
+    {
+      "path": "heavenly-key-website/FRONTEND-CONTRACT.md",
+      "sha": "8a3db70e7ccb58380fc622406b2669eb80fd297e",
+      "size": 5801,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/FRONTEND-CONTRACT.md"
+    },
+    {
+      "path": "heavenly-key-website/FRONTEND-DEFINITION-OF-DONE.md",
+      "sha": "6e7995e610ab62ad149918c420d72b17c8596393",
+      "size": 5307,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/FRONTEND-DEFINITION-OF-DONE.md"
+    },
+    {
+      "path": "heavenly-key-website/INTEGRATION-READY.md",
+      "sha": "b10d53b1b11d049074c761abad10a8b3c1fb7ac5",
+      "size": 3575,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/INTEGRATION-READY.md"
+    },
+    {
+      "path": "heavenly-key-website/KNOWN-ISSUES.md",
+      "sha": "12acad03f607b50f46b3cb75e667ee0461e98d45",
+      "size": 6053,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/KNOWN-ISSUES.md"
+    },
+    {
+      "path": "heavenly-key-website/PROJECT-CHECKLIST.md",
+      "sha": "2f01b178bc0c9563ede383eead9d5759d99cdd97",
+      "size": 20855,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/PROJECT-CHECKLIST.md"
+    },
+    {
+      "path": "heavenly-key-website/README.md",
+      "sha": "bf118f764b2815d36aa690afe39fda320ca0f248",
+      "size": 5565,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/README.md"
+    },
+    {
+      "path": "heavenly-key-website/RELEASE-CANDIDATE-AUDIT.md",
+      "sha": "5f3e825330658aadb6938751f089b1c377b966c4",
+      "size": 19072,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/RELEASE-CANDIDATE-AUDIT.md"
+    },
+    {
+      "path": "heavenly-key-website/TESTING-CHECKLIST.md",
+      "sha": "2ee1e142688e8b7efcaf5b1bd8d7aef7ffd24a66",
+      "size": 4637,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/TESTING-CHECKLIST.md"
+    },
+    {
+      "path": "heavenly-key-website/_headers",
+      "sha": "89c2d8411a4111db1431ce2a47462a28965731be",
+      "size": 2298,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/_headers"
+    },
+    {
+      "path": "heavenly-key-website/assets/family-illustration-placeholder.svg",
+      "sha": "8edbe39052c7a17aec003bd6472dfa46c969df03",
+      "size": 1638,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/family-illustration-placeholder.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/favicon.svg",
+      "sha": "16f865616bfe3149cc6b3fef3c06abd076a34774",
+      "size": 227,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/favicon.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/de.svg",
+      "sha": "740eb41809632981c39cb165cc125b8e41b5985f",
+      "size": 279,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/de.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/fr.svg",
+      "sha": "2e6a2771ed237b5f0571e447b2aa7b7fb4a0a728",
+      "size": 271,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/fr.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/gb.svg",
+      "sha": "44ee7162cafb3a4ddca7162f2876ec66352330a3",
+      "size": 429,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/gb.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/gh.svg",
+      "sha": "20ede1dd6b9f1124736e8886a00abe7c4c9a6b1b",
+      "size": 392,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/gh.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/il.svg",
+      "sha": "ac39a60e9977c39f612462e0bf9f41d604560c73",
+      "size": 367,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/il.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/ng.svg",
+      "sha": "1f8513e73a66c9bed53a78facbf6836893f1c8d6",
+      "size": 226,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/ng.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/pk.svg",
+      "sha": "e2ee003134d93f212fd3c11c370158876010b4c0",
+      "size": 407,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/pk.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/ru.svg",
+      "sha": "f7579af901f61d3b98536ab2cb1a668cdb146ce9",
+      "size": 270,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/ru.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/se.svg",
+      "sha": "84f75f9c76d1c3810a0a7eec45083af06cf60b66",
+      "size": 278,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/se.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/ug.svg",
+      "sha": "01f530e27fb78738bb876a8d1da869cd80350532",
+      "size": 775,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/ug.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/flags/us.svg",
+      "sha": "6aa1611a3ae05b4d2dc9e6568b1639fe411b7e01",
+      "size": 2227,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/flags/us.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-128.png",
+      "sha": "c518126ce406d9e3fb1ba49ef492d70e55d90599",
+      "size": 1866,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-128.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-144.png",
+      "sha": "6b35cb79a17db17cd17220ece56f90f8c22f8b78",
+      "size": 2052,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-144.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-152.png",
+      "sha": "03e1cc4f06fa47ce5b687bbca705fb79249da3fc",
+      "size": 2023,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-152.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-192.png",
+      "sha": "7ba4e1f527accb9d3f455feacda1ffe0547fa728",
+      "size": 2780,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-192.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-384.png",
+      "sha": "8c0cdc1ae0400a524ecc22f81c9b44b70b11b790",
+      "size": 5756,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-384.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-512.png",
+      "sha": "9e7ae464cc4c1f75fa0a017e726a71a925c710b2",
+      "size": 8126,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-512.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-72.png",
+      "sha": "bb1e47edae240a1af2739cbbbb79db8db09f934b",
+      "size": 1065,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-72.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-96.png",
+      "sha": "6db995ec30e9595af23257e519f234f62486a941",
+      "size": 1388,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-96.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-maskable-192.png",
+      "sha": "99b3a8e541e678d0a030a43e4a93d54a7cb9fe8c",
+      "size": 2013,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-maskable-192.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/icons/icon-maskable-512.png",
+      "sha": "c56a69bacb6a378230d560411d1d9a00465b61c4",
+      "size": 6054,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/icons/icon-maskable-512.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/1CBCB9C2-1EB2-4775-A94E-A4D01C97EEDB.png",
+      "sha": "16ae7ca7f01972cd461eaa9dfdfd1f7800bd7364",
+      "size": 2024923,
+      "status": "unavailable-large-asset",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/1CBCB9C2-1EB2-4775-A94E-A4D01C97EEDB.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/Evangelist Emmanuel picture1.jpeg",
+      "sha": "a93101e645c13a0036b26020c7daba46bed340ce",
+      "size": 1045891,
+      "status": "unavailable-large-asset",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/Evangelist Emmanuel picture1.jpeg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/IMG_0434.webp",
+      "sha": "78a67d5d22a34581f950582dc4046378d2258323",
+      "size": 96280,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/IMG_0434.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/IMG_0435.webp",
+      "sha": "15da26ad0764a6d9c3414611fb7b20306b10eb9b",
+      "size": 83900,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/IMG_0435.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/all-have-sinned.png",
+      "sha": "fe7df57c7553e2a99f88044fd7acc4b53b9c71bd",
+      "size": 160736,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/all-have-sinned.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/approved-ai-floating-icon.svg",
+      "sha": "e1e677bc9fbf60412534572dc6a6ecf852c5bed9",
+      "size": 2104,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-ai-floating-icon.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/approved-ai-floating-icon.webp",
+      "sha": "78a67d5d22a34581f950582dc4046378d2258323",
+      "size": 96280,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-ai-floating-icon.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/approved-ai-launcher-20261017.webp",
+      "sha": "96d8bff6cbbadbe4cab65df3e74b30f4b4f05379",
+      "size": 112114,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-ai-launcher-20261017.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/approved-ai-transparent-original.png",
+      "sha": "9094fc0f017823b17ad0ffe9cd6bc4f99a775a75",
+      "size": 1489990,
+      "status": "unavailable-large-asset",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-ai-transparent-original.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/approved-radio-display-20261017.webp",
+      "sha": "5450256ba186e76e541dcfa0ae627959fe142eaa",
+      "size": 270278,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-radio-display-20261017.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/approved-radio-floating-icon.svg",
+      "sha": "19f2d5e7b5b2bd7b3828aa9ef4c0ca6257e5bbab",
+      "size": 2003,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-radio-floating-icon.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/approved-radio-floating-icon.webp",
+      "sha": "15da26ad0764a6d9c3414611fb7b20306b10eb9b",
+      "size": 83900,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-radio-floating-icon.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/approved-radio-transparent-original.png",
+      "sha": "2f271405454b1c32383bd93ca0dd80bf280e134b",
+      "size": 1467653,
+      "status": "unavailable-large-asset",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-radio-transparent-original.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/assignment-banner.webp",
+      "sha": "d0476c9ff1d17da1cf3d470867ac02e8b404cad7",
+      "size": 106994,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/assignment-banner.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/feature-backgrounds.webp",
+      "sha": "7c225a60c49379c064dcd2595b39495556a5c3a8",
+      "size": 98916,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/feature-backgrounds.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/flags-row.svg",
+      "sha": "b10e7df8f7e5b7e12aa027e5163581395dbe95ba",
+      "size": 3509,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/flags-row.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/global-community-network.svg",
+      "sha": "39688a9c35eca59be3751afdac9c42373aab8c37",
+      "size": 3570,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/global-community-network.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/heavenly-key-radio-launcher-20261017.webp",
+      "sha": "dcf8a087794b0efef183a8787f715b06de1a27d7",
+      "size": 93078,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/heavenly-key-radio-launcher-20261017.webp"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/hero-people-laptop.jpg",
+      "sha": "6e43a06f8783314b1d44d8b8f70acf75f4ab5d68",
+      "size": 185496,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/hero-people-laptop.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/logo.png",
+      "sha": "0c3a113c81f5e40b3d9ed6a35cca05f16e233a0a",
+      "size": 50886,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/logo.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/ministries-header.jpg",
+      "sha": "46f4831123d38a6f421604f6ab577d7f60827a88",
+      "size": 281144,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/ministries-header.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/outreach-1.jpg",
+      "sha": "51f266a42fe79b89d1354dbd88a40c4b0779937e",
+      "size": 116937,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/outreach-1.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/outreach-2.jpg",
+      "sha": "f016e1c365e86a80daa8ad24af8c6fdcd4e8946e",
+      "size": 111107,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/outreach-2.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/outreach-3.jpg",
+      "sha": "d44aa0d8f71ba7c3633fa09604028e960b721e84",
+      "size": 123926,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/outreach-3.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/outreach-4.jpg",
+      "sha": "97b8d26fdd1f84e916cb383be4f45f3954eda81d",
+      "size": 131540,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/outreach-4.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/outreach-5.jpg",
+      "sha": "a093c1b8ff42e2d8e8642181515547070c3f2f48",
+      "size": 121135,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/outreach-5.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/outreach-6.png",
+      "sha": "4bd6f5f9a0eb2bca554256522b643deb97fa1930",
+      "size": 300366,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/outreach-6.png"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/partnership-header.jpeg",
+      "sha": "154c95593bdd116069d3757885ce7cdb193bce9c",
+      "size": 45814,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/partnership-header.jpeg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/pastor-emmanuel-adiohwo.jpg",
+      "sha": "b5162972acbaa13cfdfef4eb9d9b402400bcc2af",
+      "size": 40686,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/pastor-emmanuel-adiohwo.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/rotating-world-land.svg",
+      "sha": "1ddcddb0d5bebbee6262a72e437a1494caa9b53e",
+      "size": 65843,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/rotating-world-land.svg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/sermons-header.jpg",
+      "sha": "244daa314776425e055ed6c0a76796a024d1341b",
+      "size": 27255,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/sermons-header.jpg"
+    },
+    {
+      "path": "heavenly-key-website/assets/ministry/where-will-you-spend-eternity.png",
+      "sha": "07c0d28c4c9fd59c4d208b0bc30199859f11f941",
+      "size": 97894,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/where-will-you-spend-eternity.png"
+    },
+    {
+      "path": "heavenly-key-website/assistant/knowledge.json",
+      "sha": "b880e6622b24c93e81ff45ad0fb360ce29581f42",
+      "size": 30832,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assistant/knowledge.json"
+    },
+    {
+      "path": "heavenly-key-website/css/account1-renewal-overrides.css",
+      "sha": "7d2e2f5f2686a34e48a03fae72c264f9faa72892",
+      "size": 2340,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/account1-renewal-overrides.css"
+    },
+    {
+      "path": "heavenly-key-website/css/app-flagship-20261015.css",
+      "sha": "63a2f7322e5e1ae2f9b6e2b9ceb3fc221aead20c",
+      "size": 2658,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/app-flagship-20261015.css"
+    },
+    {
+      "path": "heavenly-key-website/css/approved-home-shell.css",
+      "sha": "373c9249d6cfb1661cd4f9de8824503ce92f574c",
+      "size": 70500,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/approved-home-shell.css"
+    },
+    {
+      "path": "heavenly-key-website/css/approved-launchers.css",
+      "sha": "c14ce9347cce825357411b47e00b6bd90e61ae96",
+      "size": 3297,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/approved-launchers.css"
+    },
+    {
+      "path": "heavenly-key-website/css/assistant-radio-fix.css",
+      "sha": "59dc7aa836ddcf4b61136c3e4805f40998a6f8ca",
+      "size": 4892,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/assistant-radio-fix.css"
+    },
+    {
+      "path": "heavenly-key-website/css/base.css",
+      "sha": "3990846a12a32e12f64524cd9105cdb1ba9d7408",
+      "size": 2063,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/base.css"
+    },
+    {
+      "path": "heavenly-key-website/css/cms-builder.css",
+      "sha": "7d62d6cfe6ba0a3323b6833a7fbd2c31269938a0",
+      "size": 2716,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/cms-builder.css"
+    },
+    {
+      "path": "heavenly-key-website/css/community-player.css",
+      "sha": "26c906f4f6b7b943051a354c7b016ee67e8436b6",
+      "size": 623,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/community-player.css"
+    },
+    {
+      "path": "heavenly-key-website/css/components.css",
+      "sha": "66c111c8f775f5400553cc1b760a93bb54f73d12",
+      "size": 16749,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/components.css"
+    },
+    {
+      "path": "heavenly-key-website/css/divine-assignment-premium.css",
+      "sha": "d6a2670cb5708f9820b61d9ed6a13ddd6ccd5d32",
+      "size": 2332,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/divine-assignment-premium.css"
+    },
+    {
+      "path": "heavenly-key-website/css/faith-cautions.css",
+      "sha": "71f3d832877a4e3a223b11372f936d51e2434516",
+      "size": 928,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/faith-cautions.css"
+    },
+    {
+      "path": "heavenly-key-website/css/footer-approved-cleanup.css",
+      "sha": "7ec977484ef5332b97033dc63b9253eb08e52192",
+      "size": 4498,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/footer-approved-cleanup.css"
+    },
+    {
+      "path": "heavenly-key-website/css/footer-assistants.css",
+      "sha": "46e9e25ee9a77599d6c03760b3130000c9136df5",
+      "size": 7956,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/footer-assistants.css"
+    },
+    {
+      "path": "heavenly-key-website/css/footer-five-columns.css",
+      "sha": "f62c01b3a980f7073dc0fb003cd4f17884bd81c7",
+      "size": 4811,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/footer-five-columns.css"
+    },
+    {
+      "path": "heavenly-key-website/css/grdpc.css",
+      "sha": "df832dfecd7576c6e1e755ac88e259574296027a",
+      "size": 1826,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/grdpc.css"
+    },
+    {
+      "path": "heavenly-key-website/css/heavenly-key-footer-app.css",
+      "sha": "e022901b9a2504f345ef9940d5e4e527618160f0",
+      "size": 4198,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/heavenly-key-footer-app.css"
+    },
+    {
+      "path": "heavenly-key-website/css/home-renewal.css",
+      "sha": "7dfee0236597ef0adfc7cc3631cf3f2751b6fae6",
+      "size": 30660,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/home-renewal.css"
+    },
+    {
+      "path": "heavenly-key-website/css/home.css",
+      "sha": "aafa41b7c5656be0e34641e8c9a7c1ba2b19a446",
+      "size": 76937,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/home.css"
+    },
+    {
+      "path": "heavenly-key-website/css/inner-dropdowns.css",
+      "sha": "52f4d99cd3ae214224360aef9fbc6b74946ee72a",
+      "size": 1002,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/inner-dropdowns.css"
+    },
+    {
+      "path": "heavenly-key-website/css/inner-page-premium.css",
+      "sha": "edfbd6dd4555a393b4fc8c0090996a0cd8717fa3",
+      "size": 5163,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/inner-page-premium.css"
+    },
+    {
+      "path": "heavenly-key-website/css/inner.css",
+      "sha": "dbe134c24153c5ad6054dbf941612d6799882d72",
+      "size": 12159,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/inner.css"
+    },
+    {
+      "path": "heavenly-key-website/css/legal-page-premium.css",
+      "sha": "22ccb4968ccd7d8db7a3b9a70b396ea141e9d1bf",
+      "size": 1796,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/legal-page-premium.css"
+    },
+    {
+      "path": "heavenly-key-website/css/mandate-vision.css",
+      "sha": "a02fa78906a3cf1f328614affb58920cbfd7d053",
+      "size": 2243,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/mandate-vision.css"
+    },
+    {
+      "path": "heavenly-key-website/css/media-components.css",
+      "sha": "eb595cd5eb3199d4321bb993a8a92832eab6d764",
+      "size": 10869,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/media-components.css"
+    },
+    {
+      "path": "heavenly-key-website/css/ministry-six-tiles.css",
+      "sha": "184e1c3e12083e5592498593150fede2f34494a6",
+      "size": 1509,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/ministry-six-tiles.css"
+    },
+    {
+      "path": "heavenly-key-website/css/mission-four-cards.css",
+      "sha": "bfcca018ff17cbfbc05e7519d019fdeaeb826b24",
+      "size": 2392,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/mission-four-cards.css"
+    },
+    {
+      "path": "heavenly-key-website/css/online-assistant.css",
+      "sha": "e4957f8d3fd1a4bf4343c4d250239729c69c7bbf",
+      "size": 4514,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/online-assistant.css"
+    },
+    {
+      "path": "heavenly-key-website/css/platform-connections-clean.css",
+      "sha": "e6efa6591e61dcdffc06a5a07f872070275285e4",
+      "size": 2798,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/platform-connections-clean.css"
+    },
+    {
+      "path": "heavenly-key-website/css/portal.css",
+      "sha": "8248fbd69786d6ab0008934cf446ab7d0b26ff3c",
+      "size": 23460,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/portal.css"
+    },
+    {
+      "path": "heavenly-key-website/css/premium-navigation-upgrade.css",
+      "sha": "240cf7c030fdd35831346c31e5e5bb91f654605d",
+      "size": 1980,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/premium-navigation-upgrade.css"
+    },
+    {
+      "path": "heavenly-key-website/css/premium-television.css",
+      "sha": "80aa8f148bf81dd5dd3afc1adfbc8fcd1a69878c",
+      "size": 1694,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/premium-television.css"
+    },
+    {
+      "path": "heavenly-key-website/css/president-message-refresh.css",
+      "sha": "b3e8296bca73d284ef0de13d24dda2e85fd0a44a",
+      "size": 1938,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/president-message-refresh.css"
+    },
+    {
+      "path": "heavenly-key-website/css/production-studio.css",
+      "sha": "6ae2c6088cd4ab651b9e70d91538df6ec717cbb2",
+      "size": 20977,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/production-studio.css"
+    },
+    {
+      "path": "heavenly-key-website/css/public-premium.css",
+      "sha": "61c81b6a1d7fadf7feedbba71f9f1beb775b56ea",
+      "size": 7192,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/public-premium.css"
+    },
+    {
+      "path": "heavenly-key-website/css/radio-approved-number-one.css",
+      "sha": "c5b0dfdf0f23dd93621e91f86ae7f141bef74333",
+      "size": 6662,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/radio-approved-number-one.css"
+    },
+    {
+      "path": "heavenly-key-website/css/radio-approved-sample1.css",
+      "sha": "b785dfbc83ff3034988a1ab0f55fab6e7764de3f",
+      "size": 5702,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/radio-approved-sample1.css"
+    },
+    {
+      "path": "heavenly-key-website/css/radio-burning-fire.css",
+      "sha": "96d77eef02d57688ed837446a229667255616aff",
+      "size": 1002,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/radio-burning-fire.css"
+    },
+    {
+      "path": "heavenly-key-website/css/radio-navigation-fix.css",
+      "sha": "012cb6aaf69c3af54263f960b4bd2a10696ee7ef",
+      "size": 1281,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/radio-navigation-fix.css"
+    },
+    {
+      "path": "heavenly-key-website/css/recent-blog.css",
+      "sha": "95c88102752fe95f97e4acdf827d69fd791d4b12",
+      "size": 2288,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/recent-blog.css"
+    },
+    {
+      "path": "heavenly-key-website/css/resources-dropdown-fix.css",
+      "sha": "e3d0be1847886b3caad923090b5f6e0b3c57652c",
+      "size": 983,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/resources-dropdown-fix.css"
+    },
+    {
+      "path": "heavenly-key-website/css/salvation-hero-button.css",
+      "sha": "633d142dec45ead30e965f6c2d1315d13415ee3f",
+      "size": 853,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/salvation-hero-button.css"
+    },
+    {
+      "path": "heavenly-key-website/css/salvation-steps.css",
+      "sha": "c8c2aefd088d4e1a6cd5a07607b7d8519b987f01",
+      "size": 3140,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/salvation-steps.css"
+    },
+    {
+      "path": "heavenly-key-website/css/social-handles-premium.css",
+      "sha": "71c8fb9027d622a5c6b349a45ea37628ccb2514f",
+      "size": 1501,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/social-handles-premium.css"
+    },
+    {
+      "path": "heavenly-key-website/css/spiritual-caution-five.css",
+      "sha": "6cd913334cca418dc70608771df6fd310943b626",
+      "size": 2202,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/spiritual-caution-five.css"
+    },
+    {
+      "path": "heavenly-key-website/css/studio-premium-overrides.css",
+      "sha": "338c7df0d9c12ca905665363bc596278c9f28337",
+      "size": 6821,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/studio-premium-overrides.css"
+    },
+    {
+      "path": "heavenly-key-website/css/tokens.css",
+      "sha": "3a5756117f4eca14b39724408c49d7ea59d15cf8",
+      "size": 2880,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/tokens.css"
+    },
+    {
+      "path": "heavenly-key-website/css/ui-components.css",
+      "sha": "044d41490ed3895a4c0b9bb9e106b8e938e961da",
+      "size": 5590,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/ui-components.css"
+    },
+    {
+      "path": "heavenly-key-website/css/world-strip-static-flags.css",
+      "sha": "ec6dd8dad2e6baa0226c879f7a64ac94da07b2c6",
+      "size": 3798,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/css/world-strip-static-flags.css"
+    },
+    {
+      "path": "heavenly-key-website/index.html",
+      "sha": "90598629a1d003990fecb74834a239e3c162a92f",
+      "size": 36557,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/index.html"
+    },
+    {
+      "path": "heavenly-key-website/js/admin-dashboard.js",
+      "sha": "18f5a68bdfca094ca1382076f86c232757d49d29",
+      "size": 42735,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/admin-dashboard.js"
+    },
+    {
+      "path": "heavenly-key-website/js/api-client.js",
+      "sha": "aa7a42bac53c5a31a82b2cd8bafa722f85399b2e",
+      "size": 6392,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/api-client.js"
+    },
+    {
+      "path": "heavenly-key-website/js/app-update.js",
+      "sha": "852cc8e0deed92347084e9a1bd1fc31aa134955b",
+      "size": 1655,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/app-update.js"
+    },
+    {
+      "path": "heavenly-key-website/js/approved-global-footer.js",
+      "sha": "77441c9b0298cc6b363ed6ec1566508fa10e2861",
+      "size": 3217,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/approved-global-footer.js"
+    },
+    {
+      "path": "heavenly-key-website/js/approved-picture-gestures.js",
+      "sha": "30fe3013feb5021007c68d7545c1301c34b12422",
+      "size": 2669,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/approved-picture-gestures.js"
+    },
+    {
+      "path": "heavenly-key-website/js/approved-sharing.js",
+      "sha": "46c14233cbdec27c8e0560d9a1f99657fa3792d5",
+      "size": 1262,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/approved-sharing.js"
+    },
+    {
+      "path": "heavenly-key-website/js/approved-widget-system.js",
+      "sha": "61fcf49a387220edb7afbd829de05e6db5b71da3",
+      "size": 10826,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/approved-widget-system.js"
+    },
+    {
+      "path": "heavenly-key-website/js/assistant-radio-user-size.js",
+      "sha": "0e9196e82bf6ee7a5a22fe36905701d47c0481e5",
+      "size": 143,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/assistant-radio-user-size.js"
+    },
+    {
+      "path": "heavenly-key-website/js/bible-reader.js",
+      "sha": "71c970b73ddad696890060eebdf453e179eaf24b",
+      "size": 19788,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/bible-reader.js"
+    },
+    {
+      "path": "heavenly-key-website/js/cms-runtime-20261015.css",
+      "sha": "501f49eddd9cd6e00f09334533ad49db6cffc4cd",
+      "size": 12918,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/cms-runtime-20261015.css"
+    },
+    {
+      "path": "heavenly-key-website/js/cms-runtime-20261015.js",
+      "sha": "431e185dd5b90e2dbf12b3758afc79b74ff11abe",
+      "size": 19179,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/cms-runtime-20261015.js"
+    },
+    {
+      "path": "heavenly-key-website/js/communications-admin.js",
+      "sha": "be5cf528d6f84edb705768b75f0413108dcfe2c3",
+      "size": 49801,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/communications-admin.js"
+    },
+    {
+      "path": "heavenly-key-website/js/community-player.js",
+      "sha": "f57cc78464d3784a3406cb6460e3d98757a1fee5",
+      "size": 9695,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/community-player.js"
+    },
+    {
+      "path": "heavenly-key-website/js/floating-radio.js",
+      "sha": "1ec72f4c52eb48cc5fe748906d672f3a600719da",
+      "size": 371,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/floating-radio.js"
+    },
+    {
+      "path": "heavenly-key-website/js/footer-approved-cleanup.js",
+      "sha": "42006c467a033ef99fbc7b1946be0f1292999298",
+      "size": 2153,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/footer-approved-cleanup.js"
+    },
+    {
+      "path": "heavenly-key-website/js/footer-assistants.js",
+      "sha": "5c060aa3550dcec76822eb07036c218a78f26d15",
+      "size": 374,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/footer-assistants.js"
+    },
+    {
+      "path": "heavenly-key-website/js/footer-recent-posts.js",
+      "sha": "2c890517608745a669afa42b323a6534d721b258",
+      "size": 1184,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/footer-recent-posts.js"
+    },
+    {
+      "path": "heavenly-key-website/js/grdpc-admin.js",
+      "sha": "caa0c8fde6c50ba5994b1fd16eeec5a0dada3864",
+      "size": 4085,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/grdpc-admin.js"
+    },
+    {
+      "path": "heavenly-key-website/js/grdpc.js",
+      "sha": "f21980c61f4c35f104d3599d5c0cfa8ac1ac25b1",
+      "size": 788,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/grdpc.js"
+    },
+    {
+      "path": "heavenly-key-website/js/hk-footer-app-promo-20261015.js",
+      "sha": "bfd636ca5f22f7a1bb794e24fbc6b2f1d0b8e0ba",
+      "size": 3895,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/hk-footer-app-promo-20261015.js"
+    },
+    {
+      "path": "heavenly-key-website/js/hk-interior-theme.css",
+      "sha": "db794b11223a0abaa7d99a5179c20e02b15f56bb",
+      "size": 2401,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/hk-interior-theme.css"
+    },
+    {
+      "path": "heavenly-key-website/js/hk-standard-footer.css",
+      "sha": "79f706eec7e0f69096c50f38139e2000beb4ee30",
+      "size": 12627,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/hk-standard-footer.css"
+    },
+    {
+      "path": "heavenly-key-website/js/hk-standard-footer.js",
+      "sha": "75ac67c2b97936100224e0459b042b8ade7558c3",
+      "size": 6585,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/hk-standard-footer.js"
+    },
+    {
+      "path": "heavenly-key-website/js/home-renewal.js",
+      "sha": "19738ded70c4e01feed2f5974f4dbebc98926ca4",
+      "size": 3719,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/home-renewal.js"
+    },
+    {
+      "path": "heavenly-key-website/js/home-slider.js",
+      "sha": "110ac2b66ecc32efb889294b37705413383bd113",
+      "size": 3701,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/home-slider.js"
+    },
+    {
+      "path": "heavenly-key-website/js/homepage-cms-admin.js",
+      "sha": "29cc1ed6aede3be755a6d67ca3328c287c1b1992",
+      "size": 9126,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/homepage-cms-admin.js"
+    },
+    {
+      "path": "heavenly-key-website/js/homepage-components.js",
+      "sha": "629346c8511bd9f1d940a9dbfa8f34334d9cde15",
+      "size": 5975,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/homepage-components.js"
+    },
+    {
+      "path": "heavenly-key-website/js/homepage-editor.js",
+      "sha": "0064cd80f6e9ae101a1a2f23a8846ae13459048b",
+      "size": 6649,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/homepage-editor.js"
+    },
+    {
+      "path": "heavenly-key-website/js/homepage-layout-admin.js",
+      "sha": "c4ade8d5d902604d3e6eb1cb3971661bdea0e8ec",
+      "size": 6169,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/homepage-layout-admin.js"
+    },
+    {
+      "path": "heavenly-key-website/js/homepage-layout.js",
+      "sha": "65edfbd4b32000316ed179ec4e219d1a0f22b633",
+      "size": 1772,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/homepage-layout.js"
+    },
+    {
+      "path": "heavenly-key-website/js/homepage-live-content.js",
+      "sha": "fb78ee66e8c932c82947b2022beb24971788882e",
+      "size": 1264,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/homepage-live-content.js"
+    },
+    {
+      "path": "heavenly-key-website/js/main.js",
+      "sha": "38234de2584f24fdf1ecd4fe6e5b9d9ae32966aa",
+      "size": 5391,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/main.js"
+    },
+    {
+      "path": "heavenly-key-website/js/media-uploader.js",
+      "sha": "1c6ca3e59ec438c762ec0ab532fd078b17961134",
+      "size": 4323,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/media-uploader.js"
+    },
+    {
+      "path": "heavenly-key-website/js/ministry-care-lady.webp",
+      "sha": "0f80ba3dd40f583fcde7ae5a41bbbc91580d28e9",
+      "size": 3004,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/ministry-care-lady.webp"
+    },
+    {
+      "path": "heavenly-key-website/js/ministry-care.css",
+      "sha": "44a0a49d8e7fb516a30abe7113cf3bbc787dc9e1",
+      "size": 9361,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/ministry-care.css"
+    },
+    {
+      "path": "heavenly-key-website/js/ministry-care.js",
+      "sha": "5dcf528379fa04abd4c914ebd841dba3a71f2bee",
+      "size": 15741,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/ministry-care.js"
+    },
+    {
+      "path": "heavenly-key-website/js/motion.js",
+      "sha": "fe516d9610e6a3594cf273b5b97bdcf1e335da7a",
+      "size": 1511,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/motion.js"
+    },
+    {
+      "path": "heavenly-key-website/js/offline-register.js",
+      "sha": "85441424498a5fa6551f608ac613012c97b3075e",
+      "size": 304,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/offline-register.js"
+    },
+    {
+      "path": "heavenly-key-website/js/online-assistant.js",
+      "sha": "959d551046ffddddf834b51cba5d32db3260b0da",
+      "size": 6541,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/online-assistant.js"
+    },
+    {
+      "path": "heavenly-key-website/js/portal.js",
+      "sha": "28ca6886056ca64518666ca6f2cffc0e9e506ea7",
+      "size": 41520,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/portal.js"
+    },
+    {
+      "path": "heavenly-key-website/js/president-assistant-radio-position.js",
+      "sha": "91ec4ddf336439bdd662022d7aeda5770200b5e5",
+      "size": 753,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/president-assistant-radio-position.js"
+    },
+    {
+      "path": "heavenly-key-website/js/production-studio.js",
+      "sha": "af99c0b84c34b8f83a5cf0ee865eb5e672039035",
+      "size": 85448,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/production-studio.js"
+    },
+    {
+      "path": "heavenly-key-website/js/public-site-master.js",
+      "sha": "bf661feb91f981d3547bab4727227daccc97bdb8",
+      "size": 8382,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/public-site-master.js"
+    },
+    {
+      "path": "heavenly-key-website/js/radio-equalizer-motion.js",
+      "sha": "d22a76632ab8d2ace58e6a2f26ca280ff9f7dcc8",
+      "size": 2794,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/radio-equalizer-motion.js"
+    },
+    {
+      "path": "heavenly-key-website/js/radio-page-volume.js",
+      "sha": "d5dc233998a4a58f51e2c9c51f27d061d632ec8c",
+      "size": 1041,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/radio-page-volume.js"
+    },
+    {
+      "path": "heavenly-key-website/js/recent-blog.js",
+      "sha": "337ddfd17c038838ecc09067dd336411fb374ee0",
+      "size": 2998,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/recent-blog.js"
+    },
+    {
+      "path": "heavenly-key-website/js/remove-legacy-assistant.js",
+      "sha": "4e2a1a218469cf4ef2bcbd93d04c4e010ce6b4bf",
+      "size": 1268,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/remove-legacy-assistant.js"
+    },
+    {
+      "path": "heavenly-key-website/js/schedule-post.js",
+      "sha": "37f439b66a84c8c49af592a4ec988c72b2199e34",
+      "size": 18963,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/schedule-post.js"
+    },
+    {
+      "path": "heavenly-key-website/js/site-cms.js",
+      "sha": "cc8bcbef398b0655f0918382f52aeed96d2fa713",
+      "size": 21426,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/site-cms.js"
+    },
+    {
+      "path": "heavenly-key-website/js/site-editor-admin.js",
+      "sha": "0384a5be6204769be83070735a196371d6a3363f",
+      "size": 614,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/site-editor-admin.js"
+    },
+    {
+      "path": "heavenly-key-website/js/site-footer.js",
+      "sha": "5fab33d9cd14d1f3bbcda9f97a276d64dd1e7442",
+      "size": 5888,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/site-footer.js"
+    },
+    {
+      "path": "heavenly-key-website/js/studio-effects.js",
+      "sha": "f9a6203f4bea1851e162fe3d39dfdaa5b2f349c8",
+      "size": 7994,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/studio-effects.js"
+    },
+    {
+      "path": "heavenly-key-website/js/studio-model.js",
+      "sha": "057e86f0128ed5f9098c145576ddf29eb7b7aab6",
+      "size": 4792,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/studio-model.js"
+    },
+    {
+      "path": "heavenly-key-website/js/system-updates-admin.js",
+      "sha": "874b73be2e3015af8d320d8cf9d9d72667c6057f",
+      "size": 3027,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/system-updates-admin.js"
+    },
+    {
+      "path": "heavenly-key-website/js/ui-components.js",
+      "sha": "a56e7055cb7ea9420ed9e165b1ccedec0736ff49",
+      "size": 6608,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/js/ui-components.js"
+    },
+    {
+      "path": "heavenly-key-website/live/index.html",
+      "sha": "052bd6689e18b9417e688278e20257d3185002ed",
+      "size": 17658,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/live/index.html"
+    },
+    {
+      "path": "heavenly-key-website/live/sources.json",
+      "sha": "3d6d7c6804227731cc791bd9944aadb5dbee8750",
+      "size": 458,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/live/sources.json"
+    },
+    {
+      "path": "heavenly-key-website/manifest.json",
+      "sha": "99361b75529c9a0138a6636ca4ec172de92d9143",
+      "size": 1543,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/manifest.json"
+    },
+    {
+      "path": "heavenly-key-website/offline.html",
+      "sha": "de0a8ddb73fa02961ea47c0d5fcd9cd334d52b83",
+      "size": 1340,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/offline.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/about.html",
+      "sha": "7fdb3ede76fcdbcfcc3369f1e0c9d02562859cd9",
+      "size": 22669,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/about.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/admin.html",
+      "sha": "8b278220a09a83563993f8a513d7e925853ef394",
+      "size": 25955,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/admin.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/contact.html",
+      "sha": "7e58b5e8ae2df913314c701b57216e027f15c09a",
+      "size": 12973,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/contact.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/grdpc.html",
+      "sha": "800088a14e5386c02d9c0372934613d5ab08bc7d",
+      "size": 14883,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/grdpc.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/hk-page-script-app-1.js",
+      "sha": "2f3e0d62fa96196b19959f088b6fefa4760b1ae1",
+      "size": 308,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/hk-page-script-app-1.js"
+    },
+    {
+      "path": "heavenly-key-website/pages/hk-page-script-app-2.js",
+      "sha": "0fde02fbde85cd675dd2c12470ca7852477dcb65",
+      "size": 2246,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/hk-page-script-app-2.js"
+    },
+    {
+      "path": "heavenly-key-website/pages/hk-page-script-bible-music-admin-1.js",
+      "sha": "c3fd8aeae5443a361a64240954eab37cbd7a0f87",
+      "size": 4516,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/hk-page-script-bible-music-admin-1.js"
+    },
+    {
+      "path": "heavenly-key-website/pages/hk-page-script-contact-1.js",
+      "sha": "1197d6db11fb316b641de678e2092688292a46f2",
+      "size": 302,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/hk-page-script-contact-1.js"
+    },
+    {
+      "path": "heavenly-key-website/pages/i-said-yes.html",
+      "sha": "43ddc0c4948e01d4a524e20d38ba86378684af00",
+      "size": 22752,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/i-said-yes.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/meet-the-pastor.html",
+      "sha": "8d4522c8958359d79009e3b4b433ebb0777c730c",
+      "size": 12143,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/meet-the-pastor.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/ministries.html",
+      "sha": "5b44fda76e2c872df2dc6c75bee66b7ecaf4c6dc",
+      "size": 15476,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/ministries.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/partner.html",
+      "sha": "c90613f9ed68a4740f05127cfade284856d0432c",
+      "size": 13892,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/partner.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/privacy.html",
+      "sha": "566ccd8dff6e49d472426d99564d28d653a10661",
+      "size": 29514,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/privacy.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/radio.html",
+      "sha": "0278e54d3f9d631b800f80ac45063b0c0d0c0e06",
+      "size": 20731,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/radio.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/resources.html",
+      "sha": "a40e029f995d505ee44801a609b69bf74c9ff58c",
+      "size": 12801,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/resources.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/social-handles.html",
+      "sha": "d91a3d003fa175232bcc3fb486097d3f9120cd29",
+      "size": 11533,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/social-handles.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/steps-to-salvation.html",
+      "sha": "a92d2bda992dace02485a3875c9e5380c7b266ba",
+      "size": 12405,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/steps-to-salvation.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/terms.html",
+      "sha": "a77d92c11eb95160e6c5d3fad2926c19a639945e",
+      "size": 25880,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/terms.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/the-ministry.html",
+      "sha": "c7ddb1b4e2540f73645ca2be72c3dc8aaa9e2b30",
+      "size": 11580,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/the-ministry.html"
+    },
+    {
+      "path": "heavenly-key-website/pages/what-we-believe.html",
+      "sha": "931d5d65617f47bd10eebe90c188eee48c6f5792",
+      "size": 12821,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/pages/what-we-believe.html"
+    },
+    {
+      "path": "heavenly-key-website/robots.txt",
+      "sha": "8100b0f6e411fe71119f2467f8321456fb361188",
+      "size": 137,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/robots.txt"
+    },
+    {
+      "path": "heavenly-key-website/rss.xml",
+      "sha": "5b86b6cfaffbc40cf86b11e0f9e02f9c8609adad",
+      "size": 855,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/rss.xml"
+    },
+    {
+      "path": "heavenly-key-website/service-worker.js",
+      "sha": "129d02fa975c1d93eb247d4927ab6c55d98f0c3f",
+      "size": 4565,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/service-worker.js"
+    },
+    {
+      "path": "heavenly-key-website/sitemap.xml",
+      "sha": "2b9e04961884c0006c6164edf139fa65b330111f",
+      "size": 1388,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/sitemap.xml"
+    },
+    {
+      "path": "heavenly-key-website/sw.js",
+      "sha": "b95dc46c383bca5381d32833d59ba738be017000",
+      "size": 2577,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/sw.js"
+    },
+    {
+      "path": "media-engine/README.md",
+      "sha": "81366900ffb052582eb8bb730b1b030b7e432f38",
+      "size": 1422,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/README.md"
+    },
+    {
+      "path": "media-engine/migrations.sql",
+      "sha": "58fc45129b197a236de62be5105ed1d8a91cdc4c",
+      "size": 4686,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/migrations.sql"
+    },
+    {
+      "path": "media-engine/migrations/0001_media_engine.sql",
+      "sha": "58fc45129b197a236de62be5105ed1d8a91cdc4c",
+      "size": 4686,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/migrations/0001_media_engine.sql"
+    },
+    {
+      "path": "media-engine/migrations/0002_broadcast_studio.sql",
+      "sha": "44d0972997886427b062f988e8e20cc697dcf7ce",
+      "size": 2035,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/migrations/0002_broadcast_studio.sql"
+    },
+    {
+      "path": "media-engine/migrations/0003_broadcast_controls.sql",
+      "sha": "34396ccc68c7055be650227edf989c24c661a8d9",
+      "size": 372,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/migrations/0003_broadcast_controls.sql"
+    },
+    {
+      "path": "media-engine/migrations/0004_livekit_transport.sql",
+      "sha": "a7de382f93d032f47790f4b8d0d42ff168be841f",
+      "size": 271,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/migrations/0004_livekit_transport.sql"
+    },
+    {
+      "path": "media-engine/migrations/0005_resumable_media_uploads.sql",
+      "sha": "df6844c06f1851efe6605a61065a776bff4051ab",
+      "size": 538,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/migrations/0005_resumable_media_uploads.sql"
+    },
+    {
+      "path": "media-engine/package-lock.json",
+      "sha": "b9603db633d964fef142e22960186da5ef8b3678",
+      "size": 50334,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/package-lock.json"
+    },
+    {
+      "path": "media-engine/package.json",
+      "sha": "525dd7510a00feeb01f8269354b861bf2b0b3235",
+      "size": 260,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/package.json"
+    },
+    {
+      "path": "media-engine/scripts/preflight.mjs",
+      "sha": "edd89dfffc5157472b3a62148abf57cfd1a26b36",
+      "size": 2826,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/scripts/preflight.mjs"
+    },
+    {
+      "path": "media-engine/src/index.ts",
+      "sha": "c39279efe518e955a3b933e169e5977029579f52",
+      "size": 48206,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/src/index.ts"
+    },
+    {
+      "path": "media-engine/src/livekit-config.ts",
+      "sha": "c09176aa5f16a2d0b7a1289174e196636198bdc2",
+      "size": 6314,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/src/livekit-config.ts"
+    },
+    {
+      "path": "media-engine/src/livekit.ts",
+      "sha": "d28f16dfc33f52066e34973813537800ada0fc89",
+      "size": 1778,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/src/livekit.ts"
+    },
+    {
+      "path": "media-engine/src/public-broadcast.ts",
+      "sha": "f1f4f8d661364d9757333809709fa3e3511b036a",
+      "size": 7830,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/src/public-broadcast.ts"
+    },
+    {
+      "path": "media-engine/src/restream.ts",
+      "sha": "0f5a2a4fa8d35869573e9a0288783d4902518149",
+      "size": 9175,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/src/restream.ts"
+    },
+    {
+      "path": "media-engine/src/studio/audio-processing.ts",
+      "sha": "38baf94e1f41d63fd7d47ce641eeba3ea443d556",
+      "size": 2398,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/src/studio/audio-processing.ts"
+    },
+    {
+      "path": "media-engine/src/studio/formats.ts",
+      "sha": "9127ebc2db2e897d107e388306fc65d36e67da65",
+      "size": 777,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/src/studio/formats.ts"
+    },
+    {
+      "path": "media-engine/src/uploads.ts",
+      "sha": "a92dbb25372fb998a0c116bc677e459446ca03ea",
+      "size": 5702,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/src/uploads.ts"
+    },
+    {
+      "path": "media-engine/tsconfig.json",
+      "sha": "8a0dcc5129ba8a6e28658898d5c2f56606d63db1",
+      "size": 319,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/tsconfig.json"
+    },
+    {
+      "path": "media-engine/wrangler.staging.toml",
+      "sha": "1582d36fec142daa75abe5e3fa974a1cea781237",
+      "size": 488,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/wrangler.staging.toml"
+    },
+    {
+      "path": "media-engine/wrangler.toml",
+      "sha": "8020bb17319b1e403ac57763dfc62422c99d34c0",
+      "size": 866,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/media-engine/wrangler.toml"
+    },
+    {
+      "path": "migrations/0001_auth_foundation.sql",
+      "sha": "8d31e3460d0104f145dd947d4d929cc31080e08a",
+      "size": 2409,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0001_auth_foundation.sql"
+    },
+    {
+      "path": "migrations/0002_community.sql",
+      "sha": "e513e669ef9f137b8b70e9f519fa199f4b34d552",
+      "size": 9325,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0002_community.sql"
+    },
+    {
+      "path": "migrations/0003_spiritual_resources.sql",
+      "sha": "0f4bc52a3d62e63c613f475aa3274ec599b2a3e3",
+      "size": 7187,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0003_spiritual_resources.sql"
+    },
+    {
+      "path": "migrations/0004_spiritual_resources_addendum.sql",
+      "sha": "1f32677ae87b53fd565f37ab201aba5df8dc3b6a",
+      "size": 3472,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0004_spiritual_resources_addendum.sql"
+    },
+    {
+      "path": "migrations/0005_evangelism.sql",
+      "sha": "34d1ac0536a08f41a0bea0ce1fa80a6965788729",
+      "size": 5639,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0005_evangelism.sql"
+    },
+    {
+      "path": "migrations/0006_encryption_idempotency.sql",
+      "sha": "66e45cffe792184e0ce74b71a7f9a24e841d8934",
+      "size": 3246,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0006_encryption_idempotency.sql"
+    },
+    {
+      "path": "migrations/0007_groups.sql",
+      "sha": "c3c63bcd27e09225e673af7bbf74fd3189348593",
+      "size": 5804,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0007_groups.sql"
+    },
+    {
+      "path": "migrations/0008_community_administration.sql",
+      "sha": "3d6ecac3a3be3b1d9317b3b384ed8c6ff6a2483e",
+      "size": 3144,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0008_community_administration.sql"
+    },
+    {
+      "path": "migrations/0009_bible_training_base.sql",
+      "sha": "47c7ba37c33f19187b263210b92342f57f423968",
+      "size": 1529,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0009_bible_training_base.sql"
+    },
+    {
+      "path": "migrations/0010_discipleship_centre.sql",
+      "sha": "d1af08fe611bf70ac506aa4fc8dbe685e2f75b91",
+      "size": 3203,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0010_discipleship_centre.sql"
+    },
+    {
+      "path": "migrations/0011_learning_paths.sql",
+      "sha": "14df7c97e237d790252b1c2755e72488b351972c",
+      "size": 1928,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0011_learning_paths.sql"
+    },
+    {
+      "path": "migrations/0012_media_library.sql",
+      "sha": "7c677d4b037ab0129b6e49e50a49b60639cc2639",
+      "size": 2055,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0012_media_library.sql"
+    },
+    {
+      "path": "migrations/0013_broadcast_distribution.sql",
+      "sha": "70843be9ac517eae0d347f1751a407b15a7e2d8c",
+      "size": 3951,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0013_broadcast_distribution.sql"
+    },
+    {
+      "path": "migrations/0014_campaign_manager.sql",
+      "sha": "603c690002c1d1dbd73107a4493463d6483c9090",
+      "size": 2970,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0014_campaign_manager.sql"
+    },
+    {
+      "path": "migrations/0015_campaign_refinements.sql",
+      "sha": "0aed0def4fe2d6bf59a68b89e8167913f62ba27f",
+      "size": 2169,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0015_campaign_refinements.sql"
+    },
+    {
+      "path": "migrations/0016_multi_account_social.sql",
+      "sha": "9940086b90c06bb2461e35763a1edff18314d79e",
+      "size": 3647,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0016_multi_account_social.sql"
+    },
+    {
+      "path": "migrations/0017_unified_distribution.sql",
+      "sha": "98b8ffc373b7a4d8c909c6adb68cd23f26266580",
+      "size": 2997,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0017_unified_distribution.sql"
+    },
+    {
+      "path": "migrations/0018_ministry_relationship_management.sql",
+      "sha": "71e1ead3abc186fa4818f4f13f174d586dea5c3b",
+      "size": 5453,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0018_ministry_relationship_management.sql"
+    },
+    {
+      "path": "migrations/0019_audit_logs.sql",
+      "sha": "0a8aa4e611f6b6691fe563cf1edfe9d475d6e3e7",
+      "size": 1171,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0019_audit_logs.sql"
+    },
+    {
+      "path": "migrations/0020_storage_retention.sql",
+      "sha": "de50d76ea4860a9415af2ee207d9868f87509803",
+      "size": 3539,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0020_storage_retention.sql"
+    },
+    {
+      "path": "migrations/0021_distribution_idempotency.sql",
+      "sha": "5518ac6a9ce58457b5fb4fea31a928234ed484ea",
+      "size": 745,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0021_distribution_idempotency.sql"
+    },
+    {
+      "path": "migrations/0022_media_multipart_uploads.sql",
+      "sha": "8513ff8d1cac1c00549791725350dfe45a22ab8d",
+      "size": 873,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0022_media_multipart_uploads.sql"
+    },
+    {
+      "path": "migrations/0023_live_broadcast_resilience.sql",
+      "sha": "64fe33fcab2c9cbe5a3e69299da142fd8fb1aea2",
+      "size": 905,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0023_live_broadcast_resilience.sql"
+    },
+    {
+      "path": "migrations/0024_recording_distribution.sql",
+      "sha": "faa5fdb914fae42ae70aaff0de50e85b5d3a7cc5",
+      "size": 263,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0024_recording_distribution.sql"
+    },
+    {
+      "path": "migrations/0025_spiritual_media_links.sql",
+      "sha": "15debc025f502eb8e545e57a08a8447c24244eb7",
+      "size": 379,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0025_spiritual_media_links.sql"
+    },
+    {
+      "path": "migrations/0026_live_broadcast_single_session.sql",
+      "sha": "7f154721ee690d10f6058ced73f32c2ea78933cb",
+      "size": 580,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0026_live_broadcast_single_session.sql"
+    },
+    {
+      "path": "migrations/0027_broadcast_source_selection.sql",
+      "sha": "606c34f7b94636db4e0fe309b6209ce0dcb20d85",
+      "size": 512,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0027_broadcast_source_selection.sql"
+    },
+    {
+      "path": "migrations/0028_recording_distribution_idempotency.sql",
+      "sha": "e891c84e58934606231775d72398fd58fa3874c4",
+      "size": 384,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0028_recording_distribution_idempotency.sql"
+    },
+    {
+      "path": "migrations/0029_public_site_submissions.sql",
+      "sha": "48cdc04b15b1667475252eadd64eef87397dca5f",
+      "size": 747,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0029_public_site_submissions.sql"
+    },
+    {
+      "path": "migrations/0030_public_site_followup.sql",
+      "sha": "8c6cf9d3ab2b93f84b0daef866e49dab1fc4c59b",
+      "size": 1372,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0030_public_site_followup.sql"
+    },
+    {
+      "path": "migrations/0031_whatsapp_social_management.sql",
+      "sha": "1dd4cc724c278868d7f782204ebac1e214bbc4d8",
+      "size": 4582,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0031_whatsapp_social_management.sql"
+    },
+    {
+      "path": "migrations/0032_social_provider_apps.sql",
+      "sha": "34af9f081f50b9fde339a3f23d0126c959c12641",
+      "size": 578,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0032_social_provider_apps.sql"
+    },
+    {
+      "path": "migrations/0032_website_ai_inbox.sql",
+      "sha": "6d243b47bedf06590e33ffedcf11558e9db54ad1",
+      "size": 1023,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0032_website_ai_inbox.sql"
+    },
+    {
+      "path": "migrations/0033_social_connection_selection.sql",
+      "sha": "66dce8d0dd5c3b1ca69fcda5dc1936df4fb02f7a",
+      "size": 376,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0033_social_connection_selection.sql"
+    },
+    {
+      "path": "migrations/0034_ministry_command_center.sql",
+      "sha": "e1b94f588764c736fa0677733bfa524b07494377",
+      "size": 9794,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0034_ministry_command_center.sql"
+    },
+    {
+      "path": "migrations/0035_grdpc_reminders.sql",
+      "sha": "78847b36dad897536907740c50b8c95ace03cf63",
+      "size": 1088,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0035_grdpc_reminders.sql"
+    },
+    {
+      "path": "migrations/0036_site_content.sql",
+      "sha": "6ada2cc36b169fe6fb34c5604948446e9bc20e69",
+      "size": 499,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0036_site_content.sql"
+    },
+    {
+      "path": "migrations/0037_site_page_content.sql",
+      "sha": "d223dbf2fc0ead94e020ef21e30175a503b0d47b",
+      "size": 432,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0037_site_page_content.sql"
+    },
+    {
+      "path": "migrations/0038_system_release_history.sql",
+      "sha": "46fc4604aa935c854d6019bb98ee9a7492ce3515",
+      "size": 647,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0038_system_release_history.sql"
+    },
+    {
+      "path": "migrations/0039_visual_cms.sql",
+      "sha": "faa20292887b23d0f333b7a191a9ad25c3ddb13a",
+      "size": 2085,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/0039_visual_cms.sql"
+    },
+    {
+      "path": "migrations/MIGRATIONS.md",
+      "sha": "82d94a45ebeb4bce37878b307de5cabf6342633a",
+      "size": 3442,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/migrations/MIGRATIONS.md"
+    },
+    {
+      "path": "package-lock.json",
+      "sha": "bcaa6233b69a711da7078b0f54532e9fd35bf4e4",
+      "size": 111683,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/package-lock.json"
+    },
+    {
+      "path": "package.json",
+      "sha": "25cd97d818725973767bb86ecd1f5fd8175e18fe",
+      "size": 1468,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/package.json"
+    },
+    {
+      "path": "scripts/account1-auth-diagnostics.mjs",
+      "sha": "13a79f08aa7b003fbc39bb44bb90ba4554765e69",
+      "size": 2290,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/account1-auth-diagnostics.mjs"
+    },
+    {
+      "path": "scripts/account1-auth-permanence-gate.mjs",
+      "sha": "016a8e4cb999d83b2cdc2e7bed8ec2b6558e1641",
+      "size": 1840,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/account1-auth-permanence-gate.mjs"
+    },
+    {
+      "path": "scripts/account4-bible-control-check.mjs",
+      "sha": "1e5675c4a7b6075510e5649829209c6e6a2cfbd6",
+      "size": 1655,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/account4-bible-control-check.mjs"
+    },
+    {
+      "path": "scripts/account4-core-lock-gate.mjs",
+      "sha": "8755267fffe6d4913690bfbff01b22c82d2c8789",
+      "size": 1935,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/account4-core-lock-gate.mjs"
+    },
+    {
+      "path": "scripts/account4-permanence-gate.mjs",
+      "sha": "8ee45ba8d20ec920dd08ee1381537d3f98e599c4",
+      "size": 2103,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/account4-permanence-gate.mjs"
+    },
+    {
+      "path": "scripts/api-contract-check.mjs",
+      "sha": "2aeb5f3684e87717951c655cf98fbcdd1e780fa7",
+      "size": 3187,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/api-contract-check.mjs"
+    },
+    {
+      "path": "scripts/architecture-check.mjs",
+      "sha": "7897618ca53774835f5bed53bac2eeef365bec86",
+      "size": 2138,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/architecture-check.mjs"
+    },
+    {
+      "path": "scripts/bootstrap-admin.mjs",
+      "sha": "0551feb1e05d5587849ad4a77180126a69fc35cb",
+      "size": 1413,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/bootstrap-admin.mjs"
+    },
+    {
+      "path": "scripts/check-deployment-credentials.mjs",
+      "sha": "da6ad40ac57ee8045b3f5abfbe27211821d6f6d3",
+      "size": 3562,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/check-deployment-credentials.mjs"
+    },
+    {
+      "path": "scripts/cms-permanence-gate.mjs",
+      "sha": "c1f0f902fcfae4c72697ddb63a1bcaa20e7d8b97",
+      "size": 3541,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/cms-permanence-gate.mjs"
+    },
+    {
+      "path": "scripts/configure-account4-login.mjs",
+      "sha": "dc2d59e1b121629c5a8501694e39755c286e287c",
+      "size": 1722,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/configure-account4-login.mjs"
+    },
+    {
+      "path": "scripts/configure-runtime.mjs",
+      "sha": "65ae5038c9d6774cfea5c5a6b0be48f59beca8bd",
+      "size": 2186,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/configure-runtime.mjs"
+    },
+    {
+      "path": "scripts/deployment-preflight.mjs",
+      "sha": "ae1ab2896b5c446c0047b0f883c871939d9db80d",
+      "size": 3724,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/deployment-preflight.mjs"
+    },
+    {
+      "path": "scripts/diagnose-account4-access.mjs",
+      "sha": "5581d2b64a3a6cc07e7ad658347e311c5413befd",
+      "size": 1917,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/diagnose-account4-access.mjs"
+    },
+    {
+      "path": "scripts/extract-deployment-runbook.mjs",
+      "sha": "7a1501426a7a3f8ed3273d352777bebd4e240c89",
+      "size": 4715,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/extract-deployment-runbook.mjs"
+    },
+    {
+      "path": "scripts/extract.sh",
+      "sha": "bf26526ee593b0ab1d80158dcefca8737c255f5d",
+      "size": 490,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/extract.sh"
+    },
+    {
+      "path": "scripts/frontend-syntax-check.mjs",
+      "sha": "8073ef3ccc3a55e6812cf968709dde7f2a6f7da1",
+      "size": 2293,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/frontend-syntax-check.mjs"
+    },
+    {
+      "path": "scripts/integration-plan.mjs",
+      "sha": "1685603942126d60b15305640287ea621f902c2e",
+      "size": 9133,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/integration-plan.mjs"
+    },
+    {
+      "path": "scripts/protected-state-gate.mjs",
+      "sha": "b8ef359cfec40bc1334d9222f9577b6724cec4dd",
+      "size": 12419,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/protected-state-gate.mjs"
+    },
+    {
+      "path": "scripts/require-existing-cloudflare-worker.mjs",
+      "sha": "7f8ff817445572dbb5a7aee1fa73d4c8ebd2d5e1",
+      "size": 903,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/require-existing-cloudflare-worker.mjs"
+    },
+    {
+      "path": "scripts/run-full-integration.mjs",
+      "sha": "178aca43b9728c4cae81d1f6fcfecda213035cab",
+      "size": 7808,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/run-full-integration.mjs"
+    },
+    {
+      "path": "scripts/setup-account4-access.mjs",
+      "sha": "140f9ba8c91510e456e84f30f9f6a330cb86ea79",
+      "size": 3144,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/setup-account4-access.mjs"
+    },
+    {
+      "path": "scripts/site-link-audit.mjs",
+      "sha": "5b6121153e779f25306d235195abd4aee1dcda23",
+      "size": 4808,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/site-link-audit.mjs"
+    },
+    {
+      "path": "scripts/sync-account1-approved-shell.py",
+      "sha": "6d5f76b022936213e03a0e4da3c4dd7bf6e0a023",
+      "size": 7525,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/sync-account1-approved-shell.py"
+    },
+    {
+      "path": "scripts/test-account1-approved-browser.cjs",
+      "sha": "1451258c346e868bde3cce5081c9e92777338280",
+      "size": 12055,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account1-approved-browser.cjs"
+    },
+    {
+      "path": "scripts/test-account1-approved-shell.cjs",
+      "sha": "b203b5f4ed574d3046fac564a54ebd56645a324d",
+      "size": 6439,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account1-approved-shell.cjs"
+    },
+    {
+      "path": "scripts/test-account1-chat-ui.cjs",
+      "sha": "f6b7ef205f1bd7156fa788530f6ad710f0098662",
+      "size": 3257,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account1-chat-ui.cjs"
+    },
+    {
+      "path": "scripts/test-account1-radio-audio.cjs",
+      "sha": "17560a8b7217b1425f96d6a6e10d301ed490e47f",
+      "size": 7658,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account1-radio-audio.cjs"
+    },
+    {
+      "path": "scripts/test-account4-agent-bridge.mjs",
+      "sha": "952647b24a2922c9d932307099905ee2e08ef426",
+      "size": 5646,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-agent-bridge.mjs"
+    },
+    {
+      "path": "scripts/test-account4-ai-preview.mjs",
+      "sha": "b52aee63bf26d8842dbf7da4d1444cc27d991dfa",
+      "size": 2637,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-ai-preview.mjs"
+    },
+    {
+      "path": "scripts/test-account4-browser-navigation.mjs",
+      "sha": "51d5ee39d5f165990f18b11cff907f227119cc19",
+      "size": 1789,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-browser-navigation.mjs"
+    },
+    {
+      "path": "scripts/test-account4-direct-upload.mjs",
+      "sha": "0fd576afa9baa7507c45119d4a96678222d1e78c",
+      "size": 11489,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-direct-upload.mjs"
+    },
+    {
+      "path": "scripts/test-account4-local-login.mjs",
+      "sha": "36e789853312189d2f8ce06b755ebf53376331ff",
+      "size": 6195,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-local-login.mjs"
+    },
+    {
+      "path": "scripts/test-account4-migrations.py",
+      "sha": "2dd3db119e59652647cbae948046169d36e3d659",
+      "size": 1449,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-migrations.py"
+    },
+    {
+      "path": "scripts/test-account4-password-recovery.mjs",
+      "sha": "4b3af71d043ae88054977e9efd31e4f604b2a353",
+      "size": 3935,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-password-recovery.mjs"
+    },
+    {
+      "path": "scripts/test-account4-release-history.mjs",
+      "sha": "f7c3dd6750d29f3d137974250ceead4c468a623a",
+      "size": 1643,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-release-history.mjs"
+    },
+    {
+      "path": "scripts/test-account4-update-centre.mjs",
+      "sha": "26b95006f3717882c3e4dcaa8d7fdf7b474c948d",
+      "size": 11561,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-account4-update-centre.mjs"
+    },
+    {
+      "path": "scripts/test-central-owner-login.mjs",
+      "sha": "f5fdba3d02fbd8db978b150755c5813afb382520",
+      "size": 1024,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-central-owner-login.mjs"
+    },
+    {
+      "path": "scripts/test-live-assistant.cjs",
+      "sha": "94e4d8a1860741839477f89d301e70f97d46ca8e",
+      "size": 2066,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-live-assistant.cjs"
+    },
+    {
+      "path": "scripts/test-ministry-care.mjs",
+      "sha": "5d51f0a18621b97612c3d4915230ed2c90d92224",
+      "size": 4483,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-ministry-care.mjs"
+    },
+    {
+      "path": "scripts/test-protected-state-gate.mjs",
+      "sha": "cb55d46bf7121dcf30ab4cca8ac17589b3a74678",
+      "size": 2457,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-protected-state-gate.mjs"
+    },
+    {
+      "path": "scripts/test-royal-community-release.mjs",
+      "sha": "780ccc04df56d764bcedc793094b8ad68f3c4856",
+      "size": 1277,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-royal-community-release.mjs"
+    },
+    {
+      "path": "scripts/test-visual-cms.mjs",
+      "sha": "5b35d74f00dbd1e83185d75631d5d9fe12d2a653",
+      "size": 5805,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/test-visual-cms.mjs"
+    },
+    {
+      "path": "scripts/verify-account4-approval.mjs",
+      "sha": "da7bff101f0a2be40e3e7210c1978b2aaef5eae9",
+      "size": 996,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/verify-account4-approval.mjs"
+    },
+    {
+      "path": "scripts/verify-account4-restore.mjs",
+      "sha": "6aa17bc50936d395cbda2301389ce5fbf0e5742a",
+      "size": 1372,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/verify-account4-restore.mjs"
+    },
+    {
+      "path": "scripts/verify-live-cms.mjs",
+      "sha": "c77bf76cb2e17080e01ee4a87f178cb3fe65db07",
+      "size": 7146,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/verify-live-cms.mjs"
+    },
+    {
+      "path": "scripts/verify-live.mjs",
+      "sha": "059a9c6f83722b15865732de1fb81489fcebb19c",
+      "size": 2264,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/scripts/verify-live.mjs"
+    },
+    {
+      "path": "src/config/security-config.ts",
+      "sha": "b2be05e4201ec2cddcd128646edcff1d25fa4810",
+      "size": 1606,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/config/security-config.ts"
+    },
+    {
+      "path": "src/index.ts",
+      "sha": "b5d8ad29f393257756c21873e49d71482f94ea47",
+      "size": 37554,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/index.ts"
+    },
+    {
+      "path": "src/middleware/rate-limit.ts",
+      "sha": "ec94eff10d8104d0fdc12e0ccd1b88b982baa61f",
+      "size": 995,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/middleware/rate-limit.ts"
+    },
+    {
+      "path": "src/middleware/rbac.ts",
+      "sha": "1c56862948a052530a25eddac8fdd06e9f5fcb98",
+      "size": 2319,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/middleware/rbac.ts"
+    },
+    {
+      "path": "src/middleware/session.ts",
+      "sha": "aea56c53f6a6c28ab668a3452b8a30db5078e3eb",
+      "size": 1622,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/middleware/session.ts"
+    },
+    {
+      "path": "src/routes/account-admin.ts",
+      "sha": "db6aec225752b53de086d8ce495cbc72d5d28315",
+      "size": 3500,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/account-admin.ts"
+    },
+    {
+      "path": "src/routes/administration.ts",
+      "sha": "f53f593ed9834ccd7646de6385a9a6f4bbb0f666",
+      "size": 3359,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/administration.ts"
+    },
+    {
+      "path": "src/routes/auth.ts",
+      "sha": "187c669da54d83d8857d1ee21e53d50e37ff1630",
+      "size": 7372,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/auth.ts"
+    },
+    {
+      "path": "src/routes/broadcast.ts",
+      "sha": "90ca378d6216a9aff56b8a2f27fbe3e2d97fa900",
+      "size": 8026,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/broadcast.ts"
+    },
+    {
+      "path": "src/routes/campaign-manager.ts",
+      "sha": "9be8aaad90c196bf71cb81585270655f3746bf97",
+      "size": 2364,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/campaign-manager.ts"
+    },
+    {
+      "path": "src/routes/communications.ts",
+      "sha": "7f5d3dcae6c36e50eac3287c36486086d74b820f",
+      "size": 23542,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/communications.ts"
+    },
+    {
+      "path": "src/routes/community-player.ts",
+      "sha": "f9d68992cd58d09538d62b9104feea34cd1556ac",
+      "size": 1677,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/community-player.ts"
+    },
+    {
+      "path": "src/routes/community.ts",
+      "sha": "3aea2f7aa9483fe7589f8db98584471ee3268014",
+      "size": 9981,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/community.ts"
+    },
+    {
+      "path": "src/routes/discipleship.ts",
+      "sha": "85aa7c1c20f532c7ef00142684c09d386027ba85",
+      "size": 2909,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/discipleship.ts"
+    },
+    {
+      "path": "src/routes/evangelism.ts",
+      "sha": "c168a92ce3c0904004db52a3d3bbaaec4baa5e5c",
+      "size": 5554,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/evangelism.ts"
+    },
+    {
+      "path": "src/routes/grdpc.ts",
+      "sha": "28dbe5900bd4ad715325dd5047ce49f6bef68606",
+      "size": 1590,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/grdpc.ts"
+    },
+    {
+      "path": "src/routes/group-admin.ts",
+      "sha": "8fd39f6fd39ba1910bbc21d5e7a7c77e5faf1e66",
+      "size": 3042,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/group-admin.ts"
+    },
+    {
+      "path": "src/routes/groups.ts",
+      "sha": "b66c3876d0df72b00d7abeeb908904efc754ab12",
+      "size": 4519,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/groups.ts"
+    },
+    {
+      "path": "src/routes/homepage.ts",
+      "sha": "0384330138c895334c7bdb64f0835afa815794ec",
+      "size": 2857,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/homepage.ts"
+    },
+    {
+      "path": "src/routes/media.ts",
+      "sha": "2698ad892186b9d46c777fd8aeb089632f6378b6",
+      "size": 3818,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/media.ts"
+    },
+    {
+      "path": "src/routes/mrm.ts",
+      "sha": "4ffce82b5eb1b1ee1fcc2dceb8dd28b2a8f053f8",
+      "size": 4099,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/mrm.ts"
+    },
+    {
+      "path": "src/routes/playout.ts",
+      "sha": "0f54e8defb2c1f00e32b3ac86340ff18f77f6372",
+      "size": 1829,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/playout.ts"
+    },
+    {
+      "path": "src/routes/portal.ts",
+      "sha": "b5382afdad14bc87ad2c58c4864a15ebcc408a95",
+      "size": 3335,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/portal.ts"
+    },
+    {
+      "path": "src/routes/public-site.ts",
+      "sha": "53e57578f626d54528e40afbc22f23f557c8ad1d",
+      "size": 5204,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/public-site.ts"
+    },
+    {
+      "path": "src/routes/recordings.ts",
+      "sha": "acdc4bda401a98fcc5233f75e6ce065159832dbf",
+      "size": 3246,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/recordings.ts"
+    },
+    {
+      "path": "src/routes/site-cms.ts",
+      "sha": "0d7b4262cc45a4eb72d979f3a24b9d89bac041aa",
+      "size": 17420,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/site-cms.ts"
+    },
+    {
+      "path": "src/routes/site-content.ts",
+      "sha": "66ab302defed09e3af9dbfc3475091959e7aad32",
+      "size": 13249,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/site-content.ts"
+    },
+    {
+      "path": "src/routes/social-accounts.ts",
+      "sha": "fd7e5897789b8a6e868fcdca7a0a7f91a2b9a1fb",
+      "size": 3738,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/social-accounts.ts"
+    },
+    {
+      "path": "src/routes/spiritual-resources.ts",
+      "sha": "d051d9bd9ec261f2df5f883e0dac60e7d143e436",
+      "size": 9893,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/spiritual-resources.ts"
+    },
+    {
+      "path": "src/routes/storage.ts",
+      "sha": "633cf9156c96f41a6ffd6e4620006b3885ca1ce2",
+      "size": 4799,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/storage.ts"
+    },
+    {
+      "path": "src/routes/system-updates.ts",
+      "sha": "c023aa4db85d485f6e519e57c80b73585a1331d1",
+      "size": 12000,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/system-updates.ts"
+    },
+    {
+      "path": "src/routes/website-ai-inbox.ts",
+      "sha": "d691e0e2368767da3c5faab277c919ddfad096ec",
+      "size": 4003,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/routes/website-ai-inbox.ts"
+    },
+    {
+      "path": "src/services/auth-service.ts",
+      "sha": "22ee4bbb82e8358419532b76e5cd9f53dcf7bb86",
+      "size": 12068,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/auth-service.ts"
+    },
+    {
+      "path": "src/services/bible-service.ts",
+      "sha": "4c3f3b673eda2926ed3dca1daa18ae51941e7801",
+      "size": 7409,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/bible-service.ts"
+    },
+    {
+      "path": "src/services/broadcast-service.ts",
+      "sha": "d6d02327a9527e305d617fdd42e0af94f15ed313",
+      "size": 16830,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/broadcast-service.ts"
+    },
+    {
+      "path": "src/services/campaign-manager-service.ts",
+      "sha": "3b75cee8e9aa1fe30b5ac28c4b3110d5ea93c872",
+      "size": 5139,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/campaign-manager-service.ts"
+    },
+    {
+      "path": "src/services/central-owner-login.ts",
+      "sha": "78c0723cb4b6dd547da0d7f4d0f4fb6ed90530a4",
+      "size": 1515,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/central-owner-login.ts"
+    },
+    {
+      "path": "src/services/comments-reactions-service.ts",
+      "sha": "3c3a16cd3e8b7e8e788c7122b11581f0b72637cb",
+      "size": 4550,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/comments-reactions-service.ts"
+    },
+    {
+      "path": "src/services/content-access.ts",
+      "sha": "05b4bf5c1b0e538e7c18bf66eb71f1b68e0993eb",
+      "size": 1874,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/content-access.ts"
+    },
+    {
+      "path": "src/services/counselling-service.ts",
+      "sha": "1e15953675ba0e9fa14131a40fecc778d275967e",
+      "size": 4083,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/counselling-service.ts"
+    },
+    {
+      "path": "src/services/devotional-service.ts",
+      "sha": "8f1edd4fe49f4cc7b97d81e235ccae7f69f0c534",
+      "size": 3048,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/devotional-service.ts"
+    },
+    {
+      "path": "src/services/discipleship-service.ts",
+      "sha": "70ab298ab027e5a9b595c677eb048735358ed822",
+      "size": 5014,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/discipleship-service.ts"
+    },
+    {
+      "path": "src/services/discussion-service.ts",
+      "sha": "de98da096f70d4e79b54e1a172cae55eb1973fb9",
+      "size": 2454,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/discussion-service.ts"
+    },
+    {
+      "path": "src/services/distribution-service.ts",
+      "sha": "69cc00f3beeecc6e2a16f19e453996021bacc60f",
+      "size": 4673,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/distribution-service.ts"
+    },
+    {
+      "path": "src/services/encryption-service.ts",
+      "sha": "19c8364a7d3dc62da668571a48b9d59311dbb308",
+      "size": 2180,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/encryption-service.ts"
+    },
+    {
+      "path": "src/services/evangelism-service.ts",
+      "sha": "d6bc63cd4806b2930d99fb28f00bcfc750127006",
+      "size": 5578,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/evangelism-service.ts"
+    },
+    {
+      "path": "src/services/follow-service.ts",
+      "sha": "632265a8a140bd9146c2aacec0f25700f999c016",
+      "size": 1634,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/follow-service.ts"
+    },
+    {
+      "path": "src/services/grdpc-service.ts",
+      "sha": "aa5e457ca69f2743e02ab7a661fcbb63ab29706f",
+      "size": 7287,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/grdpc-service.ts"
+    },
+    {
+      "path": "src/services/groups-service.ts",
+      "sha": "21414decb7b96bd95c62bbffade02173144c31be",
+      "size": 13522,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/groups-service.ts"
+    },
+    {
+      "path": "src/services/hymns-service.ts",
+      "sha": "47df2e58c8460195d2da5f0029488f8dd98abe26",
+      "size": 4673,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/hymns-service.ts"
+    },
+    {
+      "path": "src/services/integrations/media-engine-client.ts",
+      "sha": "5d307206a97fb0d007eff94ceb44a07f2bc34f68",
+      "size": 2412,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/integrations/media-engine-client.ts"
+    },
+    {
+      "path": "src/services/integrations/media-engine-proxy.ts",
+      "sha": "cfdbf07e0aa5ffb3e6d11a2211b19861cfecc38d",
+      "size": 2636,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/integrations/media-engine-proxy.ts"
+    },
+    {
+      "path": "src/services/media-service.ts",
+      "sha": "6bf2840fe2c0c60e8e2de6f315a3eaed63136be3",
+      "size": 5752,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/media-service.ts"
+    },
+    {
+      "path": "src/services/ministry-command-center-service.ts",
+      "sha": "f163e1c1915114afe72ebe0c82615584f6b88de8",
+      "size": 37758,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/ministry-command-center-service.ts"
+    },
+    {
+      "path": "src/services/moderation-service.ts",
+      "sha": "b84a08fa8ca54037fd9b0e1ede33d5926e4ff47d",
+      "size": 7484,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/moderation-service.ts"
+    },
+    {
+      "path": "src/services/mrm-service.ts",
+      "sha": "c929e243e4dc3ac1b8ec16fea766bea35493c601",
+      "size": 5377,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/mrm-service.ts"
+    },
+    {
+      "path": "src/services/multipart-media-service.ts",
+      "sha": "6dd04ce9b62098817185fe2e733dddf35f2def44",
+      "size": 7134,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/multipart-media-service.ts"
+    },
+    {
+      "path": "src/services/playout-service.ts",
+      "sha": "90ff0bb8b1618dda8403614e67b8ff9a2c6ed251",
+      "size": 3945,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/playout-service.ts"
+    },
+    {
+      "path": "src/services/prayer-service.ts",
+      "sha": "a3b7d553aa93ab3ef68b1694e50c3a4a2487138d",
+      "size": 5414,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/prayer-service.ts"
+    },
+    {
+      "path": "src/services/qa-service.ts",
+      "sha": "df82aec74038260b4d6b40ceae872d59473e7c82",
+      "size": 4770,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/qa-service.ts"
+    },
+    {
+      "path": "src/services/recording-service.ts",
+      "sha": "bab651f06e0812712b8dc81cbeda8944c631807a",
+      "size": 5774,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/recording-service.ts"
+    },
+    {
+      "path": "src/services/social-accounts-service.ts",
+      "sha": "b676b43e3511d3d81f75e54daf06527248423ac3",
+      "size": 5053,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/social-accounts-service.ts"
+    },
+    {
+      "path": "src/services/social-management-service.ts",
+      "sha": "3d50ff363bea591931a0227987f2b5ea4f9b718c",
+      "size": 55667,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/social-management-service.ts"
+    },
+    {
+      "path": "src/services/storage-retention-service.ts",
+      "sha": "9319de4f5ff2e15261b8c2bdba6468a169f5c90c",
+      "size": 7540,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/storage-retention-service.ts"
+    },
+    {
+      "path": "src/services/testimony-service.ts",
+      "sha": "8f6c300aa96621324c5209cade634a3d2d27bb6b",
+      "size": 3617,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/testimony-service.ts"
+    },
+    {
+      "path": "src/services/unified-distribution-service.ts",
+      "sha": "41cff0ab5af357b01bae7b6975c16b2655a21952",
+      "size": 2990,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/unified-distribution-service.ts"
+    },
+    {
+      "path": "src/services/whatsapp-management-service.ts",
+      "sha": "3ceae069c4fba73ee76961408380576b34d7b7c4",
+      "size": 16695,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/src/services/whatsapp-management-service.ts"
+    },
+    {
+      "path": "test/integration/portal.test.ts",
+      "sha": "4f7801bcd8ba1b4847ab28f32399a65270b76860",
+      "size": 83238,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/integration/portal.test.ts"
+    },
+    {
+      "path": "test/unit/account4-approval-trust-boundary.test.ts",
+      "sha": "76433b8fb4398d69ac32c3cf0f720e5f35798f95",
+      "size": 3046,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/account4-approval-trust-boundary.test.ts"
+    },
+    {
+      "path": "test/unit/account4-emergency-restore.test.ts",
+      "sha": "03caa48949d5cb9a4e0fc7a687a1caec7ec894aa",
+      "size": 3309,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/account4-emergency-restore.test.ts"
+    },
+    {
+      "path": "test/unit/account4-owner-only-deploy.test.ts",
+      "sha": "832b0c089ebe44654af97cc8ef782e08f0063d21",
+      "size": 1408,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/account4-owner-only-deploy.test.ts"
+    },
+    {
+      "path": "test/unit/auth-service.test.ts",
+      "sha": "1fa078ba17eb661e57c0c326e689e6cc8fd3a6c1",
+      "size": 4271,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/auth-service.test.ts"
+    },
+    {
+      "path": "test/unit/community-service.test.ts",
+      "sha": "dc4e12a4136cf6d4b70677e5551f304ff031887a",
+      "size": 1958,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/community-service.test.ts"
+    },
+    {
+      "path": "test/unit/deployment-credential-contract.test.ts",
+      "sha": "68e5e04b63c8496fe3a5f3f01e15ee0c2f66cb61",
+      "size": 1902,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/deployment-credential-contract.test.ts"
+    },
+    {
+      "path": "test/unit/frontend-contract.test.ts",
+      "sha": "d62e7b229bf213e219f5bf335806d04fd4a2407b",
+      "size": 2433,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/frontend-contract.test.ts"
+    },
+    {
+      "path": "test/unit/global-community-contract.test.ts",
+      "sha": "25ca0e0447877b58861201ed1dacb080a6ffd958",
+      "size": 3488,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/global-community-contract.test.ts"
+    },
+    {
+      "path": "test/unit/global-network-safety.test.ts",
+      "sha": "7d8f20fe546cae642b82328b767ee55578acf936",
+      "size": 2847,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/global-network-safety.test.ts"
+    },
+    {
+      "path": "test/unit/grdpc.test.ts",
+      "sha": "efa4b07cb344369602ffd9e950858f70a995853d",
+      "size": 2646,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/grdpc.test.ts"
+    },
+    {
+      "path": "test/unit/homepage-community-recovery.test.ts",
+      "sha": "40a0d5a80ee372b0e3c4b5c455feeff4567843d6",
+      "size": 2068,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/homepage-community-recovery.test.ts"
+    },
+    {
+      "path": "test/unit/homepage-small-cleanup.test.ts",
+      "sha": "6632d0d9f5f9a6568dcc56d997823aba24c3eefa",
+      "size": 2711,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/homepage-small-cleanup.test.ts"
+    },
+    {
+      "path": "test/unit/livekit-connection-status.test.ts",
+      "sha": "7894afae0db7d48fcd5a2e008233a4968014a99c",
+      "size": 2545,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/livekit-connection-status.test.ts"
+    },
+    {
+      "path": "test/unit/media-engine-integration.test.ts",
+      "sha": "6c9495a7ce72e362dd28f85dc6ced54959181fe5",
+      "size": 2590,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/media-engine-integration.test.ts"
+    },
+    {
+      "path": "test/unit/playback-source.test.ts",
+      "sha": "e13143a4a60a8895dfcb26b2e2834c74254aa2dd",
+      "size": 1192,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/playback-source.test.ts"
+    },
+    {
+      "path": "test/unit/playlist-permanence.test.ts",
+      "sha": "c8f2d6b823694d83e939cd966087bf494d61d1b2",
+      "size": 1662,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/playlist-permanence.test.ts"
+    },
+    {
+      "path": "test/unit/public-intake-contract.test.ts",
+      "sha": "0be420e9997a15c363885e583700a8f4f92b4658",
+      "size": 1920,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/public-intake-contract.test.ts"
+    },
+    {
+      "path": "test/unit/social-scheduler.test.ts",
+      "sha": "018db9ce3e90a28b33a2f2bb1286a6c4a35ad58c",
+      "size": 2229,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/social-scheduler.test.ts"
+    },
+    {
+      "path": "test/unit/studio-model.test.ts",
+      "sha": "401cc0fa31d6a9bceb912b3c795c37ac73630ef9",
+      "size": 2374,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/studio-model.test.ts"
+    },
+    {
+      "path": "test/unit/website-app-footer-fixed-guide.test.ts",
+      "sha": "88ea88981e25339388eaef65e9a93e05a454f5a7",
+      "size": 3204,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/website-app-footer-fixed-guide.test.ts"
+    },
+    {
+      "path": "test/unit/whatsapp-management.test.ts",
+      "sha": "a6b0de2b9315fff1905d8b222321ef699253b148",
+      "size": 1103,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/test/unit/whatsapp-management.test.ts"
+    },
+    {
+      "path": "tsconfig.json",
+      "sha": "a7073d88a4de6117fe5cafd2571c498da69d49f5",
+      "size": 312,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/tsconfig.json"
+    },
+    {
+      "path": "wrangler.toml",
+      "sha": "66d04e4fa05cbf2857cd95a8c03c2d3b44d847db",
+      "size": 2428,
+      "status": "verified-copy",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/wrangler.toml"
+    }
+  ]
+}

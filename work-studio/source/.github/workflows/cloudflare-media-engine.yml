@@ -1,0 +1,114 @@
+name: Promote Heavenly Key Media Engine (Account 2, update existing only)
+run-name: Account 2 approved release · ${{ inputs.target_ref }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: "Exact tested 40-character Account 2 commit SHA"
+        required: true
+        type: string
+      release_note:
+        description: "Approval note"
+        required: true
+        type: string
+      approval_proof:
+        description: "Time-limited proof signed by Account 4 after owner approval"
+        required: true
+        type: string
+      confirm_production:
+        description: "Promote this tested Account 2 release?"
+        required: true
+        type: choice
+        options: ["NO", "PROMOTE"]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: heavenlykey-account-2-production
+  cancel-in-progress: false
+
+jobs:
+  promote-account-2:
+    if: ${{ inputs.confirm_production == 'PROMOTE' }}
+    runs-on: ubuntu-latest
+    environment: media-engine-production
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_ACCOUNT_ID: c324d871146f8fcc5e7dcd3da057011c
+      CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT_2_TOKEN }}
+      EXISTING_WORKER: heavenlykey-media
+    steps:
+      - name: Require exact approved commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_REF: ${{ inputs.target_ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$TARGET_REF" =~ ^[0-9a-fA-F]{40}$ ]] || { echo '::error::Exact 40-character SHA required'; exit 1; }
+          curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/account4-review-stage.yml/runs?event=workflow_dispatch&status=success&per_page=100" >/tmp/staging.json
+          node - "$TARGET_REF" <<'NODE'
+          const fs=require('fs'); const target=process.argv[2]; const d=JSON.parse(fs.readFileSync('/tmp/staging.json'));
+          const expected=`Account 4 preview 2 · ${target}`;
+          if(!(d.workflow_runs||[]).some(r=>r.conclusion==='success'&&r.display_title===expected)) process.exit(1);
+          NODE
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_ref }}
+      - name: Load immutable Account 4 approval verifier
+        uses: actions/checkout@v4
+        with:
+          ref: b36dde78ced6a0fe92ba3bdf8cf1d4c348d99b22
+          path: .trusted-account4-approval
+          persist-credentials: false
+      - name: Require signed Account 4 owner approval
+        env:
+          TARGET_REF: ${{ inputs.target_ref }}
+          APPROVAL_PROOF: ${{ inputs.approval_proof }}
+          APPROVAL_SECRET: ${{ secrets.HKEM_CONTROL_TOKEN }}
+        run: node .trusted-account4-approval/scripts/verify-account4-approval.mjs 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: media-engine/package-lock.json
+      - name: Install and validate Account 2
+        working-directory: media-engine
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run check
+          npm run preflight
+          grep -q '^name = "heavenlykey-media"$' wrangler.toml
+          npx wrangler deploy --dry-run --config wrangler.toml
+      - name: Prove existing Worker and configured storage already exist
+        working-directory: media-engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?Missing ACCOUNT_2_TOKEN}"
+          service="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/services/$EXISTING_WORKER"
+          code=$(curl -sS -o /tmp/a2-worker.json -w '%{http_code}' -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$service")
+          test "$code" = "200" || { echo "::error::$EXISTING_WORKER does not already exist. Refusing to create a new Worker."; exit 1; }
+          D1=$(awk -F'"' '/database_id =/{print $2; exit}' wrangler.toml)
+          KV=$(awk -F'"' '/^id =/{print $2; exit}' wrangler.toml)
+          R2=$(awk -F'"' '/bucket_name =/{print $2; exit}' wrangler.toml)
+          test -n "$D1" -a -n "$KV" -a -n "$R2"
+          API="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          AUTH="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          curl -fsS -H "$AUTH" "$API/d1/database/$D1" >/dev/null
+          curl -fsS -H "$AUTH" "$API/storage/kv/namespaces/$KV" >/dev/null
+          npx --yes wrangler@4.145.0 r2 bucket info "$R2" --json >/dev/null
+          echo 'Account 2 existing Worker, D1, KV and R2 confirmed; no resource creation permitted.'
+      - name: Update existing Account 2 Worker
+        working-directory: media-engine
+        run: npx wrangler deploy --config wrangler.toml
+      - name: Verify same Worker remains
+        shell: bash
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /tmp/a2-after.json -w '%{http_code}' -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/services/$EXISTING_WORKER")
+          test "$code" = "200" || exit 1
+          echo 'Account 2 updated in place.'

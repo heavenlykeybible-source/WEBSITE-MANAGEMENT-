@@ -1,0 +1,31 @@
+{
+  "name": "heavenlykey-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Global Christian Platform + Ministry Management Suite backend — Cloudflare Workers + D1",
+  "scripts": {
+    "dev": "npx --yes wrangler@4.145.0 dev",
+    "deploy": "npm run preflight && npx --yes wrangler@4.145.0 deploy",
+    "deploy:staging": "npm run preflight && npx --yes wrangler@4.145.0 deploy --env staging",
+    "migrate:local": "npx --yes wrangler@4.145.0 d1 migrations apply heavenlykey-db --local",
+    "migrate:staging": "npx --yes wrangler@4.145.0 d1 migrations apply heavenlykey-db-staging --env staging --remote",
+    "migrate:prod": "npx --yes wrangler@4.145.0 d1 migrations apply heavenlykey-db --remote",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "preflight": "node scripts/deployment-preflight.mjs",
+    "preflight:local": "node scripts/deployment-preflight.mjs --allow-placeholders",
+    "check:api-contract": "node scripts/api-contract-check.mjs",
+    "check:architecture": "node scripts/architecture-check.mjs",
+    "check:frontend": "node scripts/frontend-syntax-check.mjs",
+    "check:links": "node scripts/site-link-audit.mjs",
+    "check:account4-locks": "node scripts/account4-core-lock-gate.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0",
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "@cloudflare/vitest-pool-workers": "^0.6.0"
+  }
+}

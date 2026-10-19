@@ -1,0 +1,81 @@
+name = "heavenlykey"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+# Use the account workers.dev address until a custom domain is configured.
+routes = []
+
+# Serve the public website as static assets first. API requests that do not match
+# an asset fall through to the Worker automatically.
+[assets]
+directory = "./heavenly-key-website"
+run_worker_first = false
+
+# ---------- Production ----------
+[[d1_databases]]
+binding = "DB"
+database_name = "heavenlykey-db"
+database_id = "8665ff03-6a2c-4852-90ab-6c74375a8c87"
+
+[[kv_namespaces]]
+binding = "SESSIONS_KV"
+id = "288aa06b90984012ba88aeb4a9cef087"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "d8151924a3cf4501800c8381c52765cb"
+
+[[kv_namespaces]]
+binding = "LIVE_STATUS_KV"
+id = "4398d4ba4bb240979fe966465c225937"
+
+# ---------- Staging (per Implementation Handbook §8 — separate D1, never shares prod data) ----------
+[env.staging]
+workers_dev = true
+routes = []
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "heavenlykey-db-staging"
+database_id = "21d9963e-69d5-46b2-94a4-19b923c67075"
+
+[[env.staging.r2_buckets]]
+binding = "MEDIA_R2"
+bucket_name = "heavenlykey-media-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "SESSIONS_KV"
+id = "dca9d74150f048dba28400567e088282"
+
+[[env.staging.kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "c203f5c676fd4babac0b86fd8ba2aa08"
+
+[[env.staging.kv_namespaces]]
+binding = "LIVE_STATUS_KV"
+id = "21fa0f7e6dd5403096509baff3f29d5f"
+
+[[r2_buckets]]
+binding = "MEDIA_R2"
+bucket_name = "heavenlykey-media"
+
+[triggers]
+crons = ["* * * * *"]
+
+# Secrets (NEVER put real values here — set via `wrangler secret put`):
+#   SESSION_SECRET   — HMAC signing key for session JWTs
+#   PASSWORD_PEPPER  — additional PBKDF2 input, separate from per-user salt
+#   ENCRYPTION_KEY   — hex-encoded 256-bit AES-GCM key for Decisions/Counselling
+#                      sensitive fields (generate with: openssl rand -hex 32)
+
+# Account 2 Media/Broadcast Engine
+[vars]
+MEDIA_ENGINE_URL = "https://heavenlykey-media.faithofourfatherstv.workers.dev"
+PUBLIC_SITE_URL = "https://heavenlykey.alldaywow247.workers.dev"
+
+[env.staging.vars]
+MEDIA_ENGINE_URL = "https://heavenlykey-media-staging.faithofourfatherstv.workers.dev"
+PUBLIC_SITE_URL = "https://heavenlykey-staging.alldaywow247.workers.dev"
+
+# Secret (set with wrangler secret put MEDIA_ENGINE_SHARED_SECRET):
+# Must match Account 2 Media Engine secret.

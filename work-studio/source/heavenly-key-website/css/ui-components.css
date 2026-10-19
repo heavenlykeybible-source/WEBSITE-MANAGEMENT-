@@ -1,0 +1,211 @@
+/* ==========================================================================
+   UI COMPONENT LIBRARY — toasts, modals, accordions, tabs, loaders,
+   empty states, pagination, media players, content cards.
+   Loaded on every page. See COMPONENT-LIBRARY.md for usage.
+   ========================================================================== */
+
+/* --- Loading state (applied by HKEcosystem.renderComponent) --- */
+.is-loading {
+  position: relative;
+  min-height: 3em;
+  pointer-events: none;
+}
+.is-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-loading::after { animation: none; }
+}
+
+/* --- Skeleton block (for manual use before data arrives) --- */
+.skeleton {
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+  min-height: 1em;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: shimmer 1.2s linear infinite;
+}
+
+/* --- Empty state --- */
+.empty-state {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-3);
+  font-style: italic;
+}
+
+/* --- Toast notifications --- */
+.toast-region {
+  position: fixed;
+  bottom: var(--space-2);
+  right: var(--space-2);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 320px;
+}
+.toast {
+  background: var(--color-charcoal);
+  color: var(--color-white);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
+  font-size: var(--text-sm);
+}
+.toast.is-visible { opacity: 1; transform: translateY(0); }
+.toast-success { border-left: 4px solid #2E7D32; }
+.toast-error { border-left: 4px solid var(--color-warm-orange); }
+.toast-info { border-left: 4px solid var(--color-gold); }
+
+/* --- Modal windows --- */
+.modal[hidden] { display: none; }
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(26,26,26,0.6);
+}
+.modal-dialog {
+  position: relative;
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  max-width: 520px;
+  width: 100%;
+  box-shadow: var(--shadow-raised);
+}
+body.modal-open { overflow: hidden; }
+
+/* --- Accordion --- */
+.accordion-item { border-bottom: 1px solid var(--border-subtle); }
+.accordion-trigger {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: var(--space-2) 0;
+  font-weight: 600;
+  font-size: var(--text-base);
+  color: var(--color-charcoal);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.accordion-trigger::after {
+  content: "+";
+  font-size: var(--text-lg);
+  color: var(--color-wine);
+}
+.accordion-trigger[aria-expanded="true"]::after { content: "−"; }
+.accordion-panel { padding-bottom: var(--space-2); color: var(--color-text-muted); }
+
+/* --- Tabs --- */
+[role="tablist"] {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 2px solid var(--border-subtle);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: var(--space-1) var(--space-2);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.tab[aria-selected="true"] {
+  color: var(--color-wine);
+  border-bottom-color: var(--color-gold);
+}
+.tab-panel[hidden] { display: none; }
+
+/* --- Pagination --- */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-1);
+  list-style: none;
+  padding: 0;
+  margin-top: var(--space-3);
+}
+.pagination a, .pagination span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25em;
+  height: 2.25em;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+}
+.pagination a:hover { background: var(--surface-alt); text-decoration: none; }
+.pagination [aria-current="page"] {
+  background: var(--color-wine);
+  color: var(--color-white);
+  border-color: var(--color-wine);
+}
+
+/* --- Media players --- */
+.video-player {
+  position: relative;
+  aspect-ratio: 16/9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-charcoal);
+}
+.video-player img { width: 100%; height: 100%; object-fit: cover; }
+.video-player .play-button {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.35);
+  color: var(--color-white);
+  font-size: var(--text-3xl);
+}
+
+/* --- Content cards: formalized names (aliases of existing patterns) --- */
+.prayer-card { padding: var(--space-3); }
+.prayer-card .prayer-count { display: block; margin-top: var(--space-1); }
+.event-card .event-date {
+  display: inline-block;
+  background: var(--color-royal-blue);
+  color: var(--color-white);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 0.3em 0.7em;
+  border-radius: var(--radius-pill);
+  margin-bottom: var(--space-1);
+}

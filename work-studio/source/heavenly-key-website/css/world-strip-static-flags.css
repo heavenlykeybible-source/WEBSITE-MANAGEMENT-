@@ -1,0 +1,31 @@
+/* Account 1: compact static flags and separate mission ticker */
+.world-strip{background:linear-gradient(90deg,#750523 0%,#750523 68%,#005735 100%);overflow:hidden}
+.world-inner{display:flex!important;align-items:center!important;gap:12px!important;padding-right:0!important;min-height:52px;height:auto!important}
+.world-fixed{display:flex;align-items:center;gap:10px;flex:0 0 auto;min-width:0}
+.world-intro{font-size:clamp(12px,1.15vw,16px)!important;font-weight:900!important;line-height:1.3!important;letter-spacing:.025em;white-space:nowrap}
+.world-flags-static{display:block;width:clamp(72px,10vw,150px);height:20px;object-fit:contain;flex-shrink:0;animation:none!important;transform:none!important}
+.world-marquee{flex:1;min-width:0;overflow:hidden;white-space:nowrap;position:relative}
+.world-marquee-text{display:inline-block;white-space:nowrap;font-size:clamp(12px,1.2vw,17px);font-weight:900;line-height:1.5;padding-left:0;animation:hk-mission-right-to-left 27s linear infinite}
+@keyframes hk-mission-right-to-left{from{transform:translateX(max(100vw,100%))}to{transform:translateX(-100%)}}
+.world-cross{align-self:stretch;display:flex;align-items:center;justify-content:center;flex:0 0 40px;color:#fff;background:#005735;font-family:Arial,sans-serif;font-weight:900;font-size:39px;line-height:1}
+.world-strip .motion-toggle,.header-earth,.earth{display:none!important}
+@media(max-width:760px){.world-inner{gap:7px!important;min-height:47px}.world-fixed{gap:5px}.world-intro{font-size:10px!important;white-space:normal;max-width:124px;line-height:1.15!important}.world-flags-static{width:65px;height:16px}.world-marquee-text{font-size:12px}.world-cross{flex-basis:27px;font-size:30px}}
+@media(max-width:390px){.world-intro{max-width:105px;font-size:9px!important}.world-flags-static{width:46px}.world-cross{flex-basis:24px}}
+@media(prefers-reduced-motion:reduce){.world-marquee-text{animation:none!important;white-space:normal}.world-marquee{overflow:auto}}
+
+/* Approved mature treatment: purple left block and frame, ivory ticker, green text. */
+.world-strip{background:#650b58!important;border-top:5px solid #650b58!important;border-bottom:5px solid #650b58!important}
+.world-inner{max-width:none!important;width:100%!important;padding:0!important;gap:0!important;min-height:48px!important}
+.world-fixed{background:#650b58;align-self:stretch;padding:8px 12px;gap:12px;max-width:58%;}
+.world-flags-static{display:flex!important;align-items:center;gap:3px;width:auto!important;height:auto!important;max-width:260px;flex-wrap:wrap;justify-content:flex-start}
+.world-flags-static img{width:20px;height:14px;object-fit:cover;display:block;flex:0 0 auto;border:1px solid #ffffff55}
+.world-marquee{background:#fffdf2;align-self:stretch;display:flex;align-items:center;border:0!important;padding:0 12px}
+.world-marquee-text{color:#07572e!important;font-weight:900!important;font-size:clamp(12px,1.12vw,17px)!important}
+.world-cross{background:#006638!important;flex-basis:46px!important;font-size:39px!important}
+@media(max-width:760px){.world-fixed{padding:5px 6px;gap:5px;max-width:64%}.world-flags-static{max-width:95px;gap:2px}.world-flags-static img{width:14px;height:10px}.world-cross{flex-basis:29px!important;font-size:30px!important}.world-marquee{padding:0 4px}}
+@media(max-width:390px){.world-fixed{max-width:67%}.world-flags-static{max-width:72px}.world-flags-static img{width:12px;height:9px}.world-cross{flex-basis:25px!important}}
+
+/* Local flag images: stable, correctly proportioned, no third-party image dependency. */
+.world-flags-static img{width:22px;height:15px;aspect-ratio:3/2;object-fit:cover;display:block;flex:0 0 auto}
+@media(max-width:760px){.world-flags-static img{width:16px;height:11px}}
+@media(max-width:390px){.world-flags-static img{width:14px;height:10px}}

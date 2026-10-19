@@ -1,0 +1,32 @@
+/* Refine the existing two footer-docked controls without changing player or assistant logic. */
+#hkem-assistant .hkem-launcher[hidden],#hkem-assistant .hkem-iphone-chat[hidden]{display:none!important}
+#hk-floating-radio.hkr-mini .hkr-bubble,#hkem-assistant .hkem-launcher{overflow:hidden!important;min-width:0!important}
+#hk-floating-radio.hkr-mini .hkr-bubble::after,#hkem-assistant .hkem-launcher::after{box-sizing:border-box;white-space:normal!important;overflow-wrap:break-word;word-break:normal;min-width:0;flex:1;display:block!important;margin:0 0 0 8px!important;padding:5px 7px!important;background:#fff9e9!important;border:1px solid #e4bf54!important;border-radius:10px!important;color:#06452e!important;text-shadow:none!important;font-weight:900!important;font-size:clamp(9px,.92vw,12px)!important;line-height:1.25!important;text-align:center}
+#hk-floating-radio.hkr-mini .hkr-bubble::after{content:"FAITH OF OUR FATHERS RADIO\A Listen Live"!important;white-space:pre-line!important}
+#hkem-assistant .hkem-launcher::after{content:"ONLINE ASSISTANT\A Ask Me Anything"!important;white-space:pre-line!important}
+#hkem-assistant .hkem-iphone-chat{box-sizing:border-box!important;max-width:calc(100vw - 14px)!important;max-height:calc(100dvh - 14px)!important;overflow:hidden!important;min-width:0!important}
+#hkem-assistant .hkem-chat-header{box-sizing:border-box;min-width:0;flex:0 0 auto;overflow:hidden}
+#hkem-assistant .hkem-chat-header strong{min-width:0;overflow-wrap:anywhere;font-size:clamp(11px,2.6vw,14px)}
+#hkem-assistant .hkem-chat-log{box-sizing:border-box;min-width:0;min-height:0;max-width:100%;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain}
+#hkem-assistant .hkem-chat-welcome,#hkem-assistant .hkem-chat-bot,#hkem-assistant .hkem-chat-visitor{box-sizing:border-box!important;max-width:100%!important;min-width:0!important;overflow-wrap:anywhere!important;word-break:normal!important;white-space:pre-wrap!important}
+#hkem-assistant .hkem-chat-bot{width:fit-content;max-width:100%!important;display:flex;align-items:flex-start;gap:7px}
+#hkem-assistant .hkem-chat-bot>span,#hkem-assistant .hkem-chat-visitor>span{min-width:0;max-width:100%;display:block;overflow-wrap:anywhere;white-space:pre-wrap}
+#hkem-assistant .hkem-message-avatar{flex:0 0 30px;width:30px;height:30px}
+#hkem-assistant .hkem-chat-form{box-sizing:border-box;flex:0 0 auto;min-width:0;max-width:100%}
+#hkem-assistant .hkem-chat-form input{min-width:0!important;width:0;flex:1}
+#hkem-assistant .hkem-chat-form button{flex:0 0 auto}
+@media(max-width:600px){#hk-floating-radio.hkr-mini .hkr-bubble::after,#hkem-assistant .hkem-launcher::after{margin-left:4px!important;padding:4px 3px!important;font-size:9px!important;line-height:1.15!important}#hkem-assistant .hkem-iphone-chat{right:7px!important;bottom:max(7px,env(safe-area-inset-bottom))!important;width:min(355px,calc(100vw - 14px))!important;height:min(520px,calc(100dvh - 20px))!important}#hkem-assistant .hkem-chat-header strong{font-size:11px!important}}
+
+/* Mobile chat: WhatsApp-style bubbles grow vertically, never horizontally past the phone. */
+#hkem-assistant{box-sizing:border-box!important}
+#hkem-assistant .hkem-iphone-chat{display:flex!important;flex-direction:column!important;contain:layout;overflow:hidden!important;isolation:isolate}
+#hkem-assistant .hkem-iphone-chat[hidden]{display:none!important}
+#hkem-assistant:has(.hkem-iphone-chat:not([hidden])) .hkem-launcher{display:none!important}
+#hkem-assistant .hkem-chat-log{display:flex!important;flex-direction:column!important;align-items:stretch!important;flex:1 1 auto!important;width:100%!important;min-width:0!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;padding:12px 9px!important}
+#hkem-assistant .hkem-chat-log>*{flex:0 0 auto!important;box-sizing:border-box!important;min-width:0!important;width:fit-content!important;max-width:100%!important;overflow-wrap:anywhere!important;word-break:break-word!important}
+#hkem-assistant .hkem-chat-log>.hkem-chat-visitor{align-self:flex-end!important;max-width:85%!important}
+#hkem-assistant .hkem-chat-log>.hkem-chat-bot,#hkem-assistant .hkem-chat-log>.hkem-chat-welcome{align-self:flex-start!important;max-width:96%!important}
+#hkem-assistant .hkem-chat-log .hkem-chat-bot>span{display:block!important;flex:1 1 0!important;min-width:0!important;width:auto!important;max-width:100%!important;overflow-wrap:anywhere!important;word-break:break-word!important;white-space:pre-wrap!important}
+#hkem-assistant .hkem-chat-log .hkem-chat-visitor>span{display:block!important;max-width:100%!important;overflow-wrap:anywhere!important;white-space:pre-wrap!important}
+#hkem-assistant .hkem-chat-header,#hkem-assistant .hkem-chat-form{width:100%!important;min-width:0!important;flex-shrink:0!important}
+#hkem-assistant .hkem-chat-form input{max-width:100%!important}

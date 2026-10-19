@@ -1,0 +1,10 @@
+import {createHmac,timingSafeEqual} from 'node:crypto';
+const a=process.argv[2],sha=process.env.TARGET_REF,proof=process.env.APPROVAL_PROOF,secret=process.env.APPROVAL_SECRET;
+if(!['1','2','3'].includes(a)||!/^[0-9a-f]{40}$/.test(sha||'')||!proof||!secret)throw Error('No valid owner approval from Account 4. Production blocked.');
+const parts=proof.split('.');
+if(parts.length!==2||!/^\d{10}$/.test(parts[0])||!/^[0-9a-f]{64}$/.test(parts[1]))throw Error('Invalid Account 4 approval format');
+const exp=Number(parts[0]),now=Math.floor(Date.now()/1000);
+if(exp<now||exp>now+7200)throw Error('Account 4 owner approval expired');
+const expected=createHmac('sha256',secret).update('hkem-account4-owner-approval-v1:'+a+':'+sha+':'+parts[0]).digest('hex');
+if(!timingSafeEqual(Buffer.from(parts[1],'hex'),Buffer.from(expected,'hex')))throw Error('Approval is not signed by Account 4 for this version and account');
+console.log('Verified explicit Account 4 approval for account '+a+' at commit '+sha);
