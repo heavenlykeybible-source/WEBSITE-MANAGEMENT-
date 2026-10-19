@@ -51,3 +51,9 @@ context.login();assert.equal(document.getElementById('login-user').value,'owner'
 console.log('PASS simple login controls: Owner/Admin shortcuts, Show/Hide password and form submission');
 
 await context.users();find(body,n=>n.attributes.placeholder==='Username (letters, numbers)').value='helper';find(body,n=>n.attributes.placeholder==='Initial password (optional)').value='helperpassword2468';find(body,n=>n.tag==='select').value='editor';button('Add user').onclick();await flush();assert.equal(addedUser.username,'helper');assert.equal(addedUser.password,'helperpassword2468');assert.equal(addedUser.role,'editor');assert.ok(body.textContent.includes('User added. They can sign in'));assert.equal(find(body,n=>n.attributes.placeholder==='Initial password (optional)').value,'');console.log('PASS Team Add user accepts a password and confirms the new login is ready');
+
+assert.match(context.lagosTime('2026-10-18 23:30:00'),/19 Oct 2026, 12:30 am WAT/);
+assert.equal(context.lagosTime('2026-10-18 23:30:00'),context.lagosTime('2026-10-18T23:30:00Z'));
+assert.equal(context.lagosTime(null),'Not recorded');
+await context.waiting();const queueRow=find(body,n=>n.tag==='details'&&n.className==='queue-row');assert.ok(queueRow);assert.ok(body.textContent.includes('Review version'));assert.ok(body.textContent.includes('P-1'));const beforePreview=publications;queueRow.open=true;await queueRow.listeners.toggle();assert.ok(body.textContent.includes('General preview'));assert.equal(publications,beforePreview);
+console.log('PASS expandable queue rows load previews without publishing and format timestamps in Lagos time');

@@ -334,6 +334,7 @@ async function finalizeUnlocked(env, actor, id) {
   if (!n.n) fail('No files were uploaded');
   const r = await env.DB.prepare("UPDATE proposals SET sealed=1 WHERE id=? AND agent_id=? AND kind='upload' AND sealed=0 AND status='waiting'").bind(id, actor.agentId).run();
   if (r.meta.changes !== 1) fail('Upload not found or already sent', 404);
+  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES (?,?) ON CONFLICT(key) DO NOTHING').bind('proposal:arrival:' + id, JSON.stringify({ arrived_at: new Date().toISOString() })).run();
   await audit(env, actor.kind + ':' + actor.agentId, 'upload-sent', 'proposal ' + id);
   return { ok: true, status: 'waiting' };
 }
@@ -931,14 +932,14 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
   if (sub === 'proposals' && m === 'GET') {
     const st = u.searchParams.get('status') || 'waiting';
     if (!['waiting', 'approved', 'rejected', 'changes_requested', 'applying', 'uncertain', 'failed'].includes(st)) fail('Bad status');
-    const r = await env.DB.prepare('SELECT p.id, p.kind, p.title, p.note, p.status, p.created_at, a.name agent, COALESCE(g.slug, s.slug) slug FROM proposals p JOIN agents a ON a.id=p.agent_id LEFT JOIN pages g ON g.id=p.page_id LEFT JOIN sites s ON s.id=p.site_id WHERE p.status=? AND p.sealed=1 AND ' + ownSql(sc, 'p.owner_id') + ' ORDER BY p.id DESC LIMIT 100').bind(st).all();
+    const r = await env.DB.prepare('SELECT p.id, p.kind, p.title, p.note, p.status, p.created_at, COALESCE(json_extract(ps.value_json,\'$.arrived_at\'),p.created_at) arrived_at, a.name agent, COALESCE(g.slug, s.slug) slug FROM proposals p JOIN agents a ON a.id=p.agent_id LEFT JOIN pages g ON g.id=p.page_id LEFT JOIN sites s ON s.id=p.site_id LEFT JOIN settings ps ON ps.key=\'proposal:arrival:\' || p.id WHERE p.status=? AND p.sealed=1 AND ' + ownSql(sc, 'p.owner_id') + ' ORDER BY p.id DESC LIMIT 100').bind(st).all();
     return json({ proposals: r.results });
   }
   if (m === 'GET' && (x = sub.match(/^proposals\/(\d+)$/))) {
     const id = +x[1];
     const r = await env.DB.prepare('SELECT p.*, a.name agent, g.slug pslug, g.content_json old_json, s.slug site, s.entry entry FROM proposals p JOIN agents a ON a.id=p.agent_id LEFT JOIN pages g ON g.id=p.page_id LEFT JOIN sites s ON s.id=p.site_id WHERE p.id=?').bind(id).first();
     if (!r || !r.sealed || (r.owner_id || null) !== (sc.ow || null)) fail('Not found', 404);
-    const base = { id: r.id, kind: r.kind, title: r.title, note: r.note, status: r.status, agent: r.agent, slug: r.pslug, site: r.site, entry: r.entry, owner_comment: r.owner_comment };
+    const base = { id: r.id, kind: r.kind, title: r.title, note: r.note, status: r.status, agent: r.agent, slug: r.pslug, site: r.site, entry: r.entry, created_at: r.created_at, decided_at: r.decided_at, version: 'P-' + r.id, owner_comment: r.owner_comment };
     if (r.kind === 'page') return json({ proposal: base, before: JSON.parse(r.old_json || '[]'), after: JSON.parse(r.new_content_json) });
     if (r.kind === 'upload') {
       const f = await env.DB.prepare('SELECT path, size, deleted FROM upload_files WHERE proposal_id=? ORDER BY path').bind(id).all();
@@ -1385,6 +1386,7 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
     await env.DB.prepare('UPDATE users SET public=? WHERE id=?').bind(b.public ? 1 : 0, user.id).run();
     return json({ ok: true });
   }
+  if (sub === 'ai/cloudflare-test' && m === 'POST') return json({ ok: true, reply: await aiTest(await aiResolve(env, 'cloudflare', sc.ow)) });
   if (sub === 'ai/network' && m === 'GET') {
     try { await aiPost('https://api.openai.com/v1/chat/completions', { authorization: 'Bearer diagnostic-invalid-key-not-real' }, { model: 'gpt-4.1-mini', messages: [{ role: 'user', content: 'OK' }] }); return json({ checked: true, message: 'Provider responded.' }); }
     catch (e) { return json({ checked: true, message: e.message || 'Connection check failed', status: e.status || 500 }); }
@@ -1911,13 +1913,20 @@ function cleanBase(u) {
   if (!h.includes('.') || /^[\d.]+$/.test(h) || h.startsWith('[') || h === 'localhost' || /\.(local|internal|localhost)$/.test(h)) fail('Use the provider\'s public https address');
   return x.origin + x.pathname.replace(/\/+$/, '');
 }
+const CF_AI_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+const CF_AI_LABEL = 'Cloudflare AI · Free daily allowance';
 async function aiProviders(env, ow) {
   const rows = (await env.DB.prepare('SELECT id, label, provider, model FROM ai_accounts WHERE ' + (ow ? 'owner_id=' + (+ow) : 'owner_id IS NULL') + ' ORDER BY id').all()).results;
   const list = rows.map(r => ({ id: String(r.id), label: r.label, provider: r.provider, model: r.model }));
+  if (!ow && env.AI && env.CLOUDFLARE_AI_ENABLED === 'true') list.unshift({ id: 'cloudflare', label: CF_AI_LABEL, provider: 'cloudflare', model: CF_AI_MODEL });
   if (!ow && env.ANTHROPIC_API_KEY) list.push({ id: 'secret', label: 'Claude (built-in)', provider: 'anthropic', model: env.ANTHROPIC_MODEL || '' });
   return list;
 }
 async function aiResolve(env, id, ow) {
+  if (!ow && (id === 'cloudflare' || (!id && env.CLOUDFLARE_AI_ENABLED === 'true'))) {
+    if (!env.AI || env.CLOUDFLARE_AI_ENABLED !== 'true') fail('Cloudflare AI is not enabled. Ask the owner to check its AI binding.', 503);
+    return { id: 'cloudflare', label: CF_AI_LABEL, provider: 'cloudflare', model: CF_AI_MODEL, binding: env.AI };
+  }
   const w = ow ? 'owner_id=' + (+ow) : 'owner_id IS NULL';
   const first = id ? null : await env.DB.prepare('SELECT * FROM ai_accounts WHERE ' + w + ' ORDER BY id LIMIT 1').first();
   if (!ow && (id === 'secret' || (!id && !first))) {
@@ -1969,8 +1978,46 @@ async function aiPost(url, headers, payload) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) fail('The AI provider returned an invalid response. Check the API base URL.', 502);
   return d;
 }
+// Native Workers AI binding: no API token, no paid-model fallback, no automatic retry.
+async function cloudflareLoop(acct, system, convo, tools, runTool) {
+  const messages = [{ role: 'system', content: system }].concat(convo);
+  const used = [];
+  for (let step = 0; step < 5; step++) {
+    if (JSON.stringify(messages).length > 60000) fail('This AI conversation is too large. Start a new chat; any submitted proposals remain in Waiting.', 413);
+    let data;
+    try {
+      data = await acct.binding.run(CF_AI_MODEL, { messages, max_tokens: 900, temperature: 0.2,
+        ...(tools.length && used.length < 4 ? { tools: tools.map(t => ({ name: t.name, description: t.description, parameters: t.inputSchema })) } : {}) });
+    } catch (e) {
+      const error = String(e && e.message || '');
+      if (/quota|limit|neuron|exceed|429/i.test(error)) fail('Cloudflare AI is temporarily at its usage limit. Its free allowance resets at 1:00 am Lagos time. Website hosting and existing content remain available within their separate limits.', 429);
+      fail('Cloudflare AI is temporarily unavailable. Your website is still available. Please try again later; no paid fallback was used.', 502);
+    }
+    const output = data && data.result ? data.result : data;
+    const message = output && output.choices && output.choices[0] && output.choices[0].message;
+    const reply = message ? message.content : output && output.response;
+    const rawCalls = (message && message.tool_calls) || (output && output.tool_calls) || [];
+    if (!Array.isArray(rawCalls)) fail('Cloudflare AI returned an invalid tool response. No action was taken.', 502);
+    if (!rawCalls.length) return { text: typeof reply === 'string' ? reply.trim() : '', used, done: true };
+    const calls = rawCalls.map((c, i) => {
+      const f = c.function || c; let input = f.arguments || {};
+      if (typeof input === 'string') { try { input = JSON.parse(input); } catch { fail('AI tool arguments were invalid. No action was taken.', 502); } }
+      if (!input || typeof input !== 'object' || Array.isArray(input)) fail('AI tool arguments must be an object.', 502);
+      if (!tools.some(t => t.name === f.name)) fail('Cloudflare AI requested a tool outside its permissions. No action was taken.', 403);
+      return { id: c.id || 'cf_' + step + '_' + i, name: f.name, input };
+    });
+    messages.push({ role: 'assistant', content: typeof reply === 'string' ? reply : '', tool_calls: calls.map(c => ({ id: c.id, type: 'function', function: { name: c.name, arguments: JSON.stringify(c.input) } })) });
+    for (const c of calls) {
+      if (used.length >= 4) return { text: '', used, done: false };
+      used.push(c.name); const result = await runTool(c);
+      messages.push({ role: 'tool', tool_call_id: c.id, name: c.name, content: result.out });
+    }
+  }
+  return { text: '', used, done: false };
+}
 // One conversation with tool use. runTool(call) returns { out, isErr }. Works for Anthropic and OpenAI-style APIs.
 async function aiLoop(acct, system, convo, tools, runTool) {
+  if (acct.provider === 'cloudflare') return cloudflareLoop(acct, system, convo, tools, runTool);
   const anth = acct.provider === 'anthropic';
   const msgs = anth ? convo.slice() : [{ role: 'system', content: system }].concat(convo);
   const used = [];
@@ -2014,13 +2061,13 @@ async function aiChat(env, user, b) {
   const key = 'ai_usage:' + (ow || 0) + ':' + new Date().toISOString().slice(0, 10);
   const limit = +env.AI_DAILY_LIMIT || 40;
   const usage = await env.DB.prepare("INSERT INTO settings (key, value_json) VALUES (?, '1') ON CONFLICT(key) DO UPDATE SET value_json=CAST(CAST(settings.value_json AS INTEGER)+1 AS TEXT), updated_at=datetime('now') WHERE CAST(settings.value_json AS INTEGER) < ? RETURNING value_json").bind(key, limit).first();
-  if (!usage) fail('Daily limit of ' + limit + ' AI messages reached. It resets tomorrow (UTC).', 429);
+  if (!usage) fail('Dashboard limit of ' + limit + ' AI messages reached. It resets at 1:00 am Lagos time. This is separate from Cloudflare’s Neuron allowance.', 429);
   const used0 = Number(usage.value_json) - 1;
   const ag = await aiAgent(env, acct, ow);
   const actor = { kind: 'agent', agentId: ag.id, a: ag };
   const admin = lvl(user.role) >= 3;
-  const tools = TOOLS.filter(t => ow ? TENANT_TOOLS.has(t.name) : (admin || !['propose_worker_deploy', 'list_connections', 'cloudflare_maintenance'].includes(t.name)));
-  const system = AI_SYSTEM + ' The signed-in person is ' + user.username + ' with the role ' + user.role + '.';
+  const tools = TOOLS.filter(t => (acct.provider !== 'cloudflare' || t.name !== 'cloudflare_maintenance') && (ow ? TENANT_TOOLS.has(t.name) : (admin || !['propose_worker_deploy', 'list_connections', 'cloudflare_maintenance'].includes(t.name))));
+  const system = AI_SYSTEM + ' First inspect the relevant site with read tools before proposing edits. Never invent site IDs or claim work was published. No connected site means the user must add a site first. ' + (acct.provider === 'cloudflare' ? 'You are Cloudflare AI, a temporary built-in assistant, not ChatGPT or Claude. Keep tool results and replies concise. ' : '') + ' The signed-in person is ' + user.username + ' with the role ' + user.role + '.';
   const proposals = [];
   const res = await aiLoop(acct, system, convo, tools, async c => {
     try {
@@ -2028,12 +2075,12 @@ async function aiChat(env, user, b) {
       const data = await toolCall(env, actor, c.name, c.input || {});
       if (data && data.proposal_id) proposals.push(data.proposal_id);
       const out = typeof data === 'string' ? data : JSON.stringify(data);
-      if (out.length > 20000) return { out: 'Result too large for the assistant. Review this file in the dashboard; do not replace it using incomplete content.', isErr: true };
+      if (out.length > (acct.provider === 'cloudflare' ? 12000 : 20000)) return { out: 'Result too large for the assistant. Review this file in the dashboard; do not replace it using incomplete content.', isErr: true };
       return { out, isErr: false };
     } catch (e) { return { out: (e && e.status) ? e.message : 'Server error', isErr: true }; }
   });
   await audit(env, user.username, 'ai-chat', (acct.label + ': ' + res.used.join(',')).slice(0, 200));
-  return { reply: res.done ? res.text : 'I reached my step limit for one message. Tell me to continue and I will pick up from here.', proposals, tools_used: res.used, left: limit - used0 - 1, account: acct.label };
+  return { reply: res.done ? (res.text || 'No response was returned. Try a shorter request.') : 'I reached my step limit for one message. Tell me to continue and I will pick up from here.', proposals, tools_used: res.used, left: limit - used0 - 1, account: acct.label };
 }
 
 async function mcp(req, env) {
@@ -2085,7 +2132,7 @@ async function route(req, env) {
   if (m === 'GET' && (x = p.match(/^\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, false);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, true);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/work\/(w_[a-f0-9]{16})$/))) return publicWork(x[1], env);
-  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'ai-connect-20261019-3' });
+  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'royal-cloudflare-20261019-1' });
   if (m === 'POST' && p === '/api/signup') return signup(req, env);
   if (p === '/mcp') return m === 'POST' ? mcp(req, env) : new Response('Use POST', { status: 405 });
   if ((x = p.match(/^\/s\/([a-z0-9-]{1,60})(\/.*)?$/))) {
@@ -2142,25 +2189,10 @@ export default {
 
 const UI = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Control Room</title>
 <style>
-body{font:16px system-ui,sans-serif;margin:0 auto;padding:12px;max-width:760px;background:#fff;color:#111}
-@media(prefers-color-scheme:dark){body{background:#121212;color:#eee}}
-.card{border:1px solid #8886;border-radius:10px;padding:10px;margin:8px 0}
-button{padding:10px 14px;border-radius:8px;border:0;background:#0a6;color:#fff;font-size:15px;margin:3px}
-button.sm{background:#667}button.bad{background:#c33}
-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.password-field{display:flex;align-items:center;gap:6px}.password-field input{flex:1;min-width:0}.password-field button{white-space:nowrap}input,textarea,select{width:100%;box-sizing:border-box;padding:9px;margin:4px 0;font:inherit}
-.pv{border:1px dashed #8888;padding:8px;border-radius:8px}.pv img{max-width:100%}
-.btn{display:inline-block;padding:8px 12px;background:#0a6;color:#fff;border-radius:8px;text-decoration:none;margin:3px}
-.tag{font-size:13px;opacity:.7;word-break:break-all}.tok{word-break:break-all;background:#fe9;color:#000;padding:8px;border-radius:8px;white-space:pre-wrap}
-.fr{width:100%;height:420px;border:1px solid #8886;border-radius:8px;background:#fff}
-pre{overflow:auto;max-height:320px;background:#8882;padding:8px;border-radius:8px;font-size:13px}
-.dp{background:var(--bg);color:var(--t);border:1px solid #8886;border-radius:10px;overflow:hidden;margin:8px 0}
-.dp .hd{border-bottom:3px solid var(--a);padding:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.dp .hd img{height:28px;border-radius:var(--r)}.dp .hd span{margin-left:auto;display:flex;gap:10px;font-size:13px;color:var(--p);font-weight:600}
-.dp .bd{padding:12px}.dp h4{color:var(--p);margin:0 0 6px;font-size:18px}
-.dp .bt{display:inline-block;padding:8px 14px;border-radius:var(--r);background:var(--p);color:#fff;border:2px solid var(--p);font-weight:600;font-size:14px}
-.dp .bt.o{background:transparent;color:var(--p)}.dp .ft{border-top:1px solid #8886;padding:8px 10px;font-size:12px;opacity:.8}
-</style></head><body><h2>Control Room</h2><div id="app"></div>
+:root{color-scheme:light;--royal:#1746c9;--navy:#11245b;--wine:#711d3e;--gold:#f6c945;--ink:#141925;--muted:#647086;--line:#e1e6ef;--paper:#f3f5fa;--shadow:0 12px 36px #1528580b}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:11px;padding:11px 18px;margin:4px 5px 4px 0;background:var(--royal);color:white;font-weight:650;font-size:14px;cursor:pointer;text-decoration:none;transition:background .15s,transform .15s}button:hover,.btn:hover{background:#103ba9;transform:translateY(-1px)}button:disabled{opacity:.55;cursor:wait;transform:none}button.sm{background:white;color:var(--navy);border-color:var(--line)}button.sm:hover{background:#eef2ff}button.bad{background:var(--wine);color:white}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:3px}input,textarea,select{display:block;width:100%;border:1px solid #ccd4e3;border-radius:10px;background:#fff;color:var(--ink);padding:12px 14px;margin:7px 0 13px;min-width:0}input:focus,textarea:focus,select:focus{outline:2px solid #1746c944;border-color:var(--royal)}input[type=checkbox]{display:inline-block;width:auto;margin:0 8px 0 0;accent-color:var(--royal)}label{font-weight:600;font-size:13px;color:#34405a}a{color:var(--royal)}h2,h3,h4{line-height:1.2;letter-spacing:-.025em}h3{font-size:25px;margin:16px 0 20px}h4{font-size:19px}p{margin:8px 0 16px}.tag{font-size:13px;color:var(--muted);word-break:normal;overflow-wrap:anywhere}.card{padding:22px;background:white;border:1px solid var(--line);border-radius:16px;margin:12px 0;box-shadow:var(--shadow)}.brandbar{height:84px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;gap:18px}.brandname{display:flex;align-items:center;gap:12px;color:var(--navy);font-weight:800;letter-spacing:-.025em;font-size:21px}.brandmark{display:grid;place-items:center;width:42px;height:42px;background:var(--royal);color:var(--gold);border-radius:13px;font-size:23px}.brandname small{display:block;color:var(--muted);font-size:10px;letter-spacing:.18em;font-weight:700}.headstatus{font-size:12px;font-weight:650;color:var(--wine);background:#faf0f4;padding:8px 12px;border-radius:30px}#app{max-width:1320px;margin:0 auto;padding:30px 38px 70px}body[data-view=workspace] #app{margin-left:258px;max-width:1500px}.sidenav{position:fixed;left:0;top:84px;bottom:0;width:258px;overflow:auto;padding:20px 16px 32px;background:var(--navy);display:flex;flex-direction:column;gap:2px;color:white}.sidenav .nav-heading{font-size:10px;text-transform:uppercase;letter-spacing:.19em;color:#b4c3ed;margin:20px 12px 7px}.sidenav button{justify-content:flex-start;margin:1px 0;width:100%;background:transparent;color:#e1e8ff;border:0;padding:11px 14px;font-weight:550;border-radius:10px}.sidenav button:hover{background:#ffffff13;transform:none}.sidenav button.active{background:var(--royal);color:white;box-shadow:inset 3px 0 var(--gold)}.userchip{border:1px solid #ffffff25;padding:14px;border-radius:12px;margin-bottom:10px;color:#fff;overflow-wrap:anywhere}.userchip small{display:block;color:#b9c7e9;font-size:12px;text-transform:capitalize}.nav-icon{font-size:17px;width:21px;display:inline-block;color:var(--gold)}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--wine)}.page-title{font-size:32px;margin:6px 0 8px}.page-intro{max-width:680px;color:var(--muted);margin-bottom:24px}.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0}.stat{background:white;border:1px solid var(--line);border-radius:14px;padding:19px 22px}.stat strong{display:block;font-size:28px;color:var(--navy);letter-spacing:-.04em}.stat span{font-size:12px;color:var(--muted)}.filters{display:flex;gap:7px;flex-wrap:wrap;margin:20px 0}.filters .selected{background:var(--navy);color:white}.queue-list{display:flex;flex-direction:column;gap:12px}.queue-row{background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);overflow:hidden}.queue-row>summary{list-style:none;display:grid;grid-template-columns:42px minmax(0,1fr) 150px 104px 20px;align-items:center;gap:16px;padding:22px;cursor:pointer}.queue-row>summary::-webkit-details-marker{display:none}.row-number{background:#edf1fc;color:var(--royal);width:38px;height:38px;display:grid;place-items:center;border-radius:11px;font-size:13px;font-weight:750}.row-title{font-weight:750;color:var(--navy);display:block;overflow-wrap:anywhere}.row-sub{font-size:12px;color:var(--muted);display:block;margin-top:5px}.badge{display:inline-block;border-radius:30px;padding:5px 10px;font-size:11px;font-weight:750;letter-spacing:.03em;background:#fff5d4;color:#725300;width:max-content;text-transform:capitalize}.badge.approved{background:#e7f5ed;color:#25643e}.badge.rejected{background:#fae8ed;color:var(--wine)}.row-chevron{color:var(--royal);font-size:18px}.queue-row[open] .row-chevron{transform:rotate(180deg)}.queue-row[open]>summary{background:#fafbff;border-bottom:1px solid var(--line)}.queue-body{padding:24px}.meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;background:var(--paper);border-radius:12px;padding:18px;margin:0 0 20px}.meta-grid dt{font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}.meta-grid dd{margin:4px 0 0;font-size:13px;overflow-wrap:anywhere}.empty-state{text-align:center;background:#fff;padding:60px 24px;border:1px dashed #ccd4e4;border-radius:18px}.empty-state .empty-icon{font-size:35px;color:var(--royal)}.empty-state h4{margin:10px 0;color:var(--navy)}.preview-shell{background:#f5f7fc;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:18px 0}.preview-heading{background:var(--navy);color:white;padding:12px 18px;display:flex;justify-content:space-between;font-size:12px;font-weight:650}.preview-content{padding:20px;background:white}.fr{width:100%;height:440px;border:1px solid var(--line);border-radius:10px;background:#fff}.password-field{display:flex;align-items:center;gap:8px}.password-field input{flex:1;min-width:0}.password-field button{white-space:nowrap;margin-bottom:13px}.pv{border:1px dashed #bcc9e3;padding:18px;border-radius:12px;background:white}.pv img{max-width:100%}pre{overflow:auto;max-height:380px;background:#111d37;color:#e6eafa;padding:18px;border-radius:12px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}.tok{word-break:break-all;background:#fff2bf;color:#1b2130;padding:12px;border-radius:10px;white-space:pre-wrap}dialog{border:1px solid var(--line);border-radius:20px;padding:28px;width:min(480px,92vw);box-shadow:0 20px 90px #101b4050}dialog::backdrop{background:#0a163576;backdrop-filter:blur(4px)}.login-layout{display:grid;grid-template-columns:1.1fr 1fr;max-width:1060px;margin:5vh auto 20px;background:#fff;border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 22px 80px #10235c14;min-height:600px}.login-story{padding:58px 44px;background:radial-gradient(ellipse at 10% 95%,#711d3e 0,transparent 60%),linear-gradient(145deg,#1746c9,#11245b 70%);color:#fff;position:relative;display:flex;flex-direction:column;justify-content:space-between}.login-story .eyebrow{color:var(--gold)}.login-story h1{font-size:48px;line-height:1.09;letter-spacing:-.05em;margin:24px 0}.login-story p{color:#dce4ff;font-size:15px;max-width:340px}.story-rule{height:4px;width:52px;background:var(--gold);border-radius:4px;margin:24px 0}.story-bottom{display:flex;gap:12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#e0e7ff}.login-panel{padding:54px 44px;align-self:center}.login-panel h3{font-size:30px;margin:8px 0 12px}.login-panel form{margin-top:24px}.login-panel form>button{width:100%;margin:8px 0}.login-panel .role-options{display:flex;gap:8px}.login-panel .role-options button{flex:1}.login-note{font-size:11px;color:var(--muted);margin-top:28px}.chat-log{max-height:55vh;overflow:auto;padding-right:5px}.chat-bubble{border:1px solid var(--line);border-radius:16px;padding:19px 22px;margin:12px 0;background:white}.chat-bubble.you{margin-left:8%;background:#edf2ff;border-color:#dbe5ff}.chat-bubble.ai{margin-right:8%;border-left:4px solid var(--wine)}.chat-who{font-size:11px;font-weight:800;color:var(--royal);text-transform:uppercase;letter-spacing:.1em}.ai-banner{border:1px solid #dce5ff;background:#edf2ff;border-left:4px solid var(--royal);border-radius:14px;padding:18px 22px;margin:18px 0}.ai-banner strong{color:var(--navy)}.ai-banner p{margin:5px 0 0;font-size:13px;color:#465676}.dp{background:var(--bg);color:var(--t);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:8px 0}.dp .hd{border-bottom:3px solid var(--a);padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.dp .hd img{height:28px}.dp .hd span{margin-left:auto;display:flex;gap:10px;font-size:13px;color:var(--p);font-weight:600}.dp .bd{padding:16px}.dp h4{color:var(--p);margin:0 0 6px;font-size:18px}.dp .bt{display:inline-block;padding:8px 14px;border-radius:var(--r);background:var(--p);color:#fff;border:2px solid var(--p);font-weight:600;font-size:14px}.dp .bt.o{background:transparent;color:var(--p)}.dp .ft{border-top:1px solid var(--line);padding:10px;font-size:12px;opacity:.8}
+@media(min-width:1600px){body[data-view=workspace] #app{margin-right:auto}}@media(max-width:1000px){.sidenav{width:218px;padding:16px 12px}body[data-view=workspace] #app{margin-left:218px;padding:26px 24px}.queue-row>summary{grid-template-columns:36px minmax(0,1fr) 20px;gap:12px}.row-time,.row-status{display:none}.login-story{padding:40px 30px}.login-panel{padding:40px 30px}.login-story h1{font-size:40px}}@media(max-width:700px){.brandbar{height:72px;padding:0 18px}.brandname{font-size:18px}.headstatus{display:none}.sidenav{position:static;width:auto;display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;background:var(--navy);margin:-22px -18px 24px;padding:12px 14px;gap:6px;border-radius:0}.sidenav button{flex:0 0 auto;width:auto;white-space:nowrap;padding:10px 13px;font-size:12px}.sidenav .userchip,.sidenav .nav-heading{display:none}.nav-icon{font-size:14px;width:auto}body[data-view=workspace] #app,#app{margin:0;padding:22px 18px 48px}.page-title{font-size:27px}.stat-grid{gap:8px}.stat{padding:14px 12px}.stat strong{font-size:23px}.stat span{font-size:10px}.queue-row>summary{padding:17px 14px}.queue-body{padding:16px}.meta-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:14px;gap:12px}.login-layout{grid-template-columns:1fr;margin:12px auto;border-radius:19px;min-height:0}.login-story{padding:30px 26px}.login-story h1{font-size:34px;margin:13px 0}.login-story p{font-size:13px;margin:6px 0}.story-bottom,.story-rule{display:none}.login-panel{padding:30px 26px}.login-panel h3{font-size:27px}.card{padding:17px}.fr{height:350px}h3{font-size:23px}.chat-bubble.ai,.chat-bubble.you{margin-left:0;margin-right:0}.password-field button{font-size:11px;padding:11px 9px}}
+</style></head><body><header class="brandbar"><div class="brandname"><span class="brandmark">▦</span><div>Control Room<small>WEBSITE MANAGEMENT</small></div></div><span class="headstatus">Preview first. Publish with confidence.</span></header><main id="app"></main>
 <script>
 var app=document.getElementById('app');
 var TAB='',WAITN=0,SIGNED=false;
@@ -2170,7 +2202,7 @@ async function api(p,m,b){
   var r=await fetch('/api/owner/'+p,{method:m||'GET',headers:{'content-type':'application/json','x-cr':'1'},body:b?JSON.stringify(b):undefined});
   if(r.status===401){login();throw new Error('Please sign in');}
   var d=await r.json();if(!r.ok)throw new Error(d.error||'Error');return d;}
-function show(){TAB='';app.innerHTML='';for(var i=0;i<arguments.length;i++)app.appendChild(arguments[i]);}
+function show(){TAB='';document.body.setAttribute('data-view',SIGNED?'workspace':'login');app.innerHTML='';for(var i=0;i<arguments.length;i++)app.appendChild(arguments[i]);}
 function oops(e){alert(e.message||'Something went wrong');}
 function view(blocks){var d=h('div',{class:'pv'});if(!blocks.length)d.appendChild(h('p',{class:'tag'},'(empty)'));
   blocks.forEach(function(b){var e;
@@ -2184,23 +2216,18 @@ var LV={viewer:1,editor:2,admin:3,owner:4};
 function lv(){return LV[ME.role]||0;}
 function own(){return lv()>=4||ME.kind==='member';}
 function regSelect(sites){var s=h('select',{});s.appendChild(h('option',{value:''},'(none)'));sites.forEach(function(x){s.appendChild(h('option',{value:x.id},x.name+' ('+x.domain+')'+(x.verified?' \\u2713':'')));});return s;}
-function nav(){var M=ME.kind==='member';
-  var n=h('nav',{},h('button',{id:'wb',onclick:waiting},'Waiting ('+WAITN+')'));
-  if(!M)n.appendChild(h('button',{class:'sm',onclick:sites},'Sites'));
-  n.appendChild(h('button',{class:'sm',onclick:remote},'Blogs'));n.appendChild(h('button',{class:'sm',onclick:github},'Code'));
-  if(!M){n.appendChild(h('button',{class:'sm',onclick:pages},'Pages'));n.appendChild(h('button',{class:'sm',onclick:design},'Design'));}
-  if(lv()>=2)n.appendChild(h('button',{class:'sm',onclick:claude},'Assistant'));
-  if(own())n.appendChild(h('button',{class:'sm',onclick:aiAccounts},'AI'));
-  if(lv()>=3)n.appendChild(h('button',{class:'sm',onclick:agents},'Agents'));
-  n.appendChild(h('button',{class:'sm',onclick:releaseHistory},'Releases'));
-  n.appendChild(h('button',{class:'sm',onclick:identity},'Identity'));
-  if(!M&&lv()>=4)n.appendChild(h('button',{class:'sm',onclick:cloud},'Cloud'));
-  if(!M&&lv()>=3){n.appendChild(h('button',{class:'sm',onclick:users},'Team'));n.appendChild(h('button',{class:'sm',onclick:logTab},'Log'));}
-  n.appendChild(h('button',{class:'sm',onclick:account},'Account'));n.appendChild(h('button',{class:'sm',onclick:logout},'Sign out'));return n;}
+var CURRENT_NAV='Waiting';
+function nav(){var M=ME.kind==='member',n=h('nav',{class:'sidenav','aria-label':'Control room navigation'},h('div',{class:'userchip'},ME.username,h('small',{},ME.role+' workspace')));
+function group(t){n.appendChild(h('div',{class:'nav-heading'},t));}
+function item(label,icon,fn,id){var a={class:CURRENT_NAV===label?'active':'',onclick:function(){CURRENT_NAV=label;fn();}};if(id)a.id=id;n.appendChild(h('button',a,h('span',{class:'nav-icon','aria-hidden':'true'},icon),h('span',{},label==='Waiting'?'Waiting ('+WAITN+')':label)));}
+group('Workspace');item('Waiting','◷',waiting,'wb');if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
+group('Connections');if(own())item('AI','✧',aiAccounts);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4)item('Cloud','☁',cloud);
+group('Administration');if(!M&&lv()>=3){item('Team','♧',users);item('Log','≡',logTab);}item('Account','○',account);item('Sign out','↪',logout);return n;}
+function lagosTime(value){if(!value)return 'Not recorded';var v=String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
 function passwordField(input){var button=h('button',{type:'button',class:'sm','aria-pressed':'false',onclick:function(){var visible=input.type==='password';input.type=visible?'text':'password';button.textContent=visible?'Hide password':'Show password';button.setAttribute('aria-pressed',String(visible));input.focus();}},'Show password');return h('div',{class:'password-field'},input,button);}
 async function passwordDialog(title){return new Promise(function(resolve){var dialog=h('dialog'),input=h('input',{type:'password',autocomplete:'current-password',placeholder:'Current password'});function done(value){dialog.close();dialog.remove();resolve(value);}dialog.appendChild(h('h3',{},title));dialog.appendChild(passwordField(input));dialog.appendChild(h('button',{onclick:function(){done(input.value);}},'Confirm'));dialog.appendChild(h('button',{class:'sm',onclick:function(){done(null);}},'Cancel'));dialog.addEventListener('cancel',function(e){e.preventDefault();done(null);});document.body.appendChild(dialog);dialog.showModal();input.focus();});}
 async function releaseHistory(){try{var d=await api('releases'),box=h('div');if(!d.releases.length)box.appendChild(h('p',{},'No proposal publications recorded yet.'));
-  d.releases.forEach(function(r){var card=h('div',{class:'card'},h('b',{},r.title),h('p',{class:'tag'},r.kind+' · '+r.status+' · '+r.created_at),h('p',{class:'tag'},'Version '+r.candidate_hash.slice(0,16)));if(r.error)card.appendChild(h('p',{},r.error));
+  d.releases.forEach(function(r){var card=h('div',{class:'card'},h('b',{},r.title),h('p',{class:'tag'},r.kind+' · '+r.status+' · '+lagosTime(r.created_at)),h('p',{class:'tag'},'Version '+r.candidate_hash.slice(0,16)));if(r.error)card.appendChild(h('p',{},r.error));
     if(own()&&r.recoverable)card.appendChild(h('button',{class:'bad',onclick:async function(){if(!confirm(r.kind==='upload'?'Restore the previous files?':'Create a recovery proposal for review?'))return;var pw=await passwordDialog('Confirm recovery');if(!pw)return;try{var result=await api('releases/'+r.id+'/restore','POST',{password:pw});if(result.proposal_id)openP(result.proposal_id);else releaseHistory();}catch(e){oops(e);}}},r.kind==='upload'?'Restore files':'Prepare recovery proposal'));
     if(own()&&(r.status==='uncertain'||r.status==='applying'))['succeeded','failed'].forEach(function(outcome){card.appendChild(h('button',{class:'sm',onclick:async function(){if(!confirm('Inspect the destination yourself first. Record that this release '+outcome+'? Do not retry an uncertain external write.'))return;var pw=await passwordDialog('Record verified outcome');if(pw)api('releases/'+r.id+'/resolve','POST',{password:pw,outcome:outcome,confirm:'I VERIFIED THE DESTINATION'}).then(releaseHistory).catch(oops);}},'I verified: '+outcome));});box.appendChild(card);});
   if(!ME.kind||ME.kind!=='member'){if(lv()>=4){var locks=await api('locks');locks.locks.forEach(function(l){box.appendChild(h('div',{class:'card'},h('p',{},'Operation lock: '+l.lock_key+' · '+new Date(l.acquired_at).toLocaleString()),h('button',{class:'bad',onclick:async function(){if(!confirm('Only clear an abandoned lock after verifying no operation is running. The lock must be over 15 minutes old. Continue?'))return;var pw=await passwordDialog('Clear abandoned lock');if(pw)api('locks/release','POST',{key:l.lock_key,password:pw,confirm:'I VERIFIED NO OPERATION IS RUNNING'}).then(releaseHistory).catch(oops);}},'Clear abandoned lock')));});}}
@@ -2211,7 +2238,8 @@ function login(){SIGNED=false;var u=h('input',{id:'login-user',name:'username',p
   u.value='owner';
   form.onsubmit=async function(event){event.preventDefault();if(submit.disabled)return;submit.disabled=true;message.textContent='Signing in...';try{await post('/api/login',{user:u.value.trim(),pass:p.value});start();}catch(e){message.textContent=e.message;submit.disabled=false;}};
   form.appendChild(h('label',{for:'login-user'},'Username'));form.appendChild(u);form.appendChild(h('label',{for:'login-password'},'Password'));form.appendChild(passwordField(p));form.appendChild(submit);form.appendChild(message);
-  show(h('h3',{},'Sign in'),h('p',{class:'tag'},'Choose Owner or Admin, or enter your own username.'),h('div',{},h('button',{type:'button',class:'sm',onclick:function(){u.value='owner';p.focus();}},'Owner'),h('button',{type:'button',class:'sm',onclick:function(){u.value='admin';p.focus();}},'Admin')),form,h('p',{},h('a',{href:'#',onclick:function(e){e.preventDefault();forgotScreen();}},'Forgot password?')));
+  var panel=h('section',{class:'login-panel'},h('div',{class:'eyebrow'},'Your workspace awaits'),h('h3',{},'Welcome back'),h('p',{class:'tag'},'Sign in to manage your sites, review work and create with AI.'),h('div',{class:'role-options'},h('button',{type:'button',class:'sm',onclick:function(){u.value='owner';p.focus();}},'Owner'),h('button',{type:'button',class:'sm',onclick:function(){u.value='admin';p.focus();}},'Admin')),form,h('p',{},h('a',{href:'#',onclick:function(e){e.preventDefault();forgotScreen();}},'Forgot password?')),h('p',{class:'login-note'},'Protected access · AI proposals stay in preview until approved.'));
+  show(h('div',{class:'login-layout'},h('aside',{class:'login-story'},h('div',{},h('div',{class:'eyebrow'},'One room. Every website.'),h('h1',{},'Create with purpose. Publish with control.'),h('div',{class:'story-rule'}),h('p',{},'Bring your websites, people and AI together. Review every proposal in one clear workspace.')),h('div',{class:'story-bottom'},h('span',{},'Create'),h('span',{},'•'),h('span',{},'Preview'),h('span',{},'•'),h('span',{},'Approve'))),panel));
   fetch('/api/public/info').then(function(r){return r.json();}).then(function(i){if(i.signup)app.appendChild(h('p',{},h('a',{href:'#',onclick:function(ev){ev.preventDefault();signupScreen();}},'Create an account')));}).catch(function(){});}
 function forgotScreen(){var i=h('input',{placeholder:'Your username or email'}),out=h('p',{class:'tag'},'');
   show(h('p',{},'Reset your password'),i,h('button',{onclick:function(){post('/api/forgot',{user:i.value}).then(function(d){
@@ -2222,19 +2250,26 @@ function resetScreen(token){var p1=h('input',{type:'password',placeholder:'New p
     post('/api/reset',{token:token,password:p1.value}).then(function(){history.replaceState(null,'','/');alert('Password saved. Please sign in.');login();}).catch(oops);}},'Save password'));}
 function logout(){CHAT=[];fetch('/api/logout',{method:'POST'}).then(login);}
 function start(){fetch('/api/owner/me').then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){ME=d.user;SIGNED=true;poll();if(!window.pt)window.pt=setInterval(poll,60000);waiting();}).catch(function(){login();});}
-async function waiting(st){st=typeof st==='string'?st:'waiting';
-  try{var d=await api('proposals?status='+st);var box=h('div');
-  if(!d.proposals.length)box.appendChild(h('p',{},st==='waiting'?'Nothing waiting. All clear.':'Nothing here.'));
-  d.proposals.forEach(function(p){box.appendChild(h('div',{class:'card'},h('b',{},p.title),h('div',{class:'tag'},p.kind+' \\u2022 '+p.agent+' \\u2022 '+(p.slug||'')+' \\u2022 '+p.created_at),
-    h('button',{onclick:function(){openP(p.id);}},st==='waiting'?'Review':'Open')));});
-  show(nav(),h('h3',{},'Proposals: '+st),
-    h('button',{class:'sm',onclick:function(){waiting('waiting');}},'Waiting'),h('button',{class:'sm',onclick:function(){waiting('approved');}},'Approved'),h('button',{class:'sm',onclick:function(){waiting('rejected');}},'Rejected'),box);TAB=st;if(st==='waiting'){WAITN=d.proposals.length;var wb=document.getElementById('wb');if(wb)wb.textContent='Waiting ('+WAITN+')';}}catch(e){oops(e);}}
+async function waiting(st){st=typeof st==='string'?st:'waiting';CURRENT_NAV='Waiting';
+try{var d=await api('proposals?status='+st),box=h('div',{class:'queue-list'});
+if(!d.proposals.length)box.appendChild(h('div',{class:'empty-state'},h('div',{class:'empty-icon'},'◇'),h('h4',{},st==='waiting'?'Your review room is clear':'No work in this view'),h('p',{class:'tag'},'New AI proposals and submitted uploads will arrive here, ready for your review.'),h('button',{onclick:function(){CURRENT_NAV='Assistant';claude();}},'✦ Start with the assistant')));
+d.proposals.forEach(function(p,i){var status=p.status||st,preview=h('div',{},h('p',{class:'tag'},'Open this row to load its preview.')),loaded=false;
+var received=p.arrived_at||p.created_at;
+var row=h('details',{class:'queue-row'},h('summary',{},h('span',{class:'row-number'},String(i+1).padStart(2,'0')),h('span',{},h('span',{class:'row-title'},p.title),h('span',{class:'row-sub'},p.kind+' · '+p.agent+' · '+(p.slug||'Control room'))),h('span',{class:'row-time row-sub'},lagosTime(received)),h('span',{class:'row-status badge '+status},status),h('span',{class:'row-chevron','aria-hidden':'true'},'⌄')),
+h('div',{class:'queue-body'},h('dl',{class:'meta-grid'},h('div',{},h('dt',{},'Sent / received'),h('dd',{},lagosTime(received))),h('div',{},h('dt',{},'Created'),h('dd',{},lagosTime(p.created_at))),h('div',{},h('dt',{},'Review version'),h('dd',{},'P-'+p.id)),h('div',{},h('dt',{},'Submitted by'),h('dd',{},p.agent)),h('div',{},h('dt',{},'Destination'),h('dd',{},p.slug||'Control room')),h('div',{},h('dt',{},'Status'),h('dd',{},status))),p.note?h('p',{},p.note):null,preview,h('button',{onclick:function(){openP(p.id);}},status==='waiting'?'Open full preview & approval':'Open review details'),h('p',{class:'tag'},'Approval checks the exact version and current website state. All times are Africa/Lagos (WAT).')));
+row.addEventListener('toggle',async function(){if(!row.open||loaded)return;loaded=true;preview.textContent='Loading preview…';try{var r=await api('proposals/'+p.id);preview.innerHTML='';var content;
+if(p.kind==='page')content=view(r.after);else if(p.kind==='design')content=dprev(r.after);else if(p.kind==='remote')content=frame(r.remote.after.content);else if(p.kind==='upload'){var link=await api('proposals/'+p.id+'/preview-link');content=h('iframe',{sandbox:'allow-scripts allow-forms',class:'fr',title:'Proposed website preview',src:link.url+(r.proposal.entry||'index.html')});}else if(p.kind==='github'){var html=r.github.files.find(function(f){return !f.deleted&&/\\.html?$/i.test(f.path);});content=html?frame(html.after):h('p',{class:'tag'},'Code proposal: use full review to inspect every changed file.');}else content=h('pre',{},r.worker.code);
+preview.appendChild(h('div',{class:'preview-shell'},h('div',{class:'preview-heading'},h('span',{},p.kind==='worker'?'Source review':'General preview'),h('span',{},'P-'+p.id+' · Not live')),h('div',{class:'preview-content'},content)));
+}catch(e){preview.textContent=e.message;loaded=false;}});box.appendChild(row);});
+var filters=h('div',{class:'filters'});['waiting','approved','rejected','changes_requested','uncertain'].forEach(function(x){filters.appendChild(h('button',{class:st===x?'selected':'sm',onclick:function(){waiting(x);}},x==='changes_requested'?'Changes requested':x.charAt(0).toUpperCase()+x.slice(1)));});
+show(nav(),h('div',{class:'eyebrow'},'Review & release'),h('h3',{class:'page-title'},'The Waiting Room'),h('p',{class:'page-intro'},'Every proposal arrives here before publication. Expand a row to preview the work, then open its full approval review.'),h('div',{class:'stat-grid'},h('div',{class:'stat'},h('strong',{},String(d.proposals.length)),h('span',{},'Items in this view')),h('div',{class:'stat'},h('strong',{},'WAT'),h('span',{},'Lagos time · UTC+1')),h('div',{class:'stat'},h('strong',{},'Review first'),h('span',{},'Your approval controls publication'))),filters,box);TAB=st;if(st==='waiting')WAITN=d.proposals.length;
+}catch(e){oops(e);}}
 async function openP(id){try{var d=await api('proposals/'+id);var P=d.proposal;var c=h('textarea',{rows:2,placeholder:'Comment for the agent (optional)'});
   var staged=null,stageError='';var password=h('input',{type:'password',autocomplete:'current-password',placeholder:'Your current password to approve'}),reviewed=h('input',{type:'checkbox',style:'width:auto;margin-right:8px'});
   if(P.status==='waiting'&&own()){try{staged=await api('proposals/'+id+'/stage','POST',{});if(P.kind==='page')d.before=JSON.parse(staged.before.content_json);if(P.kind==='design')d.before=staged.before;if(P.kind==='remote'&&staged.before)d.remote.before=staged.before;}catch(e){stageError=e.message;}}
 
   function decide(x){return function(){if(x==='approve'&&(!staged||!reviewed.checked||!password.value))return alert('Review the staged version, tick the confirmation and enter your password.');api('proposals/'+id+'/decide','POST',{decision:x,comment:c.value,password:x==='approve'?password.value:undefined,reviewed:reviewed.checked,review_token:staged?staged.review_token:''}).then(function(){waiting();}).catch(oops);};}
-  var kids=[nav(),h('h3',{},P.title),h('div',{class:'tag'},P.kind+' \\u2022 '+P.agent+' \\u2022 '+(P.site||P.slug||'')),h('p',{},P.note||'')];
+  var kids=[nav(),h('h3',{},P.title),h('div',{class:'tag'},P.kind+' \\u2022 '+P.agent+' \\u2022 '+(P.site||P.slug||'')),h('p',{},P.note||''),h('p',{class:'tag'},'Version '+(P.version||'P-'+P.id)+' · Submitted '+lagosTime(P.created_at)+' · Africa/Lagos')];
   if(P.owner_comment)kids.push(h('p',{class:'tag'},'Comment: '+P.owner_comment));
   if(P.kind==='page'){kids.push(h('b',{},'Before'),view(d.before),h('b',{},'After (proposed)'),view(d.after));}
   else if(P.kind==='design'){kids.push(h('b',{},'Before'),dprev(d.before),h('b',{},'After (proposed)'),dprev(d.after));}
@@ -2253,7 +2288,7 @@ async function openP(id){try{var d=await api('proposals/'+id);var P=d.proposal;v
     kids.push(h('b',{},'After ('+R.after.status+'): '+R.after.title),h('pre',{},R.after.content),h('b',{},'Preview of the proposed content'),frame(R.after.content));}
   else{kids.push(h('p',{},'Deploy Worker "'+d.worker.name+'" to '+d.worker.connection),h('b',{},'Code to be deployed'),h('pre',{},d.worker.code));}
   if(P.status==='waiting'&&own()){
-    if(staged){kids.push(h('h3',{},'Staged review'),h('p',{class:'tag'},'Version '+staged.candidate_hash.slice(0,16)+' · Review expires '+new Date(staged.expires_at).toLocaleTimeString()));staged.checks.forEach(function(t){kids.push(h('p',{class:'tag'},'Checked: '+t));});staged.warnings.forEach(function(t){kids.push(h('p',{class:'tag'},t));});kids.push(h('label',{},reviewed,document.createTextNode('I reviewed this exact proposed version and its preview.')),passwordField(password));}
+    if(staged){kids.push(h('h3',{},'Staged review'),h('p',{class:'tag'},'Version '+staged.candidate_hash.slice(0,16)+' · Review expires '+lagosTime(staged.expires_at)));staged.checks.forEach(function(t){kids.push(h('p',{class:'tag'},'Checked: '+t));});staged.warnings.forEach(function(t){kids.push(h('p',{class:'tag'},t));});kids.push(h('label',{},reviewed,document.createTextNode('I reviewed this exact proposed version and its preview.')),passwordField(password));}
     else kids.push(h('p',{},'Staging blocked: '+stageError));
     kids.push(c,h('button',{onclick:decide('approve')},'Approve this version'),h('button',{class:'sm',onclick:decide('changes')},'Request changes'),h('button',{class:'bad',onclick:decide('reject')},'Reject'));
   }
@@ -2409,14 +2444,14 @@ var CHAT=[];
 async function claude(){try{var st=await api('ai');
   if(!st.enabled){show(nav(),h('h3',{},'AI assistant'),h('p',{},'No AI account is connected yet.'),h('p',{class:'tag'},own()?'Open the AI tab to add one: Claude, OpenAI, Gemini or another provider.':'Ask the owner to add an AI account.'));return;}
   var sel=h('select',{});st.accounts.forEach(function(a){sel.appendChild(h('option',{value:a.id},a.label+' ('+a.model+')'));});
-  var log=h('div');var inp=h('textarea',{rows:3,placeholder:'Ask the AI to review a site, fix a page, or change the design. Anything it changes goes to Waiting first.'});var busy=false;
-  function line(who,text){var d=h('div',{class:'card'},h('b',{},who),h('div',{style:'white-space:pre-wrap'},text));log.appendChild(d);return d;}
+  var log=h('div',{class:'chat-log'});var inp=h('textarea',{rows:3,placeholder:'Ask the AI to review a site, fix a page, or change the design. Anything it changes goes to Waiting first.'});var busy=false;
+  function line(who,text){var d=h('div',{class:'chat-bubble '+(who==='You'?'you':'ai')},h('div',{class:'chat-who'},who),h('div',{style:'white-space:pre-wrap'},text));log.appendChild(d);return d;}
   CHAT.forEach(function(m){line(m.role==='user'?'You':'AI',m.content);});
-  var send=h('button',{onclick:function(){var t=inp.value.trim();if(!t||busy)return;busy=true;send.textContent='Working...';CHAT.push({role:'user',content:t});line('You',t);inp.value='';
+  var send=h('button',{onclick:function(){var t=inp.value.trim();if(!t||busy)return;busy=true;send.textContent='Working…';CHAT.push({role:'user',content:t});line('You',t);inp.value='';
     api('ai','POST',{messages:CHAT,account:sel.value}).then(function(r){CHAT.push({role:'assistant',content:r.reply||'(no reply)'});var d=line(r.account||'AI',r.reply||'(no reply)');
       if(r.proposals&&r.proposals.length){d.appendChild(h('div',{class:'tag'},'Sent to Waiting: '+r.proposals.length+' proposal(s). Nothing is live until you approve.'));d.appendChild(h('button',{class:'sm',onclick:function(){waiting();}},'Review in Waiting'));}
     }).catch(function(e){CHAT.pop();oops(e);}).then(function(){busy=false;send.textContent='Send';});}},'Send');
-  show(nav(),h('h3',{},'AI assistant'),h('p',{class:'tag'},'Pick an AI account. It can read your sites and pages and propose changes. It cannot publish.'),sel,log,inp,send,
+  show(nav(),h('div',{class:'eyebrow'},'Create with AI'),h('h3',{class:'page-title'},'Your website assistant'),h('div',{class:'ai-banner'},h('strong',{},'✦ Cloudflare AI · Built in'),h('p',{},'No OpenAI credits required. The free daily AI allowance is separate from website hosting. Ask the assistant to inspect a connected site before proposing changes.')),h('p',{class:'tag'},'Pick an AI account. It can read your sites and pages and propose changes. It cannot publish.'),sel,log,inp,send,
     h('button',{class:'sm',onclick:function(){CHAT=[];claude();}},'New chat'));}catch(e){oops(e);}}
 var AIP={anthropic:{label:'Claude (Anthropic)',provider:'anthropic',base:'',model:''},
   openai:{label:'OpenAI',provider:'openai',base:'https://api.openai.com/v1',model:''},
@@ -2428,6 +2463,7 @@ var AIP={anthropic:{label:'Claude (Anthropic)',provider:'anthropic',base:'',mode
 async function aiAccounts(){try{var d=await api('ai');var box=h('div');
   if(!d.accounts.length)box.appendChild(h('p',{class:'tag'},'No AI accounts yet.'));
   d.accounts.forEach(function(a){
+    if(a.id==='cloudflare'){var testOut=h('p',{class:'tag',role:'status'},'Ready — no API key needed.');box.appendChild(h('div',{class:'ai-banner'},h('strong',{},'✦ Cloudflare AI is built in'),h('p',{},'A temporary assistant for your connected sites. AI usage shares the account’s 10,000-Neuron daily allowance; it is not 10,000 messages. Website traffic has separate limits. Resets at 1:00 am Lagos time.'),testOut,h('button',{onclick:async function(){testOut.textContent='Testing Cloudflare AI…';try{var r=await api('ai/cloudflare-test','POST',{});testOut.textContent='Connected: '+r.reply;}catch(e){testOut.textContent=e.message;}}},'Test built-in AI'),h('button',{class:'sm',onclick:claude},'Open assistant')));return;}
     if(a.id==='secret'){box.appendChild(h('div',{class:'card'},h('b',{},a.label),h('div',{class:'tag'},'Set by the ANTHROPIC_API_KEY secret \\u2022 '+a.model)));return;}
     var out=h('span',{class:'tag'},'');
     box.appendChild(h('div',{class:'card'},h('b',{},a.label),h('div',{class:'tag'},a.provider+' \\u2022 '+a.model),out,h('br'),
