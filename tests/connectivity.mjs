@@ -7,4 +7,18 @@ await test('invalid and duplicate website connections are rejected without side 
 await test('system health checks inspect actual schema and bindings without publishing',async()=>{const d=await(await call('system/checks')).json();assert.ok(d.checks.every(c=>c.passed));assert.equal(d.counts.static_sites,1);assert.equal(d.counts.blogs,0);assert.equal(d.counts.github_sites,0);assert.equal(d.counts.waiting,0)});
 await test('live-style storage diagnostic writes, reads and removes its test object',async()=>{const r=await(await call('system/checks','POST',{action:'storage'})).json();assert.equal(r.ok,true);assert.equal(objects.size,0)});
 await test('system diagnostics remain owner-only and reject unknown actions',async()=>{assert.equal(minRole('system/checks','GET'),4);await assert.rejects(call('system/checks','GET',null,{...owner,role:'admin'}),e=>e.status===403);await assert.rejects(call('system/checks','POST',{action:'delete-site'}),e=>e.status===400)});
+// Token checks must never damage previously saved credentials.
+env.VAULT_KEY='fixture-vault-key-for-cloudflare-tests';const realFetch=globalThis.fetch;let cloudCalls=0;
+try {
+ globalThis.fetch=async(u,init)=>{cloudCalls++;assert.equal(init.headers.authorization,'Bearer fixture-token-123456789012345');return Response.json({success:true,result:[{id:'worker-one'}]});};
+ await test('Cloudflare account accepts typographic dashes and encrypts token before storage',async()=>{
+   const r=await call('connections','POST',{label:'Account 2 — Studio',account_id:'a'.repeat(32),token:'fixture-token-123456789012345'});assert.equal(r.status,201);assert.equal((await r.json()).workers,1);const c=raw.prepare('SELECT * FROM cf_connections').get();assert.equal(c.label,'Account 2 - Studio');assert.notEqual(c.token_enc,'fixture-token-123456789012345');
+ });
+ await test('invalid Account ID fails locally before contacting Cloudflare',async()=>{const before=cloudCalls;await assert.rejects(call('connections','POST',{label:'Other',account_id:'wrong',token:'fixture-token-123456789012345'}),e=>e.status===400);assert.equal(cloudCalls,before)});
+ globalThis.fetch=async()=>Response.json({success:false,errors:[{message:'Unauthorized'}]},{status:403});
+ await test('Cloudflare permission failure gives actionable guidance without saving partial accounts',async()=>{await assert.rejects(call('connections','POST',{label:'Other',account_id:'b'.repeat(32),token:'fixture-token-123456789012345'}),e=>e.message.includes('Workers Scripts: Edit'));assert.equal(raw.prepare('SELECT COUNT(*) n FROM cf_connections').get().n,1)});
+ await test('failed token replacement preserves the previously encrypted credential',async()=>{const before=raw.prepare('SELECT * FROM cf_connections').get();await assert.rejects(call('connections/'+before.id+'/token','POST',{token:'replacement-fixture-123456789'}));assert.equal(raw.prepare('SELECT token_enc FROM cf_connections WHERE id=?').get(before.id).token_enc,before.token_enc)});
+ globalThis.fetch=async()=>{throw Error('network down')};
+ await test('Cloudflare network failures become safe timeout messages without deleting saved accounts',async()=>{await assert.rejects(call('connections','POST',{label:'Other',account_id:'b'.repeat(32),token:'fixture-token-123456789012345'}),e=>e.status===504&&e.message.includes('has not been changed'));assert.equal(raw.prepare('SELECT COUNT(*) n FROM cf_connections').get().n,1)});
+} finally { globalThis.fetch=realFetch; }
 raw.close();console.log(count+' website connectivity/system checks passed');

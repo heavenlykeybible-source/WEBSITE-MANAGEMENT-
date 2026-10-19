@@ -1,6 +1,6 @@
 // Control Room v2. AI agents PROPOSE; only the signed-in owner APPROVES.
 // Bindings: DB (D1 approval-queue-db), FILES (R2 approval-queue-files)
-// Secrets:  ADMIN_USER, ADMIN_PASS, SESSION_SECRET (independent random signing key), VAULT_KEY (20+ random characters, for Cloud tab)
+// Secrets:  ADMIN_USER, ADMIN_PASS, SESSION_SECRET (independent random signing key), VAULT_KEY (20+ random characters, for Cloudflare connections)
 // Optional: SIGNUP_OPEN=true (lets anyone create a member account), ADMIN_EMAIL (owner email), RESEND_API_KEY + MAIL_FROM (sends reset and invite emails), GITHUB_TOKEN (private repo import), ANTHROPIC_API_KEY (optional shortcut for one Claude account; AI accounts are normally added in the AI tab), ANTHROPIC_MODEL, AI_DAILY_LIMIT
 
 const enc = new TextEncoder();
@@ -623,10 +623,18 @@ async function cf(env, conn, method, path, body) {
   const tok = await unseal(env, conn.token_enc);
   const init = { method, redirect: 'error', signal: AbortSignal.timeout(20000), headers: { authorization: 'Bearer ' + tok } };
   if (body) init.body = body;
-  const r = await fetch('https://api.cloudflare.com/client/v4/accounts/' + conn.account_id + path, init);
+  let r;
+  try { r = await fetch('https://api.cloudflare.com/client/v4/accounts/' + conn.account_id + path, init); }
+  catch { fail('Cloudflare could not be reached in time. Your saved connection has not been changed. Try again when the connection is stable.', 504); }
   let d = {};
-  try { d = await r.json(); } catch (e) { /* ignore */ }
-  if (!r.ok || d.success === false) throw { message: 'Cloudflare says: ' + (((d.errors || [])[0] || {}).message || ('HTTP ' + r.status)), status: 502, cfStatus: r.status };
+  try { d = await r.json(); } catch { fail('Cloudflare returned an unreadable response. Your saved connection has not been changed.', 502); }
+  if (!r.ok || d.success === false) {
+    let message;
+    if (r.status === 401 || r.status === 403) message = 'Cloudflare did not allow access. Check that the token belongs to this Account ID and includes Workers Scripts: Edit. A token marked active can still lack the required account permission.';
+    else if (r.status === 429) message = 'Cloudflare is limiting requests. Wait a little before trying again.';
+    else message = 'Cloudflare says: ' + String(((d.errors || [])[0] || {}).message || ('HTTP ' + r.status)).split(tok).join('[redacted]').replace(/Bearer\s+[^\s]+/gi, 'Bearer [redacted]').slice(0, 250);
+    throw { message, status: 502, cfStatus: r.status };
+  }
   return d;
 }
 // Maintenance is a separate, narrowly scoped capability; never an arbitrary API proxy.
@@ -727,7 +735,7 @@ async function maintenanceRoutes(req, env, user, sub, method) {
 async function discoverAccount(token) {
   let d = {}, ok = false;
   try {
-    const r = await fetch('https://api.cloudflare.com/client/v4/accounts?per_page=5', { headers: { authorization: 'Bearer ' + token } });
+    const r = await fetch('https://api.cloudflare.com/client/v4/accounts?per_page=5', { headers: { authorization: 'Bearer ' + token }, redirect: 'error', signal: AbortSignal.timeout(15000) });
     ok = r.ok; d = await r.json();
   } catch (e) { /* fall through */ }
   const list = (ok && d.result) || [];
@@ -1236,8 +1244,8 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
   }
   if (sub === 'connections' && m === 'POST') {
     const b = await body(req);
-    const label = String(b.label || '').trim();
-    if (!/^[A-Za-z0-9 _.-]{1,40}$/.test(label)) fail('Label: letters, numbers, spaces, dots, dashes');
+    const label = String(b.label || '').trim().replace(/[–—]/g, '-');
+    if (!label || label.length > 80 || /[\x00-\x1f\x7f]/.test(label)) fail('Enter an account label of 1–80 characters.');
     const token = String(b.token || '').trim();
     if (token.length < 20 || token.length > 300) fail('That does not look like an API token');
     let accountId = String(b.account_id || '').trim().toLowerCase();
@@ -1373,8 +1381,8 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
   }
   if (sub === 'remote' && m === 'POST') {
     const b = await body(req);
-    const label = String(b.label || '').trim();
-    if (!/^[A-Za-z0-9 _.-]{1,40}$/.test(label)) fail('Label: letters, numbers, spaces, dots, dashes');
+    const label = String(b.label || '').trim().replace(/[–—]/g, '-');
+    if (!label || label.length > 80 || /[\x00-\x1f\x7f]/.test(label)) fail('Enter an account label of 1–80 characters.');
     const url = cleanBase(b.url);
     await capConnections(env, sc);
     const regId = await ownRegistry(env, user, b.registry_id);
@@ -1429,8 +1437,8 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
   }
   if (sub === 'github' && m === 'POST') {
     const b = await body(req);
-    const label = String(b.label || '').trim();
-    if (!/^[A-Za-z0-9 _.-]{1,40}$/.test(label)) fail('Label: letters, numbers, spaces, dots, dashes');
+    const label = String(b.label || '').trim().replace(/[–—]/g, '-');
+    if (!label || label.length > 80 || /[\x00-\x1f\x7f]/.test(label)) fail('Enter an account label of 1–80 characters.');
     const repo = String(b.repo || '').trim();
     if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) fail('Repo should look like owner/name');
     const branch = String(b.branch || 'main').trim();
@@ -1510,8 +1518,8 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
   if (sub === 'ai' && m === 'POST') return json(await aiChat(env, user, await body(req), u.origin));
   if (sub === 'ai/accounts' && m === 'POST') {
     const b = await body(req);
-    const label = String(b.label || '').trim();
-    if (!/^[A-Za-z0-9 _.-]{1,40}$/.test(label)) fail('Label: letters, numbers, spaces, dots, dashes');
+    const label = String(b.label || '').trim().replace(/[–—]/g, '-');
+    if (!label || label.length > 80 || /[\x00-\x1f\x7f]/.test(label)) fail('Enter an account label of 1–80 characters.');
     if (b.provider !== 'anthropic' && b.provider !== 'openai') fail('Choose a provider');
     const model = String(b.model || '').trim();
     if (!MODEL_RE.test(model)) fail('Enter the model name exactly as the provider shows it');
@@ -2399,8 +2407,8 @@ var app=document.getElementById('app');
 var TAB='',WAITN=0,SIGNED=false;
 function h(t,a){var e=document.createElement(t);a=a||{};for(var k in a){if(k==='onclick')e.onclick=a[k];else if(k==='class')e.className=a[k];else e.setAttribute(k,a[k]);}
 for(var i=2;i<arguments.length;i++){var c=arguments[i];if(c==null)continue;e.appendChild(typeof c==='string'?document.createTextNode(c):c);}return e;}
-async function api(p,m,b){
-  var r=await fetch('/api/owner/'+p,{method:m||'GET',headers:{'content-type':'application/json','x-cr':'1'},body:b?JSON.stringify(b):undefined});
+async function api(p,m,b,signal){
+  var r=await fetch('/api/owner/'+p,{method:m||'GET',signal:signal,headers:{'content-type':'application/json','x-cr':'1'},body:b?JSON.stringify(b):undefined});
   if(r.status===401){login();throw new Error('Please sign in');}
   var d=await r.json();if(!r.ok)throw new Error(d.error||'Error');return d;}
 function show(){TAB='';document.body.setAttribute('data-view',SIGNED?'workspace':'login');app.innerHTML='';for(var i=0;i<arguments.length;i++)app.appendChild(arguments[i]);}
@@ -2422,7 +2430,7 @@ function nav(){var M=ME.kind==='member',n=h('nav',{class:'sidenav','aria-label':
 function group(t){n.appendChild(h('div',{class:'nav-heading'},t));}
 function item(label,icon,fn,id){var a={class:CURRENT_NAV===label?'active':'',onclick:function(){CURRENT_NAV=label;fn();}};if(id)a.id=id;n.appendChild(h('button',a,h('span',{class:'nav-icon','aria-hidden':'true'},icon),h('span',{},label==='Waiting'?'Waiting ('+WAITN+')':label)));}
 group('Workspace');item('Waiting','◷',waiting,'wb');if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
-group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4)item('Cloud','☁',cloud);
+group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4)item('Cloudflare','☁',cloud);
 group('Administration');if(!M&&lv()>=4)item('System checks','✓',systemChecks);if(!M&&lv()>=3){item('Team','♧',users);item('Log','≡',logTab);}item('Account','○',account);item('Sign out','↪',logout);return n;}
 function lagosTime(value){if(!value)return 'Not recorded';var v=String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
 async function systemChecks(){try{var data=await api('system/checks'),list=h('div'),status=h('p',{class:'tag',role:'status'},'');data.checks.forEach(function(c){list.appendChild(h('div',{class:'card'},h('b',{},(c.passed?'✓ ':'! ')+c.name),h('p',{class:'tag'},c.detail)));});show(nav(),h('div',{class:'eyebrow'},'System health'),h('h3',{class:'page-title'},'Connection & storage checks'),h('p',{class:'page-intro'},'These checks test this installation. Real WordPress, Blogger, GitHub and external AI connections need their own Check or Test action after you connect an account.'),list,h('p',{},'Managed sites: '+data.counts.static_sites+' · GitHub connections: '+data.counts.github_sites+' · Ready blogs: '+data.counts.blogs+' · Waiting: '+data.counts.waiting),h('button',{onclick:async function(){status.textContent='Testing a temporary storage object…';try{var r=await api('system/checks','POST',{action:'storage'});status.textContent=r.detail;}catch(e){status.textContent=e.message;}}},'Test file storage'),h('button',{class:'sm',onclick:aiAccounts},'Test AI'),status,h('p',{class:'tag'},'Build '+data.version));}catch(e){oops(e);}}
@@ -2568,13 +2576,40 @@ async function cloud(){try{var d=await api('connections');var box=h('div');
       h('button',{class:'sm',onclick:function(){var t=prompt('Paste the new API token for '+c.label);if(t)api('connections/'+c.id+'/token','POST',{token:t.trim()}).then(function(){alert('Token replaced.');}).catch(oops);}},'Replace token'),
       h('button',{class:'bad',onclick:function(){if(confirm('Remove this connection? Your Cloudflare account itself is not changed.'))api('connections/'+c.id+'/remove','POST').then(cloud).catch(oops);}},'Remove'),w);
     box.appendChild(card);});
-  var lb=h('input',{placeholder:'Label, e.g. Media account'}),ac=h('input',{placeholder:'Account ID (optional, I try to find it)'}),tk=h('input',{type:'password',placeholder:'API token'});
+  show(nav(),h('h3',{},'Cloudflare accounts'),h('p',{class:'page-intro'},'Connect the Cloudflare account where you want to deploy. Each account stays separate and its token is stored encrypted.'),box,
+    h('button',{class:'primary',onclick:addCloudflareAccount},'Add account'));
+}catch(e){oops(e);}}
+function addCloudflareAccount(){
+  var lb=h('input',{id:'cf-label',placeholder:'For example: Account 2 Studio',maxlength:'80',autocomplete:'off'});
+  var ac=h('input',{id:'cf-account',placeholder:'32-character Account ID',maxlength:'32',autocomplete:'off',spellcheck:'false'});
+  var tk=h('input',{id:'cf-token',type:'password',placeholder:'Paste your Cloudflare API token',autocomplete:'off',spellcheck:'false'});
+  var status=h('p',{id:'cf-connect-status',role:'status','aria-live':'polite',class:'tag'},'');
+  var btn=h('button',{type:'submit'},'Connect account');
+  var form=h('form',{},h('label',{for:'cf-label'},'Account label'),lb,h('label',{for:'cf-account'},'Account ID'),ac,
+    h('p',{class:'tag'},'Use the Account ID from the same Cloudflare account as the token. This avoids automatic account lookup problems.'),
+    h('label',{for:'cf-token'},'API token'),tk,h('p',{class:'tag'},'Already have an API token? Paste it here. Your Cloudflare password is never needed in this form.'),btn,status);
   var tpl='https://dash.cloudflare.com/?to=/:account/api-tokens&permissionGroupKeys=%5B%7B%22key%22%3A%22workers_scripts%22%2C%22type%22%3A%22edit%22%7D%5D&name=Control%20Room%20Token';
-  show(nav(),h('h3',{},'Cloudflare accounts'),h('p',{class:'tag'},'Add as many accounts as you like. Each one has its own token, stored encrypted. Deploys wait for your approval.'),box,
-    h('b',{},'Add another account'),
-    h('ol',{class:'tag'},h('li',{},'Tap the button below. Cloudflare opens a token form (Workers Scripts: Edit). Choose the account, then create the token.'),h('li',{},'Copy the token. Cloudflare shows it only once.'),h('li',{},'Paste it here with a label. The Account ID is the 32-character code in the dashboard address.')),
-    h('a',{class:'btn',href:tpl,target:'_blank',rel:'noopener'},'Create token in Cloudflare'),lb,ac,tk,
-    h('button',{onclick:function(){api('connections','POST',{label:lb.value.trim(),account_id:ac.value.trim(),token:tk.value.trim()}).then(function(r){alert('Connected. '+r.workers+' Workers found.');cloud();}).catch(oops);}},'Connect account'));}catch(e){oops(e);}}
+  form.onsubmit=async function(event){
+    event.preventDefault();if(btn.disabled)return;
+    var label=lb.value.trim(),account=ac.value.trim(),token=tk.value.trim();
+    if(!label){status.textContent='Enter an account label, for example Account 2 Studio.';lb.focus();return;}
+    if(!/^[a-fA-F0-9]{32}$/.test(account)){status.textContent='Enter the 32-character Account ID from Cloudflare.';ac.focus();return;}
+    if(token.length<20||token.length>300){status.textContent='Paste the API token from Cloudflare.';tk.focus();return;}
+    btn.disabled=true;btn.textContent='Connecting…';status.textContent='Checking account access with Cloudflare…';
+    var controller=new AbortController(),timer=setTimeout(function(){controller.abort();},25000);
+    try{
+      var result=await api('connections','POST',{label:label,account_id:account,token:token},controller.signal);
+      tk.value='';status.textContent='Connected. '+result.workers+' Workers found. Your account is ready.';
+      btn.textContent='Connected';btn.disabled=true;
+      form.appendChild(h('button',{type:'button',onclick:cloud},'View connected accounts'));
+    }catch(e){status.textContent=e.name==='AbortError'?'The connection check timed out. The account may have connected; check Cloudflare accounts before retrying.':(e.message||'Could not connect. Check the Account ID and token permissions.');btn.disabled=false;btn.textContent='Try connecting again';}
+    finally{clearTimeout(timer);}
+  };
+  show(nav(),h('h3',{},'Connect a Cloudflare account'),h('p',{class:'page-intro'},'Two simple steps. Keep this Control Room tab open while you visit Cloudflare.'),
+    h('div',{class:'card'},h('h4',{},'1. Sign in to Cloudflare'),h('p',{},'Open Cloudflare, choose the account you want, then create a token with Workers Scripts: Edit. If you already have a suitable token, go straight to step 2.'),
+      h('a',{class:'btn',href:tpl,target:'_blank',rel:'noopener noreferrer'},'Open Cloudflare'),h('p',{class:'tag'},'Cloudflare opens in another tab. This uses an API token; it does not automatically authorize or link your account.')),
+    h('div',{class:'card'},h('h4',{},'2. Return here and connect'),form),h('button',{class:'sm',onclick:cloud},'Back to Cloudflare accounts'));
+}
 async function maintenanceForm(c){try{var d=await api('connections/'+c.id+'/maintenance'),agents=await api('agents');var aid=h('select');(agents.agents||[]).filter(function(a){return a.status==='active'&&a.can_read&&!a.owner_id&&!a.site_id;}).forEach(function(a){aid.appendChild(h('option',{value:a.id},a.name+' (agent '+a.id+')'));});
 var workers=h('input',{placeholder:'Exact Worker names, comma separated',value:d.grant?d.grant.workers.join(','):''}),zone=h('input',{placeholder:'Zone ID for cache purges (optional)',value:d.grant?d.grant.zone:''}),hosts=h('input',{placeholder:'Exact cache hostnames, comma separated',value:d.grant?d.grant.hosts.join(','):''}),hours=h('input',{type:'number',min:1,max:24,value:1});
 var choices=h('div');var wl=await api('connections/'+c.id+'/workers');wl.workers.forEach(function(w){var cb=h('input',{type:'checkbox'});cb.checked=!!(d.grant&&d.grant.workers.includes(w.name));cb.onchange=function(){workers.value=Array.from(choices.querySelectorAll('input')).filter(function(x){return x.checked;}).map(function(x){return x.value;}).join(',');};cb.value=w.name;choices.appendChild(h('label',{},cb,w.name));});var advanced=h('details',{},h('summary',{},'Advanced: cache permissions and manual Worker names'),workers,zone,hosts);
