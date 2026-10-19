@@ -1932,13 +1932,30 @@ async function aiAgent(env, acct, ow) {
   return await env.DB.prepare('SELECT * FROM agents WHERE token_hash=?').bind(th).first();
 }
 async function aiPost(url, headers, payload) {
-  const r = await fetch(url, { method: 'POST', redirect: 'error', headers: Object.assign({ 'content-type': 'application/json' }, headers), body: JSON.stringify(payload) });
-  let d = {};
-  try { d = await r.json(); } catch (e) { /* ignore */ }
-  if (!r.ok) {
-    const em = (d && d.error && (d.error.message || (typeof d.error === 'string' ? d.error : ''))) || (d && d.message) || '';
-    fail('The AI provider said: ' + (String(em).slice(0, 200) || 'HTTP ' + r.status), 502);
+  let r;
+  try {
+    r = await fetch(url, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(25000), headers: Object.assign({ 'content-type': 'application/json' }, headers), body: JSON.stringify(payload) });
+  } catch (e) {
+    fail('The AI provider could not be reached. Check the API base URL and try again.', 502);
   }
+  let d;
+  try { d = await r.json(); } catch (e) { fail('The AI provider returned an unreadable response (HTTP ' + r.status + '). Check the API base URL and try again.', 502); }
+  if (!r.ok) {
+    const error = d && d.error;
+    const code = error && typeof error === 'object' ? String(error.code || error.type || '') : '';
+    const hints = r.status === 401 ? 'The AI provider rejected the API key. Check that it is an API key for this provider.'
+      : r.status === 403 ? 'The API key does not have permission for this model or Chat Completions. Check its project permissions and model access.'
+      : r.status === 429 && /quota|billing|credit/.test(code) ? 'OpenAI API credits or billing quota are unavailable. Check billing on the API platform; ChatGPT subscription billing is separate.'
+      : r.status === 429 ? 'The AI provider rate limit was reached. Wait briefly before testing again.'
+      : r.status === 404 ? 'The model or API endpoint was not found. Check the exact model name and base URL.' : '';
+    const em = (error && (error.message || (typeof error === 'string' ? error : ''))) || (d && d.message) || '';
+    // Some providers echo a rejected credential. Never send it back to the browser.
+    let safe = String(em);
+    for (const value of Object.values(headers)) { const token = String(value).replace(/^Bearer\s+/i, ''); if (token.length >= 8) safe = safe.split(token).join('[redacted]'); }
+    safe = safe.replace(/sk-[A-Za-z0-9_-]+/g, '[redacted]');
+    fail(hints || ('The AI provider said: ' + (safe.slice(0, 200) || 'HTTP ' + r.status)), 502);
+  }
+  if (!d || typeof d !== 'object' || Array.isArray(d)) fail('The AI provider returned an invalid response. Check the API base URL.', 502);
   return d;
 }
 // One conversation with tool use. runTool(call) returns { out, isErr }. Works for Anthropic and OpenAI-style APIs.
