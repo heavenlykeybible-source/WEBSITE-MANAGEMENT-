@@ -1,5 +1,6 @@
 name = "website-management"
 main = "control-room-worker.js"
+keep_vars = true
 compatibility_date = "2026-10-18"
 workers_dev = true
 
@@ -21,3 +22,4 @@ bucket_name = "website-management-files"
 
 [ai]
 binding = "AI"
+

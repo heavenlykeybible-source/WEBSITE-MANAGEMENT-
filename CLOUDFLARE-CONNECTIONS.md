@@ -60,3 +60,9 @@ API references:
 - https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/create/
 - https://developers.cloudflare.com/api/resources/r2/subresources/buckets/methods/create/
 - https://developers.cloudflare.com/workers/configuration/multipart-upload-metadata/
+
+
+
+## Separately authorized Studio installation
+
+The earlier Account 7 restriction applies to meeting-app work. The owner has separately authorized preparing and installing Studio on Account 2 through the Account 4 control room. Verify the exact account ID and existing heavenlykey-media Worker before that operation; never select a meeting connection because of a similar label. The Studio review preserves all current control room and meeting-app changes.

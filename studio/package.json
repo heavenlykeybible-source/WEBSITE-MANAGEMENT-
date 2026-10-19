@@ -1,0 +1,19 @@
+{
+  "name": "heavenlykey-media-engine",
+  "private": true,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "preflight": "node scripts/preflight.mjs",
+    "test": "node --experimental-transform-types tests/auth.mjs && node tests/workflow.mjs && node --experimental-transform-types tests/connections.mjs && node tests/devices.mjs",
+    "package:release": "node scripts/package-release.mjs",
+    "verify:release": "npm run package:release && node tests/release.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260930.2",
+    "esbuild": "0.28.1",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.0.0"
+  },
+  "type": "module"
+}

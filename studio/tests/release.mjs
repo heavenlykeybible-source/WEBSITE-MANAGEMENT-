@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+const file=new URL('../release/studio-worker.js',import.meta.url),manifest=JSON.parse(fs.readFileSync(new URL('../release/manifest.json',import.meta.url),'utf8'));
+const bytes=fs.readFileSync(file);
+assert.equal(manifest.worker,'heavenlykey-media');assert.ok(bytes.length<1000000);assert.equal(manifest.sha256,createHash('sha256').update(bytes).digest('hex'));
+const {default:worker}=await import(file.href+'?sha='+manifest.sha256);
+const id='a'.repeat(64),session={sub:'control-room:1',role:'Super Administrator',name:'Owner',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+600,nonce:id};
+let oldAssetsCalls=0;
+const env={ASSETS:{fetch(){oldAssetsCalls++;throw Error('Outdated asset binding must not override packaged files');}},LIVE_STATUS_KV:{async get(k){return k==='studio-session:'+id?JSON.stringify(session):null;}}};
+let response=await worker.fetch(new Request('https://studio.test/'),env);assert.equal(response.status,200);assert.match(await response.text(),/Continue with control room/);assert.equal(response.headers.get('cache-control'),'no-store');
+response=await worker.fetch(new Request('https://studio.test/',{headers:{cookie:'__Host-hk-studio='+id}}),env);assert.equal(response.status,200);const html=await response.text();assert.match(html,/Your message/);assert.match(html,/view-meetings/);assert.match(html,/view-editing/);assert.match(html,/test-devices/);assert.match(html,/hk-footer-column/);
+for(const path of ['/js/studio-app.js','/js/signin.js','/js/device-check.js','/css/shell.css','/css/ministry-footer.css','/assets/ministry/logo.svg'])assert.equal((await worker.fetch(new Request('https://studio.test'+path),env)).status,200);
+assert.equal((await worker.fetch(new Request('https://studio.test/js/missing.js'),env)).status,404);
+assert.equal(oldAssetsCalls,0);assert.equal(typeof worker.scheduled,'function');
+console.log('PASS single-file release: exact hash, under control room limit, sign-in/homepage, future modules, device checks, all referenced assets and inherited-asset isolation');

@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {createDeviceCheck} from '../public/js/device-check.js';
+const video={hidden:true,pause(){},async play(){}},meter={value:0};let messages=[],constraints,stopped=0;
+const tracks=[{readyState:'live',stop(){stopped++;}},{readyState:'live',stop(){stopped++;}}];
+const stream={getTracks:()=>tracks,getVideoTracks:()=>[tracks[0]],getAudioTracks:()=>[tracks[1]]};
+const make=mediaDevices=>createDeviceCheck({video,meter,onStatus:m=>messages.push(m),mediaDevices,audioFactory:()=>{throw Error('No AudioContext in this test');}});
+const working=make({async getUserMedia(input){constraints=input;return stream;}});
+assert.equal(await working.start(),true);assert.equal(video.srcObject,stream);assert.ok(constraints.video&&constraints.audio);working.stop();assert.equal(stopped,2);assert.equal(video.srcObject,null);assert.equal(meter.value,0);
+const denied=make({async getUserMedia(){throw Object.assign(Error('denied'),{name:'NotAllowedError'});}});assert.equal(await denied.start(),false);assert.match(messages.at(-1),/permission was denied/);
+let resolve;const cancelled=make({getUserMedia(){return new Promise(r=>resolve=r);}});const pending=cancelled.start();cancelled.stop(false);resolve(stream);assert.equal(await pending,false);assert.equal(stopped,4);
+console.log('PASS device test opens camera/microphone locally, releases both tracks, handles denied permission and cancels pending permission safely (simulated devices)');
