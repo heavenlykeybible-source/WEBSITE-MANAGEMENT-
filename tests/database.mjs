@@ -16,7 +16,7 @@ const stage=await (await ownerApi(new Request(url,{method:'POST',body:'{}'}),env
 const link=await (await ownerApi(new Request(url),env,user,'proposals/1/preview-link','GET',url)).json();
 assert.equal((await route(new Request('https://test'+link.url+'index.html'),env)).status,200);
 let r=await ownerApi(new Request(url,{method:'POST',body:JSON.stringify({decision:'approve',password:env.ADMIN_PASS,reviewed:true,review_token:stage.review_token})}),env,user,'proposals/1/decide','POST',url);assert.equal(r.status,200);assert.match(sql.prepare('SELECT r2_key FROM site_files').get().r2_key,/^files\/1\/.+\/index\.html$/);
-r=await ownerApi(new Request(url,{method:'POST',body:JSON.stringify({password:env.ADMIN_PASS})}),env,user,'proposals/1/undo','POST',url);assert.equal(r.status,200);assert.equal(sql.prepare('SELECT COUNT(*) n FROM site_files').get().n,0);
-assert.ok(calls<80);console.log('PASS real SQLite schema, upload isolation, approval and undo ('+calls+' queries across workflow)');
+await assert.rejects(ownerApi(new Request(url,{method:'POST',body:'{}'}),env,user,'proposals/1/undo','POST',url),e=>e.status===403);assert.equal(sql.prepare('SELECT COUNT(*) n FROM site_files').get().n,1);
+assert.ok(calls<80);console.log('PASS real SQLite schema, upload isolation, approval and direct-undo rejection ('+calls+' queries across workflow)');
 // Atomic usage cap: every increment is handled by one SQL statement.
 const q=sql.prepare("INSERT INTO settings (key, value_json) VALUES (?, '1') ON CONFLICT(key) DO UPDATE SET value_json=CAST(CAST(settings.value_json AS INTEGER)+1 AS TEXT) WHERE CAST(settings.value_json AS INTEGER) < ? RETURNING value_json");assert.equal(q.get('quota',2).value_json,'1');assert.equal(q.get('quota',2).value_json,'2');assert.equal(q.get('quota',2),undefined);console.log('PASS SQL atomic quota stops at configured maximum');

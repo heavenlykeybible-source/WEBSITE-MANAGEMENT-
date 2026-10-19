@@ -8,7 +8,7 @@ The assistant reads connected sites using existing scoped tools and submits prop
 
 The login and dashboard use royal blue, wine red, yellow accents and dark text. Desktop navigation is grouped in a side panel; phone navigation scrolls horizontally. Waiting items are expandable rows with submitter, destination, proposal version, created and sent/received times, a visual preview where supported, and access to the full approval screen. Worker source proposals show source review, not a simulated runtime deployment. File previews retain their sandbox. SQLite timestamps are interpreted as UTC and displayed in Africa/Lagos. Uploaded-file submissions record a received timestamp when finalized; existing proposals use their recorded creation timestamp as a fallback. Sent/received is the server submission event, not separately measured sender transport time.
 
-Direct human editing routes elsewhere in the existing system retain their earlier behavior; this release's approval guarantee covers AI proposals and queued uploads. This dashboard does not disable third-party editors or Cloudflare/GitHub access outside the application.
+Approval-only mode now covers CMS page/design saves, restores, GitHub saves, blog saves, AI proposals and queued uploads. Direct Worker deletion, immediate undo and cache purges are disabled; file recovery creates a Waiting proposal. This dashboard does not disable third-party editors or Cloudflare/GitHub access outside the application.
 
 Local validation: run `node tests/run.mjs`. Tests cover native Cloudflare tool outputs, default account selection, staff/member isolation, quota failures, action limits, proposal-only edits, queue metadata and Lagos dates, plus existing security/release/account tests.
 
