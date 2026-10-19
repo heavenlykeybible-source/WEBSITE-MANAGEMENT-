@@ -16,7 +16,7 @@ class Node {
 const body=new Node('body'),app=new Node('main');app.id='app';body.appendChild(app);
 function find(root,predicate){if(predicate(root))return root;for(const c of root.children){const n=find(c,predicate);if(n)return n}return null}
 const document={body,createElement:t=>new Node(t),createTextNode:t=>new Node('#text',String(t)),getElementById:id=>find(body,n=>n.id===id)};
-let publications=0,restores=0,lastLogin=null,addedUser=null;const alerts=[];let chatSent=null;let connectCalls=0,connectFailure=false,holdConnect=false,releaseConnect=null;
+let publications=0,restores=0,lastLogin=null,addedUser=null;const alerts=[];let chatSent=null;let resourceProposal=null,workerProposal=null;let connectCalls=0,connectFailure=false,holdConnect=false,releaseConnect=null;
 const fetch=async(input,init={})=>{
  const url=new URL(input,'https://room.test'),p=url.pathname;let data;
  if(p==='/api/owner/users'){if(init.method==='POST'){addedUser=JSON.parse(init.body);data={ok:true,status:'active',username:addedUser.username}}else data={users:[{id:1,username:'owner',role:'owner',status:'active',kind:'staff',has_password:true}]};}
@@ -35,6 +35,9 @@ const fetch=async(input,init={})=>{
  else if(p==='/api/owner/releases')data={releases:[{id:'11111111-1111-4111-8111-111111111111',title:'Release',kind:'page',status:'succeeded',created_at:'2026-10-18',candidate_hash:'a'.repeat(64),recoverable:true}]};
  else if(p==='/api/owner/locks')data={locks:[]};
  else if(p.endsWith('/restore')){assert.equal(JSON.parse(init.body).password,'confirm-password');restores++;data={proposal_id:2}}
+ else if(p==='/api/owner/connections/7/resources')data={resources:[{name:'meeting-db',id:'database-id'}],permission:'Read access verified. Creation requires write permission.'};
+ else if(p==='/api/owner/propose-cloudflare-resource'){resourceProposal=JSON.parse(init.body);data={proposal_id:17};}
+ else if(p==='/api/owner/propose-worker'){workerProposal=JSON.parse(init.body);data={proposal_id:18};}
  else if(p==='/api/owner/connections'){
    if(init.method==='POST'){connectCalls++;if(holdConnect)await new Promise(r=>releaseConnect=r);if(connectFailure)return Response.json({error:'Cloudflare did not allow access. Check Account ID and Workers Scripts: Edit.'},{status:502});data={ok:true,workers:2};}else data={connections:[]};
  }
@@ -81,3 +84,8 @@ assert.match(cfStatus.textContent,/Connected. 2 Workers/);assert.equal(document.
 context.addCloudflareAccount();cfForm=find(body,n=>n.tag==='form');cfStatus=document.getElementById('cf-connect-status');document.getElementById('cf-label').value='Second';document.getElementById('cf-account').value='b'.repeat(32);document.getElementById('cf-token').value='fixture-token-without-permission';
 connectFailure=true;const previousAlerts=alerts.length;await cfForm.onsubmit({preventDefault(){}});assert.match(cfStatus.textContent,/did not allow access/);assert.equal(alerts.length,previousAlerts);assert.equal(button('Try connecting again').disabled,false);
 console.log('PASS Cloudflare guided account form: navigation name, steps, local validation, progress, duplicate prevention, token clearing and inline retry errors');
+
+await context.resourceForm({id:7,label:'Account 7 Meeting App',account_id:'account-seven'});assert.ok(body.textContent.includes('meeting-db'));assert.ok(body.textContent.includes('Read access verified'));
+find(body,n=>n.attributes.placeholder==='New resource name').value='meeting-db';find(body,n=>n.tag==='select').value='d1';await button('Send creation to approval').onclick();assert.equal(resourceProposal.connection,'7');assert.equal(resourceProposal.kind,'d1');assert.equal(resourceProposal.name,'meeting-db');assert.ok(body.textContent.includes('Nothing has been created yet'));
+context.deployForm({id:7,label:'Account 7 Meeting App'});find(body,n=>n.attributes.placeholder==='Worker name (lowercase, dashes)').value='meeting-app';find(body,n=>n.attributes.placeholder==='Paste Worker code, or choose a .js file').value='export default {}';find(body,n=>n.attributes.placeholder?.startsWith('Optional bindings JSON')).value='[{"type":"ai","name":"AI"}]';button('Send to approval').onclick();await flush();assert.equal(workerProposal.connection,'7');assert.equal(workerProposal.bindings[0].name,'AI');
+console.log('PASS D1/R2 dashboard queues exact-account creation and Worker bindings without publishing (mock DOM)');
