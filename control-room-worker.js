@@ -621,11 +621,15 @@ async function unseal(env, s) {
 }
 async function cf(env, conn, method, path, body) {
   const tok = await unseal(env, conn.token_enc);
-  const init = { method, redirect: 'error', signal: AbortSignal.timeout(20000), headers: { authorization: 'Bearer ' + tok } };
+  const init = { method, redirect: 'manual', signal: AbortSignal.timeout(20000), headers: { authorization: 'Bearer ' + tok } };
   if (body) init.body = body;
   let r;
   try { r = await fetch('https://api.cloudflare.com/client/v4/accounts/' + conn.account_id + path, init); }
-  catch { fail('Cloudflare could not be reached in time. Your saved connection has not been changed. Try again when the connection is stable.', 504); }
+  catch (e) {
+    if (init.signal.aborted || e?.name === 'TimeoutError' || e?.name === 'AbortError') fail('The Cloudflare request timed out. Your saved connection has not been changed. Try again when the connection is stable.', 504);
+    fail('The server could not complete its request to Cloudflare. Your saved connection has not been changed. This is a server request failure, not proof that the token is invalid.', 502);
+  }
+  if (r.status >= 300 && r.status < 400) fail('Cloudflare redirected the API request. It was stopped without forwarding your token. Your saved connection has not been changed.', 502);
   let d = {};
   try { d = await r.json(); } catch { fail('Cloudflare returned an unreadable response. Your saved connection has not been changed.', 502); }
   if (!r.ok || d.success === false) {
@@ -677,7 +681,7 @@ async function maintenanceRun(env, actor, args) {
         result = { exists: !!w, worker: args.worker, modified_on: w ? w.modified_on : null };
       } else {
         const token = await unseal(env, conn.token_enc);
-        const response = await fetch('https://api.cloudflare.com/client/v4' + requestPath, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(20000), headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+        const response = await fetch('https://api.cloudflare.com/client/v4' + requestPath, { method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(20000), headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' }, body: JSON.stringify(payload) });
         const d = await response.json();
         if (!response.ok || d.success !== true) fail('Cloudflare did not confirm the purge. Check the action log and account permissions.', 502);
         result = { accepted: true, urls: payload.files };
@@ -720,7 +724,7 @@ async function maintenanceRoutes(req, env, user, sub, method) {
     if (!workers.length && !zone) fail('Grant at least one Worker or cache zone');
     if (zone) {
       const conn = await connById(env, id), token = await unseal(env, conn.token_enc);
-      const r = await fetch('https://api.cloudflare.com/client/v4/zones/' + zone, { headers: { authorization: 'Bearer ' + token }, redirect: 'error', signal: AbortSignal.timeout(20000) });
+      const r = await fetch('https://api.cloudflare.com/client/v4/zones/' + zone, { headers: { authorization: 'Bearer ' + token }, redirect: 'manual', signal: AbortSignal.timeout(20000) });
       const d = await r.json();
       if (!r.ok || d.success !== true || !d.result || !d.result.account || d.result.account.id !== conn.account_id) fail('Zone must belong to this Cloudflare account and be readable by its token', 403);
       const root = String(d.result.name).toLowerCase();
@@ -735,7 +739,7 @@ async function maintenanceRoutes(req, env, user, sub, method) {
 async function discoverAccount(token) {
   let d = {}, ok = false;
   try {
-    const r = await fetch('https://api.cloudflare.com/client/v4/accounts?per_page=5', { headers: { authorization: 'Bearer ' + token }, redirect: 'error', signal: AbortSignal.timeout(15000) });
+    const r = await fetch('https://api.cloudflare.com/client/v4/accounts?per_page=5', { headers: { authorization: 'Bearer ' + token }, redirect: 'manual', signal: AbortSignal.timeout(15000) });
     ok = r.ok; d = await r.json();
   } catch (e) { /* fall through */ }
   const list = (ok && d.result) || [];
@@ -1066,7 +1070,7 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
       const required = ['users','agents','sites','site_files','pages','proposals','upload_files','settings','audit_log','cf_connections','remote_sites','github_sites','ai_accounts','proposal_reviews','operation_locks','releases'];
       const missing = required.filter(t => !tables.includes(t));
       const counts = await env.DB.prepare("SELECT (SELECT COUNT(*) FROM sites) static_sites,(SELECT COUNT(*) FROM github_sites) github_sites,(SELECT COUNT(*) FROM remote_sites WHERE status='ready') blogs,(SELECT COUNT(*) FROM proposals WHERE sealed=1 AND status='waiting') waiting").first();
-      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'royal-ai-tools-20261019-7' });
+      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'cloudflare-runtime-20261019-8' });
     }
     if (m === 'POST') {
       const input = await body(req); if (input.action !== 'storage') fail('Unknown check');
@@ -1590,7 +1594,7 @@ async function rfetch(env, rs, method, path, payload, responseMeta) {
     url = 'https://www.googleapis.com/blogger/v3' + path;
     headers.authorization = 'Bearer ' + await googleAccessToken(env, rs);
   }
-  const init = { method, redirect: 'error', signal: AbortSignal.timeout(20000), headers };
+  const init = { method, redirect: 'manual', signal: AbortSignal.timeout(20000), headers };
   if (payload !== undefined) { init.body = JSON.stringify(payload); headers['content-type'] = 'application/json'; }
   const r = await fetch(url, init);
   if (responseMeta) responseMeta.totalPages = Number(r.headers.get('x-wp-totalpages')) || 0;
@@ -1746,7 +1750,7 @@ async function googleCallback(req, env) {
   const bj = await b.json().catch(() => ({}));
   if (!b.ok || !bj.id) return page('Signed in, but I could not find a Blogger blog at ' + rs.url + '. Check the blog address and that this Google account owns it.', false);
   if (!/^[0-9]+$/.test(String(bj.id))) return page('Google returned an invalid blog identifier.', false);
-  const access = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs/' + bj.id + '?maxPosts=0', { redirect: 'error', headers: { authorization: 'Bearer ' + d.access_token } });
+  const access = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs/' + bj.id + '?maxPosts=0', { redirect: 'manual', headers: { authorization: 'Bearer ' + d.access_token } });
   const info = await access.json().catch(() => ({}));
   if (!access.ok || !info.blog_user_info || info.blog_user_info.hasAdminAccess !== true) return page('Sign in with a Google account that has administrator access to this Blogger blog.', false);
   sec.refresh_token = d.refresh_token || sec.refresh_token;
@@ -1766,10 +1770,10 @@ async function driveToken(c) {
   const der = Uint8Array.from(atob(c.private_key.replace(/-----[^-]+-----/g,'').replace(/\s/g,'')),x=>x.charCodeAt(0));
   let key; try { key = await crypto.subtle.importKey('pkcs8',der,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']); } catch(e) { fail('Invalid Google service-account private key'); }
   const assertion = data+'.'+b64url(new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,new TextEncoder().encode(data))));
-  const r = await fetch('https://oauth2.googleapis.com/token',{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion})});
+  const r = await fetch('https://oauth2.googleapis.com/token',{method:'POST',redirect:'manual',signal:AbortSignal.timeout(20000),headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion})});
   const d=await r.json(); if(!r.ok||!d.access_token) fail('Google sign-in failed. Check the service account and enable Google Drive API.',502); return d.access_token;
 }
-async function driveFetch(token,path) { const r=await fetch('https://www.googleapis.com/drive/v3/files'+path,{redirect:'error',signal:AbortSignal.timeout(20000),headers:{authorization:'Bearer '+token}});if(!r.ok)fail('Google Drive could not read this file. Check folder sharing and Drive API access.',502);return r; }
+async function driveFetch(token,path) { const r=await fetch('https://www.googleapis.com/drive/v3/files'+path,{redirect:'manual',signal:AbortSignal.timeout(20000),headers:{authorization:'Bearer '+token}});if(!r.ok)fail('Google Drive could not read this file. Check folder sharing and Drive API access.',502);return r; }
 async function driveMeta(t,id) { return (await driveFetch(t,'/'+driveId(id)+'?fields=id,name,mimeType,parents,size,trashed&supportsAllDrives=true')).json(); }
 async function driveWithin(t,c,id) { let at=driveId(id);for(let i=0;i<20;i++){const m=await driveMeta(t,at);if(m.trashed)fail('This Drive file is in the bin',403);if(at===c.folder)return; if(!m.parents||m.parents.length!==1)break;at=m.parents[0];}fail('File is outside the connected project folder',403); }
 async function driveList(env,folder,cursor) { const c=await driveConfig(env),t=await driveToken(c),id=driveId(folder||c.folder);await driveWithin(t,c,id);const m=await driveMeta(t,id);if(m.mimeType!=='application/vnd.google-apps.folder')fail('Choose a folder');const q=new URLSearchParams({q:"'"+id+"' in parents and trashed = false",fields:'nextPageToken,files(id,name,mimeType,size)',pageSize:'50',supportsAllDrives:'true',includeItemsFromAllDrives:'true'});if(cursor){if(String(cursor).length>2000)fail('Invalid cursor');q.set('pageToken',cursor);}return (await driveFetch(t,'?'+q)).json(); }
@@ -1797,7 +1801,7 @@ async function ghById(env, idOrLabel, sc) {
 }
 const ghEnc = p => p.split('/').map(encodeURIComponent).join('/');
 async function gh(env, g, method, path, payload) {
-  const init = { method, redirect: 'error', signal: AbortSignal.timeout(20000), headers: { authorization: 'Bearer ' + await unseal(env, g.secret_enc), accept: 'application/vnd.github+json', 'user-agent': 'control-room', 'x-github-api-version': '2022-11-28' } };
+  const init = { method, redirect: 'manual', signal: AbortSignal.timeout(20000), headers: { authorization: 'Bearer ' + await unseal(env, g.secret_enc), accept: 'application/vnd.github+json', 'user-agent': 'control-room', 'x-github-api-version': '2022-11-28' } };
   if (payload !== undefined) { init.body = JSON.stringify(payload); init.headers['content-type'] = 'application/json'; }
   const r = await fetch('https://api.github.com/repos/' + g.repo + path, init);
   let d = null;
@@ -2331,7 +2335,7 @@ async function route(req, env) {
   if (m === 'GET' && (x = p.match(/^\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, false);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, true);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/work\/(w_[a-f0-9]{16})$/))) return publicWork(x[1], env);
-  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'royal-ai-tools-20261019-7' });
+  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'cloudflare-runtime-20261019-8' });
   if (m === 'POST' && p === '/api/signup') return signup(req, env);
   if (p === '/mcp') return m === 'POST' ? mcp(req, env) : new Response('Use POST', { status: 405 });
   if ((x = p.match(/^\/s\/([a-z0-9-]{1,60})(\/.*)?$/))) {

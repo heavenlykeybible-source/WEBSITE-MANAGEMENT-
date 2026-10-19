@@ -23,3 +23,11 @@ Official references:
 Publish the updated root control-room-worker.js through the existing Worker deployment, preserving the current DB, FILES, SESSION_SECRET, ADMIN_USER, ADMIN_PASS and VAULT_KEY. No migration or credential reset is required. Committing the source does not prove that a live deployment occurred.
 
 The complete local Control Room test suite passed. New checks exercise the actual dashboard form handlers (mock DOM/HTTP), loading state, validation, double-submit prevention, inline errors, token clearing, encrypted storage, typographic labels, invalid account IDs, provider permission errors, network failure and preservation of existing encrypted tokens on failed replacement. Real Cloudflare token acceptance requires a live credential supplied privately by the owner.
+
+## Workers runtime compatibility correction
+
+The previous connection helper used `redirect: "error"`, which Cloudflare Workers rejects before sending a request. The catch block incorrectly described every fetch failure as a timeout. This update uses `manual`, blocks Cloudflare API redirects before consuming the response, and distinguishes actual timeout/abort errors from other request failures. It also removes the unsupported option from the other authenticated provider helpers (Workers maintenance, WordPress/Blogger, Google Drive and GitHub). Manual redirects do not forward credentials to another address.
+
+Regression checks emulate the Workers rejection of the unsupported mode, require manual redirects, verify a redirect does not trigger a second request or save credentials, and distinguish real timeouts from network/request failures. All existing credentials, bindings and databases remain unchanged.
+
+Reference: https://developers.cloudflare.com/workers/runtime-apis/request/

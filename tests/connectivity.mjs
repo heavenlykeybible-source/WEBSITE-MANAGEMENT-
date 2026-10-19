@@ -10,7 +10,7 @@ await test('system diagnostics remain owner-only and reject unknown actions',asy
 // Token checks must never damage previously saved credentials.
 env.VAULT_KEY='fixture-vault-key-for-cloudflare-tests';const realFetch=globalThis.fetch;let cloudCalls=0;
 try {
- globalThis.fetch=async(u,init)=>{cloudCalls++;assert.equal(init.headers.authorization,'Bearer fixture-token-123456789012345');return Response.json({success:true,result:[{id:'worker-one'}]});};
+ globalThis.fetch=async(u,init)=>{cloudCalls++;if(init.redirect==='error')throw new TypeError('Unsupported redirect mode: error');assert.equal(init.redirect,'manual');assert.equal(init.headers.authorization,'Bearer fixture-token-123456789012345');return Response.json({success:true,result:[{id:'worker-one'}]});};
  await test('Cloudflare account accepts typographic dashes and encrypts token before storage',async()=>{
    const r=await call('connections','POST',{label:'Account 2 — Studio',account_id:'a'.repeat(32),token:'fixture-token-123456789012345'});assert.equal(r.status,201);assert.equal((await r.json()).workers,1);const c=raw.prepare('SELECT * FROM cf_connections').get();assert.equal(c.label,'Account 2 - Studio');assert.notEqual(c.token_enc,'fixture-token-123456789012345');
  });
@@ -19,6 +19,11 @@ try {
  await test('Cloudflare permission failure gives actionable guidance without saving partial accounts',async()=>{await assert.rejects(call('connections','POST',{label:'Other',account_id:'b'.repeat(32),token:'fixture-token-123456789012345'}),e=>e.message.includes('Workers Scripts: Edit'));assert.equal(raw.prepare('SELECT COUNT(*) n FROM cf_connections').get().n,1)});
  await test('failed token replacement preserves the previously encrypted credential',async()=>{const before=raw.prepare('SELECT * FROM cf_connections').get();await assert.rejects(call('connections/'+before.id+'/token','POST',{token:'replacement-fixture-123456789'}));assert.equal(raw.prepare('SELECT token_enc FROM cf_connections WHERE id=?').get(before.id).token_enc,before.token_enc)});
  globalThis.fetch=async()=>{throw Error('network down')};
- await test('Cloudflare network failures become safe timeout messages without deleting saved accounts',async()=>{await assert.rejects(call('connections','POST',{label:'Other',account_id:'b'.repeat(32),token:'fixture-token-123456789012345'}),e=>e.status===504&&e.message.includes('has not been changed'));assert.equal(raw.prepare('SELECT COUNT(*) n FROM cf_connections').get().n,1)});
+ await test('Cloudflare network failures are not misreported as timeouts without deleting saved accounts',async()=>{await assert.rejects(call('connections','POST',{label:'Other',account_id:'b'.repeat(32),token:'fixture-token-123456789012345'}),e=>e.status===502&&e.message.includes('server request failure'));assert.equal(raw.prepare('SELECT COUNT(*) n FROM cf_connections').get().n,1)});
+ globalThis.fetch=async()=>{throw new DOMException('The operation timed out','TimeoutError')};
+ await test('actual Cloudflare timeout has a distinct timeout response',async()=>{await assert.rejects(call('connections','POST',{label:'Other',account_id:'b'.repeat(32),token:'fixture-token-123456789012345'}),e=>e.status===504&&e.message.includes('timed out'))});
+ let redirectedCalls=0;globalThis.fetch=async(u,init)=>{redirectedCalls++;assert.equal(init.redirect,'manual');return new Response(null,{status:302,headers:{location:'https://untrusted.test/'}})};
+ await test('Cloudflare redirects are stopped without following or saving credentials',async()=>{await assert.rejects(call('connections','POST',{label:'Other',account_id:'b'.repeat(32),token:'fixture-token-123456789012345'}),e=>e.message.includes('without forwarding'));assert.equal(redirectedCalls,1);assert.equal(raw.prepare('SELECT COUNT(*) n FROM cf_connections').get().n,1)});
+ await test('Worker source contains no unsupported redirect error options',async()=>{assert.doesNotMatch(fs.readFileSync('control-room-worker.js','utf8'),/redirect\s*:\s*['"]error['"]/)});
 } finally { globalThis.fetch=realFetch; }
 raw.close();console.log(count+' website connectivity/system checks passed');
