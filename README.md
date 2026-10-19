@@ -6,10 +6,12 @@ Run checks: `node tests/run.mjs`. Deployment: `npx wrangler deploy`.
 
 See the included audit, setup, login, release and maintenance guides for capabilities and limitations.
 
+## Live and meeting studio
+
+The separate [Zoom Studio project](zoom-studio/README.md) contains the audited upload, owner/admin user management, a ministry banner and a responsive template. It deploys to its own Cloudflare Worker and database. The existing Control Room remains at the root. Radio is on hold.
 
 
-## Heavenly Key Studio
 
-Account 2 source and its dedicated Studio are in `studio/`. See [STUDIO-REFINEMENT.md](STUDIO-REFINEMENT.md) for changes, tests and activation on the existing Workers.
+## Account 2 Studio
 
-The Studio module plan and prepared single-channel installation are in [studio/ROADMAP.md](studio/ROADMAP.md) and [studio/ACCOUNT4-INSTALLATION.md](studio/ACCOUNT4-INSTALLATION.md).
+The separately prepared Studio is in studio/. See STUDIO-REFINEMENT.md and studio/ACCOUNT4-INSTALLATION.md. Meeting-app deployments remain separate from Studio.

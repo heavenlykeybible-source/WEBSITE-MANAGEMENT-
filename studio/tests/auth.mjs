@@ -87,5 +87,14 @@ try{
   assert.equal(raw.prepare("SELECT count(*) n FROM login_attempts WHERE ip='192.0.2.4'").get().n,10);
   }finally{globalThis.fetch=realFetch;}
  });
+
+ await test('Studio backchannels use Workers-compatible manual redirects without forwarding credentials',async()=>{
+  const previous=globalThis.fetch;let calls=[];
+  try{globalThis.fetch=async(url,options)=>{if(options.redirect==='error')throw Error('Unsupported redirect mode');calls.push({url,options});return new Response(null,{status:302,headers:{location:'https://untrusted.test/'}});};
+  const passwordResponse=await studioAuthRoute(req('https://studio.test/auth/password','POST',{user:'owner',pass:controlEnv.ADMIN_PASS},{origin:'https://studio.test'}),env);assert.equal(passwordResponse.status,502);assert.match((await passwordResponse.json()).error,/redirected/);
+  const codeResponse=await studioAuthRoute(req(callback.href,'GET',undefined,{cookie:stateCookie}),env);assert.equal(codeResponse.status,502);
+  assert.equal(calls.length,2);assert.ok(calls.every(x=>x.options.redirect==='manual'&&x.url.startsWith('https://room.test/')));assert.ok(!calls.some(x=>x.url.includes('untrusted.test')));
+  }finally{globalThis.fetch=previous;}
+ });
  raw.close();console.log(count+' Studio authentication checks passed');
 }finally{fs.unlinkSync(target);}

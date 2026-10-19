@@ -2,8 +2,8 @@
   "format": "heavenly-key-studio-single-worker-v1",
   "worker": "heavenlykey-media",
   "bundle": "studio-worker.js",
-  "bytes": 282333,
-  "sha256": "7bd886faede01aeaf2f189a4f639e91dc0d6bb079a26359a0329626d1f271875",
+  "bytes": 282723,
+  "sha256": "65838e3822075baefb3a2e6b6f8fa7b1363532ade2213c0e2aeca6b10a592048",
   "assetCount": 14,
   "assets": {
     "/assets/ministry/logo.svg": "95973432f94126d94294835f97d3d29a0e9806484784651a041e3d7d93f993a5",
@@ -32,7 +32,7 @@
     "src/studio/audio-processing.ts": "7209d79611066a948c6dfb47226436a317216cbf66bbb6a3f95f8c90197facd5",
     "src/studio/formats.ts": "a4a1dd4b704fc8a71eea1d9a87ad0466eb4dfe7b965a083849d8f581169a79a5",
     "src/studio-assets.ts": "2a9f0c999c8a8bf0078f3ae79232188268efb7e97424c6931e599fa126d8888e",
-    "src/studio-auth.ts": "de87cee5cc8be722245e8a44dfa55a3006f6666f967be5233efecc8ca26bc88f",
+    "src/studio-auth.ts": "8cc820fcf150347e44e3673f38633270db11198d2d78925b44c16f3343827ab8",
     "src/uploads.ts": "618565546aa5e0cfc54aef36b435475a21733ad8c3dcd588fd6c8c8fa5b140e1"
   },
   "deployChannel": "Account 4 control room -> connected Account 2 -> existing heavenlykey-media Worker",

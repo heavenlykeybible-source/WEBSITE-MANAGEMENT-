@@ -1,0 +1,1 @@
+Put your backup video here and name it backup.mp4 (it must include audio). A short advert, a message or a looping radio video all work. An audio file such as backup.mp3 also works and plays over a plain background. Then start the relay with FALLBACK=./fallback/backup.mp4

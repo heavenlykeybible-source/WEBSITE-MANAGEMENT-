@@ -69,3 +69,14 @@ The source still supports an ASSETS binding, but the Account 4 upload path now h
 See studio/ACCOUNT4-INSTALLATION.md for controller/account mapping, staged first upload, retention of existing services and the dependency-based cleanup process. Live account mapping and retirement decisions still need the forthcoming access. No production resources were deleted or deployed.
 
 Current checks: 124 control room regressions; 17 Studio authentication/media checks; 8 radio workflow assertions; 8 streaming/connection checks; simulated camera permission/cleanup tests; single-file release serving/hash/size checks; TypeScript, source syntax and preflight. The updated full DOM simulation passes eleven-section navigation, form containment, audio filtering, camera-off radio selection, ministry footer and website links. Actual camera hardware, live credentials, incoming Facebook video and public delivery remain acceptance work after access is available.
+
+
+## Predeployment integration — 20 October 2026
+
+This candidate now incorporates the current main control room, including its Cloudflare connection persistence, D1/R2 resource proposals, deployment binding support and meeting-app changes. It does not replace those with the older Studio branch's control room snapshot.
+
+The Studio authentication backchannels now use Workers-supported manual redirects. Redirect responses stop with a setup error and never forward credentials or sign-in codes to another host. A regression test emulates the unsupported redirect mode and verifies redirect isolation for password and single-use-code sign-in.
+
+Current validation: 148 control room checks and 18 Studio authentication/media checks, radio workflow tests, connection tests, simulated device checks, TypeScript, preflight and single-file release verification pass.
+
+Live installation has not started. TinyFish's Default profile has no recorded signed-in control-room session yet. The owner has been given the secure setup page for https://control.heavenlykey.org/ and needs to sign in and Save profile before authenticated inspection. Verify actual account IDs and current bindings before any deployment. Account 7 meeting-app work is separate; this operation is the newly authorized Account 2 Studio work.

@@ -457,10 +457,11 @@ async function studioAuthRoute(req, env) {
     if (!input || typeof input.user !== "string" || input.user.length > 254 || typeof input.pass !== "string" || !input.pass || input.pass.length > 128) return json({ error: "Enter your control room username and password" }, 400);
     let response;
     try {
-      response = await fetch(controlOrigin(env) + "/api/studio/password-login", { method: "POST", redirect: "error", signal: AbortSignal.timeout(15e3), headers: { "content-type": "application/json", authorization: "Bearer " + env.STUDIO_SSO_SECRET, "x-studio-client-ip": req.headers.get("cf-connecting-ip") || "studio-unknown" }, body: JSON.stringify({ user: input.user, pass: input.pass, audience: u.origin }) });
+      response = await fetch(controlOrigin(env) + "/api/studio/password-login", { method: "POST", redirect: "manual", signal: AbortSignal.timeout(15e3), headers: { "content-type": "application/json", authorization: "Bearer " + env.STUDIO_SSO_SECRET, "x-studio-client-ip": req.headers.get("cf-connecting-ip") || "studio-unknown" }, body: JSON.stringify({ user: input.user, pass: input.pass, audience: u.origin }) });
     } catch {
       return json({ error: "Control room could not be reached. Please try again." }, 502);
     }
+    if (response.status >= 300 && response.status < 400) return json({ error: "The control room redirected the sign-in request. Check CONTROL_ROOM_URL; credentials were not forwarded." }, 502);
     if (!response.ok) {
       if (response.status === 429) return json({ error: "Too many sign-in attempts. Wait ten minutes, then try again." }, 429);
       if (response.status === 403) return json({ error: "Use an active control room owner or admin account." }, 403);
@@ -481,10 +482,11 @@ async function studioAuthRoute(req, env) {
     if (!/^[a-f0-9]{64}$/.test(state) || !/^[a-f0-9]{64}$/.test(code) || cookie(req, "__Host-hk-studio-state") !== state) return json({ error: "Sign-in could not be confirmed. Open Studio again from the control room." }, 401);
     let response;
     try {
-      response = await fetch(controlOrigin(env) + "/api/studio/redeem", { method: "POST", redirect: "error", signal: AbortSignal.timeout(1e4), headers: { "content-type": "application/json", authorization: "Bearer " + env.STUDIO_SSO_SECRET }, body: JSON.stringify({ state, code, audience: u.origin }) });
+      response = await fetch(controlOrigin(env) + "/api/studio/redeem", { method: "POST", redirect: "manual", signal: AbortSignal.timeout(1e4), headers: { "content-type": "application/json", authorization: "Bearer " + env.STUDIO_SSO_SECRET }, body: JSON.stringify({ state, code, audience: u.origin }) });
     } catch {
       return json({ error: "Control room could not be reached. Open Studio again to retry." }, 502);
     }
+    if (response.status >= 300 && response.status < 400) return json({ error: "The control room redirected the sign-in request. Check CONTROL_ROOM_URL; credentials were not forwarded." }, 502);
     if (!response.ok) return json({ error: "Sign-in expired or was denied. Open Studio again from the control room." }, 401);
     const owner = await response.json();
     return establishSession(owner, env);
