@@ -60,3 +60,11 @@ API references:
 - https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/create/
 - https://developers.cloudflare.com/api/resources/r2/subresources/buckets/methods/create/
 - https://developers.cloudflare.com/workers/configuration/multipart-upload-metadata/
+
+### Complete meeting package and generated secrets
+
+Worker proposals now allow `generated_secret` bindings such as `{"type":"generated_secret","name":"AUTH_SECRET"}`. Only missing bindings receive a new 256-bit secret. Values are encrypted in settings and sent directly to Cloudflare metadata; they do not enter proposal previews, logs, public assets or GitHub source. Existing secret bindings are always inherited. The bounded code limit is 1.4 MB; the request limit remains 1.5 MB.
+
+The Zoom project includes a reproducible compressed single-module package for the existing upload form. This replaces the need for a separate static asset upload for this app. It initializes only CREATE IF NOT EXISTS tables/indexes and supports owner entry from the existing Control Room owner session. The owner-launch endpoint is fixed to the Account 7 meeting Worker; it never returns the shared secret, and its signed ticket is sent by POST and consumed once. Other accounts, member users and ordinary admins cannot use this owner entry.
+
+The owner selected Account 7's existing `heavenlykey-db` and `heavenlymedia` resources. The obsolete P-4 database creation proposal is not needed for that selection. Do not approve it as part of the meeting app deployment.

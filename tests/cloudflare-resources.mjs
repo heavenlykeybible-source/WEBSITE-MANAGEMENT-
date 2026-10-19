@@ -25,6 +25,7 @@ globalThis.fetch=async(input,init)=>{
  if(init.method!=='GET')writes.push({url:u.pathname,init});
  if(u.pathname.endsWith('/workers/scripts'))return ok([]);
  if(u.pathname.endsWith('/settings'))return oldSettings?ok(oldSettings):Response.json({success:false},{status:404});
+ if(u.pathname.endsWith('/subdomain'))return ok({subdomain:'account-seven'});
  if(u.pathname.endsWith('/d1/database')&&init.method==='GET')return ok(exists?[{uuid:database,name:'meeting-db'}]:[]);
  if(u.pathname.endsWith('/d1/database')&&init.method==='POST'){assert.equal(init.headers['content-type'],'application/json');assert.deepEqual(JSON.parse(init.body),{name:'meeting-db'});exists=true;return ok({uuid:database,name:'meeting-db'});}
  if(u.pathname.endsWith('/d1/database/'+database))return ok({uuid:database,name:'meeting-db'});
@@ -77,6 +78,21 @@ try{
  });
  await test('Worker binding replacement is blocked before deployment',async()=>{
   const before=writes.length;await assert.rejects(deployWorker(e.env,1,'meeting-app','export default {}',[{type:'r2_bucket',name:'OLDDB',bucket_name:'meeting-files'}]),x=>x.status===409);assert.equal(writes.length,before);
+ });
+ await test('generated Worker secrets stay encrypted, survive redeploy and support owner-only meeting launch',async()=>{
+  oldSettings=null;await deployWorker(e.env,1,'heavenly-key-zoom-studio','export default {}',[{type:'generated_secret',name:'AUTH_SECRET'}]);
+  const upload=writes.findLast(x=>x.init.method==='PUT');
+  const meta=JSON.parse(await upload.init.body.get('metadata').text()),secret=meta.bindings.find(x=>x.name==='AUTH_SECRET').text;
+  assert.match(secret,/^[a-f0-9]{64}$/);
+  const record=e.raw.prepare("SELECT value_json FROM settings WHERE key LIKE 'worker-secret:%'").get().value_json;
+  assert.ok(!record.includes(secret));assert.ok(!JSON.stringify(e.raw.prepare('SELECT * FROM audit_log').all()).includes(secret));
+  oldSettings={bindings:[{type:'secret_text',name:'AUTH_SECRET'}],compatibility_date:'2026-01-01'};
+  await deployWorker(e.env,1,'heavenly-key-zoom-studio','export default {}',[{type:'generated_secret',name:'AUTH_SECRET'}]);
+  assert.deepEqual(JSON.parse(await writes.at(-1).init.body.get('metadata').text()).bindings,[{type:'inherit',name:'AUTH_SECRET'}]);
+  const launch=await(await e.call('connections/1/meeting-launch','POST',{})).json();
+  assert.equal(launch.url,'https://heavenly-key-zoom-studio.account-seven.workers.dev/api/control-login');assert.ok(launch.ticket);assert.ok(!JSON.stringify(launch).includes(secret));
+  const claims=JSON.parse(Buffer.from(launch.ticket.split('.')[0],'base64url'));assert.equal(claims.e,'owner@studio.local');assert.equal(claims.k,'control-owner');assert.ok(claims.exp<=Date.now()+60000);
+  const url=new URL('https://room');await assert.rejects(ownerApi(new Request(url,{method:'POST',body:'{}'}),e.env,{...e.user,role:'admin'},'connections/1/meeting-launch','POST',url),x=>x.status===403);
  });
  await test('resource-specific permission errors preserve encrypted connections and never masquerade as missing resources',async()=>{
   const prev=globalThis.fetch,token=e.raw.prepare('SELECT token_enc FROM cf_connections').get().token_enc;

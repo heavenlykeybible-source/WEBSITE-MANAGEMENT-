@@ -3,7 +3,8 @@
   "version":"1.0.0",
   "private":true,
   "scripts":{
-    "test":"node --test tests/worker.test.mjs tests/deployment.test.mjs",
+    "test":"node --test tests/worker.test.mjs tests/deployment.test.mjs tests/control-room-package.test.mjs",
+    "bundle:control-room":"node scripts/bundle-control-room.mjs",
     "configure":"node scripts/configure.mjs",
     "deploy":"node scripts/deploy.mjs"
   },

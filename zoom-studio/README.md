@@ -19,3 +19,15 @@ Use a dedicated Worker named `heavenly-key-zoom-studio` and a dedicated D1 datab
 The manual GitHub Actions workflow provides the same deployment after checks. It requires deployment credentials in the `zoom-studio` environment: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `STUDIO_D1_DATABASE_ID`. No deployment credentials were supplied with the ZIP. Commits run checks only; selecting the explicit Deploy option initiates a production deployment.
 
 Only site/ is public. Server utilities, test fixtures and password hashes must never be served as assets. The existing Pages site.zip method remains supported; the generated Wrangler configuration instead deploys this as a Worker with static assets.
+
+## Deployment through the Control Room
+
+Run `npm run bundle:control-room` to generate `build/meeting-worker.mjs`. The bundle embeds all 19 public files as compressed assets; backend source and private setup scripts are excluded from public routes. The dedicated database schema is additive and idempotent, initialized on first API use. Existing records and identities are never overwritten. The generated package is approximately 1.24 MB and fits the Control Room's bounded 1.4 MB code limit.
+
+For Account 7, the owner selected database `heavenlykey-db` (`9549fc74-f6a8-4cf8-a066-7cb965c59b91`) and bucket `heavenlymedia`. Submit the bundle as Worker `heavenly-key-zoom-studio`, with bindings `d1/TEAMDB` to that database ID, `r2_bucket/FILES` to `heavenlymedia`, `ai/AI`, and `generated_secret/AUTH_SECRET`.
+
+The deployment creates a missing AUTH_SECRET privately and stores an encrypted copy in the Control Room. Subsequent deployments inherit the existing secret. Preserve the Control Room vault and database. The new Worker receives its workers.dev address; existing Workers keep their public-access settings.
+
+After deployment, use **Cloudflare → Account 7 → Workers → Open meeting app as owner**. The Control Room owner receives a signed, single-use, 60-second launch ticket through a POST, never in the URL. The app initializes its reserved owner identity only when absent and refuses to override a conflicting account. This owner entry does not configure a password login or reset any existing password. Password-based owner/admin provisioning remains a separate private operation in ACCOUNT-SETUP.md.
+
+This bundle supplies the website, database initialization and owner entry. Guest rooms and RTMP streaming still require the separate running relay and its matching configuration; Cloudflare website deployment does not provide FFmpeg or the Node relay.

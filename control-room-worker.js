@@ -386,7 +386,8 @@ function workerBindings(value) {
     if (b.type === 'd1' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(b.id || '')) return { type:'d1', name:b.name, id:b.id };
     if (b.type === 'r2_bucket') return { type:'r2_bucket', name:b.name, bucket_name:resourceSpec({kind:'r2',name:b.bucket_name}).name };
     if (b.type === 'ai') return { type:'ai', name:b.name };
-    fail('Bindings support D1 database IDs, R2 bucket names and Workers AI only.');
+    if (b.type === 'generated_secret') return {type:'generated_secret',name:b.name};
+    fail('Bindings support D1, R2, AI and new generated secrets only.');
   });
 }
 async function checkWorkerBindings(env, conn, old, additions) {
@@ -394,7 +395,7 @@ async function checkWorkerBindings(env, conn, old, additions) {
   const existing = Array.isArray(old?.bindings) ? old.bindings : [];
   for (const b of additions) {
     const current = existing.find(x => x.name === b.name);
-    if (current && (current.type !== b.type || (b.type === 'd1' && current.id !== b.id) || (b.type === 'r2_bucket' && (current.bucket_name !== b.bucket_name || current.jurisdiction && current.jurisdiction !== 'default')))) fail('Existing binding ' + b.name + ' points elsewhere. Replacement is not allowed.', 409);
+    if (current && (current.type !== (b.type === 'generated_secret' ? 'secret_text' : b.type) || (b.type === 'd1' && current.id !== b.id) || (b.type === 'r2_bucket' && (current.bucket_name !== b.bucket_name || current.jurisdiction && current.jurisdiction !== 'default')))) fail('Existing binding ' + b.name + ' points elsewhere. Replacement is not allowed.', 409);
     if (b.type === 'd1') {
       const d = await cf(env, conn, 'GET', '/d1/database/' + b.id);
       if (d.result?.uuid !== b.id) fail('Database was not verified in this account.', 409);
@@ -425,7 +426,7 @@ async function coreProposeWorker(env, actor, b) {
   const additions = workerBindings(b.bindings);
   if (additions.length) cloudflareActor(actor);
   const code = String(b.code || '');
-  if (!code || code.length > 1000000) fail('Code is required (1 MB max)');
+  if (!code || enc.encode(code).byteLength > 1400000) fail('Code is required (1.4 MB max)');
   await limitWaiting(env, actor);
   const r = await env.DB.prepare("INSERT INTO proposals (agent_id, kind, title, note, new_content_json) VALUES (?,'worker',?,?,?)")
     .bind(actor.agentId, ('Deploy Worker ' + name + ' to ' + conn.label).slice(0, 120), String(b.note || '').slice(0, 1000), JSON.stringify({ connection_id: conn.id, name, ...(additions.length ? { bindings:additions } : {}) })).run();
@@ -841,7 +842,18 @@ async function deployWorker(env, connId, name, code, additions = []) {
   const bindings = [];
   let hasAssets = false;
   if (old && Array.isArray(old.bindings)) for (const b of old.bindings) if (b && b.name) { bindings.push({ type: 'inherit', name: b.name }); if (b.type === 'assets') hasAssets = true; }
-  for (const b of additions) if (!bindings.some(x => x.name === b.name)) bindings.push(b);
+  for (const b of additions) if (!bindings.some(x => x.name === b.name)) {
+    if (b.type !== 'generated_secret') { bindings.push(b); continue; }
+    const key = 'worker-secret:' + conn.id + ':' + name + ':' + b.name;
+    let saved = await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+    if (!saved) {
+      const value = hex(crypto.getRandomValues(new Uint8Array(32)));
+      await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES (?,?) ON CONFLICT(key) DO NOTHING').bind(key,JSON.stringify({sealed:await seal(env,value)})).run();
+      saved = await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+    }
+    if (!saved) fail('Secret storage failed. No Worker was uploaded.',502);
+    bindings.push({type:'secret_text',name:b.name,text:await unseal(env,JSON.parse(saved.value_json).sealed)});
+  }
   const meta = { main_module: 'worker.js', compatibility_date: (old && old.compatibility_date) || '2025-01-01', bindings };
   if (old && Array.isArray(old.compatibility_flags) && old.compatibility_flags.length) meta.compatibility_flags = old.compatibility_flags;
   if (hasAssets) meta.keep_assets = true;
@@ -849,6 +861,7 @@ async function deployWorker(env, connId, name, code, additions = []) {
   form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }), 'metadata.json');
   form.append('worker.js', new Blob([code], { type: 'application/javascript+module' }), 'worker.js');
   await cf(env, conn, 'PUT', '/workers/scripts/' + name + '?bindings_inherit=strict', form);
+  if (!old) await cf(env,conn,'POST','/workers/scripts/' + name + '/subdomain',{enabled:true});
 }
 
 // ---------- shared protections, immutable reviews and publication records ----------
@@ -961,6 +974,7 @@ async function reviewSnapshot(env, P) {
       checks.push('New bindings verified in this account; existing bindings cannot be redirected');
     }
     target = 'worker:' + conn.id + ':' + m.name;
+    if (workerBindings(m.bindings).some(b=>b.type==='generated_secret')) warnings.push('Missing generated secrets will be created privately; existing secrets are retained. A new Worker receives its workers.dev address.');
     warnings.push('Single-file Worker code review only. No isolated Worker execution, runtime test or automatic Worker rollback is provided.');
   } else fail('Unsupported proposal kind');
   const candidateHash = await sha256(JSON.stringify(candidate)), baselineHash = await sha256(JSON.stringify(baseline));
@@ -1176,7 +1190,7 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
       const required = ['users','agents','sites','site_files','pages','proposals','upload_files','settings','audit_log','cf_connections','remote_sites','github_sites','ai_accounts','proposal_reviews','operation_locks','releases'];
       const missing = required.filter(t => !tables.includes(t));
       const counts = await env.DB.prepare("SELECT (SELECT COUNT(*) FROM sites) static_sites,(SELECT COUNT(*) FROM github_sites) github_sites,(SELECT COUNT(*) FROM remote_sites WHERE status='ready') blogs,(SELECT COUNT(*) FROM proposals WHERE sealed=1 AND status='waiting') waiting").first();
-      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'cloudflare-resources-20261020-10' });
+      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'meeting-installer-20261020-11' });
     }
     if (m === 'POST') {
       const input = await body(req); if (input.action !== 'storage') fail('Unknown check');
@@ -1350,6 +1364,20 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
   }
 
   if (m === 'GET' && (x = sub.match(/^connections\/(\d+)\/resources$/))) return json(await cloudflareResources(env,actor,{connection:+x[1],kind:u.searchParams.get('kind'),page:u.searchParams.get('page'),cursor:u.searchParams.get('cursor')}));
+  if (m === 'POST' && (x = sub.match(/^connections\/(\d+)\/meeting-launch$/))) {
+    if (user.kind !== 'staff' || user.role !== 'owner') fail('Only the owner can open this app as owner.',403);
+    const c = await connById(env,x[1]), name='heavenly-key-zoom-studio';
+    if (c.account_id !== '6401a8f41a41f5325ba5bd4d006b4ff5') fail('This launch belongs to Account 7 only.',403);
+    const saved = await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('worker-secret:' + c.id + ':' + name + ':AUTH_SECRET').first();
+    if (!saved) fail('Deploy the meeting app with a generated AUTH_SECRET first.',409);
+    const d = await cf(env,c,'GET','/workers/subdomain'), subdomain=d.result?.subdomain;
+    if (!/^[a-z0-9][a-z0-9-]{0,62}$/.test(subdomain || '')) fail('Cloudflare did not return a usable Workers subdomain.',502);
+    const key = await unseal(env,JSON.parse(saved.value_json).sealed);
+    const payload=btoa(JSON.stringify({k:'control-owner',e:'owner@studio.local',n:crypto.randomUUID(),exp:Date.now()+60000})).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const ticket=payload+'.'+await hmac(key,payload);
+    await audit(env,who,'meeting-owner-launch', 'connection ' + c.id);
+    return json({url:'https://'+name+'.'+subdomain+'.workers.dev/api/control-login',ticket});
+  }
   if (sub === 'connections' && m === 'GET') {
     const r = await env.DB.prepare('SELECT id, label, account_id, created_at FROM cf_connections ORDER BY label').all();
     return json({ connections: r.results });
@@ -1394,7 +1422,8 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
   }
   if (m === 'GET' && (x = sub.match(/^connections\/(\d+)\/workers$/))) {
     const d = await cf(env, await connById(env, x[1]), 'GET', '/workers/scripts');
-    return json({ workers: (d.result || []).map(s => ({ name: s.id, modified: s.modified_on })) });
+    let suffix='';try{const account=await cf(env,await connById(env,x[1]),'GET','/workers/subdomain');if(/^[a-z0-9][a-z0-9-]{0,62}$/.test(account.result?.subdomain||''))suffix=account.result.subdomain;}catch(e){}
+    return json({ workers: (d.result || []).map(s => ({ name:s.id, modified:s.modified_on, url:suffix&&/^[a-z0-9][a-z0-9-]{0,62}$/.test(s.id)?'https://'+s.id+'.'+suffix+'.workers.dev/':null })) });
   }
   if (m === 'POST' && (x = sub.match(/^connections\/(\d+)\/workers\/([A-Za-z0-9_-]{1,63})\/delete$/))) {
     const b = await body(req);
@@ -2144,7 +2173,7 @@ const TOOLS = [
   {name:'list_cloudflare_resources',description:'List one page of D1 databases or R2 buckets on an exact saved connection. Returns pagination. Read checks do not prove write permission. Unscoped staff only.',inputSchema:{type:'object',properties:{connection:{type:'integer'},kind:{type:'string',enum:['d1','r2']},page:{type:'integer'},cursor:{type:'string'}},required:['connection','kind']}},
   {name:'propose_cloudflare_resource',description:'Propose creation of one empty D1 database or private R2 bucket on a saved account. Owner review and approval required. Never replaces resources, executes SQL, enables billing or exposes bucket contents.',inputSchema:{type:'object',properties:{connection:{type:'string'},kind:{type:'string',enum:['d1','r2']},name:{type:'string'},note:{type:'string'}},required:['connection','kind','name']}},
   { name: 'list_connections', description: 'List connected Cloudflare accounts (labels only).', inputSchema: { type: 'object', properties: {} } },
-  { name: 'propose_worker_deploy', description: 'Propose deploying ES-module Worker code to a connected Cloudflare account. The owner reviews the code and must approve.', inputSchema: { type: 'object', properties: { connection: { type: 'string' }, name: { type: 'string' }, code: { type: 'string' }, bindings:{type:'array',maxItems:20,items:{type:'object',properties:{type:{type:'string',enum:['d1','r2_bucket','ai']},name:{type:'string'},id:{type:'string'},bucket_name:{type:'string'}},required:['type','name']}}, note: { type: 'string' } }, required: ['connection', 'name', 'code'] } },
+  { name: 'propose_worker_deploy', description: 'Propose deploying ES-module Worker code to a connected Cloudflare account. The owner reviews the code and must approve.', inputSchema: { type: 'object', properties: { connection: { type: 'string' }, name: { type: 'string' }, code: { type: 'string' }, bindings:{type:'array',maxItems:20,items:{type:'object',properties:{type:{type:'string',enum:['d1','r2_bucket','ai','generated_secret']},name:{type:'string'},id:{type:'string'},bucket_name:{type:'string'}},required:['type','name']}}, note: { type: 'string' } }, required: ['connection', 'name', 'code'] } },
   { name: 'list_remote_sites', description: 'List connected WordPress and Blogger sites.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_remote_posts', description: 'List posts or pages of a connected WordPress or Blogger site. Pass next_cursor as cursor to read the next batch.', inputSchema: { type: 'object', properties: { site: { type: 'string' }, type: { type: 'string', description: 'post or page' }, cursor: { type: 'string' } }, required: ['site'] } },
   { name: 'read_remote_post', description: 'Read one post or page (title, status, HTML content).', inputSchema: { type: 'object', properties: { site: { type: 'string' }, type: { type: 'string' }, post_id: { type: 'string' } }, required: ['site', 'post_id'] } },
@@ -2450,7 +2479,7 @@ async function route(req, env) {
   if (m === 'GET' && (x = p.match(/^\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, false);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, true);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/work\/(w_[a-f0-9]{16})$/))) return publicWork(x[1], env);
-  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'cloudflare-resources-20261020-10' });
+  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'meeting-installer-20261020-11' });
   if (m === 'POST' && p === '/api/signup') return signup(req, env);
   if (p === '/mcp') return m === 'POST' ? mcp(req, env) : new Response('Use POST', { status: 405 });
   if ((x = p.match(/^\/s\/([a-z0-9-]{1,60})(\/.*)?$/))) {
@@ -2551,7 +2580,7 @@ function item(label,icon,fn,id){var a={class:CURRENT_NAV===label?'active':'',onc
 group('Workspace');item('Waiting','◷',waiting,'wb');if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
 group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4)item('Cloudflare','☁',cloud);
 group('Administration');if(!M&&lv()>=4)item('System checks','✓',systemChecks);if(!M&&lv()>=3){item('Team','♧',users);item('Log','≡',logTab);}item('Account','○',account);item('Sign out','↪',logout);return n;}
-function lagosTime(value){if(!value)return 'Not recorded';var v=String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
+function lagosTime(value){if(!value)return 'Not recorded';var v=typeof value==='number'?value:String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
 async function systemChecks(){try{var data=await api('system/checks'),list=h('div'),status=h('p',{class:'tag',role:'status'},'');data.checks.forEach(function(c){list.appendChild(h('div',{class:'card'},h('b',{},(c.passed?'✓ ':'! ')+c.name),h('p',{class:'tag'},c.detail)));});show(nav(),h('div',{class:'eyebrow'},'System health'),h('h3',{class:'page-title'},'Connection & storage checks'),h('p',{class:'page-intro'},'These checks test this installation. Real WordPress, Blogger, GitHub and external AI connections need their own Check or Test action after you connect an account.'),list,h('p',{},'Managed sites: '+data.counts.static_sites+' · GitHub connections: '+data.counts.github_sites+' · Ready blogs: '+data.counts.blogs+' · Waiting: '+data.counts.waiting),h('button',{onclick:async function(){status.textContent='Testing a temporary storage object…';try{var r=await api('system/checks','POST',{action:'storage'});status.textContent=r.detail;}catch(e){status.textContent=e.message;}}},'Test file storage'),h('button',{class:'sm',onclick:aiAccounts},'Test AI'),status,h('p',{class:'tag'},'Build '+data.version));}catch(e){oops(e);}}
 function passwordField(input){var button=h('button',{type:'button',class:'sm','aria-pressed':'false',onclick:function(){var visible=input.type==='password';input.type=visible?'text':'password';button.textContent=visible?'Hide password':'Show password';button.setAttribute('aria-pressed',String(visible));input.focus();}},'Show password');return h('div',{class:'password-field'},input,button);}
 async function passwordDialog(title){return new Promise(function(resolve){var dialog=h('dialog'),input=h('input',{type:'password',autocomplete:'current-password',placeholder:'Current password'});function done(value){dialog.close();dialog.remove();resolve(value);}dialog.appendChild(h('h3',{},title));dialog.appendChild(passwordField(input));dialog.appendChild(h('button',{onclick:function(){done(input.value);}},'Confirm'));dialog.appendChild(h('button',{class:'sm',onclick:function(){done(null);}},'Cancel'));dialog.addEventListener('cancel',function(e){e.preventDefault();done(null);});document.body.appendChild(dialog);dialog.showModal();input.focus();});}
@@ -2588,7 +2617,7 @@ var row=h('details',{class:'queue-row'},h('summary',{},h('span',{class:'row-numb
 h('div',{class:'queue-body'},h('dl',{class:'meta-grid'},h('div',{},h('dt',{},'Sent / received'),h('dd',{},lagosTime(received))),h('div',{},h('dt',{},'Created'),h('dd',{},lagosTime(p.created_at))),h('div',{},h('dt',{},'Review version'),h('dd',{},'P-'+p.id)),h('div',{},h('dt',{},'Submitted by'),h('dd',{},p.agent)),h('div',{},h('dt',{},'Destination'),h('dd',{},p.slug||'Control room')),h('div',{},h('dt',{},'Status'),h('dd',{},status))),p.note?h('p',{},p.note):null,preview,h('button',{onclick:function(){openP(p.id);}},status==='waiting'?'Open full preview & approval':'Open review details'),h('p',{class:'tag'},'Approval checks the exact version and current website state. All times are Africa/Lagos (WAT).')));
 row.addEventListener('toggle',async function(){if(!row.open||loaded)return;loaded=true;preview.textContent='Loading preview…';try{var r=await api('proposals/'+p.id);preview.innerHTML='';var content;
 if(p.kind==='page')content=view(r.after);else if(p.kind==='design')content=dprev(r.after);else if(p.kind==='remote')content=frame(r.remote.after.content);else if(p.kind==='upload'){var link=await api('proposals/'+p.id+'/preview-link');content=h('iframe',{sandbox:'allow-scripts allow-forms',class:'fr',title:'Proposed website preview',src:link.url+(r.proposal.entry||'index.html')});}else if(p.kind==='github'){var html=r.github.files.find(function(f){return !f.deleted&&/\\.html?$/i.test(f.path);});content=html?frame(html.after):h('p',{class:'tag'},'Code proposal: use full review to inspect every changed file.');}else if(p.kind==='cloudflare_resource')content=h('pre',{},JSON.stringify(r.resource,null,2));else content=h('pre',{},r.worker.code);
-preview.appendChild(h('div',{class:'preview-shell'},h('div',{class:'preview-heading'},h('span',{},p.kind==='worker'?'Source review':'General preview'),h('span',{},'P-'+p.id+' · Not live')),h('div',{class:'preview-content'},content)));
+preview.appendChild(h('div',{class:'preview-shell'},h('div',{class:'preview-heading'},h('span',{},p.kind==='worker'?'Source review':p.kind==='cloudflare_resource'?'Resource creation review':'General preview'),h('span',{},'P-'+p.id+' · Not live')),h('div',{class:'preview-content'},content)));
 }catch(e){preview.textContent=e.message;loaded=false;}});box.appendChild(h('tr',{},h('td',{},row)));});
 var filters=h('div',{class:'filters'});['waiting','approved','rejected','changes_requested','uncertain'].forEach(function(x){filters.appendChild(h('button',{class:st===x?'selected':'sm',onclick:function(){waiting(x);}},x==='changes_requested'?'Changes requested':x.charAt(0).toUpperCase()+x.slice(1)));});
 show(nav(),h('div',{class:'eyebrow'},'Review & release'),h('h3',{class:'page-title'},'The Waiting Room'),h('p',{class:'page-intro'},'Every proposal arrives here before publication. Expand a row to preview the work, then open its full approval review.'),h('div',{class:'stat-grid'},h('div',{class:'stat'},h('strong',{},String(d.proposals.length)),h('span',{},'Items in this view')),h('div',{class:'stat'},h('strong',{},'WAT'),h('span',{},'Lagos time · UTC+1')),h('div',{class:'stat'},h('strong',{},'Review first'),h('span',{},'Your approval controls publication'))),filters,h('div',{class:'queue-table-wrap'},queueTable));TAB=st;if(st==='waiting')WAITN=d.proposals.length;
@@ -2741,7 +2770,7 @@ h('button',{class:'bad',onclick:async function(){try{var pw=await passwordDialog
 }catch(e){oops(e);}}
 async function listWorkers(c,w){try{var d=await api('connections/'+c.id+'/workers');w.innerHTML='';
   if(!d.workers.length)w.appendChild(h('p',{class:'tag'},'No Workers.'));
-  d.workers.forEach(function(x){w.appendChild(h('div',{class:'tag'},x.name+' · '+x.modified));});}catch(e){oops(e);}}
+  d.workers.forEach(function(x){w.appendChild(h('div',{class:'tag'},x.name+' · '+x.modified));if(x.url)w.appendChild(h('a',{href:x.url,target:'_blank',rel:'noopener',class:'btn sm'},'Open website'));if(x.name==='heavenly-key-zoom-studio'&&c.account_id==='6401a8f41a41f5325ba5bd4d006b4ff5'&&ME.role==='owner')w.appendChild(h('button',{onclick:async function(){try{var r=await api('connections/'+c.id+'/meeting-launch','POST',{}),form=h('form',{method:'POST',action:r.url,target:'_blank'}),ticket=h('input',{type:'hidden',name:'ticket',value:r.ticket});form.appendChild(ticket);document.body.appendChild(form);form.submit();form.remove();}catch(e){oops(e);}}},'Open meeting app as owner'));});}catch(e){oops(e);}}
 async function resourceForm(c,kind,page,cursor){kind=kind||'d1';page=page||1;try{
   var out=h('div'),status=h('p',{class:'tag',role:'status'},'');
   try{var d=await api('connections/'+c.id+'/resources?kind='+kind+'&page='+page+(cursor?'&cursor='+encodeURIComponent(cursor):''));
@@ -2756,7 +2785,7 @@ async function resourceForm(c,kind,page,cursor){kind=kind||'d1';page=page||1;try
 }catch(e){oops(e);}}
 function deployForm(c){var nm=h('input',{placeholder:'Worker name (lowercase, dashes)'}),code=h('textarea',{rows:8,placeholder:'Paste Worker code, or choose a .js file'}),f=h('input',{type:'file',accept:'.js,.mjs'}),note=h('input',{placeholder:'Note (optional)'}),bindings=h('textarea',{rows:4,placeholder:'Optional bindings JSON: [{"type":"d1","name":"TEAMDB","id":"database UUID"}]'});
   f.onchange=function(){if(f.files[0])f.files[0].text().then(function(t){code.value=t;});};
-  show(nav(),h('h3',{},'Deploy to '+c.label),h('p',{class:'tag'},'This goes to Waiting. You review the code before anything deploys. If the Worker already exists, its bindings and secrets are kept. Check observability and other settings after the first deploy.'),nm,code,f,h('p',{class:'tag'},'Optional new bindings: d1 (name, id), r2_bucket (name, bucket_name), ai (name). Existing bindings cannot be replaced. Create resources first under D1 / R2 resources.'),bindings,note,
+  show(nav(),h('h3',{},'Deploy to '+c.label),h('p',{class:'tag'},'This goes to Waiting. You review the code before anything deploys. If the Worker already exists, its bindings and secrets are kept. Check observability and other settings after the first deploy.'),nm,code,f,h('p',{class:'tag'},'Optional new bindings: d1 (name, id), r2_bucket (name, bucket_name), ai (name), generated_secret (name). Existing bindings cannot be replaced. Create resources first under D1 / R2 resources.'),bindings,note,
     h('button',{onclick:function(){var extra;try{extra=bindings.value.trim()?JSON.parse(bindings.value):[];}catch(e){oops(new Error('Enter valid bindings JSON.'));return;}api('propose-worker','POST',{connection:String(c.id),name:nm.value.trim(),code:code.value,bindings:extra,note:note.value}).then(function(){alert('Sent to Waiting.');waiting();}).catch(oops);}},'Send to approval'));}
 function showLink(out,r){out.innerHTML='';out.appendChild(h('p',{class:'tag'},(r.mailed?'Also sent by email. ':'')+'Send this link to the member. It works once:'));
   out.appendChild(h('div',{class:'tok'},r.link));out.appendChild(h('button',{class:'sm',onclick:function(){navigator.clipboard.writeText(r.link);}},'Copy link'));}

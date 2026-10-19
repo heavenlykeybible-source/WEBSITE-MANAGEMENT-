@@ -64,7 +64,7 @@ await context.users();find(body,n=>n.attributes.placeholder==='Username (letters
 
 assert.match(context.lagosTime('2026-10-18 23:30:00'),/19 Oct 2026, 12:30 am WAT/);
 assert.equal(context.lagosTime('2026-10-18 23:30:00'),context.lagosTime('2026-10-18T23:30:00Z'));
-assert.equal(context.lagosTime(null),'Not recorded');
+assert.equal(context.lagosTime(null),'Not recorded');assert.equal(context.lagosTime(Date.parse('2026-10-18T23:30:00Z')),context.lagosTime('2026-10-18T23:30:00Z'));
 await context.waiting();const queueRow=find(body,n=>n.tag==='details'&&n.className==='queue-row');assert.ok(queueRow);assert.ok(body.textContent.includes('Review version'));assert.ok(body.textContent.includes('P-1'));const beforePreview=publications;queueRow.open=true;await queueRow.listeners.toggle();assert.ok(body.textContent.includes('General preview'));assert.equal(publications,beforePreview);
 console.log('PASS expandable queue rows load previews without publishing and format timestamps in Lagos time');
 
