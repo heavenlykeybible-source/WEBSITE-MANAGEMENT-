@@ -8,7 +8,7 @@ Run `npm test` in this directory (Node 22+). The existing repository also requir
 
 ## Cloudflare deployment
 
-Use a dedicated Worker named `heavenly-key-zoom-studio` and a dedicated D1 database named `heavenly-key-zoom-studio-db`, separate from existing production resources. Account 2 remains the intended studio account; choose it when authorizing Cloudflare access. The repository's root Worker configuration and bindings are preserved.
+Use a dedicated Worker named `heavenly-key-zoom-studio` and a dedicated D1 database named `heavenly-key-zoom-studio-db`, separate from existing production resources. This meeting app targets Account 7 (`6401a8f41a41f5325ba5bd4d006b4ff5`) only. The generated configuration pins that account and rejects conflicting account environment variables. Account 2 belongs to the separate Studio and must not be changed. Account 8 is not this deployment target. The repository's root Worker configuration and bindings are preserved.
 
 1. In the intended Cloudflare account, create the dedicated D1 database and retain its ID. If the studio already has a database, preserve it and inspect its schema before migration; do not replace it or seed over its accounts.
 2. Set `STUDIO_D1_DATABASE_ID` locally to that ID. Run `npm run deploy` with Cloudflare authentication. This applies tracked additive migrations and uploads the Worker/assets. Configure `AUTH_SECRET` as a private Worker secret before activating accounts. Existing deployments must retain that secret.

@@ -3,7 +3,7 @@
   "version":"1.0.0",
   "private":true,
   "scripts":{
-    "test":"node --test tests/worker.test.mjs",
+    "test":"node --test tests/worker.test.mjs tests/deployment.test.mjs",
     "configure":"node scripts/configure.mjs",
     "deploy":"node scripts/deploy.mjs"
   },
