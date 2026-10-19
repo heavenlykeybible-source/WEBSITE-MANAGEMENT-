@@ -3,7 +3,7 @@
   "source_ref": "146ecd64321976344b08596beaf605e17e525ee0",
   "destination_prefix": "work-studio/source/",
   "verified_files": 422,
-  "unavailable_files": 4,
+  "unavailable_files": 0,
   "files": [
     {
       "path": ".env.example",
@@ -415,15 +415,17 @@
       "path": "heavenly-key-website/assets/ministry/1CBCB9C2-1EB2-4775-A94E-A4D01C97EEDB.png",
       "sha": "16ae7ca7f01972cd461eaa9dfdfd1f7800bd7364",
       "size": 2024923,
-      "status": "unavailable-large-asset",
-      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/1CBCB9C2-1EB2-4775-A94E-A4D01C97EEDB.png"
+      "status": "generated-replacement",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/1CBCB9C2-1EB2-4775-A94E-A4D01C97EEDB.png",
+      "replacement_sha": "167cd410630522f56e70b5434be4daa32cf67512"
     },
     {
       "path": "heavenly-key-website/assets/ministry/Evangelist Emmanuel picture1.jpeg",
       "sha": "a93101e645c13a0036b26020c7daba46bed340ce",
       "size": 1045891,
-      "status": "unavailable-large-asset",
-      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/Evangelist Emmanuel picture1.jpeg"
+      "status": "generated-replacement",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/Evangelist Emmanuel picture1.jpeg",
+      "replacement_sha": "acc6498db349acad840e16e461c33a184c9b6bf6"
     },
     {
       "path": "heavenly-key-website/assets/ministry/IMG_0434.webp",
@@ -471,8 +473,9 @@
       "path": "heavenly-key-website/assets/ministry/approved-ai-transparent-original.png",
       "sha": "9094fc0f017823b17ad0ffe9cd6bc4f99a775a75",
       "size": 1489990,
-      "status": "unavailable-large-asset",
-      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-ai-transparent-original.png"
+      "status": "generated-replacement",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-ai-transparent-original.png",
+      "replacement_sha": "07c8281bf4f5b6fce57e0134f8500be3f9526220"
     },
     {
       "path": "heavenly-key-website/assets/ministry/approved-radio-display-20261017.webp",
@@ -499,8 +502,9 @@
       "path": "heavenly-key-website/assets/ministry/approved-radio-transparent-original.png",
       "sha": "2f271405454b1c32383bd93ca0dd80bf280e134b",
       "size": 1467653,
-      "status": "unavailable-large-asset",
-      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-radio-transparent-original.png"
+      "status": "generated-replacement",
+      "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/heavenly-key-website/assets/ministry/approved-radio-transparent-original.png",
+      "replacement_sha": "fe989cd47f3be7b2d4c1f89044b97c29e60f2721"
     },
     {
       "path": "heavenly-key-website/assets/ministry/assignment-banner.webp",
@@ -2987,5 +2991,7 @@
       "status": "verified-copy",
       "source_url": "https://github.com/heavenlykeybible-source/onlinebible/blob/146ecd64321976344b08596beaf605e17e525ee0/wrangler.toml"
     }
-  ]
+  ],
+  "generated_replacements": 4,
+  "replacement_note": "Four missing legacy assets replaced with new artwork at the owner's request. Source sha and size remain original metadata; replacement_sha identifies the current asset. The JPEG is ministry artwork, not a photograph of Evangelist Emmanuel."
 }

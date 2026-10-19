@@ -15,13 +15,9 @@ This branch is a source-preservation workspace, not a deployed studio or an appr
 ## Copy verification
 422 of 426 selected source files have exact matching Git blob hashes. All 21 media-engine files and all 388 selected text files are present. See IMPORT-MANIFEST.json for every source hash and status.
 
-Four large legacy main-website image assets could not be downloaded using the available GitHub file connector; it returned empty content for files over 1 MB. They are NOT replaced with empty or invented files:
-- heavenly-key-website/assets/ministry/1CBCB9C2-1EB2-4775-A94E-A4D01C97EEDB.png
-- heavenly-key-website/assets/ministry/Evangelist Emmanuel picture1.jpeg
-- heavenly-key-website/assets/ministry/approved-ai-transparent-original.png
-- heavenly-key-website/assets/ministry/approved-radio-transparent-original.png
+All four previously unavailable images now have owner-authorized generated replacements. The 422 exact source copies are preserved. The portrait-named JPEG contains clearly labeled ministry artwork, not an invented photograph. See ASSET-PROVENANCE.md and replacement_sha fields in IMPORT-MANIFEST.json.
 
-Their immutable hashes and source links are retained in the manifest. The studio logo and all smaller shared images were copied. This is not yet a complete image mirror of Account 1.
+Backend validation passed: TypeScript check, preflight (5 migrations and required bindings), and Wrangler deployment dry run. These are build checks, not live integration or broadcast tests.
 
 ## Next work
 Consolidate the studio frontend and backend into an independent build; resolve old URLs/repository references; preserve existing heavenlykey-media Worker identity and its D1/KV/R2 bindings; prepare staged tests and owner-reviewed deployment. Design verified single sign-on from Account 4 and studio.heavenlykey.org separately. Do not remove authentication.
