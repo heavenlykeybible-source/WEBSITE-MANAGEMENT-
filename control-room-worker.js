@@ -76,6 +76,47 @@ async function audit(env, actor, action, detail) {
   await env.DB.prepare('INSERT INTO audit_log (actor, action, detail) VALUES (?,?,?)').bind(actor, action, String(detail || '').slice(0, 500)).run();
 }
 
+// Studio uses a single-use code; no owner password or media secret leaves this Worker.
+function studioOrigin(env) {
+  let u; try { u = new URL(env.STUDIO_URL); } catch { fail('Set STUDIO_URL to the existing Studio HTTPS origin.', 503); }
+  if (u.protocol !== 'https:' || u.username || u.password || u.pathname !== '/' || u.search || u.hash) fail('STUDIO_URL must be an HTTPS origin.', 503);
+  return u.origin;
+}
+function studioSecret(env) {
+  if (typeof env.STUDIO_SSO_SECRET !== 'string' || env.STUDIO_SSO_SECRET.length < 32) fail('Studio single sign-in is not configured.', 503);
+  return env.STUDIO_SSO_SECRET;
+}
+async function studioIssue(req, env, user) {
+  if (user.kind === 'member' || user.role !== 'owner') fail('Owner access required', 403);
+  const b = await body(req);
+  if (!/^[a-f0-9]{64}$/.test(b.state || '')) fail('Invalid Studio sign-in request');
+  const audience = studioOrigin(env), key = studioSecret(env);
+  const code = hex(crypto.getRandomValues(new Uint8Array(32)));
+  await env.DB.prepare('DELETE FROM studio_signin_codes WHERE expires_at<=?').bind(Date.now()).run();
+  await env.DB.prepare('INSERT INTO studio_signin_codes(code_hash,user_id,pass_ver,state,audience,expires_at) VALUES(?,?,?,?,?,?)').bind(await hmac(key, 'studio-code:' + code), user.id, user.pass_ver, b.state, audience, Date.now()+60000).run();
+  await audit(env, user.username, 'studio.signin.issue', audience);
+  const target = new URL('/auth/callback', audience); target.searchParams.set('code', code); target.searchParams.set('state', b.state);
+  return json({url: target.href});
+}
+async function studioRedeem(req, env) {
+  const key = studioSecret(env);
+  if (!safeEq(req.headers.get('authorization') || '', 'Bearer ' + key)) fail('Unauthorized', 401);
+  const b = await body(req);
+  if (!/^[a-f0-9]{64}$/.test(b.code || '') || !/^[a-f0-9]{64}$/.test(b.state || '') || b.audience !== studioOrigin(env)) fail('Invalid sign-in code', 401);
+  // DELETE RETURNING is atomic: two requests can never redeem the same code.
+  const grant = await env.DB.prepare('DELETE FROM studio_signin_codes WHERE code_hash=? AND state=? AND audience=? AND expires_at>? RETURNING user_id,pass_ver').bind(await hmac(key, 'studio-code:' + b.code), b.state, b.audience, Date.now()).first();
+  if (!grant) fail('Sign-in expired. Open Studio again from the control room.', 401);
+  const user = await env.DB.prepare('SELECT id,username,role,status,pass_ver,kind FROM users WHERE id=?').bind(grant.user_id).first();
+  if (!user || user.role !== 'owner' || user.kind === 'member' || user.status !== 'active' || user.pass_ver !== grant.pass_ver) fail('Owner session is no longer valid', 401);
+  await audit(env, user.username, 'studio.signin.redeem', b.audience);
+  return json({sub:'control-room:' + user.id, role:'Super Administrator', name:user.username});
+}
+function studioConnectPage() {
+  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Open Heavenly Key Studio</title><body><h1>Opening Heavenly Key Studio</h1><p id="status" role="status">Checking your control room session…</p><p><a href="/">Sign in to the control room</a></p><script>
+  (async function(){try{const state=new URL(location.href).searchParams.get('state');if(!/^[a-f0-9]{64}$/.test(state||''))throw Error('Open Studio using the Studio button in the control room.');const r=await fetch('/api/owner/studio/signin',{method:'POST',headers:{'content-type':'application/json','x-cr':'1'},body:JSON.stringify({state})});const d=await r.json();if(!r.ok)throw Error(d.error||'Sign in to the control room, then open Studio again.');location.replace(d.url);}catch(e){document.getElementById('status').textContent=e.message;}})();
+  </script></body></html>`,{headers:{'content-type':'text/html;charset=utf-8','cache-control':'no-store','referrer-policy':'no-referrer','content-security-policy':"default-src 'none'; script-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'"}});
+}
+
 // ---------- accounts, roles, sessions ----------
 const LEVEL = { viewer: 1, editor: 2, admin: 3, owner: 4 };
 const lvl = r => LEVEL[r] || 0;
@@ -128,7 +169,7 @@ async function ensureOwner(env) {
 }
 function minRole(sub, m) {
   if (sub === 'me' || sub === 'password') return 1;
-  if (sub === 'system/checks') return 4;
+  if (sub === 'system/checks' || sub === 'studio/signin') return 4;
   if (sub === 'locks' || sub === 'locks/release' || /^releases\/[a-f0-9-]{36}\/(restore|resolve)$/.test(sub) || /^proposals\/\d+\/stage$/.test(sub)) return 4;
   if (sub.startsWith('connections')) return 4;
   if (sub.startsWith('users') || sub.startsWith('agents') || sub === 'audit') return 3;
@@ -1036,6 +1077,7 @@ async function ownerApi(req, env, user, sub, m, u) {
   return publishing ? withOperationLock(env, 'publication:global', () => ownerApiUnlocked(req, env, user, sub, m, u)) : ownerApiUnlocked(req, env, user, sub, m, u);
 }
 async function ownerApiUnlocked(req, env, user, sub, m, u) {
+  if (sub === 'studio/signin' && m === 'POST') return studioIssue(req, env, user);
   let x;
   const ow = user.kind === 'member' ? user.id : null;
   const actor = { kind: 'owner', agentId: 0, user, ow };
@@ -2300,6 +2342,9 @@ async function route(req, env) {
   const u = new URL(req.url);
   const p = u.pathname, m = req.method;
   if (!env.ADMIN_USER || !env.ADMIN_PASS) fail('Set ADMIN_USER and ADMIN_PASS secrets before using Control Room.', 503);
+  if (p === '/api/studio/redeem' && m === 'POST') return studioRedeem(req, env);
+  if (p === '/studio' && m === 'GET') return Response.redirect(studioOrigin(env) + '/auth/start', 302);
+  if (p === '/studio/connect' && m === 'GET') return studioConnectPage();
   const origin = req.headers.get('origin');
   if (origin && origin !== u.origin && (p.startsWith('/api/') || p === '/mcp')) fail('Cross-origin request denied', 403);
   if (req.headers.get('sec-fetch-site') === 'cross-site' && (p.startsWith('/api/') || p === '/mcp')) fail('Cross-site request denied', 403);
@@ -2421,7 +2466,7 @@ var CURRENT_NAV='Waiting';
 function nav(){var M=ME.kind==='member',n=h('nav',{class:'sidenav','aria-label':'Control room navigation'},h('div',{class:'userchip'},ME.username,h('small',{},ME.role+' workspace')));
 function group(t){n.appendChild(h('div',{class:'nav-heading'},t));}
 function item(label,icon,fn,id){var a={class:CURRENT_NAV===label?'active':'',onclick:function(){CURRENT_NAV=label;fn();}};if(id)a.id=id;n.appendChild(h('button',a,h('span',{class:'nav-icon','aria-hidden':'true'},icon),h('span',{},label==='Waiting'?'Waiting ('+WAITN+')':label)));}
-group('Workspace');item('Waiting','◷',waiting,'wb');if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
+group('Workspace');item('Waiting','◷',waiting,'wb');if(!M&&lv()>=4)item('Studio','▣',function(){location.assign('/studio');});if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
 group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4)item('Cloud','☁',cloud);
 group('Administration');if(!M&&lv()>=4)item('System checks','✓',systemChecks);if(!M&&lv()>=3){item('Team','♧',users);item('Log','≡',logTab);}item('Account','○',account);item('Sign out','↪',logout);return n;}
 function lagosTime(value){if(!value)return 'Not recorded';var v=String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
@@ -2767,3 +2812,4 @@ async function logTab(){try{var d=await api('audit');var box=h('div');
   show(nav(),h('h3',{},'Activity log'),box);}catch(e){oops(e);}}
 var rt=new URLSearchParams(location.search).get('reset');if(rt)resetScreen(rt);else start();
 </script></body></html>`;
+

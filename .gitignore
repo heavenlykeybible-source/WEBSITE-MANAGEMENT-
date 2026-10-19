@@ -1,0 +1,6 @@
+node_modules/
+.wrangler/
+tests/*-test.mjs
+.env
+.env.*
+.dev.vars
