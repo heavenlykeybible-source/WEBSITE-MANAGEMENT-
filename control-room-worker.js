@@ -1385,6 +1385,10 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
     await env.DB.prepare('UPDATE users SET public=? WHERE id=?').bind(b.public ? 1 : 0, user.id).run();
     return json({ ok: true });
   }
+  if (sub === 'ai/network' && m === 'GET') {
+    try { await aiPost('https://api.openai.com/v1/chat/completions', { authorization: 'Bearer diagnostic-invalid-key-not-real' }, { model: 'gpt-4.1-mini', messages: [{ role: 'user', content: 'OK' }] }); return json({ checked: true, message: 'Provider responded.' }); }
+    catch (e) { return json({ checked: true, message: e.message || 'Connection check failed', status: e.status || 500 }); }
+  }
   if (sub === 'ai' && m === 'GET') { const list = await aiProviders(env, sc.ow); return json({ enabled: list.length > 0, accounts: list, model: list[0] ? list[0].model : '' }); }
   if (sub === 'ai' && m === 'POST') return json(await aiChat(env, user, await body(req)));
   if (sub === 'ai/accounts' && m === 'POST') {
@@ -1933,11 +1937,18 @@ async function aiAgent(env, acct, ow) {
 }
 async function aiPost(url, headers, payload) {
   let r;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000);
   try {
-    r = await fetch(url, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(25000), headers: Object.assign({ 'content-type': 'application/json' }, headers), body: JSON.stringify(payload) });
+    r = await fetch(url, { method: 'POST', redirect: 'manual', signal: controller.signal, headers: Object.assign({ 'content-type': 'application/json' }, headers), body: JSON.stringify(payload) });
   } catch (e) {
-    fail('The AI provider could not be reached. Check the API base URL and try again.', 502);
-  }
+    let detail = String(e && e.message || 'Connection failed');
+    for (const value of Object.values(headers)) { const token = String(value).replace(/^Bearer\s+/i, ''); if (token.length >= 8) detail = detail.split(token).join('[redacted]'); }
+    detail = detail.replace(/sk-[A-Za-z0-9_-]+/g, '[redacted]');
+    if (controller.signal.aborted) fail('The AI provider connection timed out after 25 seconds. Please try again later.', 502);
+    fail('The AI provider could not be reached. Network detail: ' + detail.slice(0, 180), 502);
+  } finally { clearTimeout(timer); }
+  if (r.status >= 300 && r.status < 400) fail('The AI API address redirected the request. Use the provider’s exact API base URL. Credentials were not forwarded.', 502);
   let d;
   try { d = await r.json(); } catch (e) { fail('The AI provider returned an unreadable response (HTTP ' + r.status + '). Check the API base URL and try again.', 502); }
   if (!r.ok) {
@@ -2074,7 +2085,7 @@ async function route(req, env) {
   if (m === 'GET' && (x = p.match(/^\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, false);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, true);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/work\/(w_[a-f0-9]{16})$/))) return publicWork(x[1], env);
-  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'ai-connect-20261019-2' });
+  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'ai-connect-20261019-3' });
   if (m === 'POST' && p === '/api/signup') return signup(req, env);
   if (p === '/mcp') return m === 'POST' ? mcp(req, env) : new Response('Use POST', { status: 405 });
   if ((x = p.match(/^\/s\/([a-z0-9-]{1,60})(\/.*)?$/))) {
