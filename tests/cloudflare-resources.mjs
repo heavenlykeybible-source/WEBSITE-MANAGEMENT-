@@ -36,6 +36,14 @@ globalThis.fetch=async(input,init)=>{
  throw Error('Unexpected API call '+u.pathname);
 };
 try{
+ await test('direct meeting installer queues the complete verified package on Account 7 without external writes',async()=>{
+  const before=writes.length,r=await(await e.call('connections/1/meeting-install','POST',{})).json();assert.equal(r.status,'waiting');assert.equal(writes.length,before);
+  const p=e.raw.prepare('SELECT * FROM proposals WHERE id=?').get(r.proposal_id),m=JSON.parse(p.new_content_json);
+  assert.equal(m.connection_id,1);assert.equal(m.name,'heavenly-key-zoom-studio');assert.equal(m.bindings.find(x=>x.name==='TEAMDB').id,'9549fc74-f6a8-4cf8-a066-7cb965c59b91');assert.equal(m.bindings.find(x=>x.name==='FILES').bucket_name,'heavenlymedia');
+  const stored=await e.env.FILES.get('worker/'+r.proposal_id+'/worker.js');assert.ok((await stored.text()).includes('const MEETING_ASSETS='));assert.ok((await stored.text()).includes('controlRoomOwnerLogin'));
+  e.raw.prepare('UPDATE cf_connections SET account_id=? WHERE id=1').run('b'.repeat(32));await assert.rejects(e.call('connections/1/meeting-install','POST',{}),x=>x.status===403);e.raw.prepare('UPDATE cf_connections SET account_id=? WHERE id=1').run(account);
+  const url=new URL('https://room');await assert.rejects(ownerApi(new Request(url,{method:'POST',body:'{}'}),e.env,{...e.user,role:'admin'},'connections/1/meeting-install','POST',url),x=>x.status===403);
+ });
  await test('D1 creation queues without any Cloudflare writes, then exact owner approval creates one empty database',async()=>{
   const p=await coreProposeResource(e.env,e.actor,{connection:'1',kind:'d1',name:'meeting-db'});assert.equal(writes.length,0);
   const d=await(await e.call('proposals/'+p.proposal_id)).json();assert.equal(d.resource.account_id,account);

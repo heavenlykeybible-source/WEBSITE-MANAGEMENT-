@@ -68,3 +68,9 @@ Worker proposals now allow `generated_secret` bindings such as `{"type":"generat
 The Zoom project includes a reproducible compressed single-module package for the existing upload form. This replaces the need for a separate static asset upload for this app. It initializes only CREATE IF NOT EXISTS tables/indexes and supports owner entry from the existing Control Room owner session. The owner-launch endpoint is fixed to the Account 7 meeting Worker; it never returns the shared secret, and its signed ticket is sent by POST and consumed once. Other accounts, member users and ordinary admins cannot use this owner entry.
 
 The owner selected Account 7's existing `heavenlykey-db` and `heavenlymedia` resources. The obsolete P-4 database creation proposal is not needed for that selection. Do not approve it as part of the meeting app deployment.
+
+### Direct reviewed installation
+
+Account 7's card includes **Install meeting app** for the signed-in owner. The server verifies the embedded package's SHA-256 and queues that exact code plus the selected D1/R2/AI/generated-secret bindings. No browser file picker or manual code paste is required. This action creates a Waiting proposal only; it does not publish, create databases or seed passwords. The existing owner review and release process still controls deployment. The endpoint refuses other accounts and non-owner users.
+
+To update the embedded package reproducibly, run `node zoom-studio/scripts/bundle-control-room.mjs`, then `node zoom-studio/scripts/embed-control-room-package.mjs`, followed by the required checks. The embedded data contains the public website and backend code only; it contains no private tokens or passwords.
