@@ -25,6 +25,7 @@ test('complete Control Room bundle serves exact public assets and excludes priva
 function database(){
  const raw=new DatabaseSync(':memory:');let migrations=0;
  const DB={async exec(sql){migrations++;raw.exec(sql);return{};},prepare(sql){const q=raw.prepare(sql);let a=[];return{bind(...x){a=x;return this},async first(){return q.get(...a)||null},async all(){return{results:q.all(...a)}},async run(){const r=q.run(...a);return{meta:{changes:r.changes}}}}}};
+ DB.batch=async(st)=>{raw.exec('BEGIN');try{const results=[];for(const q of st)results.push(await q.run());raw.exec('COMMIT');return results;}catch(e){raw.exec('ROLLBACK');throw e}};
  return{raw,DB,get migrations(){return migrations}};
 }
 const secret='fixture-control-room-shared-secret-only';
@@ -89,4 +90,19 @@ test('native meeting token uses current account permissions and does not claim R
  const r=await app.fetch(new Request('https://meeting/api/meeting-token',{headers:{authorization:'Bearer '+token}}),env,{}),j=await r.json();assert.equal(r.status,200);assert.match(j.url,/^wss:\/\/meeting\/meeting\/[a-f0-9-]{36}$/);
  const health=await (await app.fetch(new Request('https://meeting/api/health'),env,{})).json();assert.equal(health.meetingConfigured,true);assert.equal(health.relayConfigured,false);
  assert.equal((await app.fetch(new Request('https://meeting/api/meeting-token'),env,{})).status,401);d.raw.close();
+});
+
+test('fresh Control Room owner launch permits one private password setup and invalidates old sessions',async()=>{
+ const d=database(),env={TEAMDB:d.DB,AUTH_SECRET:secret};
+ const html=await (await login(env,ticket())).text();
+ const extract=key=>JSON.parse(html.match(new RegExp('localStorage\\.setItem\\("'+key+'",("[^"]+")\\)'))[1]);
+ const auth=extract('ls_tok'),setup=extract('ls_owner_setup'),password='a'.repeat(64);
+ const save=(token,body,origin='https://meeting')=>app.fetch(new Request('https://meeting/api/control-password',{method:'POST',headers:{authorization:'Bearer '+token,origin,'content-type':'application/json'},body:JSON.stringify(body)}),env,{});
+ assert.equal((await save(auth,{ticket:'wrong',password})).status,403);
+ assert.equal((await save(auth,{ticket:setup,password},'https://elsewhere')).status,403);
+ const r=await save(auth,{ticket:setup,password});assert.equal(r.status,200);const fresh=(await r.json()).token;
+ assert.equal(d.raw.prepare('SELECT tv FROM users').get().tv,1);
+ assert.equal((await save(fresh,{ticket:setup,password})).status,403);
+ assert.equal((await app.fetch(new Request('https://meeting/api/me',{headers:{authorization:'Bearer '+auth}}),env,{})).status,401);
+ const signIn=await app.fetch(new Request('https://meeting/api/login',{method:'POST',headers:{origin:'https://meeting','content-type':'application/json'},body:JSON.stringify({email:'owner',password})}),env,{});assert.equal(signIn.status,200);d.raw.close();
 });

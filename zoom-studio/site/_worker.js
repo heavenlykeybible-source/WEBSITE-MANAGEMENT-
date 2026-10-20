@@ -538,7 +538,7 @@ export default {
           if (!validEmail(t) || !stretched(b.password) || !['user', 'admin'].includes(nextRole)) return json({ error: 'Enter a valid username, password and role.' }, 400);
           if (tu) return json({ error: 'That account already exists.' }, 409);
           if (role !== 'owner' && (nextRole !== 'user' || reserved(env, t))) return json({ error: 'Only the owner can create admins.' }, 403);
-          if (reserved(env, t)) return json({ error: 'This login is reserved. Choose another username.' }, 403);
+          if (reserved(env, t) && !(role === 'owner' && t === 'admin@studio.local' && nextRole === 'admin')) return json({ error: 'This login is reserved. Choose another username.' }, 403);
           const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
           // INSERT (not upsert): concurrent creates must never replace an existing password.
           const result = await env.TEAMDB.prepare('INSERT OR IGNORE INTO users(email,salt,hash,paid,verified,banned,tv,created,seen,role) VALUES(?,?,?,0,1,0,0,?,?,?)').bind(t, salt, await pw(env, b.password, salt), now, now, nextRole).run();
