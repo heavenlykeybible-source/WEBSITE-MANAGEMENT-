@@ -1,3 +1,6 @@
 const form=document.getElementById('signin-form'),status=document.getElementById('signin-status'),submit=document.getElementById('signin-submit');
 document.getElementById('show-password').onclick=e=>{const show=form.elements.pass.type==='password';form.elements.pass.type=show?'text':'password';e.currentTarget.textContent=show?'Hide password':'Show password';e.currentTarget.setAttribute('aria-pressed',String(show));};
 form.onsubmit=async e=>{e.preventDefault();if(submit.disabled)return;submit.disabled=true;status.textContent='Signing in…';try{const response=await fetch('/auth/password',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({user:form.elements.user.value.trim(),pass:form.elements.pass.value})});form.elements.pass.value='';if(response.redirected&&new URL(response.url).pathname==='/'){location.replace('/');return;}const data=await response.json();throw Error(data.error||'Sign-in could not complete. Please try again.');}catch(e){status.textContent=e.message;}finally{submit.disabled=false;}};
+
+
+fetch('/auth/options',{credentials:'same-origin'}).then(r=>r.json()).then(options=>{document.getElementById('control-room-signin').hidden=!options.controlRoom;}).catch(()=>{});

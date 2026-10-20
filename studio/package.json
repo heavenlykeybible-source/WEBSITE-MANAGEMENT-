@@ -5,7 +5,7 @@
     "check": "tsc --noEmit",
     "deploy": "wrangler deploy",
     "preflight": "node scripts/preflight.mjs",
-    "test": "node --experimental-transform-types tests/auth.mjs && node tests/workflow.mjs && node --experimental-transform-types tests/connections.mjs && node tests/devices.mjs",
+    "test": "node --experimental-transform-types tests/auth.mjs && node tests/workflow.mjs && node --experimental-transform-types tests/connections.mjs && node tests/devices.mjs && node --experimental-transform-types tests/account2.mjs",
     "package:release": "node scripts/package-release.mjs",
     "verify:release": "npm run package:release && node tests/release.mjs"
   },

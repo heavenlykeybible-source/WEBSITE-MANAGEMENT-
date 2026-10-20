@@ -19,6 +19,7 @@ id = "1678e0f0cc6c4facb360346df667445c"
 
 [vars]
 MEDIA_ENGINE_VERSION = "v1"
+STUDIO_AUTH_MODE = "account2"
 
 [triggers]
 # One-minute monitor is required for the 180s heartbeat / 10-minute reconnect contract.
@@ -40,3 +41,4 @@ run_worker_first = true
 # Add CONTROL_ROOM_URL as the web management HTTPS origin.
 # Set STUDIO_SSO_SECRET on both Workers using the same new random 32+ byte value.
 # Preserve MEDIA_ENGINE_SHARED_SECRET and all existing provider secrets.
+
