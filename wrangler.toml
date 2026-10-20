@@ -3,6 +3,9 @@ main = "control-room-worker.js"
 compatibility_date = "2026-10-18"
 workers_dev = true
 
+[previews]
+enabled = true
+
 [vars]
 SIGNUP_OPEN = "false"
 CONTROL_WORKER_NAME = "website-management"
