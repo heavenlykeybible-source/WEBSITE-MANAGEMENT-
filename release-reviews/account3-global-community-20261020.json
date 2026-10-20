@@ -1,0 +1,633 @@
+{
+  "schema": "control-room-source-review/v1",
+  "title": "Account 3 — Global Christian Community (full source)",
+  "source": {
+    "repository": "heavenlykeybible-source/onlinebible",
+    "commit": "16c84e17acccdf6e042e9e98d4ed06eb5af7fd8d",
+    "subdirectory": "global-community/",
+    "tree_sha": "bf8a57b8c9cb178d89ef8cf2bb66919502bbd0e9"
+  },
+  "destination": {
+    "account": 3,
+    "worker": "heavenly-key-global-community",
+    "approval": "OWNER_REQUIRED",
+    "production_change": false
+  },
+  "inventory": {
+    "files": 122,
+    "bytes": 2665508,
+    "items": [
+      {
+        "path": "global-community/BUILD-STANDARD.md",
+        "sha": "4b9fb436689eaa2cbc6a87a60fb5c82d7379c29e",
+        "size": 621
+      },
+      {
+        "path": "global-community/DEFAULT-AVATAR-DISPLAY-POLICY.md",
+        "sha": "b3cf71332e1911500ae7a4d3b829050e58effea4",
+        "size": 629
+      },
+      {
+        "path": "global-community/DEFAULT-PORTRAIT-ROTATION.md",
+        "sha": "6457cd4f754c30647b494eb661f49d894b19379c",
+        "size": 925
+      },
+      {
+        "path": "global-community/ENDLESS-FEED-INTEGRATION.md",
+        "sha": "40f10cc5a7bd245e83475fbe0b8ef7ac2d22c5e9",
+        "size": 873
+      },
+      {
+        "path": "global-community/HEAVENLY-KEY-12-MINISTRY-PROFILES.md",
+        "sha": "7633fae2eaee35222e2ecf095ab2c620f0cfe441",
+        "size": 1866
+      },
+      {
+        "path": "global-community/HEAVENLY-KEY-ORGANIZATION.md",
+        "sha": "721f139895affae6d367ea10fa39fec4118c7755",
+        "size": 1077
+      },
+      {
+        "path": "global-community/LAUNCH-EDITORIAL-DESIGN-CARD-PACK.md",
+        "sha": "6aa7f8f4e12772cd3ca5866a088a5df88fb61bb0",
+        "size": 3268
+      },
+      {
+        "path": "global-community/PERMANENT-DEFAULT-AVATAR.md",
+        "sha": "f94fc1ddd7a804a667d3c4714743031c2808050c",
+        "size": 875
+      },
+      {
+        "path": "global-community/docs/CHRIST-CENTERED-SAFETY.md",
+        "sha": "e8397e3e7d7287cb72dcbdc1d02e7d84f4656368",
+        "size": 3326
+      },
+      {
+        "path": "global-community/migrations/0001_global_community.sql",
+        "sha": "8e19d85390af0efed73a9d522805ad40e434f546",
+        "size": 11545
+      },
+      {
+        "path": "global-community/migrations/0002_participation_safety.sql",
+        "sha": "ad6a86d30ac150106cee546fc9fc186cdcf2741e",
+        "size": 3219
+      },
+      {
+        "path": "global-community/migrations/0003_discipleship_growth.sql",
+        "sha": "0717e2d8e319feac12c9869fa8fd7ba45e7400f0",
+        "size": 4207
+      },
+      {
+        "path": "global-community/migrations/0004_storage_guard_background_posts.sql",
+        "sha": "995ebb97e5d19a04bb54438c19c7034099e666f8",
+        "size": 232
+      },
+      {
+        "path": "global-community/migrations/0005_design_cards_video_links.sql",
+        "sha": "50a0117ca487302c6879a07586b9a251c6a550af",
+        "size": 480
+      },
+      {
+        "path": "global-community/migrations/0006_social_network_calls.sql",
+        "sha": "0961ee04904422c5087636ec1d2f1fbcf236b855",
+        "size": 1711
+      },
+      {
+        "path": "global-community/migrations/0007_safety_accountability.sql",
+        "sha": "260527c0ba1e496717568f403c8e431ff87233af",
+        "size": 2213
+      },
+      {
+        "path": "global-community/migrations/0008_group_controls.sql",
+        "sha": "a8889be0068bdf1f75643ec82ad909b1464998c3",
+        "size": 352
+      },
+      {
+        "path": "global-community/migrations/0009_message_retries.sql",
+        "sha": "ebc3177d497b2d44b16803019b43fd12bfaf1855",
+        "size": 157
+      },
+      {
+        "path": "global-community/migrations/0010_christ_centered_safety.sql",
+        "sha": "f53dbf34568f31bfc8295e954c30d3aa3dde1df5",
+        "size": 1885
+      },
+      {
+        "path": "global-community/migrations/0011_social_signin_adverts.sql",
+        "sha": "20d9617d98ae932e479a6ad69aedbf32569c5170",
+        "size": 1546
+      },
+      {
+        "path": "global-community/migrations/0012_ministry_editorial.sql",
+        "sha": "0920d211ffc98fb4699462c2c46876505bec149a",
+        "size": 822
+      },
+      {
+        "path": "global-community/migrations/0013_ministry_editorial_audit.sql",
+        "sha": "90501f7140628fba65224d9b3efa05ceacff08b1",
+        "size": 419
+      },
+      {
+        "path": "global-community/migrations/0014_ministry_post_actions.sql",
+        "sha": "329cc075fbe2ad14be83afdaa8e3f919c225b485",
+        "size": 814
+      },
+      {
+        "path": "global-community/migrations/0015_ministry_bulk_activation.sql",
+        "sha": "a2de51b4af50db97e8dc7380ed0c373850f54add",
+        "size": 245
+      },
+      {
+        "path": "global-community/ministry-editorial-profiles.json",
+        "sha": "d1a4a58f7c33a880a5282723588c0b96e8a56bce",
+        "size": 5804
+      },
+      {
+        "path": "global-community/package-lock.json",
+        "sha": "aba14d76464b8d164b78378d51c81f5ac0e55114",
+        "size": 50389
+      },
+      {
+        "path": "global-community/package.json",
+        "sha": "c2ec523cfafd51211af93fc1ae748d95ab811166",
+        "size": 1414
+      },
+      {
+        "path": "global-community/public/_headers",
+        "sha": "567f9d871fe4c8bfc10e91981e7a0852678d426a",
+        "size": 724
+      },
+      {
+        "path": "global-community/public/account.html",
+        "sha": "101ec9d361d280271afec9278ce7df2fd924fe5e",
+        "size": 1530
+      },
+      {
+        "path": "global-community/public/app.js",
+        "sha": "ee4b5044eea220f5994ad373045f1965f2894ac3",
+        "size": 129281
+      },
+      {
+        "path": "global-community/public/assets/community-mark.svg",
+        "sha": "2e937411c0efad36fec54557fd793bc4ae130484",
+        "size": 651
+      },
+      {
+        "path": "global-community/public/assets/community-network.svg",
+        "sha": "39688a9c35eca59be3751afdac9c42373aab8c37",
+        "size": 3570
+      },
+      {
+        "path": "global-community/public/assets/default-human-avatar.svg",
+        "sha": "481568bd67755ac664aee0e4d4dbad38f6fa2f1b",
+        "size": 1552
+      },
+      {
+        "path": "global-community/public/assets/heavenly-key-permanent-default-avatar.png",
+        "sha": "9c4ea41a38eaa512eac6f340377d3fded6ec9411",
+        "size": 1802555
+      },
+      {
+        "path": "global-community/public/assets/ministry-care-logo.png",
+        "sha": "0c3a113c81f5e40b3d9ed6a35cca05f16e233a0a",
+        "size": 50886
+      },
+      {
+        "path": "global-community/public/assets/premium-icons.svg",
+        "sha": "7b5f2965d6f59f0fbef91b8f4631d0fa4d9ea901",
+        "size": 1509
+      },
+      {
+        "path": "global-community/public/assets/rotating-world-land.svg",
+        "sha": "1ddcddb0d5bebbee6262a72e437a1494caa9b53e",
+        "size": 65843
+      },
+      {
+        "path": "global-community/public/assets/royal-revival-hero.svg",
+        "sha": "91493f1ed9ba7b7b18f7851ff303d42c84ef655b",
+        "size": 2108
+      },
+      {
+        "path": "global-community/public/calling.js",
+        "sha": "2231085e2d800814a5242a475ba097446535b131",
+        "size": 8687
+      },
+      {
+        "path": "global-community/public/clean-community.css",
+        "sha": "fd1f5b33460d03aeb7eb1f0c26a92a47fecc6018",
+        "size": 2202
+      },
+      {
+        "path": "global-community/public/cms-runtime-20261015.css",
+        "sha": "862c51bfc90a2279eaee95af69778380dd3d4537",
+        "size": 9829
+      },
+      {
+        "path": "global-community/public/cms-runtime-20261015.js",
+        "sha": "de1eb28ff51abb8a6ee8b0d5db0bd0e15608a834",
+        "size": 18511
+      },
+      {
+        "path": "global-community/public/community-admin.js",
+        "sha": "46375bdec81c8a809395436cb97ffbb84d81e040",
+        "size": 10018
+      },
+      {
+        "path": "global-community/public/community-app-promo.css",
+        "sha": "879a0c0dd466b10237cd387ca6e25f70c248f288",
+        "size": 5414
+      },
+      {
+        "path": "global-community/public/community-app-promo.js",
+        "sha": "7d90c61bb8dfb7e88f8a11b520ca1a6b24617570",
+        "size": 7398
+      },
+      {
+        "path": "global-community/public/community-live-chat.css",
+        "sha": "58cdf1f6a47ba2fd12ca18459022d7854a0e3c76",
+        "size": 3655
+      },
+      {
+        "path": "global-community/public/community-live-chat.js",
+        "sha": "abef971de29397ff62b97082f698b2d9f2fd447c",
+        "size": 6514
+      },
+      {
+        "path": "global-community/public/community-maturity.css",
+        "sha": "488e7384bdbac65d87a3d4ae94c76477d2297deb",
+        "size": 2572
+      },
+      {
+        "path": "global-community/public/community-reference.css",
+        "sha": "78fb93eb092788f734c14b1358fb000a85654652",
+        "size": 1006
+      },
+      {
+        "path": "global-community/public/design-cards.d.ts",
+        "sha": "95e3621d2efb6d74769a2087c382700b99ab23fa",
+        "size": 640
+      },
+      {
+        "path": "global-community/public/design-cards.js",
+        "sha": "e7052addbca9691e0f25817176d0f750e546940e",
+        "size": 11300
+      },
+      {
+        "path": "global-community/public/endless-feed-smoke-test.js",
+        "sha": "5f7e1ec570dbf9b654428ded5ec47c7936e5681a",
+        "size": 597
+      },
+      {
+        "path": "global-community/public/fellowship.html",
+        "sha": "11ccfe55469678e101927bec89e0f094cf13c991",
+        "size": 1626
+      },
+      {
+        "path": "global-community/public/groups.html",
+        "sha": "09f74c3d2e61642d772736fea15878afda4bd5c0",
+        "size": 1651
+      },
+      {
+        "path": "global-community/public/grow.html",
+        "sha": "1dfa69e2f7ef82272178c90ef701bb98438ef86a",
+        "size": 1637
+      },
+      {
+        "path": "global-community/public/heavenly-key-assistant.css",
+        "sha": "c93e4103054a16c6da5ac5cd85b5cef03edfc713",
+        "size": 2367
+      },
+      {
+        "path": "global-community/public/heavenly-key-assistant.js",
+        "sha": "69953b748b8b6af70d8ffcb37426fdd9a662a18a",
+        "size": 2706
+      },
+      {
+        "path": "global-community/public/heavenly-key.html",
+        "sha": "ba83aaca215c842571ff5f7f36f4054b98f706e9",
+        "size": 3388
+      },
+      {
+        "path": "global-community/public/hk-page-script-heavenly-key-1.js",
+        "sha": "e09119e36b14b42a9fbc6064f664d7defcbc8b50",
+        "size": 1354
+      },
+      {
+        "path": "global-community/public/hk-page-script-heavenly-key-2.js",
+        "sha": "fc9b9e013072aadbf61b64187f7163851d5a7aad",
+        "size": 6000
+      },
+      {
+        "path": "global-community/public/hk-page-script-index-1.js",
+        "sha": "2f3e0d62fa96196b19959f088b6fefa4760b1ae1",
+        "size": 308
+      },
+      {
+        "path": "global-community/public/hk-standard-footer.css",
+        "sha": "1f3ea963107c6fb7fe2cee297658b8bb8284771d",
+        "size": 2927
+      },
+      {
+        "path": "global-community/public/hk-standard-footer.js",
+        "sha": "058e217bf2a8a844247287c171177762a866a3d1",
+        "size": 3219
+      },
+      {
+        "path": "global-community/public/index.html",
+        "sha": "e4cad135c44c4a10da3acae213d6b7701a4b8c14",
+        "size": 5343
+      },
+      {
+        "path": "global-community/public/media-dock.js",
+        "sha": "c6b68f7a485968148a4d5d740840d139c6a7c3a0",
+        "size": 2546
+      },
+      {
+        "path": "global-community/public/messages.html",
+        "sha": "ccfb41eaad583d663fc6f5af5215fa79d7d73b63",
+        "size": 1779
+      },
+      {
+        "path": "global-community/public/ministry-care-lady.webp",
+        "sha": "0f80ba3dd40f583fcde7ae5a41bbbc91580d28e9",
+        "size": 3004
+      },
+      {
+        "path": "global-community/public/ministry-care.css",
+        "sha": "9fc4ff522879479b134255c8494badc96238ceba",
+        "size": 8706
+      },
+      {
+        "path": "global-community/public/ministry-care.js",
+        "sha": "f260109ed67a2447ac5ca71685a54b7ac12e02f5",
+        "size": 16506
+      },
+      {
+        "path": "global-community/public/missions.html",
+        "sha": "23c7cba40acbd6fc6e5a95c9ec36d27803b818c7",
+        "size": 1584
+      },
+      {
+        "path": "global-community/public/official-community-feed.css",
+        "sha": "e97e55206238b841b3a11bc8452a31948ee83f7d",
+        "size": 844
+      },
+      {
+        "path": "global-community/public/official-community-feed.js",
+        "sha": "94f361a4136f44b07546fd5510b0127dd37f3f28",
+        "size": 2098
+      },
+      {
+        "path": "global-community/public/password-policy.d.ts",
+        "sha": "91bb4d65f39c101c3ad8649334381569319f47ce",
+        "size": 125
+      },
+      {
+        "path": "global-community/public/password-policy.js",
+        "sha": "41ca4281186dc59903ee17e0b7e08020459c5a43",
+        "size": 347
+      },
+      {
+        "path": "global-community/public/prayer.html",
+        "sha": "5f6f64ef505259347d198da1a600a34793a5552d",
+        "size": 1589
+      },
+      {
+        "path": "global-community/public/profile.html",
+        "sha": "1317d14f8cfa8d843652ac20fe69eb79ea7519d7",
+        "size": 1653
+      },
+      {
+        "path": "global-community/public/reference-premium.css",
+        "sha": "41b43183680fa56ab046e3290af117c8a68387fd",
+        "size": 6548
+      },
+      {
+        "path": "global-community/public/royal-community.css",
+        "sha": "a6f13efdd26f789fc9b401bf5f0b436634658d40",
+        "size": 9132
+      },
+      {
+        "path": "global-community/public/royal-community.js",
+        "sha": "0fe617bca8fec2f4ee369f80a21420234767b487",
+        "size": 288
+      },
+      {
+        "path": "global-community/public/safety.html",
+        "sha": "0140e8cde669bfa137af1424bf1dfed3848f9983",
+        "size": 1564
+      },
+      {
+        "path": "global-community/public/salvation.html",
+        "sha": "35c8eeddcd060f75ff93ab7f25d9cf9fc428b83a",
+        "size": 1630
+      },
+      {
+        "path": "global-community/public/spaces.html",
+        "sha": "09db518621fb9eb4fda436ce9d18e573abe99505",
+        "size": 1689
+      },
+      {
+        "path": "global-community/public/styles.css",
+        "sha": "edbafe93b429df21a1399c5a87ca0b98a7102473",
+        "size": 91547
+      },
+      {
+        "path": "global-community/scripts/ensure-ministry-schema.sql",
+        "sha": "2799d7fec5ed7970bb043ca69573b7f040bc1d3d",
+        "size": 1591
+      },
+      {
+        "path": "global-community/scripts/preflight.mjs",
+        "sha": "660d584aa70e2ad501d82332163d3d9ebd88fa38",
+        "size": 1358
+      },
+      {
+        "path": "global-community/src/adverts.ts",
+        "sha": "801a7567c248e364e1c06131eb5ec267797773d8",
+        "size": 7029
+      },
+      {
+        "path": "global-community/src/auth.ts",
+        "sha": "581e51c6b13f25da51674602e0966bf9e7ab2b01",
+        "size": 3237
+      },
+      {
+        "path": "global-community/src/calls.ts",
+        "sha": "d12c7a2c3f4de7da7a3a1b9b56de81424e7fe41a",
+        "size": 5321
+      },
+      {
+        "path": "global-community/src/heavenly-key-ai.ts",
+        "sha": "9a1e4affc6aa72ba477efcdb14aa79a21315cd90",
+        "size": 6290
+      },
+      {
+        "path": "global-community/src/index.ts",
+        "sha": "2f59734688560ff161aa1ae59e97d513ffe07391",
+        "size": 29099
+      },
+      {
+        "path": "global-community/src/ministry-editorial.ts",
+        "sha": "8d4edd8be7bfb2f29214dcabcfaf9c5ee643d137",
+        "size": 7036
+      },
+      {
+        "path": "global-community/src/moderation.ts",
+        "sha": "bd9738da2571fa74643b6cceeabdc07eee7742bf",
+        "size": 4671
+      },
+      {
+        "path": "global-community/src/safety.ts",
+        "sha": "8b466f136021e1434af39102d12dde93d28e9378",
+        "size": 4880
+      },
+      {
+        "path": "global-community/src/services.ts",
+        "sha": "e9017b7342916df9f163f75a170b741c9b9b9845",
+        "size": 58430
+      },
+      {
+        "path": "global-community/src/social-auth.ts",
+        "sha": "a9ff4128006a99940a3a8a5c5e5145012ee75f3f",
+        "size": 14376
+      },
+      {
+        "path": "global-community/src/stewardship.ts",
+        "sha": "7d7804e9e2c849d5f5d9f76a3f520f16cca47e31",
+        "size": 10178
+      },
+      {
+        "path": "global-community/src/types.ts",
+        "sha": "65200ce41639eff4ac6d19d2a2e1a2917bd053c2",
+        "size": 882
+      },
+      {
+        "path": "global-community/test/ai-privacy.checks.mjs",
+        "sha": "ba20d7f7c22f8de24d028747045b9c40f5e02b0a",
+        "size": 1560
+      },
+      {
+        "path": "global-community/test/api-audit.checks.mjs",
+        "sha": "2e7f931ef419cfdea081193314e73bdefcaa8dee",
+        "size": 10327
+      },
+      {
+        "path": "global-community/test/design-cards.checks.mjs",
+        "sha": "9c99d12011010038f8e70bccd313145dc44b6e68",
+        "size": 7320
+      },
+      {
+        "path": "global-community/test/frontend-feed.checks.mjs",
+        "sha": "b5b55e34c94b1ba8c42b21e0ec48db3b050075b3",
+        "size": 12925
+      },
+      {
+        "path": "global-community/test/group-controls.checks.mjs",
+        "sha": "d7e9a7e1af4c5c2679cbee2d069314a510564ebf",
+        "size": 8714
+      },
+      {
+        "path": "global-community/test/registration.checks.mjs",
+        "sha": "9c5efe215c2e5f0866c32524d000f9735247fdeb",
+        "size": 6212
+      },
+      {
+        "path": "global-community/test/social-adverts.checks.mjs",
+        "sha": "bda068807c55fb0d3e17e5535bff4a917c33630f",
+        "size": 15087
+      },
+      {
+        "path": "global-community/test/stewardship.checks.mjs",
+        "sha": "2bb346720aee1610ecb88ef528ef127474b185a3",
+        "size": 7274
+      },
+      {
+        "path": "global-community/tests/.gitkeep",
+        "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+        "size": 0
+      },
+      {
+        "path": "global-community/tests/README-endless-feed.txt",
+        "sha": "4183336c236dc771efc6440d1fdeee1c20e5bf8b",
+        "size": 59
+      },
+      {
+        "path": "global-community/tests/community-quality-gate.mjs",
+        "sha": "ac1f0d3212034765d01ad9b4639cd6f065aa90dd",
+        "size": 340
+      },
+      {
+        "path": "global-community/tests/endless-feed-contract.test.mjs",
+        "sha": "9249c05639a5c248ec3c06903623d0d5ec65c53f",
+        "size": 781
+      },
+      {
+        "path": "global-community/tests/endless-feed-static-audit.mjs",
+        "sha": "15aa1c5b25f17dc02294a986e51a32d4b3c0704d",
+        "size": 471
+      },
+      {
+        "path": "global-community/tests/feed-accessibility-audit.mjs",
+        "sha": "552c69d94a1eb4adcb3a5b6afd32995874dd6a8a",
+        "size": 373
+      },
+      {
+        "path": "global-community/tests/feed-integration-version.txt",
+        "sha": "928bf5390c8668094ee14663304e5027e5f4d047",
+        "size": 26
+      },
+      {
+        "path": "global-community/tests/feed-regression-checklist.txt",
+        "sha": "18ac82e5c75b5eb707a02fb1a728c916ac7d4e17",
+        "size": 200
+      },
+      {
+        "path": "global-community/tests/feed-safety-invariants.txt",
+        "sha": "9811235ca18e4a5c3b189046e8b3c71b0b6ecf08",
+        "size": 306
+      },
+      {
+        "path": "global-community/tests/heavenly-key-assistant-contract.test.mjs",
+        "sha": "eda0a91ad9b7a84b5dbc1d8cf8e0aee354ad86a4",
+        "size": 819
+      },
+      {
+        "path": "global-community/tests/live-chat-contract.test.mjs",
+        "sha": "b0f7222c750439b6cfb628277710ad5ab6dfbcb4",
+        "size": 850
+      },
+      {
+        "path": "global-community/tests/live-chat-quality-gate.mjs",
+        "sha": "75808fb1072397abc12ce473b431617f6e5cadb7",
+        "size": 173
+      },
+      {
+        "path": "global-community/tests/package.json",
+        "sha": "b06ab8689d5ff3d6bbc803dcbb7b756cc28adf95",
+        "size": 108
+      },
+      {
+        "path": "global-community/tests/quality-gate-version.txt",
+        "sha": "d00491fd7e5bb6fa28c517a0bb32b8b506539d4d",
+        "size": 2
+      },
+      {
+        "path": "global-community/tsconfig.json",
+        "sha": "d41e041f062e9b9220bccdb0a46bf841db4a3692",
+        "size": 277
+      },
+      {
+        "path": "global-community/wrangler.staging.toml",
+        "sha": "8829abe3c023e6d1de7b025146616e5dbb01ba6b",
+        "size": 715
+      },
+      {
+        "path": "global-community/wrangler.toml",
+        "sha": "8d284d21da5d93c1ede3a0c45cd404d339187003",
+        "size": 1040
+      }
+    ]
+  },
+  "instructions": "Source-reference review manifest only; NOT a copied source tree or executable deploy package. Retrieve all listed blobs from the pinned commit, verify hashes, build and stage against Account 3 resources; submit actual release proposal to Control Room Waiting Room for explicit owner approval. Never deploy to Account 4 Worker or overwrite Account 3 D1/KV/R2/secrets."
+}
