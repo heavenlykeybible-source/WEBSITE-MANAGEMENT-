@@ -159,14 +159,17 @@ sql(`INSERT INTO users(email,salt,hash,paid,verified,created,seen) VALUES('idlep
 sql(`INSERT INTO users(email,salt,hash,paid,verified,created,seen) VALUES('active@test.com','a','b',0,1,?,?)`, NOW - 500 * DAY, NOW - 10 * DAY);
 ok(!(await call('/api/team/messages?team=' + kt + '&since=0', { token: E })).j.m.some(x => x.t === 'old one'), 'expired messages are hidden even before cleanup runs');
 ok((await call('/api/admin/sweep', { token: E, body: {} })).s === 403, 'only the owner can run the cleanup');
+sql(`INSERT INTO users(email,salt,hash,paid,verified,created,seen) VALUES('connectedidle@test.com','a','b',0,1,?,?)`, NOW - 500 * DAY, NOW - 400 * DAY);
+sql(`INSERT INTO conns(email,id,kind,name,sec,used) VALUES('connectedidle@test.com','yt:permanent','youtube','Saved',?,?)`, 'x', NOW - 400 * DAY);
 const sw = await call('/api/admin/sweep', { token: O, body: {} }); ok(sw.j.ok, 'cleanup runs');
 ok(count("SELECT COUNT(*) FROM messages WHERE team=? AND text='old one'", kt) === 0 && count("SELECT COUNT(*) FROM messages WHERE team=? AND text='new one'", kt) === 1, 'old group messages disappear, recent ones stay');
 ok(count("SELECT COUNT(*) FROM invites WHERE code='dead00000000'") === 0, 'expired invites are deleted');
 const mb2 = sql('SELECT link,ended FROM meetings WHERE id=?', mB.j.id)[0]; ok(mb2.link === null && mb2.ended, 'forgotten live meeting links are closed');
 ok(count("SELECT COUNT(*) FROM meetings WHERE id='0ld0000000'") === 0 && count("SELECT COUNT(*) FROM attendance WHERE meeting='0ld0000000'") === 0, 'attendance older than 90 days is deleted');
 ok(count("SELECT COUNT(*) FROM programs WHERE id IN ('aaaaaaaaaa','cccccccccc')") === 0 && count("SELECT COUNT(*) FROM programs WHERE id='bbbbbbbbbb'") === 1, 'past programs expire, future ones stay');
-ok(count("SELECT COUNT(*) FROM conns WHERE id='yt:old'") === 0 && count("SELECT COUNT(*) FROM conns WHERE id='yt:new'") === 1, 'unused channel connections are deleted');
+ok(count("SELECT COUNT(*) FROM conns WHERE id='yt:old'") === 1 && count("SELECT COUNT(*) FROM conns WHERE id='yt:new'") === 1, 'saved channel connections survive cleanup regardless of last use');
 ok(count("SELECT COUNT(*) FROM users WHERE email='stale@test.com'") === 0 && count("SELECT COUNT(*) FROM users WHERE email='fresh@test.com'") === 1, 'unconfirmed accounts expire after 14 days');
+ok(count("SELECT COUNT(*) FROM users WHERE email='connectedidle@test.com'") === 1 && count("SELECT COUNT(*) FROM conns WHERE id='yt:permanent'") === 1, 'inactive accounts with saved connections are retained');
 ok(count("SELECT COUNT(*) FROM users WHERE email='idle@test.com'") === 0, 'accounts idle for a year with no plan are deleted');
 ok(count("SELECT COUNT(*) FROM users WHERE email IN ('idlepaid@test.com','active@test.com')") === 2, 'accounts with a plan or recent use are kept');
 // message cap per group
@@ -241,5 +244,10 @@ oldDb.exec(fs.readFileSync(here + '../server/migrations/2026-10-roles.sql', 'utf
 ok(oldDb.prepare('PRAGMA table_info(users)').all().some(c => c.name === 'role'), 'upgrade migration adds role to original schema');
 fs.unlinkSync(here + '_worker_under_test.mjs');
 
+// AI uses a currently supported model and never treats empty output as success.
+env.AI={async run(model,input){ok(model==='@cf/meta/llama-3.1-8b-instruct-fp8','writer uses active FP8 model');return {response:' Sunday worship titles '}}};
+let writer=await call('/api/ai',{token:O,body:{task:'title',topic:'Sunday worship'}});ok(writer.s===200&&writer.j.text==='Sunday worship titles','AI writer returns generated text');
+env.AI={async run(){return {response:''}}};ok((await call('/api/ai',{token:O,body:{task:'title',topic:'Sunday'}})).s===502,'empty AI output is a recoverable error');
+env.AI={async run(){throw Error('daily neuron quota exceeded')}};writer=await call('/api/ai',{token:O,body:{task:'title',topic:'Sunday'}});ok(writer.s===429&&writer.j.error.includes('meetings are still available'),'AI quota failures do not disable meetings');delete env.AI;
 console.log(fail ? `\n${fail} FAILED, ${pass} passed` : `\nAll ${pass} checks passed`);
 process.exit(fail ? 1 : 0);

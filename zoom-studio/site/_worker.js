@@ -308,7 +308,8 @@ async function sweep(env) {
   await run('attendance', 'DELETE FROM attendance WHERE joined < ?', now - 90 * D);
   await run('meetings', 'DELETE FROM meetings WHERE started < ?', now - 90 * D);
   await run('programs', 'DELETE FROM programs WHERE (start IS NOT NULL AND start < ?) OR (start IS NULL AND created < ?)', now - 7 * D, now - 90 * D);
-  await run('unusedConnections', 'DELETE FROM conns WHERE used < ?', now - 90 * D);
+  // Saved channel connections do not expire through housekeeping. Disconnect explicitly.
+  out.unusedConnections = 0;
   await run('limits', 'DELETE FROM limits WHERE exp < ?', now);
   await run('unconfirmedAccounts', "DELETE FROM users WHERE verified=0 AND role='user' AND created < ?", now - 14 * D);
   if (mailOn(env)) {
@@ -319,7 +320,7 @@ async function sweep(env) {
     }
     out.warned = soon.length;
   }
-  const dead = (await DB.prepare('SELECT email FROM users WHERE seen < ? AND paid < ? AND (warned > 0 OR ?) LIMIT 20').bind(now - 365 * D, now, mailOn(env) ? 0 : 1).all()).results;
+  const dead = (await DB.prepare('SELECT email FROM users WHERE NOT EXISTS (SELECT 1 FROM conns WHERE conns.email=users.email) AND seen < ? AND paid < ? AND (warned > 0 OR ?) LIMIT 20').bind(now - 365 * D, now, mailOn(env) ? 0 : 1).all()).results;
   for (const u of dead) { const staff = await getUser(env, u.email); if (isAdmin(env, u.email, staff)) continue; await purgeUser(env, u.email); await DB.prepare('DELETE FROM conns WHERE email=?').bind(u.email).run(); await DB.prepare('DELETE FROM users WHERE email=?').bind(u.email).run(); }
   out.inactiveAccounts = dead.length;
   return out;
@@ -640,9 +641,13 @@ async function helper(request, env, path, email) {
     }
     const topic = String(b.topic || '').trim().slice(0, 200), p = PROMPTS[b.task];
     if (!topic || !p) return json({ error: 'Tell me what your broadcast is about.' }, 400);
-    const r = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', { max_tokens: 300, messages: [
+    const r = await env.AI.run('@cf/meta/llama-3.1-8b-instruct-fp8', { max_tokens: 300, messages: [
       { role: 'system', content: 'You help live streamers write clear, honest, welcoming text in plain English. No false claims or guarantees.' },
       { role: 'user', content: p + topic }] });
-    return json({ text: String(r.response || '').trim() });
-  } catch { return json({ error: 'The AI service failed. Try again.' }, 502); }
+    const text = typeof r?.response === 'string' ? r.response.trim() : '';
+    return text ? json({ text }) : json({ error: 'The AI writer returned no text. Please try again.' }, 502);
+  } catch (e) {
+    if (/quota|neuron|daily.*limit|allowance|capacity.*exceeded/i.test(String(e?.message || ''))) return json({ error: 'Cloudflare AI allowance is used up for now. Please try again later; meetings are still available.' }, 429);
+    return json({ error: 'The AI service is temporarily unavailable. Please try again later.' }, 502);
+  }
 }
