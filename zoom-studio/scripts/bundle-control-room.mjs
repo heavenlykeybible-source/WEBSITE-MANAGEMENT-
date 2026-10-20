@@ -23,7 +23,7 @@ const backend=fs.readFileSync(path.join(root,'site/_worker.js'),'utf8').replace(
 const schema=fs.readFileSync(path.join(root,'migrations/0001_zoom_studio.sql'),'utf8').split('\n').filter(x=>!x.trim().startsWith('--')).join('\n');
 if(/\b(?:DROP|DELETE|UPDATE|INSERT|ALTER|REPLACE)\b/i.test(schema))throw Error('Only additive CREATE statements may be bundled.');
 const runtime=fs.readFileSync(path.join(root,'server/control-room-runtime.mjs'),'utf8');
-const code=backend+'\nconst MEETING_ASSETS='+JSON.stringify(assets)+';\nconst MEETING_SCHEMA='+JSON.stringify(schema)+';\n'+runtime;
+const code=backend+'\nconst MEETING_ASSETS='+JSON.stringify(assets)+';\nconst MEETING_SCHEMA='+JSON.stringify(schema)+';\n'+fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8')+'\n'+runtime;
 if(Buffer.byteLength(code)>1400000)throw Error('Meeting package exceeds the Control Room deployment limit.');
 fs.mkdirSync(path.join(root,'build'),{recursive:true});
 fs.writeFileSync(path.join(root,'build/meeting-worker.mjs'),code);

@@ -408,7 +408,7 @@ const acct={on:false,tok:'',me:null};try{acct.tok=localStorage.getItem('ls_tok')
 let RU='',RT='';
 async function api(path,body){try{const r=await fetch(path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(acct.tok?{authorization:'Bearer '+acct.tok}:{})},body:body?JSON.stringify(body):undefined});
  const j=await r.json().catch(()=>({}));return{ok:r.ok,status:r.status,...j}}catch(e){return{ok:false,status:0,error:'Network error'}}}
-async function relink(){if(acct.on){const r=await api('/api/relay-token');if(!r.ok){$('info').textContent=r.error||'A plan is needed to go live.';return false}RU=r.url;RT=r.token;return true}RU=$('relay').value.trim();RT=$('tok').value;return !!RU}
+async function relink(meeting=false){if(acct.on){const r=await api(meeting?'/api/meeting-token':'/api/relay-token');if(!r.ok){const msg=r.error||'The connection could not be started.';$('info').textContent=msg;if(meeting)gSt(msg);return false}if(meeting){gRoomURL=r.url;gRoomToken=r.token}else{RU=r.url;RT=r.token}return true}if(meeting){gRoomURL=$('relay').value.trim();gRoomToken=$('tok').value;return !!gRoomURL}RU=$('relay').value.trim();RT=$('tok').value;return !!RU}
 function saveTok(t){acct.tok=t||'';try{t?localStorage.setItem('ls_tok',t):localStorage.removeItem('ls_tok')}catch(e){}}
 function acRender(){const m=acct.me;$('acOut').hidden=!!m;$('acIn').hidden=!m;
  if(m){const d=Math.max(0,m.paidUntil-Date.now());$('acs').textContent=loginLabel(m.email)+' ('+(m.role||'user')+') - '+(m.role==='owner'||m.role==='admin'?'Staff access':m.active?'Active for '+(d>864e5?Math.ceil(d/864e5)+' day(s)':Math.ceil(d/36e5)+' hour(s)'):'No active plan')+(m.verified===false?'. Please confirm your email (check your inbox).':'');$('arv').hidden=m.verified!==false;$('apl').hidden=!!m.admin;$('userrole').hidden=m.role!=='owner';document.querySelectorAll('.tabs button')[9].hidden=!m.admin;$('acb').textContent=m.active?'Account':'Subscribe'}else{$('acb').textContent='Sign in';document.querySelectorAll('.tabs button')[9].hidden=true}}
@@ -474,18 +474,18 @@ $('adel').onclick=async()=>{if(!$('dpw').value){$('acm').textContent='Enter your
  if(r.ok){saveTok('');acct.me=null;$('dpw').value='';acRender();conn.list=[];renderConns();$('acm').textContent='Your account has been deleted.'}else $('acm').textContent=r.error||'Could not delete the account.'};
 function tag(c,t,x,y,w,h){c.save();c.font='600 '+Math.max(14,Math.round(h*.045))+'px system-ui,sans-serif';c.textBaseline='middle';const tw=c.measureText(t).width+24,th=Math.max(26,Math.round(h*.07));
  c.fillStyle='rgba(8,16,36,.8)';c.fillRect(x+10,y+h-th-10,tw,th);c.fillStyle='#f2c14e';c.fillRect(x+10,y+h-th-10,4,th);c.fillStyle='#fff';c.fillText(t,x+22,y+h-th/2-10);c.restore()}
-const guests=new Map(),wait=new Map(),hands=new Map();let gws=null,gice=[],gcs=null,glink='',alink='';
+const guests=new Map(),wait=new Map(),hands=new Map();let gws=null,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
 const gc=document.createElement('canvas');gc.width=640;gc.height=360;const gx=gc.getContext('2d');
 const gsend=o=>{if(gws&&gws.readyState===1)gws.send(JSON.stringify(o))},gSt=t=>{$('gst').textContent=t};
 async function gStart(){if(gws)return gStop('Room closed.');
- if(!(await relink())){gSt(acct.on?'Choose a plan to start a guest room.':'Enter your relay address under Go live first.');return}
- gSt('Starting the room...');const w=gws=new WebSocket(RU.replace(/\/+$/,'')+'/room');
- w.onopen=()=>gsend({t:'host',token:RT});w.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}gmsg(m)};
+ if(!(await relink(true))){if(!acct.on)gSt('Sign in to start a guest room, or enter your relay address under Go live.');return}
+ gSt('Starting the room...');const roomURL=gRoomURL.replace(/\/+$/,'');gRoomURL=roomURL;const w=gws=new WebSocket(roomURL+'/room');
+ w.onopen=()=>gsend({t:'host',token:gRoomToken});w.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}gmsg(m)};
  w.onclose=()=>{if(gws===w)gStop('The room closed.')};w.onerror=()=>{}}
 function gStop(msg){const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);wait.clear();
  $('grs').textContent='Start guest room';$('gin').hidden=true;hands.clear();gSt(msg||'Room closed.');renderG()}
 function gmsg(m){
- if(m.t==='created'){gice=m.ice||[];glink=location.origin+'/join.html?relay='+encodeURIComponent(RU.replace(/\/+$/,''))+'&r='+m.room+'&k='+m.key;alink=glink+'&a=1';if(tm.pend)tmPublish();
+ if(m.t==='created'){gice=m.ice||[];glink=location.origin+'/join.html?relay='+encodeURIComponent(gRoomURL)+'&r='+m.room+'&k='+m.key;alink=glink+'&a=1';if(tm.pend)tmPublish();
   $('grs').textContent='End guest room';$('gin').hidden=false;gSt('The room is open. Copy the invite link and send it to your guests. You admit each guest from the waiting room.')}
  else if(m.t==='waiting'){wait.set(m.gid,m.name+(m.ao?' (audio only)':''));renderG()}
  else if(m.t==='joined'){wait.delete(m.gid);hands.delete(m.gid);gAdd(m.gid,m.name,m.ao)}
@@ -684,6 +684,6 @@ $('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'
   if(!r.ok){$('info').textContent=r.error||'Could not create the broadcasts.';if(r.status===401||r.status===402)act.tab(8);return}
   outs.push(...r.dests.map(d=>d.url));liveEnds=r.dests.map(d=>d.end);if(r.errors&&r.errors.length)msg(r.errors.join(' | '))}
  if(!outs.length){$('info').textContent='Add a channel or a destination with a stream key first.';return}
- if(!(await relink())){if(acct.on)act.tab(8);else $('info').textContent='Enter your relay address.';return}
+ if(!(await relink())){if(!acct.on)$('info').textContent='Enter your relay address.';return}
  AC.resume();sent=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect()};
 </script></body></html>

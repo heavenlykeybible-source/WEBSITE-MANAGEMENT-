@@ -84,7 +84,18 @@ try{
   for(const name of ['AUTH_SECRET','ASSETS','OLDDB'])assert.deepEqual(meta.bindings.find(x=>x.name===name),{type:'inherit',name});
   assert.equal(meta.bindings.find(x=>x.name==='TEAMDB').id,database);assert.equal(meta.bindings.find(x=>x.name==='FILES').bucket_name,'meeting-files');
  });
+ await test('SQLite Durable Object additions preserve namespaces and declarative exports on updates',async()=>{
+  oldSettings={bindings:[{type:'secret_text',name:'AUTH_SECRET'}],exports:{Existing:{type:'durable-object',storage:'sqlite'}},compatibility_date:'2026-01-01'};
+  const binding={type:'durable_object_namespace',name:'MEETING_ROOMS',class_name:'MeetingRooms'};
+  await deployWorker(e.env,1,'meeting','export class MeetingRooms {}',[binding]);
+  let meta=JSON.parse(await writes.at(-1).init.body.get('metadata').text());assert.deepEqual(meta.exports,{Existing:{type:'durable-object',storage:'sqlite'},MeetingRooms:{type:'durable-object',storage:'sqlite'}});assert.deepEqual(meta.bindings.find(b=>b.name==='MEETING_ROOMS'),binding);
+  oldSettings.bindings.push({...binding,namespace_id:'existing-namespace'});oldSettings.exports=meta.exports;
+  await deployWorker(e.env,1,'meeting','export class MeetingRooms {}',[binding]);meta=JSON.parse(await writes.at(-1).init.body.get('metadata').text());assert.deepEqual(meta.bindings.find(b=>b.name==='MEETING_ROOMS'),{type:'inherit',name:'MEETING_ROOMS'});
+  const before=writes.length;oldSettings.exports.MeetingRooms.storage='legacy-kv';await assert.rejects(deployWorker(e.env,1,'meeting','code',[binding]),x=>x.status===409);assert.equal(writes.length,before);
+  oldSettings={bindings:[],migration_tag:'legacy'};await assert.rejects(deployWorker(e.env,1,'meeting','code',[binding]),x=>x.status===409);assert.equal(writes.length,before);
+ });
  await test('Worker binding replacement is blocked before deployment',async()=>{
+  oldSettings={bindings:[{type:'d1',name:'OLDDB',id:database}]};
   const before=writes.length;await assert.rejects(deployWorker(e.env,1,'meeting-app','export default {}',[{type:'r2_bucket',name:'OLDDB',bucket_name:'meeting-files'}]),x=>x.status===409);assert.equal(writes.length,before);
  });
  await test('generated Worker secrets stay encrypted, survive redeploy and support owner-only meeting launch',async()=>{

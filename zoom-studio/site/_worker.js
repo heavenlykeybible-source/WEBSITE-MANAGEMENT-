@@ -362,7 +362,7 @@ export default {
     const origin = request.headers.get('origin');
     if (request.method === 'POST' && origin && origin !== url.origin && path !== '/api/pay/webhook') return json({ error: 'Forbidden' }, 403);
 
-    if (path === '/api/health') return json({ ok: true, accountsConfigured: accounts, relayConfigured: !!(env.RELAY_URL && env.RELAY_SECRET), youtubeConfigured: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET), facebookConfigured: !!(env.FB_APP_ID && env.FB_APP_SECRET), aiConfigured: !!env.AI, radio: 'on-hold' });
+    if (path === '/api/health') return json({ ok: true, accountsConfigured: accounts, relayConfigured: !!(env.RELAY_URL && env.RELAY_SECRET), meetingConfigured: !!(env.MEETING_ROOMS || (env.RELAY_URL && env.RELAY_SECRET)), youtubeConfigured: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET), facebookConfigured: !!(env.FB_APP_ID && env.FB_APP_SECRET), aiConfigured: !!env.AI, radio: 'on-hold' });
     if (path === '/api/plans') return accounts ? json({ plans: plans(env), currency: cur(env) }) : json({ error: 'Accounts are not set up' }, 501);
     if (path === '/api/pay/webhook' && request.method === 'POST') {
       if (!accounts || !env.PAYSTACK_SECRET) return json({ error: 'Not set up' }, 501);
@@ -450,7 +450,7 @@ export default {
     const role = accountRole(env, email, u);
     const active = role !== 'user' || (u.paidUntil || 0) > Date.now();
     const verified = u.verified !== false;
-    if (!verified && (path === '/api/relay-token' || path === '/api/pay/start' || path === '/api/golive/start' || path.startsWith('/api/connect/') || path === '/api/tts' || path.startsWith('/api/team') || path.startsWith('/api/program'))) return json({ error: 'Please confirm your email first. Check your inbox.' }, 403);
+    if (!verified && (path === '/api/meeting-token' || path === '/api/relay-token' || path === '/api/pay/start' || path === '/api/golive/start' || path.startsWith('/api/connect/') || path === '/api/tts' || path.startsWith('/api/team') || path.startsWith('/api/program'))) return json({ error: 'Please confirm your email first. Check your inbox.' }, 403);
     if (path === '/api/resend' && request.method === 'POST') {
       if (verified) return json({ ok: true });
       if (!(await rate(env, 'rv:' + email, 3, 3600))) return json({ error: 'Too many requests. Try again later.' }, 429);
@@ -591,7 +591,13 @@ export default {
     }
     if (path === '/api/me') await env.TEAMDB.prepare('UPDATE users SET seen=?, warned=0 WHERE email=? AND seen<?').bind(Date.now(), email, Date.now() - 864e5).run();
     if (path === '/api/me') return json({ email, paidUntil: u.paidUntil || 0, active, verified, role, admin: isAdmin(env, email, u) });
-    if (path === '/api/relay-token') {
+    if (path === '/api/meeting-token' && env.MEETING_ROOMS) {
+      if (!active) return json({ error: 'Choose a plan to start a guest room.' }, 402);
+      if (!(await rate(env, 'meeting:' + email, 20, 3600))) return json({ error: 'Too many rooms started. Try again later.' }, 429);
+      const room = crypto.randomUUID();
+      return json({ url: 'wss://' + url.host + '/meeting/' + room, token: await sign(env.AUTH_SECRET, { k: 'meeting', r: room, u: email, exp: Date.now() + 10 * 60000, pe: role !== 'user' ? Date.now() + 86400000 : u.paidUntil }) });
+    }
+    if (path === '/api/relay-token' || path === '/api/meeting-token') {
       if (!env.RELAY_SECRET || !env.RELAY_URL) return json({ error: 'Streaming server is not set up.' }, 501);
       if (!active) return json({ error: 'Choose a plan to go live.' }, 402);
       return json({ url: env.RELAY_URL, token: await sign(env.RELAY_SECRET, { u: email, exp: Date.now() + 10 * 60000, pe: role !== 'user' ? Date.now() + 24 * 36e5 : u.paidUntil }) });

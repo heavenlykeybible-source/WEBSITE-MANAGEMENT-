@@ -47,6 +47,10 @@ export default {
   async fetch(request,env,ctx) {
     const path=new URL(request.url).pathname;
     try {
+      if(/^\/meeting\/[a-f0-9-]{36}\/room$/.test(path)){
+        if(!env.MEETING_ROOMS)return new Response('Meeting connection is not configured',{status:503});
+        return env.MEETING_ROOMS.get(env.MEETING_ROOMS.idFromName(path.split('/')[2])).fetch(request);
+      }
       if(path.startsWith('/api/')||path.startsWith('/p/'))await initializeMeetingDatabase(env);
       if(path==='/api/control-login')return await controlRoomOwnerLogin(request,env);
       return await studioApplication.fetch(request,{...env,ASSETS:{fetch:meetingAsset}},ctx);

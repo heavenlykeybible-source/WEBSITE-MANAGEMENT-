@@ -49,3 +49,44 @@ test('missing database yields a clear setup failure while public template still 
  assert.equal((await app.fetch(new Request('https://meeting/'),{},{})).status,200);
  assert.equal((await app.fetch(new Request('https://meeting/api/health'),{},{})).status,503);
 });
+
+const {MeetingRooms}=await import(pathToFileURL(path.join(root,'build/meeting-worker.mjs')));
+function socket(data){return {readyState:1,messages:[],serializeAttachment(d){assert.ok(Buffer.byteLength(JSON.stringify(d))<=2048,'hibernation attachment fits platform limit');this.d=structuredClone(d)},deserializeAttachment(){return structuredClone(this.d)},send(m){this.messages.push(JSON.parse(m))},close(){this.readyState=3},d:structuredClone(data)};}
+function meeting(){const all=[],state={getWebSockets(){return all},storage:{async setAlarm(){}}};return {all,state,room:new MeetingRooms(state,{AUTH_SECRET:secret}),add(data={}){const w=socket({role:'',room:'11111111-1111-4111-8111-111111111111',until:Date.now()+15000,...data});all.push(w);return w}};}
+function roomToken(extra={}){const p=Buffer.from(JSON.stringify({k:'meeting',u:'owner@test.local',r:'11111111-1111-4111-8111-111111111111',exp:Date.now()+60000,pe:Date.now()+86400000,...extra})).toString('base64url');return p+'.'+createHmac('sha256',secret).update(p).digest('hex');}
+const message=(room,w,m)=>room.webSocketMessage(w,JSON.stringify(m));
+async function openRoom(){const s=meeting(),host=s.add();await message(s.room,host,{t:'host',token:roomToken()});return {...s,host,key:host.messages.at(-1).key};}
+test('meeting host requires purpose, matching room and unexpired signed access',async()=>{
+ for(const token of ['bad',roomToken({k:'control-owner'}),roomToken({r:'another'}),roomToken({exp:Date.now()-1}),roomToken({pe:Date.now()-1})]){const s=meeting(),w=s.add();await message(s.room,w,{t:'host',token});assert.equal(w.readyState,3);}
+ const s=await openRoom();assert.equal(s.host.messages[0].t,'created');const other=s.add();await message(s.room,other,{t:'host',token:roomToken()});assert.equal(other.readyState,3);
+});
+test('waiting guests cannot chat or signal until host admission; hibernation keeps room controls',async()=>{
+ const s=await openRoom(),guest=s.add();await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,name:'Visitor',pass:'test-pass'});
+ assert.equal(s.host.messages.at(-2)?.t==='waiting'||s.host.messages.some(m=>m.t==='waiting'),true);
+ await message(s.room,guest,{t:'chat',text:'blocked'});await message(s.room,guest,{t:'sig',data:{offer:'blocked'}});assert.ok(!s.host.messages.some(m=>m.text==='blocked'||m.data?.offer==='blocked'));
+ const restored=new MeetingRooms(s.state,{AUTH_SECRET:secret});await message(restored,s.host,{t:'admit',gid:guest.d.id});assert.equal(guest.d.stage,true);
+ await message(restored,guest,{t:'sig',data:{offer:'allowed'}});assert.equal(s.host.messages.at(-1).data.offer,'allowed');
+ await message(restored,s.host,{t:'lock',on:true});const denied=s.add();await message(restored,denied,{t:'join',room:s.host.d.room,key:s.key});assert.equal(denied.readyState,3);
+ await message(restored,s.host,{t:'sig',to:'wrong-room',data:{secret:'private'}});assert.ok(!guest.messages.some(m=>m.data?.secret));
+});
+test('audience moderation, promotion, expiry and host disconnect work across hibernation',async()=>{
+ const s=await openRoom(),aud=s.add();await message(s.room,aud,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});assert.equal(aud.d.ok,true);assert.equal(aud.d.stage,false);
+ await message(s.room,s.host,{t:'audchat',on:false});await message(s.room,aud,{t:'chat',text:'not allowed'});assert.equal(aud.messages.at(-1).t,'note');
+ await message(s.room,s.host,{t:'promote',gid:aud.d.id});await message(s.room,aud,{t:'ready',ao:true});assert.equal(aud.d.stage,true);
+ await message(s.room,s.host,{t:'demote',gid:aud.d.id});assert.equal(aud.d.aud,true);assert.equal(aud.d.stage,false);
+ const late=s.add();await message(s.room,late,{t:'join',room:s.host.d.room,key:'wrong',aud:true});assert.equal(late.readyState,3);
+ s.host.d.until=Date.now()-1;await new MeetingRooms(s.state,{AUTH_SECRET:secret}).alarm();assert.equal(aud.readyState,3);assert.equal(s.host.readyState,3);
+ const another=await openRoom(),g=another.add();await message(another.room,g,{t:'join',room:another.host.d.room,key:another.key,aud:true});another.host.readyState=3;another.room.webSocketClose(another.host);assert.equal(g.readyState,3);
+});
+test('meeting transport rejects wrong origins and non-WebSocket requests; unauthenticated sockets expire',async()=>{
+ const s=meeting();assert.equal((await s.room.fetch(new Request('https://meeting/meeting/r/room'))).status,426);
+ assert.equal((await s.room.fetch(new Request('https://meeting/meeting/r/room',{headers:{upgrade:'websocket',origin:'https://elsewhere'}}))).status,403);
+ const w=s.add({until:Date.now()-1});await s.room.alarm();assert.equal(w.readyState,3);
+});
+test('native meeting token uses current account permissions and does not claim RTMP is configured',async()=>{
+ const d=database(),env={TEAMDB:d.DB,AUTH_SECRET:secret,MEETING_ROOMS:{}};
+ const loginResponse=await login(env,ticket());const html=await loginResponse.text(),token=JSON.parse(html.match(/localStorage.setItem\("ls_tok",("[^"]+")\)/)[1]);
+ const r=await app.fetch(new Request('https://meeting/api/meeting-token',{headers:{authorization:'Bearer '+token}}),env,{}),j=await r.json();assert.equal(r.status,200);assert.match(j.url,/^wss:\/\/meeting\/meeting\/[a-f0-9-]{36}$/);
+ const health=await (await app.fetch(new Request('https://meeting/api/health'),env,{})).json();assert.equal(health.meetingConfigured,true);assert.equal(health.relayConfigured,false);
+ assert.equal((await app.fetch(new Request('https://meeting/api/meeting-token'),env,{})).status,401);d.raw.close();
+});
