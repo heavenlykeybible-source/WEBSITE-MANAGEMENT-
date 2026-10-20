@@ -1,3 +1,21 @@
+# Live deployment update — 20 October 2026
+
+Account 7 meeting app is live at https://heavenly-key-zoom-studio.omegawealthcreator.workers.dev/. Stable Worker: `heavenly-key-zoom-studio`. Owner-selected existing bindings: D1 `heavenlykey-db`, private R2 `heavenlymedia`. Existing records, secrets and resource identities are preserved. Account 2 was not changed by this work.
+
+The reviewed Control Room installer embeds the complete public website. Owner-approved P-7 introduced native guest rooms; owner-approved P-9 published the AI, connection-retention and password-setup repairs. Guest rooms use per-room SQLite Durable Objects with WebSocket hibernation. Host access is signed, guests wait for admission, stage capacity is six, audience capacity is 100, and room state survives idle wakeups. Media remains browser-to-browser. Leaving ends the room. The existing external Node/FFmpeg relay remains necessary for platform RTMP streaming.
+
+Live checks passed: public banner/assets, additive database initialization, Control Room owner entry, admin read access, groups/program list screens, opening/closing a native guest room, host room chat, AI writer output and generated announcement voice. A retired writer model was replaced with the active FP8 variant. Room admission, moderation, expiry, room isolation, hibernation restoration and single-use owner password setup are covered by local tests. Final validation: 151 Control Room checks, 120 backend checks and 14 Node test entries pass.
+
+Saved channel connections no longer expire after 90 days of inactivity. Inactive users with saved channel connections are preserved by cleanup. Explicit disconnection/account deletion and provider revocation remain possible. Other documented message/attendance retention rules remain in place.
+
+A fresh Control Room owner launch provides a single-use ten-minute recovery ticket for the reserved owner password. The owner enters and submits the new password privately. It never changes automatically during deployment or launch. The owner can create `admin` with the Admin role; ordinary admins cannot appoint admins or reset the owner. Live password entry and account creation require the user's browser handoff and are not claimed completed here.
+
+Still requires configuration or device verification: real camera/microphone and guest-to-host media on separate devices/networks; TURN for restrictive networks; external RTMP relay; YouTube/Meta OAuth developer credentials and platform authorization; optional email/payment services. Radio remains on hold. Legal pages retain clearly marked draft placeholders for business/contact and legal terms; those details have not been invented or certified.
+
+The older upload-only audit below is historical and is superseded by this update where it conflicts.
+
+---
+
 # Audit and fixes — 19 October 2026
 
 Scope: uploaded Zoom Studio package; login, account administration, role boundaries, account lifecycle and relevant interface code. No live deployment was accessed or changed. This report supersedes conflicting older audit statements for these areas.
