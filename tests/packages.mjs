@@ -66,4 +66,33 @@ const invalidSession=await route(new Request('https://control.example/s/package-
 assert.doesNotMatch(await invalidSession.text(),/control-room-owner-toolbar/);
 assert.match(UI,/cmsOpenRequestedPage/);assert.match(UI,/Save changes/);
 console.log('PASS on-site CMS: owner-only toolbar, exact resolved entry, private responses, invalid session rejection, unchanged stored content');
+// OAuth discovery, owner consent, PKCE exchange and authenticated MCP tools.
+const discovery=await (await route(new Request('https://control.example/.well-known/oauth-authorization-server'),env)).json();
+assert.equal(discovery.code_challenge_methods_supported[0],'S256');
+const resourceInfo=await (await route(new Request('https://control.example/.well-known/oauth-protected-resource/mcp'),env)).json();assert.equal(resourceInfo.resource,'https://control.example/mcp');
+const challenge401=await route(new Request('https://control.example/mcp',{method:'POST',body:'{}'}),env);assert.equal(challenge401.status,401);assert.match(challenge401.headers.get('www-authenticate'),/resource_metadata/);
+const callback='https://chatgpt.com/connector_platform_oauth_redirect';
+async function register(redirect=callback){return route(new Request('https://control.example/connect/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({redirect_uris:[redirect],token_endpoint_auth_method:'none',client_name:'ChatGPT test'})}),env);}
+await assert.rejects(register('https://evil.example/callback'));
+const client=await (await register()).json();
+const verifier='a'.repeat(64),challenge=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))).toString('base64url');
+const authURL=new URL('https://control.example/connect/authorize');authURL.search=new URLSearchParams({client_id:client.client_id,redirect_uri:callback,response_type:'code',code_challenge_method:'S256',code_challenge:challenge,scope:'controlroom:work',resource:'https://control.example/mcp',state:'test-state'});
+const authStart=await route(new Request(authURL),env);assert.equal(authStart.status,302);
+const requestID=new URL(authStart.headers.get('location'),'https://control.example').searchParams.get('connect_request');
+await assert.rejects(route(new Request('https://control.example/connect/consent?id='+requestID),env),e=>e.status===403);
+const consent=await route(new Request('https://control.example/connect/consent?id='+requestID,{headers:{cookie}}),env);assert.equal((await consent.json()).scope,'controlroom:work');
+async function approve(origin='https://control.example'){return route(new Request('https://control.example/connect/consent',{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({id:requestID,decision:'approve',password:env.ADMIN_PASS})}),env);}
+await assert.rejects(approve('https://evil.example'),e=>e.status===403);
+const callbackURL=new URL((await (await approve()).json()).url);assert.equal(callbackURL.searchParams.get('state'),'test-state');assert.equal(callbackURL.searchParams.get('iss'),'https://control.example');
+await assert.rejects(approve());
+async function exchange(v=verifier,resource='https://control.example/mcp'){return route(new Request('https://control.example/connect/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:client.client_id,redirect_uri:callback,resource,code:callbackURL.searchParams.get('code'),code_verifier:v})}),env);}
+assert.equal((await exchange('b'.repeat(64))).status,400);assert.equal((await exchange(verifier,'https://evil.example/mcp')).status,400);
+const token=await (await exchange()).json();assert.equal(token.expires_in,3600);assert.ok(token.access_token.startsWith('cr_oauth_'));assert.equal((await exchange()).status,400);
+async function mcpCall(){return route(new Request('https://control.example/mcp',{method:'POST',headers:{authorization:'Bearer '+token.access_token,'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:3,method:'tools/list'})}),env);}
+const toolList=await (await mcpCall()).json();assert.ok(toolList.result.tools.length>0);assert.ok(!toolList.result.tools.some(t=>/approve|decide/.test(t.name)));
+db.prepare("UPDATE agents SET status='revoked' WHERE name='ChatGPT connection'").run();assert.equal((await mcpCall()).status,401);
+db.prepare("UPDATE agents SET status='active' WHERE name='ChatGPT connection'").run();const tk=db.prepare("SELECT key,value_json FROM settings WHERE key LIKE 'connect:token:%'").get();const expired=JSON.parse(tk.value_json);expired.expires=1;db.prepare('UPDATE settings SET value_json=? WHERE key=?').run(JSON.stringify(expired),tk.key);assert.equal((await mcpCall()).status,401);
+assert.match(UI,/Connect ChatGPT/);assert.match(UI,/Authorize ChatGPT/);
+console.log('PASS ChatGPT connection: discovery, callback restriction, owner-only consent, origin protection, PKCE, resource audience, code replay prevention, real tools, revoke and expiry');
+
 db.close();

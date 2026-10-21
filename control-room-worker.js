@@ -229,6 +229,12 @@ async function resetPw(req, env) {
 async function agentFrom(req, env) {
   const k = bearer(req);
   if (!k) return null;
+  if(k.startsWith('cr_oauth_')) {
+    const d=await connectSetting(env,'connect:token:'+await sha256(k));
+    if(!d||d.expires<Date.now()||d.resource!==new URL(req.url).origin+'/mcp')return null;
+    const u=await env.DB.prepare('SELECT role,status,pass_ver FROM users WHERE id=?').bind(d.user_id).first();
+    if(!u||u.status!=='active'||u.role!=='owner'||u.pass_ver!==d.pass_ver)return null;
+  }
   return await env.DB.prepare("SELECT * FROM agents WHERE token_hash=? AND status='active'").bind(await sha256(k)).first();
 }
 async function userAgentId(env, user) {
@@ -1347,7 +1353,7 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
       const required = ['users','agents','sites','site_files','pages','proposals','upload_files','settings','audit_log','cf_connections','remote_sites','github_sites','ai_accounts','proposal_reviews','operation_locks','releases'];
       const missing = required.filter(t => !tables.includes(t));
       const counts = await env.DB.prepare("SELECT (SELECT COUNT(*) FROM sites) static_sites,(SELECT COUNT(*) FROM github_sites) github_sites,(SELECT COUNT(*) FROM remote_sites WHERE status='ready') blogs,(SELECT COUNT(*) FROM proposals WHERE sealed=1 AND status='waiting') waiting").first();
-      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'onsite-cms-20261021' });
+      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'chatgpt-connect-20261021' });
     }
     if (m === 'POST') {
       const input = await body(req); if (input.action !== 'storage') fail('Unknown check');
@@ -2641,7 +2647,7 @@ async function aiChat(env, user, b, origin = '') {
 
 async function mcp(req, env) {
   const a = await agentFrom(req, env);
-  if (!a) return json({ jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Invalid token' } }, 401);
+  if (!a) return new Response(JSON.stringify({jsonrpc:'2.0',id:null,error:{code:-32001,message:'Connect and authorize this assistant first'}}),{status:401,headers:{'content-type':'application/json','cache-control':'no-store','www-authenticate':'Bearer resource_metadata="'+new URL(req.url).origin+'/.well-known/oauth-protected-resource/mcp"'}});
   await env.DB.prepare("UPDATE agents SET last_seen_at=datetime('now') WHERE id=?").bind(a.id).run();
   let msg;
   try { msg = await body(req); } catch (e) { return json({ jsonrpc: '2.0', id: null, error: { code: -32700, message: e.status === 413 ? 'Request too large' : 'Parse error' } }, e.status === 413 ? 413 : 400); }
@@ -2666,6 +2672,99 @@ async function mcp(req, env) {
 const APP_ICONS={"192": "iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAACXElEQVR42u3dsU0DMRiGYXLKDtBSsgAjwA7sQQdV6NiDHRiBLJAybcagyA3gu5P8f46ep0f+hd/4TooU7+5f/u5grcm/AAEhIASEgEBACAgBISAQEAJCQAgIBISAEBACAgEhIASEgBAQCAgBISAEBAJCQAgIAYGAEBACQkAgIASEgBAQAgIBISAEhICg3T5wpvPho+dyj59fW/788vvcc9qH12PUZu2iLlvpnM7GjDqnk5nRpJ51qxfWU756YkC19SydIWH/QhryEs34ASUcP+2T5Dw+EiZxAiEgBISAEBAICAEhIAQEAkJACAgBgYAQEAJCQCAgBISAEBACAgEhIASEgEBACAgBISAQEAJCQAgIBISAENBs42/Fd54k50e+EyZxAnETASUcQu0zJHz0Qw7CoBOotqGlq9fuX85jNOuylSu39QyRTm5AeAdCQCAgBISAEBAICAEhIAQEs33gTGN9u/R2eu857c/Td9RmZX0XVngN8YqMOqeTmdGknnWrF9ZTvnpiQAlXoLfPkLB/IQ15iWb8gBKOn/ZJch4fCZM4gRAQAkJACAgEhIAQEAICASEgBISAQEAICAEhIBAQAkJACAgBgYAQEAJCQCAgBISAEBAICAEhIAQEAkJACGiWcxNxyyQ5P/KdMIkTiJsIKOEQap8h4aMfchAGnUC1DS1dvXb/ch6jWZetXLmtZ4h0cgPCOxACAgEhIASEgEBACAgBISAQEAJCQAgIAYGAEBACQkAgIASEgBAQCAgBISAEBAJCQAgIASEgEBACQkAICASEgBAQAgIBISBi/QPEG3WI1iOYOwAAAABJRU5ErkJggg==", "512": "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"};
 const APP_SW="self.addEventListener('install',function(){self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});self.addEventListener('fetch',function(e){if(e.request.mode==='navigate'&&new URL(e.request.url).pathname==='/'){e.respondWith(fetch(e.request).catch(function(){return new Response('<!doctype html><meta name=viewport content=width=device-width><title>Control Panel offline</title><h1>You are offline</h1><p>Reconnect to use Control Panel. Chat, preview and approval need an internet connection.</p>',{status:503,headers:{'content-type':'text/html;charset=utf-8','cache-control':'no-store','content-security-policy':\"default-src 'none'\"}});}));}});";
 
+// ---------- authenticated external assistant connection ----------
+const CONNECT_SCOPE = 'controlroom:work';
+const CONNECT_CALLBACK = 'https://chatgpt.com/connector_platform_oauth_redirect';
+async function connectSetting(env,key) {
+  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+  return row ? JSON.parse(row.value_json) : null;
+}
+async function connectStore(env,key,value) {
+  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind(key,JSON.stringify(value)).run();
+}
+async function connectClient(env,id) {
+  if(id==='https://chatgpt.com/oauth/client.json') {
+    const r=await fetch(id,{redirect:'manual',signal:AbortSignal.timeout(10000)});
+    if(!r.ok)fail('Cannot verify ChatGPT client identity. Try again.',502);
+    const c=JSON.parse(new TextDecoder().decode(await readLimited(r,32000)));
+    if(c.client_id!==id||!Array.isArray(c.redirect_uris)||!c.redirect_uris.includes(CONNECT_CALLBACK))fail('Invalid ChatGPT client metadata',400);
+    return {client_id:id,redirect_uris:[CONNECT_CALLBACK],name:'ChatGPT'};
+  }
+  if(!/^cr_client_[a-f0-9]{48}$/.test(id))fail('Unknown OAuth client',400);
+  const c=await connectSetting(env,'connect:client:'+id);if(!c)fail('Unknown OAuth client',400);return c;
+}
+async function connectRequest(env,id) {
+  if(!/^[a-f0-9]{48}$/.test(id||''))fail('Invalid connection request',400);
+  const d=await connectSetting(env,'connect:request:'+id);
+  if(!d||d.expires<Date.now())fail('Connection request expired. Start again in ChatGPT.',400);
+  return d;
+}
+async function connectOwner(req,env) {
+  const user=await getUser(req,env);
+  if(!user||user.role!=='owner'||user.kind==='member')fail('Sign in as the owner to connect ChatGPT.',403);
+  return user;
+}
+async function connectRoutes(req,env,u) {
+  const p=u.pathname,m=req.method,issuer=u.origin,resource=issuer+'/mcp';
+  if(m==='GET'&&(p==='/.well-known/oauth-protected-resource'||p==='/.well-known/oauth-protected-resource/mcp'))return json({resource,authorization_servers:[issuer],scopes_supported:[CONNECT_SCOPE],bearer_methods_supported:['header']});
+  if(m==='GET'&&p==='/.well-known/oauth-authorization-server')return json({issuer,authorization_endpoint:issuer+'/connect/authorize',token_endpoint:issuer+'/connect/token',registration_endpoint:issuer+'/connect/register',response_types_supported:['code'],grant_types_supported:['authorization_code'],token_endpoint_auth_methods_supported:['none'],code_challenge_methods_supported:['S256'],scopes_supported:[CONNECT_SCOPE],client_id_metadata_document_supported:true,authorization_response_iss_parameter_supported:true});
+  if(p==='/connect/register'&&m==='POST') {
+    const b=await body(req);
+    if(b.token_endpoint_auth_method&&b.token_endpoint_auth_method!=='none')fail('Use public-client PKCE authentication');
+    if(!Array.isArray(b.redirect_uris)||b.redirect_uris.length!==1||b.redirect_uris[0]!==CONNECT_CALLBACK)fail('Use the ChatGPT stable callback URI');
+    const count=await env.DB.prepare("SELECT count(*) n FROM settings WHERE key LIKE 'connect:client:%'").first();if(count.n>=200)fail('Client registration limit reached',429);
+    const id='cr_client_'+hex(crypto.getRandomValues(new Uint8Array(24))),c={client_id:id,redirect_uris:[CONNECT_CALLBACK],name:String(b.client_name||'External assistant').slice(0,80)};
+    await connectStore(env,'connect:client:'+id,c);
+    return json({...c,token_endpoint_auth_method:'none',grant_types:['authorization_code'],response_types:['code']},201);
+  }
+  if(p==='/connect/authorize'&&m==='GET') {
+    const q=u.searchParams,c=await connectClient(env,q.get('client_id')||'');
+    if(q.get('redirect_uri')!==CONNECT_CALLBACK||!c.redirect_uris.includes(q.get('redirect_uri')))fail('Redirect URI mismatch');
+    if(q.get('response_type')!=='code'||q.get('code_challenge_method')!=='S256'||! /^[A-Za-z0-9_-]{43}$/.test(q.get('code_challenge')||''))fail('Authorization code with S256 PKCE is required');
+    if(q.get('resource')!==resource||q.get('scope')!==CONNECT_SCOPE)fail('Choose the controlroom:work scope and this server MCP resource');
+    const state=q.get('state');if(!state||state.length>2048)fail('Invalid OAuth state');
+    const id=hex(crypto.getRandomValues(new Uint8Array(24)));
+    await connectStore(env,'connect:request:'+id,{client_id:c.client_id,name:c.name,redirect_uri:CONNECT_CALLBACK,challenge:q.get('code_challenge'),resource,scope:CONNECT_SCOPE,state,expires:Date.now()+600000});
+    return new Response(null,{status:302,headers:{location:'/?connect_request='+id,'cache-control':'no-store','referrer-policy':'no-referrer'}});
+  }
+  if(p==='/connect/consent') {
+    const user=await connectOwner(req,env);
+    if(m==='GET') {const d=await connectRequest(env,u.searchParams.get('id'));return json({name:d.name,redirect_uri:d.redirect_uri,scope:d.scope,expires:d.expires});}
+    if(m==='POST') {
+      if(req.headers.get('origin')!==issuer)fail('Same-origin approval required',403);
+      const b=await body(req),d=await connectRequest(env,b.id);await reauthenticate(env,user,b.password);
+      if(!['approve','deny'].includes(b.decision))fail('Choose approve or deny');
+      const consumed=await env.DB.prepare('DELETE FROM settings WHERE key=? RETURNING value_json').bind('connect:request:'+b.id).first();if(!consumed)fail('This request has already been used',409);
+      const redirect=new URL(d.redirect_uri);redirect.searchParams.set('state',d.state);redirect.searchParams.set('iss',issuer);
+      if(b.decision==='deny')redirect.searchParams.set('error','access_denied');
+      else {
+        const code=hex(crypto.getRandomValues(new Uint8Array(32)));
+        await connectStore(env,'connect:code:'+await sha256(code),{...d,user_id:user.id,pass_ver:user.pass_ver,expires:Date.now()+120000});
+        redirect.searchParams.set('code',code);
+        await audit(env,user.username,'connect-chatgpt-approved',d.client_id);
+      }
+      return json({url:redirect.href});
+    }
+  }
+  if(p==='/connect/token'&&m==='POST') {
+    if(!req.headers.get('content-type')?.startsWith('application/x-www-form-urlencoded'))return json({error:'invalid_request'},400);
+    const b=new URLSearchParams(new TextDecoder().decode(await readLimited(req,16000)));
+    if(b.get('grant_type')!=='authorization_code')return json({error:'unsupported_grant_type'},400);
+    const raw=b.get('code')||'',verifier=b.get('code_verifier')||'';
+    if(!/^[a-f0-9]{64}$/.test(raw)||! /^[A-Za-z0-9._~-]{43,128}$/.test(verifier))return json({error:'invalid_grant'},400);
+    const key='connect:code:'+await sha256(raw),d=await connectSetting(env,key);
+    const challenge=btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(verifier))))).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
+    if(!d||d.expires<Date.now()||d.client_id!==b.get('client_id')||d.redirect_uri!==b.get('redirect_uri')||d.resource!==b.get('resource')||!safeEq(d.challenge,challenge))return json({error:'invalid_grant'},400);
+    const user=await env.DB.prepare('SELECT * FROM users WHERE id=?').bind(d.user_id).first();if(!user||user.status!=='active'||user.role!=='owner'||user.pass_ver!==d.pass_ver)return json({error:'invalid_grant'},400);
+    const consumed=await env.DB.prepare('DELETE FROM settings WHERE key=? RETURNING value_json').bind(key).first();if(!consumed)return json({error:'invalid_grant'},400);
+    const token='cr_oauth_'+hex(crypto.getRandomValues(new Uint8Array(32))),hash=await sha256(token);
+    const row=await env.DB.prepare('INSERT INTO agents(name,token_hash,can_read,can_propose) VALUES(?,?,1,1)').bind('ChatGPT connection',hash).run();
+    await connectStore(env,'connect:token:'+hash,{agent_id:row.meta.last_row_id,user_id:user.id,pass_ver:user.pass_ver,resource:d.resource,expires:Date.now()+3600000});
+    return json({access_token:token,token_type:'Bearer',expires_in:3600,scope:CONNECT_SCOPE});
+  }
+  return null;
+}
+
 // ---------- router ----------
 async function route(req, env) {
   const u = new URL(req.url);
@@ -2674,6 +2773,7 @@ async function route(req, env) {
   const origin = req.headers.get('origin');
   if (origin && origin !== u.origin && (p.startsWith('/api/') || p === '/mcp')) fail('Cross-origin request denied', 403);
   if (req.headers.get('sec-fetch-site') === 'cross-site' && (p.startsWith('/api/') || p === '/mcp')) fail('Cross-site request denied', 403);
+  const connected = await connectRoutes(req,env,u);if(connected)return connected;
   let x;
   if(m==='GET'&&p==='/manifest.webmanifest')return new Response(JSON.stringify({id:'/',name:'Control Panel',short_name:'Control Panel',description:'Manage websites, chat with AI and approve reviewed changes.',start_url:'/?app=1',scope:'/',display:'standalone',background_color:'#f3f5fa',theme_color:'#11245b',icons:[{src:'/app-icon-192.png',sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:'/app-icon-512.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}]}),{headers:{'content-type':'application/manifest+json','cache-control':'public,max-age=3600'}});
   if(m==='GET'&&(x=p.match(/^\/app-icon-(192|512)\.png$/)))return new Response(Uint8Array.from(atob(APP_ICONS[x[1]]),c=>c.charCodeAt(0)),{headers:{'content-type':'image/png','cache-control':'public,max-age=86400'}});
@@ -2694,7 +2794,7 @@ async function route(req, env) {
   if (m === 'GET' && (x = p.match(/^\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, false);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, true);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/work\/(w_[a-f0-9]{16})$/))) return publicWork(x[1], env);
-  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'onsite-cms-20261021' });
+  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'chatgpt-connect-20261021' });
   if (m === 'POST' && p === '/api/signup') return signup(req, env);
   if (p === '/mcp') return m === 'POST' ? mcp(req, env) : new Response('Use POST', { status: 405 });
   if ((x = p.match(/^\/s\/([a-z0-9-]{1,60})(\/.*)?$/))) {
@@ -2794,7 +2894,7 @@ function nav(){var M=ME.kind==='member',n=h('nav',{class:'sidenav','aria-label':
 function group(t){n.appendChild(h('div',{class:'nav-heading'},t));}
 function item(label,icon,fn,id){var a={class:CURRENT_NAV===label?'active':'',onclick:function(){CURRENT_NAV=label;fn();}};if(id)a.id=id;n.appendChild(h('button',a,h('span',{class:'nav-icon','aria-hidden':'true'},icon),h('span',{},label==='Waiting'?'Waiting ('+WAITN+')':label)));}
 group('Workspace');item('Waiting','◷',waiting,'wb');if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
-if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4)item('Cloudflare','☁',cloud);
+if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M)item('Connect ChatGPT','↔',connectChatGPT);if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4)item('Cloudflare','☁',cloud);
 group('Administration');if(!M&&lv()>=4)item('System checks','✓',systemChecks);if(!M&&lv()>=3){item('Team','♧',users);item('Log','≡',logTab);}item('Account','○',account);item('Sign out','↪',logout);return n;}
 function lagosTime(value){if(!value)return 'Not recorded';var v=typeof value==='number'?value:String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
 async function systemChecks(){try{var data=await api('system/checks'),list=h('div'),status=h('p',{class:'tag',role:'status'},'');data.checks.forEach(function(c){list.appendChild(h('div',{class:'card'},h('b',{},(c.passed?'✓ ':'! ')+c.name),h('p',{class:'tag'},c.detail)));});show(nav(),h('div',{class:'eyebrow'},'System health'),h('h3',{class:'page-title'},'Connection & storage checks'),h('p',{class:'page-intro'},'These checks test this installation. Real WordPress, Blogger, GitHub and external AI connections need their own Check or Test action after you connect an account.'),list,h('p',{},'Managed sites: '+data.counts.static_sites+' · GitHub connections: '+data.counts.github_sites+' · Ready blogs: '+data.counts.blogs+' · Waiting: '+data.counts.waiting),h('button',{onclick:async function(){status.textContent='Testing a temporary storage object…';try{var r=await api('system/checks','POST',{action:'storage'});status.textContent=r.detail;}catch(e){status.textContent=e.message;}}},'Test file storage'),h('button',{class:'sm',onclick:aiAccounts},'Test AI'),status,h('p',{class:'tag'},'Build '+data.version));}catch(e){oops(e);}}
@@ -2823,7 +2923,7 @@ function resetScreen(token){var p1=h('input',{type:'password',placeholder:'New p
   show(h('p',{},'Choose your password'),h('p',{class:'tag'},'Use 10 or more characters. Capitals and symbols are optional.'),passwordField(p1),passwordField(p2),h('button',{onclick:function(){if(p1.value!==p2.value)return alert('The two passwords do not match');
     post('/api/reset',{token:token,password:p1.value}).then(function(){history.replaceState(null,'','/');alert('Password saved. Please sign in.');login();}).catch(oops);}},'Save password'));}
 function logout(){CHAT=[];CHAT_FILES=[];fetch('/api/logout',{method:'POST'}).then(login);}
-function start(){fetch('/api/owner/me').then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){ME=d.user;SIGNED=true;poll();if(!window.pt)window.pt=setInterval(poll,60000);cmsOpenRequestedPage().then(function(opened){if(!opened)waiting();}).catch(oops);}).catch(function(){login();});}
+function start(){fetch('/api/owner/me').then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){ME=d.user;SIGNED=true;poll();if(!window.pt)window.pt=setInterval(poll,60000);connectRequestedConsent().then(function(consent){if(consent)return;return cmsOpenRequestedPage().then(function(opened){if(!opened)waiting();});}).catch(oops);}).catch(function(){login();});}
 async function waiting(st){st=typeof st==='string'?st:'waiting';CURRENT_NAV='Waiting';
 try{var d=await api('proposals?status='+st),box=h('tbody',{}),queueTable=h('table',{class:'queue-table'},h('thead',{},h('tr',{},h('th',{},'Account / website · Work · Arrival time · Status'))),box);
 if(!d.proposals.length)box.appendChild(h('tr',{},h('td',{},h('div',{class:'empty-state'},h('div',{class:'empty-icon'},'◇'),h('h4',{},st==='waiting'?'Your review room is clear':'No work in this view'),h('p',{class:'tag'},'New AI proposals and submitted uploads will arrive here, ready for your review.'),h('button',{onclick:function(){CURRENT_NAV='Assistant';claude();}},'✦ Start with the assistant')))));
@@ -3141,6 +3241,21 @@ async function cmsOpenRequestedPage(){
  if(!site)throw Error('The website is not connected to this control room.');
  if(!/\\.html?$/i.test(path))throw Error('Choose an HTML page for visual editing.');
  await cmsEditor(site,path);return true;
+}
+
+async function connectChatGPT(){try{
+ if(ME.role!=='owner'||ME.kind==='member')throw Error('Owner access required');
+ var data=await api('agents'),list=h('div'),url=location.origin+'/mcp',endpoint=h('input',{'aria-label':'ChatGPT MCP server URL',readonly:'readonly'});endpoint.value=url;
+ data.agents.filter(function(a){return a.name==='ChatGPT connection';}).forEach(function(a){list.appendChild(h('div',{class:'card'},h('b',{},'ChatGPT · '+a.status),h('p',{},'Last used: '+(a.last_seen_at||'Not used yet')),a.status==='active'?h('button',{class:'bad',onclick:async function(){try{await api('agents/'+a.id+'/revoke','POST');connectChatGPT();}catch(e){oops(e);}}},'Disconnect'):h('span')));});
+ var status=h('p',{role:'status'});
+ show(nav(),h('h3',{class:'page-title'},'Connect ChatGPT'),h('p',{},'Connect your ChatGPT app to this control room so it can inspect connected websites, read files and prepare changes for your approval.'),h('div',{class:'card'},h('h3',{},'Server address'),endpoint,h('button',{onclick:async function(){try{await navigator.clipboard.writeText(url);status.textContent='Server address copied.';}catch(e){status.textContent='Select and copy the server address above.';}}},'Copy connection URL'),status,h('p',{},'In your ChatGPT app connection setup, add this MCP server using OAuth. Return here when prompted, sign in as owner, and approve the connection. Availability depends on your ChatGPT account and workspace settings.'),h('p',{},'Access lasts one hour. Reconnect when it expires. ChatGPT can read and propose; publishing still requires your review and approval. Never paste your owner password into chat.')),h('h3',{},'Connection activity'),list,h('h3',{},'Connect website accounts'),h('button',{onclick:cloud},'Connect Cloudflare account'),h('button',{onclick:github},'Connect GitHub website'),h('button',{onclick:remote},'Connect WordPress or Blogger'),h('button',{onclick:projectSources},'Connect Google Drive'),h('p',{},'These website connections make their files available to authorized assistants. External websites need a host integration to display on-site editing controls.'),h('button',{class:'sm',onclick:systemChecks},'Check control room connections'));
+ }catch(e){oops(e);}}
+async function connectRequestedConsent(){
+ var params=new URLSearchParams(location.search),id=params.get('connect_request');if(!id){if(params.get('connect')==='chatgpt'){await connectChatGPT();return true;}return false;}
+ var r=await fetch('/connect/consent?id='+encodeURIComponent(id)),data=await r.json();if(!r.ok)throw Error(data.error||'Connection request unavailable');
+ var status=h('p',{role:'status'}),busy=false;
+ async function decide(decision){if(busy)return;busy=true;try{var password=await passwordDialog(decision==='approve'?'Authorize ChatGPT connection':'Decline connection');if(!password)return;var result=await post('/connect/consent',{id:id,decision:decision,password:password});location.href=result.url;}catch(e){status.textContent=e.message;}finally{busy=false;}}
+ show(nav(),h('h3',{class:'page-title'},'Allow this assistant to work on your websites?'),h('p',{},'Client: '+data.name),h('p',{},'Return address: '+data.redirect_uri),h('p',{},'This connection can read your connected sites and propose file changes, page edits and deployments. It cannot approve or publish its own proposals. Access expires after one hour. You can disconnect it at any time under Connect ChatGPT.'),h('button',{onclick:function(){decide('approve');}},'Authorize ChatGPT'),h('button',{class:'bad',onclick:function(){decide('deny');}},'Decline'),status);return true;
 }
 
 // END VISUAL CMS CLIENT

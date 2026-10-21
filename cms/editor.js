@@ -68,3 +68,18 @@ async function cmsOpenRequestedPage(){
  if(!/\.html?$/i.test(path))throw Error('Choose an HTML page for visual editing.');
  await cmsEditor(site,path);return true;
 }
+
+async function connectChatGPT(){try{
+ if(ME.role!=='owner'||ME.kind==='member')throw Error('Owner access required');
+ var data=await api('agents'),list=h('div'),url=location.origin+'/mcp',endpoint=h('input',{'aria-label':'ChatGPT MCP server URL',readonly:'readonly'});endpoint.value=url;
+ data.agents.filter(function(a){return a.name==='ChatGPT connection';}).forEach(function(a){list.appendChild(h('div',{class:'card'},h('b',{},'ChatGPT · '+a.status),h('p',{},'Last used: '+(a.last_seen_at||'Not used yet')),a.status==='active'?h('button',{class:'bad',onclick:async function(){try{await api('agents/'+a.id+'/revoke','POST');connectChatGPT();}catch(e){oops(e);}}},'Disconnect'):h('span')));});
+ var status=h('p',{role:'status'});
+ show(nav(),h('h3',{class:'page-title'},'Connect ChatGPT'),h('p',{},'Connect your ChatGPT app to this control room so it can inspect connected websites, read files and prepare changes for your approval.'),h('div',{class:'card'},h('h3',{},'Server address'),endpoint,h('button',{onclick:async function(){try{await navigator.clipboard.writeText(url);status.textContent='Server address copied.';}catch(e){status.textContent='Select and copy the server address above.';}}},'Copy connection URL'),status,h('p',{},'In your ChatGPT app connection setup, add this MCP server using OAuth. Return here when prompted, sign in as owner, and approve the connection. Availability depends on your ChatGPT account and workspace settings.'),h('p',{},'Access lasts one hour. Reconnect when it expires. ChatGPT can read and propose; publishing still requires your review and approval. Never paste your owner password into chat.')),h('h3',{},'Connection activity'),list,h('h3',{},'Connect website accounts'),h('button',{onclick:cloud},'Connect Cloudflare account'),h('button',{onclick:github},'Connect GitHub website'),h('button',{onclick:remote},'Connect WordPress or Blogger'),h('button',{onclick:projectSources},'Connect Google Drive'),h('p',{},'These website connections make their files available to authorized assistants. External websites need a host integration to display on-site editing controls.'),h('button',{class:'sm',onclick:systemChecks},'Check control room connections'));
+ }catch(e){oops(e);}}
+async function connectRequestedConsent(){
+ var params=new URLSearchParams(location.search),id=params.get('connect_request');if(!id){if(params.get('connect')==='chatgpt'){await connectChatGPT();return true;}return false;}
+ var r=await fetch('/connect/consent?id='+encodeURIComponent(id)),data=await r.json();if(!r.ok)throw Error(data.error||'Connection request unavailable');
+ var status=h('p',{role:'status'}),busy=false;
+ async function decide(decision){if(busy)return;busy=true;try{var password=await passwordDialog(decision==='approve'?'Authorize ChatGPT connection':'Decline connection');if(!password)return;var result=await post('/connect/consent',{id:id,decision:decision,password:password});location.href=result.url;}catch(e){status.textContent=e.message;}finally{busy=false;}}
+ show(nav(),h('h3',{class:'page-title'},'Allow this assistant to work on your websites?'),h('p',{},'Client: '+data.name),h('p',{},'Return address: '+data.redirect_uri),h('p',{},'This connection can read your connected sites and propose file changes, page edits and deployments. It cannot approve or publish its own proposals. Access expires after one hour. You can disconnect it at any time under Connect ChatGPT.'),h('button',{onclick:function(){decide('approve');}},'Authorize ChatGPT'),h('button',{class:'bad',onclick:function(){decide('deny');}},'Decline'),status);return true;
+}

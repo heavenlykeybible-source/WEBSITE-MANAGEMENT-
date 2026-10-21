@@ -51,3 +51,11 @@ Private chat uploads are limited to 2 MB each. Static ZIP uploads through the si
 When the owner is signed into the control room on the same origin, live HTML pages under `/s/<site>/` show an owner toolbar. Select **Edit this page** to open that exact resolved page in the visual editor. **Save changes** stores a private draft; **Send to Waiting for approval** uses the existing preview and owner approval process. **View live page** returns to the website. Signing in after opening an editor link keeps the requested page.
 
 Visitors, expired sessions, and members do not receive the toolbar. Preview responses never contain it, and it is never written into website files. Responses are private and not cached. Separately hosted WordPress, Blogger, GitHub, or Cloudflare sites require integration at their own host; account connection alone does not inject controls into external responses.
+
+## Connect ChatGPT
+
+The owner navigation now includes **Connect ChatGPT**, also available at `/?connect=chatgpt`. Copy the displayed `/mcp` URL into the ChatGPT app's MCP connection setup and choose OAuth. The server publishes protected-resource and authorization-server discovery, supports ChatGPT CIMD and dynamic public-client registration using the stable ChatGPT callback, and requires S256 PKCE.
+
+The owner signs in and explicitly authorizes the request with the current password. Codes expire after two minutes and can be exchanged once. Tokens are hashed, expire after one hour, and are tied to this origin, owner identity and password version. The owner can disconnect an issued connection from this page. Existing static-token agents continue working. There is no refresh-token grant; authorize again when access expires.
+
+Tools permit the same read-and-propose operations as existing agents. They cannot approve publication. The dashboard does not automatically install a connection in ChatGPT or make tools available to an already-running conversation; complete connection in the ChatGPT app. Availability of custom connections depends on the user's plan and workspace. A real ChatGPT-hosted OAuth round trip still requires that user connection. Local integration tests cover discovery, registered-client authorization, owner consent, PKCE exchange, audience checks, single-use codes, MCP tools, revocation and expiration.
