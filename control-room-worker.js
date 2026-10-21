@@ -827,20 +827,21 @@ async function maintenanceRun(env, actor, args) {
   if (!Number.isSafeInteger(id) || id < 1) fail('Bad connection');
   return withOperationLock(env, 'maintenance:' + id, async () => {
     const grant = await maintenanceGrant(env, id);
-    if (!grant || grant.agent_id !== actor.a.id || grant.expires <= Date.now()) fail('No active maintenance permission for this agent and account', 403);
+    const allowed = Array.isArray(grant) ? grant.find(g => g.agent_id === actor.a.id && g.expires > Date.now()) : (grant && grant.agent_id === actor.a.id && grant.expires > Date.now() ? grant : null);
+    if (!allowed) fail('No active maintenance permission for this agent and account', 403);
     const conn = await connById(env, id);
     let requestPath, payload;
     if (args.action === 'worker_status') {
-      if (!grant.workers.includes(args.worker)) fail('Worker is outside the maintenance permission', 403);
+      if (!allowed.workers.includes(args.worker)) fail('Worker is outside the maintenance permission', 403);
       requestPath = '/workers/scripts';
     } else if (args.action === 'purge_urls') {
       fail('Cache changes are disabled under approval-only mode. No cache was changed.',403);
-      if (!grant.zone || !Array.isArray(args.urls) || !args.urls.length || args.urls.length > 10) fail('A granted zone and 1–10 URLs are required');
+      if (!allowed.zone || !Array.isArray(args.urls) || !args.urls.length || args.urls.length > 10) fail('A granted zone and 1–10 URLs are required');
       const urls = args.urls.map(v => { let u; try { u = new URL(v); } catch { fail('Invalid cache URL'); }
-        if (u.protocol !== 'https:' || u.username || u.password || u.hash || !grant.hosts.includes(u.hostname) || u.port) fail('Cache URL is outside the granted hosts', 403);
+        if (u.protocol !== 'https:' || u.username || u.password || u.hash || !allowed.hosts.includes(u.hostname) || u.port) fail('Cache URL is outside the granted hosts', 403);
         return u.href;
       });
-      requestPath = '/zones/' + grant.zone + '/purge_cache'; payload = { files: urls };
+      requestPath = '/zones/' + allowed.zone + '/purge_cache'; payload = { files: urls };
     } else fail('Unsupported maintenance action. Code, DNS, databases and access changes cannot bypass review.', 403);
     const recordId = crypto.randomUUID(), key = 'maintenance:run:' + recordId;
     const record = { id: recordId, connection: id, agent_id: actor.a.id, action: args.action, worker: args.worker || null, urls: payload ? payload.files : [], started_at: new Date().toISOString(), status: 'running' };
@@ -897,7 +898,12 @@ async function maintenanceRoutes(req, env, user, sub, method) {
   return withOperationLock(env, 'maintenance:' + id, async () => {
     const key = 'maintenance:grant:' + id;
     if (b.revoke === true) {
-      await env.DB.prepare('DELETE FROM settings WHERE key=?').bind(key).run();
+      if (b.agent_id) {
+        const old = await maintenanceGrant(env, id);
+        const remaining = (Array.isArray(old) ? old : old ? [old] : []).filter(g => g.agent_id !== Number(b.agent_id));
+        if (remaining.length) await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind(key, JSON.stringify(remaining)).run();
+        else await env.DB.prepare('DELETE FROM settings WHERE key=?').bind(key).run();
+      } else await env.DB.prepare('DELETE FROM settings WHERE key=?').bind(key).run();
       await audit(env, user.username, 'maintenance-revoked', 'connection ' + id); return json({ ok: true });
     }
     const a = await env.DB.prepare("SELECT id,owner_id,site_id,can_read FROM agents WHERE id=? AND status='active'").bind(+b.agent_id).first();
@@ -919,7 +925,10 @@ async function maintenanceRoutes(req, env, user, sub, method) {
     }
     const hours = Number(b.hours || 1); if (!Number.isFinite(hours) || hours < 1 || hours > 24) fail('Permission duration: 1–24 hours');
     const grant = { agent_id: a.id, workers, zone, hosts, expires: Date.now() + hours * 3600000 };
-    await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind(key, JSON.stringify(grant)).run();
+    const previous = await maintenanceGrant(env, id);
+    const grants = (Array.isArray(previous) ? previous : previous ? [previous] : []).filter(g => g.agent_id !== a.id && g.expires > Date.now());
+    grants.push(grant);
+    await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind(key, JSON.stringify(grants)).run();
     await audit(env, user.username, 'maintenance-granted', JSON.stringify({ connection: id, ...grant })); return json({ ok: true, grant });
   });
 }
@@ -3093,12 +3102,12 @@ function addCloudflareAccount(){
     h('div',{class:'card'},h('h4',{},'2. Return here and connect'),form),h('button',{class:'sm',onclick:cloud},'Back to Cloudflare accounts'));
 }
 async function maintenanceForm(c){try{var d=await api('connections/'+c.id+'/maintenance'),agents=await api('agents');var aid=h('select');(agents.agents||[]).filter(function(a){return a.status==='active'&&a.can_read&&!a.owner_id&&!a.site_id;}).forEach(function(a){aid.appendChild(h('option',{value:a.id},a.name+' (agent '+a.id+')'));});
-var workers=h('input',{placeholder:'Exact Worker names, comma separated',value:d.grant?d.grant.workers.join(','):''}),zone=h('input',{placeholder:'Zone ID for cache purges (optional)',value:d.grant?d.grant.zone:''}),hosts=h('input',{placeholder:'Exact cache hostnames, comma separated',value:d.grant?d.grant.hosts.join(','):''}),hours=h('input',{type:'number',min:1,max:24,value:1});
-var choices=h('div');var wl=await api('connections/'+c.id+'/workers');wl.workers.forEach(function(w){var cb=h('input',{type:'checkbox'});cb.checked=!!(d.grant&&d.grant.workers.includes(w.name));cb.onchange=function(){workers.value=Array.from(choices.querySelectorAll('input')).filter(function(x){return x.checked;}).map(function(x){return x.value;}).join(',');};cb.value=w.name;choices.appendChild(h('label',{},cb,w.name));});var advanced=h('details',{},h('summary',{},'Advanced: cache permissions and manual Worker names'),workers,zone,hosts);
+var workers=h('input',{placeholder:'Exact Worker names, comma separated',value:(Array.isArray(d.grant)?d.grant[0]:d.grant)?.workers?.join(',')||''}),zone=h('input',{placeholder:'Zone ID for cache purges (optional)',value:(Array.isArray(d.grant)?d.grant[0]:d.grant)?.zone||''}),hosts=h('input',{placeholder:'Exact cache hostnames, comma separated',value:(Array.isArray(d.grant)?d.grant[0]:d.grant)?.hosts?.join(',')||''}),hours=h('input',{type:'number',min:1,max:24,value:1});
+var choices=h('div');var wl=await api('connections/'+c.id+'/workers');wl.workers.forEach(function(w){var cb=h('input',{type:'checkbox'});cb.checked=!!((Array.isArray(d.grant)?d.grant[0]:d.grant)?.workers?.includes(w.name));cb.onchange=function(){workers.value=Array.from(choices.querySelectorAll('input')).filter(function(x){return x.checked;}).map(function(x){return x.value;}).join(',');};cb.value=w.name;choices.appendChild(h('label',{},cb,w.name));});var advanced=h('details',{},h('summary',{},'Advanced: cache permissions and manual Worker names'),workers,zone,hosts);
 var log=h('div');d.actions.forEach(function(a){log.appendChild(h('p',{class:'tag'},a.started_at+' · '+a.action+' · '+a.status+' · '+a.id));});
-show(nav(),h('h3',{},'AI maintenance: '+c.label),h('p',{},'Grant one agent temporary access to deployment status and/or selected URL cache purges. Code changes still require general approval. No DNS, databases, secrets or access changes. The Cloudflare token must have the corresponding permissions. Cache grants require Zone Read and Cache Purge for the selected zone.'),h('p',{},d.grant?'Current agent '+d.grant.agent_id+'; expires '+new Date(d.grant.expires).toLocaleString():'Maintenance is disabled.'),h('h3',{},'1. Choose your AI agent'),aid,h('p',{class:'tag'},'If your built-in AI is missing, send it one chat message first. External AI agents are added under Agents.'),h('h3',{},'2. Choose websites / Workers'),choices,advanced,h('h3',{},'3. Set access duration'),h('label',{},'Expires after hours (1–24)'),hours,
+show(nav(),h('h3',{},'AI maintenance: '+c.label),h('p',{},'Grant multiple agents independent temporary access to deployment status and/or selected URL cache purges. Code changes still require general approval. No DNS, databases, secrets or access changes. The Cloudflare token must have the corresponding permissions. Cache grants require Zone Read and Cache Purge for the selected zone.'),h('p',{},d.grant?(Array.isArray(d.grant)?d.grant:[d.grant]).map(function(g){return 'Agent '+g.agent_id+' expires '+new Date(g.expires).toLocaleString();}).join(' | '):'Maintenance is disabled.'),h('h3',{},'1. Choose your AI agent'),aid,h('p',{class:'tag'},'If your built-in AI is missing, send it one chat message first. External AI agents are added under Agents.'),h('h3',{},'2. Choose websites / Workers'),choices,advanced,h('h3',{},'3. Set access duration'),h('label',{},'Expires after hours (1–24)'),hours,
 h('button',{onclick:async function(){try{var pw=await passwordDialog('Grant maintenance permissions');if(!pw)return;await api('connections/'+c.id+'/maintenance','POST',{agent_id:+aid.value,workers:workers.value,zone:zone.value,hosts:hosts.value,hours:+hours.value,password:pw});maintenanceForm(c);}catch(e){oops(e);}}},'Grant temporary access'),
-h('button',{class:'bad',onclick:async function(){try{var pw=await passwordDialog('Revoke maintenance permissions');if(!pw)return;await api('connections/'+c.id+'/maintenance','POST',{revoke:true,password:pw});maintenanceForm(c);}catch(e){oops(e);}}},'Revoke access'),h('h3',{},'Action log'),log);
+h('button',{class:'bad',onclick:async function(){try{var pw=await passwordDialog('Revoke maintenance permissions');if(!pw)return;await api('connections/'+c.id+'/maintenance','POST',{revoke:true,agent_id:+aid.value,password:pw});maintenanceForm(c);}catch(e){oops(e);}}},'Revoke selected agent'),h('h3',{},'Action log'),log);
 }catch(e){oops(e);}}
 async function listWorkers(c,w){try{var d=await api('connections/'+c.id+'/workers');w.innerHTML='';
   if(!d.workers.length)w.appendChild(h('p',{class:'tag'},'No Workers.'));
