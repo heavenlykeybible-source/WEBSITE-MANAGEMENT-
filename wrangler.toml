@@ -16,7 +16,7 @@ CLOUDFLARE_AI_ENABLED = "true"
 [[d1_databases]]
 binding = "DB"
 database_name = "website-management-db"
-database_id = "897d585c-ced1-4b08-a478-603547f242e5"
+database_id = "f86fb475-ea20-4acd-9468-f3a407be97c4"
 
 [[r2_buckets]]
 binding = "FILES"
