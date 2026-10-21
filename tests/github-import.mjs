@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
-import {scanGitHubImport,githubImport,toolCall,seal,UI} from './worker-test.mjs';
+import {scanGitHubImport,githubImport,toolCall,seal,UI,aiChat} from './worker-test.mjs';
 const raw=new DatabaseSync(':memory:');raw.exec(fs.readFileSync('schema.sql','utf8'));
 raw.exec("INSERT INTO agents(id,name,token_hash) VALUES(1,'Importer','import-test'); INSERT INTO sites(id,slug,name) VALUES(1,'demo','Demo')");
 const DB={prepare(sql){const q=raw.prepare(sql);let args=[];return {bind(...a){args=a;return this;},async first(){return q.get(...args)||null;},async all(){return {results:q.all(...args)};},async run(){const r=q.run(...args);return {meta:{changes:r.changes,last_row_id:r.lastInsertRowid}};}};},async batch(a){return Promise.all(a.map(x=>x.run()));}};
@@ -21,5 +21,8 @@ try{
  const encrypted=await seal(env,'private-token-for-test');raw.prepare("INSERT INTO github_sites(id,label,repo,branch,dir,secret_enc) VALUES(1,'Private','example/private','release','dist',?)").run(encrypted);
  await githubImport(env,actor,{site:'demo',source:'1',scan_only:true});assert.equal(calls.at(-1).init.headers.authorization,'Bearer private-token-for-test');
  const result=await toolCall(env,actor,'propose_github_import',{...args,ref:revision});assert.equal(result.status,'waiting');assert.equal(result.imported,1);assert.equal(raw.prepare('SELECT sealed FROM proposals WHERE id=?').get(result.proposal_id).sealed,1);assert.equal(raw.prepare('SELECT count(*) n FROM site_files').get().n,0);assert.equal(objects.size,1);assert.ok(calls.some(c=>c.url.endsWith('/commits/'+revision)));assert.match(UI,/Scan GitHub repository/);
- console.log('PASS direct GitHub import: immutable revision, private connection, scan without writes, integrity, unsafe sources, scope, Waiting and no publication');
+ raw.exec("INSERT INTO users(id,username,role,status,kind) VALUES(1,'owner','owner','active','staff')");
+ let turn=0;env.CLOUDFLARE_AI_ENABLED='true';env.AI={async run(model,payload){turn++;assert.match(payload.messages[0].content,/Never replace the requested repository website/);assert.ok(payload.tools.some(t=>(t.name||t.function?.name)==='propose_github_import'));if(turn===1)return {tool_calls:[{name:'propose_github_import',arguments:{...args,scan_only:true}}]};if(turn===2)return {tool_calls:[{name:'propose_github_import',arguments:{...args,ref:revision}}]};return {response:'Imported to Waiting for your preview and approval.'};}};
+ const chat=await aiChat(env,{id:1,username:'owner',role:'owner',kind:'staff'},{messages:[{role:'user',content:'Import example/website dist into demo and send to Waiting'}]});assert.equal(turn,3);assert.equal(chat.proposals.length,1);assert.equal(raw.prepare('SELECT count(*) n FROM site_files').get().n,0);assert.match(chat.reply,/Waiting/);assert.match(UI,/Prepare GitHub import request/);
+ console.log('PASS direct GitHub import: immutable revision, private connection, scan without writes, integrity, unsafe sources, scope, dashboard AI scan-to-Waiting and no publication');
 }finally{globalThis.fetch=original;raw.close();}
