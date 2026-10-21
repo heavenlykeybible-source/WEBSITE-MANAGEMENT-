@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "status": "source-inventory-only-not-deployed",
+  "sourceRepository": "heavenlykeybible-source/onlinebible",
+  "sourceDirectory": "global-community",
+  "sourceCommit": "4b9844dd4c999f575ae5fad8e37347229d6f5c8a",
+  "destination": "Account 4 owner review",
+  "targetAccount3": "cd095c096c2d5a42501e7d77cecbb34c",
+  "notes": "This is an inventory reference, not a complete source copy, build, staged website or deployment. Account 4 must not replace its own Control Room Worker.",
+  "fileCount": 122
+}
