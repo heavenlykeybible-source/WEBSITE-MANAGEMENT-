@@ -59,3 +59,18 @@ The owner navigation now includes **Connect ChatGPT**, also available at `/?conn
 The owner signs in and explicitly authorizes the request with the current password. Codes expire after two minutes and can be exchanged once. Tokens are hashed, expire after one hour, and are tied to this origin, owner identity and password version. The owner can disconnect an issued connection from this page. Existing static-token agents continue working. There is no refresh-token grant; authorize again when access expires.
 
 Tools permit the same read-and-propose operations as existing agents. They cannot approve publication. The dashboard does not automatically install a connection in ChatGPT or make tools available to an already-running conversation; complete connection in the ChatGPT app. Availability of custom connections depends on the user's plan and workspace. A real ChatGPT-hosted OAuth round trip still requires that user connection. Local integration tests cover discovery, registered-client authorization, owner consent, PKCE exchange, audience checks, single-use codes, MCP tools, revocation and expiration.
+
+
+## GitHub and TinyFish work through the assistant
+
+In staff AI chat, use **Prepare GitHub import request** or ask to import a repository into a named managed website. The assistant scans first, pins the commit, then imports the built static folder to Waiting. Limits: 40 files, 2 MB each, 25 MB total. Source applications that need a build and PHP themes need their native hosting workflow.
+
+Owner **AI permissions → Enable maximum work on all saved accounts** grants Work mode, 20 tool steps per message, and the current saved Cloudflare accounts for 24 hours. The stored grant survives new conversations, provider errors and refreshes until its recorded expiry or owner revocation. Saving ordinary preferences retains an active expiry. A tool-step limit pauses a turn without revoking the grant. Provider credentials and service limits still apply.
+
+For browser work, open **Project sources → Connect TinyFish browser automation**. Enter a TinyFish API key and optionally a saved Browser Context Profile ID belonging to that TinyFish account. The key is verified through the runs API and stored encrypted; failed verification leaves the previous connection intact. This server cannot inherit the TinyFish connection from ChatGPT.
+
+Ask the assistant to propose an exact browser task, naming the account, starting URL and actions. Review that task and profile in Waiting. Approval starts a TinyFish asynchronous run, which can perform the goal's approved actions. A start acknowledgment is not evidence that work completed. Ask the same assistant to read the task status using its proposal number. If the start outcome is uncertain, inspect the TinyFish dashboard before creating another task; the control room blocks replay of the original start. Browser tasks are not visual previews or certified deployments. Provider output is untrusted website data.
+
+The connected MCP plugin also exposes project filename search, chunked static and GitHub reads, Worker listing and Worker-source inspection, plus get_capabilities. Site-scoped and member agents retain their existing isolation. Attached-file-only tools still require an authenticated dashboard chat.
+
+These capabilities are in the feature branch until the existing Account 4 control room is deployed with its original production bindings and secrets. Do not deploy the Account 3 resource configuration over Account 4.
