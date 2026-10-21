@@ -1,0 +1,44 @@
+name: Deploy Account 4 Website Management
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'control-room-worker.js'
+      - 'wrangler.toml'
+      - 'package.json'
+      - 'tests/**'
+      - '.github/workflows/deploy-website-management.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: account4-website-management-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run project tests
+        run: node tests/run.mjs
+      - name: Validate Worker syntax
+        run: node --check control-room-worker.js
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: website-management-production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy using Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: deploy --config wrangler.toml
