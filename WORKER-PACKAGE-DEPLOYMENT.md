@@ -29,6 +29,10 @@ Source change only until the existing Account 4 control-room Worker is updated t
 
 No schema migration is needed. Keep the same database, bucket, VAULT_KEY, SESSION_SECRET, owner credentials and saved connections.
 
-Validation: package lifecycle and source-channel tests exercise the actual proposal, preview, owner approval and direct upload code against SQLite, in-memory R2 and mocked provider APIs. The existing full suite also has a pre-existing `tests/persistence.mjs` failure: it hardcodes Account 4 DB `897d585c-ced1-4b08-a478-603547f242e5`, whereas the branch root Wrangler config specifies `f86fb475-ea20-4acd-9468-f3a407be97c4`. Neither binding nor that test was altered to hide the mismatch. All other regression tests were run separately. Live plugin exposure, real Cloudflare uploads, runtime performance and the Global Christian Community deployment remain unverified.
+Validation: package lifecycle and source-channel tests exercise the actual proposal, preview, owner approval and direct upload code against SQLite, in-memory R2 and mocked provider APIs. The configuration mismatch is corrected by adding a separate `wrangler.account4.toml` and making the persistence test verify that explicit installation configuration. The root configuration is unchanged. Account 4 database and bucket existence were verified through the saved Account 4 connection on 21 October 2026. Verify actual Worker bindings before deploying; resource existence alone does not certify those bindings.
+
+For a separately authenticated Account 4 maintenance deployment, use `npx wrangler deploy --config wrangler.account4.toml` after verifying the current Worker settings. Do not use `wrangler.toml` for Account 4. No database initialization, migrations, secret rotation or resets are needed.
+
+Live plugin exposure, real Cloudflare uploads, runtime performance and the Global Christian Community deployment remain unverified.
 
 API references: https://developers.cloudflare.com/workers/static-assets/direct-upload/ and https://developers.cloudflare.com/workers/configuration/multipart-upload-metadata/
