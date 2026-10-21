@@ -149,7 +149,7 @@ function minRole(sub, m) {
   if (sub === 'ai') return 2;
   if (/^proposals\/\d+\/(decide|undo)$/.test(sub)) return 4;
   if (sub === 'propose-cloudflare-resource') return 4;
-  if (sub === 'propose-worker' || /^pages\/\d+\/rollback$/.test(sub)) return 3;
+  if (sub === 'worker-package' || sub === 'propose-worker' || /^pages\/\d+\/rollback$/.test(sub)) return 3;
   if (sub === 'design' && m === 'POST') return 3;
   return m === 'GET' ? 1 : 2;
 }
@@ -435,6 +435,100 @@ async function cloudflareResources(env, actor, b) {
   if (!Array.isArray(rows)) fail('Cloudflare returned an invalid resource list.', 502);
   return { account_id:conn.account_id, kind, resources:rows.map(x => ({name:x.name, ...(kind === 'd1' ? {id:x.uuid} : {jurisdiction:x.jurisdiction || 'default'})})), next_page:kind === 'd1' && (d.result_info?.total_count > page * 100 || rows.length === 100) ? page + 1 : null, next_cursor:kind === 'r2' ? d.result_info?.cursor || null : null, permission:'Read access verified. Creation requires write permission.' };
 }
+
+// Complete website releases use sealed static uploads; no repository code is executed here.
+async function workerPackageAssets(env, actor, id) {
+  cloudflareActor(actor);
+  const source = await env.DB.prepare("SELECT * FROM proposals WHERE id=? AND kind='upload' AND sealed=1").bind(Number(id)).first();
+  if (!source || source.owner_id || !['waiting','approved'].includes(source.status)) fail('Choose a sealed staff website upload in Waiting or an approved upload.',409);
+  const rows = (await env.DB.prepare('SELECT path,size,deleted,object_key,object_etag FROM upload_files WHERE proposal_id=? ORDER BY path').bind(source.id).all()).results;
+  if (!rows.length || rows.length > MAX_FILES || rows.some(f=>f.deleted) || !rows.some(f=>f.path==='index.html')) fail('A complete asset package must include index.html, contain no deletions and have at most 200 files.',409);
+  let size=0; const files=[];
+  for(const f of rows){
+    cleanPath(f.path); protectSourcePath(f.path);
+    if(!MIME[ext(f.path)] || !f.object_key || !f.object_etag || (size+=f.size)>20*1024*1024) fail('Unsupported or oversized asset package.',409);
+    const o=await env.FILES.get(f.object_key);
+    if(!o || o.etag!==f.object_etag) fail('Asset storage changed. Resubmit the package.',409);
+    const bytes=new Uint8Array(await o.arrayBuffer());
+    if(bytes.byteLength!==f.size) fail('Asset size changed.',409);
+    const digest=hex(await crypto.subtle.digest('SHA-256',bytes));
+    files.push({...f,hash:digest.slice(0,32),sha256:digest});
+  }
+  return {source_proposal_id:source.id,files,size,config:{run_worker_first:['/api','/api/*']}};
+}
+async function readWorkerPackageAssets(env, assets) {
+  if(!assets || !Array.isArray(assets.files) || !assets.files.length || assets.files.length>MAX_FILES) fail('Invalid release assets.',409);
+  const data=new Map();
+  for(const f of assets.files){
+    const o=await env.FILES.get(f.object_key);
+    if(!o || o.etag!==f.object_etag) fail('Reviewed asset changed or is missing.',409);
+    const bytes=new Uint8Array(await o.arrayBuffer());
+    if(bytes.length!==f.size || hex(await crypto.subtle.digest('SHA-256',bytes))!==f.sha256) fail('Reviewed asset integrity check failed.',409);
+    data.set(f.path,bytes);
+  }
+  return data;
+}
+async function uploadWorkerPackageAssets(env,conn,name,assets) {
+  const data=await readWorkerPackageAssets(env,assets),manifest={},byHash=new Map();
+  for(const f of assets.files){manifest['/'+f.path]={hash:f.hash,size:f.size};byHash.set(f.hash,f);}
+  const session=(await cf(env,conn,'POST','/workers/scripts/'+name+'/assets-upload-session',{manifest})).result;
+  if(!session?.jwt || !Array.isArray(session.buckets) || session.buckets.length>30) fail('Cloudflare returned an invalid asset upload session.',502);
+  let completion=session.buckets.length?null:session.jwt;
+  for(const bucket of session.buckets){
+    if(!Array.isArray(bucket)||!bucket.length||bucket.some(hash=>!byHash.has(hash))) fail('Cloudflare requested an unknown asset.',502);
+    const form=new FormData();
+    for(const hash of bucket){const f=byHash.get(hash);form.append(hash,new Blob([bytesBase64(data.get(f.path))],{type:MIME[ext(f.path)]}),hash);}
+    const response=await fetch('https://api.cloudflare.com/client/v4/accounts/'+conn.account_id+'/workers/assets/upload?base64=true',{method:'POST',redirect:'manual',signal:AbortSignal.timeout(20000),headers:{authorization:'Bearer '+session.jwt},body:form});
+    let result;try{result=await response.json();}catch{fail('Cloudflare asset upload response was unreadable.',502);}
+    if(!response.ok || result.success!==true) fail('Cloudflare asset upload failed. The existing Worker was not replaced.',502);
+    completion=response.status===201 && typeof result.result?.jwt==='string' ? result.result.jwt : null;
+  }
+  if(!completion) fail('Cloudflare did not confirm completion of every asset. No Worker was replaced.',502);
+  return completion;
+}
+async function serveWorkerPackagePreview(env, P, rawPath) {
+  const assets=JSON.parse(P.new_content_json).assets;
+  let path;try{path=decodeURIComponent(rawPath)||'index.html';}catch{return new Response('Not found',{status:404});}
+  if(path.endsWith('/'))path+='index.html';
+  const f=assets?.files.find(f=>f.path===path);
+  if(!f)return new Response('Not found',{status:404});
+  const o=await env.FILES.get(f.object_key);
+  if(!o || o.etag!==f.object_etag)return new Response('Preview asset missing or changed',{status:409});
+  return new Response(o.body,{headers:{'content-type':MIME[ext(path)]||'application/octet-stream','content-security-policy':"sandbox allow-scripts; connect-src 'none'; form-action 'none'; base-uri 'none'",'cache-control':'private, no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'}});
+}
+
+
+async function proposeWorkerPackage(env,actor,b) {
+  cloudflareActor(actor);
+  if(actor.kind==='agent'&&!actor.a?.can_read)fail('Read access is required for package sources.',403);
+  if(!Number.isSafeInteger(b.assets_proposal_id)||b.assets_proposal_id<1)fail('A sealed website upload proposal is required');
+  const source=b.source||'inline';let code,provenance;
+  if(source==='inline'){code=String(b.code||'');provenance={channel:'inline'};}
+  else if(source==='attachment'){
+    const f=await attachedForAI(env,actor,b.attachment_id);
+    if(f.kind!=='text'||!['js','mjs'].includes(ext(f.name)))fail('Choose a compiled .js or .mjs Worker attached to this chat.');
+    code=new TextDecoder('utf-8',{fatal:true}).decode(f.bytes);provenance={channel:'chat',name:f.name};
+  }else if(source==='github'){
+    const g=await ghById(env,b.github_site,{ow:null,site:null}),path=cleanPath(b.path);protectSourcePath(path);
+    if(!['js','mjs'].includes(ext(path)))fail('Choose a compiled .js or .mjs Worker. Repository builds must run outside the control room.');
+    const head=await ghHead(env,g),files=await ghFiles(env,g,head),f=files.find(f=>f.path===path);
+    if(!f||f.size>1400000)fail('Choose a compiled Worker file up to 1.4 MB in the saved repository folder.');
+    const blob=await gh(env,g,'GET','/git/blobs/'+f.sha);
+    if(blob.encoding!=='base64'||blob.sha!==f.sha)fail('GitHub did not return the pinned source blob.',409);
+    const bytes=Uint8Array.from(atob(String(blob.content).replace(/\s/g,'')),c=>c.charCodeAt(0));
+    if(bytes.length!==f.size)fail('GitHub source size mismatch.',409);
+    code=new TextDecoder('utf-8',{fatal:true}).decode(bytes);provenance={channel:'github',site:g.id,path,sha:f.sha,commit:head.commit};
+  }else if(source==='drive'){
+    const c=await driveConfig(env),token=await driveToken(c),id=driveId(b.file_id);await driveWithin(token,c,id);
+    const m=await driveMeta(token,id),path=cleanPath(m.name);protectSourcePath(path);
+    if(!['js','mjs'].includes(ext(path))||String(m.mimeType).startsWith('application/vnd.google-apps.')||Number(m.size)>1400000)fail('Choose a compiled Worker file up to 1.4 MB inside the connected Drive folder.');
+    const r=await driveFetch(token,'/'+id+'?alt=media&supportsAllDrives=true');code=new TextDecoder('utf-8',{fatal:true}).decode(await readLimited(r,1400000));provenance={channel:'drive',file_id:id,path};
+  }else fail('Unknown package source');
+  if(typeof code!=='string'||!code.trim())fail('The Worker source is empty');
+  provenance.sha256=await sha256(code);
+  return coreProposeWorker(env,actor,{...b,code,package_source:provenance});
+}
+
 async function coreProposeWorker(env, actor, b) {
   const conn = await env.DB.prepare('SELECT id, label FROM cf_connections WHERE label=? OR id=?').bind(String(b.connection || ''), +b.connection || 0).first();
   if (!conn) fail('Connection not found', 404);
@@ -445,9 +539,13 @@ async function coreProposeWorker(env, actor, b) {
   if (additions.length) cloudflareActor(actor);
   const code = String(b.code || '');
   if (!code || enc.encode(code).byteLength > 1400000) fail('Code is required (1.4 MB max)');
+  const assets = b.assets_proposal_id ? await workerPackageAssets(env,actor,b.assets_proposal_id) : null;
+  const target = assets ? await connById(env,conn.id) : null;
+  if(assets && additions.length) fail('Package deployment inherits existing bindings only. Maintain resources separately.',409);
+  if(assets){const settings=(await cf(env,target,'GET','/workers/scripts/'+name+'/settings')).result;if(!Array.isArray(settings?.bindings))fail('An existing Worker with readable bindings is required.',409);if(settings.bindings.some(x=>x.name==='ASSETS'&&x.type!=='assets'))fail('ASSETS is already used by another binding.',409);}
   await limitWaiting(env, actor);
   const r = await env.DB.prepare("INSERT INTO proposals (agent_id, kind, title, note, new_content_json) VALUES (?,'worker',?,?,?)")
-    .bind(actor.agentId, ('Deploy Worker ' + name + ' to ' + conn.label).slice(0, 120), String(b.note || '').slice(0, 1000), JSON.stringify({ connection_id: conn.id, name, ...(additions.length ? { bindings:additions } : {}) })).run();
+    .bind(actor.agentId, ('Deploy Worker ' + name + ' to ' + conn.label).slice(0, 120), String(b.note || '').slice(0, 1000), JSON.stringify({ connection_id: conn.id, name, ...(assets ? {assets,account_id:target.account_id,source:b.package_source||{channel:'inline'}} : {}), ...(additions.length ? { bindings:additions } : {}) })).run();
   const id = r.meta.last_row_id;
   try { await env.FILES.put('worker/' + id + '/worker.js', code); }
   catch (e) { await env.DB.prepare('DELETE FROM proposals WHERE id=?').bind(id).run(); throw e; }
@@ -699,7 +797,7 @@ async function putChatAttachment(req, env, user, filename) {
   if (user.kind === 'member' || lvl(user.role) < 2) fail('Staff editor access is required for chat attachments', 403);
   const name=String(filename||''),type=ext(name);const path=type==='zip'&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,190}\.zip$/i.test(name)?name:cleanPath(name);
   if (!TEXT_EXT.has(type) && !CHAT_IMAGES.has(type) && type!=='zip') fail('Attach code/text, a static website ZIP or PNG, JPEG, GIF or WebP pictures. PHP and executables are not supported.');
-  const bytes = await readLimited(req, MAX_FILE);
+  const bytes = await readLimited(req, type==='zip'?PACKAGE_LIMIT:MAX_FILE);
   if (!bytes.byteLength) fail('Empty attachments are not supported');
   if(type==='zip')await scanWebsiteZip(bytes);
   else if (CHAT_IMAGES.has(type)) imageBytesValid(path, bytes);
@@ -956,12 +1054,15 @@ async function connById(env, id) {
   if (!c) fail('Connection not found', 404);
   return c;
 }
-async function deployWorker(env, connId, name, code, additions = []) {
+async function deployWorker(env, connId, name, code, additions = [], assets = null, expectedAccount = null) {
   const conn = await connById(env, connId);
+  if(expectedAccount && conn.account_id!==expectedAccount) fail('The saved account changed. Resubmit the package.',409);
   // Read the current settings so existing bindings and secrets are inherited, not dropped.
   let old = null;
   try { old = (await cf(env, conn, 'GET', '/workers/scripts/' + name + '/settings')).result || {}; }
   catch (e) { if (!(e && e.cfStatus === 404)) throw e; } // 404 = brand new Worker. Any other error stops the deploy.
+  if(assets && (!old || !Array.isArray(old.bindings)))fail('Package target must be an existing Worker.',409);
+  if(assets && old.bindings.some(b=>b.name==='ASSETS'&&b.type!=='assets'))fail('ASSETS binding collision.',409);
   additions = workerBindings(additions);
   await checkWorkerBindings(env, conn, old, additions, name);
   const bindings = [];
@@ -981,7 +1082,12 @@ async function deployWorker(env, connId, name, code, additions = []) {
   }
   const meta = { main_module: 'worker.js', compatibility_date: (old && old.compatibility_date) || '2025-01-01', bindings };
   if (old && Array.isArray(old.compatibility_flags) && old.compatibility_flags.length) meta.compatibility_flags = old.compatibility_flags;
-  if (hasAssets) meta.keep_assets = true;
+  if (hasAssets && !assets) meta.keep_assets = true;
+  if(assets){
+    const jwt=await uploadWorkerPackageAssets(env,conn,name,assets);
+    meta.assets={jwt,config:assets.config};
+    if(!bindings.some(b=>b.name==='ASSETS'))bindings.push({type:'assets',name:'ASSETS'});
+  }
   if(old?.exports)meta.exports={...old.exports};
   for(const b of additions.filter(b=>b.type==='durable_object_namespace')){
     meta.exports={...(meta.exports||{}),[b.class_name]:{type:'durable-object',storage:'sqlite'}};
@@ -1093,6 +1199,7 @@ async function reviewSnapshot(env, P) {
     const object = await env.FILES.get('worker/' + P.id + '/worker.js');
     if (!object) fail('Worker source is missing', 409);
     candidate.source_hash = await sha256(await object.text());
+    if(m.assets){await readWorkerPackageAssets(env,m.assets);candidate.assets=m.assets;}
     const conn = await connById(env, m.connection_id), scripts = (await cf(env, conn, 'GET', '/workers/scripts')).result || [];
     const current = scripts.find(x => x.id === m.name);
     baseline = current ? { exists: true, modified_on: current.modified_on || null } : { exists: false };
@@ -1108,6 +1215,7 @@ async function reviewSnapshot(env, P) {
       baseline.account_id = conn.account_id;
       checks.push('New bindings verified in this account; existing bindings cannot be redirected');
     }
+    if(m.assets){if(conn.account_id!==m.account_id)fail('The saved account changed. Resubmit the package.',409);if(!current)fail('The package target no longer exists.',409);const settings=(await cf(env,conn,'GET','/workers/scripts/'+m.name+'/settings')).result;baseline.settings={compatibility_date:settings.compatibility_date,compatibility_flags:settings.compatibility_flags||[],assets:settings.assets||null,bindings:(settings.bindings||[]).map(b=>b.type==='secret_text'?{name:b.name,type:b.type}:b)};checks.push('Full static asset manifest and content hashes verified; existing resources and secrets inherited');warnings.push('Static preview only: backend APIs are disabled in preview. This package replaces the entire static asset set. No migrations, DNS changes or resource creation.');}
     target = 'worker:' + conn.id + ':' + m.name;
     if (workerBindings(m.bindings).some(b=>b.type==='generated_secret')) warnings.push('Missing generated secrets will be created privately; existing secrets are retained. A new Worker receives its workers.dev address.');
     if (workerBindings(m.bindings).some(b=>b.type==='durable_object_namespace')) warnings.push('Adds a SQLite Durable Object class for meeting connections. Existing namespaces and data are preserved. Cloudflare plan limits apply.');
@@ -1129,7 +1237,7 @@ async function checkedReview(env, user, P, input) {
   if (!r || r.expires_at < Date.now()) fail('Open this proposal again to stage a fresh review.', 409);
   const token = await hmac(secret(env), 'review:' + P.id + ':' + user.id + ':' + r.snapshot_hash + ':' + r.expires_at);
   if (input.reviewed !== true || !safeEq(String(input.review_token || ''), token)) fail('Confirm that you reviewed this exact proposal.', 403);
-  if (P.kind === 'upload' && !r.previewed_at) fail('Open the sandboxed preview before approving these files.', 409);
+  if ((P.kind === 'upload' || P.kind==='worker' && JSON.parse(P.new_content_json).assets) && !r.previewed_at) fail('Open the sandboxed preview before approving these files.', 409);
   const fresh = await reviewSnapshot(env, P);
   if (fresh.snapshotHash !== r.snapshot_hash) fail('The proposed payload or live version changed. Stage and review again.', 409);
   return fresh;
@@ -1220,7 +1328,7 @@ async function applyProposal(env, P) {
     protectWorker(env, meta.name);
     const o = await env.FILES.get('worker/' + P.id + '/worker.js');
     if (!o) fail('Worker code missing', 404);
-    await deployWorker(env, meta.connection_id, meta.name, await o.text(), workerBindings(meta.bindings));
+    await deployWorker(env, meta.connection_id, meta.name, await o.text(), workerBindings(meta.bindings), meta.assets || null, meta.account_id || null);
     return { worker: meta.name };
   } else if (P.kind === 'remote') {
     return await applyRemote(env, P);
@@ -1276,6 +1384,7 @@ async function common(req, env, actor, sub, m, u) {
   }
   if (sub === 'github-import' && m === 'POST') { await needProp(); return json(await githubImport(env, actor, await body(req)), 201); }
   if (sub === 'propose-cloudflare-resource' && m === 'POST') { cloudflareActor(actor); await needProp(); return json(await coreProposeResource(env,actor,await body(req)),201); }
+  if (sub === 'worker-package' && m === 'POST') { cloudflareActor(actor); await needProp(); return json(await proposeWorkerPackage(env,actor,await body(req)),201); }
   if (sub === 'propose-worker' && m === 'POST') { await needProp(); return json(await coreProposeWorker(env, actor, await body(req)), 201); }
   if (sub === 'upload/start' && m === 'POST') {
     await needProp(); await limitWaiting(env, actor);
@@ -1445,11 +1554,11 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
     const o = await env.FILES.get('worker/' + id + '/worker.js');
     const conn = await env.DB.prepare('SELECT label FROM cf_connections WHERE id=?').bind(meta.connection_id).first();
     const code = o ? await o.text() : '(code missing)';
-    return json({ proposal: base, worker: { name: meta.name, connection: conn ? conn.label : '(removed)', code, bindings:meta.bindings || [] } });
+    return json({ proposal: base, worker: { name: meta.name, connection: conn ? conn.label : '(removed)', code, source:meta.source || null, assets:meta.assets ? {files:meta.assets.files.map(f=>({path:f.path,size:f.size})),size:meta.assets.size,config:meta.assets.config} : null, bindings:meta.bindings || [] } });
   }
   if (m === 'GET' && (x = sub.match(/^proposals\/(\d+)\/preview-link$/))) {
-    const P = await env.DB.prepare("SELECT owner_id FROM proposals WHERE id=? AND kind='upload' AND sealed=1").bind(+x[1]).first();
-    if (!P || (P.owner_id || null) !== (sc.ow || null)) fail('Not found', 404);
+    const P = await env.DB.prepare("SELECT owner_id,kind,new_content_json FROM proposals WHERE id=? AND kind IN ('upload','worker') AND sealed=1").bind(+x[1]).first();
+    if (!P || (P.owner_id || null) !== (sc.ow || null) || P.kind==='worker' && !JSON.parse(P.new_content_json).assets) fail('Not found', 404);
     const exp = Date.now() + 3600000;
     return json({ url: '/preview/' + +x[1] + '/' + exp + '/' + user.id + '/' + await hmac(secret(env), 'preview:' + +x[1] + ':' + exp + ':' + user.id) + '/' });
   }
@@ -2370,7 +2479,7 @@ async function signup(req, env) {
 
 // BEGIN AI CAPABILITIES
 // Owner-managed permissions for the built-in dashboard assistant.
-const AI_INFRA_WRITES=new Set(['propose_worker_deploy','propose_attached_worker_deploy','propose_cloudflare_resource','cloudflare_maintenance']);
+const AI_INFRA_WRITES=new Set(['propose_worker_package','propose_worker_deploy','propose_attached_worker_deploy','propose_cloudflare_resource','cloudflare_maintenance']);
 const AI_INFRA_TOOLS=new Set([...AI_INFRA_WRITES,'list_connections','list_cloudflare_resources','list_workers','read_worker_source']);
 const AI_EXTRA_TOOLS=[
  {name:'find_project_files',description:'Find filenames by a literal query in a static or GitHub site. Returns at most 50 matching paths and a next offset; read a matching file before proposing changes.',inputSchema:{type:'object',properties:{source:{type:'string',enum:['static','github']},site:{type:'string'},query:{type:'string'},offset:{type:'integer'}},required:['source','site','query']}},
@@ -2442,6 +2551,7 @@ const TOOLS = [
   {name:'list_cloudflare_resources',description:'List one page of D1 databases or R2 buckets on an exact saved connection. Returns pagination. Read checks do not prove write permission. Unscoped staff only.',inputSchema:{type:'object',properties:{connection:{type:'integer'},kind:{type:'string',enum:['d1','r2']},page:{type:'integer'},cursor:{type:'string'}},required:['connection','kind']}},
   {name:'propose_cloudflare_resource',description:'Propose creation of one empty D1 database or private R2 bucket on a saved account. Owner review and approval required. Never replaces resources, executes SQL, enables billing or exposes bucket contents.',inputSchema:{type:'object',properties:{connection:{type:'string'},kind:{type:'string',enum:['d1','r2']},name:{type:'string'},note:{type:'string'}},required:['connection','kind','name']}},
   { name: 'list_connections', description: 'List connected Cloudflare accounts (labels only).', inputSchema: { type: 'object', properties: {} } },
+  { name:'propose_worker_package',description:'Prepare a complete existing Worker release with compiled backend code and the complete static asset set from a sealed website upload proposal. Preserves existing bindings and secrets. No GitHub Actions, build execution, migrations or automatic approval. Owner must inspect static preview and approve in Waiting.',inputSchema:{type:'object',properties:{connection:{type:'string'},name:{type:'string'},code:{type:'string'},source:{type:'string',enum:['inline','attachment','github','drive']},attachment_id:{type:'string'},github_site:{type:'string'},path:{type:'string'},file_id:{type:'string'},assets_proposal_id:{type:'integer',minimum:1},note:{type:'string'}},required:['connection','name','assets_proposal_id']} },
   { name: 'propose_worker_deploy', description: 'Propose deploying ES-module Worker code to a connected Cloudflare account. The owner reviews the code and must approve.', inputSchema: { type: 'object', properties: { connection: { type: 'string' }, name: { type: 'string' }, code: { type: 'string' }, bindings:{type:'array',maxItems:20,items:{type:'object',properties:{type:{type:'string',enum:['d1','r2_bucket','ai','generated_secret']},name:{type:'string'},id:{type:'string'},bucket_name:{type:'string'}},required:['type','name']}}, note: { type: 'string' } }, required: ['connection', 'name', 'code'] } },
   { name: 'list_remote_sites', description: 'List connected WordPress and Blogger sites.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_remote_posts', description: 'List posts or pages of a connected WordPress or Blogger site. Pass next_cursor as cursor to read the next batch.', inputSchema: { type: 'object', properties: { site: { type: 'string' }, type: { type: 'string', description: 'post or page' }, cursor: { type: 'string' } }, required: ['site'] } },
@@ -2483,6 +2593,7 @@ async function toolCall(env, actor, name, args) {
     case 'list_cloudflare_resources': read(); return await cloudflareResources(env,actor,args);
     case 'propose_cloudflare_resource': prop(); return await coreProposeResource(env,actor,args);
     case 'list_connections': read(); return { connections: (await env.DB.prepare('SELECT id, label FROM cf_connections ORDER BY label').all()).results };
+    case 'propose_worker_package': prop(); return await proposeWorkerPackage(env,actor,args);
     case 'propose_worker_deploy': prop(); return await coreProposeWorker(env, actor, args);
     case 'list_remote_sites': read(); return { sites: (await env.DB.prepare('SELECT * FROM remote_sites WHERE ' + ownSql(sc) + siteSql(sc) + ' ORDER BY label').all()).results.map(rsPublic) };
     case 'list_remote_posts': read(); return await remoteListPage(env, await rsById(env, args.site, sc), args.type === 'page' ? 'page' : 'post', args.cursor || '');
@@ -2865,11 +2976,12 @@ async function route(req, env) {
   }
   if ((x = p.match(/^\/preview\/(\d+)\/(\d+)\/(\d+)\/([a-f0-9]{64})\/(.*)$/))) {
     if (+x[2] < Date.now() || !safeEq(x[4], await hmac(secret(env), 'preview:' + x[1] + ':' + x[2] + ':' + x[3]))) return new Response('Preview link expired. Reopen it from the control room.', { status: 403 });
-    const P = await env.DB.prepare("SELECT site_id FROM proposals WHERE id=? AND kind='upload'").bind(+x[1]).first();
+    const P = await env.DB.prepare("SELECT * FROM proposals WHERE id=? AND sealed=1 AND kind IN ('upload','worker')").bind(+x[1]).first();
     const s = P && await env.DB.prepare('SELECT * FROM sites WHERE id=?').bind(P.site_id).first();
-    if (!s) return new Response('Not found', { status: 404 });
+    if (!s && !(P?.kind==='worker' && JSON.parse(P.new_content_json).assets)) return new Response('Not found', { status: 404 });
     if (m !== 'GET') fail('Use GET', 405);
     await env.DB.prepare('UPDATE proposal_reviews SET previewed_at=? WHERE proposal_id=? AND user_id=? AND expires_at>?').bind(Date.now(), +x[1], +x[3], Date.now()).run();
+    if(P.kind==='worker')return serveWorkerPackagePreview(env,P,x[5]);
     return serveSiteFile(env, s, x[5], +x[1]);
   }
   if (m === 'GET' && (x = p.match(/^\/p\/([a-z0-9-]{1,60})$/))) return publicPage(x[1], env);
@@ -2991,7 +3103,7 @@ var received=p.arrived_at||p.created_at;
 var row=h('details',{class:'queue-row'},h('summary',{},h('span',{class:'row-number'},String(i+1).padStart(2,'0')),h('span',{},h('span',{class:'row-title'},p.title),h('span',{class:'row-sub'},p.kind+' · '+p.agent+' · '+(p.slug||'Control room'))),h('span',{class:'row-time row-sub'},lagosTime(received)),h('span',{class:'row-status badge '+status},status),h('span',{class:'row-chevron','aria-hidden':'true'},'⌄')),
 h('div',{class:'queue-body'},h('dl',{class:'meta-grid'},h('div',{},h('dt',{},'Sent / received'),h('dd',{},lagosTime(received))),h('div',{},h('dt',{},'Created'),h('dd',{},lagosTime(p.created_at))),h('div',{},h('dt',{},'Review version'),h('dd',{},'P-'+p.id)),h('div',{},h('dt',{},'Submitted by'),h('dd',{},p.agent)),h('div',{},h('dt',{},'Destination'),h('dd',{},p.slug||'Control room')),h('div',{},h('dt',{},'Status'),h('dd',{},status))),p.note?h('p',{},p.note):null,preview,h('button',{onclick:function(){openP(p.id);}},status==='waiting'?'Open full preview & approval':'Open review details'),h('p',{class:'tag'},'Approval checks the exact version and current website state. All times are Africa/Lagos (WAT).')));
 row.addEventListener('toggle',async function(){if(!row.open||loaded)return;loaded=true;preview.textContent='Loading preview…';try{var r=await api('proposals/'+p.id);preview.innerHTML='';var content;
-if(p.kind==='page')content=view(r.after);else if(p.kind==='design')content=dprev(r.after);else if(p.kind==='remote')content=frame(r.remote.after.content);else if(p.kind==='upload'){var link=await api('proposals/'+p.id+'/preview-link');content=h('iframe',{sandbox:'allow-scripts allow-forms',class:'fr',title:'Proposed website preview',src:link.url+(r.proposal.entry||'index.html')});}else if(p.kind==='github'){var html=r.github.files.find(function(f){return !f.deleted&&/\\.html?$/i.test(f.path);});content=html?frame(html.after):h('p',{class:'tag'},'Code proposal: use full review to inspect every changed file.');}else if(p.kind==='browser_task')content=h('pre',{},JSON.stringify(r.browser_task,null,2));else if(p.kind==='cloudflare_resource')content=h('p',{class:'tag'},'Cloudflare resource creation has no website preview. Open full review for the proposed resource and account.');else content=h('div',{},h('p',{class:'tag'},'Worker source is not a rendered website. A truthful proposed-site preview requires a separate staging deployment. No Worker has been executed or published.'),h('button',{class:'sm',onclick:function(){openP(p.id);}},'Review proposed Worker source and settings'));
+if(p.kind==='page')content=view(r.after);else if(p.kind==='design')content=dprev(r.after);else if(p.kind==='remote')content=frame(r.remote.after.content);else if(p.kind==='upload'||p.kind==='worker'&&r.worker.assets){var link=await api('proposals/'+p.id+'/preview-link');content=h('iframe',{sandbox:'allow-scripts allow-forms',class:'fr',title:'Proposed website preview',src:link.url+(r.proposal.entry||'index.html')});}else if(p.kind==='github'){var html=r.github.files.find(function(f){return !f.deleted&&/\\.html?$/i.test(f.path);});content=html?frame(html.after):h('p',{class:'tag'},'Code proposal: use full review to inspect every changed file.');}else if(p.kind==='browser_task')content=h('pre',{},JSON.stringify(r.browser_task,null,2));else if(p.kind==='cloudflare_resource')content=h('p',{class:'tag'},'Cloudflare resource creation has no website preview. Open full review for the proposed resource and account.');else content=h('div',{},h('p',{class:'tag'},'Worker source is not a rendered website. A truthful proposed-site preview requires a separate staging deployment. No Worker has been executed or published.'),h('button',{class:'sm',onclick:function(){openP(p.id);}},'Review proposed Worker source and settings'));
 preview.appendChild(h('div',{class:'preview-shell'},h('div',{class:'preview-heading'},h('span',{},p.kind==='browser_task'?'Browser task approval':p.kind==='worker'?'Worker deployment review (not a live preview)':p.kind==='cloudflare_resource'?'Resource creation review':'Visual website preview'),h('span',{},'P-'+p.id+' · Not live')),h('div',{class:'preview-content'},content)));
 }catch(e){preview.textContent=e.message;loaded=false;}});box.appendChild(h('tr',{},h('td',{},row)));});
 var filters=h('div',{class:'filters'});['waiting','approved','rejected','changes_requested','uncertain'].forEach(function(x){filters.appendChild(h('button',{class:st===x?'selected':'sm',onclick:function(){waiting(x);}},x==='changes_requested'?'Changes requested':x.charAt(0).toUpperCase()+x.slice(1)));});
@@ -3022,7 +3134,7 @@ async function openP(id){try{var d=await api('proposals/'+id);var P=d.proposal;v
     kids.push(h('b',{},'After ('+R.after.status+'): '+R.after.title),h('pre',{},R.after.content),h('b',{},'Preview of the proposed content'),frame(R.after.content));}
   else if(P.kind==='browser_task'){kids.push(h('p',{},'TinyFish browser task: approval starts this exact goal. This is a task review, not a website preview.'),h('pre',{},JSON.stringify(d.browser_task,null,2)));}
   else if(P.kind==='cloudflare_resource'){kids.push(h('p',{},'Create '+d.resource.kind.toUpperCase()+' '+d.resource.name+' on '+d.resource.connection),h('p',{},'Account '+d.resource.account_id),h('p',{class:'tag'},'Creates an empty resource. Existing databases, buckets and data are preserved.'));}
-  else{kids.push(h('pre',{},JSON.stringify(d.worker.bindings||[],null,2)),h('p',{},'Deploy Worker "'+d.worker.name+'" to '+d.worker.connection),h('b',{},'Code to be deployed'),h('pre',{},d.worker.code));}
+  else{if(d.worker.assets){var wp=await api('proposals/'+id+'/preview-link');kids.push(h('b',{},'Website preview (backend APIs disabled)'),h('iframe',{sandbox:'allow-scripts',class:'fr',title:'Proposed Worker website',src:wp.url+'index.html'}),h('pre',{},JSON.stringify(d.worker.assets,null,2)));}kids.push(h('pre',{},JSON.stringify(d.worker.bindings||[],null,2)),h('p',{},'Deploy Worker "'+d.worker.name+'" to '+d.worker.connection),h('b',{},'Code to be deployed'),h('pre',{},d.worker.code));}
   if(P.status==='waiting'&&own()){
     if(staged){kids.push(h('h3',{},'Staged review'),h('p',{class:'tag'},'Version '+staged.candidate_hash.slice(0,16)+' · Review expires '+lagosTime(staged.expires_at)));staged.checks.forEach(function(t){kids.push(h('p',{class:'tag'},'Checked: '+t));});staged.warnings.forEach(function(t){kids.push(h('p',{class:'tag'},t));});kids.push(h('label',{},reviewed,document.createTextNode('I reviewed this exact proposed version and its preview.')),passwordField(password));}
     else kids.push(h('p',{},'Staging blocked: '+stageError));
@@ -3161,10 +3273,10 @@ async function resourceForm(c,kind,page,cursor){kind=kind||'d1';page=page||1;try
   var name=h('input',{placeholder:'New resource name',maxlength:63}),note=h('input',{placeholder:'Purpose (optional)'}),button=h('button',{onclick:async function(){button.disabled=true;try{var r=await api('propose-cloudflare-resource','POST',{connection:String(c.id),kind:type.value,name:name.value.trim(),note:note.value});status.textContent='Proposal P-'+r.proposal_id+' is in Waiting for review. Nothing has been created yet.';}catch(e){status.textContent=e.message;}finally{button.disabled=false;}}},'Send creation to approval');
   show(nav(),h('h3',{},'D1 / R2 on '+c.label),h('p',{class:'tag'},'Account '+c.account_id),h('p',{},'Create resources through this saved connection. D1 requires D1: Edit; R2 requires Workers R2 Storage: Edit. Listing verifies read access only. Existing resources and data are kept. Buckets stay private.'),h('button',{class:'sm',onclick:function(){resourceForm(c,'d1');}},'List D1'),h('button',{class:'sm',onclick:function(){resourceForm(c,'r2');}},'List R2'),out,h('h4',{},'Create an empty resource'),type,name,note,button,status);
 }catch(e){oops(e);}}
-function deployForm(c){var nm=h('input',{placeholder:'Worker name (lowercase, dashes)'}),code=h('textarea',{rows:8,placeholder:'Paste Worker code, or choose a .js file'}),f=h('input',{type:'file',accept:'.js,.mjs'}),note=h('input',{placeholder:'Note (optional)'}),bindings=h('textarea',{rows:4,placeholder:'Optional bindings JSON: [{"type":"d1","name":"TEAMDB","id":"database UUID"}]'});
+function deployForm(c){var assetsId=h('input',{type:'number',min:1,placeholder:'Sealed static website proposal ID (optional)'}),source=h('select'),ghsite=h('input',{placeholder:'Saved GitHub source ID'}),ghpath=h('input',{placeholder:'Compiled Worker path in saved repository'}),drivefile=h('input',{placeholder:'Compiled Worker Drive file ID'});[['inline','Device file / pasted code'],['github','Saved GitHub repository'],['drive','Connected Google Drive']].forEach(function(x){source.appendChild(h('option',{value:x[0]},x[1]));});source.value='inline';var nm=h('input',{placeholder:'Worker name (lowercase, dashes)'}),code=h('textarea',{rows:8,placeholder:'Paste Worker code, or choose a .js file'}),f=h('input',{type:'file',accept:'.js,.mjs'}),note=h('input',{placeholder:'Note (optional)'}),bindings=h('textarea',{rows:4,placeholder:'Optional bindings JSON: [{"type":"d1","name":"TEAMDB","id":"database UUID"}]'});
   f.onchange=function(){if(f.files[0])f.files[0].text().then(function(t){code.value=t;});};
-  show(nav(),h('h3',{},'Deploy to '+c.label),h('p',{class:'tag'},'This goes to Waiting. You review the code before anything deploys. If the Worker already exists, its bindings and secrets are kept. Check observability and other settings after the first deploy.'),nm,code,f,h('p',{class:'tag'},'Optional new bindings: d1 (name, id), r2_bucket (name, bucket_name), ai (name), generated_secret (name). Existing bindings cannot be replaced. Create resources first under D1 / R2 resources.'),bindings,note,
-    h('button',{onclick:function(){var extra;try{extra=bindings.value.trim()?JSON.parse(bindings.value):[];}catch(e){oops(new Error('Enter valid bindings JSON.'));return;}api('propose-worker','POST',{connection:String(c.id),name:nm.value.trim(),code:code.value,bindings:extra,note:note.value}).then(function(){alert('Sent to Waiting.');waiting();}).catch(oops);}},'Send to approval'));}
+  show(nav(),h('h3',{},'Deploy to '+c.label),h('p',{class:'tag'},'This goes to Waiting. You review the code before anything deploys. If the Worker already exists, its bindings and secrets are kept. Check observability and other settings after the first deploy.'),nm,h('h4',{},'Complete website package'),h('p',{},'Import the complete built static folder through Sites → ZIP, Drive or GitHub import, then enter its sealed proposal ID. Choose the compiled backend source below. Backend plus assets deploy together only after package preview and approval. Static preview does not run backend APIs.'),assetsId,source,ghsite,ghpath,drivefile,code,f,h('p',{class:'tag'},'Optional new bindings: d1 (name, id), r2_bucket (name, bucket_name), ai (name), generated_secret (name). Existing bindings cannot be replaced. Create resources first under D1 / R2 resources.'),bindings,note,
+    h('button',{onclick:function(){if(source.value!=='inline'&&!assetsId.value){oops(new Error('A sealed static asset proposal is required for repository or Drive package deployment.'));return;}var extra;try{extra=bindings.value.trim()?JSON.parse(bindings.value):[];}catch(e){oops(new Error('Enter valid bindings JSON.'));return;}api(assetsId.value?'worker-package':'propose-worker','POST',{connection:String(c.id),name:nm.value.trim(),source:source.value,github_site:ghsite.value.trim(),path:ghpath.value.trim(),file_id:drivefile.value.trim(),assets_proposal_id:assetsId.value?Number(assetsId.value):undefined,code:code.value,bindings:extra,note:note.value}).then(function(){alert('Sent to Waiting.');waiting();}).catch(oops);}},'Send to approval'));}
 function showLink(out,r){out.innerHTML='';out.appendChild(h('p',{class:'tag'},(r.mailed?'Also sent by email. ':'')+'Send this link to the member. It works once:'));
   out.appendChild(h('div',{class:'tok'},r.link));out.appendChild(h('button',{class:'sm',onclick:function(){navigator.clipboard.writeText(r.link);}},'Copy link'));}
 async function users(){try{var d=await api('users');var box=h('div');
@@ -3335,7 +3447,7 @@ async function claude(){try{var st=await api('ai');
   var sel=h('select',{'aria-label':'Choose AI assistant'});st.accounts.forEach(function(a){sel.appendChild(h('option',{value:a.id},a.label+' ('+a.model+')'));});
   var log=h('div',{class:'chat-log'});var fileList=h('div',{class:'attachment-list'}),fileStatus=h('p',{class:'tag',role:'status'},''),fileInput=h('input',{type:'file',multiple:'multiple',accept:'.html,.htm,.css,.js,.mjs,.json,.txt,.md,.xml,.svg,.webmanifest,.png,.jpg,.jpeg,.gif,.webp,.zip','aria-label':'Attach code or pictures'});var target=h('select',{'aria-label':'Attachment destination'});target.appendChild(h('option',{value:''},'Destination: let the AI ask me'));if(ME.kind!=='member'){var destinations=await api('sites');destinations.sites.forEach(function(s){target.appendChild(h('option',{value:'static:'+s.slug},'Website · '+s.name));});}var ghTargets=await api('github'),blogTargets=await api('remote');ghTargets.sites.forEach(function(s){target.appendChild(h('option',{value:'github:'+s.id},'GitHub · '+s.label));});blogTargets.sites.filter(function(s){return s.status==='ready';}).forEach(function(s){target.appendChild(h('option',{value:s.kind+':'+s.id},s.kind+' · '+s.label));});
   function drawFiles(){fileList.innerHTML='';CHAT_FILES.forEach(function(f){var card=h('div',{class:'attachment-chip'},f.kind==='image'?h('img',{src:'/api/owner/attachments/'+f.id,alt:f.name}):h('span',{class:'file-symbol'},'⌘'),h('span',{},f.name+' · '+Math.ceil(f.size/1024)+' KB'),h('button',{class:'sm',type:'button','aria-label':'Remove '+f.name,onclick:async function(){try{await api('attachments/'+f.id,'DELETE');CHAT_FILES=CHAT_FILES.filter(function(x){return x.id!==f.id;});drawFiles();}catch(e){fileStatus.textContent=e.message;}}},'×'));fileList.appendChild(card);});}
-  fileInput.onchange=async function(){var files=Array.from(fileInput.files||[]);if(CHAT_FILES.length+files.length>8){fileStatus.textContent='Up to 8 attachments. Remove an unused file first.';return;}fileInput.disabled=true;fileStatus.textContent='Uploading private attachments…';try{for(var f of files){if(f.size>2097152)throw new Error('Each attachment must be 2 MB or smaller.');var response=await fetch('/api/owner/attachments?path='+encodeURIComponent(f.name.replace(/[^A-Za-z0-9._-]/g,'-')),{method:'PUT',headers:{'content-type':'application/octet-stream','x-cr':'1'},body:f});var data=await response.json();if(!response.ok)throw new Error(data.error||'Upload failed');CHAT_FILES.push(data.attachment);drawFiles();}fileStatus.textContent='Attached privately. Tell the AI what to do; delivery goes to Waiting.';}catch(e){fileStatus.textContent=e.message;}finally{fileInput.disabled=false;fileInput.value='';}};drawFiles();
+  fileInput.onchange=async function(){var files=Array.from(fileInput.files||[]);if(CHAT_FILES.length+files.length>8){fileStatus.textContent='Up to 8 attachments. Remove an unused file first.';return;}fileInput.disabled=true;fileStatus.textContent='Uploading private attachments…';try{for(var f of files){if(f.size>(/\\.zip$/i.test(f.name)?26214400:2097152))throw new Error('ZIP attachments must be 25 MB or smaller; other files 2 MB or smaller.');var response=await fetch('/api/owner/attachments?path='+encodeURIComponent(f.name.replace(/[^A-Za-z0-9._-]/g,'-')),{method:'PUT',headers:{'content-type':'application/octet-stream','x-cr':'1'},body:f});var data=await response.json();if(!response.ok)throw new Error(data.error||'Upload failed');CHAT_FILES.push(data.attachment);drawFiles();}fileStatus.textContent='Attached privately. Tell the AI what to do; delivery goes to Waiting.';}catch(e){fileStatus.textContent=e.message;}finally{fileInput.disabled=false;fileInput.value='';}};drawFiles();
   var inp=h('textarea',{rows:1,'aria-label':'Message your AI',placeholder:'Ask me to edit, find files, or import a GitHub website to Waiting…'});var busy=false;
   function line(who,text,at){var d=h('div',{class:'chat-bubble '+(who==='You'?'you':'ai')},h('div',{class:'chat-who'},who),h('div',{style:'white-space:pre-wrap'},text));d.appendChild(h('span',{class:'chat-time'},new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',hour:'2-digit',minute:'2-digit',hour12:true}).format(new Date(at||Date.now()))+' WAT'));log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
   CHAT.forEach(function(m){line(m.role==='user'?'You':'AI',m.content,m.at);});
@@ -3455,4 +3567,5 @@ async function logTab(){try{var d=await api('audit');var box=h('div');
   show(nav(),h('h3',{},'Activity log'),box);}catch(e){oops(e);}}
 var rt=new URLSearchParams(location.search).get('reset');if(rt)resetScreen(rt);else start();
 </script></body></html>`;
+
 

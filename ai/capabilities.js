@@ -1,5 +1,5 @@
 // Owner-managed permissions for the built-in dashboard assistant.
-const AI_INFRA_WRITES=new Set(['propose_worker_deploy','propose_attached_worker_deploy','propose_cloudflare_resource','cloudflare_maintenance']);
+const AI_INFRA_WRITES=new Set(['propose_worker_package','propose_worker_deploy','propose_attached_worker_deploy','propose_cloudflare_resource','cloudflare_maintenance']);
 const AI_INFRA_TOOLS=new Set([...AI_INFRA_WRITES,'list_connections','list_cloudflare_resources','list_workers','read_worker_source']);
 const AI_EXTRA_TOOLS=[
  {name:'find_project_files',description:'Find filenames by a literal query in a static or GitHub site. Returns at most 50 matching paths and a next offset; read a matching file before proposing changes.',inputSchema:{type:'object',properties:{source:{type:'string',enum:['static','github']},site:{type:'string'},query:{type:'string'},offset:{type:'integer'}},required:['source','site','query']}},
@@ -34,3 +34,4 @@ async function extraAITool(env,actor,name,args){
  default:fail('Unknown tool',404);
  }
 }
+
