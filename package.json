@@ -1,0 +1,12 @@
+{
+  "name": "account4-website-management",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:cms": "node cms/build.mjs",
+    "test": "node tests/run.mjs",
+    "test:cms-dom": "node tests/cms-dom.mjs",
+    "test:cms-browser": "node tests/cms-browser.mjs"
+  },
+  "devDependencies": { "linkedom": "0.18.13" }
+}

@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+const target=new URL('../control-room-worker.js',import.meta.url);
+let worker=fs.readFileSync(target,'utf8');
+const frame=fs.readFileSync(new URL('./frame.js',import.meta.url),'utf8');
+const client=fs.readFileSync(new URL('./editor.js',import.meta.url),'utf8');
+const bundle='const CMS_FRAME = '+JSON.stringify(frame)+';\n'+client;
+const replacement='// BEGIN VISUAL CMS CLIENT\n'+bundle.replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END VISUAL CMS CLIENT';
+worker=worker.replace(/\/\/ BEGIN VISUAL CMS CLIENT[\s\S]*?\/\/ END VISUAL CMS CLIENT/,()=>replacement);
+worker=worker.replace(/\/\/ BEGIN AI CAPABILITIES[\s\S]*?\/\/ END AI CAPABILITIES/,()=> '// BEGIN AI CAPABILITIES\n'+fs.readFileSync(new URL('../ai/capabilities.js',import.meta.url),'utf8')+'\n// END AI CAPABILITIES');
+const aiClient=fs.readFileSync(new URL('../ai/permissions.js',import.meta.url),'utf8');
+worker=worker.replace(/\/\/ BEGIN AI PERMISSION CLIENT[\s\S]*?\/\/ END AI PERMISSION CLIENT/,()=> '// BEGIN AI PERMISSION CLIENT\n'+aiClient.replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END AI PERMISSION CLIENT');
+fs.writeFileSync(target,worker);

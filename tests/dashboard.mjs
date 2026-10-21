@@ -44,7 +44,7 @@ const fetch=async(input,init={})=>{
  else throw Error('Unexpected dashboard request: '+p);
  return Response.json(data);
 };
-const context={document,fetch,URL,URLSearchParams,TextEncoder,Blob,Date,JSON,location:{origin:'https://room.test',search:''},history:{replaceState(){}},window:{},alert:t=>alerts.push(t),confirm:()=>true,AbortController,setInterval:()=>0,setTimeout,clearTimeout,console};
+const context={crypto,document,fetch,URL,URLSearchParams,TextEncoder,Blob,Date,JSON,location:{origin:'https://room.test',search:''},history:{replaceState(){}},window:{},alert:t=>alerts.push(t),confirm:()=>true,AbortController,setInterval:()=>0,setTimeout,clearTimeout,console};
 vm.createContext(context);vm.runInContext(UI.match(/<script>([\s\S]*?)<\/script>/)[1],context);
 async function flush(){for(let i=0;i<15;i++)await new Promise(r=>setImmediate(r))}
 await flush();await context.openP(1);
@@ -65,7 +65,7 @@ await context.users();find(body,n=>n.attributes.placeholder==='Username (letters
 assert.match(context.lagosTime('2026-10-18 23:30:00'),/19 Oct 2026, 12:30 am WAT/);
 assert.equal(context.lagosTime('2026-10-18 23:30:00'),context.lagosTime('2026-10-18T23:30:00Z'));
 assert.equal(context.lagosTime(null),'Not recorded');assert.equal(context.lagosTime(Date.parse('2026-10-18T23:30:00Z')),context.lagosTime('2026-10-18T23:30:00Z'));
-await context.waiting();const queueRow=find(body,n=>n.tag==='details'&&n.className==='queue-row');assert.ok(queueRow);assert.ok(body.textContent.includes('Review version'));assert.ok(body.textContent.includes('P-1'));const beforePreview=publications;queueRow.open=true;await queueRow.listeners.toggle();assert.ok(body.textContent.includes('General preview'));assert.equal(publications,beforePreview);
+await context.waiting();const queueRow=find(body,n=>n.tag==='details'&&n.className==='queue-row');assert.ok(queueRow);assert.ok(body.textContent.includes('Review version'));assert.ok(body.textContent.includes('P-1'));const beforePreview=publications;queueRow.open=true;await queueRow.listeners.toggle();assert.ok(body.textContent.includes('Visual website preview'));assert.equal(publications,beforePreview);
 console.log('PASS expandable queue rows load previews without publishing and format timestamps in Lagos time');
 
 await context.claude();const fileInput=find(body,n=>n.tag==='input'&&n.attributes.type==='file');assert.ok(fileInput);fileInput.files=[{name:'example.html',size:18}];await fileInput.onchange();assert.equal(context.CHAT_FILES.length,1);assert.ok(body.textContent.includes('example.html'));const destination=find(body,n=>n.tag==='select'&&n.attributes['aria-label']==='Attachment destination');destination.value='static:demo';find(body,n=>n.tag==='textarea').value='Send this file unchanged for approval.';button('Send').onclick();await flush();assert.equal(chatSent.attachments.length,1);assert.equal(chatSent.attachments[0],context.CHAT_FILES[0].id);assert.match(chatSent.messages.at(-1).content,/static:demo/);assert.ok(body.textContent.includes('Sent to Waiting'));await button('Clear private uploads').onclick();assert.equal(context.CHAT_FILES.length,0);console.log('PASS assistant attachment picker uploads privately, sends selected IDs/destination and clears originals');
@@ -89,3 +89,4 @@ await context.resourceForm({id:7,label:'Account 7 Meeting App',account_id:'accou
 find(body,n=>n.attributes.placeholder==='New resource name').value='meeting-db';find(body,n=>n.tag==='select').value='d1';await button('Send creation to approval').onclick();assert.equal(resourceProposal.connection,'7');assert.equal(resourceProposal.kind,'d1');assert.equal(resourceProposal.name,'meeting-db');assert.ok(body.textContent.includes('Nothing has been created yet'));
 context.deployForm({id:7,label:'Account 7 Meeting App'});find(body,n=>n.attributes.placeholder==='Worker name (lowercase, dashes)').value='meeting-app';find(body,n=>n.attributes.placeholder==='Paste Worker code, or choose a .js file').value='export default {}';find(body,n=>n.attributes.placeholder?.startsWith('Optional bindings JSON')).value='[{"type":"ai","name":"AI"}]';button('Send to approval').onclick();await flush();assert.equal(workerProposal.connection,'7');assert.equal(workerProposal.bindings[0].name,'AI');
 console.log('PASS D1/R2 dashboard queues exact-account creation and Worker bindings without publishing (mock DOM)');
+
