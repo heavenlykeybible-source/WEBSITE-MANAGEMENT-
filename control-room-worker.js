@@ -449,7 +449,7 @@ async function coreProposeWorker(env, actor, b) {
 }
 
 // ---------- serving sites ----------
-async function serveSiteFile(env, site, rawPath, previewId) {
+async function serveSiteFile(env, site, rawPath, previewId, req) {
   let path;
   try { path = decodeURIComponent(rawPath); } catch (e) { return new Response('Not found', { status: 404 }); }
   if (!path || path.endsWith('/')) path += site.entry;
@@ -465,12 +465,22 @@ async function serveSiteFile(env, site, rawPath, previewId) {
   if (!key && !/\.[A-Za-z0-9]+$/.test(path)) { path = path + '/' + site.entry; key = await find(path); }
   const o = key ? await env.FILES.get(key) : null;
   if (!o) return new Response('Not found', { status: 404 });
-  return new Response(o.body, { headers: {
+  const owner = !previewId && req && /\.html?$/i.test(path) ? await getUser(req, env) : null;
+  const editable = owner && owner.kind !== 'member' && owner.role === 'owner';
+  let content = o.body;
+  if (editable) {
+    const href = '/?edit_site=' + encodeURIComponent(site.slug) + '&edit_path=' + encodeURIComponent(path);
+    const bar = '<aside id="control-room-owner-toolbar" aria-label="Website editing" style="position:fixed;inset:0 0 auto 0;z-index:2147483647;display:flex;gap:16px;align-items:center;padding:12px 18px;background:#11245b;color:white;font:16px system-ui;box-shadow:0 2px 12px #0004"><span>Owner editing</span><a target="_blank" rel="noopener" href="'+esc(href)+'" style="color:white;text-decoration:underline">Edit this page</a><span style="font-size:12px">Save changes as a private draft</span></aside>';
+    const html = await o.text();
+    content = /<body\b[^>]*>/i.test(html) ? html.replace(/<body\b[^>]*>/i, m => m + bar) : bar + html;
+  }
+  return new Response(content, { headers: {
     'content-type': MIME[ext(path)] || 'application/octet-stream',
     'content-security-policy': SANDBOX,
     'x-content-type-options': 'nosniff',
     'access-control-allow-origin': '*',
-    'cache-control': previewId ? 'no-store' : 'public, max-age=30'
+    'cache-control': 'private, no-store',
+    'vary': 'Cookie'
   } });
 }
 function renderBlocks(blocks) {
@@ -1337,7 +1347,7 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
       const required = ['users','agents','sites','site_files','pages','proposals','upload_files','settings','audit_log','cf_connections','remote_sites','github_sites','ai_accounts','proposal_reviews','operation_locks','releases'];
       const missing = required.filter(t => !tables.includes(t));
       const counts = await env.DB.prepare("SELECT (SELECT COUNT(*) FROM sites) static_sites,(SELECT COUNT(*) FROM github_sites) github_sites,(SELECT COUNT(*) FROM remote_sites WHERE status='ready') blogs,(SELECT COUNT(*) FROM proposals WHERE sealed=1 AND status='waiting') waiting").first();
-      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'visual-cms-ai-20261021' });
+      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'onsite-cms-20261021' });
     }
     if (m === 'POST') {
       const input = await body(req); if (input.action !== 'storage') fail('Unknown check');
@@ -2684,7 +2694,7 @@ async function route(req, env) {
   if (m === 'GET' && (x = p.match(/^\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, false);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, true);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/work\/(w_[a-f0-9]{16})$/))) return publicWork(x[1], env);
-  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'visual-cms-ai-20261021' });
+  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'onsite-cms-20261021' });
   if (m === 'POST' && p === '/api/signup') return signup(req, env);
   if (p === '/mcp') return m === 'POST' ? mcp(req, env) : new Response('Use POST', { status: 405 });
   if ((x = p.match(/^\/s\/([a-z0-9-]{1,60})(\/.*)?$/))) {
@@ -2692,7 +2702,7 @@ async function route(req, env) {
     if (!x[2]) return Response.redirect(u.origin + p + '/', 302);
     const s = await env.DB.prepare('SELECT * FROM sites WHERE slug=?').bind(x[1]).first();
     if (!s) return new Response('Not found', { status: 404 });
-    return serveSiteFile(env, s, x[2].slice(1), 0);
+    return serveSiteFile(env, s, x[2].slice(1), 0, req);
   }
   if ((x = p.match(/^\/preview\/(\d+)\/(\d+)\/(\d+)\/([a-f0-9]{64})\/(.*)$/))) {
     if (+x[2] < Date.now() || !safeEq(x[4], await hmac(secret(env), 'preview:' + x[1] + ':' + x[2] + ':' + x[3]))) return new Response('Preview link expired. Reopen it from the control room.', { status: 403 });
@@ -2813,7 +2823,7 @@ function resetScreen(token){var p1=h('input',{type:'password',placeholder:'New p
   show(h('p',{},'Choose your password'),h('p',{class:'tag'},'Use 10 or more characters. Capitals and symbols are optional.'),passwordField(p1),passwordField(p2),h('button',{onclick:function(){if(p1.value!==p2.value)return alert('The two passwords do not match');
     post('/api/reset',{token:token,password:p1.value}).then(function(){history.replaceState(null,'','/');alert('Password saved. Please sign in.');login();}).catch(oops);}},'Save password'));}
 function logout(){CHAT=[];CHAT_FILES=[];fetch('/api/logout',{method:'POST'}).then(login);}
-function start(){fetch('/api/owner/me').then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){ME=d.user;SIGNED=true;poll();if(!window.pt)window.pt=setInterval(poll,60000);waiting();}).catch(function(){login();});}
+function start(){fetch('/api/owner/me').then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){ME=d.user;SIGNED=true;poll();if(!window.pt)window.pt=setInterval(poll,60000);cmsOpenRequestedPage().then(function(opened){if(!opened)waiting();}).catch(oops);}).catch(function(){login();});}
 async function waiting(st){st=typeof st==='string'?st:'waiting';CURRENT_NAV='Waiting';
 try{var d=await api('proposals?status='+st),box=h('tbody',{}),queueTable=h('table',{class:'queue-table'},h('thead',{},h('tr',{},h('th',{},'Account / website · Work · Arrival time · Status'))),box);
 if(!d.proposals.length)box.appendChild(h('tr',{},h('td',{},h('div',{class:'empty-state'},h('div',{class:'empty-icon'},'◇'),h('h4',{},st==='waiting'?'Your review room is clear':'No work in this view'),h('p',{class:'tag'},'New AI proposals and submitted uploads will arrive here, ready for your review.'),h('button',{onclick:function(){CURRENT_NAV='Assistant';claude();}},'✦ Start with the assistant')))));
@@ -3116,11 +3126,22 @@ async function cmsEditor(site,path,sourceOnly){try{
  ['up','down'].forEach(function(direction){inspector.appendChild(h('button',{class:'sm',onclick:function(){send('move',{direction:direction});}},'Move '+direction));});
  var submit=h('button',{onclick:async function(){if(busy)return;busy=true;submit.disabled=true;clearTimeout(timer);try{var content=await html(),r=await api('cms/propose'+query,'POST',{content:content,base_key:file.base_key,assets:assets});await api('cms/draft'+query,'DELETE');dirty=false;openP(r.proposal_id);}catch(e){status.textContent=e.message;}finally{busy=false;submit.disabled=false;}}},'Send to Waiting for approval');
  var widths=h('div');[['Desktop','100%'],['Tablet','768px'],['Phone','390px']].forEach(function(v){widths.appendChild(h('button',{class:'sm',onclick:function(){frame.style.width=v[1];frame.style.maxWidth='100%';}},v[0]));});
- show(nav(),h('h3',{class:'page-title'},'Editing '+path),h('p',{class:'tag'},site.name+' · '+(file.content===null?'New page':'Existing page')),h('button',{class:'sm',onclick:function(){if(dirty&&!confirm('Leave the editor? Wait for Draft saved or save your draft first.'))return;cmsPages(site);}},'Back to pages'),toggle,h('button',{class:'sm',onclick:saveDraft},'Save draft'),submit,status,widths,tools,h('div',{class:'cms-layout'},preview,inspector),code,h('details',{},h('summary',{},'Page title and search description'),title,description,h('button',{class:'sm',onclick:function(){send('metadata',{title:title.value,description:description.value});}},'Apply page details')));
+ show(nav(),h('h3',{class:'page-title'},'Editing '+path),h('p',{class:'tag'},site.name+' · '+(file.content===null?'New page':'Existing page')),h('button',{class:'sm',onclick:function(){if(dirty&&!confirm('Leave the editor? Wait for Draft saved or save your draft first.'))return;cmsPages(site);}},'Back to pages'),h('a',{class:'btn',href:'/s/'+encodeURIComponent(site.slug)+'/'+path.split('/').map(encodeURIComponent).join('/'),target:'_blank',rel:'noopener'},'View live page'),toggle,h('button',{class:'sm',onclick:saveDraft},'Save changes'),submit,status,widths,tools,h('div',{class:'cms-layout'},preview,inspector),code,h('details',{},h('summary',{},'Page title and search description'),title,description,h('button',{class:'sm',onclick:function(){send('metadata',{title:title.value,description:description.value});}},'Apply page details')));
  // show() clears the previous editor; register this session only after mounting it.
  CMS_CLEANUP=function(){clearTimeout(timer);window.removeEventListener('message',receive);pending.forEach(function(p){clearTimeout(p.timer);p.reject(Error('Editor closed'));});pending.clear();};
  code.style.display=visual?'none':'block';preview.style.display=visual?'block':'none';inspector.style.display=visual?'block':'none';tools.style.display=visual?'block':'none';if(visual)openFrame();else status.textContent='Source editor · Drafts and proposals do not publish immediately.';
  }catch(e){oops(e);}}
+
+// Open an exact public page after authentication, including after a fresh sign-in.
+async function cmsOpenRequestedPage(){
+ var params=new URLSearchParams(location.search),slug=params.get('edit_site'),path=params.get('edit_path');
+ if(!slug||!path)return false;
+ if(!own())throw Error('Only the owner can open on-site editing.');
+ var data=await api('sites'),site=data.sites.find(function(s){return s.slug===slug;});
+ if(!site)throw Error('The website is not connected to this control room.');
+ if(!/\\.html?$/i.test(path))throw Error('Choose an HTML page for visual editing.');
+ await cmsEditor(site,path);return true;
+}
 
 // END VISUAL CMS CLIENT
 function ghForm(s){var r=h('input',{placeholder:'GitHub repo, e.g. owner/name'}),b=h('input',{placeholder:'Branch (default main)'}),d=h('input',{placeholder:'Folder inside the repo (optional)'}),msg=h('p',{class:'tag'},'');

@@ -52,8 +52,19 @@ async function cmsEditor(site,path,sourceOnly){try{
  ['up','down'].forEach(function(direction){inspector.appendChild(h('button',{class:'sm',onclick:function(){send('move',{direction:direction});}},'Move '+direction));});
  var submit=h('button',{onclick:async function(){if(busy)return;busy=true;submit.disabled=true;clearTimeout(timer);try{var content=await html(),r=await api('cms/propose'+query,'POST',{content:content,base_key:file.base_key,assets:assets});await api('cms/draft'+query,'DELETE');dirty=false;openP(r.proposal_id);}catch(e){status.textContent=e.message;}finally{busy=false;submit.disabled=false;}}},'Send to Waiting for approval');
  var widths=h('div');[['Desktop','100%'],['Tablet','768px'],['Phone','390px']].forEach(function(v){widths.appendChild(h('button',{class:'sm',onclick:function(){frame.style.width=v[1];frame.style.maxWidth='100%';}},v[0]));});
- show(nav(),h('h3',{class:'page-title'},'Editing '+path),h('p',{class:'tag'},site.name+' · '+(file.content===null?'New page':'Existing page')),h('button',{class:'sm',onclick:function(){if(dirty&&!confirm('Leave the editor? Wait for Draft saved or save your draft first.'))return;cmsPages(site);}},'Back to pages'),toggle,h('button',{class:'sm',onclick:saveDraft},'Save draft'),submit,status,widths,tools,h('div',{class:'cms-layout'},preview,inspector),code,h('details',{},h('summary',{},'Page title and search description'),title,description,h('button',{class:'sm',onclick:function(){send('metadata',{title:title.value,description:description.value});}},'Apply page details')));
+ show(nav(),h('h3',{class:'page-title'},'Editing '+path),h('p',{class:'tag'},site.name+' · '+(file.content===null?'New page':'Existing page')),h('button',{class:'sm',onclick:function(){if(dirty&&!confirm('Leave the editor? Wait for Draft saved or save your draft first.'))return;cmsPages(site);}},'Back to pages'),h('a',{class:'btn',href:'/s/'+encodeURIComponent(site.slug)+'/'+path.split('/').map(encodeURIComponent).join('/'),target:'_blank',rel:'noopener'},'View live page'),toggle,h('button',{class:'sm',onclick:saveDraft},'Save changes'),submit,status,widths,tools,h('div',{class:'cms-layout'},preview,inspector),code,h('details',{},h('summary',{},'Page title and search description'),title,description,h('button',{class:'sm',onclick:function(){send('metadata',{title:title.value,description:description.value});}},'Apply page details')));
  // show() clears the previous editor; register this session only after mounting it.
  CMS_CLEANUP=function(){clearTimeout(timer);window.removeEventListener('message',receive);pending.forEach(function(p){clearTimeout(p.timer);p.reject(Error('Editor closed'));});pending.clear();};
  code.style.display=visual?'none':'block';preview.style.display=visual?'block':'none';inspector.style.display=visual?'block':'none';tools.style.display=visual?'block':'none';if(visual)openFrame();else status.textContent='Source editor · Drafts and proposals do not publish immediately.';
  }catch(e){oops(e);}}
+
+// Open an exact public page after authentication, including after a fresh sign-in.
+async function cmsOpenRequestedPage(){
+ var params=new URLSearchParams(location.search),slug=params.get('edit_site'),path=params.get('edit_path');
+ if(!slug||!path)return false;
+ if(!own())throw Error('Only the owner can open on-site editing.');
+ var data=await api('sites'),site=data.sites.find(function(s){return s.slug===slug;});
+ if(!site)throw Error('The website is not connected to this control room.');
+ if(!/\.html?$/i.test(path))throw Error('Choose an HTML page for visual editing.');
+ await cmsEditor(site,path);return true;
+}

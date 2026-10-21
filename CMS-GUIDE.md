@@ -45,3 +45,9 @@ Open **AI permissions** as owner. Choose Chat only, Inspect, or Work, and a budg
 Cloudflare deployment/resource proposals need express owner permission for the exact saved accounts, lasting 1–24 hours. Expired or unselected accounts are denied by the server, including model-generated calls. Only a person can approve publication. Existing maintenance grants are still separate. The assistant cannot grant itself access, expose stored credentials, replace protected control-plane Workers, install PHP themes/plugins on static hosting, or bypass a connected provider's permissions.
 
 Private chat uploads are limited to 2 MB each. Static ZIP uploads through the site installer retain the separate 25 MB compressed/expanded package limits. Attached Worker code retains the existing 1.4 MB limit. Connected services must be configured before their tools can work.
+
+## Edit from a live page
+
+When the owner is signed into the control room on the same origin, live HTML pages under `/s/<site>/` show an owner toolbar. Select **Edit this page** to open that exact resolved page in the visual editor. **Save changes** stores a private draft; **Send to Waiting for approval** uses the existing preview and owner approval process. **View live page** returns to the website. Signing in after opening an editor link keeps the requested page.
+
+Visitors, expired sessions, and members do not receive the toolbar. Preview responses never contain it, and it is never written into website files. Responses are private and not cached. Separately hosted WordPress, Blogger, GitHub, or Cloudflare sites require integration at their own host; account connection alone does not inject controls into external responses.

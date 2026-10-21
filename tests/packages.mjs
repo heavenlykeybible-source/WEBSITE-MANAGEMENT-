@@ -13,7 +13,7 @@ console.log('PASS website ZIP: stored/deflated, root stripping, CRC, unsafe path
 // Exercise the real import, staged review, preview acknowledgement and publication paths.
 import fs from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
-import {importWebsiteZip,ownerApi,route,putChatAttachment,toolCall} from './worker-test.mjs';
+import {importWebsiteZip,ownerApi,route,putChatAttachment,toolCall,hmac,secret} from './worker-test.mjs';
 const db=new DatabaseSync(':memory:');db.exec(fs.readFileSync('schema.sql','utf8'));
 db.exec("INSERT INTO users(id,username,role,status,kind) VALUES(1,'owner','owner','active','staff'); INSERT INTO agents(id,name,token_hash) VALUES(1,'Package tester','package-token'); INSERT INTO sites(id,slug,name) VALUES(1,'package-demo','Package demo')");
 const objects=new Map();const env={ADMIN_USER:'owner',ADMIN_PASS:'test-password-only',SESSION_SECRET:'test-signing-key-only-1234567890',VAULT_KEY:'test-vault-key-only-1234567890',DB:{prepare(sql){const st=db.prepare(sql);let args=[];return {bind(...a){args=a;return this;},async first(){return st.get(...args)||null;},async all(){return {results:st.all(...args)};},async run(){const r=st.run(...args);return {meta:{changes:r.changes,last_row_id:r.lastInsertRowid}};}};},async batch(rows){return Promise.all(rows.map(r=>r.run()));}},FILES:{async put(k,value){const b=typeof value==='string'?new TextEncoder().encode(value):new Uint8Array(value);const etag=Buffer.from(await crypto.subtle.digest('SHA-256',b)).toString('hex');objects.set(k,{b,etag});return {etag};},async get(k){const o=objects.get(k);return o?{etag:o.etag,body:o.b,async arrayBuffer(){return o.b.slice().buffer;},async text(){return new TextDecoder().decode(o.b);}}:null;},async delete(k){objects.delete(k);}}};
@@ -48,4 +48,22 @@ await api('cms/draft?site=package-demo&path=about.html','POST',{base_key:null,co
 const attached=await putChatAttachment(new Request('https://control.example/upload',{method:'PUT',body:packageBytes}),env,owner,'website.zip');assert.equal(attached.kind,'package');const zipProposal=await toolCall(env,{kind:'agent',agentId:1,a:{id:1,can_read:1,can_propose:1},chatUserId:1,chatAttachmentIds:[attached.id],aiPolicy:{mode:'work',max_tools:20,connections:[],expires_at:0}},'propose_attached_website',{site:'package-demo',attachment_id:attached.id});assert.equal(zipProposal.status,'waiting');assert.equal(db.prepare('SELECT sealed FROM proposals WHERE id=?').get(zipProposal.proposal_id).sealed,1);
 console.log('PASS attached ZIP: private upload, integrity check and unchanged website import to Waiting');
 console.log('PASS CMS API: private drafts, approved page edits, stale editor rejection, stale proposal rejection, viewer denial and new-page drafts');
+// Owner toolbar is response-only, private, and points at the resolved page.
+const liveKey=db.prepare("SELECT r2_key FROM site_files WHERE path='style.css'").get();
+await env.FILES.put('onsite-test','<!doctype html><html><body><h1>Live page</h1></body></html>');
+db.prepare("UPDATE site_files SET r2_key='onsite-test' WHERE path='index.html'").run();
+const expiry=Date.now()+60000;
+const signature=await hmac(secret(env),'s:1:'+expiry+':0');
+const cookie='cr_session=1.'+expiry+'.0.'+signature;
+const publicPage=await route(new Request('https://control.example/s/package-demo/'),env);
+assert.doesNotMatch(await publicPage.text(),/control-room-owner-toolbar/);
+const ownerPage=await route(new Request('https://control.example/s/package-demo/',{headers:{cookie}}),env);
+assert.equal(ownerPage.headers.get('cache-control'),'private, no-store');
+assert.equal(ownerPage.headers.get('vary'),'Cookie');
+const ownerHTML=await ownerPage.text();assert.match(ownerHTML,/Edit this page/);assert.match(ownerHTML,/edit_path=index.html/);
+assert.doesNotMatch(await (await env.FILES.get('onsite-test')).text(),/control-room-owner-toolbar/);
+const invalidSession=await route(new Request('https://control.example/s/package-demo/',{headers:{cookie:cookie+'bad'}}),env);
+assert.doesNotMatch(await invalidSession.text(),/control-room-owner-toolbar/);
+assert.match(UI,/cmsOpenRequestedPage/);assert.match(UI,/Save changes/);
+console.log('PASS on-site CMS: owner-only toolbar, exact resolved entry, private responses, invalid session rejection, unchanged stored content');
 db.close();
