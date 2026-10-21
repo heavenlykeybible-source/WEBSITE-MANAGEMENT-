@@ -807,7 +807,7 @@ async function cf(env, conn, method, path, body) {
   try { d = await r.json(); } catch { fail('Cloudflare returned an unreadable response. Your saved connection has not been changed.', 502); }
   if (!r.ok || d.success === false) {
     let message;
-    if (r.status === 401 || r.status === 403) { const permission = path.startsWith('/d1/') ? 'D1: Edit (D1 Write)' : path.startsWith('/r2/') ? 'Workers R2 Storage: Edit (Workers R2 Storage Write)' : 'Workers Scripts: Edit'; message = 'Cloudflare did not allow access. Check that the token belongs to this Account ID and includes ' + permission + '. Read checks do not prove write permission. Your saved connection has not been changed.'; }
+    if (r.status === 401 || r.status === 403) { const permission = path.startsWith('/builds/') ? 'Workers Builds Configuration: Edit (a user-scoped API token)' : path.startsWith('/d1/') ? 'D1: Edit (D1 Write)' : path.startsWith('/r2/') ? 'Workers R2 Storage: Edit (Workers R2 Storage Write)' : 'Workers Scripts: Edit'; message = 'Cloudflare did not allow access. Check that the token belongs to this Account ID and includes ' + permission + '. Read checks do not prove write permission. Your saved connection has not been changed.'; }
     else if (r.status === 429) message = 'Cloudflare is limiting requests. Wait a little before trying again.';
     else message = 'Cloudflare says: ' + String(((d.errors || [])[0] || {}).message || ('HTTP ' + r.status)).split(tok).join('[redacted]').replace(/Bearer\s+[^\s]+/gi, 'Bearer [redacted]').slice(0, 250);
     throw { message, status: 502, cfStatus: r.status };
@@ -852,6 +852,20 @@ async function maintenanceRun(env, actor, args) {
         const d = await cf(env, conn, 'GET', requestPath);
         const w = (d.result || []).find(x => x.id === args.worker);
         result = { exists: !!w, worker: args.worker, modified_on: w ? w.modified_on : null };
+        if(w){
+          const checks=await Promise.allSettled([
+            cf(env,conn,'GET','/workers/scripts/'+encodeURIComponent(args.worker)+'/settings'),
+            /^[a-f0-9]{32}$/.test(w.tag||'')?cf(env,conn,'GET','/builds/workers/'+w.tag+'/triggers'):Promise.reject({message:'Cloudflare did not return a Worker tag; build discovery is unavailable.'})
+          ]);
+          if(checks[0].status==='fulfilled'){
+            const settings=checks[0].value.result||{};
+            result.configuration={compatibility_date:settings.compatibility_date,bindings:(settings.bindings||[]).map(b=>({name:b.name,type:b.type,...(b.id?{id:b.id}:{}),...(b.namespace_id?{namespace_id:b.namespace_id}:{}),...(b.bucket_name?{bucket_name:b.bucket_name}:{})})),has_assets:!!settings.assets||(settings.bindings||[]).some(b=>b.type==='assets')};
+          }else result.configuration_error=checks[0].reason?.message||'Worker settings are unavailable';
+          if(checks[1].status==='fulfilled'){
+            const response=checks[1].value.result,rows=Array.isArray(response)?response:(response?.triggers||[]);
+            result.builds={worker_tag:w.tag,triggers:rows.map(t=>({trigger_uuid:t.trigger_uuid,trigger_name:t.trigger_name,root_directory:t.root_directory,build_command:t.build_command,deploy_command:t.deploy_command,branch_includes:t.branch_includes,branch_excludes:t.branch_excludes,repo_connection_uuid:t.repo_connection_uuid}))};
+          }else result.builds_error=checks[1].reason?.message||'Workers Builds discovery is unavailable';
+        }
       } else {
         const token = await unseal(env, conn.token_enc);
         const response = await fetch('https://api.cloudflare.com/client/v4' + requestPath, { method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(20000), headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' }, body: JSON.stringify(payload) });
@@ -1353,7 +1367,7 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
       const required = ['users','agents','sites','site_files','pages','proposals','upload_files','settings','audit_log','cf_connections','remote_sites','github_sites','ai_accounts','proposal_reviews','operation_locks','releases'];
       const missing = required.filter(t => !tables.includes(t));
       const counts = await env.DB.prepare("SELECT (SELECT COUNT(*) FROM sites) static_sites,(SELECT COUNT(*) FROM github_sites) github_sites,(SELECT COUNT(*) FROM remote_sites WHERE status='ready') blogs,(SELECT COUNT(*) FROM proposals WHERE sealed=1 AND status='waiting') waiting").first();
-      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'chatgpt-connect-20261021' });
+      return json({ checks: [{ name: 'Database schema', passed: !missing.length, detail: missing.length ? 'Missing tables: ' + missing.join(', ') : 'Required tables are present' }, { name: 'Private file storage binding', passed: !!env.FILES, detail: 'Use the storage test below for a real read/write check' }, { name: 'Cloudflare AI binding', passed: !!env.AI && env.CLOUDFLARE_AI_ENABLED === 'true', detail: 'Use AI → Test built-in AI for a real inference check' }], counts, version: 'account3-build-inspect-20261021' });
     }
     if (m === 'POST') {
       const input = await body(req); if (input.action !== 'storage') fail('Unknown check');
@@ -2794,7 +2808,7 @@ async function route(req, env) {
   if (m === 'GET' && (x = p.match(/^\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, false);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/site\/([a-z0-9.-]{3,253})$/))) return publicSite(x[1], env, true);
   if (m === 'GET' && (x = p.match(/^\/api\/public\/work\/(w_[a-f0-9]{16})$/))) return publicWork(x[1], env);
-  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'chatgpt-connect-20261021' });
+  if (m === 'GET' && p === '/api/public/info') return json({ signup: env.SIGNUP_OPEN === 'true', version: 'account3-build-inspect-20261021' });
   if (m === 'POST' && p === '/api/signup') return signup(req, env);
   if (p === '/mcp') return m === 'POST' ? mcp(req, env) : new Response('Use POST', { status: 405 });
   if ((x = p.match(/^\/s\/([a-z0-9-]{1,60})(\/.*)?$/))) {
