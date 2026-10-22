@@ -39,6 +39,9 @@ jobs:
       - name: Run project tests
         run: npm test
 
+      - name: Verify Account 4 owner approval interface
+        run: node tests/account4-permission-ui.mjs
+
       - name: Verify CMS editing and preview controls
         run: |
           npm run test:cms-dom
