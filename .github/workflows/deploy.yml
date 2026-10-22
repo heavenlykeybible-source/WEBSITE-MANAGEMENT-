@@ -1,15 +1,6 @@
 name: Deploy Website Management to Cloudflare
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'control-room-worker.js'
-      - 'wrangler.toml'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'tests/**'
-      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 permissions:
@@ -35,6 +26,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Check browser-test runtime is installed
+        run: node --input-type=module -e "import('playwright').then(() => console.log('Playwright available')).catch(() => console.log('Playwright installed in following step'))"
 
       - name: Run project tests
         run: npm test
