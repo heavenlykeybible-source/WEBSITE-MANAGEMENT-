@@ -68,3 +68,21 @@ test('premium homepage features laptop hero and app family while app remains acc
  assert.match(html,/href="\/experience\.html"/);
  assert.match(get('public/experience.html'),/id="bible"/);
 });
+
+test('premium page assets, CSP, navigation and app preservation',()=>{
+ const html=get('public/index.html');
+ const sw=get('public/sw.js');
+ const css=get('public/premium-home.css');
+ for(const path of ['premium-home.css','premium-family-nav.js','premium-download-options.js','experience.html','assets/ministry/logo.png','assets/ministry/hero-people-laptop.jpg','assets/ministry/global-community-network.svg','assets/ministry/rotating-world-land.svg']){
+  assert.ok(sw.includes('/'+path),'Offline asset missing: '+path);
+ }
+ assert.match(html,/href="\/premium-home\.css"/);
+ assert.doesNotMatch(html,/<style\b|\sstyle=/i);
+ assert.match(html,/class="laptop"/);
+ assert.match(css,/\.foot \.social-links/);
+ assert.match(html,/aria-label="Main navigation"/);
+ assert.match(html,/aria-label="Follow Heavenly Key"/);
+ assert.match(html,/href="\/experience\.html"/);
+ assert.match(get('public/premium-download-options.js'),/window\.location\.origin/);
+ assert.doesNotMatch(get('public/premium-download-options.js'),/api\.qrserver\.com/);
+});
