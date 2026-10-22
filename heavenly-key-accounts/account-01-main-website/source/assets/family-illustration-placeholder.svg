@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-labelledby="fam-title">
+  <title id="fam-title">Family and missionary gathered around a laptop showing the ministry's Gospel slideshow</title>
+  <!-- Simple flat placeholder figures — replace with official ministry artwork -->
+  <rect x="0" y="0" width="800" height="360" fill="none"/>
+
+  <!-- Father -->
+  <g transform="translate(80,120)">
+    <circle cx="40" cy="30" r="26" fill="#8A5A3B"/>
+    <rect x="10" y="55" width="60" height="110" rx="14" fill="#1B3A6B"/>
+  </g>
+
+  <!-- Mother with head covering -->
+  <g transform="translate(200,130)">
+    <circle cx="40" cy="30" r="24" fill="#9C6B4A"/>
+    <path d="M8 20 Q40 -10 72 20 L72 46 Q40 30 8 46 Z" fill="#7A1B2B"/>
+    <rect x="12" y="52" width="56" height="110" rx="14" fill="#7A1B2B"/>
+  </g>
+
+  <!-- Boy -->
+  <g transform="translate(330,160)">
+    <circle cx="28" cy="22" r="18" fill="#8A5A3B"/>
+    <rect x="8" y="40" width="40" height="80" rx="10" fill="#C9A227"/>
+  </g>
+
+  <!-- Girl with head covering -->
+  <g transform="translate(420,158)">
+    <circle cx="28" cy="22" r="18" fill="#9C6B4A"/>
+    <path d="M4 16 Q28 -4 52 16 L52 34 Q28 22 4 34 Z" fill="#1B3A6B"/>
+    <rect x="8" y="42" width="40" height="80" rx="10" fill="#1B3A6B"/>
+  </g>
+
+  <!-- Missionary/Evangelist -->
+  <g transform="translate(560,110)">
+    <circle cx="42" cy="32" r="27" fill="#6B4226"/>
+    <rect x="10" y="58" width="64" height="112" rx="14" fill="#262626"/>
+  </g>
+
+  <!-- Ground line suggesting they are gathered together -->
+  <rect x="60" y="300" width="600" height="4" fill="#E4C766" opacity="0.6"/>
+</svg>
