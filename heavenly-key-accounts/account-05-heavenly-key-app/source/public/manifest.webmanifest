@@ -1,0 +1,30 @@
+{
+  "name": "Heavenly Key — Community & Discipleship",
+  "short_name": "Heavenly Key",
+  "description": "Global Christian Community & Discipleship — Taking Christ to the Nations of the World",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#162f78",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "education",
+    "social"
+  ],
+  "lang": "en"
+}
