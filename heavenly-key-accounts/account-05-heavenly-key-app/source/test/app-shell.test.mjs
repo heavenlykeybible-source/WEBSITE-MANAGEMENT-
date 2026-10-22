@@ -34,7 +34,7 @@ test('mobile community and media shortcuts only use verified HTTPS ministry page
   assert.doesNotMatch(a,/javascript:|data:/i);
  }
  assert.match(html,/sign-in inside this app remains pending/i);
- assert.match(html,/not yet integrated into this app/i);
+ assert.match(html,/member sign-in and live playback are still being connected and tested/i);
 });
 test('script styles and service worker do not contain the original cloud credentials',()=>{
  for(const path of ['src/index.js','public/app.js','public/sw.js','public/index.html','public/styles.css']){
