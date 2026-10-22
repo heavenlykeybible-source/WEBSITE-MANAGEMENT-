@@ -1,0 +1,45 @@
+body[data-page=home]{background:#f0fff5}body[data-page=home] .top{background:linear-gradient(110deg,#082875,#034bc1,#071c55);border-bottom:3px solid #e5bf54}body[data-page=home] .top .navlinks a[aria-current=page]{background:#e60021;color:white}body[data-page=home] .shell{max-width:1480px}body[data-page=home] .social-layout{grid-template-columns:minmax(190px,235px) minmax(0,1fr) minmax(215px,285px);gap:14px}body[data-page=home] .social-rail,body[data-page=home] .social-sidebar{background:#e9fff0;border:1px solid #ccebd7;border-radius:15px;padding:13px}body[data-page=home] .social-rail .rail-link{border-radius:9px;min-height:42px;font-weight:700;color:#083c88}body[data-page=home] .social-rail .rail-link[aria-current=page]{background:#e50926;color:white}body[data-page=home] .social-rail .rail-icon{display:inline-grid;place-items:center;width:30px;height:30px;background:#e2ecff;color:#0645b4;border-radius:9px;font-size:20px}body[data-page=home] .social-stream .card{background:#fff;border-radius:15px;box-shadow:0 3px 15px #17492b12}body[data-page=home] .royal-guest-hero{background:linear-gradient(110deg,#041d68e8,#0a4cb2dd),url('assets/rotating-world-land.svg') center/cover;color:#fff;border-radius:15px}body[data-page=home] .royal-guest-hero h1{color:#fff}body[data-page=home] .royal-guest-hero .eyebrow{color:#ffdf66}body[data-page=home].royal-signed-in .royal-guest-hero{display:none!important}body[data-page=home] #hk-standard-copyright-footer{background:#062b7c!important;border-top:3px solid #e1bb58}body[data-page=home] .bottom-nav{display:none!important}@media(max-width:1050px){body[data-page=home] .social-layout{grid-template-columns:210px minmax(0,1fr)}body[data-page=home] .social-sidebar{grid-column:1/-1}}@media(max-width:650px){body[data-page=home] .social-layout{display:block}body[data-page=home] .social-rail{margin-bottom:12px}}
+/* Match approved reference: a single top menu and the standard footer only. */
+body[data-page=home] .reference-footer,body[data-page=home] #community-footer{display:none!important}
+body[data-page=home] .social-rail .rail-link:hover{background:#e50926;color:#fff}
+body[data-page=home] .social-sidebar .card{background:#fafffc;border:1px solid #d0eed9;box-shadow:0 3px 15px #0a5b2614}
+body[data-page=home] .social-rail{box-shadow:0 4px 18px #13522d16}
+body[data-page=home] .reference-banner{background:linear-gradient(105deg,#071e68e8,#0855b1c9),url('assets/rotating-world-land.svg') center/cover;text-align:left;min-height:200px}
+body[data-page=home] .reference-banner h2{font-family:system-ui,sans-serif;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:900;color:white;letter-spacing:-.02em}
+body[data-page=home] .reference-banner strong{font-family:system-ui,sans-serif;color:#ffdf5e;font-size:clamp(1rem,1.9vw,1.5rem);letter-spacing:.025em}
+body[data-page=home] .composer-card{background:white}
+body[data-page=home] .composer-shortcuts{background:#f8fbff}
+
+body[data-page=home] .social-rail .rail-premium-icon{width:29px;height:29px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;padding:5px;background:#e5efff;border:1px solid #cadbf7;border-radius:9px;color:#0648af}body[data-page=home] .social-rail .rail-link[aria-current=page] .rail-premium-icon{background:white;color:#e20b26}body[data-page=home] .royal-image-banner{background:#06378a url('assets/royal-revival-hero.svg') center/cover!important;text-align:left;min-height:235px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:30px 35px}body[data-page=home] .royal-image-banner:before{display:none}body[data-page=home] .royal-image-banner h2{font-size:clamp(1.8rem,3.3vw,3.2rem);line-height:1.05;margin:0;text-shadow:0 2px 8px #001b57}body[data-page=home] .royal-image-banner strong{color:white;font-size:clamp(1.2rem,2.7vw,2.5rem);line-height:1.1;margin-top:6px}body[data-page=home] .royal-image-banner p{color:#ffe46a;font-weight:900;font-size:clamp(1.25rem,2.5vw,2.4rem);letter-spacing:.01em;margin:4px 0}body[data-page=home] .royal-image-banner small{color:#fff;max-width:350px;line-height:1.5;text-shadow:0 1px 5px #092350}body[data-page=home] .royal-image-banner .reference-flags{display:none}@media(max-width:650px){body[data-page=home] .royal-image-banner{padding:20px;min-height:205px;background-position:57% center!important}}
+
+/* Premium refinement: consistent layout rhythm, brand hierarchy, legibility, focus and responsive polish. */
+body[data-page=home]{--royal:#063eaa;--royal-deep:#061f68;--royal-red:#d91131;--mint:#eafaf0;--gold:#f3c95c;background:linear-gradient(180deg,#effcf3 0%,#f8fbff 45%,#edf8f1 100%);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body[data-page=home] .top{background:linear-gradient(110deg,#051d60 0%,#0749b5 58%,#061e63 100%);box-shadow:0 7px 25px #071e5a24}
+body[data-page=home] .top .nav{max-width:1500px;min-height:74px;gap:14px}
+body[data-page=home] .top .brand img{width:45px;height:45px;object-fit:contain;filter:drop-shadow(0 2px 5px #001b56a0)}
+body[data-page=home] .top .navlinks{display:flex;align-items:center;gap:3px}
+body[data-page=home] .top .navlinks a{color:#f6faff;font-size:.84rem;font-weight:750;padding:11px 10px;border-radius:9px;white-space:nowrap;transition:background .18s ease,transform .18s ease}
+body[data-page=home] .top .navlinks a:hover{background:#ffffff26;transform:translateY(-1px)}
+body[data-page=home] .top .navlinks a[aria-current=page]{background:#d91131;border:1px solid #ff7b8c66;box-shadow:0 3px 11px #420b2b33}
+body[data-page=home] .community-trust-strip{padding:11px 16px;background:#e6f7ec;color:#184d3a}
+body[data-page=home] .shell{max-width:1500px;margin:15px auto;padding:0 18px}
+body[data-page=home] .social-layout{grid-template-columns:minmax(205px,245px) minmax(0,1fr) minmax(245px,300px);gap:19px}
+body[data-page=home] .social-rail,body[data-page=home] .social-sidebar{background:linear-gradient(160deg,#effff3,#e6f8ed);border:1px solid #c6e7d2;border-radius:18px;box-shadow:0 10px 26px #0d5a3220;padding:16px}
+body[data-page=home] .social-rail .rail-link{display:flex;align-items:center;gap:12px;padding:10px 12px;min-height:48px;margin:3px 0;border-radius:12px;font-size:.91rem;transition:background .18s ease,box-shadow .18s ease}
+body[data-page=home] .social-rail .rail-link:hover{background:#dbece7;color:#063b8d}
+body[data-page=home] .social-rail .rail-link[aria-current=page]{background:linear-gradient(105deg,#d30a2b,#f12744);color:#fff;box-shadow:0 5px 14px #b60c2c36}
+body[data-page=home] .social-rail .rail-premium-icon{width:34px;height:34px;padding:7px;border-radius:11px;background:#fff;box-shadow:0 2px 8px #0c357016}
+body[data-page=home] .social-stream .card,body[data-page=home] .social-stream .post{background:#fff;border:1px solid #dce7e2;border-radius:17px;box-shadow:0 6px 22px #113f3b10}
+body[data-page=home] .social-stream .card h2,body[data-page=home] .social-sidebar .card h2{color:#073d91}
+body[data-page=home] .social-sidebar .card{border-radius:15px;padding:16px;background:#fff}
+body[data-page=home] .reference-family{background:linear-gradient(135deg,#fffdf2,#fff1c3)!important;border:1px solid #e9d38c!important}
+body[data-page=home] .royal-image-banner{border-radius:18px;border:1px solid #7ca6ed;box-shadow:0 13px 32px #061f6a34;min-height:260px}
+body[data-page=home] .royal-guest-hero{border:1px solid #9ac1f6;box-shadow:0 7px 20px #062a6830}
+body[data-page=home] .authbar{border-bottom:1px solid #d7e9e0}
+body[data-page=home] .btn,body[data-page=home] button{transition:transform .16s ease,box-shadow .16s ease}
+body[data-page=home] .btn:hover,body[data-page=home] button:hover{box-shadow:0 3px 11px #063eaa1c}
+body[data-page=home] :is(a,button,input,textarea,select):focus-visible{outline:3px solid #dbaa30!important;outline-offset:3px}
+body[data-page=home] #hk-standard-copyright-footer{padding:25px 16px!important;background:linear-gradient(100deg,#061d62,#0647a7)!important;box-shadow:0 -5px 22px #052e7c15}
+@media(max-width:1200px){body[data-page=home] .social-layout{grid-template-columns:minmax(185px,225px) minmax(0,1fr)}body[data-page=home] .social-sidebar{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}}
+@media(max-width:760px){body[data-page=home] .top .nav{min-height:0}body[data-page=home] .top .navlinks{overflow-x:auto;max-width:100%;padding-bottom:6px}body[data-page=home] .shell{padding:0 11px}body[data-page=home] .social-layout{display:block}body[data-page=home] .social-rail{display:flex;overflow-x:auto;gap:5px;align-items:center;white-space:nowrap;padding:9px;margin-bottom:14px}body[data-page=home] .social-rail .rail-link{flex-shrink:0;margin:0;padding:7px 9px}body[data-page=home] .social-sidebar{display:grid;grid-template-columns:1fr;margin-top:15px}body[data-page=home] .royal-image-banner{min-height:210px;padding:20px 18px}body[data-page=home] .royal-guest-hero{padding:20px}}
+@media(prefers-reduced-motion:reduce){body[data-page=home] .top .navlinks a,body[data-page=home] .social-rail .rail-link,body[data-page=home] .btn{transition:none!important;transform:none!important}}

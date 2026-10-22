@@ -1,0 +1,140 @@
+/* HKEM Ministry Care: independent fixed widget (no selectors modify the website or CMS). */
+#hk-ministry-care[hidden],#hk-ministry-care [hidden]{display:none!important}
+#hk-ministry-care,#hk-ministry-care *{box-sizing:border-box}
+#hk-ministry-care{
+  --hkc-blue:#063c86;--hkc-wine:#880b2a;--hkc-gold:#f7ce55;--hkc-bottom:18px;
+  position:fixed;right:14px;bottom:var(--hkc-bottom);z-index:18000;
+  font:14px/1.46 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  color:#152d58;text-align:left;isolation:isolate;pointer-events:none;
+  width:auto;max-width:min(384px,calc(100vw - 24px));
+}
+#hk-ministry-care button,#hk-ministry-care input{font:inherit}
+#hk-ministry-care a,#hk-ministry-care button{touch-action:manipulation}
+#hk-ministry-care .hkc-launcher{
+  pointer-events:auto;min-height:52px;display:flex;align-items:center;gap:8px;
+  border:2px solid var(--hkc-gold);border-radius:999px;
+  padding:5px 10px 5px 5px;color:#fff;font-weight:800;
+  background:linear-gradient(130deg,#6c061e,#a10b31 80%,#5b0731);
+  box-shadow:0 9px 22px #00163238;cursor:pointer;max-width:240px;
+}
+#hk-ministry-care .hkc-mini-face{width:42px;height:42px;border-radius:50%;object-fit:cover;object-position:center 24%;background:#fff3d7;border:2px solid #fff4b8;flex-shrink:0}
+#hk-ministry-care .hkc-launcher-text{max-width:98px;font-size:12px;line-height:1.15}
+#hk-ministry-care .hkc-teaser{display:none;max-width:155px;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:600;white-space:nowrap}
+#hk-ministry-care .hkc-launcher-mark{color:#ffe492;font-size:17px}
+#hk-ministry-care.hkc-attention:not(.hkc-returning):not([data-member="true"]) .hkc-launcher-text{display:none}
+#hk-ministry-care.hkc-attention:not(.hkc-returning):not([data-member="true"]) .hkc-teaser{display:block;animation:hkc-text-reveal 2s steps(27,end) both}
+#hk-ministry-care.hkc-attention .hkc-launcher{animation:hkc-nudge 1.7s ease-in-out 3}
+#hk-ministry-care[data-member="true"]:not(.hkc-expanded){
+  top:42%;bottom:auto!important;right:7px;max-width:48px;
+}
+#hk-ministry-care[data-member="true"] .hkc-launcher{padding:3px;min-height:46px;max-width:46px;box-shadow:0 5px 14px #001b3640}
+#hk-ministry-care[data-member="true"] .hkc-launcher-text,
+#hk-ministry-care[data-member="true"] .hkc-teaser,
+#hk-ministry-care[data-member="true"] .hkc-launcher-mark{display:none}
+#hk-ministry-care[data-member="true"]:not(.hkc-expanded) .hkc-mini-face{width:38px;height:38px}
+#hk-ministry-care[data-member="true"]:not(.hkc-expanded) .hkc-launcher{animation:hkc-soft-pulse 7s ease-in-out 2}
+#hk-ministry-care .hkc-panel{
+  pointer-events:auto;width:min(370px,calc(100vw - 24px));min-width:0;
+  max-height:min(590px,calc(100dvh - var(--hkc-bottom) - 14px));
+  overflow:hidden;display:flex;flex-direction:column;
+  border-radius:22px;border:1.5px solid var(--hkc-gold);
+  background:#fff;box-shadow:0 16px 44px #051b4390;
+}
+#hk-ministry-care .hkc-head{
+  display:flex;align-items:center;gap:9px;min-height:72px;
+  padding:9px 8px 9px 12px;background:linear-gradient(135deg,#6e0828,#a20a2e 70%,#660a33);
+  color:#fff;flex-shrink:0;
+}
+#hk-ministry-care .hkc-logo{height:53px;width:51px;object-fit:contain;flex-shrink:0}
+#hk-ministry-care .hkc-heading{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.2}
+#hk-ministry-care .hkc-ministry-name{font-size:13px;letter-spacing:-.2px;color:#fff}
+#hk-ministry-care .hkc-care-name{font-size:16px;font-weight:850;color:#ffdf86;margin-top:2px}
+#hk-ministry-care .hkc-header-buttons{display:flex;align-items:flex-start;align-self:flex-start;gap:4px;flex-shrink:0}
+#hk-ministry-care .hkc-head-button{
+  background:#ffffff20;border:1px solid #ffffff55;color:white;border-radius:50%;
+  width:27px;height:27px;display:grid;place-items:center;padding:0;cursor:pointer;font-size:18px;
+}
+#hk-ministry-care .hkc-flags{display:flex;justify-content:center;align-items:center;gap:5px;min-height:31px;
+  padding:5px 9px;background:linear-gradient(90deg,#740b2a,#540929);
+  border-bottom:2px solid var(--hkc-gold);flex-shrink:0}
+#hk-ministry-care .hkc-flag{font-size:17px;line-height:1.2}
+#hk-ministry-care .hkc-hero{
+  flex-shrink:0;display:flex;align-items:center;gap:10px;
+  background:linear-gradient(115deg,#fff8e9,#f8faff 56%,#fff6e8);
+  border-bottom:1px solid #e5d9cc;padding:10px 13px;
+}
+#hk-ministry-care .hkc-portrait{
+  width:84px;height:84px;flex-shrink:0;object-fit:cover;object-position:center 22%;
+  border-radius:50%;background:#f5e9d7;border:3px solid #e6b84a;
+}
+#hk-ministry-care .hkc-welcome{
+  margin:0;min-height:58px;display:flex;align-items:center;
+  font-size:15px;line-height:1.35;font-weight:800;color:#052960;
+}
+#hk-ministry-care .hkc-messages{
+  overflow-y:auto;overscroll-behavior:contain;padding:9px 12px;
+  flex:1 1 auto;min-height:68px;max-height:156px;background:#fbfcff;
+}
+#hk-ministry-care .hkc-message{border-radius:12px;padding:7px 10px;margin:5px 18px 7px 0;background:#edf2fc;
+  color:#15376a;overflow-wrap:anywhere;white-space:pre-wrap;font-size:12px}
+#hk-ministry-care .hkc-message.hkc-user{margin:6px 0 6px 25px;background:#faebef;color:#71152b}
+#hk-ministry-care .hkc-follow-link{display:inline-block;margin:5px 2px 8px;
+  padding:8px 12px;border-radius:10px;background:#123b81;color:white;text-decoration:none;
+  font-size:12px;font-weight:800}
+#hk-ministry-care .hkc-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:9px 10px;background:#fff;
+  flex:0 0 auto}
+#hk-ministry-care .hkc-action{
+  border-radius:12px;border:1px solid #e4dfdf;min-width:0;min-height:39px;
+  padding:7px 8px;display:flex;align-items:center;gap:6px;cursor:pointer;text-align:left;
+  color:#173a7a;background:#f7f9ff;box-shadow:0 3px 7px #001a3811;
+}
+#hk-ministry-care .hkc-action:nth-child(1),#hk-ministry-care .hkc-action:nth-child(4){
+  background:#8c102e;color:#fff;border-color:#8c102e}
+#hk-ministry-care .hkc-action:nth-child(5){background:#063983;color:#fff;border-color:#063983}
+#hk-ministry-care .hkc-wide{grid-column:1/-1}
+#hk-ministry-care .hkc-action-icon{font-size:18px;flex:0 0 23px;text-align:center}
+#hk-ministry-care .hkc-action-label{font-size:12px;font-weight:800;line-height:1.15;flex:1}
+#hk-ministry-care .hkc-action-arrow{font-size:23px;line-height:0}
+#hk-ministry-care .hkc-compose{display:flex;align-items:center;gap:7px;margin:0 10px 4px;flex-shrink:0}
+#hk-ministry-care .hkc-input{flex:1;min-width:0;min-height:42px;padding:9px 11px;border:1px solid #c4cddd;
+  border-radius:100px;color:#20365a;background:#f7f9fc;font-size:13px}
+#hk-ministry-care .hkc-send{border:0;background:#9d0a32;border-radius:50%;color:#fff;
+  width:42px;height:42px;min-width:42px;cursor:pointer;font-size:18px}
+#hk-ministry-care .hkc-disclosure{
+  font-size:9px;color:#69738a;margin:0;padding:2px 12px 10px;line-height:1.3;flex-shrink:0;
+}
+#hk-ministry-care :is(button,a,input):focus-visible{outline:3px solid #f3c52a;outline-offset:2px}
+#hk-ministry-care .hkc-action:hover,#hk-ministry-care .hkc-follow-link:hover{filter:brightness(1.06)}
+#hk-ministry-care .hkc-root:not(.hkc-expanded) .hkc-panel{display:none}
+@keyframes hkc-nudge{
+  0%,65%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}
+}
+@keyframes hkc-soft-pulse{
+  0%,90%,100%{box-shadow:0 5px 14px #001b3640}92%{box-shadow:0 0 0 5px #e6bd544a,0 5px 14px #001b3640}
+}
+@keyframes hkc-text-reveal{from{max-width:0}to{max-width:155px}}
+@media(max-width:720px){
+  #hk-ministry-care{right:8px;max-width:calc(100vw - 16px)}
+  #hk-ministry-care .hkc-panel{width:min(350px,calc(100vw - 16px));max-height:calc(100dvh - var(--hkc-bottom) - 8px)}
+  #hk-ministry-care .hkc-head{min-height:66px;padding:7px}
+  #hk-ministry-care .hkc-logo{width:42px;height:44px}
+  #hk-ministry-care .hkc-ministry-name{font-size:12px}
+  #hk-ministry-care .hkc-care-name{font-size:14px}
+  #hk-ministry-care .hkc-hero{padding:8px 10px}
+  #hk-ministry-care .hkc-portrait{width:66px;height:66px}
+  #hk-ministry-care .hkc-welcome{font-size:13px;min-height:46px}
+  #hk-ministry-care .hkc-actions{gap:5px;padding:6px}
+  #hk-ministry-care .hkc-action{min-height:38px;padding:6px}
+  #hk-ministry-care .hkc-action-label{font-size:11px}
+  #hk-ministry-care .hkc-messages{min-height:53px}
+  #hk-ministry-care[data-member="true"]:not(.hkc-expanded){top:auto;bottom:var(--hkc-bottom)!important;right:6px;}
+}
+@media(max-width:330px){
+  #hk-ministry-care .hkc-action-icon{font-size:15px;flex-basis:19px}
+  #hk-ministry-care .hkc-action-label{font-size:10px}
+  #hk-ministry-care .hkc-flag{font-size:14px}
+  #hk-ministry-care .hkc-flags{gap:3px}
+}
+@media(prefers-reduced-motion:reduce){
+  #hk-ministry-care *,#hk-ministry-care *::before,#hk-ministry-care *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
