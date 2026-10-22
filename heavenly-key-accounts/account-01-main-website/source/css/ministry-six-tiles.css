@@ -1,0 +1,14 @@
+/* Six approved ministry cards: premium contrasting borders and balanced descriptions. */
+.resources-section .six-grid{align-items:stretch;gap:clamp(10px,1.2vw,19px)}
+.resources-section .ministry-tile{border:3px solid #d5b455;border-radius:19px;padding:24px 14px 19px;box-shadow:0 0 0 2px #fff8e6,0 9px 25px #132c2023,inset 0 1px 0 #fff8;min-height:300px}
+.resources-section .ministry-tile.green{border-color:#e6c675}
+.resources-section .ministry-tile.wine{border-color:#e9d7a5}
+.resources-section .ministry-tile.gold{border-color:#076445}
+.resources-section .ministry-tile h2{min-height:58px;margin-bottom:10px;font-size:clamp(18px,1.5vw,23px);line-height:1.18}
+.resources-section .ministry-tile h2 small{font-size:clamp(13px,1.05vw,17px);margin-top:4px}
+.resources-section .ministry-tile .tile-description{font-size:clamp(13px,1.05vw,16px);line-height:1.4;font-weight:500;margin:0 0 18px;max-width:24ch;flex:1}
+.resources-section .ministry-tile .tile-button{margin-top:auto;border:1px solid #cfae5d;font-weight:800}
+.resources-section .ministry-tile.gold .tile-description{color:#17251b}
+@media(max-width:1100px){.resources-section .six-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.resources-section .six-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.resources-section .ministry-tile{padding:18px 9px;min-height:270px}.resources-section .ministry-tile .tile-description{font-size:13px}}
+@media(max-width:360px){.resources-section .six-grid{grid-template-columns:1fr}}
