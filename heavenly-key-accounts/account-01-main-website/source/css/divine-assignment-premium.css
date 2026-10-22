@@ -1,0 +1,13 @@
+/* Account 1 — divine assignment: expand the approved message without altering its words or ministry imagery. */
+.assignment{isolation:isolate;min-height:clamp(360px,32vw,520px)!important;display:flex;align-items:center;justify-content:center;padding:clamp(35px,5vw,75px) 24px!important;overflow:hidden;background-size:cover!important;background-position:center!important}
+.assignment:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(255,252,238,.93),rgba(255,252,238,.82) 46%,rgba(255,252,238,.91));pointer-events:none}
+.assignment:after{content:"";position:absolute;inset:18px;border:2px solid rgba(116,10,45,.35);border-radius:25px;pointer-events:none}
+.assignment-copy{width:min(1040px,100%)!important;max-width:1040px;margin:0 auto!important;padding:clamp(20px,4vw,50px)!important;text-align:center;position:relative;border-radius:22px;background:linear-gradient(135deg,#fffdf6df,#ffffffc2);box-shadow:0 15px 55px #24351b19,0 0 0 1px #b68d4229}
+.assignment .eyebrow{font-size:clamp(16px,1.6vw,23px)!important;letter-spacing:.26em!important;color:#7b1535!important;font-weight:900!important;margin-bottom:20px!important;text-transform:uppercase}
+.assignment .eyebrow:after{content:"";display:block;width:110px;height:4px;margin:16px auto 0;border-radius:8px;background:linear-gradient(90deg,#00603c,#e0b446,#7b1535)}
+.assignment h2{font:bold clamp(40px,5.4vw,84px)/1.1 Georgia,serif!important;letter-spacing:-.045em!important;color:#004c32!important;font-style:normal!important;text-shadow:0 2px 0 #fff}
+.assignment h2 span{color:#7b1535!important;display:block;margin-top:6px}
+.assignment blockquote{max-width:820px;margin:28px auto 0!important;font:italic 600 clamp(18px,2vw,27px)/1.5 Georgia,serif!important;color:#253525}
+.assignment cite{display:block;margin-top:12px!important;font:700 clamp(14px,1.3vw,18px)/1.4 Arial,sans-serif!important;color:#00603c}
+@media(max-width:760px){.assignment{min-height:390px!important;padding:28px 15px!important}.assignment:after{inset:8px;border-radius:14px}.assignment-copy{padding:28px 15px!important}.assignment .eyebrow{letter-spacing:.15em!important}.assignment h2{font-size:clamp(35px,8vw,54px)!important}.assignment blockquote{margin-top:20px!important}}
+@media(prefers-reduced-motion:reduce){.assignment *{animation:none!important}}
