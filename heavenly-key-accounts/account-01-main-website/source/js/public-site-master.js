@@ -5,6 +5,10 @@ const mainHost=['heavenlykey.org','www.heavenlykey.org','localhost','127.0.0.1']
 /* Only actual public Account 1 pages can start these shared floating launchers. */
 const publicPages=new Set(['/','/index','/live','/live/index',...['about','contact','grdpc','i-said-yes','meet-the-pastor','ministries','partner','privacy','radio','resources','social-handles','steps-to-salvation','terms','the-ministry','what-we-believe'].map(p=>'/pages/'+p)]);
 const pageKey=path.replace(/\/+$/,'').replace(/\.html$/,'')||'/';
+const cleanRoutes={'/pages/about.html':'/about-us','/pages/what-we-believe.html':'/statement-of-faith','/pages/meet-the-pastor.html':'/meet-the-pastor','/pages/the-ministry.html':'/the-ministry','/pages/ministries.html':'/ministries','/pages/partner.html':'/partner-with-us','/pages/contact.html':'/contact-us'};
+if(mainHost)document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('a[href]').forEach(a=>{try{const url=new URL(a.getAttribute('href'),location.href);const dest=cleanRoutes[url.pathname];if(url.origin===location.origin&&dest)a.setAttribute('href',dest+url.search+url.hash)}catch{}})});
+for(const clean of Object.values(cleanRoutes))publicPages.add(clean);
+
 if(!mainHost||!publicPages.has(pageKey))return;
 if(window.__hkApprovedPublicShell)return;window.__hkApprovedPublicShell=true;
 const radioPage=/^\/pages\/radio(?:\.html)?\/?$/.test(path);
