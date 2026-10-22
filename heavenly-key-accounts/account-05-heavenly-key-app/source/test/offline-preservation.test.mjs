@@ -7,7 +7,7 @@ test('Owner-locked offline features, links, curriculum and data keys survive rel
  for(const path of REQUIRED){assert.ok(existsSync(new URL('public/'+path,root)),'Missing protected feature: '+path);assert.ok(context.paths.includes('/'+path),'Missing offline dependency: '+path)}
  const html=read('public/creation-to-eternity.html'),data=JSON.parse(html.match(/<script id="lesson-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
  assert.equal(data.length,35);assert.deepEqual(data.map(l=>l.id),Array.from({length:35},(_,i)=>i+1));
- assert.ok(read('public/index.html').includes('/walk-offline.html'));assert.ok(read('public/index.html').includes('/creation-to-eternity.html'));
+ assert.ok(read('public/experience.html').includes('/walk-offline.html'));assert.ok(read('public/experience.html').includes('/creation-to-eternity.html'));
  for(const id of ['daily-topic','goal-form','quiz-topic','journal-form','stats'])assert.ok(read('public/walk-offline.html').includes('id="'+id+'"'),'Removed offline pillar '+id);
  assert.ok(read('public/walk-offline.js').includes('hkem-offline-private-notebook-v1'));assert.ok(read('public/creation-to-eternity.js').includes('hkem-creation-eternity-v1'));
  assert.ok(read('public/offline-vault.js').includes("name:'AES-GCM'"));assert.ok(read('public/walk-offline.js').includes('sealNotebook(state,passphrase)'));
