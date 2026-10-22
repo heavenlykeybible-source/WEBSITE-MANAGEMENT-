@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "release": "basic-global-launch-candidate",
+  "status": "preflight-blocked",
+  "updatedAt": "2026-10-13",
+  "coordinationRepository": "aoemeta247-cell/All-Nations-For-Christ-Outreach",
+  "services": [
+    {
+      "account": 1,
+      "key": "website",
+      "name": "Heavenly Key Main Website",
+      "source": "alldaywow247-ops/heavenlykey",
+      "readiness": "needs-staging-verification"
+    },
+    {
+      "account": 2,
+      "key": "studio",
+      "name": "Studio, Radio, TV and Media",
+      "source": null,
+      "readiness": "source-and-cloudflare-verification-required"
+    },
+    {
+      "account": 3,
+      "key": "community",
+      "name": "Global Christian Community",
+      "source": "aoemeta247-cell/All-Nations-For-Christ-Outreach",
+      "sourcePath": "global-community",
+      "readiness": "cloudflare-resource-placeholders"
+    },
+    {
+      "account": 4,
+      "key": "control",
+      "name": "Main Control Room",
+      "source": null,
+      "readiness": "independent-deployment-verification-required"
+    },
+    {
+      "account": 5,
+      "key": "app",
+      "name": "Heavenly Key App",
+      "source": "aoemeta247-cell/heavenly-key-mobile-app",
+      "readiness": "remote-build-and-integration-tests-required"
+    },
+    {
+      "account": 6,
+      "key": "bible",
+      "name": "Heavenly Key Bible",
+      "source": null,
+      "readiness": "separate-deployment-unverified-audio-unpublished"
+    }
+  ],
+  "sharedDataOwnership": {
+    "bible": "account-6",
+    "community": "account-3",
+    "broadcastMedia": "account-2",
+    "orchestration": "account-4"
+  },
+  "automaticContentPropagation": [
+    {
+      "origin": "bible",
+      "consumers": [
+        "app",
+        "community"
+      ],
+      "type": "published-approved-bible-content"
+    },
+    {
+      "origin": "community",
+      "consumers": [
+        "app"
+      ],
+      "type": "public-approved-community-content"
+    },
+    {
+      "origin": "app",
+      "consumers": [
+        "community"
+      ],
+      "type": "approved-shared-feature-manifest-only"
+    }
+  ],
+  "prohibitedSync": [
+    "passwords",
+    "user-profiles",
+    "sessions",
+    "private-messages",
+    "private-prayer-requests",
+    "database-copies",
+    "production-secrets"
+  ],
+  "releaseGates": [
+    "production-secrets-and-resources-verified",
+    "staging-migrations-tested",
+    "builds-and-tests-pass",
+    "cross-service-contracts-tested",
+    "rollback-and-backups-verified",
+    "owner-production-approval"
+  ]
+}
