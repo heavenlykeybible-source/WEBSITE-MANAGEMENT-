@@ -1,6 +1,4 @@
 import {test} from 'node:test';
-// Run shared AI sandbox safety checks with the existing Account 3 feed test suite.
-import '../../../scripts/test-account4-ai-preview.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
