@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "masterBranch": "main",
+  "recoveryBranch": "global-community-recovery-20261022",
+  "productionSafe": true,
+  "accounts": [
+    {
+      "account": 1,
+      "folder": "account-01-main-website",
+      "recoverySource": "recovered-onlinebible/heavenly-key-website",
+      "status": "partial-staging"
+    },
+    {
+      "account": 2,
+      "folder": "account-02-studio-radio-tv-media",
+      "recoverySource": "recovered-onlinebible/media-engine",
+      "status": "partial-staging",
+      "note": "Zoom not verified"
+    },
+    {
+      "account": 3,
+      "folder": "account-03-global-christian-community",
+      "recoverySource": "apps/global-christian-community",
+      "alternate": "recovered-onlinebible/global-community",
+      "status": "partial-staging"
+    },
+    {
+      "account": 4,
+      "folder": "account-04-website-management-control-room",
+      "recoverySource": "recovered-onlinebible/account4-control-room",
+      "status": "reference-only",
+      "note": "root is live master"
+    },
+    {
+      "account": 5,
+      "folder": "account-05-heavenly-key-app",
+      "recoverySource": "recovered-onlinebible/heavenly-key-app",
+      "status": "partial-staging"
+    },
+    {
+      "account": 6,
+      "folder": "account-06-online-bible",
+      "recoverySource": "recovered-onlinebible/bible",
+      "status": "partial-staging"
+    },
+    {
+      "account": 7,
+      "folder": "account-07-unverified",
+      "status": "not-identified"
+    },
+    {
+      "account": 8,
+      "folder": "account-08-unverified",
+      "status": "not-identified"
+    }
+  ],
+  "releaseGates": [
+    "complete file transfer",
+    "compare master versions",
+    "test and typecheck",
+    "validate Cloudflare bindings and migrations",
+    "merge",
+    "verify live deployments"
+  ]
+}
