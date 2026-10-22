@@ -23,11 +23,11 @@ test('mobile app has installable PWA shell and all navigable sections',()=>{
 });
 test('mobile community and media shortcuts only use verified HTTPS ministry pages',()=>{
  const html=get('public/index.html');
- for(const page of ['community.html','radio.html','video.html','grdpc.html']){
+ for(const page of ['community.html','video.html','grdpc.html']){
   assert.ok(html.includes('href="https://heavenlykey.alldaywow247.workers.dev/pages/'+page+'"'),page+' link missing');
  }
  const external=[...html.matchAll(/<a\b[^>]*class="service-link"[^>]*>/g)].map(m=>m[0]);
- assert.equal(external.length,4,'Expected four official service shortcuts');
+ assert.equal(external.length,3,'Expected three official service shortcuts; radio has its own accessible launch button');
  for(const a of external){
   assert.match(a,/target="_blank"/);
   assert.match(a,/rel="noopener noreferrer"/);
