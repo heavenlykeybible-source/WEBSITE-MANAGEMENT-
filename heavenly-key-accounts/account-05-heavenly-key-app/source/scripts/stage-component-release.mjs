@@ -1,4 +1,4 @@
-import {cpSync,copyFileSync,mkdirSync,rmSync,writeFileSync,existsSync} from 'node:fs';
+import {cpSync,mkdirSync,rmSync,writeFileSync,existsSync,readFileSync} from 'node:fs';
 import {join} from 'node:path';
 const root=process.cwd(),publicDir=join(root,'public'),out=join(root,'.component-release');
 const target=process.env.RELEASE_TARGET;
@@ -7,7 +7,8 @@ if(!allowed.has(target))throw new Error('Unknown isolated release target');
 rmSync(out,{recursive:true,force:true});mkdirSync(out,{recursive:true});
 const transfer=(path)=>{const src=join(publicDir,path),dest=join(out,path);if(!existsSync(src))throw new Error('Missing required asset '+path);mkdirSync(dest.substring(0,dest.lastIndexOf('/')),{recursive:true});cpSync(src,dest,{recursive:true});};
 if(target==='premium-page'){
- for(const path of ['index.html','premium-home.css','premium-family-nav.js','premium-download-options.js','premium-share.js','site-sync.js','icon.svg','manifest.webmanifest','assets/ministry','icons','download','experience.html','styles.css','app.js','member.js','platform.js'])transfer(path);
+ for(const path of ['index.html','premium-home.css','premium-family-nav.js','premium-download-options.js','premium-share.js','site-sync.js','icon.svg','manifest.webmanifest','assets/ministry','icons','download','styles.css'])transfer(path);
+ const home=join(out,'index.html');writeFileSync(home,readFileSync(home,'utf8').replaceAll('href="/experience.html"','href="https://heavenly-key-app.heavenlykeyapp.workers.dev/experience.html"'));
  // Dedicated showcase does not ship Account 5's API Worker or production credentials.
 }else{
  const platform=target.slice('guide-'.length);
