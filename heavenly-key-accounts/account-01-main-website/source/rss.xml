@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  RSS-ready architecture placeholder.
+  Once AI 1's /api/blog endpoint is live, this file is generated
+  server-side (Cloudflare Worker) from the same published-article data
+  the homepage "Latest Ministry Updates" section reads — one source,
+  two representations. Until then this is a static, valid, empty-channel
+  RSS 2.0 document so the <link rel="alternate"> below never 404s.
+-->
+<rss version="2.0">
+  <channel>
+    <title>Heavenly Key Evangelistic Movement — Blog &amp; Teaching Archive</title>
+    <link>https://www.heavenlykey.org/</link>
+    <description>Teaching articles and ministry updates from Heavenly Key Evangelistic Movement.</description>
+    <language>en</language>
+    <!-- Items populate automatically from /api/blog?status=published once AI 1's API is live. -->
+  </channel>
+</rss>
