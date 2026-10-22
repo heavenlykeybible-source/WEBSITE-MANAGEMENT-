@@ -60,10 +60,10 @@ test('offline shell contains every dependency but never automatically downloads 
   assert.equal(intercepted('/audio-bible.html?chapter=NaN'),false);assert.equal(intercepted('/reading/kjv/john.json'),false);
  });
 });
-test('Android and Apple installation icons have correct PNG dimensions and safe viewports',()=>{
+test('Android and Apple installation icon references and safe viewports are valid',()=>{
  const manifest=json('public/manifest.webmanifest');
- for(const icon of manifest.icons){const bytes=readFileSync(new URL('public'+icon.src,root)),size=Number(icon.sizes.split('x')[0]);assert.equal(bytes.readUInt32BE(16),size);assert.equal(bytes.readUInt32BE(20),size);}
+ for(const icon of manifest.icons){const source=readFileSync(new URL('public'+icon.src,root),'utf8');const size=Number(icon.sizes.split('x')[0]);assert.equal(icon.type,'image/svg+xml');assert.match(source,/<svg\\b/);assert.match(source,new RegExp('viewBox="0 0 '+size+' '+size+'"'));}
  for(const page of ['index.html','bible.html','devotional.html','hymns.html','audio-bible.html','audio-hymns.html'])assert.match(read('public/'+page),/viewport-fit=cover/);
- assert.match(read('public/index.html'),/apple-touch-icon.png/);
+ assert.match(read('public/index.html'),/apple-touch-icon.svg/);
  assert.match(read('public/styles.css'),/min-height:44px/);
 });
