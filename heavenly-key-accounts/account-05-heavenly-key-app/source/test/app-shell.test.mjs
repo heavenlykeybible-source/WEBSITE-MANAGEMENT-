@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 
 const get=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 test('Account 5 has its own Cloudflare Worker identity, without account 1–4 storage bindings',()=>{
@@ -85,4 +85,17 @@ test('premium page assets, CSP, navigation and app preservation',()=>{
  assert.match(html,/href="\/experience\.html"/);
  assert.match(get('public/premium-download-options.js'),/window\.location\.origin/);
  assert.doesNotMatch(get('public/premium-download-options.js'),/api\.qrserver\.com/);
+});
+
+test('premium page references only existing bundled local assets',()=>{
+ const html=get('public/index.html');
+ const css=get('public/premium-home.css');
+ const source=[...html.matchAll(/(?:src|href)="(\/[^"#?]+)"/g)].map(m=>m[1])
+  .concat([...css.matchAll(/url\(["']?(\/[^)"']+)["']?\)/g)].map(m=>m[1]));
+ for(const path of new Set(source)){
+  if(path==='/')continue;
+  assert.ok(existsSync(new URL('../public'+path,import.meta.url)),'Missing premium local asset: '+path);
+ }
+ assert.ok(source.includes('/assets/ministry/hero-people-laptop.jpg'));
+ assert.ok(source.includes('/premium-home.css'));
 });
