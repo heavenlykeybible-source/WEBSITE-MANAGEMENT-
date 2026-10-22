@@ -40,6 +40,12 @@ jobs:
           test -n "$CF_ACCOUNT" || { echo '::error::Missing ACCOUNT4_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
           test "$CF_ACCOUNT" != 'cd095c096c2d5a42501e7d77cecbb34c' || { echo '::error::Account 3 destination detected; deployment blocked'; exit 1; }
 
+      - name: Verify existing Account 4 Worker and live bindings
+        run: node scripts/deploy-account4-existing.mjs --check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
@@ -57,9 +63,10 @@ jobs:
         run: node tests/account4-permission-ui.mjs
 
       - name: Install browser test dependencies
+        timeout-minutes: 4
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
 
       - name: Verify CMS editing and preview controls
         run: |
@@ -67,7 +74,7 @@ jobs:
           npm run test:cms-browser
 
       - name: Deploy existing Worker without changing its resources
-        run: npx --yes wrangler@4 deploy --config wrangler.toml
+        run: node scripts/deploy-account4-existing.mjs
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
