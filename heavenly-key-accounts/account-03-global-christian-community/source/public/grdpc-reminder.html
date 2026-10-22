@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#142d69"><title>GRDPC Reminder | Heavenly Key</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef3fa;color:#182343;font:16px/1.5 system-ui,sans-serif}.wrap{max-width:440px;margin:28px auto;padding:16px}.phone{background:linear-gradient(160deg,#103d84,#062358 50%,#64133d);border-radius:28px;padding:26px 20px;color:white;box-shadow:0 12px 35px #10255435;text-align:center}.bell{font-size:66px}.phone h1{font-size:25px;margin:4px 0;color:#ffe16b}.phone p{margin:6px 0}.tag{color:#ffdd72;font-weight:750}.panel{background:white;border-radius:18px;padding:20px;margin:16px 0;box-shadow:0 5px 22px #0b2d5210}button,a.action{display:block;width:100%;border:0;border-radius:12px;padding:14px 12px;margin:10px 0;font:700 16px system-ui;text-align:center;text-decoration:none;cursor:pointer;color:white}button{background:#81204a}.fb{background:#1769e9}.yt{background:#db2323}.radio{background:#76234e}.muted{font-size:13px;color:#52617a}ul{padding-left:23px}li{margin:5px 0}#state{font-weight:700}button:focus-visible,a:focus-visible{outline:3px solid #ffc929;outline-offset:3px}
+</style></head><body><main class="wrap">
+<section class="phone"><div class="bell" aria-hidden="true">🔔</div><h1>GRDPC REMINDER</h1><p class="tag">Global Revival &amp; Destiny Prayer Cry</p><h2>WE ARE ABOUT TO GO LIVE!</h2><p>Taking Christ to the Nations of the World</p></section>
+<section class="panel"><h2>Prayer reminder subscription</h2><p id="state" role="status">Checking your subscription…</p><button id="subscribe" type="button">Subscribe to reminders</button><p class="muted">Subscription is optional. Notifications need your permission. This website can show scheduled reminders while it is open; offline ringing and closed-browser alerts require a native app or a separately deployed push service.</p></section>
+<section class="panel"><h2>Join our live programmes</h2><p>These links are always available, whether or not you subscribe.</p>
+<a class="action fb" href="https://www.facebook.com/search/top?q=heavenly%20key%20evangelistic%20movement" target="_blank" rel="noopener noreferrer">JOIN LIVE ON FACEBOOK ↗</a>
+<a class="action yt" href="https://www.youtube.com/results?search_query=Heavenly+Key+Evangelistic+Movement" target="_blank" rel="noopener noreferrer">JOIN LIVE ON YOUTUBE ↗</a>
+<a class="action radio" href="https://radio.heavenlykey.org/" target="_blank" rel="noopener noreferrer">JOIN LIVE ON OUR ONLINE RADIO ↗</a>
+<p class="muted">Facebook and YouTube currently open searches for the ministry, not verified live-video URLs. Configure the exact ministry/live links before release.</p></section>
+<section class="panel"><h2>Weekly prayer schedule</h2><p class="muted">West Africa Time (Nigeria, UTC+1). Times require administrator confirmation before public release.</p><ul id="schedule"></ul></section>
+</main><script>
+(()=>{'use strict';
+const times=[[1,'18:00'],[1,'23:00'],[2,'00:00'],[3,'11:00'],[5,'09:00'],[6,'21:00'],[0,'15:00'],[0,'19:00'],[0,'20:00']];
+const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const key='grdpc-reminder-opt-in-v1',button=document.getElementById('subscribe'),state=document.getElementById('state');
+const list=document.getElementById('schedule');
+times.forEach(([d,t])=>{const li=document.createElement('li');li.textContent=days[d]+' · '+t+' WAT';list.append(li)});
+let subscribed=false;try{subscribed=localStorage.getItem(key)==='yes'}catch{}
+function render(){state.textContent=subscribed?'Subscribed on this device':'Not subscribed';button.textContent=subscribed?'Unsubscribe':'Subscribe to reminders'}
+button.addEventListener('click',async()=>{if(subscribed){subscribed=false;try{localStorage.removeItem(key)}catch{}render();return}
+if(!('Notification'in window)){state.textContent='Browser notifications are not supported on this device.';return}
+let permission;try{permission=await Notification.requestPermission()}catch{permission='denied'}
+if(permission!=='granted'){state.textContent='Notification permission is needed to receive reminders.';return}
+subscribed=true;try{localStorage.setItem(key,'yes')}catch{}render()});
+const formatter=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',weekday:'long',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+let last='';
+function check(){if(!subscribed||!('Notification'in window)||Notification.permission!=='granted'||document.visibilityState!=='visible')return;
+const parts=formatter.formatToParts(new Date());const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));const stamp=p.weekday+'-'+p.hour+':'+p.minute;if(stamp===last)return;
+if(times.some(([d,t])=>days[d]===p.weekday&&t===p.hour+':'+p.minute)){last=stamp;try{new Notification('GRDPC Reminder — Join live',{body:'Global Revival & Destiny Prayer Cry. Open GRDPC Reminder for Facebook, YouTube or radio.',tag:'grdpc-schedule'})}catch{}}}
+render();check();setInterval(check,30000);
+})();
+</script></body></html>

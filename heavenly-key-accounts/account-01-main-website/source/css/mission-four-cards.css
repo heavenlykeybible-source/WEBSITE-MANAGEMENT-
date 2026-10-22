@@ -1,0 +1,17 @@
+/* Four mission pathways: preserve the approved wording, photos and destinations. */
+.feature-section{padding:clamp(52px,6vw,92px) 0;background:linear-gradient(180deg,#fffef7 0%,#f0f7ee 100%)}
+.feature-section .four-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(13px,1.6vw,24px)}
+.feature-section .feature-card{position:relative;isolation:isolate;display:flex;align-items:flex-end;min-width:0;min-height:clamp(320px,30vw,420px);overflow:hidden;border:2px solid #d9c270;border-radius:22px;background-color:#123f30;box-shadow:0 14px 30px #12382427;transition:transform .25s ease,box-shadow .25s ease}
+.feature-section .feature-card::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,#082a1b10 0%,#08291f9c 53%,#06251ded 100%);pointer-events:none}
+.feature-section .feature-card:nth-child(2){border-color:#d9ad46}
+.feature-section .feature-card:nth-child(3){border-color:#7d2747}
+.feature-section .feature-card:nth-child(4){border-color:#146946}
+.feature-section .feature-copy{position:relative;z-index:1;width:100%;min-width:0;padding:clamp(18px,2vw,29px);color:#fff;overflow-wrap:anywhere}
+.feature-section .feature-copy h2{font-size:clamp(24px,2.4vw,37px);line-height:1.08;color:#fff;margin:0 0 12px;text-shadow:0 2px 8px #001c15b0}
+.feature-section .feature-copy p{color:#fff5da;font-size:clamp(14px,1.25vw,18px);line-height:1.5;margin:0 0 20px}
+.feature-section .feature-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%;min-height:42px;padding:10px 16px;border-radius:999px;background:#f8dc5b;color:#183c2d;font-weight:800;text-decoration:none;box-shadow:0 5px 14px #001a1644;transition:background .2s ease,transform .2s ease}
+.feature-section .feature-button:hover,.feature-section .feature-button:focus-visible{background:#fff1a1;transform:translateY(-2px)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.feature-section .feature-card:hover{transform:translateY(-5px);box-shadow:0 20px 36px #12382438}}
+@media(max-width:1050px){.feature-section .four-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.feature-section .four-grid{grid-template-columns:1fr}.feature-section .feature-card{min-height:340px}}
+@media(prefers-reduced-motion:reduce){.feature-section .feature-card,.feature-section .feature-button{transition:none!important}}

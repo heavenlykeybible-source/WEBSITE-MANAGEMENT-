@@ -1,0 +1,75 @@
+/* Approved 19 Oct logged-in reference, rebranded for Heavenly Key. Structural/visual layer only. */
+body[data-page=home].hk-reference-dashboard{background:#edf3fb!important;color:#12264a}
+body[data-page=home].hk-reference-dashboard .shell{max-width:1760px!important;padding:10px 12px 30px!important}
+body[data-page=home].hk-reference-dashboard .social-layout{align-items:start!important}
+body[data-page=home].hk-reference-dashboard .social-stream{min-width:0}
+body[data-page=home].hk-reference-dashboard .social-rail{background:linear-gradient(180deg,#061d4d 0,#08285f 58%,#061a42 100%)!important;color:#fff!important;border:0!important;box-shadow:0 12px 30px #061a4230!important;border-radius:13px!important}
+body[data-page=home].hk-reference-dashboard .social-rail .reference-member{display:grid;grid-template-columns:52px 1fr;gap:8px;align-items:center;padding:12px 8px!important;border-bottom:1px solid #ffffff1e}
+body[data-page=home].hk-reference-dashboard .social-rail .reference-member .member-avatar{width:50px;height:50px;border-radius:50%;overflow:hidden}
+body[data-page=home].hk-reference-dashboard .social-rail .reference-member strong{font-size:13px;line-height:1.2}
+body[data-page=home].hk-reference-dashboard .social-rail .reference-member a{grid-column:2;color:#bcd7ff;font-size:11px;text-decoration:none;margin-top:-10px}
+body[data-page=home].hk-reference-dashboard .social-rail .rail-brand{display:none}
+body[data-page=home].hk-reference-dashboard .social-rail>.muted{display:none}
+body[data-page=home].hk-reference-dashboard .social-rail>.rail-ministry-link{color:#ffe08b!important;border:1px solid #ffffff26;border-radius:8px;padding:7px 9px;margin:3px 0 8px;text-decoration:none}
+body[data-page=home].hk-reference-dashboard .social-rail .rail-link{min-height:42px!important;border-radius:8px!important;padding:7px 9px!important;font-size:14px!important;background:transparent!important;color:#f7fbff!important;border:0!important}
+body[data-page=home].hk-reference-dashboard .social-rail .rail-premium-icon{width:29px!important;height:29px!important;padding:6px!important;background:#ffffff10}
+body[data-page=home].hk-reference-dashboard .social-rail .rail-link:hover{background:#ffffff12!important;transform:none!important}
+body[data-page=home].hk-reference-dashboard .social-rail .rail-link[aria-current=page]{background:linear-gradient(90deg,#b10e50,#e11d5b)!important;box-shadow:0 7px 18px #36071e55!important}
+body[data-page=home].hk-reference-dashboard .hk-ref-nav-icon{width:29px;height:29px;display:grid;place-items:center;font-size:20px}
+body[data-page=home].hk-reference-dashboard .hk-ref-create{display:block;width:calc(100% - 8px);margin:12px 4px;border:0;border-radius:8px;padding:11px 8px;background:linear-gradient(90deg,#a50d4b,#e11d5b);color:#fff;font-weight:900;box-shadow:0 7px 18px #36071e55;cursor:pointer}
+body[data-page=home].hk-reference-dashboard .grdpc-mini-reminder{background:#fff!important;color:#781442!important;border:0!important;margin-top:12px!important}
+body[data-page=home].hk-reference-dashboard .reference-mission{margin-top:12px!important}
+body[data-page=home].hk-reference-dashboard .top{border-bottom:1px solid #cfdced!important;box-shadow:0 4px 15px #0a2a5c16!important}
+body[data-page=home].hk-reference-dashboard .top .nav{max-width:1760px!important;padding:5px 12px!important;gap:10px!important}
+body[data-page=home].hk-reference-dashboard .reference-search{flex:1 1 360px;max-width:650px!important;background:#edf3fb!important;border:0!important;box-shadow:none!important}
+body[data-page=home].hk-reference-dashboard .reference-search input{background:transparent!important;font-size:13px!important}
+body[data-page=home].hk-reference-dashboard .reference-search button{border-radius:999px!important;background:#0b3f8f!important;color:#fff!important}
+body[data-page=home].hk-reference-dashboard .navlinks a{font-size:11px!important;min-width:62px!important;padding:7px 8px!important}
+body[data-page=home].hk-reference-dashboard .hk-ref-account{margin-left:auto!important}
+body[data-page=home].hk-reference-dashboard .stream-heading{padding:2px 3px 7px!important;margin:0 0 7px!important}
+body[data-page=home].hk-reference-dashboard .stream-heading h1{font-size:18px!important}
+body[data-page=home].hk-reference-dashboard .stream-heading p{font-size:12px!important;margin:0}
+body[data-page=home].hk-reference-dashboard .hk-active-section{margin:0 0 9px!important;padding:9px 10px!important;border-radius:11px!important;background:#fff!important}
+body[data-page=home].hk-reference-dashboard .hk-active-head{margin-bottom:6px}
+body[data-page=home].hk-reference-dashboard .hk-active-head h2{font-size:14px!important;letter-spacing:.08em}
+body[data-page=home].hk-reference-dashboard .hk-active-note{display:none}
+body[data-page=home].hk-reference-dashboard .hk-active-viewport{padding:2px 0 5px}
+body[data-page=home].hk-reference-dashboard .hk-active-track{gap:8px!important}
+body[data-page=home].hk-reference-dashboard .hk-active-moving{animation-duration:150s!important}
+body[data-page=home].hk-reference-dashboard .hk-active-person{width:82px!important;flex-basis:82px!important;background:linear-gradient(180deg,#f7faff,#fff);border:1px solid #dbe5f3;border-radius:10px;padding:5px 4px 6px;box-shadow:0 3px 10px #102d5b0d}
+body[data-page=home].hk-reference-dashboard .hk-active-person .member-avatar{width:54px!important;height:54px!important}
+body[data-page=home].hk-reference-dashboard .hk-active-person strong{font-size:10px!important;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-page=home].hk-reference-dashboard .hk-active-person small{font-size:9px!important;color:#9b1248;font-weight:800}
+body[data-page=home].hk-reference-dashboard .composer-card{margin:0 0 8px!important;border-radius:10px!important;padding:11px!important}
+body[data-page=home].hk-reference-dashboard .composer-prompt{border-radius:999px!important;padding:12px 15px!important;font-size:14px!important}
+body[data-page=home].hk-reference-dashboard .feed-tabs{top:63px!important;border-radius:9px!important;margin-bottom:8px!important;padding:0 5px!important}
+body[data-page=home].hk-reference-dashboard .social-stream .post{border-radius:10px!important;margin-bottom:8px!important;border:1px solid #dbe4ef!important;box-shadow:0 3px 12px #0c2a570d!important}
+body[data-page=home].hk-reference-dashboard .social-stream .post p{font-size:14px!important;line-height:1.5!important}
+body[data-page=home].hk-reference-dashboard .post-header{padding:9px 10px 3px!important}
+body[data-page=home].hk-reference-dashboard .actions{border-top:1px solid #edf1f6;padding-top:5px!important}
+body[data-page=home].hk-reference-dashboard .social-sidebar{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+body[data-page=home].hk-reference-dashboard .hk-reference-stack{display:grid;gap:8px;margin-bottom:8px}
+body[data-page=home].hk-reference-dashboard .hk-ref-panel{background:#fff;border:1px solid #dbe4ef;border-radius:10px;padding:10px;box-shadow:0 3px 12px #0c2a570d;overflow:hidden}
+body[data-page=home].hk-reference-dashboard .hk-ref-panel>header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #edf1f6;padding-bottom:6px;margin-bottom:7px}
+body[data-page=home].hk-reference-dashboard .hk-ref-panel h2{font-size:13px!important;margin:0!important;color:#102d61}
+body[data-page=home].hk-reference-dashboard .hk-ref-panel header>a{font-size:10px;color:#0d5fbe;text-decoration:none;font-weight:800}
+body[data-page=home].hk-reference-dashboard .hk-live-panel{position:relative;min-height:150px;background:radial-gradient(circle at 70% 20%,#1c5db0,#071e4d 62%)!important;color:#fff;border:0!important}
+body[data-page=home].hk-reference-dashboard .hk-live-panel header{border-color:#ffffff25}body[data-page=home].hk-reference-dashboard .hk-live-panel h2{color:#fff!important}
+body[data-page=home].hk-reference-dashboard .hk-live-badge{display:inline-block;background:#ef174f;border-radius:5px;padding:3px 7px;font-size:9px;font-weight:900;letter-spacing:.06em}
+body[data-page=home].hk-reference-dashboard .hk-live-title{display:block;font-size:17px;margin-top:16px;color:#ffe38d}
+body[data-page=home].hk-reference-dashboard .hk-live-panel p{font-size:11px;color:#dbeaff}
+body[data-page=home].hk-reference-dashboard .hk-live-button{display:inline-block;background:linear-gradient(90deg,#a40f4b,#e21d5b);color:#fff;text-decoration:none;border-radius:7px;padding:7px 10px;font-size:11px;font-weight:900}
+body[data-page=home].hk-reference-dashboard .hk-ref-mini-list{display:grid;gap:5px}
+body[data-page=home].hk-reference-dashboard .hk-ref-mini-list>a{display:grid;text-decoration:none;border-radius:7px;padding:7px 8px;background:#f7f9fc;color:#17335f}
+body[data-page=home].hk-reference-dashboard .hk-ref-mini-list strong{font-size:11px}body[data-page=home].hk-reference-dashboard .hk-ref-mini-list small{font-size:9px;color:#718096;text-transform:capitalize}
+body[data-page=home].hk-reference-dashboard .hk-ref-people{display:grid;gap:6px}
+body[data-page=home].hk-reference-dashboard .hk-ref-person{display:flex;gap:7px;align-items:center;text-decoration:none;color:#18345f;padding:4px;border-radius:7px}
+body[data-page=home].hk-reference-dashboard .hk-ref-person:hover{background:#f2f6fc}
+body[data-page=home].hk-reference-dashboard .hk-ref-person img{width:31px;height:31px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 0 0 1px #cdd9e9}
+body[data-page=home].hk-reference-dashboard .hk-ref-person span{display:grid}body[data-page=home].hk-reference-dashboard .hk-ref-person strong{font-size:10px}body[data-page=home].hk-reference-dashboard .hk-ref-person small{font-size:8px;color:#718096}
+body[data-page=home].hk-reference-dashboard .social-sidebar>.card{margin-bottom:8px!important;padding:10px!important}body[data-page=home].hk-reference-dashboard .social-sidebar>.card h2{font-size:13px!important}
+@media(min-width:1250px){body[data-page=home].hk-reference-dashboard .social-layout{grid-template-columns:220px minmax(600px,1fr) 280px!important;gap:10px!important}}
+@media(min-width:1500px){body[data-page=home].hk-reference-dashboard .social-layout{grid-template-columns:235px minmax(680px,1fr) 300px!important}}
+@media(max-width:1050px){body[data-page=home].hk-reference-dashboard .social-sidebar{display:none!important}body[data-page=home].hk-reference-dashboard .social-layout{grid-template-columns:210px minmax(0,1fr)!important}}
+@media(max-width:760px){body[data-page=home].hk-reference-dashboard .shell{padding:6px!important}body[data-page=home].hk-reference-dashboard .social-layout{display:block!important}body[data-page=home].hk-reference-dashboard .social-rail{display:flex!important;background:#fff!important;color:#18345f!important;border:1px solid #dbe4ef!important;box-shadow:none!important}body[data-page=home].hk-reference-dashboard .social-rail .reference-member,body[data-page=home].hk-reference-dashboard .social-rail>.rail-ministry-link,body[data-page=home].hk-reference-dashboard .social-rail .reference-mission,body[data-page=home].hk-reference-dashboard .social-rail .community-rules,body[data-page=home].hk-reference-dashboard .hk-ref-create{display:none!important}body[data-page=home].hk-reference-dashboard .social-rail .rail-link{color:#17335f!important;background:#f4f7fb!important}body[data-page=home].hk-reference-dashboard .social-rail .rail-link[aria-current=page]{color:#fff!important}body[data-page=home].hk-reference-dashboard .hk-active-setting{display:none!important}body[data-page=home].hk-reference-dashboard .hk-active-person{width:75px!important;flex-basis:75px!important}body[data-page=home].hk-reference-dashboard .top .nav{padding:6px!important}}
+@media(prefers-reduced-motion:reduce){body[data-page=home].hk-reference-dashboard .hk-active-moving{animation:none!important}}

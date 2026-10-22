@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS ministry_editorial_audit (audit_id INTEGER PRIMARY KEY AUTOINCREMENT,admin_user_id INTEGER NOT NULL REFERENCES users(user_id),action TEXT NOT NULL CHECK(action IN ('publish','reply')),profile_id TEXT NOT NULL,subject_id INTEGER NOT NULL,created_at TEXT NOT NULL DEFAULT (datetime('now')));
+CREATE INDEX IF NOT EXISTS idx_ministry_editorial_audit ON ministry_editorial_audit(created_at DESC);

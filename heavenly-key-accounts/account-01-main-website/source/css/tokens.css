@@ -1,0 +1,96 @@
+/* ==========================================================================
+   DESIGN TOKENS — Heavenly Key Evangelistic Movement
+   Palette per approved specification. Wine red is a placeholder shade;
+   replace --color-wine with the exact logo value once the logo asset
+   is supplied (see COMPARISON-REPORT.md, item 3.6).
+   ========================================================================== */
+
+:root {
+  /* Core palette (spec-approved) */
+  --color-royal-blue: #1B3A6B;
+  --color-royal-blue-dark: #12274A;
+  --color-wine: #7A1B2B;        /* placeholder — match to official logo */
+  --color-wine-dark: #5A1420;
+  --color-gold: #C9A227;
+  --color-gold-light: #E4C766;
+  --color-white: #FFFFFF;
+  --color-charcoal: #1A1A1A;
+  --color-charcoal-soft: #262626;
+  --color-text: #333333;
+  --color-text-muted: #5C5C5C;
+
+  /* Reserved — alerts, LIVE, revival highlights ONLY.
+     Original brand value (#E8590C) failed WCAG AA at normal text sizes
+     both as text-on-white (.prayer-count) and as background-with-white-
+     text (.badge-live default) — see RELEASE-CANDIDATE-AUDIT.md H2.
+     Replaced with the closest same-hue shade that passes 4.5:1 in both
+     directions (5.29:1). Flagged for ministry brand-guideline
+     confirmation, not a unilateral rebrand — see KNOWN-ISSUES.md. */
+  --color-warm-orange: #B94709;
+
+  /* Surfaces */
+  --surface-page: var(--color-white);
+  --surface-dark: var(--color-charcoal);
+  --surface-alt: #F6F5F2;
+  --border-subtle: #E3E1DC;
+
+  /* Typography */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --font-utility: "IBM Plex Mono", monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+
+  --leading-tight: 1.15;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* Spacing scale (8px base) */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-5: 3rem;
+  --space-6: 4rem;
+  --space-7: 6rem;
+
+  /* Radius & shadow */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --shadow-card: 0 2px 12px rgba(26, 26, 26, 0.08);
+  --shadow-raised: 0 8px 28px rgba(26, 26, 26, 0.14);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 600ms;
+
+  /* Layout */
+  --max-width: 1280px;
+  --header-strip-height: 40px;
+
+  /* Z-index layers (consolidated from 4 previously hardcoded values —
+     see DESIGN-TOKENS.md for the full layering rationale) */
+  --z-header: 100;
+  --z-modal: 900;
+  --z-toast: 1000;
+  --z-skip-link: 1000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

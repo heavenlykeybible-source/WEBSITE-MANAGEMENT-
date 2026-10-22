@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "narration": "human",
+  "publicationApproved": false,
+  "rights": {
+    "lyrics": false,
+    "tune": false,
+    "arrangement": false,
+    "performerConsent": false,
+    "recordingDistribution": false,
+    "streaming": false,
+    "offline": false
+  },
+  "tracks": {},
+  "featured": {
+    "title": "Faith of Our Fathers",
+    "publicationApproved": false,
+    "rights": {
+      "ownerPermission": true,
+      "aiDisclosure": true,
+      "generationDistribution": false,
+      "recordingDistribution": false,
+      "streaming": false,
+      "offline": false
+    },
+    "track": {
+      "approved": false,
+      "aiGenerated": true,
+      "offlineApproved": false,
+      "mimeType": "audio/mp4",
+      "performer": "Heavenly Key Evangelistic Movement — AI-generated hymn",
+      "url": "https://audio.heavenlykey.org/hymns/faith-of-our-fathers/featured.m4a",
+      "sha256": "ec37b08d79a00b227f5fc4166e2b2af721312e5d1754a9374ea0949b58b5e6d7",
+      "durationSeconds": 776.638,
+      "bytes": 12411689,
+      "origin": "Uploaded by ministry owner; streaming copy retains original AAC audio; requires storage upload and approval"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+/* Global Christian Community: visual maturity layer; no data or authentication changes. */
+:root{--paper:#f3f5f9;--ink:#17263b;--line:#d9e1ec;--radius:16px}
+body{background:#f3f5f9;color:#17263b;-webkit-font-smoothing:antialiased}
+.top{background:#102f63;box-shadow:0 2px 12px #10223a18;border-bottom:1px solid #ffffff24}
+.top .nav{max-width:1260px;gap:18px}
+.top .brand{display:flex;align-items:center;gap:11px;min-width:0}
+.top .navlinks{scrollbar-width:thin;scrollbar-color:#9db6da transparent}
+.top .navlinks a{font-weight:650;font-size:.91rem;border-radius:8px;transition:background .15s ease}
+.top .navlinks a[aria-current=page]{background:#ffffff24;box-shadow:inset 0 -2px #f0cc77}
+.authbar{background:#fff;border-bottom:1px solid #e2e8f0}
+.community-trust-strip{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:9px 18px;background:#eaf0f8;border-bottom:1px solid #d8e2f1;padding:9px 16px;color:#29476f;font-size:.81rem;font-weight:650}
+.community-trust-strip span:not(:first-child)::before{content:'•';margin-right:17px;color:#8699b5}
+.community-trust-strip a{color:#16447d;text-underline-offset:3px}
+.shell{max-width:1200px}
+.hero{border-radius:18px;background:linear-gradient(125deg,#fff 0%,#f9fbff 100%);box-shadow:0 7px 30px #152d5010;padding:clamp(22px,3vw,38px)}
+.hero h1{font-size:clamp(1.65rem,3.6vw,2.7rem);line-height:1.17;letter-spacing:-.025em}
+.hero p{font-size:1.03rem;line-height:1.65}
+.card{border-color:#dce4ef;border-radius:16px;box-shadow:0 3px 16px #162f4b09}
+.card h2,.card h3{letter-spacing:-.018em}
+.btn{min-height:42px;border-radius:10px;font-weight:700}
+input,textarea,select{border-color:#bfcddd;background:#fff;min-height:42px}
+textarea{line-height:1.6;resize:vertical}
+:where(a,button,input,textarea,select,summary):focus-visible{outline:3px solid #d5a634!important;outline-offset:3px}
+:where(button,.btn):disabled{opacity:.55;cursor:not-allowed}
+:where(.card,.hero,.community-trust-strip){overflow-wrap:anywhere}
+@media(max-width:720px){.top{position:relative}.top .nav{display:block}.top .brand{margin-bottom:12px}.top .navlinks{margin-left:0;padding-bottom:7px}.top .navlinks a{min-height:42px;display:inline-flex;align-items:center}.community-trust-strip{justify-content:flex-start;gap:7px 14px}.community-trust-strip span:not(:first-child)::before{display:none}.shell{margin:14px auto;padding:0 12px}.hero{padding:20px}.card{padding:16px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}

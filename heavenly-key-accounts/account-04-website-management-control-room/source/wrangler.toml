@@ -1,0 +1,22 @@
+name = "heavenlykey-control-room"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+workers_dev = true
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+# Account 4 D1 and R2 resources are explicitly bound below; do not replace with resources from other accounts.
+[[d1_databases]]
+binding = "DB"
+database_name = "heavenlykey-control-room-db"
+database_id = "25536a81-63ed-41e3-85f1-4f17bb977628"
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "heavenlykey-control-room-media"
+[ai]
+binding = "AI"
+[vars]
+ACCESS_TEAM_DOMAIN = "raspy-darkness-1dc8.cloudflareaccess.com"
+ACCESS_AUD = "3bf4d8f65406e5890c8f27e0ada19f44ff09033b7624728925519a6e797a8b87"
+

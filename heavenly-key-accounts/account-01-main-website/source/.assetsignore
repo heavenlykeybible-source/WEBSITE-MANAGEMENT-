@@ -1,0 +1,4 @@
+# Internal project documentation is not a public website asset.
+*.md
+*.py
+.assetsignore

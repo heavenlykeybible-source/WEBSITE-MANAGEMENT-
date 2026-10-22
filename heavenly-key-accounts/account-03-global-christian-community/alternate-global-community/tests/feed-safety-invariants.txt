@@ -1,0 +1,5 @@
+Automatic continuation must never bypass /api/feed authorization.
+Automatic continuation must never construct a second cursor.
+Automatic continuation must never remove manual pagination fallback.
+Automatic continuation must stop when nextBefore is absent.
+Automatic continuation must not run concurrently.

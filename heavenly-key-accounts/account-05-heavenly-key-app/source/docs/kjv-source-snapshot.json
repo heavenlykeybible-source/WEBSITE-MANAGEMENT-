@@ -1,0 +1,271 @@
+{
+  "repository": "aoemeta247-cell/All-Nations-For-Christ-Outreach",
+  "ref": "9a16d9dfaff160562da1a966033fdff6e333222b",
+  "sourcePullRequest": 32,
+  "books": [
+    {
+      "path": "public/reading/kjv/1-chronicles.json",
+      "gitBlob": "80cccd79bc404b7ba7e96b9d222b0bd8c780021b"
+    },
+    {
+      "path": "public/reading/kjv/1-corinthians.json",
+      "gitBlob": "e92942301a345cf885e9fe14c5a6c2ef90aecd81"
+    },
+    {
+      "path": "public/reading/kjv/1-john.json",
+      "gitBlob": "e8f966b9fadfbbc3da72aa19d0f018a5d699c277"
+    },
+    {
+      "path": "public/reading/kjv/1-kings.json",
+      "gitBlob": "c8608a32f5195eed41b89101bfc93b59d3d39c9a"
+    },
+    {
+      "path": "public/reading/kjv/1-peter.json",
+      "gitBlob": "887b6c464618e439624459f4b2e12c4c2d558c36"
+    },
+    {
+      "path": "public/reading/kjv/1-samuel.json",
+      "gitBlob": "4008acc44b19516fe34d615005a9242fa47ae1bd"
+    },
+    {
+      "path": "public/reading/kjv/1-thessalonians.json",
+      "gitBlob": "7aaf95e295479856af6b2db89638fd9f148273f9"
+    },
+    {
+      "path": "public/reading/kjv/1-timothy.json",
+      "gitBlob": "35c62524743e9a86a9038bc752dd64eed8c82b0b"
+    },
+    {
+      "path": "public/reading/kjv/2-chronicles.json",
+      "gitBlob": "65f7443b86f6a362476dd05be3ea3d4f76dc496c"
+    },
+    {
+      "path": "public/reading/kjv/2-corinthians.json",
+      "gitBlob": "3241c349a648b75f681a756c86444109c66804a6"
+    },
+    {
+      "path": "public/reading/kjv/2-john.json",
+      "gitBlob": "c515331849501471c304fecf3e7c895654a694e9"
+    },
+    {
+      "path": "public/reading/kjv/2-kings.json",
+      "gitBlob": "b0036295de94e50d5daa90b03ae0452498fe6aa7"
+    },
+    {
+      "path": "public/reading/kjv/2-peter.json",
+      "gitBlob": "431da6d2dbd75e5377c622e048ebe995e7b37718"
+    },
+    {
+      "path": "public/reading/kjv/2-samuel.json",
+      "gitBlob": "b2e187280b0a61a4b6aea323aec15894949538f8"
+    },
+    {
+      "path": "public/reading/kjv/2-thessalonians.json",
+      "gitBlob": "16d0add24a1998420d17a89004ab24d02deea95f"
+    },
+    {
+      "path": "public/reading/kjv/2-timothy.json",
+      "gitBlob": "dcea4d1d1fabb272079490a43736e1c6d7481e90"
+    },
+    {
+      "path": "public/reading/kjv/3-john.json",
+      "gitBlob": "479259fd1c45b10b240dd846422c406df1052085"
+    },
+    {
+      "path": "public/reading/kjv/acts.json",
+      "gitBlob": "5182b18ba86377a9ce23862db308f1c39b4d07bd"
+    },
+    {
+      "path": "public/reading/kjv/amos.json",
+      "gitBlob": "95218b9242818a78d4903ae3c6ca4dd642d32129"
+    },
+    {
+      "path": "public/reading/kjv/colossians.json",
+      "gitBlob": "3e6f62ca2e5b0aa3bbfdcfd567d13b8ddb761321"
+    },
+    {
+      "path": "public/reading/kjv/daniel.json",
+      "gitBlob": "781ea86fd3b357030868d3e22cb8448418ac5774"
+    },
+    {
+      "path": "public/reading/kjv/deuteronomy.json",
+      "gitBlob": "53f5b287b75f8d26f333f0b313542eb19f031c63"
+    },
+    {
+      "path": "public/reading/kjv/ecclesiastes.json",
+      "gitBlob": "552b94323189c9af033aa46261b55a8546809ee5"
+    },
+    {
+      "path": "public/reading/kjv/ephesians.json",
+      "gitBlob": "66f69bdd093ce1011594d4febc3cb46d584582de"
+    },
+    {
+      "path": "public/reading/kjv/esther.json",
+      "gitBlob": "4f03fcf391af1aadf719f8de0a98fae09177a13a"
+    },
+    {
+      "path": "public/reading/kjv/exodus.json",
+      "gitBlob": "8fa40be091fb868537f69066bf2c91193f3e1dae"
+    },
+    {
+      "path": "public/reading/kjv/ezekiel.json",
+      "gitBlob": "3415ffc238b897bbd948c7190364ef6eecb1db10"
+    },
+    {
+      "path": "public/reading/kjv/ezra.json",
+      "gitBlob": "d292eda433f7847a4ffc0aafa3584345077a5701"
+    },
+    {
+      "path": "public/reading/kjv/galatians.json",
+      "gitBlob": "1c191c862cc76b71e0cd6b872d8b50f0a4eb83fc"
+    },
+    {
+      "path": "public/reading/kjv/genesis.json",
+      "gitBlob": "f80a4ad1b4502ec057cf53729842538616b4745d"
+    },
+    {
+      "path": "public/reading/kjv/habakkuk.json",
+      "gitBlob": "836353ba6cc4fd4a7d306e21c444cf27f51fd47f"
+    },
+    {
+      "path": "public/reading/kjv/haggai.json",
+      "gitBlob": "481133366a1e34fc16b93743b1081db701eb9f15"
+    },
+    {
+      "path": "public/reading/kjv/hebrews.json",
+      "gitBlob": "1ab94c1a09d23e7df325c852fb414e9500f46ea5"
+    },
+    {
+      "path": "public/reading/kjv/hosea.json",
+      "gitBlob": "00cd6ea4097b06df60d8d16bb9789a031181dacf"
+    },
+    {
+      "path": "public/reading/kjv/isaiah.json",
+      "gitBlob": "01dba5a6e83063af6ca37afa5a7c1bd7b7ad02d3"
+    },
+    {
+      "path": "public/reading/kjv/james.json",
+      "gitBlob": "4f70d227da4c7fce5af49fb054effa352311f986"
+    },
+    {
+      "path": "public/reading/kjv/jeremiah.json",
+      "gitBlob": "38fc4e14b647832a4f7bdbcd059b97389e68171a"
+    },
+    {
+      "path": "public/reading/kjv/job.json",
+      "gitBlob": "c96db06916a2a40b6aba034658d12b720a0e0419"
+    },
+    {
+      "path": "public/reading/kjv/joel.json",
+      "gitBlob": "4778e89b4d2536e7ba21ffaab1f9985bbaf25d26"
+    },
+    {
+      "path": "public/reading/kjv/john.json",
+      "gitBlob": "273834a7f798aeb4a15ce9bfef5766eaf65645dc"
+    },
+    {
+      "path": "public/reading/kjv/jonah.json",
+      "gitBlob": "0879bda92ba2070e101f7d83604b2d63934cf30a"
+    },
+    {
+      "path": "public/reading/kjv/joshua.json",
+      "gitBlob": "c2e27d9649e21a11740dba2bda2956422dd60c6a"
+    },
+    {
+      "path": "public/reading/kjv/jude.json",
+      "gitBlob": "e1b5af0e4e44038e0f3e95c9d80dfdb438e1824a"
+    },
+    {
+      "path": "public/reading/kjv/judges.json",
+      "gitBlob": "a712216cbea645f600b968b0746af95d3a23ed26"
+    },
+    {
+      "path": "public/reading/kjv/lamentations.json",
+      "gitBlob": "15b28bf126678accf36621a0ba1d5a2a9751fd4c"
+    },
+    {
+      "path": "public/reading/kjv/leviticus.json",
+      "gitBlob": "f0efd3c863ad9329038fc639b0e0706800db4534"
+    },
+    {
+      "path": "public/reading/kjv/luke.json",
+      "gitBlob": "5a3d4238b5ba17cf9a16e0180e0f27f8da82d45b"
+    },
+    {
+      "path": "public/reading/kjv/malachi.json",
+      "gitBlob": "382b11d9e0d1726674ca0f274efc0b41091e735d"
+    },
+    {
+      "path": "public/reading/kjv/mark.json",
+      "gitBlob": "ba7b9345ce6fd784678a4ff5ee3b99327dbe1a7a"
+    },
+    {
+      "path": "public/reading/kjv/matthew.json",
+      "gitBlob": "68b914173d6b854879a35fcbfca1fccf9db919d7"
+    },
+    {
+      "path": "public/reading/kjv/micah.json",
+      "gitBlob": "3306a69f6f8d40b181097f574816f2f20cd8c3dd"
+    },
+    {
+      "path": "public/reading/kjv/nahum.json",
+      "gitBlob": "72b9cf2d08c097898d07ccd44f79c95b49a3a584"
+    },
+    {
+      "path": "public/reading/kjv/nehemiah.json",
+      "gitBlob": "e7b301d3452c3d5b6e889e0a8b10c1491e354432"
+    },
+    {
+      "path": "public/reading/kjv/numbers.json",
+      "gitBlob": "d5803619c9c1fb5169ac4803eac83382470cc518"
+    },
+    {
+      "path": "public/reading/kjv/obadiah.json",
+      "gitBlob": "b8ddca9d1a15b99ca715975fa9a25b33e52c2450"
+    },
+    {
+      "path": "public/reading/kjv/philemon.json",
+      "gitBlob": "8d5224987474a80f6243d355206b6506a375fe16"
+    },
+    {
+      "path": "public/reading/kjv/philippians.json",
+      "gitBlob": "7aa44dbc1551070266f1960abfb8eda61713055c"
+    },
+    {
+      "path": "public/reading/kjv/proverbs.json",
+      "gitBlob": "806abd1346effd5aae62437371e1e9d53d19aa39"
+    },
+    {
+      "path": "public/reading/kjv/psalms.json",
+      "gitBlob": "02b1b566c084f22fb429039d42abe903ac25d6cf"
+    },
+    {
+      "path": "public/reading/kjv/revelation.json",
+      "gitBlob": "1eab3b1d3e2b989d9732155a4e94cf7c2c74f9e3"
+    },
+    {
+      "path": "public/reading/kjv/romans.json",
+      "gitBlob": "3edec18538ebc144f07aee9c56e0c462b46d2ed6"
+    },
+    {
+      "path": "public/reading/kjv/ruth.json",
+      "gitBlob": "5565a921f398f3d4340d7443b6659a1216aa1899"
+    },
+    {
+      "path": "public/reading/kjv/song-of-solomon.json",
+      "gitBlob": "8120e18115c03958d6928056f434a726fc7c6a6f"
+    },
+    {
+      "path": "public/reading/kjv/titus.json",
+      "gitBlob": "73ea4da57a852591187371fe9ab33a2ef5c1f4ee"
+    },
+    {
+      "path": "public/reading/kjv/zechariah.json",
+      "gitBlob": "a9e48d8a6e36b73973829e46ecdede59268c08f8"
+    },
+    {
+      "path": "public/reading/kjv/zephaniah.json",
+      "gitBlob": "01c8bbc574a591c08cabc82b63e05ab6682b0c45"
+    }
+  ]
+}

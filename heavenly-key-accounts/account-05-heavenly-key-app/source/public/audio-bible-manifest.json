@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "translation": "KJV",
+  "language": "en-NG",
+  "narration": "human",
+  "narrator": null,
+  "publicationApproved": false,
+  "rights": {
+    "bibleText": false,
+    "narratorConsent": false,
+    "recordingDistribution": false,
+    "streaming": false,
+    "offline": false
+  },
+  "tracks": {}
+}

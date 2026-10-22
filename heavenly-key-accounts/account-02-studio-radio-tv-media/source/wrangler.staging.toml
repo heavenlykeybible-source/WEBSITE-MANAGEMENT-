@@ -1,0 +1,24 @@
+name = "heavenlykey-media-staging"
+main = "src/index.ts"
+keep_vars = true
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "heavenlykey-media-db-staging"
+database_id = "REPLACE_ACCOUNT2_STAGING_D1_ID"
+
+[[r2_buckets]]
+binding = "MEDIA_R2"
+bucket_name = "heavenlykey-media-engine-staging"
+
+[[kv_namespaces]]
+binding = "LIVE_STATUS_KV"
+id = "REPLACE_ACCOUNT2_STAGING_KV_ID"
+
+[vars]
+MEDIA_ENGINE_VERSION = "staging"
+
+[triggers]
+crons = []

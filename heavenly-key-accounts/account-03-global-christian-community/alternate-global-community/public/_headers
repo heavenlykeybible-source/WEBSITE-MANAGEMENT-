@@ -1,0 +1,7 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev; connect-src 'self' https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev; frame-src https://heavenlykey.alldaywow247.workers.dev/api/broadcast/community-player https://www.youtube-nocookie.com https://www.youtube.com https://www.facebook.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=()
+

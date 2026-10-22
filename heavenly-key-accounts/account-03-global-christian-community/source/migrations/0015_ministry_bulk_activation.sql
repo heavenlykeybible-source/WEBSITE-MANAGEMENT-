@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS ministry_bulk_activation_audit (audit_id INTEGER PRIMARY KEY AUTOINCREMENT,admin_user_id INTEGER NOT NULL REFERENCES users(user_id),activated_count INTEGER NOT NULL,created_at TEXT NOT NULL DEFAULT (datetime('now')));

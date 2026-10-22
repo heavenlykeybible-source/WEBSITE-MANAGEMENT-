@@ -1,0 +1,2 @@
+/* Authentication UI only; backend session and permissions remain authoritative. */
+(function(){'use strict';function apply(session){document.body.classList.toggle('royal-signed-in',!!(session&&session.user));}window.addEventListener('hk-care-session',function(e){apply(e.detail);});})();

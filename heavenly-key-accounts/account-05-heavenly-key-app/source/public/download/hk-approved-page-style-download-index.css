@@ -1,0 +1,2 @@
+body{font:17px system-ui,sans-serif;margin:0;padding:40px 18px;background:linear-gradient(130deg,#061641,#0b3888,#760b27);color:white;min-height:100vh;text-align:center}h1{color:#ffdc7c}main{max-width:650px;margin:auto}nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}nav a{display:block;padding:22px;border:1px solid #ffdb80;border-radius:15px;background:#ffffff18;color:white;font-weight:800;text-decoration:none}p{line-height:1.6}
+html body .hkem-approved-style-1{color:#ffe49e}

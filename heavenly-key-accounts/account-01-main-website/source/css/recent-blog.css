@@ -1,0 +1,11 @@
+.hk-recent-blog{background:#fff;padding:68px 0 78px;border-top:6px solid #ffdf26}.hk-blog-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:30px}.hk-blog-heading h2{font-size:clamp(28px,3.5vw,44px);color:#005334;margin:10px 0 12px}.hk-blog-heading p{font-size:17px}.hk-blog-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:17px}.hk-blog-card{border:1px solid #dedede;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 6px 22px #0000000d;display:flex;flex-direction:column;min-width:0}.hk-blog-card .hk-blog-thumb{aspect-ratio:16/10;background:linear-gradient(135deg,#005334,#790326);display:flex;align-items:center;justify-content:center;color:#ffdf26;font-size:35px;font-weight:700;overflow:hidden}.hk-blog-thumb img{width:100%;height:100%;object-fit:cover}.hk-blog-card-body{padding:18px;display:flex;flex-direction:column;gap:12px;flex:1}.hk-blog-card h3{font-size:19px;line-height:1.35;color:#003f27;margin:0}.hk-blog-card p{font-size:15px;line-height:1.5;margin:0}.hk-blog-date{font-size:14px;color:#6b6b6b}.hk-blog-read{margin-top:auto;color:#790326;font-weight:700;font-size:16px;text-decoration:underline}.hk-blog-fallback a{color:#790326;text-decoration:underline}.hk-blog-status{font-size:17px}@media(max-width:1150px){.hk-blog-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.hk-blog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hk-recent-blog{padding:42px 0}}@media(max-width:430px){.hk-blog-grid{grid-template-columns:1fr}}
+
+/* Approved responsive five-card editorial grid; full-width messages on feed failure. */
+.hk-blog-grid{align-items:stretch}
+.hk-blog-grid>.hk-blog-status,.hk-blog-grid>p:not(.hk-blog-card){grid-column:1/-1}
+.hk-blog-card{transition:transform .2s ease,box-shadow .2s ease}
+.hk-blog-card:focus-within{outline:3px solid #d6a327;outline-offset:3px}
+.hk-blog-read:focus-visible{outline:3px solid #005334;outline-offset:3px;border-radius:3px}
+.hk-blog-card h3{overflow-wrap:anywhere}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.hk-blog-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px #0000001a}}
+@media(min-width:1151px) and (max-width:1350px){.hk-blog-grid{gap:12px}.hk-blog-card-body{padding:14px}}
