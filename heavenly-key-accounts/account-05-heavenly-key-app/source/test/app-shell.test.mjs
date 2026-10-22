@@ -11,7 +11,7 @@ test('Account 5 has its own Cloudflare Worker identity, without account 1–4 st
  assert.doesNotMatch(config,/\[\[d1_databases\]\]|\[\[kv_namespaces\]\]|\[\[r2_buckets\]\]/);
 });
 test('mobile app has installable PWA shell and all navigable sections',()=>{
- const html=get('public/index.html'),js=get('public/app.js');
+ const html=get('public/experience.html'),js=get('public/app.js');
  const manifest=JSON.parse(get('public/manifest.webmanifest'));
  assert.equal(manifest.start_url,'/');
  assert.equal(manifest.display,'standalone');
@@ -22,7 +22,7 @@ test('mobile app has installable PWA shell and all navigable sections',()=>{
  assert.match(js,/serviceWorker\.register\("\/sw\.js"\)/);
 });
 test('mobile community and media shortcuts only use verified HTTPS ministry pages',()=>{
- const html=get('public/index.html');
+ const html=get('public/experience.html');
  for(const page of ['community.html','video.html','grdpc.html']){
   assert.ok(html.includes('href="https://heavenlykey.alldaywow247.workers.dev/pages/'+page+'"'),page+' link missing');
  }
@@ -59,3 +59,12 @@ test('Account 5 public shell rejects all third-party framing after website uses 
  assert.match(headers,/object-src 'none'/);
 });
 
+
+test('premium homepage features laptop hero and app family while app remains accessible',()=>{
+ const html=get('public/index.html');
+ assert.match(html,/class="laptop"/);
+ assert.match(html,/id="all-in-one"/);
+ assert.match(html,/class="family-grid"/);
+ assert.match(html,/href="\/experience\.html"/);
+ assert.match(get('public/experience.html'),/id="bible"/);
+});
