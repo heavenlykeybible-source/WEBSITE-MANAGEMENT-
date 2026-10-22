@@ -2,6 +2,16 @@ name: Deploy Website Management to Cloudflare
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'control-room-worker.js'
+      - 'cms/**'
+      - 'ai/**'
+      - 'tests/**'
+      - 'wrangler.toml'
+      - 'package.json'
+      - '.github/workflows/deploy.yml'
 
 permissions:
   contents: read
@@ -45,6 +55,13 @@ jobs:
         run: |
           npm run test:cms-dom
           npm run test:cms-browser
+
+      - name: Integrate saved interfaces into active Worker
+        run: |
+          npm run build:cms
+          node --check control-room-worker.js
+          grep -q 'Cloudflare API tokens' control-room-worker.js
+          grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
 
       - name: Check Cloudflare deployment credentials
         env:
