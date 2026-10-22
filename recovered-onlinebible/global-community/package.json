@@ -1,0 +1,24 @@
+{
+  "name": "heavenly-key-global-community",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit --pretty false",
+    "preflight": "node scripts/preflight.mjs",
+    "frontend": "node --check public/app.js && node --check public/design-cards.js && node --check public/calling.js && node --check public/password-policy.js && node --check public/community-admin.js && node --check public/community-app-promo.js && node --check public/ministry-care.js && node --check public/community-live-chat.js && node --check public/heavenly-key-assistant.js",
+    "buildcheck": "npm run check && npm run frontend && npm run test:design && npm run test:feed && npm run test:groups && npm run test:registration && npm run test:stewardship && npm run test:social-adverts && npm run preflight",
+    "test:audit": "node test/api-audit.checks.mjs",
+    "test:design": "node --test test/design-cards.checks.mjs",
+    "test:groups": "node --test test/group-controls.checks.mjs",
+    "test:registration": "node --test test/registration.checks.mjs",
+    "test:feed": "node --test test/frontend-feed.checks.mjs",
+    "test:stewardship": "node --test test/stewardship.checks.mjs",
+    "test:social-adverts": "node --test test/social-adverts.checks.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261015.1",
+    "typescript": "^5.5.0",
+    "wrangler": "4.151.0"
+  }
+}
