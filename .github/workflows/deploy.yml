@@ -2,16 +2,6 @@ name: Deploy Website Management to Cloudflare
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'control-room-worker.js'
-      - 'cms/**'
-      - 'ai/**'
-      - 'tests/**'
-      - 'wrangler.toml'
-      - 'package.json'
-      - '.github/workflows/deploy.yml'
 
 permissions:
   contents: read
@@ -34,11 +24,31 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Check Cloudflare deployment credentials
+        env:
+          CF_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ]; then
+            echo "::error::Add ACCOUNT4_CLOUDFLARE_API_TOKEN to Account 4 GitHub secrets."
+            exit 1
+          fi
+
+      - name: Confirm correct Account 4 destination
+        env:
+          CF_ACCOUNT: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CF_ACCOUNT" || { echo '::error::Missing ACCOUNT4_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
+          test "$CF_ACCOUNT" != 'cd095c096c2d5a42501e7d77cecbb34c' || { echo '::error::Account 3 destination detected; deployment blocked'; exit 1; }
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Check browser-test runtime is installed
-        run: node --input-type=module -e "import('playwright').then(() => console.log('Playwright available')).catch(() => console.log('Playwright installed in following step'))"
+      - name: Integrate saved interfaces into active Worker
+        run: |
+          npm run build:cms
+          node --check control-room-worker.js
+          grep -q 'Cloudflare API tokens' control-room-worker.js
+          grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
 
       - name: Run project tests
         run: npm test
@@ -56,28 +66,6 @@ jobs:
           npm run test:cms-dom
           npm run test:cms-browser
 
-      - name: Integrate saved interfaces into active Worker
-        run: |
-          npm run build:cms
-          node --check control-room-worker.js
-          grep -q 'Cloudflare API tokens' control-room-worker.js
-          grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
-
-      - name: Check Cloudflare deployment credentials
-        env:
-          CF_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
-        run: |
-          if [ -z "$CF_API_TOKEN" ]; then
-            echo "::error::Add ACCOUNT4_CLOUDFLARE_API_TOKEN to Account 4 GitHub secrets."
-            exit 1
-          fi
-
-      - name: Confirm correct Account 4 destination
-        env:
-          CF_ACCOUNT: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          test -n "$CF_ACCOUNT" || { echo '::error::Missing ACCOUNT4_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
-          test "$CF_ACCOUNT" != 'cd095c096c2d5a42501e7d77cecbb34c' || { echo '::error::Account 3 destination detected; deployment blocked'; exit 1; }
       - name: Deploy existing Worker without changing its resources
         run: npx --yes wrangler@4 deploy --config wrangler.toml
         env:
