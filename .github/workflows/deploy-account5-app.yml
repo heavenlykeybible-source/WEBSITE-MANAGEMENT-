@@ -2,11 +2,6 @@ name: Deploy Account 5 Heavenly Key App
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/**'
-      - '.github/workflows/deploy-account5-app.yml'
 
 permissions:
   contents: read
