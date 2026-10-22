@@ -42,6 +42,11 @@ jobs:
       - name: Verify Account 4 owner approval interface
         run: node tests/account4-permission-ui.mjs
 
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+
       - name: Verify CMS editing and preview controls
         run: |
           npm run test:cms-dom
