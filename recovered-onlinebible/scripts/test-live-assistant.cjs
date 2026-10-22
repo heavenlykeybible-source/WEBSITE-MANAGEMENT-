@@ -1,0 +1,22 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ const page=await browser.newPage({viewport:{width:390,height:844}});
+ const responses=[];page.on('response',r=>{if(r.url().includes('/v1/assistant'))responses.push(r.status())});
+ await page.goto('https://heavenlykey.org/',{waitUntil:'domcontentloaded'});
+ const toggle=page.getByRole('button',{name:'Open Online Assistant chat',exact:true});await toggle.waitFor({timeout:30000});await toggle.click();
+ const img=page.locator('.hkem-chat-header .hkem-ai-avatar img');
+ await img.waitFor();assert.ok(await img.evaluate(i=>i.complete&&i.naturalWidth>0));
+ assert.match(await page.locator('.hkem-chat-header').textContent(),/HEAVENLY KEY EVANGELISTIC MOVEMENT AI ASSISTANT/);
+ const frame=await page.locator('.hkem-iphone-chat').boundingBox();assert.ok(frame.width<=320&&frame.height<=440&&frame.y>150);
+ await page.getByRole('textbox',{name:'Your message',exact:true}).fill('Hello, what ministry resources can you help me find?');
+ await page.getByRole('button',{name:'Send message',exact:true}).click();
+ await page.waitForFunction(()=>{const e=document.querySelector('.hkem-chat-bot');return e&&e.textContent!=='Typing…'},{},{timeout:40000});
+ const answer=await page.locator('.hkem-chat-bot').textContent();assert.deepEqual(responses,[200]);assert.ok(answer.length>20);assert.doesNotMatch(answer,/unable to connect|temporarily unavailable|request limit/i);
+ console.log('LIVE assistant HTTP 200; approved portrait loaded; requested name, compact mobile size and real Gemini reply verified');
+ await page.screenshot({path:'live-assistant-mobile.png'});
+ await page.goto('https://heavenlykey.org/pages/radio.html',{waitUntil:'domcontentloaded'});await page.waitForTimeout(1500);
+ assert.equal(await page.locator('#hk-radio-compact:visible').count(),0);console.log('Radio page duplicate floating radio link hidden');
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});
