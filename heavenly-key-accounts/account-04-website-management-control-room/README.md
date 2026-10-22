@@ -1,7 +1,7 @@
-# Uploaded source is reference only; main branch takes priority
+# Account 4 — Website Management Control Room
 
-Recovery source: `onlinebible/account4-control-room`.
+The newer Website Management control room in repository root on `main` is authoritative.
 
-Status: Recovery source available; latest GitHub main-branch version must be compared before merge and deployment.
+The `source/`, `uploaded-reference/`, and `recovered-onlinebible/account4-control-room/` files contain historical implementations for comparison only. Do not replace the modern control room or deploy the historical Worker, authentication, permissions, UI or schemas.
 
-Do not overwrite newer WEBSITE-MANAGEMENT- main branch application files. Keep secrets and production databases outside source control.
+Before migrating any feature, verify it is absent from the latest implementation, bring over only the missing functionality, run tests, preserve production bindings and obtain deployment verification. Other accounts follow the same latest-version-wins rule.
