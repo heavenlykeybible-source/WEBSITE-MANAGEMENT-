@@ -2,6 +2,10 @@ name: Deploy Account 5 Heavenly Key App
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/RELEASE-APPROVED-20261022.txt'
 
 permissions:
   contents: read
