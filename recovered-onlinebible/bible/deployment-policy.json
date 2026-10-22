@@ -1,0 +1,21 @@
+{
+  "product": "HEAVENLY KEY BIBLE",
+  "worker": "heavenly-key-bible",
+  "config": "bible/wrangler.toml",
+  "qualityWorkflow": ".github/workflows/bible-quality.yml",
+  "releaseMode": "account4-controlled",
+  "autoUpdate": true,
+  "autoUpdateBranch": "main",
+  "watchedPaths": ["bible/**", "heavenly-key-website/bible/**"],
+  "preDeployChecks": ["scripture", "reader", "offline", "worker", "assets", "study-tools", "live"],
+  "isolation": {
+    "dedicatedCloudflareAccount": true,
+    "sharedDatabaseMutation": false,
+    "forwardPrivateCredentials": false
+  },
+  "requirements": {
+    "dedicatedCloudflareToken": "BIBLE_CLOUDFLARE_API_TOKEN",
+    "dedicatedCloudflareAccountId": "BIBLE_CLOUDFLARE_ACCOUNT_ID",
+    "liveUrlVariable": "BIBLE_LIVE_URL"
+  }
+}
