@@ -99,3 +99,15 @@ test('premium page references only existing bundled local assets',()=>{
  assert.ok(source.includes('/assets/ministry/hero-people-laptop.jpg'));
  assert.ok(source.includes('/premium-home.css'));
 });
+
+test('mission message and five app sharing controls are present and safe',()=>{
+ const html=get('public/index.html');
+ assert.match(html,/<\/div><p class="hero-mission-line">Together we take Christ to the nations of the world<\/p>/);
+ assert.equal((html.match(/class="share-to-bless family-share"/g)||[]).length,5);
+ assert.match(html,/src="\/premium-share\.js"/);
+ assert.match(get('public/sw.js'),/\/premium-share\.js/);
+ const script=get('public/premium-share.js');
+ assert.match(script,/navigator\.share/);
+ assert.match(script,/navigator\.clipboard/);
+ assert.doesNotMatch(script,/innerHTML\s*=/);
+});
