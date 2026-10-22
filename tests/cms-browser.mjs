@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
-const require=createRequire(import.meta.url),{chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright');
+const require=createRequire(import.meta.url),{chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright':'playwright');
 const temp=new URL('./cms-browser-worker.mjs',import.meta.url);fs.writeFileSync(temp,fs.readFileSync(new URL('../control-room-worker.js',import.meta.url),'utf8')+'\nexport {UI};');
 const {UI}=await import(temp.href);let saved=null,proposed=null;
 const original='<!DOCTYPE html><html><head><title>Original title</title><meta name="description" content="Original description"><style>body{font-family:system-ui;margin:0}header,footer{padding:24px;background:#edf6f1}main{padding:32px}</style></head><body><header><strong>Community</strong></header><main><h1 onclick="window.inlineRan=true">Welcome</h1><p>Original paragraph</p><a href="/join">Join us</a><img src="/old.png" alt="Old image"><section><h2>Second section</h2><p>Keep this content</p></section></main><footer>Original footer</footer><script>window.siteScriptRan=true;</script></body></html>';
