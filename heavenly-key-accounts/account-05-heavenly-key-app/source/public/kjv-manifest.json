@@ -1,0 +1,476 @@
+{
+  "version": 1,
+  "translation": "King James Version (Authorized Version)",
+  "totalBooks": 66,
+  "totalChapters": 1189,
+  "totalVerses": 31102,
+  "source": {
+    "repository": "https://github.com/aruljohn/Bible-kjv",
+    "license": "MIT (JSON compilation/software)",
+    "additionalNotice": "In the United Kingdom the Authorized Version is subject to Crown rights. Licensing and regional permissions should be reviewed before public commercial app-store distribution."
+  },
+  "books": [
+    {
+      "name": "Genesis",
+      "id": "genesis",
+      "chapters": 50,
+      "testament": "Old Testament",
+      "path": "reading/kjv/genesis.json"
+    },
+    {
+      "name": "Exodus",
+      "id": "exodus",
+      "chapters": 40,
+      "testament": "Old Testament",
+      "path": "reading/kjv/exodus.json"
+    },
+    {
+      "name": "Leviticus",
+      "id": "leviticus",
+      "chapters": 27,
+      "testament": "Old Testament",
+      "path": "reading/kjv/leviticus.json"
+    },
+    {
+      "name": "Numbers",
+      "id": "numbers",
+      "chapters": 36,
+      "testament": "Old Testament",
+      "path": "reading/kjv/numbers.json"
+    },
+    {
+      "name": "Deuteronomy",
+      "id": "deuteronomy",
+      "chapters": 34,
+      "testament": "Old Testament",
+      "path": "reading/kjv/deuteronomy.json"
+    },
+    {
+      "name": "Joshua",
+      "id": "joshua",
+      "chapters": 24,
+      "testament": "Old Testament",
+      "path": "reading/kjv/joshua.json"
+    },
+    {
+      "name": "Judges",
+      "id": "judges",
+      "chapters": 21,
+      "testament": "Old Testament",
+      "path": "reading/kjv/judges.json"
+    },
+    {
+      "name": "Ruth",
+      "id": "ruth",
+      "chapters": 4,
+      "testament": "Old Testament",
+      "path": "reading/kjv/ruth.json"
+    },
+    {
+      "name": "1 Samuel",
+      "id": "1samuel",
+      "chapters": 31,
+      "testament": "Old Testament",
+      "path": "reading/kjv/1-samuel.json"
+    },
+    {
+      "name": "2 Samuel",
+      "id": "2samuel",
+      "chapters": 24,
+      "testament": "Old Testament",
+      "path": "reading/kjv/2-samuel.json"
+    },
+    {
+      "name": "1 Kings",
+      "id": "1kings",
+      "chapters": 22,
+      "testament": "Old Testament",
+      "path": "reading/kjv/1-kings.json"
+    },
+    {
+      "name": "2 Kings",
+      "id": "2kings",
+      "chapters": 25,
+      "testament": "Old Testament",
+      "path": "reading/kjv/2-kings.json"
+    },
+    {
+      "name": "1 Chronicles",
+      "id": "1chronicles",
+      "chapters": 29,
+      "testament": "Old Testament",
+      "path": "reading/kjv/1-chronicles.json"
+    },
+    {
+      "name": "2 Chronicles",
+      "id": "2chronicles",
+      "chapters": 36,
+      "testament": "Old Testament",
+      "path": "reading/kjv/2-chronicles.json"
+    },
+    {
+      "name": "Ezra",
+      "id": "ezra",
+      "chapters": 10,
+      "testament": "Old Testament",
+      "path": "reading/kjv/ezra.json"
+    },
+    {
+      "name": "Nehemiah",
+      "id": "nehemiah",
+      "chapters": 13,
+      "testament": "Old Testament",
+      "path": "reading/kjv/nehemiah.json"
+    },
+    {
+      "name": "Esther",
+      "id": "esther",
+      "chapters": 10,
+      "testament": "Old Testament",
+      "path": "reading/kjv/esther.json"
+    },
+    {
+      "name": "Job",
+      "id": "job",
+      "chapters": 42,
+      "testament": "Old Testament",
+      "path": "reading/kjv/job.json"
+    },
+    {
+      "name": "Psalms",
+      "id": "psalms",
+      "chapters": 150,
+      "testament": "Old Testament",
+      "path": "reading/kjv/psalms.json"
+    },
+    {
+      "name": "Proverbs",
+      "id": "proverbs",
+      "chapters": 31,
+      "testament": "Old Testament",
+      "path": "reading/kjv/proverbs.json"
+    },
+    {
+      "name": "Ecclesiastes",
+      "id": "ecclesiastes",
+      "chapters": 12,
+      "testament": "Old Testament",
+      "path": "reading/kjv/ecclesiastes.json"
+    },
+    {
+      "name": "Song of Solomon",
+      "id": "songofsolomon",
+      "chapters": 8,
+      "testament": "Old Testament",
+      "path": "reading/kjv/song-of-solomon.json"
+    },
+    {
+      "name": "Isaiah",
+      "id": "isaiah",
+      "chapters": 66,
+      "testament": "Old Testament",
+      "path": "reading/kjv/isaiah.json"
+    },
+    {
+      "name": "Jeremiah",
+      "id": "jeremiah",
+      "chapters": 52,
+      "testament": "Old Testament",
+      "path": "reading/kjv/jeremiah.json"
+    },
+    {
+      "name": "Lamentations",
+      "id": "lamentations",
+      "chapters": 5,
+      "testament": "Old Testament",
+      "path": "reading/kjv/lamentations.json"
+    },
+    {
+      "name": "Ezekiel",
+      "id": "ezekiel",
+      "chapters": 48,
+      "testament": "Old Testament",
+      "path": "reading/kjv/ezekiel.json"
+    },
+    {
+      "name": "Daniel",
+      "id": "daniel",
+      "chapters": 12,
+      "testament": "Old Testament",
+      "path": "reading/kjv/daniel.json"
+    },
+    {
+      "name": "Hosea",
+      "id": "hosea",
+      "chapters": 14,
+      "testament": "Old Testament",
+      "path": "reading/kjv/hosea.json"
+    },
+    {
+      "name": "Joel",
+      "id": "joel",
+      "chapters": 3,
+      "testament": "Old Testament",
+      "path": "reading/kjv/joel.json"
+    },
+    {
+      "name": "Amos",
+      "id": "amos",
+      "chapters": 9,
+      "testament": "Old Testament",
+      "path": "reading/kjv/amos.json"
+    },
+    {
+      "name": "Obadiah",
+      "id": "obadiah",
+      "chapters": 1,
+      "testament": "Old Testament",
+      "path": "reading/kjv/obadiah.json"
+    },
+    {
+      "name": "Jonah",
+      "id": "jonah",
+      "chapters": 4,
+      "testament": "Old Testament",
+      "path": "reading/kjv/jonah.json"
+    },
+    {
+      "name": "Micah",
+      "id": "micah",
+      "chapters": 7,
+      "testament": "Old Testament",
+      "path": "reading/kjv/micah.json"
+    },
+    {
+      "name": "Nahum",
+      "id": "nahum",
+      "chapters": 3,
+      "testament": "Old Testament",
+      "path": "reading/kjv/nahum.json"
+    },
+    {
+      "name": "Habakkuk",
+      "id": "habakkuk",
+      "chapters": 3,
+      "testament": "Old Testament",
+      "path": "reading/kjv/habakkuk.json"
+    },
+    {
+      "name": "Zephaniah",
+      "id": "zephaniah",
+      "chapters": 3,
+      "testament": "Old Testament",
+      "path": "reading/kjv/zephaniah.json"
+    },
+    {
+      "name": "Haggai",
+      "id": "haggai",
+      "chapters": 2,
+      "testament": "Old Testament",
+      "path": "reading/kjv/haggai.json"
+    },
+    {
+      "name": "Zechariah",
+      "id": "zechariah",
+      "chapters": 14,
+      "testament": "Old Testament",
+      "path": "reading/kjv/zechariah.json"
+    },
+    {
+      "name": "Malachi",
+      "id": "malachi",
+      "chapters": 4,
+      "testament": "Old Testament",
+      "path": "reading/kjv/malachi.json"
+    },
+    {
+      "name": "Matthew",
+      "id": "matthew",
+      "chapters": 28,
+      "testament": "New Testament",
+      "path": "reading/kjv/matthew.json"
+    },
+    {
+      "name": "Mark",
+      "id": "mark",
+      "chapters": 16,
+      "testament": "New Testament",
+      "path": "reading/kjv/mark.json"
+    },
+    {
+      "name": "Luke",
+      "id": "luke",
+      "chapters": 24,
+      "testament": "New Testament",
+      "path": "reading/kjv/luke.json"
+    },
+    {
+      "name": "John",
+      "id": "john",
+      "chapters": 21,
+      "testament": "New Testament",
+      "path": "reading/kjv/john.json"
+    },
+    {
+      "name": "Acts",
+      "id": "acts",
+      "chapters": 28,
+      "testament": "New Testament",
+      "path": "reading/kjv/acts.json"
+    },
+    {
+      "name": "Romans",
+      "id": "romans",
+      "chapters": 16,
+      "testament": "New Testament",
+      "path": "reading/kjv/romans.json"
+    },
+    {
+      "name": "1 Corinthians",
+      "id": "1corinthians",
+      "chapters": 16,
+      "testament": "New Testament",
+      "path": "reading/kjv/1-corinthians.json"
+    },
+    {
+      "name": "2 Corinthians",
+      "id": "2corinthians",
+      "chapters": 13,
+      "testament": "New Testament",
+      "path": "reading/kjv/2-corinthians.json"
+    },
+    {
+      "name": "Galatians",
+      "id": "galatians",
+      "chapters": 6,
+      "testament": "New Testament",
+      "path": "reading/kjv/galatians.json"
+    },
+    {
+      "name": "Ephesians",
+      "id": "ephesians",
+      "chapters": 6,
+      "testament": "New Testament",
+      "path": "reading/kjv/ephesians.json"
+    },
+    {
+      "name": "Philippians",
+      "id": "philippians",
+      "chapters": 4,
+      "testament": "New Testament",
+      "path": "reading/kjv/philippians.json"
+    },
+    {
+      "name": "Colossians",
+      "id": "colossians",
+      "chapters": 4,
+      "testament": "New Testament",
+      "path": "reading/kjv/colossians.json"
+    },
+    {
+      "name": "1 Thessalonians",
+      "id": "1thessalonians",
+      "chapters": 5,
+      "testament": "New Testament",
+      "path": "reading/kjv/1-thessalonians.json"
+    },
+    {
+      "name": "2 Thessalonians",
+      "id": "2thessalonians",
+      "chapters": 3,
+      "testament": "New Testament",
+      "path": "reading/kjv/2-thessalonians.json"
+    },
+    {
+      "name": "1 Timothy",
+      "id": "1timothy",
+      "chapters": 6,
+      "testament": "New Testament",
+      "path": "reading/kjv/1-timothy.json"
+    },
+    {
+      "name": "2 Timothy",
+      "id": "2timothy",
+      "chapters": 4,
+      "testament": "New Testament",
+      "path": "reading/kjv/2-timothy.json"
+    },
+    {
+      "name": "Titus",
+      "id": "titus",
+      "chapters": 3,
+      "testament": "New Testament",
+      "path": "reading/kjv/titus.json"
+    },
+    {
+      "name": "Philemon",
+      "id": "philemon",
+      "chapters": 1,
+      "testament": "New Testament",
+      "path": "reading/kjv/philemon.json"
+    },
+    {
+      "name": "Hebrews",
+      "id": "hebrews",
+      "chapters": 13,
+      "testament": "New Testament",
+      "path": "reading/kjv/hebrews.json"
+    },
+    {
+      "name": "James",
+      "id": "james",
+      "chapters": 5,
+      "testament": "New Testament",
+      "path": "reading/kjv/james.json"
+    },
+    {
+      "name": "1 Peter",
+      "id": "1peter",
+      "chapters": 5,
+      "testament": "New Testament",
+      "path": "reading/kjv/1-peter.json"
+    },
+    {
+      "name": "2 Peter",
+      "id": "2peter",
+      "chapters": 3,
+      "testament": "New Testament",
+      "path": "reading/kjv/2-peter.json"
+    },
+    {
+      "name": "1 John",
+      "id": "1john",
+      "chapters": 5,
+      "testament": "New Testament",
+      "path": "reading/kjv/1-john.json"
+    },
+    {
+      "name": "2 John",
+      "id": "2john",
+      "chapters": 1,
+      "testament": "New Testament",
+      "path": "reading/kjv/2-john.json"
+    },
+    {
+      "name": "3 John",
+      "id": "3john",
+      "chapters": 1,
+      "testament": "New Testament",
+      "path": "reading/kjv/3-john.json"
+    },
+    {
+      "name": "Jude",
+      "id": "jude",
+      "chapters": 1,
+      "testament": "New Testament",
+      "path": "reading/kjv/jude.json"
+    },
+    {
+      "name": "Revelation",
+      "id": "revelation",
+      "chapters": 22,
+      "testament": "New Testament",
+      "path": "reading/kjv/revelation.json"
+    }
+  ]
+}
