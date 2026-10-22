@@ -39,6 +39,11 @@ jobs:
       - name: Run project tests
         run: npm test
 
+      - name: Verify CMS editing and preview controls
+        run: |
+          npm run test:cms-dom
+          npm run test:cms-browser
+
       - name: Check Cloudflare deployment credentials
         env:
           CF_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
