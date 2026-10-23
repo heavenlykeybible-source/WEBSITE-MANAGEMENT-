@@ -32,18 +32,16 @@ export default {
   if(url.pathname==='/'&&['GET','HEAD'].includes(request.method))return Response.redirect('https://heavenlykey.org/pages/admin#studio',302);
   if(url.pathname==='/health'&&request.method==='GET') return json({ok:true,service:'heavenlykey-media-engine',version:env.MEDIA_ENGINE_VERSION??'v1'});
   const radioPath=/^\/api\/broadcast\/(?:programme|live|media\/\d+\/object)$/.test(url.pathname);
+  let radioAuthorized=false;
   if(radioPath && env.RADIO_PUBLIC_API_KEY && ['GET','HEAD'].includes(request.method)) {
     const presented=(request.headers.get('Authorization')||'').replace(/^Bearer /,'');
     const enc=new TextEncoder();
     const expected=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(env.RADIO_PUBLIC_API_KEY)));
     const received=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(presented)));
     let diff=0;for(let i=0;i<expected.length;i++)diff|=expected[i]^received[i];
-    if(diff===0 && presented.length>0) {
-      const trusted=new Headers(request.headers);trusted.set('X-Heavenly-Key-Internal','media-engine-public-v1');trusted.delete('Authorization');
-      return this.fetch(new Request(request,{headers:trusted}),{...env,RADIO_PUBLIC_API_KEY:undefined} as Env);
-    }
+    radioAuthorized=diff===0 && presented.length>0;
   }
-  const marker=request.headers.get('X-Heavenly-Key-Internal'); const auth=request.headers.get('Authorization')??'';
+  const marker=radioAuthorized?'media-engine-public-v1':request.headers.get('X-Heavenly-Key-Internal'); const auth=request.headers.get('Authorization')??'';
   if(marker==='media-engine-public-v1' && request.method==='GET' && url.pathname==='/api/broadcast/live') {
     const row=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,started_at,last_heartbeat_at,reconnect_deadline FROM live_sessions WHERE status IN ('live','reconnecting') ORDER BY session_id DESC LIMIT 1").first();
     if(!row)return json({live:null});
