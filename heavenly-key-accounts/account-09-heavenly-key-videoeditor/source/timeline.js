@@ -23,6 +23,9 @@ $('clipCancel').onclick=()=>{if(session)session.cancelled=true;v.pause()};
 async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
  if(!ready()||!clips.length)return info('Load a video and add timeline clips.');
+ if(clips.some(c=>c.end>v.duration+.02))return info('A clip exceeds the current video duration. Reload the original source or correct the clips.');
+ const totalSeconds=clips.reduce((n,c)=>n+(c.end-c.start)/c.speed,0);
+ if(record&&totalSeconds>600)return info('Browser export is limited to ten minutes. Shorten the timeline.');
  if(record&&(!canvas.captureStream||!window.MediaRecorder))return info('WebM export is unavailable in this browser.');
  const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t)):null;
  if(record&&!mime)return info('Browser does not support WebM encoding.');
@@ -49,7 +52,8 @@ async function runTimeline(record){
     let completed=false,timer;const finish=(err)=>{if(completed)return;completed=true;clearInterval(timer);v.removeEventListener('ended',end);v.removeEventListener('error',error);err?reject(err):resolve()};
     const end=()=>finish(),error=()=>finish(Error('Video playback failed'));
     v.addEventListener('ended',end);v.addEventListener('error',error);
-    timer=setInterval(()=>{if(state.cancelled||v.currentTime>=c.end-.03||v.ended)finish()},40);
+    const started=Date.now(),maxMs=Math.max(15000,((c.end-c.start)/c.speed+12)*1000);
+    timer=setInterval(()=>{if(state.cancelled||v.currentTime>=c.end-.03||v.ended)return finish();if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
    });
   }
   v.pause();
