@@ -125,6 +125,19 @@ export async function onRequest({ request: req, env, params }) {
     }
     // Multi-account gateway: credentials reside ONLY in Cloudflare's encrypted
     // AI_CONNECTIONS_JSON secret. Never return keys to browsers or logs.
+    if (a === 'voice-config' && m === 'GET') return J({available:!!(env.VOICE_TTS_API_KEY&&env.VOICE_TTS_VOICE_ID),requiresConsent:true});
+    if (a === 'voice-synthesize' && m === 'POST') {
+      if (!env.VOICE_TTS_API_KEY || !env.VOICE_TTS_VOICE_ID) return J({error:'Voice synthesis not configured.'},503);
+      const b=await body(req);
+      if (!b || typeof b.text!=='string' || !b.text.trim() || b.text.length>1500 || b.consentConfirmed!==true) return J({error:'Text and voice authorization required (maximum 1500 characters).'},400);
+      const count=await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='voice_synthesize' AND at>?").bind(u.id,Date.now()-DAY).first();
+      if(count.c>=10)return J({error:'Daily synthesis limit reached.'},429);
+      const res=await fetch('https://api.elevenlabs.io/v1/text-to-speech/'+encodeURIComponent(env.VOICE_TTS_VOICE_ID),{method:'POST',headers:{'xi-api-key':env.VOICE_TTS_API_KEY,'content-type':'application/json','accept':'audio/mpeg'},body:JSON.stringify({text:b.text,model_id:'eleven_multilingual_v2'}),signal:AbortSignal.timeout(45000)});
+      if(!res.ok)return J({error:'Voice provider unavailable or quota reached.'},503);
+      const audio=await res.arrayBuffer();if(audio.byteLength>5e6)return J({error:'Audio too large.'},413);
+      await log(env,u.id,'voice_synthesize');
+      return new Response(audio,{headers:{'content-type':'audio/mpeg','cache-control':'no-store','x-content-type-options':'nosniff'}});
+    }
     if (a === 'ai-connections' && m === 'GET') {
       const entries = parseAIConnections(env);
       return J(entries.map(x => ({ id:x.id, name:x.name, provider:x.provider, model:x.model, enabled:x.enabled !== false })));
