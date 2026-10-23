@@ -88,6 +88,11 @@ export default {
    const routes={"/kingdom-quest":"/kingdom-quest.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
    const pathname=url.pathname.replace(/\/$/,"")||"/";
    if(pathname.endsWith(".html")&&pathname!=="/index.html"&&pathname!=="/study-extensions.html"){
+    const redirect=new URL(url);
+    redirect.pathname=pathname.slice(0,-5);
+    return Response.redirect(redirect.toString(),308);
+   }
+   if(pathname.endsWith(".html")&&pathname!=="/index.html"&&pathname!=="/study-extensions.html"){
     const clean=pathname.slice(0,-5);
     const target=clean==="/study-extensions"?"/study":clean;
     return Response.redirect(new URL(target+url.search,url.origin),308);
