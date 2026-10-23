@@ -20,8 +20,8 @@ jobs:
           test -s wrangler.toml
       - name: Syntax validation
         run: node --check 'functions/api/[[path]].js'
-      - name: Backend tests
-        run: npm test
+      - name: Full preflight and backend regression tests
+        run: npm run check
       - name: Check deployment credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
