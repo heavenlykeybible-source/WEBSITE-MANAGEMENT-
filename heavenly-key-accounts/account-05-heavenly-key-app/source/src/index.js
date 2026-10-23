@@ -58,6 +58,16 @@ export function createWorker(upstreamFetch=fetch) {
       });
     }
     // Wrangler Static Assets handles public files; member APIs are isolated above.
+    // Resolve clean public paths to existing HTML assets without changing APIs.
+    if ((request.method==="GET"||request.method==="HEAD") && !url.pathname.startsWith("/api/")) {
+      const path=url.pathname.replace(/\\/$/,"");
+      if (path && !path.split("/").pop().includes(".")) {
+        const asset=new URL(url);
+        asset.pathname=path+".html";
+        const result=await env.ASSETS.fetch(new Request(asset,request));
+        if(result.status!==404) return result;
+      }
+    }
     return env.ASSETS.fetch(request);
   }
   };
