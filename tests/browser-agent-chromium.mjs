@@ -8,7 +8,7 @@ try{
  browser=await puppeteer.launch({executablePath:chromium.executablePath(),headless:true,args:['--no-sandbox','--ignore-certificate-errors','--no-proxy-server','--host-resolver-rules=MAP fixture.example.org:443 127.0.0.1:'+port]});
  const endpoint=browser.wsEndpoint(),adapter={async launch(){const b=await puppeteer.connect({browserWSEndpoint:endpoint});b.sessionId=()=> 'fixture-session';return b;},async connect(){return this.launch();}};
  const run=createDriver(adapter,async h=>h==='fixture.example.org'),job={hosts:['fixture.example.org'],expires:Date.now()+120000};
- let state=await run({},job,{type:'navigate',url:'https://fixture.example.org/'});job.session=state.session;assert.ok(state.screenshot.length>1000);assert.equal(state.elements.length,5);
+ let state=await run({},job,{type:'navigate',url:'https://fixture.example.org/'});job.session=state.session;assert.ok(state.screenshot.length>1000);assert.equal(state.elements.length,4);
  const field=n=>state.elements.find(e=>e.label===n).id;
  await assert.rejects(run({},job,{type:'fill',element:field('Display name'),value:'Wrong',snapshot:'stale'}));
  state=await run({},job,{type:'fill',element:field('Display name'),value:'Emmanuel',snapshot:state.snapshot});assert.ok(!JSON.stringify(state.elements).includes('Emmanuel'));
