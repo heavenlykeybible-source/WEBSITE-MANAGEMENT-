@@ -20,7 +20,7 @@
       for(const p of items){
         const li=el('li',{},list);el('span',{text:p.name+' · '+new Date(p.updated_at).toLocaleString()+' '},li);
         const open=el('button',{type:'button',text:'Open'},li);
-        open.onclick=async()=>{try{const d=await json('projects/'+encodeURIComponent(p.id));selected=d.id;const state=d.data||{};layers.splice(0,layers.length,...(Array.isArray(state.layers)?state.layers:[]));$('pn').value=d.name;$('asp').value=state.aspect||'16:9';$('vfx').value=state.filter||'none';$('vb').value=state.brightness||100;showLayers();dims();status.textContent='Project opened. Re-select your media file.';}catch(e){status.textContent=e.message}};
+        open.onclick=async()=>{try{const d=await json('projects/'+encodeURIComponent(p.id));selected=d.id;const state=d.data||{};layers.splice(0,layers.length,...(Array.isArray(state.layers)?state.layers:[]));$('pn').value=d.name;$('asp').value=state.aspect||'16:9';$('vfx').value=state.filter||'none';$('vb').value=state.brightness||100;showLayers();dims();window.hkTimeline?.restoreClips(state.timeline||[]);status.textContent='Project opened. Re-select your media file.';}catch(e){status.textContent=e.message}};
         const remove=el('button',{type:'button',text:'Delete'},li);remove.onclick=async()=>{if(!confirm('Delete project '+p.name+'?'))return;try{await json('projects/'+encodeURIComponent(p.id),'DELETE');if(selected===p.id)selected=null;await loadProjects()}catch(e){status.textContent=e.message}};
       }
       status.textContent=items.length+' cloud project(s) available.';
