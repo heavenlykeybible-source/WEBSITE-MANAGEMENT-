@@ -1,0 +1,45 @@
+name: Deploy Heavenly Key Bible (Account 6)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/heavenly-key-bible/**'
+      - '.github/workflows/deploy-bible.yml'
+permissions:
+  contents: read
+concurrency:
+  group: account6-bible-production
+  cancel-in-progress: false
+jobs:
+  audit-and-deploy:
+    runs-on: ubuntu-latest
+    environment: account-6
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/heavenly-key-bible
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.BIBLE_CLOUDFLARE_API_TOKEN || secrets.ACCOUNT6_CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.BIBLE_CLOUDFLARE_ACCOUNT_ID || secrets.ACCOUNT6_CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/heavenly-key-bible/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Validate Worker bundle and all static assets
+        run: npm run build
+      - name: Audit and publish the existing Bible Worker
+        run: npm run deploy
+      - name: Verify published scripture and homepage
+        env:
+          BIBLE_LIVE_URL: ${{ vars.BIBLE_LIVE_URL }}
+        run: |
+          if [ -n "$BIBLE_LIVE_URL" ]; then
+            node bible/scripts/verify-live.mjs "$BIBLE_LIVE_URL"
+          else
+            echo '::warning::BIBLE_LIVE_URL is unset; live URL verification requires that variable.'
+          fi

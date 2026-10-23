@@ -46,8 +46,10 @@
       "account": 6,
       "folder": "account-06-online-bible",
       "recoverySource": "recovered-onlinebible/bible",
-      "status": "requires-latest-version-comparison",
-      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+      "status": "audited-local-build-live-verification-pending",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison",
+      "currentSource": "apps/heavenly-key-bible",
+      "deploymentWorkflow": ".github/workflows/deploy-bible.yml"
     },
     {
       "account": 7,

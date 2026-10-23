@@ -1,0 +1,1 @@
+(function(){const n=document.querySelector('.hk-family-nav');if(!n)return;const b=n.querySelector('.hk-family-toggle'),p=n.querySelector('.hk-family-links');b.addEventListener('click',()=>{const open=b.getAttribute('aria-expanded')!=='true';b.setAttribute('aria-expanded',String(open));p.hidden=!open});})();

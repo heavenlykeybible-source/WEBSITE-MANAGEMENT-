@@ -1,7 +1,7 @@
 # Bible website and service
 
-Recovery source: `onlinebible/bible`.
+Current audited release source: `apps/heavenly-key-bible`.
 
-Status: Recovery source available; latest GitHub main-branch version must be compared before merge and deployment.
+The current homepage, ministry logo, full KJV corpus, quiz/certificates and offline study tools are there. Deployment workflow: `.github/workflows/deploy-bible.yml`.
 
-Do not overwrite newer WEBSITE-MANAGEMENT- main branch application files. Keep secrets and production databases outside source control.
+The `source` folder in this account directory is the historical recovery copy and is retained unchanged for reference; it is not the new release target.
