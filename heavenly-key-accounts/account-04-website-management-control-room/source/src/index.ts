@@ -28,7 +28,14 @@ function imageType(b:Uint8Array){if(b.length>=8&&[137,80,78,71,13,10,26,10].ever
 export default {async fetch(request:Request,env:Env):Promise<Response>{
  const u=new URL(request.url);
  const ownerHost=u.hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
- if(!ownerHost&&!u.pathname.startsWith('/api/'))return env.ASSETS.fetch(request);
+ if(!ownerHost&&!u.pathname.startsWith('/api/')){
+  if((request.method==='GET'||request.method==='HEAD')&&!u.pathname.split('/').pop()?.includes('.')&&u.pathname!=='/'){
+   const asset=new URL(u);asset.pathname=u.pathname.replace(/\/$/,'')+'.html';
+   const response=await env.ASSETS.fetch(new Request(asset,request));
+   if(response.status!==404)return response;
+  }
+  return env.ASSETS.fetch(request);
+ }
  if(ownerHost&&u.pathname==='/api/owner/login'&&request.method==='POST'){
   if(request.headers.get('Origin')!==u.origin)return fail('Invalid sign-in origin.',403);
   try{const data=await body(request,4096);if(data.username!==undefined&&data.username!=='owner')return fail('Sign-in failed. Check your username and password.',401);const result=await ownerLogin(request,env.DB,data.password);return result.ok?new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','cache-control':'no-store','set-cookie':result.cookie!}}):fail(result.error!,result.status)}catch{return fail('Sign-in is temporarily unavailable.',503)}
