@@ -1,0 +1,11 @@
+# Account 9 original release: missing-file integrity manifest
+# Format: SHA-256  relative path from source/
+# These hashes were calculated from heavenlykey-videoeditor-account9-staging-final.zip.
+08efebb2ec59bc1b30f8ca7658534fe8958ee6493172e1320830a0fc8324f3d8  assets/favicon.png
+74667442aa4a4e1d86886bcaea583073520af738a59237a51f8c55f448030e92  assets/logo-256.png
+fe9d04795ae01ddfeadb3b4d4f4745fc7a6bcc14637557a740b6c189e38a2ed8  assets/logo-512.png
+4c9dd099626dc8951cfd365967a5cf633d754c35546f4b002cc61da1c5bd5fc6  index.html
+08efebb2ec59bc1b30f8ca7658534fe8958ee6493172e1320830a0fc8324f3d8  public/assets/favicon.png
+74667442aa4a4e1d86886bcaea583073520af738a59237a51f8c55f448030e92  public/assets/logo-256.png
+fe9d04795ae01ddfeadb3b4d4f4745fc7a6bcc14637557a740b6c189e38a2ed8  public/assets/logo-512.png
+4c9dd099626dc8951cfd365967a5cf633d754c35546f4b002cc61da1c5bd5fc6  public/index.html
