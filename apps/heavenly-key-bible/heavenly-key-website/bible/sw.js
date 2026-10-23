@@ -1,5 +1,5 @@
 "use strict";
-const SHELL = "hk-bible-shell-v40";
+const SHELL = "hk-bible-shell-v43";
 const SCRIPTURE = "hk-bible-kjv-ae1f46af-v1";
 const PREFIX = new URL("./", self.location.href).pathname;
 const SHELL_ASSETS = ["./index.html", "./ministry-logo.jpeg", "./style.css", "./reader-design.css", "./reader-design.js", "./shared/hk-standard-footer.css", "./fonts/NimbusRoman-Regular.otf", "./fonts/NimbusRoman-Bold.otf", "./fonts/NimbusRoman-Italic.otf", "./fonts/NimbusRoman-BoldItalic.otf", "./app.js", "./study-tools.js", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png", "./data/hymns.json", "./study-extensions.html", "./study-extensions.js", "./dictionary.json", "./daily-topics.json", "./daily-lessons.json", "./original-language-guide.json", "./read-pray-reminder.js", "./read-pray-push.js", "./kingdom-quest.html", "./kingdom-quest.css", "./kingdom-quest.js", "./kingdom-quest-questions.json", "./data/annotations/GEN.json", "./data/annotations/EXO.json", "./data/annotations/MAT.json", "./data/annotations/MAR.json", "./data/annotations/JOH.json", "./data/annotations/center-references.json", "./shared/app-update.js", "./shared/hk-standard-footer.js", "./family-navigation.js", "./install/index.html", "./install/ipad/index.html", "./install/android/index.html", "./install/iphone/index.html", "./install/mac/index.html", "./install/windows/index.html", "./install/ipad/install.js", "./install/android/install.js", "./install/iphone/install.js", "./install/mac/install.js", "./install/windows/install.js"];
@@ -18,14 +18,19 @@ self.addEventListener("fetch", event => {
  if(event.request.method!=="GET"||url.origin!==self.location.origin||!url.pathname.startsWith(PREFIX))return;
  const isAnnotation = url.pathname.startsWith(PREFIX+"data/annotations/") && ["GEN.json", "EXO.json", "MAT.json", "MAR.json", "JOH.json", "center-references.json"].some(name=>url.pathname===PREFIX+"data/annotations/"+name);
  const isScripture = url.pathname.startsWith(PREFIX+"data/kjv/");
- const isShell = SHELL_PATHS.has(url.pathname);
+ const aliases={"/kingdom-quest":"kingdom-quest.html","/dictionary":"study-extensions.html","/concordance":"study-extensions.html","/study":"study-extensions.html","/daily-routine":"study-extensions.html"};
+ const base=PREFIX.endsWith("/")?PREFIX.slice(0,-1):PREFIX;
+ const relative=url.pathname===base?"/":url.pathname.startsWith(base+"/")?url.pathname.slice(base.length):url.pathname;
+ const isShell = SHELL_PATHS.has(url.pathname)||Object.hasOwn(aliases,relative);
  if(!isScripture&&!isShell&&!isAnnotation)return;
  event.respondWith((async()=>{
   const cache=await caches.open(isScripture?SCRIPTURE:SHELL);
   // Always check the network for HTML navigation so an old cached page cannot hide updates.
   // Never substitute the Bible reader for Dictionary/Concordance when their page is unavailable.
   const navigation=event.request.mode==="navigate";
-  const cached=await cache.match(event.request);
+  const alias=aliases[relative];
+  const fallback=alias?new URL(alias,self.location.href):null;
+  const cached=(await cache.match(event.request))||(fallback?await cache.match(fallback):undefined);
   if(cached&&!navigation)return cached;
   try{
    const response=await fetch(event.request);
@@ -71,13 +76,13 @@ self.addEventListener("message", event=>{
  event.waitUntil(download);
 });
 
-self.addEventListener("notificationclick",event=>{event.notification.close();event.waitUntil((async()=>{const url=new URL("study-extensions.html",self.location.href).href;for(const c of await self.clients.matchAll({type:"window",includeUncontrolled:true})){if(c.url.startsWith(new URL("./",self.location.href).href)&&"focus" in c){if("navigate" in c)await c.navigate(url);return c.focus();}}return self.clients.openWindow(url);})());});
+self.addEventListener("notificationclick",event=>{event.notification.close();event.waitUntil((async()=>{const url=new URL("daily-routine",self.location.href).href;for(const c of await self.clients.matchAll({type:"window",includeUncontrolled:true})){if(c.url.startsWith(new URL("./",self.location.href).href)&&"focus" in c){if("navigate" in c)await c.navigate(url);return c.focus();}}return self.clients.openWindow(url);})());});
 
 // The browser invokes this only when a configured push service sends an event.
 self.addEventListener('push',event=>{
  let payload={};try{payload=event.data?.json()||{};}catch{payload={};}
  if(payload.type!=='hk-read-pray-daily')return;
  const title='READ & PRAY DAILY ROUTINE';
- const options={body:'Have you prayed today? It’s time to read God’s Word and pray.',tag:'hk-read-pray-daily',icon:'./icon-192.png',data:{url:new URL('study-extensions.html',self.location.href).href}};
+ const options={body:'Have you prayed today? It’s time to read God’s Word and pray.',tag:'hk-read-pray-daily',icon:'./icon-192.png',data:{url:new URL('daily-routine',self.location.href).href}};
  event.waitUntil(self.registration.showNotification(title,options));
 });
