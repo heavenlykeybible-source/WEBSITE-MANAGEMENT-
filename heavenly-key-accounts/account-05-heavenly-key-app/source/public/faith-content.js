@@ -54,3 +54,19 @@ export function hymnForDay(now=Date.now()){
   if(!VERIFIED_HYMNS.length)throw Error("No rights-cleared, faith-reviewed hymns are available.");
   return VERIFIED_HYMNS[dayNumber(now)%VERIFIED_HYMNS.length];
 }
+
+// Official public, versioned doctrinal reference. This does not replace KJV text.
+// Other modules may call it when they need fresh ministry doctrinal context.
+export const OFFICIAL_DOCTRINE_URL="https://www.heavenlykey.org/doctrine/approved.json";
+export async function loadOfficialDoctrine(fetcher=fetch){
+  const response=await fetcher(OFFICIAL_DOCTRINE_URL,{headers:{Accept:"application/json"},cache:"no-cache"});
+  if(!response.ok)throw new Error("Approved doctrine feed unavailable");
+  const text=await response.text();
+  if(text.length>30000)throw new Error("Approved doctrine feed oversized");
+  const data=JSON.parse(text);
+  if(data.schema!=="hkem-doctrine-v1"||data.authority!=="Heavenly Key Evangelistic Movement"
+    ||data.scriptureTranslation!=="Authorized King James Version (KJV)"
+    ||!Array.isArray(data.articles)||data.articles.length!==22
+    ||data.articles.some((article,index)=>article.article!==index+1))throw new Error("Unrecognized doctrine version");
+  return data;
+}
