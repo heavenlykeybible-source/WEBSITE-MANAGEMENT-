@@ -2,13 +2,14 @@ name: Account 9 VideoEditor - Cloudflare Pages
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/deploy-account-09-videoeditor.yml'
       - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
 permissions:
   contents: read
 jobs:
-  deploy-preview:
+  deploy-account9:
     runs-on: ubuntu-latest
     environment: account9-staging
     defaults:
@@ -47,3 +48,11 @@ jobs:
           accountId: ${{ secrets.ACCOUNT9_CF_ACCOUNT_ID }}
           workingDirectory: heavenly-key-accounts/account-09-heavenly-key-videoeditor/source
           command: pages deploy public --project-name=heavenlykey-studio --branch=account9-staging
+      - name: Deploy production to Cloudflare Pages
+        if: github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
+          accountId: ${{ secrets.ACCOUNT9_CF_ACCOUNT_ID }}
+          workingDirectory: heavenly-key-accounts/account-09-heavenly-key-videoeditor/source
+          command: pages deploy public --project-name=heavenlykey-studio --branch=main
