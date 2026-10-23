@@ -64,5 +64,16 @@ async function runTimeline(record){
  }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}info('Timeline failed: '+e.message)}
  finally{v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration);if(stream)stream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
 }
+window.hkTimeline={
+ getClips:()=>clips.map(c=>({...c})),
+ restoreClips:(data)=>{
+  if(!Array.isArray(data)||data.length>200)return info('Saved timeline is invalid or too long.');
+  const valid=data.every(c=>c&&Number.isFinite(c.start)&&Number.isFinite(c.end)&&
+    Number.isFinite(c.speed)&&c.start>=0&&c.end>c.start&&c.speed>=.25&&c.speed<=4);
+  if(!valid)return info('Saved timeline contains invalid clips.');
+  clips=data.map(c=>({start:c.start,end:c.end,speed:c.speed}));
+  undo=[];redo=[];paint();info('Timeline restored. Reload the original video to preview or export.');
+ }
+};
 $('clipPlay').onclick=()=>runTimeline(false);$('clipExport').onclick=()=>runTimeline(true);
 })();
