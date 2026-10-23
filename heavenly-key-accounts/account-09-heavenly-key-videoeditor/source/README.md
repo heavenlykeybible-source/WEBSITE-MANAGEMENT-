@@ -1,22 +1,24 @@
-# Account 9 VideoEditor source import target
+# Heavenly Key Studio
 
-This directory is reserved for the complete Heavenly Key VideoEditor source package for Account 9.
+Browser video, audio and voice studio with optional accounts on free Cloudflare. NOT ready for public launch: read AUDIT.md first.
 
-Status:
-- Import: pending actual deployment package upload
-- Deployment target: GitHub-managed Cloudflare Pages / staging workflow
-- Production status: not ready
+## Contents
+- index.html: the whole web app (editor, audio studio, voice studio, account page)
+- assets/: Heavenly Key logo files and favicon
+- functions/api/[[path]].js: API (accounts, projects, media, auto-captions, account deletion)
+- schema.sql: D1 database tables
+- wrangler.toml: Cloudflare bindings (paste your D1 database_id)
+- _headers: security headers
+- DEPLOY.md: deploy steps (needs your Cloudflare login and approval)
+- ARCHITECTURE.md, AUDIT.md: design and audit/launch readiness
+- tests/: the automated test scripts (sandbox paths, see tests/README.md)
 
-Important:
-- Do not deploy from this directory until the full source package is copied here and verified.
-- Preserve any newer development work already present in the supplied package.
-- Keep the existing production Cloudflare bindings, D1 database, R2 media storage, and Workers AI configuration unchanged until staging verification succeeds.
+## Release status
+Current locally verified build: 53/53 backend integration checks passed with simulated D1/R2/AI; static Chromium page loaded without page errors. Live Cloudflare, mobile, and export testing remain necessary. See RELEASE-STATUS.md.
 
-Required follow-up before deployment:
-1. Upload the extracted release package into this directory.
-2. Run `npm run check` from the imported app root.
-3. Verify Cloudflare Pages project `heavenlykey-studio` output directory is `public` and Pages Functions are retained.
-4. Validate D1, R2, Workers AI, and Owner/Admin authentication in the live staging environment.
-5. Activate AI services only after staging pass.
+## Try it without deploying
+Serve this folder over http (for example `python3 -m http.server`) and open index.html. The editor, audio and voice tools work. Accounts, media library and auto-captions need the Cloudflare deploy.
 
-Do not treat this as production-ready until staging verification succeeds.
+## Static deployment security (23 October 2026)
+
+Deploy ONLY the `public/` directory as static assets, with `functions/` in the project root. Do not publish `.` because it exposes `schema.sql`, tests, migrations, and private setup documentation. Set Cloudflare Pages output directory to `public` and Pages project root to this source folder. Preserve the Pages Functions directory at the project root.
