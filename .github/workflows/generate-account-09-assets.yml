@@ -1,0 +1,35 @@
+name: Generate Account 9 PNG Assets
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/generate-account-09-assets.yml'
+      - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/scripts/generate-brand-assets.py'
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate all six PNG assets
+        run: python3 heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/scripts/generate-brand-assets.py
+      - name: Validate generated PNG files
+        run: |
+          set -eu
+          root=heavenly-key-accounts/account-09-heavenly-key-videoeditor/source
+          for folder in assets public/assets; do
+            for name in favicon.png logo-256.png logo-512.png; do
+              test -s "$root/$folder/$name"
+              file "$root/$folder/$name" | grep -q 'PNG image data'
+            done
+          done
+      - name: Commit generated image files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/assets heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/public/assets
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate Account 9 favicon and logo PNG files"
+            git push
+          fi
