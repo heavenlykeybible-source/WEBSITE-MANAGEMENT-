@@ -6,6 +6,12 @@ const passkeys=await build({entryPoints:[new URL('../security/owner-passkeys.js'
 const passkeyServer='// BEGIN OWNER PASSKEY SERVER\n'+passkeys.outputFiles[0].text.replace(/[ \t]+$/gm,'')+'\nconst ownerPasskeys=OwnerPasskeys.createOwnerPasskeyRoutes({json:(...a)=>json(...a),fail,body,reauthenticate,audit,withOperationLock});\n// END OWNER PASSKEY SERVER';
 if(worker.includes('// BEGIN OWNER PASSKEY SERVER'))worker=worker.replace(/\/\/ BEGIN OWNER PASSKEY SERVER[\s\S]*?\/\/ END OWNER PASSKEY SERVER/,()=>passkeyServer);
 else worker=passkeyServer+'\n'+worker;
+const nativeServer='// BEGIN NATIVE WORKSPACE SERVER\n'+fs.readFileSync(new URL('../workspace/imports.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/verification.js',import.meta.url),'utf8')+'\n// END NATIVE WORKSPACE SERVER';
+if(worker.includes('// BEGIN NATIVE WORKSPACE SERVER'))worker=worker.replace(/\/\/ BEGIN NATIVE WORKSPACE SERVER[\s\S]*?\/\/ END NATIVE WORKSPACE SERVER/,()=>nativeServer);
+else worker=nativeServer+'\n'+worker;
+const nativeClient='// BEGIN NATIVE WORKSPACE CLIENT\n'+fs.readFileSync(new URL('../workspace/client.js',import.meta.url),'utf8').replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END NATIVE WORKSPACE CLIENT';
+if(worker.includes('// BEGIN NATIVE WORKSPACE CLIENT'))worker=worker.replace(/\/\/ BEGIN NATIVE WORKSPACE CLIENT[\s\S]*?\/\/ END NATIVE WORKSPACE CLIENT/,()=>nativeClient);
+else worker=worker.replace('var CHAT=[],',nativeClient+'\nvar CHAT=[],');
 const passkeyClient=fs.readFileSync(new URL('../security/passkey-client.js',import.meta.url),'utf8');
 const passkeySection='// BEGIN OWNER PASSKEY CLIENT\n'+passkeyClient.replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END OWNER PASSKEY CLIENT';
 if(worker.includes('// BEGIN OWNER PASSKEY CLIENT'))worker=worker.replace(/\/\/ BEGIN OWNER PASSKEY CLIENT[\s\S]*?\/\/ END OWNER PASSKEY CLIENT/,()=>passkeySection);

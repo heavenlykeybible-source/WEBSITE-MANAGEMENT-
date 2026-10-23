@@ -8,6 +8,7 @@ on:
       - 'control-room-worker.js'
       - 'ai/**'
       - 'security/**'
+      - 'workspace/**'
       - 'cms/build.mjs'
       - '.github/workflows/deploy.yml'
 
@@ -69,6 +70,7 @@ jobs:
           npm test
           node tests/owner-passkeys.mjs
           node tests/ai-workspace.mjs
+          node tests/native-imports.mjs
 
       - name: Verify Account 4 owner approval interface
         run: node tests/account4-permission-ui.mjs
@@ -84,6 +86,7 @@ jobs:
           npm run test:cms-dom
           npm run test:cms-browser
           node tests/account4-permissions-browser.mjs
+          node tests/native-imports-browser.mjs
 
       - name: Deploy existing Worker without changing its resources
         run: node scripts/deploy-account4-existing.mjs
