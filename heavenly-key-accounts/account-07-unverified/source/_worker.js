@@ -1,26 +1,20 @@
-// Account 7: dedicated Radio Pages Worker. Bind MEDIA_SERVICE to Account 2 Worker "heavenlykey-media".
-// Keep broadcasting credentials and databases on Account 2; expose only its public read endpoints.
+// Account 7 dedicated Radio Pages Worker. No cross-account service binding assumed.
+// Set MEDIA_PUBLIC_ORIGIN only after verifying Account 2's public broadcast endpoint.
 const allowed = /^\/api\/broadcast\/(?:programme|live|media\/\d+\/object)$/;
 export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    if (url.pathname.startsWith('/api/broadcast/')) {
-      if (!['GET','HEAD'].includes(request.method) || !allowed.test(url.pathname)) {
-        return new Response('Not found', {status:404});
-      }
-      if (!env.MEDIA_SERVICE || typeof env.MEDIA_SERVICE.fetch !== 'function') {
-        return Response.json({error:'Radio broadcast service is not connected.'},{status:503,headers:{'Cache-Control':'no-store'}});
-      }
-      const upstream = new URL(url.pathname + url.search, 'https://heavenlykey-media.internal');
-      const headers = new Headers();
-      headers.set('X-Heavenly-Key-Internal','media-engine-public-v1');
-      if (request.headers.has('Range')) headers.set('Range',request.headers.get('Range'));
-      const response = await env.MEDIA_SERVICE.fetch(new Request(upstream,{method:request.method,headers}));
-      const outgoing = new Headers(response.headers);
-      outgoing.set('Cache-Control','no-store');
-      return new Response(response.body,{status:response.status,headers:outgoing});
-    }
-    if (!env.ASSETS) return new Response('Radio site assets are not configured.',{status:503});
-    return env.ASSETS.fetch(request);
+ async fetch(request,env) {
+  const url=new URL(request.url);
+  if(url.pathname.startsWith('/api/broadcast/')) {
+   if(!['GET','HEAD'].includes(request.method)||!allowed.test(url.pathname))return new Response('Not found',{status:404});
+   if(!env.MEDIA_PUBLIC_ORIGIN)return Response.json({error:'Broadcast connection not configured'},{status:503,headers:{'Cache-Control':'no-store'}});
+   let base;try{base=new URL(env.MEDIA_PUBLIC_ORIGIN);if(base.protocol!=='https:'||base.username||base.password||base.pathname!=='/'||base.search||base.hash)throw Error('Invalid origin');}catch{return Response.json({error:'Invalid broadcast origin configuration'},{status:503});}
+   const target=new URL(url.pathname+url.search,base);
+   const headers=new Headers();if(request.headers.has('Range'))headers.set('Range',request.headers.get('Range'));
+   // The backend must independently authorize public broadcast access; never forward an internal trust marker.
+   const response=await fetch(new Request(target,{method:request.method,headers,redirect:'manual'}));
+   const h=new Headers(response.headers);h.set('Cache-Control','no-store');h.delete('set-cookie');h.delete('access-control-allow-origin');
+   return new Response(response.body,{status:response.status,headers:h});
   }
+  return env.ASSETS?env.ASSETS.fetch(request):new Response('Radio assets not configured',{status:503});
+ }
 };
