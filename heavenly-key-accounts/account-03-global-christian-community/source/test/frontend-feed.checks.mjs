@@ -6,6 +6,7 @@ class Node {
  constructor(tag,text){this.tag=tag;this.textContent=text||'';this.dataset={};this.children=[];this.attributes={};this.parentElement=null;}
  append(...items){for(const item of items){item.parentElement=this;this.children.push(item);}}
  replaceChildren(...items){this.children=[];this.append(...items);}
+ before(next){const p=this.parentElement;p.children.splice(p.children.indexOf(this),0,next);next.parentElement=p;}
  replaceWith(next){const p=this.parentElement;p.children[p.children.indexOf(this)]=next;next.parentElement=p;}
  remove(){if(this.parentElement)this.parentElement.children=this.parentElement.children.filter(x=>x!==this);}
  setAttribute(k,v){this.attributes[k]=v;}
@@ -120,8 +121,9 @@ test('home feed automatically follows its cursor once, keeps manual retry, and d
  }
  const context={URLSearchParams,location:{search:''},page:'home',root:host,el:(tag,text)=>new FeedNode(tag,text),api:url=>new Promise(resolve=>requests.push({url,resolve})),renderPost:p=>{const n=new FeedNode('article');n.dataset.postId=String(p.post_id);return n;},IntersectionObserver:class{constructor(fn){this.fn=fn;observers.push(this);}observe(node){this.node=node;}disconnect(){this.disconnected=true;}}};
  host.getAttribute=k=>host.attributes[k];
+ const publications=new Node('section'),query=host.querySelector.bind(host);host.querySelector=s=>s==='.hk-official-feed'?publications:query(s);host.append(publications);
  const mount=vm.runInNewContext(source.slice(start,end)+'\nmountFeed;',context),initial=mount(host);
- requests[0].resolve({items:[{post_id:5}],nextBefore:5});await initial;assert.equal(observers.length,1);
+ requests[0].resolve({items:[{post_id:5}],nextBefore:5});await initial;assert.equal(observers.length,1);assert(host.children.indexOf(host.querySelector('[data-feed]'))<host.children.indexOf(publications));assert(host.children.indexOf(host.querySelector('[data-load-more]'))<host.children.indexOf(publications));
  const observer=observers[0];observer.fn([{isIntersecting:true}]);assert(observer.disconnected);assert(requests[1].url.includes('before=5'));assert.equal(requests.length,2);
  observer.fn([{isIntersecting:true}]);assert.equal(requests.length,2);
  requests[1].resolve({items:[{post_id:4}],nextBefore:4});await new Promise(r=>setImmediate(r));assert.equal(host.querySelector('[data-feed]').children.length,2);
