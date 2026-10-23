@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run check && npm run frontend && npm run test:home && npm run test:security && npm run test:design && npm run test:feed && npm run test:groups && npm run test:registration && npm run test:stewardship && npm run test:social-adverts && npm run test:active && npm run test:spaces && npm run preflight && node scripts/verify-worker-bundle.mjs",
+    "build": "npm run check && npm run test:passkeys && node --check public/passkeys.js && npm run frontend && npm run test:home && npm run test:security && npm run test:design && npm run test:feed && npm run test:groups && npm run test:registration && npm run test:stewardship && npm run test:social-adverts && npm run test:active && npm run test:spaces && npm run preflight && node scripts/verify-worker-bundle.mjs",
     "deploy": "wrangler deploy --config wrangler.toml",
     "upload:version": "wrangler versions upload --config wrangler.toml",
     "migrations:production": "wrangler d1 migrations apply heavenly-key-global-community-db --remote --config wrangler.toml",
@@ -23,11 +23,15 @@
     "test:spaces": "node --test test/spaces.checks.mjs",
     "test:care": "node --test test/community-care.checks.mjs",
     "test:home": "node --test test/approved-home-layout.checks.mjs test/approved-dashboard.checks.mjs test/home-loading.checks.mjs test/no-ai.checks.mjs",
-    "test:security": "node --test test/session-security.checks.mjs"
+    "test:security": "node --test test/session-security.checks.mjs",
+    "test:passkeys": "node --test test/passkeys.checks.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261015.1",
     "typescript": "^5.5.0",
     "wrangler": "4.151.0"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "13.2.2"
   }
 }
