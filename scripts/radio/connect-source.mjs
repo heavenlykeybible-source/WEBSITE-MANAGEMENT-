@@ -26,15 +26,29 @@ if (!health.ok || (await health.json()).service !== 'heavenlykey-media-engine') 
 // Preserve the deployed studio modules, not an older recovered studio build.
 const contentResponse = await fetch(endpoint(source, '/content/v2'), {headers:{Authorization:'Bearer '+source.token}, signal:AbortSignal.timeout(30000)});
 if (!contentResponse.ok) throw Error('Cannot read the existing Account 2 code (HTTP '+contentResponse.status+'); refusing a replacement.');
-const main = contentResponse.headers.get('cf-worker-main-module-part');
-if (!main || /["'\r\n\\]/.test(main)) throw Error('Could not identify the existing module entry safely.');
+let main = contentResponse.headers.get('cf-worker-main-module-part') || beforeSource.main_module;
 const modules = new FormData();
 if ((contentResponse.headers.get('content-type')||'').includes('multipart/form-data')) {
   const original = await contentResponse.formData();
+  const metadata=original.get('metadata');
+  if(metadata){try{const parsed=JSON.parse(typeof metadata==='string'?metadata:await metadata.text());main ||= parsed.main_module;}catch{}}
   for (const [name, value] of original) if(name!=='metadata') {
     if(typeof value==='string')modules.append(name,value);else modules.append(name,value,value.name);
   }
-} else modules.append(main, new Blob([await contentResponse.arrayBuffer()], {type:'application/javascript+module'}), main);
+} else {
+  main ||= 'deployed-main.mjs';
+  modules.append(main, new Blob([await contentResponse.arrayBuffer()], {type:'application/javascript+module'}), main);
+}
+if(!main){
+  const candidates=[];
+  for(const [name,value]of modules){
+    if(!/\.(?:m?js)$/.test(name))continue;
+    const text=typeof value==='string'?value:await value.text();
+    if(/export\s+default\b|export\s*\{[^}]*\bas\s+default\b/s.test(text))candidates.push(name);
+  }
+  if(candidates.length===1)main=candidates[0];
+}
+if (!main || /["'\r\n\\]/.test(main)) throw Error('Could not identify the existing module entry safely; module names: '+[...modules.keys()].join(', '));
 const currentMain = modules.get(main);
 if (!currentMain) throw Error('Original Account 2 module is missing.');
 const allCode = (await Promise.all([...modules.values()].map(value=>typeof value==='string'?value:value.text()))).join('\n');
