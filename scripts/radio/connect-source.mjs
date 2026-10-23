@@ -24,8 +24,8 @@ const health = await fetch(origin+'/health', {redirect:'error', signal:AbortSign
 if (!health.ok || (await health.json()).service !== 'heavenlykey-media-engine') throw Error('Account 2 Media Engine health check failed.');
 
 // Preserve the deployed studio modules, not an older recovered studio build.
-const contentResponse = await fetch(endpoint(source, '/content'), {headers:{Authorization:'Bearer '+source.token}, signal:AbortSignal.timeout(30000)});
-if (!contentResponse.ok) throw Error('Cannot read the existing Account 2 code; refusing a replacement.');
+const contentResponse = await fetch(endpoint(source, '/content/v2'), {headers:{Authorization:'Bearer '+source.token}, signal:AbortSignal.timeout(30000)});
+if (!contentResponse.ok) throw Error('Cannot read the existing Account 2 code (HTTP '+contentResponse.status+'); refusing a replacement.');
 const main = contentResponse.headers.get('cf-worker-main-module-part');
 if (!main || /["'\r\n\\]/.test(main)) throw Error('Could not identify the existing module entry safely.');
 const modules = new FormData();
