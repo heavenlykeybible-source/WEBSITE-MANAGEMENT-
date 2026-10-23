@@ -87,7 +87,7 @@ export default {
   if(request.method==="GET"||request.method==="HEAD"){
    const routes={"/kingdom-quest":"/kingdom-quest.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
    const pathname=url.pathname.replace(/\/$/,"")||"/";
-   if(pathname.endsWith(".html")&&pathname!=="/index.html"&&pathname!=="/study-extensions.html"){
+   if(pathname==="/kingdom-quest.html"){
     const redirect=new URL(url);
     redirect.pathname=pathname.slice(0,-5);
     return Response.redirect(redirect.toString(),308);
