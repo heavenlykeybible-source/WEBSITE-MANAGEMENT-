@@ -5,7 +5,7 @@
   panel.className='panel';
   panel.style.marginTop='18px';
   panel.innerHTML='<h2>AI Creative Assistant</h2><p class="muted">Cloudflare Workers AI • sign-in required • daily usage limit • availability depends on account allowance</p><label for="aitask">Choose an AI task</label><select id="aitask"><option value="script">Video / podcast script</option><option value="titles">Video titles</option><option value="description">Video description</option><option value="captions">Rewrite captions</option><option value="rewrite">Rewrite text</option><option value="hashtags">Hashtags</option><option value="summary">Summarize</option><option value="outline">Scene-by-scene outline</option></select><label for="aiprompt">Topic or text</label><textarea id="aiprompt" rows="5" maxlength="4000" placeholder="Enter a topic, draft or notes"></textarea><div class="actions"><button id="airun" class="primary" type="button">Generate with AI</button><button id="aiuse" type="button">Use as video caption</button><button id="aicopy" type="button">Copy result</button></div><label for="airesult">AI result (editable)</label><textarea id="airesult" rows="10" placeholder="Generated content will appear here"></textarea><div class="status" id="aistatus" role="status">Ready.</div>';
-  document.querySelector('main').append(panel);
+  document.getElementById('video').append(panel);
   $('airun').onclick=async()=>{
     const btn=$('airun'),text=$('aiprompt').value.trim();
     if(text.length<3)return $('aistatus').textContent='Enter at least 3 characters.';
