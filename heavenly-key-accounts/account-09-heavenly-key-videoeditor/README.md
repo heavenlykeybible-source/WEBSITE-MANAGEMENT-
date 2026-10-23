@@ -28,3 +28,8 @@ Account 4 is not used for this path.
 ## Latest secured staging release (23 October 2026)
 
 Latest complete ZIP: `heavenlykey-videoeditor-account9-final-deployment-ready.zip` (provided in chat). SHA-256: `b2f7af11f09ed130e001fc77eb1bfb900cdc779c9b129e6798e69cb77da3597e`, contains 39 files including separately staged static `public/` assets. 53/53 backend integration checks and preflight passed locally. The workflow was hardened in GitHub commit `fbc9ac40` to deploy ONLY `public/`, not source/test/migration files. The package has **not yet** been copied to the GitHub source directory and has **not** been live-deployed. Owner/Admin provisioning, D1/R2/AI live verification and real browser end-to-end tests are required before launch. Do not use the earlier ZIP hash above to verify this latest package.
+
+
+## 23 October 2026 — latest staging package and workflow verification
+
+New portable release package supplied in chat: `heavenlykey-videoeditor-account9-staging-final.zip`, SHA-256 `5aeed78144ad6cdce14811d724bca78cee0161024e6b8390fda101ea61cb3a5e`. The package includes the original browser editor, Cloudflare Pages Functions backend, account provisioning scripts, D1 schema/migrations, tests, `public/` assets, and corrected instructions to deploy ONLY `public/`. The source passed `npm run check` locally (preflight plus 53/53 simulated backend integration checks). The GitHub staging workflow was further hardened in commit `1d129150` with required asset/config/test checks. The complete ZIP has still NOT been imported into the GitHub source folder; therefore NO live deployment, D1 provisioning, Owner/Admin login or real browser export has been confirmed. Explicitly keep public launch blocked pending live checks.
