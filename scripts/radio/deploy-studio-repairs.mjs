@@ -30,8 +30,9 @@ if(changed){
   // Content-only update retains the same entry point and every existing binding.
   const entry=response.headers.get('cf-entrypoint');
   const uploadHeaders={...headers};if(entry)uploadHeaders['CF-WORKER-MAIN-MODULE-PART']=entry;
+  if(entry)modules.set('metadata',new Blob([JSON.stringify({main_module:entry})],{type:'application/json'}));
   const result=await fetch(root+'/content',{method:'PUT',headers:uploadHeaders,body:modules,signal:AbortSignal.timeout(30000)});
-  const data=await result.json();if(!result.ok||!data.success)throw Error('Studio content update failed: HTTP '+result.status+'; codes '+data.errors?.map(e=>e.code).join(','));
+  const data=await result.json();if(!result.ok||!data.success)throw Error('Studio content update failed: HTTP '+result.status+'; '+data.errors?.map(e=>e.code+': '+e.message).join('; '));
 }
 const after=await settings();
 if(JSON.stringify(before.bindings)!==JSON.stringify(after.bindings))throw Error('Existing binding preservation verification failed.');

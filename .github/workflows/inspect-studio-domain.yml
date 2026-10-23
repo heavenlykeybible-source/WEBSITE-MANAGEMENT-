@@ -1,0 +1,25 @@
+name: Inspect Studio domain routing
+on:
+  workflow_dispatch:
+  push:
+    branches: [prepare/account-07-radio-20261023]
+    paths: ['.github/workflows/inspect-studio-domain.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read Account 2 domain mapping and zone access
+        env:
+          ACCOUNT_2_TOKEN: ${{ secrets.ACCOUNT_2_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          const headers={Authorization:'Bearer '+process.env.ACCOUNT_2_TOKEN};
+          for(const path of ['/accounts/c324d871146f8fcc5e7dcd3da057011c/workers/domains','/zones?name=heavenlykey.org']){
+            const r=await fetch('https://api.cloudflare.com/client/v4'+path,{headers});const d=await r.json();
+            const records=(d.result||[]).map(x=>({hostname:x.hostname,service:x.service,environment:x.environment,zone_id:x.zone_id,id:x.id,name:x.name}));
+            console.log(JSON.stringify({path,http:r.status,success:d.success,codes:d.errors?.map(e=>e.code),records}));
+          }
+          JS
