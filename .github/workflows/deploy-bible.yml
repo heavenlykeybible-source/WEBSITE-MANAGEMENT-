@@ -32,8 +32,10 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Validate Worker bundle and all static assets
         run: npm run build
-      - name: Audit and publish the existing Bible Worker
-        run: npm run deploy
+      - name: Audit Bible before deployment
+        run: npm test
+      - name: Deploy Bible directly to Cloudflare from GitHub
+        run: npx wrangler deploy --config bible/wrangler.toml --keep-vars
       - name: Verify published scripture and homepage
         env:
           BIBLE_LIVE_URL: ${{ vars.BIBLE_LIVE_URL }}
