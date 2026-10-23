@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build:cms": "node cms/build.mjs",
-    "test": "node tests/run.mjs",
+    "test": "node tests/advert-free.mjs && node tests/run.mjs",
+    "test:adverts": "node tests/advert-free.mjs",
     "test:cms-dom": "node tests/cms-dom.mjs",
     "test:cms-browser": "node tests/cms-browser.mjs"
   },
