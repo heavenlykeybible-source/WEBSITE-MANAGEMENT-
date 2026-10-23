@@ -1,0 +1,10 @@
+/* Heavenly Key Global Community — premium shell coordinated from the owner reference.
+   Existing community features, routes, data and controls remain authoritative. */
+@import url('./reference-premium.css');
+body[data-page=home]{background:linear-gradient(#f8fbff,#eef4fa)}
+body[data-page=home] .brand{display:flex;align-items:center;gap:10px;color:#f7d985;font-family:Georgia,serif;font-size:1.28rem;letter-spacing:.04em}
+body[data-page=home] .brand small{display:block;font-family:system-ui,sans-serif;font-size:.62rem;letter-spacing:.22em;margin-top:3px}
+.reference-banner:before{background-image:url('assets/rotating-world-land.svg');background-position:center;background-size:cover;opacity:.12}
+.reference-family .status:empty{display:none}.reference-search-results{scroll-margin-top:120px}
+body[data-page=home] .composer-prompt{text-transform:uppercase;line-height:1.55}
+body[data-page=home] a:focus-visible,body[data-page=home] button:focus-visible{outline:3px solid #e7b94c;outline-offset:3px}

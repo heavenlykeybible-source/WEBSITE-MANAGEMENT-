@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Heavenly Key | Live & Meeting Studio</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#153c86"><link rel="icon" href="/icons/icon-192.png">
+<style>
+:root{--bg:#14202e;--pn:#1d2c3d;--ln:#2f4258;--tx:#e8eef5;--mu:#93a6ba;--ac:#3fa7d6;--live:#e5484d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,sans-serif;max-width:900px;margin-inline:auto;padding:12px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+h1{font-size:18px;margin:0}h2{font-size:15px;margin:14px 0 4px;color:var(--mu)}
+.pill{padding:3px 12px;border-radius:99px;background:var(--pn);border:1px solid var(--ln);color:var(--mu);font-size:13px}
+.pill.on{background:var(--live);border-color:var(--live);color:#fff}
+.cvs{display:grid;gap:8px;grid-template-columns:1fr}.cvs.s{grid-template-columns:1fr 1fr}
+.lb{font-size:12px;color:var(--mu);margin-bottom:2px}
+canvas{width:100%;aspect-ratio:16/9;background:#000;border-radius:8px;display:block}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+button,select,input[type=text],input[type=password],input[type=datetime-local]{background:var(--pn);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:8px 11px;font:inherit}
+button{cursor:pointer}button:hover{border-color:var(--ac)}
+button.pri{background:var(--ac);color:#06121c;border-color:var(--ac);font-weight:600}
+button.go{background:var(--live);border-color:var(--live);color:#fff;font-weight:600}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--ln);margin-top:8px;overflow-x:auto}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;color:var(--mu);white-space:nowrap}
+.tabs button.a{color:var(--tx);border-color:var(--ac)}
+section{display:none;padding-top:6px}section.a{display:block}
+input[type=text],input[type=password]{flex:1;min-width:110px}
+.msg{padding:6px 8px;margin:4px 0;border-radius:8px;background:#22364b;word-wrap:break-word}.msg.me{background:#1f4f6b;margin-left:18%}.msg.sys{background:none;color:var(--mu);font-size:13px;text-align:center}.msg.announce{border-left:4px solid #f2c14e}
+#tcl{height:260px;overflow:auto;background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:6px;margin:8px 0}
+ul{list-style:none;margin:6px 0;padding:0}
+li{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 10px;border:1px solid var(--ln);border-radius:6px;margin-bottom:6px;background:var(--pn)}
+li.cur{border-color:var(--ac)}li>span{flex:1;min-width:90px;cursor:pointer}
+small,.mu{color:var(--mu);font-size:13px}small.tag{color:#fff;background:var(--live);padding:1px 8px;border-radius:99px}
+input[type=range]{flex:1;min-width:90px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.card{text-align:left;display:flex;flex-direction:column;gap:3px;padding:12px}.card small{color:var(--mu)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.gal button{padding:0;overflow:hidden}.gal button.cur{border:2px solid var(--ac)}
+.gal img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}.gal span{display:block;font-size:12px;padding:3px 6px;color:var(--mu)}
+textarea{width:100%;background:var(--pn);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:8px;font:inherit}
+.gal a{text-decoration:none}
+a{color:var(--ac)}
+</style><link rel="stylesheet" href="/studio-theme.css"></head><body>
+<div class="site-nav"><a class="brand" href="/" aria-label="Heavenly Key Studio home"><span class="brand-mark">HK</span><span>HEAVENLY KEY<small>LIVE &amp; MEETING STUDIO</small></span></a><a class="return-link" href="https://heavenlykey.org/">Go back to main website <span aria-hidden="true">↗</span></a></div>
+<div class="studio-hero"><div class="hero-copy"><p class="eyebrow">ONE MESSAGE. EVERY NATION.</p><h1>Your voice.<br>A world to reach.</h1><p>A simple space to broadcast, meet your team and bring people together.</p><div class="hero-actions"><button class="hero-primary" data-a="tab" data-i="0">Open your workspace <span aria-hidden="true">↘</span></button><button class="hero-secondary" data-a="tab" data-i="10">Start a meeting</button></div><div class="hero-values">REVIVAL <span>•</span> HOLINESS <span>•</span> POWER</div></div><div class="hero-art"><img src="/bg/globe-doves.jpg" alt="Heavenly Key Evangelistic Movement banner with a globe, doves and flags of the nations"><span class="art-caption">Taking Christ to the nations of the world</span></div></div>
+<main class="workspace" id="workspace"><header class="workspace-header"><div><p class="eyebrow">YOUR WORKSPACE</p><h2>Make every connection count.</h2></div><span><button id="inst" hidden>Install app</button> <button id="mdb">Pro view</button> <button data-a="tab" data-i="8" id="acb">Sign in</button> <span class="pill" id="st">Offline</span></span></header>
+<div class="cvs" id="cvs">
+<div id="pw" hidden><div class="lb">Preview</div><canvas id="cp" width="1280" height="720"></canvas></div>
+<div><div class="lb">Program (what viewers see)</div><canvas id="cv" width="1280" height="720"></canvas></div></div>
+<div class="mu" id="note" role="status"></div>
+<div class="row"><label><input type="checkbox" id="dw"> Draw on screen</label><input type="color" id="dc" value="#ff4d4d" aria-label="Pen colour"><select id="dwid" aria-label="Pen size"><option value="4">Thin</option><option value="8" selected>Medium</option><option value="16">Thick</option></select><button id="dcl">Clear drawing</button></div>
+<div class="tabs"><button class="a" data-t="0">Start</button><button data-t="1">Scenes</button><button data-t="2">Sources</button><button data-t="3">Mixer</button><button data-t="4">Go live</button><button data-t="5">Chat</button><button data-t="6">Photos</button><button data-t="7">Announce</button><button data-t="8">Account</button><button data-t="9" hidden>Admin</button><button data-t="10">Meetings &amp; guests</button><button data-t="11">Groups</button><button data-t="12">Programs</button></div>
+
+<p class="feature-help" id="featureHelp">Choose a broadcast layout, set your title, then open Go live when you are ready.</p>
+<section class="a" id="t5">
+<div class="row"><label>Screen shape <select id="ori"><option value="l">Landscape (16:9)</option><option value="p">Portrait (9:16, phones)</option><option value="s">Square (1:1)</option></select></label></div>
+<div class="row"><label><input type="checkbox" id="anb" checked> Animate backgrounds (slow zoom and sparkles)</label><label><input type="checkbox" id="lite"> Lite mode (saves battery and data)</label></div>
+<div class="row"><input type="text" id="qtt" maxlength="60" placeholder="Title or station name on screen" aria-label="Title"><input type="text" id="qtk" maxlength="200" placeholder="Scrolling message" aria-label="Scrolling message"></div>
+<h2>Choose how you want to connect</h2><p class="mu">Start with a layout. You can add cameras, media and guests as you go.</p>
+<div class="cards">
+<button class="card" data-a="q" data-m="pres"><b>Presenter + chat</b><small>Framed camera, chat panel, title and ticker</small></button>
+<button class="card" disabled title="Radio is on hold" data-m="radio"><b>24/7 Radio — on hold</b><small>Reserved for a later update</small></button>
+<button class="card" data-a="q" data-m="camtpl"><b>Camera + background</b><small>You on camera, placed inside a template</small></button>
+<button class="card" data-a="q" data-m="cam"><b>Camera only</b><small>Your real background, front or rear camera</small></button>
+<button class="card" data-a="q" data-m="pic"><b>Picture only</b><small>No face. Background, your voice and music</small></button>
+<button class="card" data-a="q" data-m="pre"><b>Pre-recorded 24/7</b><small>Your videos on an automatic loop</small></button>
+<button class="card" data-a="tab" data-i="4"><b>Stream link or key</b><small>Paste the details from YouTube, Facebook and others</small></button>
+</div>
+<h2>Backgrounds</h2><div class="gal" id="gal"></div></section>
+<section id="t0">
+<div class="row"><label><input type="checkbox" id="stm"> Studio mode</label>
+<select id="tr" aria-label="Transition"><option value="cut">Cut</option><option value="fade">Fade</option></select>
+<select id="dur" aria-label="Duration"><option value="300">0.3s</option><option value="600" selected>0.6s</option><option value="1000">1s</option></select>
+<button class="pri" id="take" hidden>Take to program</button></div>
+<ul id="sl"></ul><button data-a="sadd">Add scene</button>
+<h2>In the selected scene</h2><ul id="il"></ul></section>
+
+<section id="t1">
+<div class="row"><button data-a="amed">+ Media playlist</button><button data-a="acam">+ Camera</button><button data-a="amic">+ Microphone</button><label class="mu"><input type="checkbox" id="nrs" checked> Strong noise removal</label><button data-a="ascr">+ Screen</button><button data-a="aimg">+ Image</button><button data-a="atxt">+ Text</button><button data-a="ach">+ Chat overlay</button><button data-a="aticker">+ Ticker</button><button data-a="avbg">+ Video background</button></div>
+<ul id="ul"></ul>
+<input type="file" id="fm" accept="video/*,audio/*" multiple hidden><input type="file" id="fv" accept="video/*" hidden><input type="file" id="fi" accept="image/*" hidden></section>
+
+<section id="t2"><ul id="ml"></ul>
+<label class="mu">Monitor volume (not sent to viewers) <input type="range" id="vol" min="0" max="1" step=".05" value=".8"></label></section>
+
+<section id="t3">
+<div class="row"><label><input type="checkbox" id="low"> Low data mode (smaller picture, 15 fps, lighter audio)</label></div>
+<p class="mu" id="dmt"></p>
+<div id="conn" hidden><h2>Your channels</h2><ul id="chl"></ul>
+<div class="row"><button data-a="cyt">+ YouTube channel</button><button data-a="cfb">+ Facebook Pages</button></div>
+<div class="row"><input type="text" id="btl" maxlength="100" placeholder="Broadcast title" aria-label="Broadcast title"><select id="bpr" aria-label="Privacy"><option value="public">Public</option><option value="unlisted">Unlisted</option><option value="private">Private</option></select></div>
+<p class="mu" id="chm">Sign in under Account to connect channels. Add more than one channel to broadcast to all of them at once.</p></div>
+<h2>Other destinations (TikTok, Instagram, any RTMP)</h2>
+<div class="row"><select id="pre"><option value="rtmp://a.rtmp.youtube.com/live2">YouTube</option>
+<option value="rtmps://live-api-s.facebook.com:443/rtmp/">Facebook</option>
+<option value="rtmp://live.twitch.tv/app">Twitch</option><option value="">TikTok (paste URL and key)</option><option value="">Instagram (paste URL and key)</option><option value="">Custom RTMP</option></select>
+<button class="pri" data-a="dadd">Add destination</button></div>
+<ul id="dl"></ul>
+<div id="manual"><h2>Your own server</h2>
+<div class="row"><input type="text" id="relay" placeholder="wss://your-relay.example.com" aria-label="Relay address"></div>
+<div class="row"><input type="password" id="tok" placeholder="Relay password" aria-label="Relay password"></div></div>
+<div class="row"><button class="go" id="gl">Go live</button><button id="rc">Record to file</button><span class="mu" id="info"></span></div>
+<p class="mu">Copy each server URL and stream key from the platform's live dashboard. Keys stay in this tab and are not saved. Keep this tab open and visible while live. TikTok: open LIVE Producer (livecenter.tiktok.com/producer) to get the server URL and key. It needs 1,000+ followers and LIVE access, and it works best in Portrait. Instagram: paste the URL and key only if your account shows them.</p></section>
+
+<section id="t4"><div class="row"><input type="text" id="chn" placeholder="Twitch channel name" aria-label="Twitch channel"><button class="pri" id="chc">Connect</button></div>
+<div class="mu" id="chs">Reads the public chat of one Twitch channel. YouTube and Facebook chat need account sign-in and are not included yet. Add "+ Chat overlay" in Sources to show chat on screen.</div><ul id="cl"></ul></section>
+<section id="t6"><div class="row"><label><input type="checkbox" id="pon"> Take photos automatically</label>
+<select id="pint" aria-label="Interval"><option value="1">every 1 min</option><option value="5" selected>every 5 min</option><option value="10">every 10 min</option><option value="30">every 30 min</option></select>
+<button id="pnow">Take photo now</button><button id="pall">Download all</button></div><div class="gal" id="pl"></div>
+<p class="mu">Photos are kept in this tab only, so download them before closing it. Your browser may ask permission to download several files. Keep this tab open and visible.</p></section>
+<section id="t7"><textarea id="atx" rows="3" maxlength="400" placeholder="Type an announcement for viewers"></textarea>
+<div class="row"><button class="pri" id="asp">Announce now</button><label class="mu">Repeat <select id="arp"><option value="0">Off</option><option value="300">Every 5 min</option><option value="600">Every 10 min</option><option value="900">Every 15 min</option><option value="1800">Every 30 min</option><option value="3600">Every 60 min</option></select></label></div>
+<div class="mu" id="ast">The announcer voice plays into your broadcast and lowers the music while it speaks. It needs the Cloudflare AI setup in the README.</div>
+<h2>AI writer</h2><div class="row"><input type="text" id="aitp" maxlength="200" placeholder="What is your broadcast about?" aria-label="Topic"></div>
+<div class="row"><button data-a="ai" data-m="title">Titles</button><button data-a="ai" data-m="description">Description</button><button data-a="ai" data-m="announcement">Announcement</button><button data-a="ai" data-m="ticker">Ticker lines</button></div>
+<textarea id="aio" rows="5" placeholder="Your text appears here. You can edit it."></textarea>
+<div class="row"><button id="aua">Use as announcement</button><button id="aut">Add as ticker</button></div></section>
+<section id="t9"><div id="acOut"><div class="row"><input type="text" id="aem" placeholder="Username or email" autocomplete="username" aria-label="Username or email"></div>
+<div class="row"><input type="password" id="apw" placeholder="Password (8 or more characters)" autocomplete="current-password" aria-label="Password"></div>
+<div class="row"><label class="mu"><input type="checkbox" id="aag"> I am 18 or older and agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a> (needed to create an account)</label></div>
+<div class="row"><label class="mu"><input type="checkbox" id="showpw"> Show password</label></div><div class="row"><button class="pri" id="ali">Log in</button><button id="asu">Create account</button><button id="afg">Forgot password?</button></div></div>
+<div id="acRs" hidden><p>Choose a new password.</p><div class="row"><input type="password" id="rpw" placeholder="New password (8 or more characters)" autocomplete="new-password" aria-label="New password"></div><div class="row"><button class="pri" id="rsv">Save new password</button></div></div>
+<div id="acIn" hidden><p id="acs"></p><h2>Choose a plan</h2><div class="cards" id="apl"></div><div class="row"><button id="alo">Log out</button><button id="arv" hidden>Resend confirmation email</button><button id="aloa">Log out of all devices</button></div>
+<div id="ownerSetup" hidden><h2>Set owner password</h2><p>Opened securely from the Control Room. Set the password you want to use for owner sign-in. This option expires after 10 minutes.</p><div class="row"><input id="ownerNewPassword" type="password" placeholder="Owner password (8 or more characters)" autocomplete="new-password" aria-label="Owner password"><button id="ownerSavePassword">Set owner password</button></div></div><h2>My password</h2><div class="row"><input type="password" id="oldpw" placeholder="Current password" autocomplete="current-password"><input type="password" id="newpw" placeholder="New password (8 or more characters)" autocomplete="new-password"><button id="changepw">Save password</button></div><h2>Your data</h2><div class="row"><button id="aexp">Download my data</button></div>
+<div class="row"><input type="password" id="dpw" placeholder="Password to confirm deletion" autocomplete="current-password" aria-label="Password"><button id="adel">Delete my account</button></div></div>
+<p class="mu" id="acm"></p></section>
+<section id="t10"><h2>User management</h2><p class="mu">Create accounts and set passwords here. Users sign in with one username and password. Only the owner can appoint admins.</p>
+<div class="row"><input id="newuser" placeholder="New username or email" autocomplete="off" maxlength="254"><input id="userpw" type="password" placeholder="Password (8 or more characters)" autocomplete="new-password"><select id="userrole" aria-label="Account role"><option value="user">User</option><option value="admin">Admin</option></select><button id="createuser">Create user</button></div>
+<h2>Set a user's password</h2><div class="row"><input id="resetuser" placeholder="Username or email" autocomplete="off"><input id="resetpw" type="password" placeholder="New password (8 or more characters)" autocomplete="new-password"><button id="resetuserpw">Set password</button></div><p id="admsg" class="mu" role="status"></p><div class="cards" id="ads"></div>
+<div class="row"><input type="text" id="adq" placeholder="Search by start of email" aria-label="Search"><button id="adsb">Search</button></div>
+<ul id="adl"></ul><button id="adm" hidden>Load more</button>
+<div class="row"><button id="adsw">Clean up old data now</button></div></section>
+<section id="t11">
+<div class="row"><button class="pri" id="grs">Start guest room</button><label class="mu"><input type="checkbox" id="glk"> Lock stage (no new guests)</label></div>
+<div id="gin" hidden>
+<h2>Invite</h2>
+<div class="row"><b>Stage guests</b> <button id="gcg">Copy link</button><button id="gwg">Share on WhatsApp</button></div>
+<div class="row"><b>Audience</b> <button id="gca">Copy link</button><button id="gwa">Share on WhatsApp</button><span class="mu">Watching now: <b id="gac">0</b></span></div>
+<div class="row"><input type="text" id="gwt" maxlength="200" placeholder="Public watch link (YouTube, Facebook...) shown to the audience" aria-label="Watch link"><button id="gwb">Set</button></div>
+<div class="row"><label class="mu"><input type="checkbox" id="gach" checked> Audience chat on</label><label class="mu">Slow mode <select id="gsl"><option value="0">Off</option><option value="5">5 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option></select></label></div>
+<h2>Audience hands</h2><ul id="ghl"></ul></div>
+<p class="mu" id="gst">Guests join from a link in their browser. They need no account. Use headphones so guests do not hear an echo.</p>
+<h2>Waiting room</h2><ul id="gwl"></ul>
+<h2>In the room</h2><ul id="gli"></ul>
+<div class="row"><button id="gar">Arrange camera and guests in a grid</button></div>
+<h2>Room chat</h2><div id="gcl" class="mu" style="max-height:220px;overflow:auto"></div>
+<div class="row"><input type="text" id="gct" maxlength="300" placeholder="Message to everyone" aria-label="Chat message"><button id="gcs">Send</button></div>
+<label class="mu"><input type="checkbox" id="gcv" checked> Show room chat on the stream (needs a Chat overlay in the scene)</label></section>
+<section id="t12">
+<p class="mu" id="tmOut">Sign in under Account to use groups.</p>
+<div id="tmIn" hidden>
+<div class="row"><select id="tsel" aria-label="Group"></select><input type="text" id="tnm" maxlength="60" placeholder="New group name" aria-label="New group name"><button id="tcr">Create group</button></div>
+<div id="tbody" hidden>
+<div class="row"><button id="tic">Copy invite link</button><button id="tiw">Invite on WhatsApp</button><button id="tmt">Start meeting with this group</button><button id="tlv">Leave group</button><button id="tdl" hidden>Delete group</button></div>
+<div class="row"><span class="mu" id="tttl"></span><select id="tdays" hidden aria-label="Messages disappear after"><option value="1">24 hours</option><option value="7">7 days</option><option value="30">30 days</option></select></div>
+<div id="tcl" aria-live="polite"></div>
+<div class="row"><input type="text" id="tct" maxlength="600" placeholder="Message" aria-label="Message"><button class="pri" id="tcs">Send</button></div>
+<label class="mu" id="tanl" hidden><input type="checkbox" id="tan"> Send as announcement</label>
+<h2>Members</h2><ul id="tml"></ul>
+<div id="tfu" hidden><h2>Follow up after a meeting</h2>
+<div class="row"><select id="tms" aria-label="Meeting"></select><button id="tmr">Show who came</button></div>
+<p class="mu" id="trp"></p>
+<div class="row"><select id="tau" aria-label="Send to"><option value="new">New attendees</option><option value="returning">Returning attendees</option><option value="absent">Members who missed it</option><option value="all">Everyone</option></select><label class="mu"><input type="checkbox" id="tem"> Also email them</label></div>
+<textarea id="ttx" rows="3" maxlength="500" placeholder="Your follow-up message"></textarea>
+<div class="row"><button class="pri" id="tsf">Send follow-up</button><button id="tmend">End live meeting</button></div></div>
+</div></div></section>
+<section id="t13">
+<div class="row"><input type="text" id="ptt" maxlength="100" placeholder="Program title" aria-label="Program title"></div>
+<textarea id="pds" rows="2" maxlength="500" placeholder="Short description"></textarea>
+<div class="row"><input type="datetime-local" id="pst" aria-label="Date and time"><input type="text" id="pwl" maxlength="200" placeholder="Watch link (YouTube, Facebook...)" aria-label="Watch link"></div>
+<div class="row"><button class="pri" id="psv">Save program</button></div>
+<p class="mu" id="pms"></p><ul id="ppl"></ul>
+<div id="psh" hidden><h2>Share this program</h2><p class="mu" id="psu"></p>
+<div class="row"><button data-a="pshare" data-m="wa">WhatsApp</button><button data-a="pshare" data-m="fb">Facebook</button><button data-a="pshare" data-m="x">X</button><button data-a="pshare" data-m="tg">Telegram</button><button data-a="pshare" data-m="li">LinkedIn</button><button data-a="pshare" data-m="em">Email</button><button data-a="pshare" data-m="cp">Copy link</button><button data-a="pshare" data-m="nat">More...</button><button data-a="pshare" data-m="img">Picture for Instagram or TikTok</button></div></div>
+</section>
+</main><footer class="ministry-footer"><div><span class="footer-name">HEAVENLY KEY<br>EVANGELISTIC MOVEMENT</span><p>End-time, Non-denominational,<br>Apostolic &amp; Evangelistic Movement.</p></div><div><p class="footer-label">TOGETHER, WE TAKE CHRIST TO THE NATIONS.</p><p>Revival • Holiness • Power</p><a href="https://heavenlykey.org/">Visit the main website ↗</a></div><div><p class="footer-label">SUBSCRIBE / FOLLOW US</p><p>HEAVENLY KEY EVANGELISTIC MOVEMENT</p><a href="https://www.facebook.com/heavenlykey">Facebook ↗</a><div class="footer-legal"><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a></div></div></footer>
+<script>
+const helpText=['Choose a broadcast layout, set your title, then open Go live when you are ready.','Prepare scenes privately, then take the selected scene to your program.','Add cameras, microphone, screen sharing, pictures or media from your device.','Balance each sound source and adjust your listening volume.','Connect a channel or enter a stream key, then start your broadcast.','Connect public Twitch chat and add it to your broadcast.','Capture moments from your program and download them before closing the studio.','Write announcements and broadcast text, or prepare a spoken announcement.','Sign in, manage your access and change your password.','Create users, set passwords and manage account access.','Open a room, share the invitation and admit people when you are ready.','Bring your team together with group messages, meetings and attendance follow-up.','Create a program page, add its watch link and share it with your audience.'];
+document.querySelectorAll('.tabs button').forEach((b,i)=>b.addEventListener('click',()=>{$('featureHelp').textContent=helpText[i]}));
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let W=1280,H=720;const cx=$('cv').getContext('2d'),px=$('cp').getContext('2d');
+const P={full:[0,0,1,1],left:[0,0,.5,1],right:[.5,0,.5,1],pip:[.703,.611,.273,.274],tl:[.023,.042,.273,.274],lower:[.023,.78,.953,.125],top:[.023,.042,.953,.125],ticker:[0,.92,1,.08],presL:[.03,.14,.62,.7],chatR:[.68,.14,.29,.7],q1:[0,0,.5,.5],q2:[.5,0,.5,.5],q3:[0,.5,.5,.5],q4:[.5,.5,.5,.5]};
+const PN={full:'Full',left:'Left half',right:'Right half',pip:'Corner (bottom right)',tl:'Corner (top left)',lower:'Lower strip',top:'Top strip',ticker:'Bottom ticker bar',presL:'Presenter window',chatR:'Chat panel',q1:'Grid: top left',q2:'Grid: top right',q3:'Grid: bottom left',q4:'Grid: bottom right'};
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+const dest=AC.createMediaStreamDestination(),bus=AC.createGain(),mon=AC.createGain(),an=AC.createAnalyser();
+an.fftSize=128;bus.connect(dest);bus.connect(an);mon.connect(AC.destination);mon.gain.value=.8;
+const arr=new Uint8Array(an.frequencyBinCount);
+let S=[],SC=[{name:'Scene 1',items:[]}],uid=1,pgm=0,pvw=0,from=null,t0=0,studio=false;
+const msg=t=>$('note').textContent=t,src=id=>S.find(s=>s.id===id),ed=()=>studio?pvw:pgm;
+
+function mk(type,name,x){const s={id:uid++,type,name,vol:.8,mute:false,...x};S.push(s);return s}
+function wire(s,node,monitor){s.g=AC.createGain();node.connect(s.g);s.g.connect(bus);if(monitor)s.g.connect(mon);for(const g of guests.values())if(g.mm)s.g.connect(g.mm)}
+function place(s,p){const it=SC[ed()].items;if(it.some(i=>i.id===s.id))return;
+ it.push({id:s.id,p:p||(s.type==='ticker'?'ticker':s.type==='text'?'lower':(s.type==='camera'||s.type==='screen')&&it.length?'pip':'full'),on:true})}
+function addMedia(files){const s=mk('media','Playlist '+uid,{files:[...files].map(f=>({name:f.name.replace(/\.[^.]+$/,''),url:URL.createObjectURL(f),audio:f.type.startsWith('audio')})),i:0,loop:true,err:0});
+ s.el=document.createElement('video');s.el.playsInline=true;wire(s,AC.createMediaElementSource(s.el),true);
+ s.el.onended=()=>nx(s,1);s.el.onplaying=()=>s.err=0;s.el.onerror=()=>{if(++s.err<s.files.length)nx(s,1)};
+ play(s,0);place(s);ui()}
+function play(s,i){s.i=i;s.el.src=s.files[i].url;AC.resume();s.el.play().catch(()=>{});ui()}
+function nx(s,d){const n=s.i+d,L=s.files.length;if((n>=L||n<0)&&d>0&&!s.loop){s.el.pause();ui();return}play(s,(n+L)%L)}
+function addStream(t,st){const s=mk(t,(t==='camera'?'Camera ':'Screen ')+uid);s.el=document.createElement('video');s.el.muted=true;s.el.playsInline=true;s.el.srcObject=st;s.el.play();
+ if(st.getAudioTracks().length)wire(s,AC.createMediaStreamSource(st),false);
+ st.getVideoTracks()[0].onended=()=>act.srm(S.indexOf(s));place(s);ui()}
+async function cam(){try{addStream('camera',await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720},audio:true}))}catch(e){msg('Camera or microphone not available: '+e.message)}}
+async function scr(){try{addStream('screen',await navigator.mediaDevices.getDisplayMedia({video:true,audio:true}))}catch(e){msg('Screen sharing is not available on this device or was cancelled.')}}
+const mbuf=new Float32Array(512);
+async function mic(){try{
+ const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1,sampleRate:48000}});
+ let proc=null,use=st;
+ if($('nrs').checked){try{await loadNS();proc=new Shiguredo.NoiseSuppressionProcessor(NSPATH);use=new MediaStream([await proc.startProcessing(st.getAudioTracks()[0])])}catch(e){proc=null;use=st;msg('Strong noise removal is not available here. Standard noise removal is on.')}}
+ const s=mk('mic','Microphone '+uid,{gate:-50,st,o:true,hold:0,proc}),n=AC.createMediaStreamSource(use),hp=AC.createBiquadFilter(),cp=AC.createDynamicsCompressor();
+ hp.type='highpass';hp.frequency.value=90;cp.threshold.value=-24;cp.ratio.value=3;cp.attack.value=.01;cp.release.value=.25;
+ s.an=AC.createAnalyser();s.an.fftSize=512;s.gt=AC.createGain();
+ n.connect(hp);hp.connect(cp);cp.connect(s.an);cp.connect(s.gt);wire(s,s.gt,false);ui();msg('Microphone added with noise suppression, a low-cut filter, a compressor and a noise gate. Use headphones to avoid echo.')
+}catch(e){msg('Microphone not available: '+e.message)}}
+$('fm').onchange=e=>{if(e.target.files.length)addMedia(e.target.files);e.target.value=''};
+$('fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.src=URL.createObjectURL(f);place(mk('image',f.name.replace(/\.[^.]+$/,''),{img}));e.target.value='';ui()};
+
+function take(i){if(i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;t0=performance.now();if(studio)pvw=o}
+$('take').onclick=()=>{take(pvw);ui()};
+$('stm').onchange=e=>{studio=e.target.checked;if(studio)pvw=SC.length>1?(pgm+1)%SC.length:pgm;$('cvs').classList.toggle('s',studio);$('pw').hidden=!studio;$('take').hidden=!studio;ui()};
+$('vol').oninput=e=>mon.gain.value=e.target.value;
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('a',x===b));document.querySelectorAll('section').forEach((s,i)=>s.classList.toggle('a',i==b.dataset.t))});
+
+const act={
+ ssel:i=>{studio?pvw=i:take(i);ui()},
+ sadd:()=>{SC.push({name:'Scene '+(SC.length+1),items:[]});ui()},
+ sren:i=>{const n=prompt('Scene name',SC[i].name);if(n)SC[i].name=n.slice(0,40);ui()},
+ sdel:i=>{if(SC.length<2){msg('Keep at least one scene.');return}SC.splice(i,1);from=null;
+  pgm=pgm>i?pgm-1:pgm===i?0:pgm;pvw=pvw>i?pvw-1:pvw===i?0:pvw;ui()},
+ iup:j=>{const a=SC[ed()].items;if(j>0)[a[j-1],a[j]]=[a[j],a[j-1]];ui()},
+ idn:j=>{const a=SC[ed()].items;if(j<a.length-1)[a[j+1],a[j]]=[a[j],a[j+1]];ui()},
+ ivis:j=>{const it=SC[ed()].items[j];it.on=!it.on;ui()},
+ irm:j=>{SC[ed()].items.splice(j,1);ui()},
+ amed:()=>$('fm').click(),acam:cam,amic:mic,ascr:scr,aimg:()=>$('fi').click(),
+ aticker:()=>{place(mk('ticker','Ticker '+uid,{text:'Welcome! Share this broadcast with a friend.',speed:120}));ui()},avbg:()=>$('fv').click(),ach:()=>{place(mk('chat','Chat '+uid,{}),'right');ui()},atxt:()=>{place(mk('text','Text '+uid,{text:'My Radio'}));ui()},
+ mp:i=>nx(S[i],-1),mn:i=>nx(S[i],1),
+ mt:i=>{const e=S[i].el;AC.resume();e.paused?e.play():e.pause();ui()},
+ sadd2:i=>{place(S[i]);ui();msg('Added to the selected scene.')},
+ srm:i=>{const s=S[i];if(!s)return;s.el&&s.el.pause();s.el&&s.el.srcObject&&s.el.srcObject.getTracks().forEach(t=>t.stop());
+  s.g&&s.g.disconnect();try{s.proc&&s.proc.stopProcessing()}catch(e){}s.raw&&s.raw.disconnect();s.hm&&s.hm.disconnect();s.st&&s.st.getTracks().forEach(t=>t.stop());SC.forEach(c=>c.items=c.items.filter(x=>x.id!==s.id));S.splice(i,1);ui()},
+ mute:i=>{S[i].mute=!S[i].mute;ui()},
+ dadd:()=>{ds.push({url:$('pre').value,key:'',on:true});rd();if($('pre').selectedOptions[0].text.startsWith('TikTok'))msg('TikTok works best in Portrait. Change Screen shape under Start.')}};
+const inp={
+ pre:(j,v)=>{SC[ed()].items[j].p=v},
+ txt:(i,v)=>{S[i].text=v},lp:(i,v,b)=>{S[i].loop=b.checked},vol:(i,v)=>{S[i].vol=+v},gate:(i,v)=>{S[i].gate=+v},bgm:(i,v)=>setBgMode(S[i],v),csel:(i,v,b)=>{b.checked?conn.sel.add(conn.list[i].id):conn.sel.delete(conn.list[i].id)},spd:(i,v)=>{S[i].speed=+v}};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b)act[b.dataset.a](+b.dataset.i,b)});
+document.addEventListener('input',e=>{const b=e.target.closest('[data-n]');if(b)inp[b.dataset.n](+b.dataset.i,b.value,b)});
+
+function ui(){renderG();
+ $('sl').innerHTML=SC.map((s,i)=>`<li class="${i==ed()?'cur':''}"><span data-a="ssel" data-i="${i}">${esc(s.name)}</span>${i==pgm?'<small class="tag">Live</small>':''}${studio&&i==pvw?'<small>Preview</small>':''}<button data-a="sren" data-i="${i}">Rename</button><button data-a="sdel" data-i="${i}" aria-label="Delete scene">x</button></li>`).join('');
+ const it=SC[ed()].items;
+ $('il').innerHTML=it.length?it.map((x,j)=>`<li><span>${esc(src(x.id).name)}</span><select data-n="pre" data-i="${j}" aria-label="Position">${Object.keys(P).map(k=>`<option value="${k}"${k==x.p?' selected':''}>${PN[k]}</option>`).join('')}</select><button data-a="iup" data-i="${j}">Up</button><button data-a="idn" data-i="${j}">Down</button><button data-a="ivis" data-i="${j}">${x.on?'Hide':'Show'}</button><button data-a="irm" data-i="${j}" aria-label="Remove">x</button></li>`).join(''):'<li class="mu">Empty. Add sources from the Sources tab.</li>';
+ $('ul').innerHTML=S.length?S.map((s,i)=>`<li><span>${esc(s.name)} <small>${s.type}</small></span>`+
+  (s.type==='text'||s.type==='ticker'?`<input type="text" data-n="txt" data-i="${i}" value="${esc(s.text)}" aria-label="Text">`:'')+(s.type==='ticker'?`<select data-n="spd" data-i="${i}" aria-label="Speed"><option value="70"${s.speed==70?' selected':''}>Slow</option><option value="120"${s.speed==120?' selected':''}>Normal</option><option value="200"${s.speed==200?' selected':''}>Fast</option></select>`:'')+
+  (s.type==='media'?`<div class="row" style="width:100%;margin:0"><button data-a="mp" data-i="${i}">Prev</button><button data-a="mt" data-i="${i}">${s.el.paused?'Play':'Pause'}</button><button data-a="mn" data-i="${i}">Next</button><label><input type="checkbox" data-n="lp" data-i="${i}"${s.loop?' checked':''}> Loop 24/7</label><small>${esc(s.files[s.i].name)} (${s.i+1}/${s.files.length})</small></div>`:'')+
+  `${s.type==='camera'?`<select data-n="bgm" data-i="${i}" aria-label="Background"><option value="off">Real background</option><option value="blur"${s.bgm==='blur'?' selected':''}>Blur background</option><option value="tpl"${s.bgm==='tpl'?' selected':''}>Template background</option></select><button data-a="flip" data-i="${i}">Flip camera</button>`:''}${s.type==='mic'?'':`<button data-a="sadd2" data-i="${i}">Add to scene</button>`}<button data-a="srm" data-i="${i}" aria-label="Delete">x</button></li>`).join(''):'<li class="mu">No sources yet. Add media, a camera, an image or text.</li>';
+ $('ml').innerHTML=S.filter(s=>s.g).map(s=>{const i=S.indexOf(s);return `<li><span>${esc(s.name)}</span><input type="range" min="0" max="1" step=".05" value="${s.vol}" data-n="vol" data-i="${i}" aria-label="Volume"><button data-a="mute" data-i="${i}">${s.mute?'Unmute':'Mute'}</button>${s.type==='mic'?`<label class="mu" style="width:100%">Noise gate (higher cuts more background noise) <input type="range" min="-70" max="-20" step="1" value="${s.gate}" data-n="gate" data-i="${i}" aria-label="Noise gate"></label>`:''}</li>`}).join('')||'<li class="mu">Audio sources appear here. A source is heard only while it is in the live scene.</li>'}
+
+const fit=(c,e,iw,ih,x,y,w,h)=>{if(!iw)return;const r=Math.min(w/iw,h/ih),dw=iw*r,dh=ih*r;c.drawImage(e,x+(w-dw)/2,y+(h-dh)/2,dw,dh)};
+function dr(c,s,x,y,w,h,fr){
+ if(s.type==='image'){if(s.fn)s.fn(c,x,y,w,h,performance.now());else{const iw=s.img.naturalWidth||s.img.width,ih=s.img.naturalHeight||s.img.height;
+  if(s.cover&&animBg){const t=performance.now(),z=1.02+.05*Math.sin(t/8000);c.save();c.translate(x+w/2,y+h/2);c.scale(z,z);c.translate(-x-w/2,-y-h/2);cover(c,s.img,iw,ih,x,y,w,h);c.restore();spark(c,x,y,w,h,t)}
+  else(s.cover?cover:fit)(c,s.img,iw,ih,x,y,w,h)}}
+ else if(s.type==='text'){const ph=Math.min(h,72);c.font='600 '+Math.round(ph*.5)+'px system-ui,sans-serif';c.textBaseline='middle';
+  const tw=Math.min(c.measureText(s.text).width+50,w),yy=y+(h-ph)/2;c.fillStyle='rgba(13,22,32,.85)';c.fillRect(x,yy,tw,ph);c.fillStyle='#3fa7d6';c.fillRect(x,yy,6,ph);c.fillStyle='#fff';c.fillText(s.text,x+24,yy+ph/2,tw-34)}
+ else if(s.type==='ticker')drawTicker(c,s,x,y,w,h);
+ else if(s.type==='vbg'){if(s.el.videoWidth)cover(c,s.el,s.el.videoWidth,s.el.videoHeight,x,y,w,h)}
+ else if(s.type==='guest'){(fr?cover:fit)(c,s.el,s.el.videoWidth,s.el.videoHeight,x,y,w,h);tag(c,s.name,x,y,w,h)}
+ else if(s.type==='chat')drawChat(c,x,y,w,h);
+ else if(s.type==='media'){const f=s.files[s.i];
+  if(f&&f.audio){c.fillStyle='#f2c14e';const n=48,bw=w/n,mh=h*.6;for(let i=0;i<n;i++){const v=arr[i]/255*mh+3;c.fillRect(x+i*bw+3,y+h*.8-v,bw-6,v)}
+   c.fillStyle='#fff';c.font='500 '+Math.round(Math.min(h*.06,w*.045))+'px system-ui,sans-serif';c.textBaseline='middle';c.shadowColor='#000';c.shadowBlur=10;c.fillText(f.name,x+20,y+h*.9,w-40);c.shadowBlur=0}
+  else fit(c,s.el,s.el.videoWidth,s.el.videoHeight,x,y,w,h)}
+ else if(s.blur&&s.oc)(fr?cover:fit)(c,s.oc,s.oc.width,s.oc.height,x,y,w,h);
+ else(fr?cover:fit)(c,s.el,s.el.videoWidth,s.el.videoHeight,x,y,w,h)}
+function drawScene(c,sc,a){c.globalAlpha=a;for(const t of sc.items){const s=src(t.id);if(t.on&&s){const[q,r,u,v]=P[t.p],X=q*W,Y=r*H,Wd=u*W,Hd=v*H;
+  if(FR[t.p]){c.save();c.shadowColor='rgba(0,0,0,.55)';c.shadowBlur=24;rrect(c,X,Y,Wd,Hd,22);c.fillStyle='#0d1620';c.fill();c.shadowBlur=0;c.clip();dr(c,s,X,Y,Wd,Hd,1);c.restore();rrect(c,X,Y,Wd,Hd,22);c.strokeStyle='#f2c14e';c.lineWidth=4;c.stroke()}
+  else dr(c,s,X,Y,Wd,Hd,0)}}c.globalAlpha=1}
+const inSc=(i,s)=>i!=null&&SC[i]&&SC[i].items.some(t=>t.id===s.id&&t.on);
+let lastF=0;
+function frame(){if($('lite').checked){const t=performance.now();if(t-lastF<70){requestAnimationFrame(frame);return}lastF=t}
+ an.getByteFrequencyData(arr);cx.fillStyle='#0d1620';cx.fillRect(0,0,W,H);
+ if(from!=null){const p=Math.min(1,(performance.now()-t0)/+$('dur').value);drawScene(cx,SC[from],1);drawScene(cx,SC[pgm],p);if(p>=1)from=null}else drawScene(cx,SC[pgm],1);
+ cx.drawImage(dl,0,0);if($('low').checked)lc.drawImage($('cv'),0,0,lo.width,lo.height);if(guests.size){if(gc.width!==W/2){gc.width=W/2;gc.height=H/2}gx.drawImage($('cv'),0,0,gc.width,gc.height)}
+ if(studio){px.fillStyle='#0d1620';px.fillRect(0,0,W,H);drawScene(px,SC[pvw],1)}
+ for(const s of S)if(s.blur&&s.oc&&seg&&!segBusy&&s.el.readyState>1){segBusy=true;segCur=s;seg.send({image:s.el}).catch(()=>{}).finally(()=>segBusy=false)}
+ for(const s of S){if(!s.g)continue;
+  if(s.type==='mic'){s.an.getFloatTimeDomainData(mbuf);let q=0;for(const v of mbuf)q+=v*v;const now=performance.now();
+   if(20*Math.log10(Math.sqrt(q/mbuf.length)+1e-9)>s.gate)s.hold=now+400;const op=now<s.hold;
+   if(op!==s.o){s.o=op;s.gt.gain.setTargetAtTime(op?1:0,AC.currentTime,.04)}
+   s.g.gain.value=s.mute?0:s.vol}
+  else{s.g.gain.value=(inSc(pgm,s)||inSc(from,s))&&!s.mute?s.vol*duck:0;if(s.hm)s.hm.gain.value=s.mute?0:1}}
+ requestAnimationFrame(frame)}
+const chatLog=[];
+function drawChat(c,x,y,w,h){c.fillStyle='rgba(13,22,32,.78)';c.fillRect(x,y,w,h);const fs=Math.max(18,Math.min(28,h/16));c.font='500 '+fs+'px system-ui,sans-serif';c.textBaseline='top';
+ c.save();c.fillStyle='#f2c14e';c.font='700 '+Math.round(fs*.8)+'px system-ui,sans-serif';c.fillText(chatLog.length?'LIVE CHAT':'LIVE CHAT - messages appear here',x+12,y+10);c.restore();let yy=y+h-8;for(let i=chatLog.length-1;i>=0&&yy>y+fs*2.6;i--){yy-=fs*1.4;const n=chatLog[i].n+': ';c.fillStyle='#3fa7d6';c.fillText(n,x+12,yy);const nw=c.measureText(n).width;c.fillStyle='#fff';c.fillText(chatLog[i].t,x+12+nw,yy,Math.max(10,w-nw-24))}}
+let cws=null;
+$('chc').onclick=()=>{const ch=$('chn').value.trim().replace(/^#/,'').toLowerCase();if(!/^\w{3,25}$/.test(ch)){$('chs').textContent='Enter a valid Twitch channel name.';return}
+ if(cws)cws.close();cws=new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+ cws.onopen=()=>{cws.send('CAP REQ :twitch.tv/tags');cws.send('NICK justinfan'+(10000+Math.floor(Math.random()*80000)));cws.send('JOIN #'+ch);$('chs').textContent='Connected to #'+ch};
+ cws.onmessage=e=>e.data.split('\r\n').forEach(l=>{if(l.startsWith('PING'))cws.send('PONG :tmi.twitch.tv');
+  const m=l.match(/display-name=([^;]*);.*? PRIVMSG #\S+ :(.*)$/);if(!m)return;
+  chatLog.push({n:m[1],t:m[2]});if(chatLog.length>60)chatLog.shift();
+  const li=document.createElement('li');li.textContent=m[1]+': '+m[2];$('cl').prepend(li);while($('cl').children.length>30)$('cl').lastChild.remove()});
+ cws.onclose=()=>{$('chs').textContent='Chat disconnected.'}};
+const dl=document.createElement('canvas');dl.width=W;dl.height=H;const dx=dl.getContext('2d');dx.lineCap='round';dx.lineJoin='round';
+let dwn=false,lx=0,ly=0;const cvEl=$('cv');
+const pt=e=>{const r=cvEl.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
+$('dw').onchange=e=>{cvEl.style.touchAction=e.target.checked?'none':'';cvEl.style.cursor=e.target.checked?'crosshair':''};
+cvEl.onpointerdown=e=>{if(!$('dw').checked)return;dwn=true;cvEl.setPointerCapture(e.pointerId);[lx,ly]=pt(e);dx.strokeStyle=$('dc').value;dx.lineWidth=+$('dwid').value;dx.beginPath();dx.moveTo(lx,ly);dx.lineTo(lx+.1,ly);dx.stroke()};
+cvEl.onpointermove=e=>{if(!dwn)return;const[x,y]=pt(e);dx.beginPath();dx.moveTo(lx,ly);dx.lineTo(x,y);dx.stroke();lx=x;ly=y};
+cvEl.onpointerup=cvEl.onpointercancel=()=>{dwn=false};
+$('dcl').onclick=()=>dx.clearRect(0,0,W,H);
+const cover=(c,e,iw,ih,x,y,w,h)=>{const k=Math.max(w/iw,h/ih),dw=iw*k,dh=ih*k;c.drawImage(e,x+(w-dw)/2,y+(h-dh)/2,dw,dh)};
+let seg=null,segBusy=false,segCur=null,bgImg=null,curBg=0,bgFn=null;
+function loadSeg(cb){if(seg)return cb(true);const B='https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/',sc=document.createElement('script');sc.src=B+'selfie_segmentation.js';
+ sc.onload=()=>{try{seg=new SelfieSegmentation({locateFile:f=>B+f});seg.setOptions({modelSelection:1});
+  seg.onResults(r=>{const s=segCur;if(!s||!s.oc)return;const iw=r.image.width,ih=r.image.height,k=Math.min(1,960/Math.max(iw,ih)),w=Math.round(iw*k),h=Math.round(ih*k);
+   if(s.oc.width!==w||s.oc.height!==h){s.oc.width=w;s.oc.height=h}
+   const c=s.oc.getContext('2d');c.save();c.clearRect(0,0,w,h);c.drawImage(r.segmentationMask,0,0,w,h);c.globalCompositeOperation='source-in';c.drawImage(r.image,0,0,w,h);c.globalCompositeOperation='destination-over';
+   if(s.bgm==='tpl'&&bgFn)bgFn(c,0,0,w,h,performance.now());else if(s.bgm==='tpl'&&bgImg)cover(c,bgImg,bgImg.naturalWidth||bgImg.width,bgImg.naturalHeight||bgImg.height,0,0,w,h);else{c.filter='blur(14px)';c.drawImage(r.image,0,0,w,h)}c.restore()});cb(true)}catch(e){cb(false)}};
+ sc.onerror=()=>cb(false);document.head.appendChild(sc)}
+function setBgMode(s,v){if(v==='off'){s.blur=false;s.bgm='off';return}msg('Loading background model...');
+ loadSeg(ok=>{if(!ok){msg('Could not load the background model. Check your connection.');s.blur=false;s.bgm='off';ui();return}
+  s.oc=s.oc||document.createElement('canvas');s.bgm=v;s.blur=true;msg(v==='tpl'?'Template background is on. Pick a template under Start.':'Background blur is on.');ui()})}
+
+const T=[['Nations stage','bg/nations-stage.jpg'],['Gold stage','bg/gold-stage.jpg'],['Globe and doves','bg/globe-doves.jpg'],['Worship crowd','bg/worship-crowd.jpg'],['Vertical nations (portrait)','bg/vertical-nations.jpg',1]].map(([n,u,p])=>({n,u,p,th:u.replace('bg/','bg/th-')}));
+function proc(n,c1,c2,c3){const c=document.createElement('canvas');c.width=1280;c.height=720;const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,720);
+ gr.addColorStop(0,c1);gr.addColorStop(.6,c2);gr.addColorStop(1,c3);g.fillStyle=gr;g.fillRect(0,0,1280,720);
+ const rg=g.createRadialGradient(640,280,20,640,280,560);rg.addColorStop(0,'rgba(255,230,160,.5)');rg.addColorStop(1,'rgba(255,230,160,0)');g.fillStyle=rg;g.fillRect(0,0,1280,720);
+ for(let i=0;i<40;i++){g.beginPath();g.fillStyle='rgba(255,215,120,'+(Math.random()*.1+.03)+')';g.arc(Math.random()*1280,Math.random()*720,10+Math.random()*50,0,7);g.fill()}
+ g.fillStyle='rgba(242,193,78,.9)';g.fillRect(0,692,1280,6);T.push({n,c,u:c.toDataURL('image/jpeg',.6)})}
+proc('Royal blue and gold','#0b1f4d','#143a8c','#061233');proc('Crimson glory','#4a0d18','#8c1b2c','#1d0409');proc('Midnight worship','#05060f','#101a3a','#050810');proc('Golden dawn','#1b3a6b','#d9973f','#fbe4a1');
+function gal(){$('gal').innerHTML=T.map((t,i)=>`<button data-a="bgsel" data-i="${i}" class="${i==curBg?'cur':''}"><img src="${t.th||t.u}" alt="${esc(t.n)}" loading="lazy"><span>${esc(t.n)}</span></button>`).join('')}
+function setBg(i){const t=T[i];curBg=i;
+ const go=()=>{bgImg=t.c||t.img;bgFn=t.fn||null;let b=S.find(s=>s.isBg);if(!b)b=mk('image','Background',{isBg:true,cover:true});b.img=bgImg;b.fn=bgFn;b.tn=t.n;
+  const it=SC[ed()].items;if(!it.some(x=>x.id===b.id))it.unshift({id:b.id,p:'full',on:true});gal();ui()};
+ if(t.p&&W>=H)msg('This template is made for Portrait. Change Screen shape under Start.');
+ if(t.fn||t.c||(t.img&&t.img.complete))return go();t.img=t.img||new Image();t.img.onload=go;t.img.src=t.u}
+function newScene(name){SC.push({name,items:[]});const i=SC.length-1;if(studio)pvw=i;else take(i);return i}
+function pick(acc){$('fm').accept=acc;$('fm').click();setTimeout(()=>$('fm').accept='video/*,audio/*',500)}
+async function quick(m){const N={radio:'24/7 Radio',camtpl:'Camera + background',cam:'Camera',pic:'Picture only',pre:'Pre-recorded 24/7',pres:'Presenter + chat'};
+ newScene(N[m]);if(m!=='cam')setBg(curBg);
+ if(m==='radio'){place(mk('text','Station '+uid,{text:'My Radio'}),'lower');place(mk('ticker','Ticker '+uid,{text:'Welcome to our 24/7 broadcast. Share with a friend.',speed:120}),'ticker');pick('audio/*,video/*');msg('Choose your audio or video files. They play on a loop. Rename the station in Sources.')}
+ else if(m==='pre'){pick('video/*');msg('Choose your videos. They play in order on a loop.')}
+ else if(m==='pres'){await cam();const c=S.filter(s=>s.type==='camera').pop(),it=SC[ed()].items;if(c){const x=it.find(z=>z.id===c.id);if(x)x.p='presL'}
+  place(mk('chat','Chat '+uid,{}),'chatR');place(mk('text','Title '+uid,{text:'My Broadcast'}),'top');place(mk('ticker','Ticker '+uid,{text:'Welcome! Share this broadcast with a friend.',speed:120}),'ticker');ui();msg('Connect Twitch chat under Chat. Change the title and ticker text under Sources.')}
+ else if(m==='pic'){await mic();place(mk('text','Title '+uid,{text:'Live'}),'lower');msg('No camera is used. Speak into your microphone, or add music from Sources.')}
+ else{await cam();const c=S.filter(s=>s.type==='camera').pop();if(c){const it=SC[ed()].items.find(x=>x.id===c.id);if(it)it.p='full';if(m==='camtpl')setBgMode(c,'tpl');ui()}}
+ ui();$('cvs').scrollIntoView({behavior:'smooth'})}
+Object.assign(act,{q:(i,b)=>quick(b.dataset.m),bgsel:i=>setBg(i),tab:i=>document.querySelectorAll('.tabs button')[i].click(),
+ flip:async i=>{const s=S[i];s.face=s.face==='environment'?'user':'environment';
+  try{const v=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:s.face},width:1280,height:720},audio:false}),old=s.el.srcObject;
+   old.getVideoTracks().forEach(t=>t.stop());s.el.srcObject=new MediaStream([...v.getVideoTracks(),...old.getAudioTracks()]);s.el.play();msg('Switched to the '+(s.face==='environment'?'rear':'front')+' camera.')}
+  catch(e){msg('Could not switch camera: '+e.message)}}});
+const lo=document.createElement('canvas');lo.width=640;lo.height=360;const lc=lo.getContext('2d');
+$('ori').onchange=e=>{if(want){e.target.value=W<H?'p':W==H?'s':'l';msg('Stop the broadcast before changing the screen shape.');return}
+ const v=e.target.value,p=v==='p';W=v==='l'?1280:720;H=p?1280:720;[$('cv'),$('cp'),dl].forEach(c=>{c.width=W;c.height=H});lo.width=W/2;lo.height=H/2;dx.lineCap='round';dx.lineJoin='round';
+ [$('cv'),$('cp')].forEach(c=>{c.style.aspectRatio=W+'/'+H;c.style.width=p?'min(100%,34vh)':v==='s'?'min(100%,60vh)':'';c.style.margin=v==='l'?'':'0 auto'})};
+const FR={pip:1,tl:1,presL:1,chatR:1};
+const rrect=(c,x,y,w,h,r)=>{c.beginPath();c.roundRect?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h)};
+let animBg=true;$('anb').onchange=e=>animBg=e.target.checked;
+function spark(c,x,y,w,h,t){const A=c.globalAlpha;c.save();c.fillStyle='#ffe6a0';for(let i=0;i<36;i++){const sp=.02+(i%5)*.012,py=1-(((i*53%100)/100+t*sp/1000)%1);
+ c.globalAlpha=A*(.25+.35*Math.abs(Math.sin(t/700+i)));c.beginPath();c.arc(x+(i*97%100)/100*w+Math.sin(t/1500+i)*12,y+py*h,1.5+i%3,0,7);c.fill()}c.restore()}
+function drawTicker(c,s,x,y,w,h){c.fillStyle='rgba(8,16,36,.92)';c.fillRect(x,y,w,h);c.fillStyle='#f2c14e';c.fillRect(x,y,w,3);
+ c.font='600 '+Math.round(h*.55)+'px system-ui,sans-serif';c.textBaseline='middle';const txt=s.text+'     \u2022     ',tw=c.measureText(txt).width;if(!tw)return;
+ c.save();c.beginPath();c.rect(x,y,w,h);c.clip();c.fillStyle='#fff';const off=(performance.now()/1000*s.speed)%tw;for(let q=x-off;q<x+w;q+=tw)c.fillText(txt,q,y+h/2+1);c.restore()}
+$('fv').onchange=e=>{const f=e.target.files[0];if(!f)return;const s=mk('vbg','Video background',{});s.el=document.createElement('video');s.el.src=URL.createObjectURL(f);s.el.loop=true;s.el.muted=true;s.el.playsInline=true;s.el.play();
+ SC[ed()].items.unshift({id:s.id,p:'full',on:true});e.target.value='';ui()};
+const lin=(c,x,y,w,h,a,b,d)=>{const g=c.createLinearGradient(x,y,x,y+h);g.addColorStop(0,a);g.addColorStop(.6,b);g.addColorStop(1,d);c.fillStyle=g;c.fillRect(x,y,w,h)};
+function beams(c,x,y,w,h,t,cols){const A=c.globalAlpha;cols.forEach((col,i)=>{const a=Math.sin(t/2200+i*2)*.4,bx=x+w*(.2+.3*i),g=c.createLinearGradient(bx,y,bx+a*w,y+h);g.addColorStop(0,col);g.addColorStop(1,'rgba(0,0,0,0)');
+ c.save();c.globalAlpha=A*.35;c.fillStyle=g;c.beginPath();c.moveTo(bx-w*.03,y);c.lineTo(bx+w*.03,y);c.lineTo(bx+a*w+w*.12,y+h);c.lineTo(bx+a*w-w*.12,y+h);c.fill();c.restore()})}
+function floor(c,x,y,w,h){const g=c.createLinearGradient(x,y+h*.78,x,y+h);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(242,193,78,.35)');c.fillStyle=g;c.fillRect(x,y+h*.78,w,h*.22);c.fillStyle='#f2c14e';c.fillRect(x,y+h*.78,w,Math.max(2,h*.006))}
+function anim(n,fn){const c=document.createElement('canvas');c.width=320;c.height=180;fn(c.getContext('2d'),0,0,320,180,3000);T.push({n,fn,u:c.toDataURL('image/jpeg',.7)})}
+anim('Stage lights (USA style)',(c,x,y,w,h,t)=>{lin(c,x,y,w,h,'#0a1a44','#102a6b','#050b1f');const A=c.globalAlpha;
+ for(let i=0;i<7;i++){c.fillStyle=i%2?'rgba(255,255,255,.16)':'rgba(200,30,50,.28)';c.fillRect(x,y+h*(.62+i*.036),w,h*.036)}
+ c.fillStyle='#fff';for(let i=0;i<40;i++){c.globalAlpha=A*(.3+.5*Math.abs(Math.sin(t/600+i)));c.fillRect(x+w*((i*37)%100)/100,y+h*.4*(((i*61)%100)/100),2,2)}c.globalAlpha=A;
+ beams(c,x,y,w,h,t,['#ff4d5e','#ffffff','#4d8dff']);floor(c,x,y,w,h)});
+anim('News studio (Euro style)',(c,x,y,w,h,t)=>{lin(c,x,y,w,h,'#10222b','#1b3a46','#0a1418');for(let i=0;i<6;i++){c.fillStyle='rgba(255,255,255,.05)';c.fillRect(x+w*(i/6)+4,y+h*.08,w/6-8,h*.66);c.fillStyle='rgba(242,193,78,.6)';c.fillRect(x+w*(i/6),y+h*.08,2,h*.66)}
+ const sx=x+((t/30)%(w*1.6))-w*.3,g=c.createLinearGradient(sx,y,sx+w*.25,y);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,.14)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(x,y,w,h*.75);floor(c,x,y,w,h)});
+anim('Stone arches (Euro style)',(c,x,y,w,h,t)=>{lin(c,x,y,w,h,'#efe3c8','#cdb994','#6f5f40');const n=w>h?3:2,aw=w/n;for(let i=0;i<n;i++){const cx0=x+aw*(i+.5),r=aw*.38,top=y+h*.16;
+ const g=c.createLinearGradient(0,top,0,y+h*.78);g.addColorStop(0,'#3a2f1f');g.addColorStop(1,'#8a7552');c.fillStyle=g;c.beginPath();c.arc(cx0,top+r,r,Math.PI,0);c.lineTo(cx0+r,y+h*.78);c.lineTo(cx0-r,y+h*.78);c.fill();
+ c.fillStyle='rgba(255,226,160,'+(.18+.12*Math.sin(t/900+i))+')';c.beginPath();c.arc(cx0,top+r,r*.8,Math.PI,0);c.lineTo(cx0+r*.8,y+h*.78);c.lineTo(cx0-r*.8,y+h*.78);c.fill()}floor(c,x,y,w,h)});
+anim('Gold particles',(c,x,y,w,h,t)=>{lin(c,x,y,w,h,'#060f2a','#0e2457','#030812');const A=c.globalAlpha;for(let i=0;i<34;i++){const sp=.015+(i%6)*.01,py=1-(((i*47%100)/100+t*sp/1000)%1),r=6+(i%5)*7,px=x+((i*83)%100)/100*w+Math.sin(t/2000+i)*20;
+ const g=c.createRadialGradient(px,y+py*h,0,px,y+py*h,r);g.addColorStop(0,'rgba(255,215,120,'+.55*A+')');g.addColorStop(1,'rgba(255,215,120,0)');c.fillStyle=g;c.fillRect(px-r,y+py*h-r,r*2,r*2)}});
+anim('Flowing waves',(c,x,y,w,h,t)=>{lin(c,x,y,w,h,'#04122f','#0a2a66','#020816');const cols=['rgba(30,90,200,.45)','rgba(60,140,230,.4)','rgba(242,193,78,.35)','rgba(255,255,255,.18)'];
+ cols.forEach((col,k)=>{c.fillStyle=col;c.beginPath();c.moveTo(x,y+h);for(let i=0;i<=40;i++){const px=x+w*i/40;c.lineTo(px,y+h*(.55+k*.09)+Math.sin(i*.35+t/(900+k*250)+k)*h*.04)}c.lineTo(x+w,y+h);c.fill()})});
+anim('Aurora worship',(c,x,y,w,h,t)=>{lin(c,x,y,w,h,'#03040c','#0a1230','#02030a');const cols=['rgba(80,160,255,.07)','rgba(150,100,255,.07)','rgba(242,193,78,.06)'];c.lineCap='round';
+ cols.forEach((col,k)=>{c.strokeStyle=col;for(let j=0;j<10;j++){c.lineWidth=h*.03*(10-j)/4+4;c.beginPath();for(let i=0;i<=30;i++){const px=x+w*i/30,py=y+h*(.3+k*.12)+Math.sin(i*.3+t/1500+k*2)*h*.07;i?c.lineTo(px,py):c.moveTo(px,py)}c.stroke()}})});
+let ph=[],pT=null;
+function snap(){$('cv').toBlob(b=>{if(!b)return;const u=URL.createObjectURL(b),d=new Date();ph.unshift({u,n:'photo-'+d.toISOString().slice(0,19).replace(/[:T]/g,'-')+'.jpg',t:d.toLocaleTimeString()});while(ph.length>60)URL.revokeObjectURL(ph.pop().u);
+ $('pl').innerHTML=ph.map(p=>`<a href="${p.u}" download="${p.n}" class="mu"><img src="${p.u}" alt="Photo at ${p.t}" style="width:100%;border-radius:6px;display:block"><span>${p.t}</span></a>`).join('')},'image/jpeg',.92)}
+const pset=()=>{clearInterval(pT);if($('pon').checked)pT=setInterval(snap,+$('pint').value*60000)};
+$('pon').onchange=$('pint').onchange=pset;$('pnow').onclick=snap;
+$('pall').onclick=()=>ph.forEach((p,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=p.u;a.download=p.n;a.click()},i*500));
+let duck=1,arT=null;const ann=AC.createGain();ann.connect(bus);ann.connect(mon);
+async function speak(t){t=t.trim().slice(0,400);if(!t)return;$('ast').textContent='Preparing the voice...';
+ try{const r=await fetch('/api/tts',{method:'POST',headers:{'content-type':'application/json',...(acct.tok?{authorization:'Bearer '+acct.tok}:{})},body:JSON.stringify({text:t})});if(!r.ok)throw new Error(r.status);
+  const j=await r.json(),bin=atob(j.audio),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  const buf=await AC.decodeAudioData(u.buffer);AC.resume();const sr=AC.createBufferSource();sr.buffer=buf;sr.connect(ann);duck=.25;sr.onended=()=>{duck=1;$('ast').textContent='Done.'};sr.start();$('ast').textContent='Announcing...'}
+ catch(e){duck=1;$('ast').textContent='The announcer voice is not set up yet (see README, Workers AI binding). A browser voice will play on your device only. Viewers will not hear it.';if('speechSynthesis' in window)speechSynthesis.speak(new SpeechSynthesisUtterance(t))}}
+$('asp').onclick=()=>speak($('atx').value);
+$('arp').onchange=()=>{clearInterval(arT);const n=+$('arp').value;if(n)arT=setInterval(()=>speak($('atx').value),n*1000)};
+const loginId=v=>{const t=String(v||'').trim().toLowerCase();return /^[a-z0-9][a-z0-9._-]{1,39}$/.test(t)?t+'@studio.local':t};
+const loginLabel=v=>v.endsWith('@studio.local')?v.slice(0,-13):v;
+const acct={on:false,tok:'',me:null};try{acct.tok=localStorage.getItem('ls_tok')||''}catch(e){}
+let RU='',RT='';
+async function api(path,body){try{const r=await fetch(path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(acct.tok?{authorization:'Bearer '+acct.tok}:{})},body:body?JSON.stringify(body):undefined});
+ const j=await r.json().catch(()=>({}));return{ok:r.ok,status:r.status,...j}}catch(e){return{ok:false,status:0,error:'Network error'}}}
+async function relink(meeting=false){if(acct.on){const r=await api(meeting?'/api/meeting-token':'/api/relay-token');if(!r.ok){const msg=r.error||'The connection could not be started.';$('info').textContent=msg;if(meeting)gSt(msg);return false}if(meeting){gRoomURL=r.url;gRoomToken=r.token}else{RU=r.url;RT=r.token}return true}if(meeting){gRoomURL=$('relay').value.trim();gRoomToken=$('tok').value;return !!gRoomURL}RU=$('relay').value.trim();RT=$('tok').value;return !!RU}
+function saveTok(t){acct.tok=t||'';try{t?localStorage.setItem('ls_tok',t):localStorage.removeItem('ls_tok')}catch(e){}}
+function acRender(){const m=acct.me;$('acOut').hidden=!!m;$('acIn').hidden=!m;$('ownerSetup').hidden=!(m&&m.role==='owner'&&localStorage.getItem('ls_owner_setup'));
+ if(m){const d=Math.max(0,m.paidUntil-Date.now());$('acs').textContent=loginLabel(m.email)+' ('+(m.role||'user')+') - '+(m.role==='owner'||m.role==='admin'?'Staff access':m.active?'Active for '+(d>864e5?Math.ceil(d/864e5)+' day(s)':Math.ceil(d/36e5)+' hour(s)'):'No active plan')+(m.verified===false?'. Please confirm your email (check your inbox).':'');$('arv').hidden=m.verified!==false;$('apl').hidden=!!m.admin;$('userrole').hidden=m.role!=='owner';document.querySelectorAll('.tabs button')[9].hidden=!m.admin;$('acb').textContent=m.active?'Account':'Subscribe'}else{$('acb').textContent='Sign in';document.querySelectorAll('.tabs button')[9].hidden=true}}
+async function refreshMe(){if(!acct.tok){acct.me=null;return acRender()}const r=await api('/api/me');if(r.ok)acct.me=r;else{saveTok('');acct.me=null}acRender()}
+async function stretch(e,p){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(p),'PBKDF2',false,['deriveBits']);
+ const b=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode('livestudio:'+loginId(e)),iterations:210000,hash:'SHA-256'},k,256);return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function acAuth(kind){const em=loginId($('aem').value),pwr=$('apw').value;
+ if(kind==='signup'&&pwr.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}
+ $('acm').textContent='Please wait...';const r=await api('/api/'+kind,{email:em,password:await stretch(em,pwr),agree:$('aag').checked});
+ if(r.ok){saveTok(r.token);$('apw').value='';$('acm').textContent='';await refreshMe();loadConns();pendingJoin()}else $('acm').textContent=r.error||'Could not sign in.'}
+$('showpw').onchange=e=>$('apw').type=e.target.checked?'text':'password';
+$('ali').onclick=()=>acAuth('login');$('asu').onclick=()=>acAuth('signup');$('alo').onclick=()=>{saveTok('');acct.me=null;acRender();conn.list=[];renderConns()};
+async function aiWrite(task){const topic=$('aitp').value.trim();if(!topic){$('ast').textContent='Type what your broadcast is about first.';return}
+ $('aio').value='Writing...';const r=await api('/api/ai',{task,topic});
+ if(r.ok)$('aio').value=r.text;else{$('aio').value='';$('ast').textContent=r.status===401?'Sign in under Account to use the AI writer.':(r.error||'The AI writer is not available.')}}
+Object.assign(act,{ai:(i,b)=>aiWrite(b.dataset.m),buy:async(i,b)=>{$('acm').textContent='Opening payment...';const r=await api('/api/pay/start',{plan:b.dataset.m});if(r.ok&&r.url)location.href=r.url;else $('acm').textContent=r.error||'Could not start the payment.'}});
+$('aua').onclick=()=>{$('atx').value=$('aio').value.slice(0,400)};
+$('aut').onclick=()=>{const t=$('aio').value.split('\n').map(x=>x.replace(/^\s*(\d+[.)]|[-*])\s*/,'').trim()).filter(Boolean).join('   \u2022   ').slice(0,300);if(!t)return;
+ place(mk('ticker','Ticker '+uid,{text:t,speed:120}));ui();msg('Ticker added to the selected scene.')};
+(async()=>{const r=await api('/api/plans');
+ if(!r.ok||!r.plans){$('acb').hidden=true;document.querySelectorAll('.tabs button')[8].hidden=true;return}
+ acct.on=true;$('manual').hidden=true;
+ $('apl').innerHTML=r.plans.map(p=>`<button class="card" data-a="buy" data-m="${esc(p.id)}"><b>${esc(p.name)}</b><small>${esc(r.currency)} ${Number(p.amount).toLocaleString()} for ${p.days} day(s)</small></button>`).join('');
+ await refreshMe();await loadConns();const q2=new URLSearchParams(location.search),cn=q2.get('connected'),ce=q2.get('connect_error');if(cn||ce){history.replaceState(null,'',location.pathname);$('chm').textContent=cn?'Connected. Choose the channels to use below.':ce;act.tab(4)}const rs=q2.get('reset'),nt=q2.get('notice');if(rs){history.replaceState(null,'',location.pathname);rtok=rs;$('acOut').hidden=true;$('acRs').hidden=false;act.tab(8)}else if(nt){history.replaceState(null,'',location.pathname);$('acm').textContent=nt;act.tab(8)}const jn=q2.get('join');if(jn){try{sessionStorage.setItem('ls_join',jn)}catch(e){}history.replaceState(null,'',location.pathname)}await pendingJoin();const ref=new URLSearchParams(location.search).get('reference');
+ if(ref&&acct.tok){history.replaceState(null,'',location.pathname);const v=await api('/api/pay/verify?reference='+encodeURIComponent(ref));$('acm').textContent=v.ok?'Payment received. Your plan is active.':(v.error||'The payment is not confirmed yet. Refresh in a minute.');await refreshMe();act.tab(8)}})();
+const conn={list:[],sel:new Set(),seen:new Set()};let liveEnds=[];
+function renderConns(){$('chl').innerHTML=conn.list.length?conn.list.map((c,i)=>`<li><label style="flex:1"><input type="checkbox" data-n="csel" data-i="${i}"${conn.sel.has(c.id)?' checked':''}> ${esc(c.name)} <small>${c.kind}</small></label><button data-a="crm" data-i="${i}" aria-label="Remove">x</button></li>`).join(''):'<li class="mu">No channels connected yet.</li>'}
+async function loadConns(){$('conn').hidden=!acct.on;if(!acct.on||!acct.me){conn.list=[];return renderConns()}
+ const r=await api('/api/connections');conn.list=r.ok?r.list:[];conn.list.forEach(c=>{if(!conn.seen.has(c.id)){conn.seen.add(c.id);conn.sel.add(c.id)}});renderConns()}
+async function oauth(k){const r=await api('/api/connect/'+k);if(r.ok&&r.url)location.href=r.url;else $('chm').textContent=r.status===401?'Sign in under Account first.':(r.error||'Could not start the connection.')}
+Object.assign(act,{cyt:()=>oauth('youtube'),cfb:()=>oauth('facebook'),crm:async i=>{await api('/api/connections/remove',{id:conn.list[i].id});conn.sel.delete(conn.list[i].id);loadConns()}});
+let rtok='';
+$('afg').onclick=async()=>{const e=$('aem').value.trim();if(!e){$('acm').textContent='Type your email above first. For a username account, ask an admin to reset your password.';return}$('acm').textContent='Please wait...';
+ const r=await api('/api/forgot',{email:e});$('acm').textContent=r.ok?'If that email has an account, a reset link is on its way.':(r.error||'Could not send the email.')};
+$('arv').onclick=async()=>{const r=await api('/api/resend',{});$('acm').textContent=r.ok?'Confirmation email sent.':(r.error||'Could not send the email.')};
+$('rsv').onclick=async()=>{if($('rpw').value.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}
+ const em=JSON.parse(atob(rtok.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'))).e;const r=await api('/api/reset',{token:rtok,password:await stretch(em,$('rpw').value)});
+ if(r.ok){$('acRs').hidden=true;$('acOut').hidden=false;$('rpw').value='';$('acm').textContent='Password changed. You can log in now.'}else $('acm').textContent=r.error||'Could not change the password.'};
+let adC='';
+const adF=(n,c)=>c+' '+Number(n||0).toLocaleString();
+async function adLoad(reset){if(reset){adC='';$('adl').innerHTML='';const s=await api('/api/admin/stats');
+  if(s.ok)$('ads').innerHTML=[['Users',s.users],['Active plans',s.active],['Unconfirmed emails',s.unverified],['New this week',s.newWeek],['Revenue, 7 days',adF(s.revenue.d7,s.currency)],['Revenue, 30 days',adF(s.revenue.d30,s.currency)],['Revenue, all time',adF(s.revenue.all,s.currency)]].map(([a,b])=>`<div class="card"><small>${a}</small><b>${esc(b)}</b></div>`).join('');
+  else $('ads').textContent=s.error||'Not allowed.'}
+ const r=await api('/api/admin/users?q='+encodeURIComponent($('adq').value.trim())+'&cursor='+encodeURIComponent(adC));if(!r.ok)return;
+ r.users.forEach(u=>{const li=document.createElement('li'),d=Math.ceil(((u.pu||0)-Date.now())/864e5),st=u.b?'Suspended':d>0?'Active, '+d+' day(s) left':'No plan';
+  const editable=u.role!=='owner'&&u.email!==acct.me.email&&(acct.me.role==='owner'||u.role==='user');
+  li.innerHTML=`<span style="cursor:default">${esc(loginLabel(u.email))}<br><small>${esc(u.role||'user')} · ${u.role==='user'?st:(u.b?'Suspended':'Staff access')}${u.v===0?', email not confirmed':''}</small></span>${editable?`<button data-a="adrpw" data-m="${esc(u.email)}">Set password</button><button data-a="adg" data-i="7" data-m="${esc(u.email)}">+7 days</button><button data-a="adg" data-i="30" data-m="${esc(u.email)}">+30 days</button><button data-a="adb" data-i="${u.b?0:1}" data-m="${esc(u.email)}">${u.b?'Restore':'Suspend'}</button>${acct.me.role==='owner'?`<button data-a="adrole" data-i="${u.role==='admin'?0:1}" data-m="${esc(u.email)}">${u.role==='admin'?'Make user':'Make admin'}</button>`:''}`:''}`;$('adl').appendChild(li)});
+ adC=r.cursor;$('adm').hidden=!adC}
+const adResult=r=>{$('admsg').textContent=r.ok?'Saved.':r.error||'Could not save. Try again.';if(r.ok)adLoad(true)};
+Object.assign(act,{adg:async(i,b)=>adResult(await api('/api/admin/grant',{email:b.dataset.m,days:i})),adb:async(i,b)=>adResult(await api('/api/admin/ban',{email:b.dataset.m,banned:i===1})),adrpw:(i,b)=>{$('resetuser').value=loginLabel(b.dataset.m);$('resetpw').focus()},adrole:async(i,b)=>adResult(await api('/api/admin/role',{email:b.dataset.m,role:i===1?'admin':'user'}))});
+$('createuser').onclick=async()=>{if($('userpw').value.length<8){$('admsg').textContent='Use a password of 8 or more characters.';return}const b=$('createuser');b.disabled=true;try{const email=loginId($('newuser').value),r=await api('/api/admin/create',{email,password:await stretch(email,$('userpw').value),role:acct.me.role==='owner'?$('userrole').value:'user'});adResult(r);if(r.ok){$('newuser').value='';$('userpw').value='';$('admsg').textContent='Account created. Share the username and password with the user.'}}finally{b.disabled=false}};
+$('resetuserpw').onclick=async()=>{if($('resetpw').value.length<8){$('admsg').textContent='Use a password of 8 or more characters.';return}const email=loginId($('resetuser').value),r=await api('/api/admin/password',{email,password:await stretch(email,$('resetpw').value)});adResult(r);if(r.ok){$('resetpw').value='';$('admsg').textContent='Password set. Previous logins have been signed out.'}};
+$('ownerSavePassword').onclick=async()=>{if($('ownerNewPassword').value.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}const r=await api('/api/control-password',{ticket:localStorage.getItem('ls_owner_setup')||'',password:await stretch(acct.me.email,$('ownerNewPassword').value)});if(r.ok){saveTok(r.token);localStorage.removeItem('ls_owner_setup');$('ownerNewPassword').value='';$('ownerSetup').hidden=true;$('acm').textContent='Owner password saved. You can sign in with username owner and your password.';refreshMe()}else $('acm').textContent=r.error||'Could not set the owner password.'};
+$('changepw').onclick=async()=>{if($('newpw').value.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}const email=acct.me.email,r=await api('/api/account/password',{current:await stretch(email,$('oldpw').value),password:await stretch(email,$('newpw').value)});if(r.ok){saveTok(r.token);$('oldpw').value='';$('newpw').value='';$('acm').textContent='Password changed. Other devices have been signed out.'}else $('acm').textContent=r.error||'Could not change password.'};
+$('adsw').onclick=async()=>{const r=await api('/api/admin/sweep',{});msg(r.ok?'Cleaned up: '+Object.entries(r.removed).map(([k,v])=>k+' '+v).join(', '):(r.error||'Could not clean up.'))};
+$('adsb').onclick=()=>adLoad(true);$('adm').onclick=()=>adLoad(false);
+document.querySelectorAll('.tabs button')[9].addEventListener('click',()=>adLoad(true));
+$('aloa').onclick=async()=>{await api('/api/logout-all',{});saveTok('');acct.me=null;acRender();conn.list=[];renderConns();$('acm').textContent='Logged out of all devices.'};
+$('aexp').onclick=async()=>{const r=await api('/api/account/export');if(!r.ok){$('acm').textContent=r.error||'Could not export your data.';return}
+ const{ok,status,...d}=r,a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='my-data.json';a.click()};
+$('adel').onclick=async()=>{if(!$('dpw').value){$('acm').textContent='Enter your password to confirm.';return}
+ if(!confirm('Delete your account and connected channels? This cannot be undone and any remaining plan time is lost.'))return;
+ const r=await api('/api/account/delete',{password:await stretch(acct.me.email,$('dpw').value)});
+ if(r.ok){saveTok('');acct.me=null;$('dpw').value='';acRender();conn.list=[];renderConns();$('acm').textContent='Your account has been deleted.'}else $('acm').textContent=r.error||'Could not delete the account.'};
+function tag(c,t,x,y,w,h){c.save();c.font='600 '+Math.max(14,Math.round(h*.045))+'px system-ui,sans-serif';c.textBaseline='middle';const tw=c.measureText(t).width+24,th=Math.max(26,Math.round(h*.07));
+ c.fillStyle='rgba(8,16,36,.8)';c.fillRect(x+10,y+h-th-10,tw,th);c.fillStyle='#f2c14e';c.fillRect(x+10,y+h-th-10,4,th);c.fillStyle='#fff';c.fillText(t,x+22,y+h-th/2-10);c.restore()}
+const guests=new Map(),wait=new Map(),hands=new Map();let gws=null,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
+const gc=document.createElement('canvas');gc.width=640;gc.height=360;const gx=gc.getContext('2d');
+const gsend=o=>{if(gws&&gws.readyState===1)gws.send(JSON.stringify(o))},gSt=t=>{$('gst').textContent=t};
+async function gStart(){if(gws)return gStop('Room closed.');
+ if(!(await relink(true))){if(!acct.on)gSt('Sign in to start a guest room, or enter your relay address under Go live.');return}
+ gSt('Starting the room...');const roomURL=gRoomURL.replace(/\/+$/,'');gRoomURL=roomURL;const w=gws=new WebSocket(roomURL+'/room');
+ w.onopen=()=>gsend({t:'host',token:gRoomToken});w.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}gmsg(m)};
+ w.onclose=()=>{if(gws===w)gStop('The room closed.')};w.onerror=()=>{}}
+function gStop(msg){const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);wait.clear();
+ $('grs').textContent='Start guest room';$('gin').hidden=true;hands.clear();gSt(msg||'Room closed.');renderG()}
+function gmsg(m){
+ if(m.t==='created'){gice=m.ice||[];glink=location.origin+'/join.html?relay='+encodeURIComponent(gRoomURL)+'&r='+m.room+'&k='+m.key;alink=glink+'&a=1';if(tm.pend)tmPublish();
+  $('grs').textContent='End guest room';$('gin').hidden=false;gSt('The room is open. Copy the invite link and send it to your guests. You admit each guest from the waiting room.')}
+ else if(m.t==='waiting'){wait.set(m.gid,m.name+(m.ao?' (audio only)':''));renderG()}
+ else if(m.t==='joined'){wait.delete(m.gid);hands.delete(m.gid);gAdd(m.gid,m.name,m.ao)}
+ else if(m.t==='count')$('gac').textContent=m.n
+ else if(m.t==='note')gSt(m.text)
+ else if(m.t==='left'){wait.delete(m.gid);gRemove(m.gid)}
+ else if(m.t==='sig'){const g=guests.get(m.from);if(g)gsig(g,m.data)}
+ else if(m.t==='chat')gchat(m.name,m.text)
+ else if(m.t==='hand'){const g=guests.get(m.from);if(g){g.hand=m.on;renderG();if(m.on)gchat('Room',g.name+' raised a hand')}else{m.on?hands.set(m.from,m.name):hands.delete(m.from);if(m.on)gchat('Room',m.name+' raised a hand');renderG()}}
+ else if(m.t==='react'){const g=guests.get(m.from);gchat(g?g.name:'Guest',m.emoji)}
+ else if(m.t==='error'||m.t==='closed')gStop(m.msg||m.why||'The room closed.')}
+async function gAdd(gid,name,ao){if(guests.has(gid))return;const g={id:gid,name,ao,pc:null,src:null,mm:AC.createMediaStreamDestination(),hand:false};guests.set(gid,g);
+ ann.connect(g.mm);for(const s of S)if(s.g&&s.type!=='guest')s.g.connect(g.mm);for(const o of guests.values())if(o!==g&&o.src&&o.src.raw)o.src.raw.connect(g.mm);
+ const pc=g.pc=new RTCPeerConnection({iceServers:gice});
+ g.mm.stream.getAudioTracks().forEach(t=>pc.addTrack(t,g.mm.stream));if(!ao&&!$('lite').checked){gcs=gcs||gc.captureStream(15);gcs.getVideoTracks().forEach(t=>pc.addTrack(t,gcs))}
+ pc.onicecandidate=e=>{if(e.candidate)gsend({t:'sig',to:gid,data:{c:e.candidate}})};pc.ontrack=e=>gTrack(g,e);
+ try{await pc.setLocalDescription(await pc.createOffer());gsend({t:'sig',to:gid,data:{sdp:pc.localDescription}})}catch(e){gSt('Could not connect '+name+'.')}
+ renderG()}
+function gTrack(g,e){const st=e.streams[0]||new MediaStream([e.track]);
+ if(!g.src){const s=g.src=mk('guest',g.name,{});s.el=document.createElement('video');s.el.muted=true;s.el.playsInline=true;s.el.srcObject=st;s.el.play().catch(()=>{})}
+ if(e.track.kind==='audio'&&!g.src.raw){const a=new Audio();a.srcObject=st;a.muted=true;a.play().catch(()=>{});
+  const s=g.src,node=AC.createMediaStreamSource(st);s.raw=node;s.g=AC.createGain();node.connect(s.g);s.g.connect(bus);s.hm=AC.createGain();node.connect(s.hm);s.hm.connect(mon);
+  for(const o of guests.values())if(o!==g&&o.mm)node.connect(o.mm)}
+ ui()}
+async function gsig(g,d){try{if(d.sdp){await g.pc.setRemoteDescription(d.sdp);
+  try{const snd=g.pc.getSenders().find(s=>s.track&&s.track.kind==='video'),p=snd.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:700000}];await snd.setParameters(p)}catch(e){}}
+ else if(d.c)await g.pc.addIceCandidate(d.c)}catch(e){}}
+function gRemove(gid){const g=guests.get(gid);if(!g)return;try{g.pc&&g.pc.close()}catch(e){}
+ for(const s of S){if(s.g)try{s.g.disconnect(g.mm)}catch(e){}if(s.raw)try{s.raw.disconnect(g.mm)}catch(e){}}try{ann.disconnect(g.mm)}catch(e){}
+ const i=g.src?S.indexOf(g.src):-1;guests.delete(gid);if(i>=0)act.srm(i);else renderG()}
+function renderG(){const it=SC[ed()]?SC[ed()].items:[];
+ $('ghl').innerHTML=[...hands].map(([id,n])=>`<li><span style="cursor:default">${esc(n)} &#9995;</span><button data-a="gprom" data-m="${id}">Invite to stage</button></li>`).join('')||'<li class="mu">No raised hands.</li>';
+ $('gwl').innerHTML=[...wait].map(([id,n])=>`<li><span style="cursor:default">${esc(n)}</span><button data-a="gad" data-m="${id}">Admit</button><button data-a="gdn" data-m="${id}">Deny</button></li>`).join('')||'<li class="mu">Nobody is waiting.</li>';
+ $('gli').innerHTML=[...guests.values()].map(g=>{const on=g.src&&it.some(x=>x.id===g.src.id);
+  return `<li><span style="cursor:default">${esc(g.name)}${g.hand?' &#9995;':''}<br><small>${g.src?(on?'On stream':'Backstage'):'Connecting...'}${g.src&&g.src.mute?', muted':''}</small></span><button data-a="gstage" data-m="${g.id}">${on?'Take off stream':'Put on stream'}</button><button data-a="gmute" data-m="${g.id}">${g.src&&g.src.mute?'Unmute':'Mute'}</button><button data-a="gdem" data-m="${g.id}">To audience</button><button data-a="gkick" data-m="${g.id}">Remove</button></li>`}).join('')||'<li class="mu">No guests yet.</li>'}
+Object.assign(act,{
+ gad:(i,b)=>{gsend({t:'admit',gid:b.dataset.m});wait.delete(b.dataset.m);renderG()},
+ gdn:(i,b)=>{gsend({t:'deny',gid:b.dataset.m});wait.delete(b.dataset.m);renderG()},
+ gkick:(i,b)=>{gsend({t:'kick',gid:b.dataset.m});gRemove(b.dataset.m)},
+ gmute:(i,b)=>{const g=guests.get(b.dataset.m);if(!g||!g.src)return;g.src.mute=!g.src.mute;gsend({t:'mute',to:g.id,on:g.src.mute});renderG()},
+ gprom:(i,b)=>{gsend({t:'promote',gid:b.dataset.m});hands.delete(b.dataset.m);renderG()},
+ gdem:(i,b)=>{gsend({t:'demote',gid:b.dataset.m});gRemove(b.dataset.m)},
+ gstage:(i,b)=>{const g=guests.get(b.dataset.m);if(!g||!g.src)return;const it=SC[ed()].items,k=it.findIndex(x=>x.id===g.src.id);k>=0?it.splice(k,1):place(g.src,'full');ui()}});
+function gchat(n,t){const d=document.createElement('div');d.textContent=n+': '+t;$('gcl').appendChild(d);while($('gcl').children.length>80)$('gcl').firstChild.remove();$('gcl').scrollTop=1e9;
+ if($('gcv').checked&&n!=='Room'){chatLog.push({n,t});if(chatLog.length>60)chatLog.shift()}}
+$('gcs').onclick=()=>{const t=$('gct').value.trim();if(!t)return;gsend({t:'chat',text:t});$('gct').value=''};
+$('gct').onkeydown=e=>{if(e.key==='Enter')$('gcs').click()};
+$('glk').onchange=e=>gsend({t:'lock',on:e.target.checked});$('grs').onclick=gStart;
+async function cp(t){try{await navigator.clipboard.writeText(t);gSt('Link copied.')}catch(e){prompt('Copy this link',t)}}
+const wa=(l,t)=>window.open('https://wa.me/?text='+encodeURIComponent(t+' '+l),'_blank','noopener');
+$('gcg').onclick=()=>cp(glink);$('gca').onclick=()=>cp(alink);
+$('gwg').onclick=()=>wa(glink,'Join my live broadcast as a guest:');$('gwa').onclick=()=>wa(alink,'Join my live broadcast room:');
+$('gwb').onclick=()=>{gsend({t:'watch',url:$('gwt').value.trim()});gSt('Watch link updated.')};
+$('gach').onchange=e=>gsend({t:'audchat',on:e.target.checked});$('gsl').onchange=e=>gsend({t:'slow',sec:+e.target.value});
+$('gar').onclick=()=>{const m=S.filter(s=>s.type==='camera'||s.type==='guest').slice(0,4),it=SC[ed()].items;if(!m.length){msg('Add a camera or admit a guest first.');return}
+ const P2=m.length===1?['full']:m.length===2?['left','right']:['q1','q2','q3','q4'];
+ m.forEach((s,i)=>{let x=it.find(z=>z.id===s.id);if(!x){place(s,P2[i]);x=it.find(z=>z.id===s.id)}if(x){x.p=P2[i];x.on=true}});ui()};
+$('lite').onchange=e=>{const on=e.target.checked;$('low').checked=on;$('anb').checked=!on;animBg=!on;dmeter();if(on)msg('Lite mode is on: lower frame rate, no background animation, smaller stream, and audio-only return for new guests.')};
+let ip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('inst').hidden=false});
+$('inst').onclick=async()=>{if(ip){ip.prompt();ip=null;$('inst').hidden=true}};
+addEventListener('appinstalled',()=>{$('inst').hidden=true});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+const NSPATH='https://cdn.jsdelivr.net/npm/@shiguredo/noise-suppression@2022.4.2/dist';
+function loadNS(){return window.Shiguredo?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src=NSPATH+'/noise_suppression.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+const QV=[3000000,1200000,500000],QA=[192000,96000,64000];let qTier=0;
+function dmeter(){const t=$('low').checked?2:qTier,mb=(QV[t]+QA[t])*3600/8/1e6;$('dmt').textContent='Uploads about '+Math.round(mb)+' MB per hour at this quality.'+(t?' A lower quality is active.':'')}
+$('low').addEventListener('change',dmeter);dmeter();
+function qset(type,v){const it=SC[ed()].items;let s=it.map(x=>src(x.id)).find(s=>s&&s.type===type);
+ if(!s){if(!v)return;s=mk(type,(type==='ticker'?'Ticker ':'Title ')+uid,type==='ticker'?{text:v,speed:120}:{text:v});place(s,type==='ticker'?'ticker':'lower');ui()}else if(v)s.text=v}
+$('qtt').oninput=e=>qset('text',e.target.value);$('qtk').oninput=e=>qset('ticker',e.target.value);
+function netCheck(){const c=navigator.connection;if(!c)return;if((c.saveData||['slow-2g','2g','3g'].includes(c.effectiveType))&&!$('lite').checked){$('lite').checked=true;$('lite').onchange({target:$('lite')});msg('Slow or data-saver connection detected. Lite mode is on.')}}
+if(navigator.connection){navigator.connection.addEventListener('change',netCheck);netCheck()}
+let pro=false;try{pro=localStorage.getItem('ls_pro')==='1'}catch(e){}
+function applyMode(){const b=document.querySelectorAll('.tabs button');[1,2,3,5,6,7].forEach(i=>b[i].hidden=!pro);$('mdb').textContent=pro?'Simple view':'Pro view'}
+$('mdb').onclick=()=>{pro=!pro;try{localStorage.setItem('ls_pro',pro?'1':'0')}catch(e){}applyMode()};applyMode();
+
+const tm={list:[],cur:'',role:'',last:0,timer:null,idle:0,pend:null,live:'',boost:0};
+const tmShow=()=>{const ok=!!(acct.on&&acct.me);$('tmOut').hidden=ok;$('tmIn').hidden=!ok};
+async function tmLoad(){tmShow();if(!acct.on||!acct.me){$('tmOut').textContent=acct.on?'Sign in under Account to use groups.':'Groups need accounts. Ask the owner to turn them on.';return}
+ const r=await api('/api/teams');if(!r.ok){$('tmOut').hidden=false;$('tmIn').hidden=true;$('tmOut').textContent=r.error||'Groups are not available.';return}
+ tm.list=r.teams;$('tsel').innerHTML=tm.list.map(t=>`<option value="${t.id}">${esc(t.name)} (${t.n})</option>`).join('');
+ if(tm.list.length){if(!tm.list.some(t=>t.id===tm.cur))tm.cur=tm.list[0].id;$('tsel').value=tm.cur;tmOpen(tm.cur)}else{tm.cur='';$('tbody').hidden=true}}
+async function tmOpen(id){tm.cur=id;const t=tm.list.find(x=>x.id===id);tm.role=t?t.role:'member';tm.last=0;tm.idle=0;tm.boost=Date.now()+60000;$('tcl').textContent='';$('tbody').hidden=false;
+ $('tttl').textContent='Messages disappear after '+(t&&t.ttl===1?'24 hours':((t&&t.ttl)||30)+' days')+'.';$('tdays').hidden=tm.role!=='leader';$('tdays').value=String((t&&t.ttl)||30);
+ const st=tm.role!=='member';['tic','tiw','tmt'].forEach(i=>$(i).hidden=!st);$('tlv').hidden=tm.role==='leader';$('tdl').hidden=tm.role!=='leader';$('tanl').hidden=!st;$('tfu').hidden=!st;
+ await tmMembers();if(st)tmMeetings();tmPoll()}
+async function tmPoll(){clearTimeout(tm.timer);if(!tm.cur)return;
+ if(document.hidden||!$('t12').classList.contains('a')){tm.timer=setTimeout(tmPoll,60000);return}
+ const r=await api('/api/team/messages?team='+tm.cur+'&since='+tm.last);
+ if(r.ok){if(r.m.length){tmAdd(r.m);tm.idle=0;tm.boost=Date.now()+60000}else tm.idle++;tm.last=r.last}
+ tm.timer=setTimeout(tmPoll,Date.now()<tm.boost?6000:Math.min(120000,20000*Math.pow(2,Math.min(3,tm.idle))))}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&tm.cur){tm.idle=0;tmPoll()}});
+function tmAdd(ms){const box=$('tcl');for(const m of ms){const d=document.createElement('div');d.className='msg '+(m.k==='sys'||m.k==='meeting'?'sys':m.s==='me'?'me':'')+(m.k==='announce'?' announce':'');
+  if(m.k==='sys')d.textContent=m.t;
+  else if(m.k==='meeting'){d.append('Live meeting: '+m.t+' ');const b=document.createElement('button');b.textContent='Join';b.dataset.a='tjoin';b.dataset.m=m.m;d.appendChild(b)}
+  else{const n=document.createElement('b');n.textContent=(m.k==='announce'?'Announcement - ':'')+(m.s==='me'?'You':m.n)+': ';d.append(n,document.createTextNode(m.t))}
+  const t=document.createElement('small');t.className='mu';t.textContent=' '+new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});d.appendChild(t);box.appendChild(d)}
+ while(box.children.length>150)box.firstChild.remove();box.scrollTop=1e9}
+async function tmMembers(){const r=await api('/api/team/members?team='+tm.cur);if(!r.ok)return;const st=r.me!=='member';
+ $('tml').innerHTML=r.members.map(m=>`<li><span style="cursor:default">${esc(m.name)} <small>${m.role}${st&&m.email?' - '+esc(m.email):''}</small></span>${r.me==='leader'&&m.role!=='leader'?`<button data-a="tmrole" data-m="${esc(m.email)}" data-i="${m.role==='admin'?0:1}">${m.role==='admin'?'Make member':'Make admin'}</button>`:''}${st&&m.role!=='leader'&&!(r.me==='admin'&&m.role==='admin')?`<button data-a="tmrem" data-m="${esc(m.email)}">Remove</button>`:''}</li>`).join('')}
+async function tmMeetings(){const r=await api('/api/team/meetings?team='+tm.cur);if(!r.ok)return;
+ $('tms').innerHTML=r.meetings.map(m=>`<option value="${m.id}">${esc(m.title)} - ${new Date(m.started).toLocaleDateString()} (${m.n} came${m.ended?'':', live'})</option>`).join('')||'<option value="">No meetings yet</option>'}
+const TPL={new:'Welcome! Thank you for joining us for the first time. We are glad you came. Next: ',returning:'Thank you for being with us again. Your presence encourages everyone. Next: ',absent:'We missed you at our last meeting. Here is a short summary and the next date: ',all:'Thank you to everyone who joined and to everyone in this group. Next: '};
+function tmTpl(){const c=$('ttx').value.trim();if(!c||Object.values(TPL).map(x=>x.trim()).includes(c))$('ttx').value=TPL[$('tau').value]}
+async function tmReport(){const id=$('tms').value;if(!id){$('trp').textContent='No meeting selected.';return}
+ const r=await api('/api/team/meeting/report?meeting='+id);if(!r.ok){$('trp').textContent=r.error||'Could not load.';return}
+ const nw=r.attended.filter(x=>x.first).map(x=>x.name),rt=r.attended.filter(x=>!x.first).map(x=>x.name),ab=r.absent.map(x=>x.name);
+ $('trp').textContent='New: '+(nw.join(', ')||'none')+'. Returning: '+(rt.join(', ')||'none')+'. Missed: '+(ab.join(', ')||'none')+'.';tmTpl()}
+$('tmr').onclick=tmReport;$('tau').onchange=tmTpl;
+$('tsf').onclick=async()=>{const mid=$('tms').value;if(!mid){$('trp').textContent='Pick a meeting first.';return}
+ const r=await api('/api/team/followup',{meeting:mid,audience:$('tau').value,text:$('ttx').value,email:$('tem').checked});
+ $('trp').textContent=r.ok?'Posted to the group for '+r.people+' people'+($('tem').checked?' and emailed '+r.emailed:'')+'.':(r.error||'Could not send.');if(r.ok){tm.idle=0;tmPoll()}};
+$('tsel').onchange=e=>tmOpen(e.target.value);
+$('tdays').onchange=async e=>{const r=await api('/api/team/ttl',{team:tm.cur,days:+e.target.value});if(r.ok){const t=tm.list.find(x=>x.id===tm.cur);if(t)t.ttl=r.ttl;$('tttl').textContent='Messages disappear after '+(r.ttl===1?'24 hours':r.ttl+' days')+'.';tm.idle=0;tm.boost=Date.now()+60000;tmPoll()}else msg(r.error||'Could not change it.')};
+$('tcr').onclick=async()=>{const n=$('tnm').value.trim();if(!n)return;const r=await api('/api/team/create',{name:n});if(r.ok){$('tnm').value='';tm.cur=r.id;await tmLoad()}else msg(r.error||'Could not create the group.')};
+async function tmInvite(){const r=await api('/api/team/invite',{team:tm.cur});if(r.ok)return r.url;msg(r.error||'Could not make a link.');return ''}
+$('tic').onclick=async()=>{const u=await tmInvite();if(u){await cp(u);msg('Invite link copied. It works for 7 days.')}};
+$('tiw').onclick=async()=>{const u=await tmInvite();if(u)wa(u,'Join our group on Live Studio:')};
+$('tlv').onclick=async()=>{if(!confirm('Leave this group?'))return;const r=await api('/api/team/leave',{team:tm.cur});if(r.ok){tm.cur='';tmLoad()}else msg(r.error||'Could not leave.')};
+$('tdl').onclick=async()=>{if(!confirm('Delete this group and all its messages for everyone? This cannot be undone.'))return;const r=await api('/api/team/delete',{team:tm.cur});if(r.ok){tm.cur='';tmLoad()}else msg(r.error||'Could not delete.')};
+$('tcs').onclick=async()=>{const t=$('tct').value.trim();if(!t)return;$('tct').value='';const r=await api('/api/team/send',{team:tm.cur,text:t,kind:$('tan').checked?'announce':'msg'});if(!r.ok)msg(r.error||'Could not send.');tm.idle=0;tm.boost=Date.now()+60000;tmPoll()};
+$('tct').onkeydown=e=>{if(e.key==='Enter')$('tcs').click()};
+$('tmt').onclick=()=>{const t=prompt('Meeting title','Team meeting');if(t===null)return;tm.pend={team:tm.cur,title:t.trim()||'Team meeting'};
+ if(gws&&alink)tmPublish();else{act.tab(10);gStart();msg('Starting the guest room. Your group gets the meeting link when it opens.')}};
+async function tmPublish(){const p=tm.pend;if(!p||!alink)return;tm.pend=null;const r=await api('/api/team/meeting/start',{team:p.team,title:p.title,link:alink});
+ if(r.ok){tm.live=r.id;gSt('Meeting posted to the group. Members join from the group chat.');tmMeetings()}else gSt(r.error||'Could not post the meeting.')}
+$('tmend').onclick=async()=>{if(!tm.live){$('trp').textContent='No live meeting to end.';return}await api('/api/team/meeting/end',{meeting:tm.live});tm.live='';if(gws)gStop('Meeting ended.');tmMeetings();tm.idle=0;tmPoll()};
+Object.assign(act,{
+ tjoin:async(i,b)=>{const r=await api('/api/team/meeting/join',{meeting:b.dataset.m});if(r.ok)window.open(r.link,'_blank','noopener');else msg(r.error||'Could not join.')},
+ tmrole:async(i,b)=>{await api('/api/team/role',{team:tm.cur,email:b.dataset.m,role:i===1?'admin':'member'});tmMembers()},
+ tmrem:async(i,b)=>{if(!confirm('Remove this person from the group?'))return;const r=await api('/api/team/remove',{team:tm.cur,email:b.dataset.m});if(!r.ok)msg(r.error||'Could not remove.');tmMembers()}});
+async function pendingJoin(){let c='';try{c=sessionStorage.getItem('ls_join')||''}catch(e){}if(!c)return;
+ if(!acct.me){$('acm').textContent='Sign in or create an account to join the group.';act.tab(8);return}
+ try{sessionStorage.removeItem('ls_join')}catch(e){}
+ const r=await api('/api/team/join',{code:c});act.tab(11);if(r.ok){tm.cur=r.team.id;await tmLoad();msg('You joined '+r.team.name+'.')}else{tmShow();msg(r.error||'Could not join the group.')}}
+
+let prList=[],prEdit='',prSel=null;
+async function prLoad(){if(!acct.on||!acct.me){$('pms').textContent=acct.on?'Sign in under Account to create programs.':'Programs need accounts.';$('ppl').innerHTML='';return}
+ const r=await api('/api/programs');if(!r.ok){$('pms').textContent=r.error||'Programs are not available.';return}prList=r.programs;
+ $('ppl').innerHTML=prList.map((p,i)=>`<li><span style="cursor:default">${esc(p.title)}<br><small>${p.start?new Date(p.start).toLocaleString():'No date'}</small></span><button data-a="psel" data-i="${i}">Share</button><button data-a="ped" data-i="${i}">Edit</button><button data-a="pdl" data-i="${i}">Delete</button></li>`).join('')||'<li class="mu">No programs yet.</li>'}
+$('psv').onclick=async()=>{const st=$('pst').value?new Date($('pst').value).getTime():0;
+ const r=await api('/api/program/save',{id:prEdit,title:$('ptt').value,descr:$('pds').value,start:st,watch:$('pwl').value});
+ if(r.ok){prEdit='';['ptt','pds','pst','pwl'].forEach(i=>$(i).value='');$('pms').textContent='Saved.';await prLoad();prShare(prList.findIndex(p=>p.id===r.id))}else $('pms').textContent=r.error||'Could not save.'};
+function prShare(i){const p=prList[i];if(!p)return;prSel={...p,url:location.origin+'/p/'+p.id};$('psh').hidden=false;$('psu').textContent=prSel.url}
+const shareUrls=(u,t)=>{const U=encodeURIComponent(u),X=encodeURIComponent(t);return{wa:'https://wa.me/?text='+X+'%20'+U,fb:'https://www.facebook.com/sharer/sharer.php?u='+U,x:'https://twitter.com/intent/tweet?text='+X+'&url='+U,tg:'https://t.me/share/url?url='+U+'&text='+X,li:'https://www.linkedin.com/sharing/share-offsite/?url='+U,em:'mailto:?subject='+X+'&body='+X+'%0A'+U}};
+function wrap(c,t,x,y,w,lh,max){const ws=t.split(/\s+/);let l='',n=0;for(const wd of ws){const tt=l?l+' '+wd:wd;if(c.measureText(tt).width>w&&l){c.fillText(l,x,y);y+=lh;l=wd;if(++n>=max)return y}else l=tt}c.fillText(l,x,y);return y+lh}
+function prImage(t){const c=document.createElement('canvas');c.width=1080;c.height=1350;const g=c.getContext('2d');
+ if(bgFn)bgFn(g,0,0,1080,1350,performance.now());else if(bgImg)cover(g,bgImg,bgImg.naturalWidth||bgImg.width,bgImg.naturalHeight||bgImg.height,0,0,1080,1350);else lin(g,0,0,1080,1350,'#0a1a44','#102a6b','#050b1f');
+ const gr=g.createLinearGradient(0,500,0,1350);gr.addColorStop(0,'rgba(8,16,36,0)');gr.addColorStop(1,'rgba(8,16,36,.92)');g.fillStyle=gr;g.fillRect(0,500,1080,850);
+ g.fillStyle='#f2c14e';g.fillRect(70,800,120,8);g.fillStyle='#fff';g.textBaseline='alphabetic';g.font='700 72px system-ui,sans-serif';let y=wrap(g,prSel.title,70,890,940,86,3);
+ if(prSel.start){g.font='500 38px system-ui,sans-serif';g.fillStyle='#f2c14e';g.fillText(new Date(prSel.start).toLocaleString([],{dateStyle:'full',timeStyle:'short'}),70,y+10)}
+ g.fillStyle='#fff';g.font='500 34px system-ui,sans-serif';g.fillText(prSel.url.replace(/^https?:\/\//,''),70,1280);
+ c.toBlob(async b=>{const f=new File([b],'program.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:prSel.title,text:t+' '+prSel.url});return}catch(e){}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='program.png';a.click();msg('Picture saved. Post it on Instagram, TikTok or WhatsApp status and add the link.')},'image/png')}
+Object.assign(act,{psel:i=>prShare(i),
+ ped:i=>{const p=prList[i];prEdit=p.id;$('ptt').value=p.title;$('pds').value=p.descr||'';$('pwl').value=p.watch||'';$('pst').value=p.start?new Date(p.start-new Date(p.start).getTimezoneOffset()*6e4).toISOString().slice(0,16):'';$('pms').textContent='Editing. Tap Save program when done.'},
+ pdl:async i=>{if(!confirm('Delete this program?'))return;await api('/api/program/delete',{id:prList[i].id});$('psh').hidden=true;prLoad()},
+ pshare:async(i,b)=>{if(!prSel)return;const k=b.dataset.m,t=prSel.title+(prSel.start?' - '+new Date(prSel.start).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}):'');
+  if(k==='cp'){try{await navigator.clipboard.writeText(prSel.url);msg('Link copied.')}catch(e){prompt('Copy this link',prSel.url)}}
+  else if(k==='nat'){if(navigator.share)navigator.share({title:prSel.title,text:t,url:prSel.url}).catch(()=>{});else msg('Sharing is not available on this device. Use the buttons.')}
+  else if(k==='img')prImage(t);else window.open(shareUrls(prSel.url,t)[k],'_blank','noopener')}});
+document.querySelectorAll('.tabs button')[11].addEventListener('click',tmLoad);
+document.querySelectorAll('.tabs button')[12].addEventListener('click',prLoad);
+gal();
+ui();frame();
+
+const mkStream=()=>{const lowd=$('low').checked,s=(lowd?lo:$('cv')).captureStream(lowd?15:30);dest.stream.getAudioTracks().forEach(t=>s.addTrack(t));return s};
+const mime=()=>['video/webm;codecs=h264,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));
+let rr=null,ch=[];
+$('rc').onclick=()=>{if(rr){rr.stop();return}ch=[];AC.resume();
+ rr=new MediaRecorder(mkStream(),{mimeType:mime(),videoBitsPerSecond:4000000,audioBitsPerSecond:192000});
+ rr.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};
+ rr.onstop=()=>{const a=document.createElement('a');const ty=rr.mimeType||'video/webm';a.href=URL.createObjectURL(new Blob(ch,{type:ty}));a.download='recording-'+Date.now()+(ty.includes('mp4')?'.mp4':'.webm');a.click();rr=null;$('rc').textContent='Record to file'};
+ rr.start(1000);$('rc').textContent='Stop recording'};
+let ds=[],ws=null,rec=null,live=false,sent=0;
+function rd(){const ul=$('dl');ul.innerHTML='';ds.forEach((d,i)=>{const li=document.createElement('li');
+ li.innerHTML='<input type="checkbox" checked aria-label="Enabled"><input type="text" placeholder="Server URL"><input type="password" placeholder="Stream key"><button aria-label="Remove">x</button>';
+ const[c,u,k,x]=li.children;u.value=d.url;c.onchange=()=>d.on=c.checked;u.oninput=()=>d.url=u.value;k.oninput=()=>d.key=k.value;x.onclick=()=>{ds.splice(i,1);rd()};ul.appendChild(li)})}
+function setSt(t,on){$('st').textContent=t;$('st').classList.toggle('on',!!on)}
+let want=false,retry=0,outs=[];
+function connect(){try{ws=new WebSocket(RU)}catch(e){want=false;$('gl').textContent='Go live';setSt('Offline');$('info').textContent='Invalid relay address.';return}
+ ws.onopen=()=>{retry=0;const lowd=$('low').checked;
+  ws.send(JSON.stringify({type:'start',token:RT,dests:outs,size:W<H?'portrait':W==H?'square':'landscape'}));
+  const tr=lowd?2:qTier;rec=new MediaRecorder(mkStream(),{mimeType:mime(),videoBitsPerSecond:QV[tr],audioBitsPerSecond:QA[tr]});
+  rec.ondataavailable=e=>{if(!e.data.size||ws.readyState!==1)return;if(ws.bufferedAmount>3e6){qTier=Math.min(2,qTier+1);dmeter();msg('Slow network. Lowering the stream quality to keep you live.');ws.close();return}ws.send(e.data);sent+=e.data.size;$('info').textContent=(sent/1048576).toFixed(1)+' MB sent'};
+  rec.start(1000);setSt('On air',true)};
+ ws.onmessage=e=>{$('info').textContent=String(e.data).slice(0,120)};
+ ws.onclose=()=>{try{rec&&rec.state!=='inactive'&&rec.stop()}catch(e){}
+  if(want){setSt('Reconnecting. Backup is playing.',true);$('info').textContent='Connection lost. Retrying...';setTimeout(()=>want&&relink().then(ok=>ok&&want&&connect()),Math.min(15000,2000*++retry))}else setSt('Offline')};
+ ws.onerror=()=>{}}
+$('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}try{ws.close()}catch(e){}if(liveEnds.length){api('/api/golive/end',{ends:liveEnds});liveEnds=[]}$('gl').textContent='Go live';return}
+ outs=ds.filter(d=>d.on&&d.url&&d.key).map(d=>d.url.replace(/\/+$/,'')+'/'+d.key);
+ if(acct.on&&conn.sel.size){$('info').textContent='Creating your broadcasts...';
+  const r=await api('/api/golive/start',{ids:[...conn.sel],title:$('btl').value.trim()||'Live broadcast',privacy:$('bpr').value});
+  if(!r.ok){$('info').textContent=r.error||'Could not create the broadcasts.';if(r.status===401||r.status===402)act.tab(8);return}
+  outs.push(...r.dests.map(d=>d.url));liveEnds=r.dests.map(d=>d.end);if(r.errors&&r.errors.length)msg(r.errors.join(' | '))}
+ if(!outs.length){$('info').textContent='Add a channel or a destination with a stream key first.';return}
+ if(!(await relink())){if(!acct.on)$('info').textContent='Enter your relay address.';return}
+ AC.resume();sent=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect()};
+</script></body></html>

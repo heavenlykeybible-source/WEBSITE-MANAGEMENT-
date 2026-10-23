@@ -1,0 +1,19 @@
+name = "heavenly-key-app"
+main = "src/index.js"
+compatibility_date = "2026-10-10"
+workers_dev = true
+
+# Account 5 hosts only public app assets and a basic health endpoint.
+# Do NOT attach the original Accounts 1-4 databases or copy their credentials here.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+
+# Enable only after Account 3 production public APIs and policy are verified.
+[vars]
+COMMUNITY_PUBLIC_READS_ENABLED = "false"
+COMMUNITY_MEMBER_ACCESS_ENABLED = "false"
+# Only read reviewed public website data. No member sessions, secrets or private routes.
+SITE_PUBLIC_SYNC_ENABLED = "true"

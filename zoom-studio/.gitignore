@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+.env
+.env.*
+.dev.vars
+wrangler.generated.json
+initial-accounts.sql
+worker-under-test.mjs
+_worker_under_test.mjs
+_browser_worker.mjs
+build/

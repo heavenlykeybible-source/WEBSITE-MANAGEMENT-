@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "masterBranch": "main",
+  "recoveryBranch": "global-community-recovery-20261022",
+  "productionSafe": false,
+  "accounts": [
+    {
+      "account": 1,
+      "folder": "account-01-main-website",
+      "recoverySource": "recovered-onlinebible/heavenly-key-website",
+      "status": "requires-latest-version-comparison",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+    },
+    {
+      "account": 2,
+      "folder": "account-02-studio-radio-tv-media",
+      "recoverySource": "recovered-onlinebible/media-engine",
+      "status": "requires-latest-version-comparison",
+      "note": "Zoom not verified",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+    },
+    {
+      "account": 3,
+      "folder": "account-03-global-christian-community",
+      "recoverySource": "apps/global-christian-community",
+      "alternate": "recovered-onlinebible/global-community",
+      "status": "requires-latest-version-comparison",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+    },
+    {
+      "account": 4,
+      "folder": "account-04-website-management-control-room",
+      "recoverySource": "recovered-onlinebible/account4-control-room",
+      "status": "main-root-is-authoritative",
+      "note": "Historical account4-control-room source is deprecated; preserve modern root control room and recover only missing validated functionality.",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+    },
+    {
+      "account": 5,
+      "folder": "account-05-heavenly-key-app",
+      "recoverySource": "recovered-onlinebible/heavenly-key-app",
+      "status": "requires-latest-version-comparison",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+    },
+    {
+      "account": 6,
+      "folder": "account-06-online-bible",
+      "recoverySource": "recovered-onlinebible/bible",
+      "status": "audited-local-build-live-verification-pending",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison",
+      "currentSource": "apps/heavenly-key-bible",
+      "deploymentWorkflow": ".github/workflows/deploy-bible.yml"
+    },
+    {
+      "account": 7,
+      "folder": "account-07-unverified",
+      "status": "not-identified",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+    },
+    {
+      "account": 8,
+      "folder": "account-08-unverified",
+      "status": "not-identified",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+    }
+  ],
+  "releaseGates": [
+    "complete file transfer",
+    "compare master versions",
+    "test and typecheck",
+    "validate Cloudflare bindings and migrations",
+    "merge",
+    "verify live deployments"
+  ],
+  "integrationPolicy": {
+    "priority": "Use the most recently verified, working WEBSITE-MANAGEMENT- account implementation, not a historical onlinebible copy",
+    "legacyFolders": "Historical copies are references only; never deploy or automatically merge them",
+    "restoreRules": [
+      "Identify current deployed implementation and source for each account",
+      "Diff relevant features from historic files against current account implementation",
+      "Transfer only still-missing functionality and assets",
+      "Avoid obsolete control-room UI, auth, workflows, schemas and deployments",
+      "Test, review and verify deployments per account"
+    ],
+    "neverOverwrite": [
+      "root account4 Website Management control room",
+      "latest working site designs and functionality",
+      "Cloudflare production secrets, bindings, database content"
+    ]
+  }
+}

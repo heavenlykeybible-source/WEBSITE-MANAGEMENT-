@@ -1,0 +1,1 @@
+(()=>{'use strict';function dock(){const footer=document.querySelector('.site-footer');if(!footer)return;for(const id of ['hk-floating-radio','hkem-assistant']){const node=document.getElementById(id);if(node&&node.parentNode!==footer)footer.appendChild(node)}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',dock,{once:true});else dock()})();

@@ -1,0 +1,27 @@
+name: Account 5 Independent App Checks
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  app:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install app development dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify mobile app, static assets and owner resource isolation
+        run: |
+          npm run build
+          npm test
+      - name: Validate Cloudflare Worker bundle without deployment
+        run: npx --no-install wrangler deploy --dry-run
+

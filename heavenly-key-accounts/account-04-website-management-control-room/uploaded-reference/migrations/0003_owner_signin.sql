@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS cms_owner_password (
+ id INTEGER PRIMARY KEY CHECK(id=1),password_hash TEXT NOT NULL,salt TEXT NOT NULL,
+ updated_by TEXT NOT NULL,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS cms_owner_sessions (
+ session_hash TEXT PRIMARY KEY,actor TEXT NOT NULL,expires_at INTEGER NOT NULL
+);

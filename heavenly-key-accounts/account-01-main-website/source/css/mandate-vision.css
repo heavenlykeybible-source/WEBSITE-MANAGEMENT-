@@ -1,0 +1,15 @@
+/* Divine Assignment: approved end-time mandate, scoped to the homepage. */
+.assignment .assignment-copy{width:min(1150px,100%)!important;max-width:1150px!important}
+.assignment .mandate-vision{margin:clamp(24px,4vw,42px) auto 0;display:grid;gap:18px;max-width:1020px}
+.assignment .mandate-rapture{display:flex;align-items:center;justify-content:center;gap:clamp(9px,2vw,22px);padding:clamp(19px,3vw,30px);border:2px solid #e5c067;border-radius:20px;background:linear-gradient(115deg,#550b28,#8a1037 45%,#580d2d);color:#fff9de;box-shadow:0 12px 28px #4a102a35,inset 0 0 0 2px #ffffff22}
+.assignment .mandate-rapture h3{font:900 clamp(21px,3.2vw,39px)/1.2 Georgia,serif;letter-spacing:.025em;margin:0;text-wrap:balance;text-shadow:0 2px 6px #0004}
+.assignment .mandate-rapture h3 em{display:block;color:#ffe17b;font-style:normal;margin-top:6px}
+.assignment .mandate-signal{flex:none;color:#ffdb67;font-size:clamp(18px,3vw,30px)}
+.assignment .mandate-army{border:1px solid #d7b95d;border-radius:19px;padding:clamp(20px,3vw,31px);background:linear-gradient(120deg,#e6f5e9,#fffef7 47%,#fdf1d5);box-shadow:0 8px 26px #174b2820}
+.assignment .mandate-army-heading{margin:0 0 15px;color:#064c32;font:800 clamp(20px,2.8vw,32px)/1.3 Georgia,serif;text-wrap:balance}
+.assignment .mandate-army-heading strong{color:#80112f;display:block;font-weight:900;font-size:clamp(24px,3.3vw,40px);margin-top:4px}
+.assignment .mandate-army-intro{margin:0 auto;max-width:850px;color:#193d2e;font:700 clamp(16px,1.9vw,22px)/1.6 Arial,sans-serif;text-wrap:pretty}
+.assignment .mandate-army-intro::before{content:"";display:block;width:105px;height:4px;margin:0 auto 14px;border-radius:5px;background:linear-gradient(90deg,#005d3c,#e5b73d,#83122f)}
+.assignment blockquote{margin-top:24px!important}
+@media(max-width:600px){.assignment .mandate-rapture{gap:8px;padding:18px 11px}.assignment .mandate-signal{font-size:17px}.assignment .mandate-army{padding:19px 13px}.assignment .mandate-army-intro{line-height:1.5}}
+@media(prefers-reduced-motion:no-preference){.assignment .mandate-signal{animation:mandate-glow 3s ease-in-out infinite alternate}@keyframes mandate-glow{from{opacity:.6;filter:drop-shadow(0 0 0 #ffd36a)}to{opacity:1;filter:drop-shadow(0 0 8px #ffd36a)}}}

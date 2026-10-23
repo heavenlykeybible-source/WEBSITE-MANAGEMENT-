@@ -1,0 +1,22 @@
+import {DatabaseSync} from 'node:sqlite';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {ownerApi,corePutFile,route} from './worker-test.mjs';
+const sql=new DatabaseSync(':memory:');sql.exec(fs.readFileSync('schema.sql','utf8'));
+let calls=0;
+const DB={prepare(q){const p=sql.prepare(q);let a=[];return {bind(...x){a=x;return this},async first(){calls++;return p.get(...a)||null},async all(){calls++;return {results:p.all(...a)}},async run(){calls++;const r=p.run(...a);return {meta:{changes:r.changes,last_row_id:r.lastInsertRowid}}}}},async batch(st){sql.exec('BEGIN');try{const r=[];for(const s of st)r.push(await s.run());sql.exec('COMMIT');return r}catch(e){sql.exec('ROLLBACK');throw e}}};
+const stored=new Map();const FILES={async put(k,v){stored.set(k,v);return {etag:'etag-'+k}},async get(k){const v=stored.get(k);return v==null?null:{body:v,async text(){return typeof v==='string'?v:new TextDecoder().decode(v)}}},async delete(k){for(const x of Array.isArray(k)?k:[k])stored.delete(x)}};const env={DB,FILES,ADMIN_USER:'owner',ADMIN_PASS:'bootstrap-password'};
+sql.exec("INSERT INTO users(id,username,role,status) VALUES(1,'owner','owner','active');INSERT INTO agents(id,name,token_hash) VALUES(1,'test','test');INSERT INTO sites(id,slug,name) VALUES(1,'demo','Demo');INSERT INTO proposals(id,agent_id,site_id,kind,title,sealed) VALUES(1,1,1,'upload','New file',0)");
+const actor={kind:'agent',agentId:1,a:{id:1}},user={id:1,role:'owner',kind:'staff',username:'owner'};
+await corePutFile(new Request('https://test/',{method:'PUT',body:'Hello world'}),env,actor,1,'index.html');
+assert.equal(sql.prepare('SELECT size FROM upload_files').get().size,11);assert.equal(sql.prepare('SELECT COUNT(*) n FROM site_files').get().n,0);
+sql.exec('UPDATE proposals SET sealed=1 WHERE id=1');
+const url=new URL('https://test/');
+const stage=await (await ownerApi(new Request(url,{method:'POST',body:'{}'}),env,user,'proposals/1/stage','POST',url)).json();
+const link=await (await ownerApi(new Request(url),env,user,'proposals/1/preview-link','GET',url)).json();
+assert.equal((await route(new Request('https://test'+link.url+'index.html'),env)).status,200);
+let r=await ownerApi(new Request(url,{method:'POST',body:JSON.stringify({decision:'approve',password:env.ADMIN_PASS,reviewed:true,review_token:stage.review_token})}),env,user,'proposals/1/decide','POST',url);assert.equal(r.status,200);assert.match(sql.prepare('SELECT r2_key FROM site_files').get().r2_key,/^files\/1\/.+\/index\.html$/);
+await assert.rejects(ownerApi(new Request(url,{method:'POST',body:'{}'}),env,user,'proposals/1/undo','POST',url),e=>e.status===403);assert.equal(sql.prepare('SELECT COUNT(*) n FROM site_files').get().n,1);
+assert.ok(calls<80);console.log('PASS real SQLite schema, upload isolation, approval and direct-undo rejection ('+calls+' queries across workflow)');
+// Atomic usage cap: every increment is handled by one SQL statement.
+const q=sql.prepare("INSERT INTO settings (key, value_json) VALUES (?, '1') ON CONFLICT(key) DO UPDATE SET value_json=CAST(CAST(settings.value_json AS INTEGER)+1 AS TEXT) WHERE CAST(settings.value_json AS INTEGER) < ? RETURNING value_json");assert.equal(q.get('quota',2).value_json,'1');assert.equal(q.get('quota',2).value_json,'2');assert.equal(q.get('quota',2),undefined);console.log('PASS SQL atomic quota stops at configured maximum');

@@ -1,0 +1,17 @@
+{
+  "name": "heavenly-key-mobile-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Heavenly Key Evangelistic Movement mobile web application",
+  "scripts": {
+    "build": "node scripts/stamp-release.mjs && npm run check",
+    "check": "node scripts/check-app.mjs && node --test test/offline-preservation.test.mjs",
+    "test": "node --test test/*.test.mjs",
+    "dev": "wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.145.0"
+  }
+}

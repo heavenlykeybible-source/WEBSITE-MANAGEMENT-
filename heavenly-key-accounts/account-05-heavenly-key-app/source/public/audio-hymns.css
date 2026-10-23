@@ -1,0 +1,23 @@
+.audio-hymns-page{max-width:850px;padding:14px}.audio-hymns-page .study-card{padding:18px;margin-bottom:18px}.audio-hymn-source-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.audio-hymn-source{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid #d5e0ed;border-radius:11px;background:#f7f9fd;color:#163a70;text-decoration:none}.audio-hymn-source span{font-size:.88rem;color:#4b5c73}.audio-hymn-controls{display:grid;grid-template-columns:2fr 1fr;gap:12px}.audio-hymn-controls label{font-weight:700;font-size:.86rem}.audio-hymn-controls select{display:block;width:100%;min-height:45px;padding:8px;border-radius:9px;border:1px solid #cbd5e4;background:#fff;margin-top:6px}.audio-hymn-reading{margin:16px 0;background:#f8fafe;padding:16px;border:1px solid #dce5f2;border-radius:12px}.audio-hymn-reading h3{color:#173b73}.audio-hymn-reading pre{font:1.1rem/1.8 Georgia,serif;white-space:pre-wrap;overflow-wrap:anywhere}.audio-hymn-actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}.audio-hymn-actions button{min-height:45px;padding:9px 14px;border:1px solid #ccd6e8;border-radius:9px;background:#eaf0fa;color:#173b73;font-weight:700}#hymn-player{width:100%}@media(max-width:570px){.audio-hymn-source-grid,.audio-hymn-controls{grid-template-columns:1fr}.audio-hymns-page .study-card{padding:12px}}
+.audio-hymn-search-row{display:flex;gap:9px;align-items:stretch;margin:7px 0}.audio-hymn-search-row input{flex:1;min-width:0;min-height:48px;padding:10px 13px;border:1px solid #cedaea;border-radius:10px;font:1rem system-ui}.audio-hymn-search-row button{min-height:48px;border:0;border-radius:10px;padding:10px 18px;background:#153b73;color:#fff;font:700 .9rem system-ui;cursor:pointer}.audio-hymn-search-row button:focus-visible,.audio-hymn-search-row input:focus-visible,.hymn-quick-searches a:focus-visible{outline:3px solid #d7a128;outline-offset:2px}.hymn-quick-searches{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px;align-items:center}.hymn-quick-searches>span{font-size:.82rem;color:#455a70}.hymn-quick-searches>a{display:inline-flex;border-radius:999px;border:1px solid #d3dff0;padding:8px 11px;color:#164176;background:#f5f8fc;text-decoration:none;font-size:.83rem}.audio-hymns-page .audio-hymn-search-row+.study-fine{margin:9px 0}
+@media(max-width:550px){.audio-hymn-search-row{flex-direction:column}.audio-hymn-search-row button{width:100%}}
+
+/* One approval acknowledgement, shared by the Text Hymnal and Audio Hymnal. */
+.hymn-acknowledgement{margin:16px 0 20px;padding:clamp(17px,3.3vw,27px);border:1px solid #dae2ef;border-top:4px solid #751c3c;background:#fff;border-radius:15px;color:#26364d;line-height:1.65;box-shadow:0 2px 13px #153b730c}
+.hymn-acknowledgement>h2{font-size:clamp(1.15rem,2.6vw,1.5rem);line-height:1.24;margin:0 0 12px;color:#751c3c;letter-spacing:.015em}
+.hymn-acknowledgement>p{margin:0 0 10px;font-size:.96rem}
+.hymn-acknowledgement .hymn-mission{margin:21px 0 18px;padding:15px 17px;background:#f5f7fc;border-left:3px solid #153b73;border-radius:8px}
+.hymn-acknowledgement .hymn-mission h3{margin:0 0 10px;font-size:1.06rem;color:#153b73}
+.hymn-acknowledgement .hymn-mission-line{margin:8px 0;font-weight:800;color:#173a72;font-size:.94rem;line-height:1.55}
+.hymn-acknowledgement .hymn-mission-detail{font-weight:400;color:#30445e}
+.hymn-acknowledgement .hymn-leadership{border-top:1px solid #e1e8f1;padding-top:17px;margin-top:12px;text-align:center}
+.hymn-acknowledgement .hymn-leadership p{margin:6px 0;font-size:.93rem}
+.hymn-acknowledgement .hymn-leader-name{font-weight:900;color:#173a72;letter-spacing:.02em}
+.hymn-acknowledgement .hymn-closing-motto{text-align:center;font-weight:900;font-size:.98rem;color:#751c3c;letter-spacing:.03em;margin:19px 0 0;padding-top:15px;border-top:1px solid #e1e8f1}
+@media(max-width:570px){.hymn-acknowledgement{padding:16px 14px}.hymn-acknowledgement .hymn-mission{padding:12px}.hymn-acknowledgement>p{font-size:.94rem}.hymn-acknowledgement .hymn-mission-line{font-size:.91rem}}
+
+.audio-hymns-page .audio-playlist-panel{margin:14px 0}
+.audio-hymns-page .audio-playlist-panel>select{width:100%}
+.audio-hymns-page .audio-mixer-grid input[type=range]{min-height:30px}
+
+.heavenly-featured-hymn{border-top:4px solid #78213e;background:linear-gradient(140deg,#fff,#f7f9fe)}.heavenly-featured-hymn h2{color:#153b73;font-size:clamp(1.25rem,3vw,1.6rem)}.heavenly-featured-hymn .study-kicker{letter-spacing:.09em;color:#78213e}.heavenly-featured-hymn .btn{display:inline-block;min-height:44px;padding:12px 16px;border-radius:9px}

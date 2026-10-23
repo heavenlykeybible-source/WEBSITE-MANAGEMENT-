@@ -1,0 +1,15 @@
+name = "heavenly-key-bible"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+# Deploy only within the owner's verified Bible Cloudflare account.
+# No member databases, credentials, or protected resources are copied.
+[assets]
+directory = "../heavenly-key-website/bible"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/health"]
+
+# Point this at the approved central public media service when accounts migrate.
+[vars]
+MINISTRY_PUBLIC_API_ORIGIN = "https://heavenlykey.alldaywow247.workers.dev"

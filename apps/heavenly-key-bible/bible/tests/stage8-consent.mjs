@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const base='heavenly-key-website/bible/';
+const push=fs.readFileSync(base+'read-pray-push.js','utf8');
+const study=fs.readFileSync(base+'study-extensions.js','utf8');
+assert(push.includes('window.hkReadPrayStopPush=disable'),'external unsubscribe handler');
+assert(push.includes('if(!response.ok)throw Error'),'remote unsubscribe must acknowledge');
+assert(push.includes("Save your Read & Pray preferences"),'explicit opt-in before push');
+assert(study.includes("window.hkReadPrayStopPush()"),'main unsub cancels push');
+console.log('PASS: explicit opt-in and cancellation integration');

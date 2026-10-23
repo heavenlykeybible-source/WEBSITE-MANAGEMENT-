@@ -1,0 +1,42 @@
+name = "heavenly-key-global-community"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+workers_dev = true
+keep_vars = true
+routes = []
+
+[ai]
+binding = "AI"
+
+[assets]
+directory = "./public"
+run_worker_first = ["/api", "/api/*"]
+
+# Account 3 production resource IDs verified against aoemeta247@gmail.com Cloudflare dashboard.
+[[d1_databases]]
+binding = "DB"
+database_name = "heavenly-key-global-community-db"
+database_id = "94d70dc2-91fe-4c5d-afc2-ca9ccff04f28"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "daf1094e23c6494fb89a6e7bd232b52b"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "heavenly-key-global-community-media"
+
+[vars]
+PUBLIC_ORIGIN = "https://global.heavenlykey.org"
+PLATFORM_NAME = "Heavenly Key Global Christian Social Network"
+
+[triggers]
+crons = ["0 * * * *"]
+
+# Optional calling: CALL_TURN_URLS and CALL_TURN_SECRET are Worker secrets.
+# Use a coturn-compatible relay with temporary HMAC credentials.
+
+# Secrets to set only after Account 3 is connected:
+# SESSION_SECRET
+# PASSWORD_PEPPER
+# INTERSERVICE_SECRET

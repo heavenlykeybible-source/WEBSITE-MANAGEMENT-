@@ -1,0 +1,143 @@
+{
+  "organization": {
+    "id": "heavenly-key-evangelistic-movement",
+    "name": "Heavenly Key Evangelistic Movement",
+    "type": "ministry",
+    "description": "A Christian evangelistic movement taking Christ to the nations of the world.",
+    "website": "https://www.heavenlykey.org"
+  },
+  "profiles": [
+    {
+      "id": "hkem-editorial-01",
+      "displayName": "Daniel Adeyemi",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Salvation and Gospel",
+      "portraitPath": "/assets/ministry-profiles/avatar-01.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-02",
+      "displayName": "Samuel Okoro",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Revival and Holiness",
+      "portraitPath": "/assets/ministry-profiles/avatar-02.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-03",
+      "displayName": "Emmanuel Eze",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Bible Study",
+      "portraitPath": "/assets/ministry-profiles/avatar-03.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-04",
+      "displayName": "Joseph Adebayo",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Prayer and Intercession",
+      "portraitPath": "/assets/ministry-profiles/avatar-04.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-05",
+      "displayName": "David Oghenekaro",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Evangelism and Missions",
+      "portraitPath": "/assets/ministry-profiles/avatar-05.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-06",
+      "displayName": "Paul Chukwu",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Christian Discipleship",
+      "portraitPath": "/assets/ministry-profiles/avatar-06.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-07",
+      "displayName": "Grace Adewale",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Prayer and Encouragement",
+      "portraitPath": "/assets/ministry-profiles/avatar-07.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-08",
+      "displayName": "Esther Okafor",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Christian Family",
+      "portraitPath": "/assets/ministry-profiles/avatar-08.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-09",
+      "displayName": "Ruth Oghenero",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Holy Living",
+      "portraitPath": "/assets/ministry-profiles/avatar-09.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-10",
+      "displayName": "Deborah Nwosu",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Bible Teaching",
+      "portraitPath": "/assets/ministry-profiles/avatar-10.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-11",
+      "displayName": "Mary Akinola",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Faith and Devotionals",
+      "portraitPath": "/assets/ministry-profiles/avatar-11.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    },
+    {
+      "id": "hkem-editorial-12",
+      "displayName": "Hannah Eze",
+      "workplace": "Heavenly Key Evangelistic Movement",
+      "organizationId": "heavenly-key-evangelistic-movement",
+      "ministryFocus": "Christian Youth and Discipleship",
+      "portraitPath": "/assets/ministry-profiles/avatar-12.jpg",
+      "accountType": "ministry-managed-editorial",
+      "managedBy": "Heavenly Key Evangelistic Movement",
+      "status": "pending-creation"
+    }
+  ]
+}

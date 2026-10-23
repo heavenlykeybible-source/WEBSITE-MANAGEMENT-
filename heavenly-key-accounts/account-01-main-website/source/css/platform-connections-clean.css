@@ -1,0 +1,25 @@
+/* Clean platform picker inspired by the simplicity of modern broadcaster connection dialogs.
+   This is Heavenly Key's own presentation layer; no third-party branding assets are copied. */
+#admin-autopost .platform-hub-group{max-width:920px;margin-inline:auto}
+#admin-autopost .platform-hub-group>.studio-help{max-width:650px;margin:.35rem auto 1.1rem;text-align:center;color:#6d7787}
+#admin-autopost .social-connect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:1rem auto 1.25rem;max-width:820px}
+#admin-autopost .social-connect-grid .platform-card{position:relative;min-height:112px;margin:0!important;padding:18px 20px!important;border:1px solid #e1e6ee!important;border-radius:15px!important;background:#fff!important;box-shadow:0 5px 18px rgba(20,42,75,.07)!important;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;overflow:hidden;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+#admin-autopost .social-connect-grid .platform-card::before{display:none!important}
+#admin-autopost .social-connect-grid .platform-card:hover{transform:translateY(-2px);border-color:#c7d4e5!important;box-shadow:0 10px 25px rgba(20,42,75,.11)!important}
+#admin-autopost .social-connect-grid .platform-card h3{flex:1 1 100%;margin:0!important;font-size:1.14rem;line-height:1.2;color:#263b5d}
+#admin-autopost .social-connect-grid .platform-card>p{display:none}
+#admin-autopost .social-connect-grid .platform-status-chip{position:absolute;right:12px;top:10px;margin:0;font-size:.63rem;padding:.25rem .45rem;opacity:.9}
+#admin-autopost .social-connect-grid .platform-card>.btn{width:100%;margin:5px 0 0!important;padding:.55rem .7rem;box-shadow:none!important;border-radius:9px!important}
+#admin-autopost .platforms-tabs{position:static;justify-content:center;max-width:820px;margin:.25rem auto 1rem;background:#fff;border-color:#e3e8ef;box-shadow:none}
+#admin-autopost .platforms-tabs .btn{box-shadow:none!important}
+#admin-autopost .social-selection-card{max-width:820px;margin:1rem auto!important}
+#admin-autopost .social-selection-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#admin-autopost .platform-connected{min-height:auto!important}
+@media(max-width:620px){
+ #admin-autopost .social-connect-grid,#admin-autopost .social-selection-grid{grid-template-columns:1fr 1fr;gap:10px}
+ #admin-autopost .social-connect-grid .platform-card{min-height:104px;padding:15px 13px!important}
+ #admin-autopost .social-connect-grid .platform-card h3{font-size:1rem;padding-right:45px}
+ #admin-autopost .social-connect-grid .platform-card>.btn{font-size:.82rem}
+ #admin-autopost .platforms-tabs{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}
+}
+@media(max-width:390px){#admin-autopost .social-connect-grid{grid-template-columns:1fr}}

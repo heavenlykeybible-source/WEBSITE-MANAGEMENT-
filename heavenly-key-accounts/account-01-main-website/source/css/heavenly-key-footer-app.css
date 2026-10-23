@@ -1,0 +1,35 @@
+/* Heavenly Key App footer showcase: scoped to the shared public footer. */
+.hkem-footer .hkem-app-feature{min-width:0;max-width:330px}
+.hkem-footer #hkem-footer-app-title{color:#ffda3c;font-size:clamp(17px,1.6vw,21px);font-weight:900;letter-spacing:.07em;margin:0 0 14px}
+.hkem-footer .hkem-app-subtitle{margin:0 0 14px;color:#dbe8ff;font-size:12px;font-weight:650;line-height:1.5;letter-spacing:.01em}
+.hkem-footer .hkem-app-phone{width:min(100%,290px);margin:0 auto 12px;background:#fff;border:4px solid #b1c6ea;border-radius:20px;overflow:hidden;box-shadow:0 10px 25px #0007}
+.hkem-footer .hkem-app-phone-top{background:linear-gradient(90deg,#062d69,#881536);padding:7px 9px;display:flex;align-items:center;gap:5px;color:#fff;font-weight:800;font-size:10px;letter-spacing:.04em}
+.hkem-footer .hkem-app-phone-top>span:first-child{color:#ffdb00}
+.hkem-footer .hkem-app-preview-label{margin-left:auto;color:#ffe2a4;font-size:9px;letter-spacing:0}
+.hkem-footer .hkem-app-preview{min-height:290px;background:#fff;color:#132f63;padding:15px 12px;text-align:center}
+.hkem-footer .hkem-app-preview-brand{display:flex;gap:9px;align-items:center;text-align:left;padding:10px 9px;background:linear-gradient(125deg,#123c89,#8f2341);color:#fff;border-radius:12px}
+.hkem-footer .hkem-app-preview-brand>span{display:grid;place-items:center;border:2px solid #fbdc59;border-radius:12px;width:43px;height:43px;flex:0 0 43px;color:#fbdc59;font-size:25px}
+.hkem-footer .hkem-app-preview-brand strong{display:block;font-weight:900;font-size:15px;line-height:1.15;color:#fff}
+.hkem-footer .hkem-app-preview-brand small{display:block;color:#ffe5a0;font-size:9px;letter-spacing:.05em;margin-top:4px}
+.hkem-footer .hkem-app-preview>p{font-size:12px;font-weight:750;margin:15px 0 10px;color:#14386d}
+.hkem-footer .hkem-app-preview-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hkem-footer .hkem-app-preview-links a{background:#f2f5fc;color:#133f85;border:1px solid #d7e0ef;border-radius:11px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;text-decoration:none;font-size:23px;padding:10px 6px}
+.hkem-footer .hkem-app-preview-links a span{font-size:11px;font-weight:850}
+.hkem-footer .hkem-app-preview-links a:hover,.hkem-footer .hkem-app-preview-links a:focus-visible{background:#dfeafb;color:#78183a;border-color:#d4b75d}
+.hkem-footer .hkem-app-preview-note{display:block;color:#53617b;font-size:10px;line-height:1.4;margin:13px 4px 1px}
+
+.hkem-footer .hkem-app-explainer{color:#e4efff;font-size:12px;line-height:1.45;margin:8px 0 10px}
+.hkem-footer .hkem-app-open,.hkem-footer .hkem-app-login{display:block;text-align:center;text-decoration:none;border-radius:9px;padding:10px 9px;font-size:12px;font-weight:850;line-height:1.4}
+.hkem-footer .hkem-app-open{color:#092b69;background:#ffda3c}
+.hkem-footer .hkem-app-open:hover{color:#041b40;background:#fff0a0}
+.hkem-footer .hkem-app-install-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}
+.hkem-footer .hkem-app-install-options a{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;padding:9px 6px;border-radius:9px;border:1px solid #8aa5d9;text-decoration:none;background:#12376e;color:#fff;font-size:11px;font-weight:800;line-height:1.25;text-align:left}
+.hkem-footer .hkem-app-install-options a:hover{background:#2453a0}
+.hkem-footer .hkem-app-install-options small{display:block;font-size:9px;font-weight:600;line-height:1.3;color:#d8e8ff}
+.hkem-footer .hkem-app-platform-icon{display:block;width:20px;height:20px;line-height:1;flex:0 0 20px;text-align:center}
+.hkem-footer .hkem-app-login{color:#fff;background:#7e1838;border:1px solid #e1b55a}
+.hkem-footer .hkem-app-login:hover{background:#a52a51}
+.hkem-footer .hkem-app-status{font-size:10px;color:#d7e1f0;line-height:1.45;margin:11px 0 0}
+.hkem-footer .hkem-app-feature a:focus-visible{outline:3px solid #ffda3c;outline-offset:3px}
+@media(max-width:760px){.hkem-footer .hkem-app-feature{max-width:none}.hkem-footer .hkem-app-phone{margin-left:0}}
+@media(max-width:480px){.hkem-footer .hkem-app-phone{width:min(100%,320px)}.hkem-footer .hkem-app-install-options{max-width:320px}}

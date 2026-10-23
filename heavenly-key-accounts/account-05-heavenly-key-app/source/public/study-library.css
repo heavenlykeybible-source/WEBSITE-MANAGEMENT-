@@ -1,0 +1,90 @@
+/* Faith of Our Fathers — low-overhead scripture and hymn reading UI */
+.study-header{background:linear-gradient(120deg,#153b73,#751c3c);color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px max(16px,calc((100vw - 1120px)/2))}
+.study-brand{font-size:1.15rem;font-weight:900;text-decoration:none;letter-spacing:.04em}.study-header nav{display:flex;gap:9px;flex-wrap:wrap}
+.study-header nav a{font-size:.9rem;text-decoration:none;padding:7px 9px;border-radius:8px;background:#ffffff17}
+.study-header a:hover,.study-header a:focus-visible{outline:2px solid #edd05c}
+.study-shell{max-width:1050px;margin:18px auto;padding:0 14px;min-height:65vh}.study-shell>h1{font-size:clamp(1.4rem,4vw,2.2rem);color:#153b73;margin:5px 0 10px}
+.study-kicker{color:#78233d;font-size:.8rem;letter-spacing:.11em;font-weight:900}
+.study-status{font-size:.83rem;min-height:1.5em;color:#555f6f}.study-subtitle{line-height:1.5;color:#485467}
+.study-main{display:grid;gap:18px}.study-main>h2{margin:12px 0 0;color:#173d7a}
+.study-card{background:#fff;padding:clamp(14px,3vw,24px);border-radius:16px;border:1px solid #d9e1ee;box-shadow:0 2px 14px #153b7310;min-width:0}
+.study-card h3{color:#153b73;margin:8px 0 15px}.study-controls,.study-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 16px}
+.study-controls label{font-weight:800}.study-controls select{width:auto;max-width:100%;min-width:155px}.study-actions button{min-height:40px}
+.kjv-reader{max-width:74ch;margin:24px auto;font-size:clamp(1.05rem,2vw,1.2rem);line-height:1.9}
+.kjv-verse{margin:.1rem 0 1rem;overflow-wrap:anywhere}.kjv-verse sup{font-weight:800;color:#85274a;margin-right:8px;font-size:.7em}
+.study-card input[type=search]{width:100%;margin:8px 0}
+.study-results{display:grid;gap:6px;max-height:230px;overflow:auto}
+.study-result,.hymn-choice{display:block;width:100%;border:1px solid #dce3ed;border-radius:8px;padding:11px;text-align:left;background:#f8f9fc;color:#153b73;line-height:1.4;cursor:pointer}
+.study-result:hover,.hymn-choice:hover{background:#e9eff9}.study-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:16px}
+.hymn-items{max-height:60vh;overflow:auto;display:grid;gap:6px;margin-top:9px}
+.hymn-full-text{white-space:pre-wrap;font:inherit;line-height:1.85;overflow-wrap:anywhere}
+.study-card blockquote{border-left:4px solid #d4b45a;padding-left:15px;margin:15px 0;font-family:Georgia,serif;line-height:1.6}
+.study-fine{font-size:.85rem;color:#566174}.study-footer{text-align:center;padding:22px 14px;margin-top:28px;background:#0b2955;color:#fff;font-size:.83rem}
+@media(max-width:600px){.study-header{padding:11px}.study-header nav{overflow-x:auto;flex-wrap:nowrap;width:100%}.study-header nav a{white-space:nowrap}.study-controls{align-items:stretch;display:grid;grid-template-columns:1fr 1fr}.study-controls select{min-width:0;width:100%}}
+
+/* Audio Bible shell: rendered only after recording approval; audio never auto-downloads. */
+.audio-bible-panel{max-width:940px;margin:16px auto}.audio-bible-panel h2{margin:10px 0;color:#153b73;font-size:1.22rem}
+.audio-bible-panel audio{display:block;width:100%;min-height:48px;margin:15px 0}.audio-bible-panel .audio-setting{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.91rem}
+.audio-bible-panel #audio-status{min-height:2.5em;line-height:1.5;color:#485467}.audio-bible-panel #audio-coverage{font-weight:700}
+.audio-bible-panel #audio-ready[hidden]{display:none}
+
+/* Phone-first Holy Bible page. Scoped so other ministry/CMS pages are untouched. */
+.mobile-kjv-page{background:#f6f8fc}
+.mobile-kjv-page .mobile-kjv-shell{max-width:840px;margin:12px auto;padding:0 12px}
+.mobile-kjv-page .mobile-kjv-shell>h1{font-size:1.4rem;margin:4px 0}
+.mobile-kjv-page .mobile-kjv-shell>.study-subtitle{font-size:.88rem;margin:4px 0}
+.mobile-kjv-page .mobile-kjv{padding:0;overflow:clip;box-shadow:0 2px 12px #17365a14}
+.mobile-kjv-page .mobile-kjv-toolbar{display:flex;align-items:end;gap:9px;flex-wrap:wrap;background:#fff;border-bottom:1px solid #e6ebf3;padding:14px}
+.mobile-kjv-page .mobile-kjv-picker{flex:2;min-width:106px}
+.mobile-kjv-page .mobile-kjv-picker:nth-child(2){flex:1;min-width:91px}
+.mobile-kjv-page .mobile-kjv-picker label{display:block;font:700 .76rem system-ui;color:#4b5f7a;margin-bottom:5px}
+.mobile-kjv-page .mobile-kjv-picker select{width:100%;max-width:100%;border:1px solid #cad5e4;border-radius:9px;padding:10px 6px;background:#f9fbfe;color:#173b73;font:600 .95rem system-ui;min-height:44px}
+.mobile-kjv-page .mobile-kjv-size{display:flex;align-items:center;gap:5px;margin-left:auto}
+.mobile-kjv-page .mobile-kjv-size-button{min-height:44px;min-width:44px;border:1px solid #cad5e4;border-radius:9px;background:#eaf0fb;color:#153b73;font:bold 1rem system-ui;cursor:pointer}
+.mobile-kjv-page .mobile-kjv-size-button:disabled{opacity:.4}
+.mobile-kjv-page .mobile-kjv-size-label{font:700 .78rem system-ui;color:#54677e;min-width:35px;text-align:center}
+.mobile-kjv-page .mobile-kjv-intro{text-align:center;padding:17px 16px 3px;scroll-margin-top:12px}
+.mobile-kjv-page .mobile-kjv-eyebrow{font:800 .71rem system-ui;letter-spacing:.08em;color:#75203d;margin:0}
+.mobile-kjv-page .mobile-kjv-title{color:#153b73;font:800 1.45rem system-ui;margin:5px 0 1px}
+.mobile-kjv-page .mobile-kjv-status{min-height:0;padding:0 18px;text-align:center;color:#6b7280;font-size:.9rem}
+.mobile-kjv-page .mobile-kjv-verses{font:400 var(--kjv-reader-font,20px)/1.85 system-ui,-apple-system,"Segoe UI",sans-serif;max-width:none;color:#17243b;padding:4px 16px 16px;margin:0}
+.mobile-kjv-page .mobile-kjv-verses.mobile-kjv-serif{font-family:Georgia,"Times New Roman",serif;line-height:1.9}
+.mobile-kjv-page .mobile-kjv-verses .kjv-verse{margin:0 0 .9em}
+.mobile-kjv-page .mobile-kjv-verses .kjv-verse sup{color:#7e2546;font-size:.68em;font-weight:800;margin-right:7px}
+.mobile-kjv-page .mobile-kjv-extras{padding:8px 14px;border-top:1px solid #e5ebf1}
+.mobile-kjv-page .mobile-kjv-extras summary{cursor:pointer;color:#153b73;font:700 .95rem system-ui;padding:9px 0}
+.mobile-kjv-page .mobile-kjv-extras label{display:block;font:700 .78rem system-ui;color:#415671;margin:10px 0 4px}
+.mobile-kjv-page .mobile-kjv-extras input,.mobile-kjv-page .mobile-kjv-extras select{display:block;width:100%;border:1px solid #cad5e4;border-radius:8px;min-height:43px;padding:9px;background:#fafcff}
+.mobile-kjv-page .mobile-kjv-option-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mobile-kjv-page .mobile-kjv-option-actions button,.mobile-kjv-page .mobile-kjv-option-actions a{min-height:43px;padding:10px 12px;font-size:.88rem}
+.mobile-kjv-page{padding-bottom:70px}
+.mobile-kjv-page .mobile-kjv-nav{position:fixed;bottom:0;left:0;right:0;margin:auto;max-width:840px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:6px;background:#153b73;padding:9px 11px max(9px,env(safe-area-inset-bottom));box-shadow:0 -2px 12px #12284922}
+.mobile-kjv-page .mobile-kjv-nav-button{background:#fff;border:0;border-radius:9px;color:#153b73;font:800 .86rem system-ui;padding:8px;min-height:46px;min-width:102px;cursor:pointer}
+.mobile-kjv-page .mobile-kjv-nav-button:disabled{opacity:.4;cursor:default}
+.mobile-kjv-page .mobile-kjv-ref{color:white;font:700 .78rem system-ui;text-align:center;overflow-wrap:anywhere}
+@media(max-width:600px){
+ .mobile-kjv-page .mobile-kjv-header{gap:4px;flex-wrap:nowrap;padding:10px 11px}
+ .mobile-kjv-page .mobile-kjv-header .study-brand{font-size:.85rem;white-space:nowrap}
+ .mobile-kjv-page .mobile-kjv-header nav{width:auto;flex:1;overflow:visible;justify-content:flex-end;gap:4px}
+ .mobile-kjv-page .mobile-kjv-header nav a{font-size:.76rem;padding:6px}
+ .mobile-kjv-page .mobile-kjv-size{margin-left:auto}
+ .mobile-kjv-page .mobile-kjv-shell>.study-subtitle{line-height:1.4}
+ .mobile-kjv-page .mobile-kjv-verses{padding-left:15px;padding-right:15px}
+}
+
+/* Opt-in playlist & separate narration/music controls; no assets or cross-page side effects. */
+.audio-playlist-panel{margin:18px 0;padding:16px;background:#f6f9fd;border:1px solid #dbe4f1;border-radius:13px;display:grid;gap:12px}
+.audio-playlist-panel h3{color:#153b73;margin:0 0 2px;font-size:1.08rem}
+.audio-playlist-panel>label:not(.audio-setting){display:block;font-weight:700;color:#2c486b}
+.audio-playlist-panel>select{max-width:100%;width:100%;min-height:45px;padding:10px;background:white;color:#19355b;border:1px solid #c7d6e9;border-radius:9px}
+.audio-mixer-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.audio-mixer-grid label{display:flex;flex-direction:column;gap:6px;font-weight:700;color:#30455e}
+.audio-mixer-grid input[type=range]{accent-color:#153b73;width:100%;min-height:31px}
+.audio-mixer-grid output{font-weight:500;color:#506686}
+.audio-playlist-panel .audio-setting{display:flex;align-items:center;gap:8px;font-weight:700;color:#1d416e}
+.audio-playlist-panel .audio-setting input{width:20px;height:20px}
+.audio-playlist-panel>a{color:#153b73}
+.audio-playlist-panel button{justify-self:start;min-height:44px;border-radius:9px}
+.audio-playlist-panel button:disabled{opacity:.48;cursor:not-allowed}
+.audio-playlist-panel audio:not([controls]){display:none}
+@media(max-width:550px){.audio-mixer-grid{grid-template-columns:1fr}.audio-playlist-panel{padding:12px}}

@@ -1,0 +1,52 @@
+{
+  "accounts": [
+    {
+      "account": 1,
+      "name": "Main Heavenly Key / Home Page",
+      "email": "alldaywow247@gmail.com"
+    },
+    {
+      "account": 2,
+      "name": "Studio / Media",
+      "email": "faithofourfatherstv@gmail.com"
+    },
+    {
+      "account": 3,
+      "name": "Global Christian Community",
+      "email": "aoemeta247@gmail.com"
+    },
+    {
+      "account": 4,
+      "name": "Main Control Room",
+      "email": "emmanuel2026miracle@gmail.com"
+    },
+    {
+      "account": 5,
+      "name": "Heavenly Key App",
+      "email": "heavenlykeyapp@gmail.com"
+    },
+    {
+      "account": 6,
+      "name": "Heavenly Key Bible",
+      "email": "heavenlykeybible@gmail.com"
+    },
+    {
+      "account": 7,
+      "name": "Heavenly Key Radio / Independent Radio Page",
+      "email": "heavenlykeyradio@gmail.com",
+      "website": "https://radio.heavenlykey.org",
+      "ai_target_url": "https://radio.heavenlykey.org",
+      "page_url": "https://radio.heavenlykey.org"
+    },
+    {
+      "account": 8,
+      "name": "Heavenly Key MeetingSpace",
+      "email": "omegawealthcreator@gmail.com"
+    },
+    {
+      "account": 9,
+      "name": "Heavenly Key VideoEditor",
+      "email": "emmanuelmeta247@gmail.com"
+    }
+  ]
+}

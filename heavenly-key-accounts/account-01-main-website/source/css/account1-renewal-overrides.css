@@ -1,0 +1,34 @@
+/* Account 1 approved visual identity — safe non-destructive refresh for legacy functional pages. */
+:root{--hk-green:#005334;--hk-deep:#003f27;--hk-wine:#790326;--hk-gold:#ffdf26}
+html{scroll-behavior:smooth}body{font-size:max(16px,1rem);background-color:#fff;color:#151515}a{overflow-wrap:anywhere}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--hk-gold);outline-offset:3px}header,.site-header{border-bottom:3px solid var(--hk-gold)}h1,h2,h3{overflow-wrap:break-word}button,.button,[type=submit]{min-height:42px}img{max-width:100%;height:auto}footer{border-top:3px solid var(--hk-gold)}
+
+/* ORIGINAL OWNER-APPROVED AI + RADIO ARTWORK ONLY.
+   These files are the exact uploaded originals already stored in this repository. */
+#hkem-assistant .hkem-launcher,
+#hkem-assistant .hkem-assistant-img{
+  background-color:transparent!important;
+  background-image:url('../assets/ministry/approved-ai-floating-icon.webp')!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:contain!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+#hkem-assistant .hkem-assistant-img{object-fit:contain!important;content:url('../assets/ministry/approved-ai-floating-icon.webp')!important}
+#hk-floating-radio .hkr-bubble,
+#hk-floating-radio .hk-radio-artwork{
+  background-color:transparent!important;
+  background-image:url('../assets/ministry/approved-radio-floating-icon.webp')!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:contain!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+#hk-floating-radio .hk-radio-artwork{object-fit:contain!important;content:url('../assets/ministry/approved-radio-floating-icon.webp')!important}
+#hkem-assistant .hkem-launcher::before,#hkem-assistant .hkem-launcher::after,#hk-floating-radio .hkr-bubble::before,#hk-floating-radio .hkr-bubble::after{content:none!important}
+
+/* Dedicated Radio page uses its full approved radio player, never a duplicate floating radio. */
+body.broadcast-public #hk-floating-radio{display:none!important;visibility:hidden!important;pointer-events:none!important}
+
+@media(max-width:760px){body{overflow-x:hidden}main,section,article{max-width:100%}nav{max-width:100%}}

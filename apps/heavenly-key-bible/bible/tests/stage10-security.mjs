@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {handleReadPray} from '../read-pray-server.js';
+const url=new URL('https://bible.example/api/read-pray/subscribe');
+const env={READ_PRAY_DB:{}};
+const req=(origin,type='application/json')=>new Request(url,{method:'POST',headers:{...(origin?{Origin:origin}:{}),'Content-Type':type},body:JSON.stringify({})});
+assert.equal((await handleReadPray(req('https://other.example'),env,url)).status,403);
+assert.equal((await handleReadPray(req(null),env,url)).status,403);
+assert.equal((await handleReadPray(req('https://bible.example','text/plain'),env,url)).status,415);
+assert.equal((await handleReadPray(req('https://bible.example'),env,url)).status,503);
+assert.equal((await handleReadPray(new Request(url,{method:'GET'}),env,url)).status,405);
+console.log('PASS: same-origin and JSON-only subscription API');

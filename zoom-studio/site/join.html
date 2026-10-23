@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Join the broadcast</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#14202e">
+<style>
+:root{--bg:#14202e;--pn:#1d2c3d;--ln:#2f4258;--tx:#e8eef5;--mu:#93a6ba;--ac:#3fa7d6;--live:#e5484d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,sans-serif;max-width:760px;margin-inline:auto;padding:14px}
+h1{font-size:20px;margin:6px 0 10px}
+button,input[type=text]{background:var(--pn);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:10px 12px;font:inherit}
+button{cursor:pointer}button:hover{border-color:var(--ac)}
+button.pri{background:var(--ac);color:#06121c;border-color:var(--ac);font-weight:600}
+button.end{background:var(--live);border-color:var(--live);color:#fff}
+a{color:var(--ac)}:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+input[type=text]{flex:1;min-width:150px}
+.mu{color:var(--mu);font-size:13px}
+.box{background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:12px}
+.vw{position:relative}
+#rv{width:100%;aspect-ratio:16/9;background:#000;border-radius:8px;display:block}
+#lv{position:absolute;right:8px;bottom:8px;width:28%;max-width:180px;aspect-ratio:16/9;object-fit:cover;background:#000;border:2px solid #f2c14e;border-radius:8px;transform:scaleX(-1)}
+#cl{height:170px;overflow:auto;background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:8px}
+#wb iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:8px}
+[hidden]{display:none!important}
+</style></head><body>
+<h1 id="ti">Join the broadcast</h1>
+
+<section id="pre" class="box">
+<p id="intro">You have been invited to join a live broadcast as a guest. You do not need an account.</p>
+<div class="row"><input type="text" id="nm" maxlength="30" placeholder="Your name" autocomplete="name" aria-label="Your name"></div>
+<div class="row" id="nrrow"><label class="mu"><input type="checkbox" id="nr" checked> Strong noise removal for my voice</label></div>
+<div class="row" id="aorow"><label class="mu"><input type="checkbox" id="ao"> Audio only (uses much less data)</label></div>
+<div class="row"><label class="mu" id="oklab"><input type="checkbox" id="ok"> <span id="oktx"></span></label></div>
+<div class="row"><button class="pri" id="go">Join</button></div>
+<p class="mu" id="pm" role="status"></p>
+</section>
+
+<section id="wait" class="box" hidden><p><b>Waiting for the host to let you in...</b></p><p class="mu" id="ws" role="status"></p></section>
+
+<section id="live" hidden>
+<div id="stg" hidden>
+ <div class="vw"><video id="rv" autoplay playsinline></video><video id="lv" autoplay playsinline muted></video></div>
+ <div class="row"><button id="mic">Mute</button><button id="cam">Camera off</button><button id="shr">Share screen</button></div>
+</div>
+<div id="audv" hidden><div id="wb"></div></div>
+<div class="row" id="invrow" hidden><span>The host invited you to the stage.</span><button class="pri" id="inv">Join the stage</button></div>
+<div class="row"><button id="hand">Raise hand</button>
+<button data-e="&#128079;" aria-label="Clap">&#128079;</button><button data-e="&#128591;" aria-label="Thank you">&#128591;</button><button data-e="&#10084;&#65039;" aria-label="Heart">&#10084;&#65039;</button>
+<button class="end" id="leave">Leave</button></div>
+<p class="mu" id="nt" role="status"></p>
+<div id="cl" aria-live="polite"></div>
+<div class="row"><input type="text" id="ct" maxlength="300" placeholder="Type a message" aria-label="Chat message"><button id="cs">Send</button></div>
+</section>
+
+<section id="done" class="box" hidden><p id="dm"></p></section>
+
+<script>
+const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),relay=q.get('relay')||'',room=q.get('r')||'',key=q.get('k')||'',AUD=q.get('a')==='1';
+const pass=(()=>{try{let p=sessionStorage.getItem('gp');if(!p){p=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');sessionStorage.setItem('gp',p)}return p}catch(e){return String(Math.random()).slice(2)}})();
+const NSPATH='https://cdn.jsdelivr.net/npm/@shiguredo/noise-suppression@2022.4.2/dist';let proc=null;
+function loadNS(){return window.Shiguredo?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src=NSPATH+'/noise_suppression.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+let ws=null,pc=null,ice=[],local=null,camTrack=null,over=false,tries=0,pend=[],hand=false,sharing=false,onStage=false,joined=false;
+const show=id=>['pre','wait','live','done'].forEach(s=>$(s).hidden=s!==id);
+const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
+const note=t=>{$('nt').textContent=t};
+function stopLocal(){try{proc&&proc.stopProcessing()}catch(e){}proc=null;if(local)local.getTracks().forEach(t=>t.stop());local=null}
+function end(msg){over=true;try{ws&&ws.close()}catch(e){}try{pc&&pc.close()}catch(e){}stopLocal();show('done');$('dm').textContent=msg}
+function mode(stage){onStage=stage;$('stg').hidden=!stage;$('audv').hidden=stage;$('aorow').hidden=true;if(!stage)$('invrow').hidden=$('invrow').hidden}
+if(AUD){$('nrrow').hidden=true;$('ti').textContent='Join the audience';$('intro').textContent='You are joining as a viewer. You can chat, raise your hand and react. The host may invite you to the stage. You do not need an account.';$('aorow').hidden=true;
+ $('oktx').textContent='I understand my name and chat messages will be visible to the host and everyone in the room, and may appear on the broadcast. I agree to the Privacy Policy.'}
+else $('oktx').textContent='I understand the host may broadcast and record this session, including my video, voice, name and chat messages. The host can see my network address. I agree to the Privacy Policy.';
+$('oklab').insertAdjacentHTML('beforeend',' <a href="/privacy.html" target="_blank" rel="noopener">Read it</a>');
+$('pm').textContent=AUD?'':'Use headphones to avoid echo. Your browser will ask to use your camera and microphone.';
+if(!/^wss:\/\//.test(relay)||!/^[A-Za-z0-9_-]{1,64}$/.test(room)||!/^\w+$/.test(key)){$('pm').textContent='This invite link is incomplete. Ask the host for a new one.';$('go').disabled=true}
+
+async function getMedia(ao){const m=await getMedia0(ao);if(!m||!$('nr').checked||!m.getAudioTracks().length)return m;
+ try{await loadNS();proc=new Shiguredo.NoiseSuppressionProcessor(NSPATH);const pt=await proc.startProcessing(m.getAudioTracks()[0]);return new MediaStream([...m.getVideoTracks(),pt])}catch(e){proc=null;note('Strong noise removal is not available on this device. Standard noise removal is on.');return m}}
+async function getMedia0(ao){
+ try{return await navigator.mediaDevices.getUserMedia({video:ao?false:{width:1280,height:720,facingMode:'user'},audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
+ catch(e){try{const m=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});note('No camera found. You will join with audio only.');return m}catch(e2){return null}}}
+
+$('go').onclick=async()=>{
+ if(!$('nm').value.trim()){$('pm').textContent='Please type your name.';return}
+ if(!$('ok').checked){$('pm').textContent='Please tick the box to continue.';return}
+ if(!AUD){$('pm').textContent='Please allow your camera and microphone...';local=await getMedia($('ao').checked);
+  if(!local){$('pm').textContent='Please allow your microphone, and your camera if you have one, then tap Join again.';return}
+  $('lv').srcObject=local;onStage=true}
+ connect()};
+
+function connect(){
+ ws=new WebSocket(relay.replace(/\/+$/,'')+'/room');
+ ws.onopen=()=>{send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked});if(!joined)show('wait')};
+ ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}onMsg(m)};
+ ws.onclose=()=>{if(over)return;if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';note('Connection lost. Reconnecting...');setTimeout(connect,2000)}else end('The connection was lost. Open the invite link again to rejoin.')};
+ ws.onerror=()=>{}}
+
+function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
+ const m=u.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([\w-]{6,15})/);
+ if(m){const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+m[1]+'?playsinline=1';f.allow='autoplay; encrypted-media; picture-in-picture';f.title='Live broadcast';f.referrerPolicy='strict-origin-when-cross-origin';w.appendChild(f)}
+ else{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Watch the live broadcast';w.appendChild(a)}}
+
+function onMsg(m){switch(m.t){
+ case 'welcome':ice=m.ice||[];setWatch(m.watch);break;
+ case 'admitted':tries=0;joined=true;show('live');mode(!AUD||onStage);if(AUD&&!onStage)note('');break;
+ case 'denied':end('The host did not admit you.');break;
+ case 'kick':end('You were removed from the room.');break;
+ case 'closed':end(m.why||'The room has ended.');break;
+ case 'error':end(m.msg||'Could not join.');break;
+ case 'mute':if(local)setMic(false);note('The host muted your microphone. Tap Unmute when you are asked to speak.');break;
+ case 'chat':addChat(m.name,m.text);break;
+ case 'note':note(m.text);break;
+ case 'watch':setWatch(m.url);break;
+ case 'audchat':note(m.on?'Audience chat is on.':'The host turned audience chat off.');break;
+ case 'slow':note(m.sec?'Slow mode: one message every '+m.sec+' seconds.':'Slow mode is off.');break;
+ case 'promoted':$('invrow').hidden=false;break;
+ case 'demoted':try{pc&&pc.close()}catch(e){}pc=null;stopLocal();onStage=false;mode(false);note('You are back in the audience.');break;
+ case 'sig':onSig(m.data);break}}
+
+$('inv').onclick=async()=>{$('invrow').hidden=true;local=await getMedia(false);if(!local){note('Could not use your microphone or camera.');return}
+ $('lv').srcObject=local;onStage=true;mode(true);send({t:'ready',ao:!local.getVideoTracks().length})};
+
+async function onSig(d){try{
+ if(d.sdp){if(pc)pc.close();pc=new RTCPeerConnection({iceServers:ice});
+  pc.onicecandidate=e=>{if(e.candidate)send({t:'sig',data:{c:e.candidate}})};
+  pc.ontrack=e=>{$('rv').srcObject=e.streams[0]||new MediaStream([e.track]);$('rv').play().catch(()=>{})};
+  await pc.setRemoteDescription(d.sdp);local.getTracks().forEach(t=>pc.addTrack(t,local));
+  const a=await pc.createAnswer();await pc.setLocalDescription(a);send({t:'sig',data:{sdp:pc.localDescription}});
+  try{const s=vsender();if(s){const p=s.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:600000}];await s.setParameters(p)}}catch(e){}
+  for(const c of pend)await pc.addIceCandidate(c).catch(()=>{});pend=[]}
+ else if(d.c){if(pc&&pc.remoteDescription)await pc.addIceCandidate(d.c);else pend.push(d.c)}
+}catch(e){note('Connection problem. Please leave and rejoin.')}}
+
+function setMic(on){local.getAudioTracks().forEach(t=>t.enabled=on);$('mic').textContent=on?'Mute':'Unmute'}
+$('mic').onclick=()=>local&&setMic(!local.getAudioTracks().some(t=>t.enabled));
+$('cam').onclick=()=>{const v=local?local.getVideoTracks():[];if(!v.length){note('No camera is connected.');return}const on=!v[0].enabled;v.forEach(t=>t.enabled=on);$('cam').textContent=on?'Camera off':'Camera on'};
+$('hand').onclick=()=>{hand=!hand;send({t:'hand',on:hand});$('hand').textContent=hand?'Lower hand':'Raise hand'};
+document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>send({t:'react',emoji:b.dataset.e}));
+const vsender=()=>pc&&pc.getSenders().find(s=>s.track&&s.track.kind==='video');
+async function stopShare(){const s=vsender();if(s&&camTrack)await s.replaceTrack(camTrack);sharing=false;$('shr').textContent='Share screen'}
+$('shr').onclick=async()=>{if(!navigator.mediaDevices.getDisplayMedia){note('Screen sharing is not available on this device.');return}
+ if(sharing){stopShare();return}const s=vsender();if(!s){note('Join with a camera first to share your screen.');return}
+ try{const st=await navigator.mediaDevices.getDisplayMedia({video:true}),t=st.getVideoTracks()[0];camTrack=s.track;await s.replaceTrack(t);sharing=true;$('shr').textContent='Stop sharing';t.onended=stopShare}catch(e){}};
+function addChat(n,t){const d=document.createElement('div'),b=document.createElement('b');b.textContent=n+': ';d.append(b,document.createTextNode(t));$('cl').appendChild(d);while($('cl').children.length>80)$('cl').firstChild.remove();$('cl').scrollTop=1e9}
+$('cs').onclick=()=>{const t=$('ct').value.trim();if(t){send({t:'chat',text:t});$('ct').value=''}};
+$('ct').onkeydown=e=>{if(e.key==='Enter')$('cs').click()};
+$('leave').onclick=()=>end('You left the room. You can close this page.');
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script></body></html>

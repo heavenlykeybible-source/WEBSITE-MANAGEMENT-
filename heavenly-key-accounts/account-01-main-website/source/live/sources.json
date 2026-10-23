@@ -1,0 +1,7 @@
+{
+  "youtubeChannel": "https://www.youtube.com/@heavenlykeyministry/live",
+  "facebookPage": "https://www.facebook.com/heavenlykey",
+  "youtubeVideoId": "",
+  "facebookVideoUrl": "",
+  "notes": "Add the current 11-character YouTube video ID and public Facebook live video permalink. Blank fields show channel buttons rather than a fake live player. These values are public. Automatic detection requires a YouTube API integration and Facebook permissions."
+}
