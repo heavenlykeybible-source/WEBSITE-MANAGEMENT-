@@ -1,0 +1,10 @@
+{
+  "name": "heavenlykey-videoeditor-account9",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/be.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "check": "npm run preflight && npm test"
+  }
+}
