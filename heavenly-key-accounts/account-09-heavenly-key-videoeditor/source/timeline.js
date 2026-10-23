@@ -40,10 +40,11 @@ async function runTimeline(record){
   }
   for(let i=0;i<clips.length;i++){
    if(state.cancelled)break;
-   const c=clips[i];v.pause();await seek(c.start);v.playbackRate=c.speed;
+   const c=clips[i];v.pause();if(rec&&rec.state==='recording')rec.pause();await seek(c.start);v.playbackRate=c.speed;
    if(rec&&rec.state==='inactive')rec.start(250);
    info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length);
    await v.play();
+   if(rec&&rec.state==='paused')rec.resume();
    await new Promise((resolve,reject)=>{
     let completed=false,timer;const finish=(err)=>{if(completed)return;completed=true;clearInterval(timer);v.removeEventListener('ended',end);v.removeEventListener('error',error);err?reject(err):resolve()};
     const end=()=>finish(),error=()=>finish(Error('Video playback failed'));
