@@ -97,6 +97,15 @@ export default {
     return env.ASSETS.fetch(new Request(assetUrl,request));
    }
   }
+  // Serve clean public paths while retaining original HTML assets internally.
+  if(request.method==="GET"||request.method==="HEAD"){
+   const aliases={"/kingdom-quest":"/kingdom-quest.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
+   const pathname=url.pathname.replace(/\/$/,"")||"/";
+   if(aliases[pathname]){
+    const target=new URL(aliases[pathname],url.origin);
+    return env.ASSETS.fetch(new Request(target,request));
+   }
+  }
   return env.ASSETS.fetch(request);
  }
 };
