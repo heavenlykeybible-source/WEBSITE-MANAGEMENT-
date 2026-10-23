@@ -1,5 +1,5 @@
 "use strict";
-const SHELL = "hk-bible-shell-v41";
+const SHELL = "hk-bible-shell-v42";
 const SCRIPTURE = "hk-bible-kjv-ae1f46af-v1";
 const PREFIX = new URL("./", self.location.href).pathname;
 const SHELL_ASSETS = ["./index.html", "./ministry-logo.jpeg", "./style.css", "./reader-design.css", "./reader-design.js", "./shared/hk-standard-footer.css", "./fonts/NimbusRoman-Regular.otf", "./fonts/NimbusRoman-Bold.otf", "./fonts/NimbusRoman-Italic.otf", "./fonts/NimbusRoman-BoldItalic.otf", "./app.js", "./study-tools.js", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png", "./data/hymns.json", "./study-extensions.html", "./study-extensions.js", "./dictionary.json", "./daily-topics.json", "./daily-lessons.json", "./original-language-guide.json", "./read-pray-reminder.js", "./read-pray-push.js", "./kingdom-quest.html", "./kingdom-quest.css", "./kingdom-quest.js", "./kingdom-quest-questions.json", "./data/annotations/GEN.json", "./data/annotations/EXO.json", "./data/annotations/MAT.json", "./data/annotations/MAR.json", "./data/annotations/JOH.json", "./data/annotations/center-references.json", "./shared/app-update.js", "./shared/hk-standard-footer.js", "./family-navigation.js", "./install/index.html", "./install/ipad/index.html", "./install/android/index.html", "./install/iphone/index.html", "./install/mac/index.html", "./install/windows/index.html", "./install/ipad/install.js", "./install/android/install.js", "./install/iphone/install.js", "./install/mac/install.js", "./install/windows/install.js"];
@@ -76,13 +76,13 @@ self.addEventListener("message", event=>{
  event.waitUntil(download);
 });
 
-self.addEventListener("notificationclick",event=>{event.notification.close();event.waitUntil((async()=>{const url=new URL("study-extensions.html",self.location.href).href;for(const c of await self.clients.matchAll({type:"window",includeUncontrolled:true})){if(c.url.startsWith(new URL("./",self.location.href).href)&&"focus" in c){if("navigate" in c)await c.navigate(url);return c.focus();}}return self.clients.openWindow(url);})());});
+self.addEventListener("notificationclick",event=>{event.notification.close();event.waitUntil((async()=>{const url=new URL("daily-routine",self.location.href).href;for(const c of await self.clients.matchAll({type:"window",includeUncontrolled:true})){if(c.url.startsWith(new URL("./",self.location.href).href)&&"focus" in c){if("navigate" in c)await c.navigate(url);return c.focus();}}return self.clients.openWindow(url);})());});
 
 // The browser invokes this only when a configured push service sends an event.
 self.addEventListener('push',event=>{
  let payload={};try{payload=event.data?.json()||{};}catch{payload={};}
  if(payload.type!=='hk-read-pray-daily')return;
  const title='READ & PRAY DAILY ROUTINE';
- const options={body:'Have you prayed today? It’s time to read God’s Word and pray.',tag:'hk-read-pray-daily',icon:'./icon-192.png',data:{url:new URL('study-extensions.html',self.location.href).href}};
+ const options={body:'Have you prayed today? It’s time to read God’s Word and pray.',tag:'hk-read-pray-daily',icon:'./icon-192.png',data:{url:new URL('daily-routine',self.location.href).href}};
  event.waitUntil(self.registration.showNotification(title,options));
 });
