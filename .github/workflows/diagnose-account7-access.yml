@@ -15,14 +15,16 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_RADIO_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_RADIO_ACCOUNT_ID }}
+          ACCOUNT_2_TOKEN: ${{ secrets.ACCOUNT_2_TOKEN }}
         run: |
           node --input-type=module <<'JS'
           const token=process.env.CLOUDFLARE_API_TOKEN,account=process.env.CLOUDFLARE_ACCOUNT_ID;
           if(!token||!account)throw Error('Account 7 GitHub secrets are missing');
-          for(const path of ['workers/scripts/heavenlykeyradio/settings','workers/scripts/heavenlykeyradio/subdomain','workers/subdomain','workers/domains']){
-            const r=await fetch('https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(account)+'/'+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000)});
+          const sourceToken=process.env.ACCOUNT_2_TOKEN;
+          if(!sourceToken){console.log('ACCOUNT_2_TOKEN is not configured in this repository');}
+          else for(const path of ['workers/subdomain','workers/scripts/heavenlykey-media/settings']){
+            const r=await fetch('https://api.cloudflare.com/client/v4/accounts/c324d871146f8fcc5e7dcd3da057011c/'+path,{headers:{Authorization:'Bearer '+sourceToken},signal:AbortSignal.timeout(15000)});
             const d=await r.json(),v=d.result;
-            const result=path.endsWith('/settings')?{bindings:v?.bindings?.map(b=>({name:b.name,type:b.type,...(b.type==='plain_text'&&/ORIGIN|URL/.test(b.name)?{text:b.text}:{})})),compatibility_date:v?.compatibility_date,assets:v?.assets}:v;
-            console.log(JSON.stringify({path,http:r.status,success:d.success,errorCodes:d.errors?.map(e=>e.code),result}));
+            console.log(JSON.stringify({path,http:r.status,success:d.success,errorCodes:d.errors?.map(e=>e.code),result:path.endsWith('/settings')?{bindings:v?.bindings?.map(b=>({name:b.name,type:b.type}))}:v}));
           }
           JS
