@@ -17,9 +17,9 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           const headers={Authorization:'Bearer '+process.env.ACCOUNT_2_TOKEN};
-          for(const path of ['/accounts/c324d871146f8fcc5e7dcd3da057011c/workers/domains','/zones?name=heavenlykey.org']){
+          for(const path of ['/zones/e47b50f70a14e09185dd461f24d3854e/workers/routes','/zones/e47b50f70a14e09185dd461f24d3854e/dns_records?name=studio.heavenlykey.org','/zones/e47b50f70a14e09185dd461f24d3854e/rulesets/phases/http_request_cache_settings/entrypoint']){
             const r=await fetch('https://api.cloudflare.com/client/v4'+path,{headers});const d=await r.json();
-            const records=(d.result||[]).map(x=>({hostname:x.hostname,service:x.service,environment:x.environment,zone_id:x.zone_id,id:x.id,name:x.name}));
+            const records=Array.isArray(d.result)?d.result.map(x=>({id:x.id,pattern:x.pattern,script:x.script,name:x.name,type:x.type,content:x.content,proxied:x.proxied})):d.result?.rules?.map(x=>({id:x.id,action:x.action,expression:x.expression,action_parameters:x.action_parameters}));
             console.log(JSON.stringify({path,http:r.status,success:d.success,codes:d.errors?.map(e=>e.code),records}));
           }
           JS
