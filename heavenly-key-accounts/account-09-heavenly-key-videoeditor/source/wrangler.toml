@@ -1,0 +1,15 @@
+name = "heavenlykey-studio"
+compatibility_date = "2026-01-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "heavenlykey-studio"
+database_id = "106e04ec-8fd7-466d-a8ed-54a9c5b94a71"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "heavenlykey-media"
+
+[ai]
+binding = "AI"
