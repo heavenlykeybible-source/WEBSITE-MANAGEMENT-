@@ -191,13 +191,13 @@ export async function onRequest({ request: req, env, params }) {
     }
     if (a === 'transcribe' && m === 'POST') {
       if (!env.AI) return J({ error: 'AI is not enabled on this deployment.' }, 503);
-      const size = Number(req.headers.get('content-length'));
+      const announced = req.headers.get('content-length');
       if ((req.headers.get('content-type') || '').split(';')[0] !== 'audio/wav') return J({ error: 'Send a WAV file.' }, 415);
-      if (!Number.isSafeInteger(size) || size <= 0 || size > 3 * 1024 * 1024) return J({ error: 'Audio chunk too large.' }, 413);
+      if (announced !== null && (!/^\\d+$/.test(announced) || Number(announced) > 3 * 1024 * 1024)) return J({ error: 'Audio chunk too large.' }, 413);
       const n = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe' AND at>?").bind(u.id, Date.now() - DAY).first()).c;
       if (n >= 120) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' }, 429);
       const audio = await req.arrayBuffer();
-      if (audio.byteLength !== size || audio.byteLength > 3 * 1024 * 1024) return J({ error: 'Audio size mismatch.' }, 400);
+      if (!audio.byteLength || audio.byteLength > 3 * 1024 * 1024 || (announced !== null && Number(announced) !== audio.byteLength)) return J({ error: 'Audio size mismatch or chunk too large.' }, 413);
       const r = await env.AI.run('@cf/openai/whisper', { audio: [...new Uint8Array(audio)] });
       await log(env, u.id, 'transcribe');
       return J({ text: r.text || '', words: (r.words || []).map(w => ({ word: String(w.word), start: +w.start, end: +w.end })) });
@@ -238,14 +238,15 @@ export async function onRequest({ request: req, env, params }) {
         const name = (new URL(req.url).searchParams.get('name') || 'file').replace(/[^\w.\- ]/g, '_').slice(0, 120);
         const type = (req.headers.get('content-type') || 'application/octet-stream').split(';')[0];
         if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
-        const size = Number(req.headers.get('content-length'));
-        if (!Number.isSafeInteger(size) || size <= 0 || size > MAXFILE) return J({ error: 'File must be under 50 MB.' }, 413);
+        const announced = req.headers.get('content-length');
+        if (announced !== null && (!/^\\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
+        const payload = await req.arrayBuffer();
+        const size = payload.byteLength;
+        if (size <= 0 || size > MAXFILE || (announced !== null && Number(announced) !== size)) return J({ error: 'File size is invalid or exceeds 50 MB.' }, 413);
         const reservation = await env.DB.prepare('UPDATE users SET storage_used=storage_used+? WHERE id=? AND storage_used+?<=?').bind(size,u.id,size,QUOTA).run();
         if (!reservation.meta.changes) return J({ error: 'Storage allowance is full.' }, 413);
         let id, key;
         try {
-          const payload = await req.arrayBuffer();
-          if (payload.byteLength !== size || payload.byteLength > MAXFILE) return J({ error: 'Upload size mismatch.' }, 400);
           id = rnd(12); key = `${u.id}/${id}`;
           await env.MEDIA.put(key, payload, { httpMetadata: { contentType: type } });
           await env.DB.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,0,?)').bind(id, u.id, name, type, size, key, Date.now()).run();
