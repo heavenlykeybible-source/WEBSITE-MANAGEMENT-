@@ -1,6 +1,10 @@
 name: Account 9 VideoEditor - Cloudflare Pages
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/deploy-account-09-videoeditor.yml'
+      - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
 permissions:
   contents: read
 jobs:
