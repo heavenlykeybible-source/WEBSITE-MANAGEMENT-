@@ -31,16 +31,16 @@ jobs:
           node tests/run.mjs
           node --experimental-vm-modules tests/account7-radio.mjs
           node --experimental-strip-types tests/account2-radio.mjs
-      - name: Verify Account 7 deployment and Account 2 connection
+      - name: Verify existing Account 7 Worker access
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_RADIO_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_RADIO_ACCOUNT_ID }}
         run: node heavenly-key-accounts/account-07-unverified/scripts/preflight.mjs
-      - name: Deploy Radio directly to Account 7 Cloudflare Pages
+      - name: Deploy Radio directly to existing Account 7 Worker
         working-directory: heavenly-key-accounts/account-07-unverified/source
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_RADIO_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_RADIO_ACCOUNT_ID }}
-        run: npx --yes wrangler@4.152.0 pages deploy . --project-name heavenly-key-radio --branch main
+        run: npx --yes wrangler@4.152.0 deploy --config wrangler.toml --keep-vars
       - name: Verify deployed Radio and Account 2 programme
-        run: node heavenly-key-accounts/account-07-unverified/scripts/verify-live.mjs https://heavenly-key-radio.pages.dev
+        run: node heavenly-key-accounts/account-07-unverified/scripts/verify-live.mjs https://heavenlykeyradio.heavenlykeyradio.workers.dev

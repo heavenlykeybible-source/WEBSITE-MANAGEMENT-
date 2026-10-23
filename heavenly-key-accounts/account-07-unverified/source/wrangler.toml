@@ -1,7 +1,15 @@
-name = "heavenly-key-radio"
+name = "heavenlykeyradio"
+main = "_worker.js"
 compatibility_date = "2026-10-23"
-pages_build_output_dir = "."
+keep_vars = true
+workers_dev = true
 
-# preflight.mjs reads the saved production MEDIA_PUBLIC_ORIGIN and preserves it
-# in the deployment config. RADIO_PUBLIC_API_KEY remains a Pages secret.
-# Account 2 must have the same RADIO_PUBLIC_API_KEY. No Account 4 dependency.
+[assets]
+directory = "."
+binding = "ASSETS"
+run_worker_first = ["/api/broadcast/*"]
+
+# Existing Worker secrets and variables are retained by --keep-vars.
+# Account 2 is the broadcast source; Account 4 is not involved.
+# MEDIA_PUBLIC_ORIGIN: verified Account 2 HTTPS origin.
+# RADIO_PUBLIC_API_KEY: server-only secret shared with Account 2.
