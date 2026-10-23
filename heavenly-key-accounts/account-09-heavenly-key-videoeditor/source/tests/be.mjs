@@ -78,6 +78,21 @@ const noVoiceRequest = await request('voice-synthesize', { method: 'POST', cooki
 check('Unconfigured voice service returns 503', noVoiceRequest.status === 503);
 const anonymousVoice = await request('voice-config');
 check('Anonymous voice configuration forbidden', anonymousVoice.status === 401);
+
+const noLengthUpload = await onRequest({
+  request: new Request('https://studio.example/api/media?name=sample.png',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
+    body:new Uint8Array([1,2,3,4,5])
+  }),env,params:{path:['media']}
+});
+check('Media supports absent content length',noLengthUpload.status===200);
+const noLengthWav = await onRequest({
+  request: new Request('https://studio.example/api/transcribe',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},
+    body:new Uint8Array([1,2,3,4,5])
+  }),env,params:{path:['transcribe']}
+});
+check('Transcription supports absent content length',noLengthWav.status===200);
 const logout = await request('logout', { method: 'POST', cookie: login.cookie });
 check('Logout succeeds', logout.status === 200);
 const expired = await request('me', { cookie: login.cookie });
