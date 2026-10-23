@@ -193,7 +193,7 @@ export async function onRequest({ request: req, env, params }) {
       if (!env.AI) return J({ error: 'AI is not enabled on this deployment.' }, 503);
       const announced = req.headers.get('content-length');
       if ((req.headers.get('content-type') || '').split(';')[0] !== 'audio/wav') return J({ error: 'Send a WAV file.' }, 415);
-      if (announced !== null && (!/^\\d+$/.test(announced) || Number(announced) > 3 * 1024 * 1024)) return J({ error: 'Audio chunk too large.' }, 413);
+      if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > 3 * 1024 * 1024)) return J({ error: 'Audio chunk too large.' }, 413);
       const n = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe' AND at>?").bind(u.id, Date.now() - DAY).first()).c;
       if (n >= 120) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' }, 429);
       const audio = await req.arrayBuffer();
@@ -239,7 +239,7 @@ export async function onRequest({ request: req, env, params }) {
         const type = (req.headers.get('content-type') || 'application/octet-stream').split(';')[0];
         if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
         const announced = req.headers.get('content-length');
-        if (announced !== null && (!/^\\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
+        if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
         const payload = await req.arrayBuffer();
         const size = payload.byteLength;
         if (size <= 0 || size > MAXFILE || (announced !== null && Number(announced) !== size)) return J({ error: 'File size is invalid or exceeds 50 MB.' }, 413);
