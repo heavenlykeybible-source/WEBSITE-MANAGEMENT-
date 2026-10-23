@@ -1,0 +1,100 @@
+name: Deploy Website Management to Cloudflare
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/account4-permissions-passkeys-20261023]
+    paths:
+      - 'control-room-worker.js'
+      - 'ai/**'
+      - 'security/**'
+      - 'workspace/**'
+      - 'browser-agent/**'
+      - 'tests/browser-agent*.mjs'
+      - 'cms/build.mjs'
+      - '.github/workflows/deploy.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-management-production
+  cancel-in-progress: false
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: account-4
+    steps:
+      - name: Check out the source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check Cloudflare deployment credentials
+        env:
+          CF_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ]; then
+            echo "::error::Add ACCOUNT4_CLOUDFLARE_API_TOKEN to Account 4 GitHub secrets."
+            exit 1
+          fi
+
+      - name: Confirm correct Account 4 destination
+        env:
+          CF_ACCOUNT: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CF_ACCOUNT" || { echo '::error::Missing ACCOUNT4_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
+          test "$CF_ACCOUNT" != 'cd095c096c2d5a42501e7d77cecbb34c' || { echo '::error::Account 3 destination detected; deployment blocked'; exit 1; }
+
+      - name: Verify existing Account 4 Worker and live bindings
+        run: node scripts/deploy-account4-existing.mjs --check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Integrate saved interfaces into active Worker
+        run: |
+          npm run build:cms
+          node --check control-room-worker.js
+          grep -q 'Cloudflare API tokens' control-room-worker.js
+          grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
+
+      - name: Run project tests
+        run: |
+          npm test
+          node tests/owner-passkeys.mjs
+          node tests/ai-workspace.mjs
+          node tests/native-imports.mjs
+          node tests/browser-agent.mjs
+
+      - name: Verify Account 4 owner approval interface
+        run: node tests/account4-permission-ui.mjs
+
+      - name: Install browser test dependencies
+        timeout-minutes: 4
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install chromium
+
+      - name: Verify CMS editing and preview controls
+        run: |
+          npm run test:cms-dom
+          npm run test:cms-browser
+          node tests/account4-permissions-browser.mjs
+          node tests/native-imports-browser.mjs
+          node tests/browser-agent-chromium.mjs
+
+      - name: Deploy existing Worker without changing its resources
+        run: node scripts/deploy-account4-existing.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+

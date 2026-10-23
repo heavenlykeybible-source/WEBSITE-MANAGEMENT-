@@ -1,0 +1,17 @@
+{
+  "name": "account4-website-management",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:cms": "node cms/build.mjs",
+    "test": "node tests/run.mjs",
+    "test:cms-dom": "node tests/cms-dom.mjs",
+    "test:cms-browser": "node tests/cms-browser.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/puppeteer": "1.1.0",
+    "@simplewebauthn/server": "13.2.2",
+    "esbuild": "0.25.12",
+    "linkedom": "0.18.13"
+  }
+}
