@@ -1,0 +1,14 @@
+# Static page rewrites only; API endpoints remain owned by the Worker.
+/account /account.html 200
+/fellowship /fellowship.html 200
+/grdpc-reminder /grdpc-reminder.html 200
+/groups /groups.html 200
+/grow /grow.html 200
+/heavenly-key /heavenly-key.html 200
+/messages /messages.html 200
+/missions /missions.html 200
+/prayer /prayer.html 200
+/profile /profile.html 200
+/safety /safety.html 200
+/salvation /salvation.html 200
+/spaces /spaces.html 200
