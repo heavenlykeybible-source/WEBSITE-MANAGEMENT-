@@ -1,6 +1,6 @@
 /* Exact approved artwork; one audio connection per player, never autoplay. */
 (function(){
-'use strict';if(!window.__hkApprovedPublicShell)return;if(/^(?:bible|global|community|radio|studio|control|app)\./.test(location.hostname)||/^\/(?:pages\/)?radio(?:\.html)?\/?$/.test(location.pathname)||/^\/(?:bible|community)(?:\/|$)/.test(location.pathname))return;
+'use strict';if(!window.__hkApprovedPublicShell&&location.hostname!=='radio.heavenlykey.org')return;if(/^(?:bible|global|community|studio|control|app)\./.test(location.hostname)||/^\/(?:pages\/)?radio(?:\.html)?\/?$/.test(location.pathname)||/^\/(?:bible|community)(?:\/|$)/.test(location.pathname))return;
 if(document.getElementById('hk-floating-radio'))return;
 const mount=document.getElementById('hk-radio-page-mount');
 if(!document.querySelector('link[href*="radio-approved-number-one.css"]')){const css=document.createElement('link');css.rel='stylesheet';css.href='/css/radio-approved-number-one.css?v=20261020f';document.head.append(css)}
