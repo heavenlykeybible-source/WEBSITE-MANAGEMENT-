@@ -125,6 +125,7 @@ export async function onRequest({ request: req, env, params }) {
     }
     // Multi-account gateway: credentials reside ONLY in Cloudflare's encrypted
     // AI_CONNECTIONS_JSON secret. Never return keys to browsers or logs.
+    if (['voice-config','voice-synthesize','ai-connections','ai-gateway'].includes(a) && !ROLES.has(u.role)) return J({error:'Owner or administrator permission required.'},403);
     if (a === 'voice-config' && m === 'GET') return J({available:!!(env.VOICE_TTS_API_KEY&&env.VOICE_TTS_VOICE_ID),requiresConsent:true});
     if (a === 'voice-synthesize' && m === 'POST') {
       if (!env.VOICE_TTS_API_KEY || !env.VOICE_TTS_VOICE_ID) return J({error:'Voice synthesis not configured.'},503);
