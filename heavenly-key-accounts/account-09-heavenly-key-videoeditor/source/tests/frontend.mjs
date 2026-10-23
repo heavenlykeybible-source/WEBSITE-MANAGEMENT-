@@ -13,7 +13,19 @@ for(const id of ['vf','vexp','vdl','af','aexp','autocap','login','register','log
 for(const route of ["json('projects')","json('media')","'/api/transcribe'","'/api/media?name='","json('me')"]){
   assert.ok(module.includes(route),'Missing frontend API integration: '+route);
 }
-assert.ok(html.includes('src="/integrations.js"'),'Integration script not loaded');
+for(const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']){
+  const src=readFileSync(name,'utf8'),pub=readFileSync('public/'+name,'utf8');
+  assert.equal(src,pub,'Module synchronization failed: '+name);
+  assert.ok(html.includes('src="/'+name+'"'),'Missing script tag: '+name);
+  execFileSync(process.execPath,['--check',name],{stdio:'inherit'});
+}
+const timeline=readFileSync('timeline.js','utf8');
+for(const feature of ['clipAdd','clipSplit','clipUndo','clipRedo','clipExport','clipDownload'])
+  assert.ok(timeline.includes(feature),'Timeline missing '+feature);
+const voice=readFileSync('voice-studio.js','utf8');
+assert.ok(voice.includes('/api/voice-synthesize'),'Voice synthesis API not connected');
+const enhancement=readFileSync('voice-enhance.js','utf8');
+assert.ok(enhancement.includes('enhanceDownload'),'Enhanced audio download control missing');
 assert.ok(headers.includes('Content-Security-Policy'),'Missing CSP');
 execFileSync(process.execPath,['--check','public/integrations.js'],{stdio:'inherit'});
 execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
