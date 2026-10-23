@@ -11,9 +11,10 @@ export default {
    const target=new URL(url.pathname+url.search,base);
    const headers=new Headers();headers.set('Authorization','Bearer '+env.RADIO_PUBLIC_API_KEY);if(request.headers.has('Range'))headers.set('Range',request.headers.get('Range'));
    // Account 2 verifies this server-side token; never expose it in browser assets.
-   const response=await fetch(new Request(target,{method:request.method,headers,redirect:'manual'}));
-   const h=new Headers(response.headers);h.set('Cache-Control','no-store');h.delete('set-cookie');h.delete('access-control-allow-origin');
-   return new Response(response.body,{status:response.status,headers:h});
+   let response;try{response=await fetch(new Request(target,{method:request.method,headers,redirect:'manual'}));}catch{return Response.json({error:'Broadcast engine unreachable'},{status:502,headers:{'Cache-Control':'no-store'}});}
+   if(response.status>=300&&response.status<400)return Response.json({error:'Unexpected broadcast redirect'},{status:502,headers:{'Cache-Control':'no-store'}});
+   const h=new Headers(response.headers);h.set('Cache-Control','no-store');h.delete('set-cookie');h.delete('access-control-allow-origin');h.delete('content-security-policy');
+   return new Response(request.method==='HEAD'?null:response.body,{status:response.status,headers:h});
   }
   return env.ASSETS?env.ASSETS.fetch(request):new Response('Radio assets not configured',{status:503});
  }
