@@ -1,0 +1,42 @@
+name: Inspect current Account 2 Studio source
+on:
+  workflow_dispatch:
+  push:
+    branches: [prepare/account-07-radio-20261023]
+    paths: ['.github/workflows/audit-account2-studio.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Read current deployed modules and configuration names only
+        env:
+          ACCOUNT_2_TOKEN: ${{ secrets.ACCOUNT_2_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs/promises';
+          const root='https://api.cloudflare.com/client/v4/accounts/c324d871146f8fcc5e7dcd3da057011c/workers/scripts/heavenlykey-media';
+          const headers={Authorization:'Bearer '+process.env.ACCOUNT_2_TOKEN};
+          const response=await fetch(root+'/content/v2',{headers});
+          if(!response.ok)throw Error('Source read failed: '+response.status);
+          const out='studio-source';await fs.mkdir(out);
+          const parts=[];
+          if((response.headers.get('content-type')||'').includes('multipart/form-data')){
+            const data=await response.formData();let i=0;
+            for(const[name,value]of data){if(name==='metadata')continue;const file='module-'+i++;await fs.writeFile(out+'/'+file,typeof value==='string'?value:Buffer.from(await value.arrayBuffer()));parts.push({name,file,type:value.type});}
+          }else{await fs.writeFile(out+'/main.mjs',Buffer.from(await response.arrayBuffer()));parts.push({name:response.headers.get('cf-worker-main-module-part')||'main.mjs',file:'main.mjs',type:response.headers.get('content-type')});}
+          await fs.writeFile(out+'/modules.json',JSON.stringify(parts,null,2));
+          const config=await(await fetch(root+'/settings',{headers})).json();
+          await fs.writeFile(out+'/binding-names.json',JSON.stringify(config.result.bindings.map(({name,type})=>({name,type})),null,2));
+          console.log('Saved deployed source modules and binding names. No secret values were read.');
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: account2-current-studio-source
+          path: studio-source/
+          retention-days: 1
