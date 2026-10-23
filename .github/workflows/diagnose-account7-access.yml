@@ -1,4 +1,4 @@
-name: Diagnose Account 7 Cloudflare Access
+name: Check Account 2 Radio Connection Credential
 on:
   workflow_dispatch:
   push:
@@ -21,7 +21,7 @@ jobs:
           const token=process.env.CLOUDFLARE_API_TOKEN,account=process.env.CLOUDFLARE_ACCOUNT_ID;
           if(!token||!account)throw Error('Account 7 GitHub secrets are missing');
           const sourceToken=process.env.ACCOUNT_2_TOKEN;
-          if(!sourceToken){console.log('ACCOUNT_2_TOKEN is not configured in this repository');}
+          if(!sourceToken){throw Error('Connection blocked: ACCOUNT_2_TOKEN is missing from Website Management GitHub Actions secrets. No connection or credential was changed.');}
           else for(const path of ['workers/subdomain','workers/scripts/heavenlykey-media/settings']){
             const r=await fetch('https://api.cloudflare.com/client/v4/accounts/c324d871146f8fcc5e7dcd3da057011c/'+path,{headers:{Authorization:'Bearer '+sourceToken},signal:AbortSignal.timeout(15000)});
             const d=await r.json(),v=d.result;
