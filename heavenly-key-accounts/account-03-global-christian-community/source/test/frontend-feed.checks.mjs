@@ -110,3 +110,20 @@ test('Community HTML navigation and referenced scripts/styles/images exist',asyn
 });
 
 
+
+test('home feed automatically follows its cursor once, keeps manual retry, and disconnects the old observer on refresh',async()=>{
+ const source=readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),start=source.indexOf('async function mountFeed('),end=source.indexOf('function feedTabs(',start),requests=[],observers=[],host=new Node('section');
+ class FeedNode extends Node{
+  get isConnected(){return this===host||!!this.parentElement;}
+  getAttribute(k){return this.attributes[k];}
+  addEventListener(name,fn){this[name]=fn;}
+ }
+ const context={URLSearchParams,location:{search:''},page:'home',root:host,el:(tag,text)=>new FeedNode(tag,text),api:url=>new Promise(resolve=>requests.push({url,resolve})),renderPost:p=>{const n=new FeedNode('article');n.dataset.postId=String(p.post_id);return n;},IntersectionObserver:class{constructor(fn){this.fn=fn;observers.push(this);}observe(node){this.node=node;}disconnect(){this.disconnected=true;}}};
+ host.getAttribute=k=>host.attributes[k];
+ const mount=vm.runInNewContext(source.slice(start,end)+'\nmountFeed;',context),initial=mount(host);
+ requests[0].resolve({items:[{post_id:5}],nextBefore:5});await initial;assert.equal(observers.length,1);
+ const observer=observers[0];observer.fn([{isIntersecting:true}]);assert(observer.disconnected);assert(requests[1].url.includes('before=5'));assert.equal(requests.length,2);
+ observer.fn([{isIntersecting:true}]);assert.equal(requests.length,2);
+ requests[1].resolve({items:[{post_id:4}],nextBefore:4});await new Promise(r=>setImmediate(r));assert.equal(host.querySelector('[data-feed]').children.length,2);
+ const second=observers[1],refresh=mount(host,'article');assert(second.disconnected);requests[2].resolve({items:[]});await refresh;assert.equal(host.dataset.nextBefore,'');assert.equal(host.querySelector('[data-load-more]'),null);
+});
