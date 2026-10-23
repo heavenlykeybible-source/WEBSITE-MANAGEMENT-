@@ -29,4 +29,10 @@ assert.ok(enhancement.includes('enhanceDownload'),'Enhanced audio download contr
 assert.ok(headers.includes('Content-Security-Policy'),'Missing CSP');
 execFileSync(process.execPath,['--check','public/integrations.js'],{stdio:'inherit'});
 execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
+const timelineScript=readFileSync('timeline.js','utf8');
+assert.ok(timelineScript.includes('window.hkTimeline='),'Timeline state bridge must exist');
+assert.ok(html.includes('timeline:window.hkTimeline?.getClips()'),'Project snapshots must contain timeline');
+assert.ok(html.includes('restoreClips(d.timeline||[])'),'Local projects must restore timeline');
+assert.ok(module.includes('restoreClips(state.timeline||[])'),'Cloud projects must restore timeline');
+assert.ok(timelineScript.includes('rec.pause()') && timelineScript.includes('rec.resume()'),'Export recorder must skip clip seeking');
 console.log('PASS frontend integration wiring, duplicate source and security headers');
