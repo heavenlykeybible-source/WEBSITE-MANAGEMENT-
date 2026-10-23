@@ -74,6 +74,7 @@ jobs:
           node tests/ai-workspace.mjs
           node tests/native-imports.mjs
           node tests/browser-agent.mjs
+          node tests/domains.mjs
 
       - name: Verify Account 4 owner approval interface
         run: node tests/account4-permission-ui.mjs

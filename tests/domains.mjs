@@ -1,0 +1,16 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';import {DatabaseSync} from 'node:sqlite';
+const temp=new URL('./domains-test-worker.mjs',import.meta.url);fs.writeFileSync(temp,fs.readFileSync('control-room-worker.js','utf8')+'\nexport {seal,inspectHeavenlyDomains,domainWorkspaceRoutes};');const original=globalThis.fetch;
+try{
+const w=await import(temp.href),raw=new DatabaseSync(':memory:');raw.exec(fs.readFileSync('schema.sql','utf8'));
+const DB={prepare(sql){const q=raw.prepare(sql);let v=[];return {bind(...a){v=a;return this},async first(){return q.get(...v)||null},async all(){return {results:q.all(...v)}},async run(){q.run(...v);return {meta:{changes:1}}}}}};
+const env={DB,VAULT_KEY:'fixture-domain-vault-key-long'},account='a'.repeat(32),zone='b'.repeat(32);raw.prepare('INSERT INTO cf_connections(id,label,account_id,token_enc)VALUES(?,?,?,?)').run(6,'Cloudflare Account 1',account,await w.seal(env,'fixture-domain-token'));
+let denied=false,foreign=false,calls=0;
+globalThis.fetch=async(url,init)=>{calls++;assert.equal(init.redirect,'manual');assert.ok(!init.method||init.method==='GET');assert.equal(init.headers.authorization,'Bearer fixture-domain-token');if(denied)return Response.json({success:false},{status:403});
+ if(url.includes('/zones?'))return Response.json({success:true,result:[{id:zone,name:'heavenlykey.org',status:'active',account:{id:foreign?'c'.repeat(32):account}}]});
+ if(url.includes('/dns_records?')){const name=new URL(url).searchParams.get('name');assert.ok(['radio','controlroom','meeting','editor'].some(s=>name===s+'.heavenlykey.org'));return Response.json({success:true,result:[{id:'record',type:'CNAME',name,content:'origin.example.com',proxied:true}],result_info:{total_pages:1}});}
+ if(url.endsWith('/workers/domains'))return Response.json({success:true,result:[{hostname:'radio.heavenlykey.org',service:'radio-gateway',enabled:true}]});throw Error('Unexpected network request');};
+const report=await w.inspectHeavenlyDomains(env,6);assert.equal(report.hosts.length,4);assert.equal(report.hosts.find(h=>h.hostname==='radio.heavenlykey.org').workers[0].service,'radio-gateway');assert.equal(calls,6);assert.ok(!JSON.stringify(report).includes('fixture-domain-token'));assert.match(report.notice,/No DNS/);
+const saved=raw.prepare('SELECT token_enc FROM cf_connections WHERE id=6').get().token_enc;denied=true;await assert.rejects(w.inspectHeavenlyDomains(env,6),e=>e.status===403&&e.message.includes('Zone: Read'));assert.equal(raw.prepare('SELECT token_enc FROM cf_connections WHERE id=6').get().token_enc,saved);denied=false;foreign=true;await assert.rejects(w.inspectHeavenlyDomains(env,6),e=>e.status===403);
+await assert.rejects(w.domainWorkspaceRoutes(new Request('https://room/api/owner/domains/inspect?connection=6'),env,{role:'admin',kind:'staff'},'domains/inspect','GET'),e=>e.status===403);
+raw.close();console.log('PASS domain inspection: exact zone/account, four approved hosts, read-only requests, owner isolation, wrong-account denial, permission failures preserve credentials, no token disclosure');
+}finally{globalThis.fetch=original;fs.unlinkSync(temp);}
