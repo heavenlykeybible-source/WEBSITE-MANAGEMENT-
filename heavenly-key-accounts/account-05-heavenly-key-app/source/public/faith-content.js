@@ -2,7 +2,7 @@
 // Only use the historical text. Modern recordings, performances, remixes,
 // translations and arrangements have separate rights and are NOT included.
 // See the official statement of faith before adding any new item.
-export const STATEMENT_OF_FAITH="https://www.heavenlykey.org/pages/what-we-believe.html";
+export const STATEMENT_OF_FAITH="https://www.heavenlykey.org/statement-of-faith";
 export const HYMN_TEXTS=Object.freeze([
   {
     title:"Amazing Grace",author:"John Newton",theme:"Salvation by God's grace",
