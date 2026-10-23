@@ -24,7 +24,7 @@ function syncMediaSession(playing){
 }
 function display(playing){$('.hkr-launch-mode').textContent=playing?'PLAYING':'RADIO';root.classList.toggle('hkr-playing',playing);button.textContent=playing?'❚❚':'▶';button.setAttribute('aria-label',playing?'Pause radio':'Play radio');syncMediaSession(playing);if(playing){notice.textContent='Playing';retries=0;clearTimeout(retry)}}
 const bind=window.HKRadioPlayback||function(audio,render){let playing=false;const sync=()=>render(playing&&!audio.paused&&!audio.ended&&!audio.error);audio.addEventListener('playing',()=>{playing=true;sync()});['pause','ended','waiting','stalled','seeking','emptied','error','abort','loadstart'].forEach(e=>audio.addEventListener(e,()=>{playing=false;sync()}));sync()};
-function safeUrl(item){const u=new URL(item.url,location.origin);if(u.protocol!=='https:'&&u.origin!==location.origin)throw Error('Radio source is unavailable.');return u.href}
+function safeUrl(item){const u=new URL(item.url,window.HK_RADIO_API_ORIGIN||location.origin);if(u.protocol!=='https:'&&u.origin!==location.origin)throw Error('Radio source is unavailable.');return u.href}
 function release(){audio.pause();audio.removeAttribute('src');audio.load();display(false)}
 function stop(){desired=false;generation++;clearTimeout(poll);clearTimeout(retry);release();notice.textContent='Stopped. Tap Play to listen.'}
 function schedule(){clearTimeout(poll);if(desired)poll=setTimeout(()=>refresh(true).catch(()=>{}),30000)}
