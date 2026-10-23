@@ -20,7 +20,7 @@ self.addEventListener("fetch", event => {
  const isScripture = url.pathname.startsWith(PREFIX+"data/kjv/");
  const aliases={"/kingdom-quest":"kingdom-quest.html","/dictionary":"study-extensions.html","/concordance":"study-extensions.html","/study":"study-extensions.html","/daily-routine":"study-extensions.html"};
  const base=PREFIX.endsWith("/")?PREFIX.slice(0,-1):PREFIX;
- const relative=url.pathname.startsWith(base)?url.pathname.slice(base.length):url.pathname;
+ const relative=url.pathname===base?"/":url.pathname.startsWith(base+"/")?url.pathname.slice(base.length):url.pathname;
  const isShell = SHELL_PATHS.has(url.pathname)||Object.hasOwn(aliases,relative);
  if(!isScripture&&!isShell&&!isAnnotation)return;
  event.respondWith((async()=>{
