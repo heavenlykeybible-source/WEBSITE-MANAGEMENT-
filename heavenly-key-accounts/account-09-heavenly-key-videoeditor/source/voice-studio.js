@@ -3,7 +3,7 @@
   const panel=document.createElement('section');
   panel.className='panel';panel.style.marginTop='16px';
   panel.innerHTML='<h2>Voice Studio</h2><p>Convert speech to text using the existing Audio Editor transcription feature, or generate speech using a configured voice.</p><label for="voiceText">Text to speech</label><textarea id="voiceText" maxlength="1500" rows="5" placeholder="Enter your script"></textarea><label><input id="voiceConsent" type="checkbox"> I own this voice or have explicit permission to use it.</label><button id="voiceGenerate" type="button">Generate voice audio</button><p id="voiceStatus" role="status"></p><audio id="voicePlayer" controls style="width:100%"></audio><a id="voiceDownload" download="heavenly-key-voice.mp3" hidden>Download generated audio</a>';
-  (document.querySelector('main')||document.body).append(panel);
+  document.getElementById('audio').append(panel);
   const $=id=>document.getElementById(id);let url;
   $('voiceGenerate').onclick=async()=>{
     if(!$('voiceConsent').checked){$('voiceStatus').textContent='Confirm that you are authorized to use the voice.';return}
