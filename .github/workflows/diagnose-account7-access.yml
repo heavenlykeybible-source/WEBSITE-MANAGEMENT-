@@ -19,9 +19,10 @@ jobs:
           node --input-type=module <<'JS'
           const token=process.env.CLOUDFLARE_API_TOKEN,account=process.env.CLOUDFLARE_ACCOUNT_ID;
           if(!token||!account)throw Error('Account 7 GitHub secrets are missing');
-          for(const [service,path] of [['Pages','pages/projects'],['Workers','workers/scripts']]){
+          for(const path of ['workers/scripts/heavenlykeyradio/settings','workers/scripts/heavenlykeyradio/subdomain','workers/subdomain','workers/domains']){
             const r=await fetch('https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(account)+'/'+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000)});
-            const d=await r.json();
-            console.log(JSON.stringify({service,http:r.status,success:d.success,errorCodes:d.errors?.map(e=>e.code),resources:d.success?d.result?.map(x=>x.name||x.id):undefined}));
+            const d=await r.json(),v=d.result;
+            const result=path.endsWith('/settings')?{bindings:v?.bindings?.map(b=>({name:b.name,type:b.type,...(b.type==='plain_text'&&/ORIGIN|URL/.test(b.name)?{text:b.text}:{})})),compatibility_date:v?.compatibility_date,assets:v?.assets}:v;
+            console.log(JSON.stringify({path,http:r.status,success:d.success,errorCodes:d.errors?.map(e=>e.code),result}));
           }
           JS
