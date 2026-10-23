@@ -23,3 +23,8 @@ Deployment blockers:
 Feature honesty: Video export is WebM; MP4 export, full nonlinear multitrack composition, AI text-to-video and natural-language AI editing are not implemented in this release.
 
 Account 4 is not used for this path.
+
+
+## Latest secured staging release (23 October 2026)
+
+Latest complete ZIP: `heavenlykey-videoeditor-account9-final-deployment-ready.zip` (provided in chat). SHA-256: `b2f7af11f09ed130e001fc77eb1bfb900cdc779c9b129e6798e69cb77da3597e`, contains 39 files including separately staged static `public/` assets. 53/53 backend integration checks and preflight passed locally. The workflow was hardened in GitHub commit `fbc9ac40` to deploy ONLY `public/`, not source/test/migration files. The package has **not yet** been copied to the GitHub source directory and has **not** been live-deployed. Owner/Admin provisioning, D1/R2/AI live verification and real browser end-to-end tests are required before launch. Do not use the earlier ZIP hash above to verify this latest package.
