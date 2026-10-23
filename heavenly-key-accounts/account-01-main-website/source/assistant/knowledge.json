@@ -247,6 +247,8 @@
         "title": "Hell",
         "summary": "That Hell fire is a place of everlasting punishment where sinners (all who do not have their names in the Book of Life) will suffer torment for ever and ever. (Matthew 25:46; Luke 16:19-31.)"
       }
-    ]
+    ],
+    "canonicalFeed": "/doctrine/approved.json",
+    "synchronization": "Refresh canonical feed before official doctrinal responses when backend supports it; validated server-side fallback to pinned approved version on failure."
   }
 }
