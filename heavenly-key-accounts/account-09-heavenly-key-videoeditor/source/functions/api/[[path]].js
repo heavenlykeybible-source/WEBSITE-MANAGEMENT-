@@ -1,0 +1,172 @@
+const QUOTA = 500 * 1024 * 1024, MAXFILE = 50 * 1024 * 1024, DAY = 86400000;
+const enc = new TextEncoder();
+const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+const rnd = n => hex(crypto.getRandomValues(new Uint8Array(n)));
+const sha = async s => hex(await crypto.subtle.digest('SHA-256', enc.encode(s)));
+const J = (o, s = 200, h = {}) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...h } });
+async function pbkdf2(pw, salt) {
+  const k = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+  return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: 100000 }, k, 256));
+}
+const ROLES = new Set(['owner', 'admin']);
+const cookie = (t, age) => `hk=${t}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${age}`;
+async function user(req, env) {
+  const m = (req.headers.get('cookie') || '').match(/(?:^|; )hk=([a-f0-9]{64})/);
+  if (!m) return null;
+  const r = await env.DB.prepare('SELECT u.id,u.email,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').bind(await sha(m[1]), Date.now()).first();
+  return r || null;
+}
+const log = (env, uid, a) => env.DB.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').bind(uid, a, Date.now()).run();
+const body = async req => {
+  try {
+    const raw = await req.text();
+    if (raw.length > 1100000) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+};
+
+export async function onRequest({ request: req, env, params }) {
+  const p = [].concat(params.path || []), m = req.method, a = p[0];
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(m)) {
+    const origin = req.headers.get('origin');
+    if (origin && origin !== new URL(req.url).origin) return J({ error: 'Cross-origin request blocked' }, 403);
+  }
+  if (m !== 'GET' && m !== 'HEAD' && req.headers.get('x-requested-with') !== 'hk') return J({ error: 'Blocked request' }, 403);
+  try {
+    if (a === 'register' && m === 'POST') {
+      const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid registration data.' }, 400);
+      const email = String(b.email || '').trim().toLowerCase(), pw = String(b.password || '');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return J({ error: 'Enter a valid email address.' }, 400);
+      if (pw.length < 12 || pw.length > 200) return J({ error: 'Password must be at least 12 characters.' }, 400);
+      if (['emmanuelmeta247@gmail.com'].includes(email)) return J({ error: 'This address requires owner provisioning.' }, 403);
+      if (await env.DB.prepare('SELECT 1 x FROM users WHERE email=?').bind(email).first()) return J({ error: 'That email is already registered.' }, 409);
+      const id = rnd(16), salt = rnd(16);
+      await env.DB.prepare('INSERT INTO users(id,email,pass_hash,salt,created_at) VALUES(?,?,?,?,?)').bind(id, email, await pbkdf2(pw, salt), salt, Date.now()).run();
+      await log(env, id, 'register');
+      return J({ ok: true });
+    }
+    if (a === 'login' && m === 'POST') {
+      const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid login data.' }, 400);
+      const email = String(b.email || '').trim().toLowerCase();
+      const fails = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='login_fail' AND at>?").bind(email, Date.now() - 900000).first()).c;
+      if (fails >= 10) return J({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
+      const u = await env.DB.prepare('SELECT * FROM users WHERE email=?').bind(email).first();
+      const h = await pbkdf2(String(b?.password || ''), u ? u.salt : '0'.repeat(32));
+      if (!u || h !== u.pass_hash) { await log(env, email, 'login_fail'); return J({ error: 'Wrong email or password.' }, 401); }
+      const t = rnd(32);
+      await env.DB.prepare('INSERT INTO sessions VALUES(?,?,?)').bind(await sha(t), u.id, Date.now() + 30 * DAY).run();
+      await log(env, u.id, 'login');
+      return J({ ok: true, email: u.email, role: u.role || 'member' }, 200, { 'set-cookie': cookie(t, 30 * 86400) });
+    }
+    if (a === 'logout' && m === 'POST') {
+      const c = (req.headers.get('cookie') || '').match(/(?:^|; )hk=([a-f0-9]{64})/);
+      if (c) await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha(c[1])).run();
+      return J({ ok: true }, 200, { 'set-cookie': cookie('', 0) });
+    }
+    const u = await user(req, env);
+    if (a === 'me' && m === 'GET') return u ? J({ email: u.email, role: u.role || 'member' }) : J({ error: 'Not signed in' }, 401);
+    if (!u) return J({ error: 'Please sign in.' }, 401);
+
+    if (a === 'account' && m === 'DELETE') {
+      if (ROLES.has(u.role)) return J({ error: 'Privileged accounts require an administrator-assisted deletion.' }, 403);
+      const b = await body(req), row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
+      if (!row || await pbkdf2(String(b?.password || ''), row.salt) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
+      const files = (await env.DB.prepare('SELECT r2_key FROM media WHERE user_id=? AND deleted=0').bind(u.id).all()).results;
+      for (const x of files) await env.MEDIA.delete(x.r2_key);
+      for (const t of ['media', 'projects', 'sessions']) await env.DB.prepare(`DELETE FROM ${t} WHERE user_id=?`).bind(u.id).run();
+      await env.DB.prepare('DELETE FROM audit WHERE user_id=?').bind(u.id).run();
+      await env.DB.prepare('DELETE FROM users WHERE id=?').bind(u.id).run();
+      return J({ ok: true }, 200, { 'set-cookie': cookie('', 0) });
+    }
+    if (a === 'transcribe' && m === 'POST') {
+      if (!env.AI) return J({ error: 'AI is not enabled on this deployment.' }, 503);
+      const size = Number(req.headers.get('content-length'));
+      if ((req.headers.get('content-type') || '').split(';')[0] !== 'audio/wav') return J({ error: 'Send a WAV file.' }, 415);
+      if (!Number.isSafeInteger(size) || size <= 0 || size > 3 * 1024 * 1024) return J({ error: 'Audio chunk too large.' }, 413);
+      const n = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe' AND at>?").bind(u.id, Date.now() - DAY).first()).c;
+      if (n >= 120) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' }, 429);
+      const audio = await req.arrayBuffer();
+      if (audio.byteLength !== size || audio.byteLength > 3 * 1024 * 1024) return J({ error: 'Audio size mismatch.' }, 400);
+      const r = await env.AI.run('@cf/openai/whisper', { audio: [...new Uint8Array(audio)] });
+      await log(env, u.id, 'transcribe');
+      return J({ text: r.text || '', words: (r.words || []).map(w => ({ word: String(w.word), start: +w.start, end: +w.end })) });
+    }
+    if (a === 'projects') {
+      if (!p[1] && m === 'GET') return J((await env.DB.prepare('SELECT id,name,updated_at FROM projects WHERE user_id=? ORDER BY updated_at DESC LIMIT 200').bind(u.id).all()).results);
+      if (!p[1] && m === 'POST') {
+        const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid project data.' }, 400);
+        const d = JSON.stringify(b?.data ?? {}), name = String(b?.name || 'Untitled').slice(0, 100);
+        if (!d || d.length > 1e6) return J({ error: 'Project is too large.' }, 413);
+        const id = rnd(12);
+        await env.DB.prepare('INSERT INTO projects VALUES(?,?,?,?,?)').bind(id, u.id, name, d, Date.now()).run();
+        return J({ id });
+      }
+      if (p[1] && m === 'GET') {
+        const r = await env.DB.prepare('SELECT id,name,data,updated_at FROM projects WHERE id=? AND user_id=?').bind(p[1], u.id).first();
+        return r ? J({ ...r, data: JSON.parse(r.data) }) : J({ error: 'Not found' }, 404);
+      }
+      if (p[1] && m === 'PUT') {
+        const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid project data.' }, 400);
+        const d = JSON.stringify(b?.data ?? {});
+        if (!d || d.length > 1e6) return J({ error: 'Project is too large.' }, 413);
+        const r = await env.DB.prepare('UPDATE projects SET name=?,data=?,updated_at=? WHERE id=? AND user_id=?').bind(String(b?.name || 'Untitled').slice(0, 100), d, Date.now(), p[1], u.id).run();
+        return r.meta.changes ? J({ ok: true }) : J({ error: 'Not found' }, 404);
+      }
+      if (p[1] && m === 'DELETE') {
+        await env.DB.prepare('DELETE FROM projects WHERE id=? AND user_id=?').bind(p[1], u.id).run();
+        return J({ ok: true });
+      }
+    }
+    if (a === 'media') {
+      if (!p[1] && m === 'GET') {
+        const l = (await env.DB.prepare('SELECT id,name,type,size,created_at FROM media WHERE user_id=? AND deleted=0 ORDER BY created_at DESC LIMIT 500').bind(u.id).all()).results;
+        const used = (await env.DB.prepare('SELECT storage_used s FROM users WHERE id=?').bind(u.id).first()).s;
+        return J({ items: l, used, quota: QUOTA });
+      }
+      if (!p[1] && m === 'POST') {
+        const name = (new URL(req.url).searchParams.get('name') || 'file').replace(/[^\w.\- ]/g, '_').slice(0, 120);
+        const type = (req.headers.get('content-type') || 'application/octet-stream').split(';')[0];
+        if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
+        const size = Number(req.headers.get('content-length'));
+        if (!Number.isSafeInteger(size) || size <= 0 || size > MAXFILE) return J({ error: 'File must be under 50 MB.' }, 413);
+        const reservation = await env.DB.prepare('UPDATE users SET storage_used=storage_used+? WHERE id=? AND storage_used+?<=?').bind(size,u.id,size,QUOTA).run();
+        if (!reservation.meta.changes) return J({ error: 'Storage allowance is full.' }, 413);
+        let id, key;
+        try {
+          const payload = await req.arrayBuffer();
+          if (payload.byteLength !== size || payload.byteLength > MAXFILE) return J({ error: 'Upload size mismatch.' }, 400);
+          id = rnd(12); key = `${u.id}/${id}`;
+          await env.MEDIA.put(key, payload, { httpMetadata: { contentType: type } });
+          await env.DB.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,0,?)').bind(id, u.id, name, type, size, key, Date.now()).run();
+          return J({ id });
+        } catch (e) {
+          if (key) await env.MEDIA.delete(key).catch(() => {});
+          return J({ error: 'Upload failed; no storage was charged.' }, 500);
+        } finally {
+          if (!id || !key || !(await env.DB.prepare('SELECT 1 x FROM media WHERE id=? AND user_id=?').bind(id||'',u.id).first())) {
+            await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(size,u.id).run();
+          }
+        }
+      }
+      if (p[1] && m === 'GET') {
+        const r = await env.DB.prepare('SELECT * FROM media WHERE id=? AND user_id=? AND deleted=0').bind(p[1], u.id).first();
+        if (!r) return J({ error: 'Not found' }, 404);
+        const o = await env.MEDIA.get(r.r2_key);
+        return o ? new Response(o.body, { headers: { 'content-type': r.type, 'content-disposition': `inline; filename="${String(r.name).replace(/[\r\n"\\]/g, '_')}"`, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-security-policy': "sandbox; default-src 'none'" } }) : J({ error: 'Missing file' }, 404);
+      }
+      if (p[1] && m === 'DELETE') {
+        const r = await env.DB.prepare('SELECT r2_key FROM media WHERE id=? AND user_id=?').bind(p[1], u.id).first();
+        if (r) {
+          await env.MEDIA.delete(r.r2_key);
+          const saved = await env.DB.prepare('UPDATE media SET deleted=1 WHERE id=? AND user_id=? AND deleted=0').bind(p[1],u.id).run();
+          if (saved.meta.changes) {
+            const sizeRow = await env.DB.prepare('SELECT size FROM media WHERE id=? AND user_id=?').bind(p[1],u.id).first();
+            await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(sizeRow.size,u.id).run();
+          }
+        }
+        return J({ ok: true });
+      }
+    }
+    return J({ error: 'Not found' }, 404);
+  } catch (e) { return J({ error: 'Server error. Please try again.' }, 500); }
+}
