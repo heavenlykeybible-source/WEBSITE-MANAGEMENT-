@@ -1,3 +1,0 @@
-# Verified Scripture colour annotations
-
-Place per-book JSON files here, named GEN.json, MAT.json, etc. Format: `{ "3": { "16": [{"type":"jesus","start":0,"end":15}] } }`. Offsets are UTF-16 JavaScript string indices into the **unchanged local KJV verse text**. Allowed types: `jesus` (red), `god` (blue), `reference` (green). Each span must be independently verified against the exact KJV verse; never infer speakers from punctuation. Unannotated text remains unchanged. The green reference type is for separately sourced reference text and must not be guessed from Scripture. No annotation data has yet been validated or imported.

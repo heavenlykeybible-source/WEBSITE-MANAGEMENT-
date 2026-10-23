@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /pages/admin.html
-Disallow: /pages/bible-music-admin.html
-
-Sitemap: https://heavenlykey.org/sitemap.xml

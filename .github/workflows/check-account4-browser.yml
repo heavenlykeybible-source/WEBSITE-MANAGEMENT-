@@ -1,0 +1,20 @@
+name: Check Account 4 browser runtime access
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/account4-permissions-passkeys-20261023]
+    paths: ['.github/workflows/check-account4-browser.yml','scripts/browser/preflight.mjs']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: node scripts/browser/preflight.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}

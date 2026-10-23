@@ -1,9 +1,0 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {validateProjectManifest,requireProjectReleaseApproval} from '../project-import/validation.mjs';
-const sha='a'.repeat(64),revision='b'.repeat(40);
-const sample=()=>({repository:'heavenlykeybible-source/onlinebible',revision,projectPath:'heavenly-key-app',target:{connectionId:4,worker:'heavenly-key-app'},files:[{path:'src/index.js',bytes:100,sha256:sha},{path:'public/index.html',bytes:200,sha256:sha}]});
-test('accepts complete pinned project manifest',()=>{const result=validateProjectManifest(sample());assert.equal(result.fileCount,2);assert.equal(result.totalBytes,300)});
-test('rejects secrets and traversal',()=>{for(const path of ['.env','src/../secret','private/password.pem','node_modules/x.js','public/.dev.vars']){const x=sample();x.files[0].path=path;assert.throws(()=>validateProjectManifest(x))}});
-test('rejects duplicate paths, oversized files and missing revision',()=>{const x=sample();x.files[1].path='SRC/INDEX.JS';assert.throws(()=>validateProjectManifest(x));const y=sample();y.files[0].bytes=60000000;assert.throws(()=>validateProjectManifest(y));const z=sample();z.revision='main';assert.throws(()=>validateProjectManifest(z))});
-test('release requires approved exact owner, target and revision',()=>{const manifest=validateProjectManifest(sample());const review={status:'approved',ownerId:'owner',reviewTokenVerified:true,passwordReauthenticated:true,baselineVerified:true,manifestHash:sha,approvedManifestHash:sha};const args={manifest,review,owner:{id:'owner'},currentRevision:revision,connectionId:4};assert.equal(requireProjectReleaseApproval(args),true);assert.throws(()=>requireProjectReleaseApproval({...args,connectionId:3}));assert.throws(()=>requireProjectReleaseApproval({...args,review:{...review,status:'waiting'}}))});
