@@ -37,4 +37,4 @@ $('pcloud').onclick=async()=>{try{const d=await api('projects','POST',{name:$('p
 for(const act of ['login','register'])$(act).onclick=async()=>{try{await api(act,'POST',{email:$('email').value,password:$('password').value});$('authmsg').textContent=act==='login'?'Signed in successfully.':'Account created. Please sign in.'}catch(e){$('authmsg').textContent=e.message}};
 $('logout').onclick=async()=>{try{await api('logout','POST');$('authmsg').textContent='Signed out.'}catch(e){$('authmsg').textContent=e.message}};
 $('autocap').onclick=()=>{$('vm').textContent='Automatic captions require a signed-in account, a WAV audio chunk, and a configured Cloudflare AI binding. Manual SRT captions are available now.'};
-</script><script src="/integrations.js" defer></script></body></html>
+</script><script src="/integrations.js" defer></script><script src="/ai-tools.js" defer></script></body></html>
