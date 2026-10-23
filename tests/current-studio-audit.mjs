@@ -7,6 +7,7 @@ const sourcePath=process.argv[2];
 if(!sourcePath)throw Error('Pass the deployed Studio module path.');
 const context=vm.createContext({crypto,Request,Response,Headers,URL,TextEncoder,TextDecoder,AbortSignal,console,btoa,atob,fetch:()=>{throw Error('External calls are disabled during studio fixture checks')},setTimeout,clearTimeout});
 const repaired=repairStudioSource(fs.readFileSync(sourcePath,'utf8'));
+assert.equal(repairStudioSource(repaired.source).source,repaired.source,'Repairs must be safe to rerun');
 const module=new vm.SourceTextModule(repaired.source+'\nexport {engine,assets};',{context});
 await module.link(()=>{throw Error('Unexpected external source module')});await module.evaluate();
 const {assets,engine}=module.namespace,worker=module.namespace.default;
@@ -25,6 +26,7 @@ env.MEDIA_R2={
 const origin='https://studio.example';
 async function request(path,{method='GET',body,cookie,originHeader,raw}={}){const headers={};if(body!==undefined)headers['Content-Type']=raw?'audio/mpeg':'application/json';if(cookie)headers.cookie=cookie;if(originHeader)headers.origin=originHeader;return worker.fetch(new Request(origin+path,{method,headers,...(body!==undefined?{body:raw?body:JSON.stringify(body)}:{})}),env,{});}
 let response=await request('/');assert.equal(response.status,200);assert.match(await response.text(),/Sign in|Welcome back/);
+response=await request('/pages/admin');assert.equal(response.status,303);assert.equal(response.headers.get('location'),origin+'/#live');
 assert.equal((await request('/api/media-engine/capabilities')).status,401);
 assert.equal((await request('/auth/password',{method:'POST',body:{user:'fixture-owner',pass:'fixture-password'},originHeader:'https://attacker.example'})).status,403);
 assert.equal((await request('/auth/password',{method:'POST',body:{user:'fixture-owner',pass:'wrong'},originHeader:origin})).status,401);
