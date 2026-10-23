@@ -6,6 +6,9 @@ on:
     paths:
       - '.github/workflows/deploy-account-09-videoeditor.yml'
       - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
+concurrency:
+  group: account9-cloudflare-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
