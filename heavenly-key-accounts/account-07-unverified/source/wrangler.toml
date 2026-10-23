@@ -1,0 +1,10 @@
+name = "heavenly-key-radio"
+compatibility_date = "2026-10-23"
+pages_build_output_dir = "."
+
+# Requires both Workers to be in the same Cloudflare account.
+# If Account 2 and Account 7 are in different accounts, this binding cannot connect them;
+# use a verified authenticated public API endpoint instead. Do not invent a Studio hostname.
+[[services]]
+binding = "MEDIA_SERVICE"
+service = "heavenlykey-media"
