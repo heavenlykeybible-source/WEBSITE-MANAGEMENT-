@@ -1,6 +1,9 @@
 name: Connect Account 7 Radio to Account 2
 on:
   workflow_dispatch:
+  push:
+    branches: [prepare/account-07-radio-20261023]
+    paths: ['.github/workflows/connect-account7-radio.yml']
 permissions:
   contents: read
 concurrency:
@@ -25,4 +28,5 @@ jobs:
           CLOUDFLARE_RADIO_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_RADIO_ACCOUNT_ID }}
           CLOUDFLARE_RADIO_API_TOKEN: ${{ secrets.CLOUDFLARE_RADIO_API_TOKEN }}
           RADIO_PUBLIC_API_KEY: ${{ secrets.RADIO_PUBLIC_API_KEY }}
+          OWNER_APPROVED_RADIO_KEY_ROTATION: 'true'
         run: node scripts/radio/connect-source.mjs

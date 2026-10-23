@@ -58,12 +58,14 @@ console.log('Existing source entry point: '+main);
 
 const keyExists = (targetSettings) => (targetSettings.bindings||[]).some(b=>b.name==='RADIO_PUBLIC_API_KEY');
 let key = process.env.RADIO_PUBLIC_API_KEY;
-if (keyExists(beforeSource)!==keyExists(beforeRadio) && !key) throw Error('One side already has a radio key. Supply the same key as RADIO_PUBLIC_API_KEY in GitHub secrets; existing keys will not be rotated.');
+const rotate = process.env.OWNER_APPROVED_RADIO_KEY_ROTATION === 'true';
+if (rotate) key = randomBytes(32).toString('base64url');
+if (!rotate && keyExists(beforeSource)!==keyExists(beforeRadio) && !key) throw Error('One side already has a radio key. Supply the same key as RADIO_PUBLIC_API_KEY in GitHub secrets; existing keys will not be rotated.');
 if (!keyExists(beforeSource) && !keyExists(beforeRadio)) key ||= randomBytes(32).toString('base64url');
 if(key)console.log('::add-mask::'+key);
 
 // For an existing supplied key, prove it is accepted before touching either side.
-if(keyExists(beforeSource) && key && main==='hk-radio-listener-entry.mjs') {
+if(!rotate && keyExists(beforeSource) && key && main==='hk-radio-listener-entry.mjs') {
   const probe=await fetch(origin+'/api/broadcast/programme?channel=radio',{headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
   if(!probe.ok)throw Error('The supplied shared radio key was not accepted by Account 2. Existing credentials were kept.');
 }
@@ -84,8 +86,7 @@ if(main!=='hk-radio-listener-entry.mjs') {
   // Content-only update preserves runtime settings, bindings and stored assets.
   await api(source, endpoint(source,'/content'), {method:'PUT',headers:{'CF-WORKER-MAIN-MODULE-PART':wrapper},body:modules});
 }
-if(!keyExists(beforeRadio))await putSecret(radio,'RADIO_PUBLIC_API_KEY',key);
-if(!keyExists(beforeSource)) await putSecret(source,'RADIO_PUBLIC_API_KEY',key);
+if(rotate || !keyExists(beforeSource)) await putSecret(source,'RADIO_PUBLIC_API_KEY',key);
 if(key){
  let programmeResponse;
  for(let attempt=0;attempt<6;attempt++){
@@ -97,6 +98,7 @@ if(key){
  const programme=await programmeResponse.json();
  if(!Array.isArray(programme.items))throw Error('Account 2 returned an unexpected programme response.');
 }
+if(rotate || !keyExists(beforeRadio))await putSecret(radio,'RADIO_PUBLIC_API_KEY',key);
 if(!(beforeRadio.bindings||[]).some(b=>b.name==='MEDIA_PUBLIC_ORIGIN'))await putSecret(radio,'MEDIA_PUBLIC_ORIGIN',origin);
 else if(beforeRadio.bindings.find(b=>b.name==='MEDIA_PUBLIC_ORIGIN')?.type==='plain_text' && beforeRadio.bindings.find(b=>b.name==='MEDIA_PUBLIC_ORIGIN')?.text!==origin)throw Error('A different source origin already exists. It was preserved.');
 const afterSource=await settings(source);
