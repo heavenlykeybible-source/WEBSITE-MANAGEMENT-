@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const p=document.createElement('section');p.className='panel';p.style.marginTop='16px';
 p.innerHTML='<h2>Voice Enhancement & Noise Removal</h2><p class="muted">Local browser processing. Reduces steady background noise, rumble and uneven volume; not equivalent to Adobe Enhance Speech AI.</p><label for="enhanceFile">Voice recording (audio file)</label><input id="enhanceFile" type="file" accept="audio/*"><label for="enhanceStrength">Noise reduction strength</label><input id="enhanceStrength" type="range" min="0" max="100" value="65"><label><input id="enhanceNormalize" type="checkbox" checked> Normalize speech volume</label><div class="actions"><button id="enhanceRun" type="button">Enhance voice</button><a id="enhanceDownload" hidden download="heavenly-key-enhanced.wav">Download enhanced WAV</a></div><audio id="enhancePreview" controls></audio><div id="enhanceStatus" class="status" role="status">Select a recording.</div>';
-document.querySelector('main').append(p);
+document.getElementById('audio').append(p);
 let currentUrl;
 function wav(data,rate){const out=new ArrayBuffer(44+data.length*2),v=new DataView(out);const put=(off,str)=>{for(let i=0;i<str.length;i++)v.setUint8(off+i,str.charCodeAt(i))};put(0,'RIFF');v.setUint32(4,out.byteLength-8,true);put(8,'WAVE');put(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);put(36,'data');v.setUint32(40,data.length*2,true);for(let i=0;i<data.length;i++)v.setInt16(44+i*2,Math.max(-32768,Math.min(32767,Math.round(data[i]*32767))),true);return new Blob([out],{type:'audio/wav'})}
 document.getElementById('enhanceRun').onclick=async()=>{
