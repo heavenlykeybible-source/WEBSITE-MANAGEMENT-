@@ -1,0 +1,28 @@
+name: Repair current Account 2 Studio features
+on:
+  workflow_dispatch:
+  push:
+    branches: [prepare/account-07-radio-20261023]
+    paths:
+      - '.github/workflows/repair-account2-studio.yml'
+      - 'scripts/radio/studio-repairs.mjs'
+      - 'scripts/radio/deploy-studio-repairs.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: account2-studio-content-update
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node tests/run.mjs
+      - name: Update studio code only, preserve all credentials and storage
+        env:
+          ACCOUNT_2_TOKEN: ${{ secrets.ACCOUNT_2_TOKEN }}
+        run: node scripts/radio/deploy-studio-repairs.mjs

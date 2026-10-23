@@ -26,7 +26,7 @@ if (!health.ok || (await health.json()).service !== 'heavenlykey-media-engine') 
 // Preserve the deployed studio modules, not an older recovered studio build.
 const contentResponse = await fetch(endpoint(source, '/content/v2'), {headers:{Authorization:'Bearer '+source.token}, signal:AbortSignal.timeout(30000)});
 if (!contentResponse.ok) throw Error('Cannot read the existing Account 2 code (HTTP '+contentResponse.status+'); refusing a replacement.');
-let main = contentResponse.headers.get('cf-worker-main-module-part') || beforeSource.main_module;
+let main = contentResponse.headers.get('cf-entrypoint') || contentResponse.headers.get('cf-worker-main-module-part') || beforeSource.main_module;
 const modules = new FormData();
 if ((contentResponse.headers.get('content-type')||'').includes('multipart/form-data')) {
   const original = await contentResponse.formData();
@@ -54,6 +54,7 @@ if (!currentMain) throw Error('Original Account 2 module is missing.');
 const allCode = (await Promise.all([...modules.values()].map(value=>typeof value==='string'?value:value.text()))).join('\n');
 if (!allCode.includes('media-engine-public-v1') || !allCode.includes('/api/broadcast/programme')) throw Error('The deployed studio uses a different listener API. Refusing to alter it without an exact adapter.');
 console.log('Verified deployed Account 2 studio modules, required bindings, and public radio API.');
+console.log('Existing source entry point: '+main);
 
 const keyExists = (targetSettings) => (targetSettings.bindings||[]).some(b=>b.name==='RADIO_PUBLIC_API_KEY');
 let key = process.env.RADIO_PUBLIC_API_KEY;
@@ -62,7 +63,7 @@ if (!keyExists(beforeSource) && !keyExists(beforeRadio)) key ||= randomBytes(32)
 if(key)console.log('::add-mask::'+key);
 
 // For an existing supplied key, prove it is accepted before touching either side.
-if(keyExists(beforeSource) && key && allCode.includes('hk-radio-source-adapter-v1')) {
+if(keyExists(beforeSource) && key && main==='hk-radio-listener-entry.mjs') {
   const probe=await fetch(origin+'/api/broadcast/programme?channel=radio',{headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
   if(!probe.ok)throw Error('The supplied shared radio key was not accepted by Account 2. Existing credentials were kept.');
 }
@@ -71,25 +72,31 @@ async function putSecret(target,name,text) {
 }
 
 // Add the key only when absent; leave every existing production secret intact.
-if(!allCode.includes('hk-radio-source-adapter-v1')) {
+if(main!=='hk-radio-listener-entry.mjs') {
   const wrapper='hk-radio-listener-entry.mjs', adapter='hk-radio-source-adapter.mjs';
-  if(modules.has(wrapper)||modules.has(adapter))throw Error('Unexpected adapter module collision.');
+  if(modules.has(wrapper)&&!String(await modules.get(wrapper).text()).includes('hk-radio-source-adapter-v1'))throw Error('Unexpected adapter module collision.');
+  modules.delete(wrapper);modules.delete(adapter);
   modules.append(adapter,new Blob([await fs.readFile(new URL('./radio-source-adapter.mjs',import.meta.url))],{type:'application/javascript+module'}),adapter);
   const relative='./'+main;
   const wrapperCode=`// hk-radio-source-adapter-v1\nimport upstream from ${JSON.stringify(relative)};\nexport * from ${JSON.stringify(relative)};\nimport {radioSourceAdapter} from './${adapter}';\nexport default radioSourceAdapter(upstream);\n`;
   modules.append(wrapper,new Blob([wrapperCode],{type:'application/javascript+module'}),wrapper);
   modules.append('metadata',new Blob([JSON.stringify({main_module:wrapper})],{type:'application/json'}));
   // Content-only update preserves runtime settings, bindings and stored assets.
-  await api(source, endpoint(source,'/content'), {method:'PUT',body:modules});
+  await api(source, endpoint(source,'/content'), {method:'PUT',headers:{'CF-WORKER-MAIN-MODULE-PART':wrapper},body:modules});
 }
+if(!keyExists(beforeRadio))await putSecret(radio,'RADIO_PUBLIC_API_KEY',key);
 if(!keyExists(beforeSource)) await putSecret(source,'RADIO_PUBLIC_API_KEY',key);
 if(key){
- const programmeResponse=await fetch(origin+'/api/broadcast/programme?channel=radio',{headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(20000)});
+ let programmeResponse;
+ for(let attempt=0;attempt<6;attempt++){
+  programmeResponse=await fetch(origin+'/api/broadcast/programme?channel=radio',{headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(20000)});
+  if(programmeResponse.ok)break;
+  if(attempt<5)await new Promise(resolve=>setTimeout(resolve,2000));
+ }
  if(!programmeResponse.ok)throw Error('Account 2 did not accept the authenticated radio request (HTTP '+programmeResponse.status+').');
  const programme=await programmeResponse.json();
  if(!Array.isArray(programme.items))throw Error('Account 2 returned an unexpected programme response.');
 }
-if(!keyExists(beforeRadio))await putSecret(radio,'RADIO_PUBLIC_API_KEY',key);
 if(!(beforeRadio.bindings||[]).some(b=>b.name==='MEDIA_PUBLIC_ORIGIN'))await putSecret(radio,'MEDIA_PUBLIC_ORIGIN',origin);
 else if(beforeRadio.bindings.find(b=>b.name==='MEDIA_PUBLIC_ORIGIN')?.type==='plain_text' && beforeRadio.bindings.find(b=>b.name==='MEDIA_PUBLIC_ORIGIN')?.text!==origin)throw Error('A different source origin already exists. It was preserved.');
 const afterSource=await settings(source);
