@@ -10,6 +10,7 @@ import * as Adverts from "./adverts";
 import * as Editorial from "./ministry-editorial";
 import * as Active from "./active";
 import * as Care from "./community-care";
+import {passkeyRoutes} from "./passkeys";
 
 const security=(headers=new Headers())=>{
   headers.set("X-Content-Type-Options","nosniff");headers.set("X-Frame-Options","DENY");headers.set("Referrer-Policy","strict-origin-when-cross-origin");
@@ -33,6 +34,7 @@ const validEmail=(v:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 async function rate(env:Env,key:string,max:number,seconds:number){
   const k="rate:"+key,raw=await env.SESSIONS.get(k),state=raw?JSON.parse(raw):{n:0};if(state.n>=max)return false;state.n++;await env.SESSIONS.put(k,JSON.stringify(state),{expirationTtl:seconds});return true;
 }
+const handlePasskeys=passkeyRoutes({json,body,rate,sourceKey});
 async function me(request:Request,env:Env){const u=await getSession(request,env);if(!u)throw Object.assign(new Error("Please sign in."),{status:401});return u;}
 
 async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Response>{
@@ -43,6 +45,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
 
   if(!['GET','HEAD','OPTIONS'].includes(m)&&!p.startsWith('/api/auth/')&&!p.startsWith('/api/calls')){const writer=await getSession(request,env);if(writer&&!await rate(env,'write:'+writer.userId,180,600))return error('Please slow down and try again shortly.',429);}
 
+  if(p.startsWith("/api/auth/passkeys")){const response=await handlePasskeys(request,env);if(response)return response;}
   if(p==="/api/auth/social/providers"&&m==="GET")return json(await Social.providerStatus(env));
   if(p==="/api/auth/social/pending"&&m==="GET"){const f=await Social.pending(request,env);return json({provider:f.provider,name:f.person.name,email:f.person.email});}
   if(p==="/api/auth/social/complete"&&m==="POST"){

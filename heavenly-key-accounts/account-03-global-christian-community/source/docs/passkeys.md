@@ -1,0 +1,11 @@
+# Community member passkeys
+
+Members create an account using the existing registration flow, then open Account & security to add a device. Adding and removing devices requires the current password. Social-only accounts must first establish a password through the supported account recovery process; this feature does not bypass password confirmation.
+
+The sign-in form accepts the email address and offers Face ID / fingerprint. The operating system chooses the available verification method, including its device PIN. No biometric image, template, or voice recording is collected. Password login remains available. Passkeys are specific to the hostname where they were registered; use the permanent community domain consistently.
+
+Deployment uses the existing `heavenly-key-global-community` Worker and existing D1 binding. Before deploying, the workflow applies only `migrations/0020_passkeys.sql`, an additive, idempotent migration. It does not recreate bindings, seed accounts, rotate secrets, or reset tables. Retain the new tables on rollback; older application versions ignore them.
+
+Challenges expire after five minutes and are bound to an HttpOnly, Secure, SameSite=Strict cookie, exact origin, operation, account, and password version. D1 consumes each challenge once. Assertions require cryptographic signature and user verification checks; credential counters update conditionally. Account status and role are loaded from current records before issuing the existing session type. Restricted members retain their existing restricted access; suspended and banned members cannot sign in. Each member may register eight passkeys per hostname.
+
+Validation: `npm run build` and repository-root `node tests/run.mjs` pass. The optional, pre-existing `npm run test:care` check is blocked by its import of the absent `src/content-screening.ts` module; that test and missing module are unchanged by this work. Real ECDSA/CBOR authenticator fixtures exercise enrollment, authentication, missing user verification, wrong origin, replay, expiry, password changes, restrictions, suspension, removal and account isolation. Physical Face ID / fingerprint prompts still require a supported device and HTTPS after deployment.
