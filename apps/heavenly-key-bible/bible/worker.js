@@ -83,32 +83,18 @@ export default {
    }catch{return Response.json({success:false,error:{message:"The ministry media service is temporarily unavailable."}},{status:502});}
    finally{clearTimeout(timeout);}
   }
-  // Extensionless public routes; existing .html files remain untouched.
+  // Extensionless public URLs mapped to the original, unchanged static assets.
   if(request.method==="GET"||request.method==="HEAD"){
    const routes={"/kingdom-quest":"/kingdom-quest.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
    const pathname=url.pathname.replace(/\/$/,"")||"/";
    if(pathname==="/kingdom-quest.html"){
     const redirect=new URL(url);
-    redirect.pathname=pathname.slice(0,-5);
+    redirect.pathname="/kingdom-quest";
     return Response.redirect(redirect.toString(),308);
-   }
-   if(pathname.endsWith(".html")&&pathname!=="/index.html"&&pathname!=="/study-extensions.html"){
-    const clean=pathname.slice(0,-5);
-    const target=clean==="/study-extensions"?"/study":clean;
-    return Response.redirect(new URL(target+url.search,url.origin),308);
    }
    if(routes[pathname]){
     const assetUrl=new URL(routes[pathname],url.origin);
     return env.ASSETS.fetch(new Request(assetUrl,request));
-   }
-  }
-  // Serve clean public paths while retaining original HTML assets internally.
-  if(request.method==="GET"||request.method==="HEAD"){
-   const aliases={"/kingdom-quest":"/kingdom-quest.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
-   const pathname=url.pathname.replace(/\/$/,"")||"/";
-   if(aliases[pathname]){
-    const target=new URL(aliases[pathname],url.origin);
-    return env.ASSETS.fetch(new Request(target,request));
    }
   }
   return env.ASSETS.fetch(request);
