@@ -16,6 +16,10 @@ jobs:
         run: |
           test -s public/index.html
           test -s 'functions/api/[[path]].js'\n          test -s public/_headers
+          test -s wrangler.toml
+          test -s public/assets/logo-256.png
+          test -s scripts/preflight.mjs
+          test -s tests/be.mjs
           test -s schema.sql
           test -s wrangler.toml
       - name: Syntax validation
