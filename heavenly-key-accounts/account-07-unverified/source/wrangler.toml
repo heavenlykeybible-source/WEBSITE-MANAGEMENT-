@@ -2,6 +2,6 @@ name = "heavenly-key-radio"
 compatibility_date = "2026-10-23"
 pages_build_output_dir = "."
 
-# Configure MEDIA_PUBLIC_ORIGIN only after the Account 2 endpoint is verified.
-# Account 2 currently requires an internal trust marker for public broadcast APIs.
-# Do not deploy an unauthenticated proxy or put credentials in the browser.
+# preflight.mjs reads the saved production MEDIA_PUBLIC_ORIGIN and preserves it
+# in the deployment config. RADIO_PUBLIC_API_KEY remains a Pages secret.
+# Account 2 must have the same RADIO_PUBLIC_API_KEY. No Account 4 dependency.

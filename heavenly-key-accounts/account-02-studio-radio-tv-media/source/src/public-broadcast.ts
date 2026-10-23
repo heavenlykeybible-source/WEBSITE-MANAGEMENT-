@@ -15,12 +15,12 @@ function mediaItem(m:any){return {mediaId:m.media_id,title:m.object_key.split('/
 
 export async function publicProgramme(request:Request,env:BroadcastEnv):Promise<Response>{
  const channel=new URL(request.url).searchParams.get('channel')==='radio'?'audio':'video';
- const live=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,destination,reconnect_deadline FROM live_sessions WHERE ((status='live' AND julianday(last_heartbeat_at)>julianday('now','-180 seconds')) OR (status='reconnecting' AND julianday(reconnect_deadline)>julianday('now'))) ORDER BY session_id DESC LIMIT 1").first<any>();
+ const live=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,destination,reconnect_deadline FROM live_sessions WHERE destination IN (?, 'both') AND ((status='live' AND julianday(last_heartbeat_at)>julianday('now','-180 seconds')) OR (status='reconnecting' AND julianday(reconnect_deadline)>julianday('now'))) ORDER BY session_id DESC LIMIT 1").bind(channel==='audio'?'radio':'video').first<any>();
  if(live&&(live.destination==='both'||live.destination===(channel==='audio'?'radio':'video'))){
   if(live.status==='reconnecting'){
    const fallbackId=Number(live.fallback_media_id);
    const fallback=Number.isInteger(fallbackId)&&fallbackId>0?await eligibleMedia(env,fallbackId):null;
-   if(fallback&&channel==='video')return json({mode:'reconnecting',title:live.title+' · connection break',items:[mediaItem(fallback)],reconnectDeadline:live.reconnect_deadline});
+   if(fallback&&(channel==='video'||fallback.media_type==='audio'))return json({mode:'reconnecting',title:live.title+' · connection break',items:[mediaItem(fallback)],reconnectDeadline:live.reconnect_deadline});
   } else {
    const id=live.visual_media_id??Number(String(live.source_ref).replace(/^media:/,''));
    const media=Number.isInteger(id)&&id>0?await eligibleMedia(env,id):null;

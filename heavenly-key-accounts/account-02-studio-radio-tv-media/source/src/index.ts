@@ -33,7 +33,8 @@ export default {
   if(url.pathname==='/health'&&request.method==='GET') return json({ok:true,service:'heavenlykey-media-engine',version:env.MEDIA_ENGINE_VERSION??'v1'});
   const radioPath=/^\/api\/broadcast\/(?:programme|live|media\/\d+\/object)$/.test(url.pathname);
   let radioAuthorized=false;
-  if(radioPath && env.RADIO_PUBLIC_API_KEY && ['GET','HEAD'].includes(request.method)) {
+  const radioViewer=url.pathname==='/api/media-engine/livekit/viewer-token'&&request.method==='POST';
+  if(env.RADIO_PUBLIC_API_KEY && ((radioPath && ['GET','HEAD'].includes(request.method))||radioViewer)) {
     const presented=(request.headers.get('Authorization')||'').replace(/^Bearer /,'');
     const enc=new TextEncoder();
     const expected=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(env.RADIO_PUBLIC_API_KEY)));
@@ -41,6 +42,7 @@ export default {
     let diff=0;for(let i=0;i<expected.length;i++)diff|=expected[i]^received[i];
     radioAuthorized=diff===0 && presented.length>0;
   }
+  if(radioAuthorized)url.searchParams.set('channel','radio');
   const marker=radioAuthorized?'media-engine-public-v1':request.headers.get('X-Heavenly-Key-Internal'); const auth=request.headers.get('Authorization')??'';
   if(marker==='media-engine-public-v1' && request.method==='GET' && url.pathname==='/api/broadcast/live') {
     const row=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,started_at,last_heartbeat_at,reconnect_deadline FROM live_sessions WHERE status IN ('live','reconnecting') ORDER BY session_id DESC LIMIT 1").first();
@@ -48,10 +50,11 @@ export default {
      const safe=row as Record<string,unknown>;
      return json({live:{session_id:safe.session_id,title:safe.title,status:safe.status,source_type:safe.source_type,started_at:safe.started_at,reconnect_deadline:safe.reconnect_deadline}});
   }
-  if(marker==='media-engine-public-v1' && request.method==='GET' && url.pathname==='/api/broadcast/programme') return publicProgramme(request,env);
+  if(marker==='media-engine-public-v1' && request.method==='GET' && url.pathname==='/api/broadcast/programme') return publicProgramme(new Request(url,request),env);
   { const match=url.pathname.match(/^\/api\/broadcast\/media\/(\d+)\/object$/); if(marker==='media-engine-public-v1' && match && ['GET','HEAD'].includes(request.method))return serveBroadcastMedia(request,env,Number(match[1])); }
   if(url.pathname==='/api/media-engine/livekit/viewer-token'&&request.method==='POST'&&marker==='media-engine-public-v1'){
-    const live=await env.DB.prepare("SELECT session_id,source_ref,title,status FROM live_sessions WHERE source_ref LIKE 'livekit:%' AND ((status='live' AND last_heartbeat_at>datetime('now','-180 seconds')) OR (status='reconnecting' AND reconnect_deadline>datetime('now'))) ORDER BY session_id DESC LIMIT 1").first<any>();
+    const destination=url.searchParams.get('channel')==='radio'?'radio':'video';
+    const live=await env.DB.prepare("SELECT session_id,source_ref,title,status FROM live_sessions WHERE source_ref LIKE 'livekit:%' AND destination IN (?, 'both') AND ((status='live' AND julianday(last_heartbeat_at)>julianday('now','-180 seconds')) OR (status='reconnecting' AND julianday(reconnect_deadline)>julianday('now'))) ORDER BY session_id DESC LIMIT 1").bind(destination).first<any>();
     if(!live)return json({error:'No LiveKit broadcast is active'},404);
     try { const {createLiveKitToken}=await import('./livekit'); const room='heavenlykey-live-'+live.session_id; return json({...(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,'viewer-'+crypto.randomUUID(),false)),title:live.title,sessionId:live.session_id}); }
     catch(e){return json({error:e instanceof Error?e.message:'Live transport unavailable'},503);}
