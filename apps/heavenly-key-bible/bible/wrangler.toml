@@ -11,7 +11,7 @@ send_metrics = false
 directory = "../heavenly-key-website/bible"
 binding = "ASSETS"
 html_handling = "none"
-run_worker_first = ["/api/*", "/health", "/study", "/dictionary", "/concordance", "/daily-routine", "/kingdom-quest", "/kingdom-quest.html"]
+run_worker_first = ["/", "/install", "/install/", "/api/*", "/health", "/study", "/dictionary", "/concordance", "/daily-routine", "/kingdom-quest", "/kingdom-quest.html"]
 
 # Point this at the approved central public media service when accounts migrate.
 [vars]
