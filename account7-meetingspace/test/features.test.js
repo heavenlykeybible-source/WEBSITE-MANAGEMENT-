@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {PLATFORMS,validateDestination,planBroadcast} from '../src/broadcast-config.js';
+import {validateChatMessage,sanitizeDisplayName} from '../src/chat-protocol.js';
+test('supported broadcast platforms are registered',()=>{for(const key of ['facebook','youtube','instagram','tiktok','linkedin','x','custom'])assert.ok(PLATFORMS[key])});
+test('multiple pages on one platform are supported in plans',()=>{const result=planBroadcast([{platform:'facebook',label:'Page A',accountId:'page-a',enabled:true},{platform:'facebook',label:'Page B',accountId:'page-b',enabled:true}]);assert.equal(result.destinations.length,2);assert.equal(result.readyToStream,false)});
+test('duplicate destinations are rejected',()=>assert.throws(()=>planBroadcast([{platform:'youtube',label:'A',accountId:'same'},{platform:'youtube',label:'B',accountId:'same'}])));
+test('invalid destination inputs are rejected',()=>assert.throws(()=>validateDestination({platform:'unknown',label:'Test',accountId:'1'})));
+test('chat text validation enforces message size',()=>{assert.equal(validateChatMessage({type:'text',text:' Hello '}).text,'Hello');assert.throws(()=>validateChatMessage({type:'text',text:'x'.repeat(4001)}));assert.throws(()=>validateChatMessage({type:'file',text:'x'}))});
+test('display names are bounded',()=>{assert.equal(sanitizeDisplayName('  Grace  '),'Grace');assert.throws(()=>sanitizeDisplayName('a'.repeat(81)))});
