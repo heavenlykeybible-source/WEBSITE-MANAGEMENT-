@@ -23,7 +23,7 @@ jobs:
         with: {node-version: '22'}
       - run: npm install --ignore-scripts --no-audit --no-fund
       - name: Check browser policy and binding preservation
-        run: node tests/run.mjs && node tests/browser-agent.mjs && node scripts/test-activate-private-browser.mjs
+        run: npm run build:cms && node tests/run.mjs && node tests/browser-agent.mjs && node scripts/test-activate-private-browser.mjs
       - name: Preserve existing healthy Control Room
         run: node scripts/activate-private-browser.mjs snapshot
       - name: Deploy the private browser helper
