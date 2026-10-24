@@ -22,7 +22,9 @@ export class MeetingRoom extends DurableObject {
    const savedOwner=await this.ctx.storage.get('ownerUserId');
    if(savedOwner&&savedOwner!==claims.userId)return new Response('Room owner mismatch',{status:403});
   }
-  if(this.meetingDeadline&&Date.now()>=this.meetingDeadline)return new Response('Meeting time limit reached',{status:403});
+  const persistedDeadline=await this.ctx.storage.getAlarm();
+  if(persistedDeadline&&Date.now()>=persistedDeadline)return new Response('Meeting time limit reached',{status:403});
+  if(persistedDeadline)this.meetingDeadline=persistedDeadline;
   if(this.clients.size>=Math.min(12,this.capacity))return new Response('Room full',{status:429});
   if(!demo&&claims.role==='owner'&&this.ownerId===claims.userId)return new Response('Owner already connected',{status:409});
   if(this.locked&&claims.role!=='owner')return new Response('Room locked',{status:403});
