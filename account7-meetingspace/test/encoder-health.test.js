@@ -10,3 +10,5 @@ test('stale encoder report fails closed',()=>{
 });
 test('future timestamp fails closed',()=>assert.equal(interpretEncoderHealth({connected:true,observedAt:5000},{now:1000}).encoder,'disconnected'));
 test('missing encoder report never claims live',()=>assert.deepEqual(publicEncoderStatus(null),{configured:true,encoder:'disconnected',liveDestinations:0,readyToStream:false}));
+
+test('nonfinite timestamp fails closed',()=>assert.equal(interpretEncoderHealth({connected:true,observedAt:NaN},{now:1000}).encoder,'disconnected'));
