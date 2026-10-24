@@ -26,6 +26,17 @@ const passkeyClient=fs.readFileSync(new URL('../security/passkey-client.js',impo
 const passkeySection='// BEGIN OWNER PASSKEY CLIENT\n'+passkeyClient.replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END OWNER PASSKEY CLIENT';
 if(worker.includes('// BEGIN OWNER PASSKEY CLIENT'))worker=worker.replace(/\/\/ BEGIN OWNER PASSKEY CLIENT[\s\S]*?\/\/ END OWNER PASSKEY CLIENT/,()=>passkeySection);
 else worker=worker.replace('async function passwordDialog(',passkeySection+'\nasync function passwordDialog(');
+const oauthServer='// BEGIN CLOUDFLARE OAUTH SERVER\n'+fs.readFileSync(new URL('../workspace/cloudflare-oauth.js',import.meta.url),'utf8')+'\n// END CLOUDFLARE OAUTH SERVER';
+if(worker.includes('// BEGIN CLOUDFLARE OAUTH SERVER'))worker=worker.replace(/\/\/ BEGIN CLOUDFLARE OAUTH SERVER[\s\S]*?\/\/ END CLOUDFLARE OAUTH SERVER/,()=>oauthServer);else worker=oauthServer+'\n'+worker;
+const releaseClient='// BEGIN RELEASE CLIENT\n'+fs.readFileSync(new URL('../workspace/release-client.js',import.meta.url),'utf8').replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END RELEASE CLIENT';
+if(worker.includes('// BEGIN RELEASE CLIENT'))worker=worker.replace(/\/\/ BEGIN RELEASE CLIENT[\s\S]*?\/\/ END RELEASE CLIENT/,()=>releaseClient);else worker=worker.replace("var CHAT_TARGET=",()=>releaseClient+'\nvar CHAT_TARGET=');
+worker=worker.replace('const tok = await unseal(env, conn.token_enc);','const tok = await cfOAuthToken(env, conn);');
+if(!worker.includes('const oauthConnection=await cfOAuthRoutes'))worker=worker.replace('  const operations=await controlOperationsRoutes','  const oauthConnection=await cfOAuthRoutes(req,env,user,sub,m);if(oauthConnection)return oauthConnection;\n  const operations=await controlOperationsRoutes');
+if(!worker.includes("p === '/oauth/cloudflare/callback'"))worker=worker.replace("  if (m === 'GET' && p === '/oauth/google/callback')", "  if (m === 'GET' && p === '/oauth/cloudflare/callback') return cfOAuthCallback(req, env);\n  if (m === 'GET' && p === '/oauth/google/callback')");
+if(!worker.includes("'Connect with Cloudflare (OAuth)'"))worker=worker.replace("      h('button',{class:'sm',onclick:function(){tokenRepair(c,w);}},'Verify / replace token'),","      h('button',{class:'sm',onclick:function(){cloudflareOAuthPanel(c,w);}},'Connect with Cloudflare (OAuth)'),\n      h('button',{class:'sm',onclick:function(){tokenRepair(c,w);}},'Verify / replace token'),");
+if(!worker.includes("clearInterval(CHAT_QUEUE_POLL)"))worker=worker.replace("if(typeof PROVIDER_POLL!=='undefined'&&PROVIDER_POLL)","if(typeof CHAT_QUEUE_POLL!=='undefined'&&CHAT_QUEUE_POLL){clearInterval(CHAT_QUEUE_POLL);CHAT_QUEUE_POLL=null;}if(typeof PROVIDER_POLL!=='undefined'&&PROVIDER_POLL)");
+worker=worker.replace("h('button',{class:'sm',onclick:nativeImports},'Import repository or phone files'),log,", "h('button',{class:'sm',onclick:releaseGuide},'Send work: GitHub / upload / AI'),log,");
+worker=worker.replace('if(own()){verificationPanel(providerBox);','if(own()){watchChatProposals(log);verificationPanel(providerBox);');
 if (!worker.trim()) throw new Error('Refusing CMS build: active Worker source is empty');
 const requiredMarkers = [
   ['VISUAL CMS CLIENT', '// BEGIN VISUAL CMS CLIENT', '// END VISUAL CMS CLIENT'],
