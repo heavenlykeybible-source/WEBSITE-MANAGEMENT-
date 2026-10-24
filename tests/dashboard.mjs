@@ -16,9 +16,10 @@ class Node {
 const body=new Node('body'),app=new Node('main');app.id='app';body.appendChild(app);
 function find(root,predicate){if(predicate(root))return root;for(const c of root.children){const n=find(c,predicate);if(n)return n}return null}
 const document={body,createElement:t=>new Node(t),createTextNode:t=>new Node('#text',String(t)),getElementById:id=>find(body,n=>n.id===id)};
+let optionalDestinationsFail=false;
 let publications=0,restores=0,lastLogin=null,addedUser=null;const alerts=[];let chatSent=null;let resourceProposal=null,workerProposal=null;let connectCalls=0,connectFailure=false,holdConnect=false,releaseConnect=null;
 const fetch=async(input,init={})=>{
- const url=new URL(input,'https://room.test'),p=url.pathname;let data;
+ const url=new URL(input,'https://room.test'),p=url.pathname;let data;if(optionalDestinationsFail&&(p==='/api/owner/github'||p==='/api/owner/remote'))return Response.json({error:'Provider unavailable'},{status:503});
  if(p==='/api/owner/users'){if(init.method==='POST'){addedUser=JSON.parse(init.body);data={ok:true,status:'active',username:addedUser.username}}else data={users:[{id:1,username:'owner',role:'owner',status:'active',kind:'staff',has_password:true}]};}
  else if(p==='/api/owner/ai'){if(init.method==='POST'){chatSent=JSON.parse(init.body);data={reply:'Submitted to Waiting.',proposals:[3],account:'Cloudflare AI'}}else data={enabled:true,accounts:[{id:'cloudflare',label:'Cloudflare AI',model:'test-model'}]};}
  else if(p==='/api/owner/sites')data={sites:[{slug:'demo',name:'Demo',files:0}]};
@@ -95,3 +96,5 @@ find(body,n=>n.attributes.placeholder==='New resource name').value='meeting-db';
 context.deployForm({id:7,label:'Account 7 Meeting App'});find(body,n=>n.attributes.placeholder==='Worker name (lowercase, dashes)').value='meeting-app';find(body,n=>n.attributes.placeholder==='Paste Worker code, or choose a .js file').value='export default {}';find(body,n=>n.attributes.placeholder?.startsWith('Optional bindings JSON')).value='[{"type":"ai","name":"AI"}]';button('Send to approval').onclick();await flush();assert.equal(workerProposal.connection,'7');assert.equal(workerProposal.bindings[0].name,'AI');
 console.log('PASS D1/R2 dashboard queues exact-account creation and Worker bindings without publishing (mock DOM)');
 
+
+optionalDestinationsFail=true;await context.claude();assert.ok(find(body,n=>n.tag==='textarea'&&n.attributes['aria-label']==='Message your AI'),'Provider outage must not remove the chat composer');assert.ok(body.textContent.includes('Some attachment destinations are unavailable'));optionalDestinationsFail=false;console.log('PASS AI chat remains usable when optional attachment providers fail');

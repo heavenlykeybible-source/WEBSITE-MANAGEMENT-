@@ -1,3 +1,4 @@
+import {repairChat} from './chat-resilience.mjs';
 import fs from 'node:fs';
 import {build} from 'esbuild';
 const target=new URL('../control-room-worker.js',import.meta.url);
@@ -50,4 +51,4 @@ for (const [name, start, end] of requiredMarkers) {
   const section = worker.slice(worker.indexOf(start) + start.length, worker.indexOf(end));
   if (!section.trim()) throw new Error('Refusing CMS build: empty generated section ' + name);
 }
-fs.writeFileSync(target,worker);
+fs.writeFileSync(target,repairChat(worker));

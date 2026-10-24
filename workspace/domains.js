@@ -1,4 +1,4 @@
-const HK_DOMAIN_HOSTS=['controlroom.heavenlykey.org','radio.heavenlykey.org','meeting.heavenlykey.org','editor.heavenlykey.org'];
+const HK_DOMAIN_HOSTS=['studioroom.heavenlykey.org','controlroom.heavenlykey.org','app.heavenlykey.org','bible.heavenlykey.org','global.heavenlykey.org','meeting.heavenlykey.org','mediaeditor.heavenlykey.org','radio.heavenlykey.org'];
 async function domainZoneRead(env,conn,path,permission){
  const token=await unseal(env,conn.token_enc);
  const response=await fetch('https://api.cloudflare.com/client/v4'+path,{headers:{authorization:'Bearer '+token},redirect:'manual',signal:AbortSignal.timeout(20000)});
