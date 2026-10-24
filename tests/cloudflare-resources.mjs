@@ -24,6 +24,7 @@ globalThis.fetch=async(input,init)=>{
  const u=new URL(input);assert.equal(u.origin,'https://api.cloudflare.com');assert.ok(u.pathname.startsWith('/client/v4/accounts/'+account+'/'));assert.equal(init.redirect,'manual');
  if(init.method!=='GET')writes.push({url:u.pathname,init});
  if(u.pathname.endsWith('/workers/scripts'))return ok([]);
+ if(u.pathname.endsWith('/time_travel/bookmark'))return ok({bookmark:'test-pre-release-bookmark'});
  if(u.pathname.endsWith('/deployments')&&init.method==='GET')return ok({deployments:[{created_on:'2026-10-24',versions:[{version_id:'previous-version',percentage:100}]}]});
  if(u.pathname.endsWith('/settings'))return oldSettings?ok(oldSettings):Response.json({success:false},{status:404});
  if(u.pathname.endsWith('/subdomain'))return ok({subdomain:'account-seven'});
