@@ -6,5 +6,6 @@ export function repairChat(worker){
  worker=worker.replace(/var tpl='https:\/\/dash\.cloudflare\.com\/\?to=\/:account\/api-tokens[^']*';/,"var tpl='https://dash.cloudflare.com/profile/api-tokens';");
  worker=worker.replace('Already have an API token? Paste it here. Your Cloudflare password is never needed in this form.','Use a token scoped to the selected account. Worker deployment needs Account: Workers Scripts Edit. Domain changes additionally need Zone: Zone Read, DNS Edit and Workers Routes Edit on heavenlykey.org. D1, R2, Pages and AI operations require their matching account permissions. Control Room approval cannot add permissions missing from a Cloudflare token. Your Cloudflare password is never needed here.');
  worker=worker.replace('.chat-log{max-height:55vh;','.chat-log{min-width:0;overflow-wrap:anywhere;max-height:55vh;').replace('.chat-shell .chat-log{min-height:40vh;max-height:calc(100dvh - 330px);','.chat-shell .chat-log{min-height:180px;max-height:max(180px,calc(100dvh - 330px));');
+ worker=worker.replace("onclick:function(){var t=prompt('Paste the new API token for '+c.label);if(t)api('connections/'+c.id+'/token','POST',{token:t.trim()}).then(function(){alert('Token replaced.');}).catch(oops);}","onclick:function(){tokenRepair(c,w);}").replace("},'Replace token')","},'Verify / replace token')");
  return worker;
 }
