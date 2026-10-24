@@ -49,3 +49,11 @@ test('meeting UI includes accessible chat and send controls',async()=>{
  assert.match(html,/id="chatSend"/);
  assert.match(html,/createTextNode\(message\)/);
 });
+
+test('chat echoes to sender and identifies server-assigned participant',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await r.text();
+ assert.match(html,/serverParticipantId=m\.id/);
+ assert.match(html,/m\.from===serverParticipantId/);
+ assert.match(html,/server\.send\(JSON\.stringify\(\{type:'chat',from:id,text:msg\.text\.trim\(\)\}\)\)/);
+});
