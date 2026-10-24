@@ -49,7 +49,7 @@ jobs:
           RELEASE_WORKER: heavenly-key-app
           RELEASE_ORIGIN: https://heavenly-key-app.heavenlykeyapp.workers.dev/
       - name: Publish Account 5 Worker
-        run: npx --no-install wrangler deploy --config wrangler.toml --keep-vars
+        run: npx --no-install wrangler deploy --config wrangler.toml --name heavenly-key-app --keep-vars
       - name: Verify release and restore previous version on failure
         if: always() && !cancelled() && steps.release_snapshot.outcome == 'success'
         working-directory: .
