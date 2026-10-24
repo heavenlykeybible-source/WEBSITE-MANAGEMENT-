@@ -20,3 +20,10 @@ async function resetStudioPassword(req,env,user){
  return json({ok:true,notice:'The Studio password was updated. Your existing Studio username was preserved. Sign in on the Studio page to verify it.'});
  });
 }
+
+function controlRoomPublicRequest(req){
+ const u=new URL(req.url),canonical='https://controlroom.heavenlykey.org';
+ if(u.origin!=='https://website-management.emmanuel2026miracle.workers.dev'||req.headers.get('x-hk-public-origin')!==canonical)return req;
+ const headers=new Headers(req.headers);if(headers.get('origin')===u.origin)headers.set('origin',canonical);
+ u.protocol='https:';u.hostname='controlroom.heavenlykey.org';u.port='';return new Request(u,new Request(req,{headers}));
+}
