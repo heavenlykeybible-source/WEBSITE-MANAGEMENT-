@@ -27,7 +27,7 @@ jobs:
       - name: Preserve existing healthy Control Room
         run: node scripts/activate-private-browser.mjs snapshot
       - name: Deploy the private browser helper
-        run: npx --yes wrangler@4 deploy --config browser-agent/wrangler.jsonc --keep-vars
+        run: node scripts/activate-private-browser.mjs deploy
       - name: Connect the private service without changing app bindings
         run: node scripts/activate-private-browser.mjs attach
       - uses: actions/upload-artifact@v4
