@@ -50,7 +50,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_RADIO_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_RADIO_ACCOUNT_ID }}
-        run: npx --yes wrangler@4.152.0 deploy --config wrangler.toml --keep-vars
+        run: npx --yes wrangler@4.152.0 deploy --config wrangler.toml --name heavenlykeyradio --keep-vars
       - name: Verify deployed Radio and Account 2 programme
         run: node heavenly-key-accounts/account-07-unverified/scripts/verify-live.mjs https://heavenlykeyradio.heavenlykeyradio.workers.dev
       - name: Verify release and restore previous version on failure
