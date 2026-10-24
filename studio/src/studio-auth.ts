@@ -12,7 +12,7 @@ const random=()=>[...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toStri
 function cookie(req:Request,name:string){return (req.headers.get('cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name+'='))?.slice(name.length+1)||'';}
 function setCookie(name:string,value:string,age:number){return `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${age}`;}
 function redirect(url:string,cookies:string[]=[]){const h=new Headers(headers);h.set('location',url);for(const c of cookies)h.append('set-cookie',c);return new Response(null,{status:303,headers:h});}
-export function controlOrigin(env:StudioAuthEnv){const u=new URL(env.CONTROL_ROOM_URL||'');if(u.protocol!=='https:'||u.username||u.password||u.pathname!=='/'||u.search||u.hash)throw Error('CONTROL_ROOM_URL must be the control room HTTPS origin.');return u.origin;}
+export function controlOrigin(env:StudioAuthEnv){const u=new URL(env.CONTROL_ROOM_URL||'https://controlroom.heavenlykey.org');if(u.protocol!=='https:'||u.username||u.password||u.pathname!=='/'||u.search||u.hash)throw Error('CONTROL_ROOM_URL must be the control room HTTPS origin.');return u.origin;}
 function localMode(env:StudioAuthEnv){return env.STUDIO_AUTH_MODE==='account2';}
 function localConfigured(env:StudioAuthEnv){return localMode(env)&&!!env.ADMIN_USERNAME&&!!env.ADMIN_PASSWORD;}
 async function credentialVersion(env:StudioAuthEnv){
@@ -29,19 +29,19 @@ export async function studioOwner(req:Request,env:StudioAuthEnv):Promise<StudioO
  const id=cookie(req,cookieName);if(!/^[a-f0-9]{64}$/.test(id))return null;
  const raw=await env.LIVE_STATUS_KV.get('studio-session:'+id);if(!raw)return null;
  try{const owner=JSON.parse(raw);if(!['Super Administrator','Administrator'].includes(owner.role)||typeof owner.sub!=='string'||!Number.isSafeInteger(owner.exp)||owner.exp<=Math.floor(Date.now()/1000))return null;
- if(localMode(env)){if(!localConfigured(env)||owner.sub!=='account2:owner'||owner.role!=='Super Administrator'||owner.credentialVersion!==await credentialVersion(env))return null;}
- else if(!/^control-room:\d+$/.test(owner.sub))return null;
+ if(owner.sub==='account2:owner'){if(!localConfigured(env)||owner.role!=='Super Administrator'||owner.credentialVersion!==await credentialVersion(env))return null;}
+ else if(!configured(env)||!/^control-room:\d+$/.test(owner.sub))return null;
  return owner;}catch{return null;}
 }
 async function establishSession(owner:Partial<StudioOwner>,env:StudioAuthEnv):Promise<Response>{
- if(!['Super Administrator','Administrator'].includes(String(owner.role))||typeof owner.sub!=='string'||!(localMode(env)?owner.sub==='account2:owner':/^control-room:\d+$/.test(owner.sub))||typeof owner.name!=='string')return json({error:'Control room returned an invalid identity.'},502);
+ if(!['Super Administrator','Administrator'].includes(String(owner.role))||typeof owner.sub!=='string'||!(owner.sub==='account2:owner'?localConfigured(env):configured(env)&&/^control-room:\d+$/.test(owner.sub))||typeof owner.name!=='string')return json({error:'Control room returned an invalid identity.'},502);
  const now=Math.floor(Date.now()/1000),id=random();
  await env.LIVE_STATUS_KV.put('studio-session:'+id,JSON.stringify({...owner,iat:now,exp:now+43200,nonce:id}),{expirationTtl:43200});
  return redirect('/',[setCookie(cookieName,id,43200),setCookie('__Host-hk-studio-state','',0)]);
 }
 export async function studioAuthRoute(req:Request,env:StudioAuthEnv):Promise<Response|null>{
  const u=new URL(req.url),p=u.pathname;
- if(p==='/auth/options'&&req.method==='GET')return json({controlRoom:!localMode(env)&&configured(env),directAccount2:localMode(env)});
+ if(p==='/auth/options'&&req.method==='GET')return json({controlRoom:configured(env),directAccount2:localConfigured(env)});
  if(p==='/auth/password'&&req.method==='POST'){
   if(req.headers.get('origin')!==u.origin)return json({error:'Cross-origin request denied'},403);
   if(!(localMode(env)?localConfigured(env):configured(env)))return json({error:'Studio sign-in is not configured.'},503);
@@ -70,12 +70,12 @@ export async function studioAuthRoute(req:Request,env:StudioAuthEnv):Promise<Res
   return establishSession(await response.json() as Partial<StudioOwner>,env);
  }
  if(p==='/auth/start'&&req.method==='GET'){
-  if(localMode(env)||!configured(env))return json({error:'Studio sign-in needs CONTROL_ROOM_URL and STUDIO_SSO_SECRET configured on this existing Worker.'},503);
+  if(!configured(env))return json({error:'Studio sign-in needs CONTROL_ROOM_URL and STUDIO_SSO_SECRET configured on this existing Worker.'},503);
   const state=random(),target=new URL('/studio/connect',controlOrigin(env));target.searchParams.set('state',state);
   return redirect(target.href,[setCookie('__Host-hk-studio-state',state,300)]);
  }
  if(p==='/auth/callback'&&req.method==='GET'){
-  if(localMode(env)||!configured(env))return json({error:'Studio sign-in is not configured.'},503);
+  if(!configured(env))return json({error:'Studio sign-in is not configured.'},503);
   const state=u.searchParams.get('state')||'',code=u.searchParams.get('code')||'';
   if(!/^[a-f0-9]{64}$/.test(state)||!/^[a-f0-9]{64}$/.test(code)||cookie(req,'__Host-hk-studio-state')!==state)return json({error:'Sign-in could not be confirmed. Open Studio again from the control room.'},401);
   let response:Response;try{response=await fetch(controlOrigin(env)+'/api/studio/redeem',{method:'POST',redirect:'manual',signal:AbortSignal.timeout(10000),headers:{'content-type':'application/json',authorization:'Bearer '+env.STUDIO_SSO_SECRET},body:JSON.stringify({state,code,audience:u.origin})});}catch{return json({error:'Control room could not be reached. Open Studio again to retry.'},502);}

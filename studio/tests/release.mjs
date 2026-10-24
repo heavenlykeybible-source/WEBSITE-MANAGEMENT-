@@ -7,7 +7,7 @@ assert.equal(manifest.worker,'heavenlykey-media');assert.ok(bytes.length<1000000
 const {default:worker}=await import(file.href+'?sha='+manifest.sha256);
 const id='a'.repeat(64),session={sub:'control-room:1',role:'Super Administrator',name:'Owner',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+600,nonce:id};
 let oldAssetsCalls=0;
-const env={ASSETS:{fetch(){oldAssetsCalls++;throw Error('Outdated asset binding must not override packaged files');}},LIVE_STATUS_KV:{async get(k){return k==='studio-session:'+id?JSON.stringify(session):null;}}};
+const env={CONTROL_ROOM_URL:'https://controlroom.heavenlykey.org',STUDIO_SSO_SECRET:'test-secret-at-least-32-characters-only',ASSETS:{fetch(){oldAssetsCalls++;throw Error('Outdated asset binding must not override packaged files');}},LIVE_STATUS_KV:{async get(k){return k==='studio-session:'+id?JSON.stringify(session):null;}}};
 let response=await worker.fetch(new Request('https://studio.test/'),env);assert.equal(response.status,200);assert.match(await response.text(),/Continue with control room/);assert.equal(response.headers.get('cache-control'),'no-store');
 response=await worker.fetch(new Request('https://studio.test/',{headers:{cookie:'__Host-hk-studio='+id}}),env);assert.equal(response.status,200);const html=await response.text();assert.match(html,/Your message/);assert.match(html,/view-meetings/);assert.match(html,/view-editing/);assert.match(html,/test-devices/);assert.match(html,/hk-footer-column/);
 for(const path of ['/js/studio-app.js','/js/signin.js','/js/device-check.js','/css/shell.css','/css/ministry-footer.css','/assets/ministry/logo.svg'])assert.equal((await worker.fetch(new Request('https://studio.test'+path),env)).status,200);
