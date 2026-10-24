@@ -102,3 +102,12 @@ test('room server retains fail-closed participant admission gate',async()=>{
  assert.match(html,/MeetingSpace/);
  assert.equal(response.status,200);
 });
+
+test('meeting interface contains host waiting-room controls',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await response.text();
+ assert.match(html,/id="admissionPanel"/);
+ assert.match(html,/admission-decision/);
+ assert.match(html,/id="roomLock"/);
+ assert.match(html,/Waiting for host approval/);
+});
