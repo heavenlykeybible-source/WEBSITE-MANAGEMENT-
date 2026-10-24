@@ -19,3 +19,15 @@ body{background:#fbf8ef;color:#091c58;font-family:'Bible Serif','Times New Roman
 #reader #verses{font-size:20px}#book-list button{line-height:1.15;padding-top:7px;padding-bottom:7px}#book-list{max-height:790px}@media(max-width:640px){#reader #verses{font-size:21px}#book-list{max-height:144px}}
 
 .brand .ministry-logo{display:block;width:76px;height:76px;object-fit:contain;flex:none;background:#fff;border-radius:4px}@media(max-width:900px){.brand .ministry-logo{width:56px;height:56px}}@media(max-width:640px){.brand .ministry-logo{width:55px;height:55px}}
+/* Keep the lower tools and footer in document flow at every viewport size. */
+.bible-layout{height:auto;min-height:0;align-items:start}
+.book-sidebar,.reader-sidebar{min-width:0;max-width:100%;overflow-wrap:anywhere}
+#reader{height: min(960px,calc(100dvh - 110px));min-height:520px}
+#verses{min-height:0;flex:1 1 auto;overflow:auto;overscroll-behavior:contain}
+.reader-topbar,.reader-bottom{flex-shrink:0}
+.reader-sidebar .panel{height:auto;min-height:0}
+main>.panel,main>section,footer{position:relative;clear:both;min-width:0;max-width:100%;box-sizing:border-box}
+.feature-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))}
+.feature-card,.feature-card strong{min-width:0;white-space:normal;overflow-wrap:anywhere}
+footer{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));overflow-wrap:anywhere}
+@media(max-width:640px){.bible-layout{height:auto}.book-sidebar{height:auto;max-height:220px}#reader{height: min(820px,90dvh);min-height:480px}.reader-bottom{flex-wrap:wrap}.reader-bottom button{min-height:44px;flex:1 1 28%;white-space:normal}.explore-features h2{display:flex;flex-wrap:wrap;gap:10px}.reader-sidebar{width:100%}}

@@ -34,6 +34,12 @@ jobs:
         run: npm run build
       - name: Audit Bible before deployment
         run: npm test
+      - name: Preserve previous healthy existing Worker
+        working-directory: .
+        run: node scripts/test-existing-worker-release.mjs && node scripts/existing-worker-release.mjs snapshot
+        env:
+          RELEASE_WORKER: onlinebible
+          RELEASE_ORIGIN: https://bible.heavenlykey.org/
       - name: Deploy Bible directly to Cloudflare from GitHub
         run: npx wrangler deploy --config bible/wrangler.toml --name onlinebible --keep-vars
       - name: Verify published scripture and homepage
@@ -45,3 +51,15 @@ jobs:
           else
             echo '::warning::BIBLE_LIVE_URL is unset; live URL verification requires that variable.'
           fi
+      - name: Verify release and restore previous version on failure
+        working-directory: .
+        run: node scripts/existing-worker-release.mjs verify
+        env:
+          RELEASE_WORKER: onlinebible
+          RELEASE_ORIGIN: https://bible.heavenlykey.org/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: onlinebible-previous-deployments
+          path: .release-state/
+          retention-days: 90

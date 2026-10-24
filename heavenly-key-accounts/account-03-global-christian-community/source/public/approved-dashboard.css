@@ -172,3 +172,15 @@ body[data-page=home].gc-composed-dashboard :is(a,button,input,select,summary):fo
 }
 @media(max-width:540px){body[data-page=home].gc-composed-dashboard .social-sidebar{display:flex!important}body[data-page=home].gc-composed-dashboard .composer-top{gap:7px}body[data-page=home].gc-composed-dashboard .gc-composer-submit{padding:8px 10px;font-size:11px}body[data-page=home].gc-composed-dashboard .composer-top>.member-avatar{width:34px;height:34px;flex-basis:34px}body[data-page=home].gc-composed-dashboard .composer-prompt{font-size:12px!important;padding:8px!important}body[data-page=home].gc-composed-dashboard .composer-shortcut{font-size:11px!important;padding:6px 3px}body[data-page=home].gc-composed-dashboard .brand-name{font-size:17px!important}body[data-page=home].gc-composed-dashboard .brand-words>small{font-size:8px!important}body[data-page=home].gc-composed-dashboard .authbar{max-width:145px}body[data-page=home].gc-composed-dashboard .authbar .btn{font-size:10px!important;padding:6px!important}body[data-page=home].gc-composed-dashboard .authbar .notifications>summary{max-width:86px;font-size:10px}body[data-page=home].gc-composed-dashboard .gc-active-content{width:108px;flex-basis:108px}}
 @media(prefers-reduced-motion:reduce){body[data-page=home].gc-composed-dashboard *{scroll-behavior:auto!important;transition:none!important}}
+/* Bound sticky rails to the feed; keep publications and the footer below the grid. */
+body[data-page=home] .shell,body[data-page=home] #page-root{min-width:0;height:auto;overflow:visible;display:flow-root}
+body[data-page=home] .social-layout{height:auto!important;min-height:0!important;align-items:start!important;isolation:isolate}
+body[data-page=home] .social-layout>*{min-width:0;max-width:100%;box-sizing:border-box}
+body[data-page=home] .social-rail,body[data-page=home] .social-sidebar{align-self:start!important;max-height:calc(100dvh - 100px)!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;scrollbar-gutter:stable}
+body[data-page=home] .social-stream{min-width:0;overflow-wrap:anywhere}
+body[data-page=home] .hk-official-feed,body[data-page=home] footer,body[data-page=home] #hk-standard-footer,body[data-page=home] #hk-app-footer-promo{position:relative;clear:both;isolation:isolate;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+body[data-page=home] .social-layout>.hk-official-feed{grid-column:1/-1}
+body[data-page=home] .hk-official-posts{min-width:0}
+body[data-page=home] .hk-official-posts article{min-width:0;max-width:100%;box-sizing:border-box}
+@media(max-width:1100px){body[data-page=home] .social-sidebar{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important}}
+@media(max-width:760px){body[data-page=home] .social-rail,body[data-page=home] .social-sidebar{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important;scrollbar-gutter:auto}body[data-page=home] .social-layout{display:block!important}body[data-page=home] .social-sidebar{margin-bottom:20px}}
