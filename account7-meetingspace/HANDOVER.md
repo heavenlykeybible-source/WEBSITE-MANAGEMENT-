@@ -68,3 +68,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 ## Meeting time limit groundwork (2026-10-24)
 - Durable Object now assigns a plan-derived meeting deadline when owner joins, refuses connections after the deadline, and closes connections on the next incoming signalling message after expiry. Browser handles `meeting-ended` and stops local media.
 - **Incomplete:** There is NO scheduled alarm or independent server timer yet, so idle calls may continue past deadline until another message or reconnect. In-memory deadline is lost on DO restart. Monthly quota accounting, plan revocation and billing enforcement remain unimplemented. Do NOT claim reliable time enforcement.
+
+## Durable Object meeting alarms (2026-10-24)
+- Added `alarm()` to close sockets at the meeting deadline even when participants are idle, and persisted the deadline with `ctx.storage.setAlarm`.
+- New WebSocket upgrades read `ctx.storage.getAlarm()` to reject expired sessions after object restarts. Added regression test for expired persisted alarm.
+- Still needs Cloudflare runtime integration testing and recovery verification; in-memory connected client state is NOT hibernation safe. No monthly quota ledger or payment-backed ticket issuance yet.
