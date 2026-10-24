@@ -61,7 +61,7 @@ test('Account 5 public shell rejects all third-party framing after website uses 
 
 
 test('premium homepage features laptop hero and app family while app remains accessible',()=>{
- const html=get('public/index.html');
+ const html=get('public/downloads.html');
  assert.match(html,/class="laptop"/);
  assert.match(html,/id="all-in-one"/);
  assert.match(html,/class="family-grid"/);
@@ -70,7 +70,7 @@ test('premium homepage features laptop hero and app family while app remains acc
 });
 
 test('premium page assets, CSP, navigation and app preservation',()=>{
- const html=get('public/index.html');
+ const html=get('public/downloads.html');
  const sw=get('public/sw.js');
  const css=get('public/premium-home.css');
  for(const path of ['premium-home.css','premium-family-nav.js','premium-download-options.js','experience.html','assets/ministry/logo.png','assets/ministry/hero-people-laptop.jpg','assets/ministry/global-community-network.svg','assets/ministry/rotating-world-land.svg']){
@@ -88,7 +88,7 @@ test('premium page assets, CSP, navigation and app preservation',()=>{
 });
 
 test('premium page references only existing bundled local assets',()=>{
- const html=get('public/index.html');
+ const html=get('public/downloads.html');
  const css=get('public/premium-home.css');
  const source=[...html.matchAll(/(?:src|href)="(\/[^"#?]+)"/g)].map(m=>m[1])
   .concat([...css.matchAll(/url\(["']?(\/[^)"']+)["']?\)/g)].map(m=>m[1]));
@@ -101,7 +101,7 @@ test('premium page references only existing bundled local assets',()=>{
 });
 
 test('mission message and five app sharing controls are present and safe',()=>{
- const html=get('public/index.html');
+ const html=get('public/downloads.html');
  assert.match(html,/<\/div><p class="hero-mission-line">Together we take Christ to the nations of the world<\/p>/);
  assert.equal((html.match(/class="share-to-bless family-share"/g)||[]).length,5);
  assert.match(html,/src="\/premium-share\.js"/);
@@ -113,3 +113,5 @@ test('mission message and five app sharing controls are present and safe',()=>{
 });
 
 test('all five device QR assets are local, included in offline shell, and linked to installation pages',()=>{const sw=get('public/sw.js'),code=get('public/premium-download-options.js');for(const device of ['android','iphone','ipad','windows','mac']){const qr=get('public/qr/'+device+'.svg');assert.match(qr,/<svg /);assert.match(qr,/<path fill="#111"/);assert.match(sw,new RegExp('/qr/'+device+'\\.svg'));assert.ok(code.includes("'/download/'")||code.includes("'download/'"));assert.ok(get('public/download/'+device+'/index.html').length>100);}assert.match(code,/qrLink\.append\(img\)/);});
+
+test('main app URL launches functional app and preserves download landing page',()=>{const html=get('public/index.html');for(const asset of ['/app.js','/member.js','/site-sync.js','/platform.js'])assert.ok(html.includes(asset));for(const target of ['/bible.html','/walk-offline.html','/creation-to-eternity.html','/downloads.html'])assert.ok(html.includes(target));assert.match(html,/data-screen="community"/);assert.match(html,/data-screen="live"/);assert.doesNotMatch(html,/https:\/\/(?:app|bible)\.heavenlykey\.org/);});
