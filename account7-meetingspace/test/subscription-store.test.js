@@ -26,3 +26,8 @@ test('subscription store requires trusted database and user',async()=>{
  await assert.rejects(readSubscription(null,'owner'),/missing/);
  await assert.rejects(readMonthlyUsage({prepare(){}},''),/missing/);
 });
+
+test('corrupt usage does not silently grant a new quota',async()=>{
+ const {db}=dbFor({used:'not-a-number'});
+ await assert.rejects(readMonthlyUsage(db,'owner1',{now}),/Invalid stored usage/);
+});
