@@ -2,8 +2,8 @@
   "format": "heavenly-key-studio-single-worker-v1",
   "worker": "heavenlykey-media",
   "bundle": "studio-worker.js",
-  "bytes": 285427,
-  "sha256": "9ae7433ef546b9622ebb27010d50209e5d1e29baf016123d735fb00c5e0e0a28",
+  "bytes": 527526,
+  "sha256": "3b0c10769c4c96f1bc52b926052f3a19724dc38f7fce4052a9a5680d4f758eae",
   "assetCount": 14,
   "assets": {
     "/assets/ministry/logo.svg": "95973432f94126d94294835f97d3d29a0e9806484784651a041e3d7d93f993a5",
@@ -32,7 +32,7 @@
     "src/studio/audio-processing.ts": "7209d79611066a948c6dfb47226436a317216cbf66bbb6a3f95f8c90197facd5",
     "src/studio/formats.ts": "a4a1dd4b704fc8a71eea1d9a87ad0466eb4dfe7b965a083849d8f581169a79a5",
     "src/studio-assets.ts": "2a9f0c999c8a8bf0078f3ae79232188268efb7e97424c6931e599fa126d8888e",
-    "src/studio-auth.ts": "2dfbc6aa8aecb72569e623d33d3b63edc860a97401187b9f58b92ebf7bbd357a",
+    "src/studio-auth.ts": "d00829faa250d6938255e729653e76626192c3a1b27163744241d9273ec3e4b9",
     "src/uploads.ts": "618565546aa5e0cfc54aef36b435475a21733ad8c3dcd588fd6c8c8fa5b140e1"
   },
   "deployChannel": "Direct Cloudflare Account 2 -> existing heavenlykey-media Worker",

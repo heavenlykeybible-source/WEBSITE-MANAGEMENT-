@@ -39,7 +39,14 @@ async function establishSession(owner:Partial<StudioOwner>,env:StudioAuthEnv):Pr
  await env.LIVE_STATUS_KV.put('studio-session:'+id,JSON.stringify({...owner,iat:now,exp:now+43200,nonce:id}),{expirationTtl:43200});
  return redirect('/',[setCookie(cookieName,id,43200),setCookie('__Host-hk-studio-state','',0)]);
 }
+export function studioPublicRequest(req:Request):Request{
+ const u=new URL(req.url),canonical='https://studioroom.heavenlykey.org';
+ if(u.origin!=='https://heavenlykey-media.faithofourfatherstv.workers.dev'||req.headers.get('x-hk-public-origin')!==canonical)return req;
+ const headers=new Headers(req.headers);if(headers.get('origin')===u.origin)headers.set('origin',canonical);
+ u.hostname='studioroom.heavenlykey.org';return new Request(u,new Request(req,{headers}));
+}
 export async function studioAuthRoute(req:Request,env:StudioAuthEnv):Promise<Response|null>{
+ req=studioPublicRequest(req);
  const u=new URL(req.url),p=u.pathname;
  if(p==='/auth/options'&&req.method==='GET')return json({controlRoom:configured(env),directAccount2:localConfigured(env)});
  if(p==='/auth/password'&&req.method==='POST'){

@@ -13,6 +13,7 @@ await walk(path.join(root,'src'),async file=>{sourceFiles[path.relative(root,fil
 await fs.mkdir(path.join(root,'release'),{recursive:true});
 const outfile=path.join(root,'release/studio-worker.js');
 await build({absWorkingDir:root,entryPoints:[path.join(root,'src/index.ts')],outfile,bundle:true,format:'esm',target:'es2022',platform:'browser',minify:false,plugins:[{name:'embed-studio-public-files',setup(b){b.onLoad({filter:/[/\\]embedded-manifest\.ts$/},()=>({contents:'export const assets='+JSON.stringify(assets)+';',loader:'ts'}));}}]});
+await fs.appendFile(outfile,'\nconst STATIC_ASSETS='+JSON.stringify(Object.fromEntries(Object.entries(assets).map(([path,item])=>[path,Buffer.from(item.content).toString('base64')])) )+';\n');
 const bytes=await fs.readFile(outfile);if(bytes.length>1000000)throw Error('Studio bundle exceeds control room 1 MB upload limit.');
 const manifest={format:'heavenly-key-studio-single-worker-v1',worker:'heavenlykey-media',bundle:'studio-worker.js',bytes:bytes.length,sha256:hash(bytes),assetCount:Object.keys(assets).length,assets:Object.fromEntries(Object.entries(assets).map(([name,item])=>[name,hash(item.content)])),sourceFiles,deployChannel:'Direct Cloudflare Account 2 -> existing heavenlykey-media Worker',preserve:['DB','MEDIA_R2','LIVE_STATUS_KV','MEDIA_ENGINE_SHARED_SECRET','all existing provider secrets'],databaseChange:'None for Account 2 direct owner sign-in',noNewAssetBindingRequired:true};
 await fs.writeFile(path.join(root,'release/manifest.json'),JSON.stringify(manifest,null,2)+'\n');

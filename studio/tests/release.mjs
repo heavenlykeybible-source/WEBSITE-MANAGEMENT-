@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 const file=new URL('../release/studio-worker.js',import.meta.url),manifest=JSON.parse(fs.readFileSync(new URL('../release/manifest.json',import.meta.url),'utf8'));
 const bytes=fs.readFileSync(file);
-assert.equal(manifest.worker,'heavenlykey-media');assert.ok(bytes.length<1000000);assert.equal(manifest.sha256,createHash('sha256').update(bytes).digest('hex'));
+assert.ok(bytes.toString().includes('const STATIC_ASSETS='),'Review must include a portable frontend demo manifest');assert.equal(manifest.worker,'heavenlykey-media');assert.ok(bytes.length<1000000);assert.equal(manifest.sha256,createHash('sha256').update(bytes).digest('hex'));
 const {default:worker}=await import(file.href+'?sha='+manifest.sha256);
 const id='a'.repeat(64),session={sub:'control-room:1',role:'Super Administrator',name:'Owner',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+600,nonce:id};
 let oldAssetsCalls=0;
