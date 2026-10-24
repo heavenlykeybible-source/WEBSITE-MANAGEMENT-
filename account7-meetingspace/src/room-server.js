@@ -86,6 +86,8 @@ export class MeetingRoom extends DurableObject {
    if(record.role==='owner'){this.ownerId=null;for(const c of this.clients.values())c.socket.close(1012,'Host disconnected');this.clients.clear();this.locked=false}
   };
   server.addEventListener('close',cleanup);server.addEventListener('error',cleanup);
-  return new Response(null,{status:101,webSocket:client});
+  const offered=(request.headers.get('Sec-WebSocket-Protocol')||'').split(',').map(v=>v.trim());
+  const headers=offered.includes('meetingspace')?{'Sec-WebSocket-Protocol':'meetingspace'}:{};
+  return new Response(null,{status:101,webSocket:client,headers});
  }
 }
