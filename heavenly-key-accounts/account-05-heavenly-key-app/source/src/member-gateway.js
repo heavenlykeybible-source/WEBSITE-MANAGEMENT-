@@ -81,13 +81,13 @@ export async function memberGateway(request,env,upstreamFetch=fetch) {
     if(target.kind==='tracks'){
       // The upstream track route also permits anonymous reads. Validate this
       // session first so an expired cookie cannot masquerade as signed-in progress.
-      const check=await upstreamFetch(ORIGIN+'/api/me',{method:'GET',headers:{Accept:'application/json',Cookie:'gc_session='+id},redirect:'error',credentials:'omit',cache:'no-store',signal:controller.signal});
+      const check=await upstreamFetch(ORIGIN+'/api/me',{method:'GET',headers:{Accept:'application/json',Cookie:'gc_session='+id},redirect:'manual',credentials:'omit',cache:'no-store',signal:controller.signal});
       if(check.status===401)return reply({error:'Please sign in.'},401,true);
       if(!check.ok||!(check.headers.get('content-type')||'').includes('application/json'))throw Error('Session unavailable');
       const verified=shape(await jsonBody(check,262144),'session');
       if(verified.member.status!=='active')return reply({error:'Learning actions are unavailable for your restricted account.'},403);
     }
-    const result=await upstreamFetch(ORIGIN+target.path,{method:request.method,headers,body,redirect:'error',credentials:'omit',cache:'no-store',signal:controller.signal});
+    const result=await upstreamFetch(ORIGIN+target.path,{method:request.method,headers,body,redirect:'manual',credentials:'omit',cache:'no-store',signal:controller.signal});
     if(!result.ok){
       const status=[400,401,403,409,429,503].includes(result.status)?result.status:502;
       const message=status===401?'Email or password is incorrect, or your session has ended.':status===403?'This action is unavailable for your account.':status===429?'Too many attempts. Please wait before trying again.':'The member service could not complete this request.';

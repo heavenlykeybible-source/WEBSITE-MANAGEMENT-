@@ -26,7 +26,7 @@ async function bundledChapter(request,env,match,url){
  let chapterId;
  if(url.searchParams.get("metadata")==="1"){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);
-  try{const metadata=await fetch(publicOrigin(env)+"/api/bible/"+encodeURIComponent(name)+"/"+chapter,{headers:{Accept:"application/json"},redirect:"error",signal:controller.signal});if(metadata.ok){const info=await metadata.json();if(info.success===true&&Number.isSafeInteger(info.chapterId)&&info.chapterId>0)chapterId=info.chapterId;}}catch{}finally{clearTimeout(timer);}
+  try{const metadata=await fetch(publicOrigin(env)+"/api/bible/"+encodeURIComponent(name)+"/"+chapter,{headers:{Accept:"application/json"},redirect:"manual",signal:controller.signal});if(metadata.ok){const info=await metadata.json();if(info.success===true&&Number.isSafeInteger(info.chapterId)&&info.chapterId>0)chapterId=info.chapterId;}}catch{}finally{clearTimeout(timer);}
  }
  const result=Response.json({success:true,translation:"KJV",book:name,chapter,verses,warning:null,...(chapterId?{chapterId}:{})},{headers:{"X-Content-Type-Options":"nosniff"}});
  return request.method==="HEAD"?new Response(null,{status:result.status,headers:result.headers}):result;
@@ -68,7 +68,7 @@ export default {
    if(range&&path.endsWith("/object")&&/^bytes=\d*-\d*$/.test(range))headers.set("Range",range);
    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
    try{
-    const upstream=await fetch(publicOrigin(env)+path,{method:"GET",headers,redirect:"error",signal:controller.signal});
+    const upstream=await fetch(publicOrigin(env)+path,{method:"GET",headers,redirect:"manual",signal:controller.signal});
     if(path.startsWith("/api/bible/audio")&&upstream.ok){
      const data=await upstream.json();
      if(data.success!==true||!Array.isArray(data.items))throw Error("Invalid chapter audio metadata");

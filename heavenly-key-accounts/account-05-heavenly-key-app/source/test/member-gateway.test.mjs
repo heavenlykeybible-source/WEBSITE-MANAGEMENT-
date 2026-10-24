@@ -18,7 +18,7 @@ test('login uses Account 3 and creates only a protected host cookie',async()=>{
  const r=await memberGateway(request('login','POST',{email:' Test@example.test ',password:'secret',role:'owner'},{Authorization:'Bearer attacker',Cookie:'gc_session=attacker'}),enabled,async(url,options)=>{
   assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/auth/login');assert.equal(options.headers.Origin,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev');
   assert.equal(options.headers.Cookie,undefined);assert.equal(options.headers.Authorization,undefined);
-  assert.equal(options.credentials,'omit');assert.equal(options.redirect,'error');
+  assert.equal(options.credentials,'omit');assert.equal(options.redirect,'manual');
   assert.deepEqual(JSON.parse(options.body),{email:'test@example.test',password:'secret'});
   return json({ok:true,userId:4,role:'owner'},200,{'set-cookie':'gc_session='+ID+'; Path=/; HttpOnly; Secure; SameSite=Lax'});
  });

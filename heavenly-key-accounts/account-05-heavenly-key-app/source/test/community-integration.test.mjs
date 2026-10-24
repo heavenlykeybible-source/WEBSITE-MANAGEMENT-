@@ -17,7 +17,7 @@ test('public feed never forwards credentials, queries or arbitrary destinations'
  let called=0;const app=createWorker(async(url,options)=>{
   called++;assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/feed');
   assert.deepEqual(options.headers,{Accept:'application/json'});
-  assert.equal(options.redirect,'error');assert.equal(options.credentials,'omit');
+  assert.equal(options.redirect,'manual');assert.equal(options.credentials,'omit');
   return reply([{profile_name:'A member',body:'A public testimony',email:'private',userId:33},{post_type:'video',body:'excluded'},{video_url:'https://example.test',body:'excluded'}]);
  });
  const r=await app.fetch(req('/api/community/feed',{headers:{cookie:'gc_session=private',authorization:'Bearer private'}}),enabled);

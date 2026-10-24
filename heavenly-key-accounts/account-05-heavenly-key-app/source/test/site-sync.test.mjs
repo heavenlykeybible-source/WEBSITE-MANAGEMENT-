@@ -17,7 +17,7 @@ test('published website content is filtered and no credentials are forwarded',as
  assert.ok(!JSON.stringify(j).includes('ignored_admin_secret'));assert.ok(!JSON.stringify(j).includes('private_contact'));
  for(const x of seen){
   assert.ok(x.url.startsWith('https://heavenlykey.org/api/'));
-  assert.equal(x.options.credentials,'omit');assert.equal(x.options.redirect,'error');
+  assert.equal(x.options.credentials,'omit');assert.equal(x.options.redirect,'manual');
   assert.equal(x.options.headers.Cookie,undefined);
  }
 });
