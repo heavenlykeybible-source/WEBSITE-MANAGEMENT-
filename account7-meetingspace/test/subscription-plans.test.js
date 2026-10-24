@@ -21,3 +21,7 @@ test('usage and participant caps are enforced at boundaries',()=>{
  assert.equal(effectiveMeetingMinutes({plan:PLANS.free,minutesUsed:115}),5);
  assert.throws(()=>canJoinMeeting({plan:PLANS.free,connected:-1}),/Invalid/);
 });
+
+test('paid plan seat limits remain within current peer-to-peer safety cap',()=>{
+ for(const plan of Object.values(PLANS))assert.ok(plan.participants<=12);
+});
