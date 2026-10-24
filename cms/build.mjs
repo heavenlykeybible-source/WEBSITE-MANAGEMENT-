@@ -1,3 +1,4 @@
+import {improveCodingChat} from './chat-productivity.mjs';
 import {repairChat} from './chat-resilience.mjs';
 import fs from 'node:fs';
 import {build} from 'esbuild';
@@ -51,4 +52,4 @@ for (const [name, start, end] of requiredMarkers) {
   const section = worker.slice(worker.indexOf(start) + start.length, worker.indexOf(end));
   if (!section.trim()) throw new Error('Refusing CMS build: empty generated section ' + name);
 }
-fs.writeFileSync(target,repairChat(worker));
+fs.writeFileSync(target,improveCodingChat(repairChat(worker)));
