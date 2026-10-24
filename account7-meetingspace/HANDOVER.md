@@ -54,3 +54,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added `src/subscription-store.js` for parameterized D1 subscription lookup, UTC monthly meeting-minute usage, and entitlement resolution.
 - Added `test/subscription-store.test.js` for active/expired subscriptions and quota handling. Tests have NOT been executed.
 - This store is NOT yet connected to worker routes or a D1 binding; usage is NOT enforced live. Payment provider and verified account identity still required.
+
+## Latest subscription safety fixes
+- Subscription usage queries now reject corrupt/non-finite totals instead of granting extra time; regression test added.
+- Entitlement evaluation accepts time-valid `trialing` subscriptions as well as `active` subscriptions.
+- These are source changes only; tests and production enforcement are still pending.
