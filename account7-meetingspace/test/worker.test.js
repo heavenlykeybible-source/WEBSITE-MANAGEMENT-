@@ -88,3 +88,10 @@ test('meeting room displays broadcast integration status',async()=>{
  assert.match(html,/Encoder: not connected/);
  assert.match(html,/Broadcasting is not yet connected/);
 });
+
+test('broadcast status endpoint reports no encoder until configured',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/api/broadcast/status'),mockEnv);
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get('cache-control'),'no-store');
+ assert.deepEqual(await response.json(),{configured:false,encoder:'disconnected',liveDestinations:0,readyToStream:false});
+});
