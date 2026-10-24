@@ -3,7 +3,7 @@ import {repairChat} from './chat-resilience.mjs';
 import fs from 'node:fs';
 import {build} from 'esbuild';
 const target=new URL('../control-room-worker.js',import.meta.url);
-let worker=fs.readFileSync(target,'utf8');
+let worker=improveCodingChat(repairChat(fs.readFileSync(target,'utf8')));
 const operations='// BEGIN CONTROL OPERATIONS\n'+fs.readFileSync(new URL('../workspace/operations.js',import.meta.url),'utf8')+'\n// END CONTROL OPERATIONS';
 if(worker.includes('// BEGIN CONTROL OPERATIONS'))worker=worker.replace(/\/\/ BEGIN CONTROL OPERATIONS[\s\S]*?\/\/ END CONTROL OPERATIONS/,()=>operations);
 else worker=operations+'\n'+worker;
@@ -26,9 +26,9 @@ const passkeyClient=fs.readFileSync(new URL('../security/passkey-client.js',impo
 const passkeySection='// BEGIN OWNER PASSKEY CLIENT\n'+passkeyClient.replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END OWNER PASSKEY CLIENT';
 if(worker.includes('// BEGIN OWNER PASSKEY CLIENT'))worker=worker.replace(/\/\/ BEGIN OWNER PASSKEY CLIENT[\s\S]*?\/\/ END OWNER PASSKEY CLIENT/,()=>passkeySection);
 else worker=worker.replace('async function passwordDialog(',passkeySection+'\nasync function passwordDialog(');
-const oauthServer='// BEGIN CLOUDFLARE OAUTH SERVER\n'+fs.readFileSync(new URL('../workspace/cloudflare-oauth.js',import.meta.url),'utf8')+'\n// END CLOUDFLARE OAUTH SERVER';
+const oauthServer='// BEGIN CLOUDFLARE OAUTH SERVER\n'+fs.readFileSync(new URL('../workspace/cloudflare-oauth.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/release-preview.js',import.meta.url),'utf8')+'\n// END CLOUDFLARE OAUTH SERVER';
 if(worker.includes('// BEGIN CLOUDFLARE OAUTH SERVER'))worker=worker.replace(/\/\/ BEGIN CLOUDFLARE OAUTH SERVER[\s\S]*?\/\/ END CLOUDFLARE OAUTH SERVER/,()=>oauthServer);else worker=oauthServer+'\n'+worker;
-const releaseClient='// BEGIN RELEASE CLIENT\n'+fs.readFileSync(new URL('../workspace/release-client.js',import.meta.url),'utf8').replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END RELEASE CLIENT';
+const releaseClient='// BEGIN RELEASE CLIENT\n'+(fs.readFileSync(new URL('../workspace/release-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/release-preview-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END RELEASE CLIENT';
 if(worker.includes('// BEGIN RELEASE CLIENT'))worker=worker.replace(/\/\/ BEGIN RELEASE CLIENT[\s\S]*?\/\/ END RELEASE CLIENT/,()=>releaseClient);else worker=worker.replace('async function claude()',()=>releaseClient+'\nasync function claude()');
 worker=worker.replace('const tok = await unseal(env, conn.token_enc);','const tok = await cfOAuthToken(env, conn);');
 if(!worker.includes('const oauthConnection=await cfOAuthRoutes'))worker=worker.replace('  const operations=await controlOperationsRoutes','  const oauthConnection=await cfOAuthRoutes(req,env,user,sub,m);if(oauthConnection)return oauthConnection;\n  const operations=await controlOperationsRoutes');
@@ -37,6 +37,11 @@ if(!worker.includes("'Connect with Cloudflare (OAuth)'"))worker=worker.replace("
 if(!worker.includes("clearInterval(CHAT_QUEUE_POLL)"))worker=worker.replace("if(typeof PROVIDER_POLL!=='undefined'&&PROVIDER_POLL)","if(typeof CHAT_QUEUE_POLL!=='undefined'&&CHAT_QUEUE_POLL){clearInterval(CHAT_QUEUE_POLL);CHAT_QUEUE_POLL=null;}if(typeof PROVIDER_POLL!=='undefined'&&PROVIDER_POLL)");
 worker=worker.replace("h('button',{class:'sm',onclick:nativeImports},'Import repository or phone files'),log,", "h('button',{class:'sm',onclick:releaseGuide},'Send work: GitHub / upload / AI'),log,");
 worker=worker.replace('if(own()){verificationPanel(providerBox);','if(own()){watchChatProposals(log);verificationPanel(providerBox);');
+if(!worker.includes('const releaseDemo=await releasePreviewRoutes'))worker=worker.replace('  const operations=await controlOperationsRoutes','  const releaseDemo=await releasePreviewRoutes(req,env,user,sub,m);if(releaseDemo)return releaseDemo;\n  const workerDiagnostics=await workerReleaseDiagnostics(req,env,user,sub,m);if(workerDiagnostics)return workerDiagnostics;\n  const sourceRead=await workerSourceRoute(req,env,user,sub,m);if(sourceRead)return sourceRead;\n  const operations=await controlOperationsRoutes');
+if(!worker.includes("p.match(/^\\/release-demo"))worker=worker.replace("  if (m === 'GET' && p === '/oauth/cloudflare/callback')", "  if((x=p.match(/^\\/release-demo\\/(\\d+)\\/(\\d+)\\/([a-f0-9]{64})\\/(.*)$/)))return serveReleaseDemo(req,env,+x[1],+x[2],x[3],x[4]);\n  if (m === 'GET' && p === '/oauth/cloudflare/callback')");
+worker=worker.replace("h('button',{class:'sm',onclick:function(){listWorkers(c,w);}},'Workers'),", "h('button',{class:'sm',onclick:function(){listWorkers(c,w);}},'Workers'),h('button',{class:'sm',onclick:function(){workerDiagnosticCard(c,'heavenlykey-studio',w);}},'Diagnose live deployment'),h('button',{class:'sm',onclick:function(){workerSourceCard(c,w);}},'Inspect existing Worker source'),");
+worker=worker.replace("  else if(P.kind==='github'){var G=d.github;", "  else if(P.kind==='github'){var G=d.github;");
+if(!worker.includes('var demoMount=h('))worker=worker.replace("  if(P.owner_comment)kids.push", "  if(P.kind==='worker'){var demoMount=h('section');kids.push(demoMount);workerDemoCard(id,demoMount);}\n  if(P.owner_comment)kids.push");
 if (!worker.trim()) throw new Error('Refusing CMS build: active Worker source is empty');
 const requiredMarkers = [
   ['VISUAL CMS CLIENT', '// BEGIN VISUAL CMS CLIENT', '// END VISUAL CMS CLIENT'],
@@ -63,4 +68,4 @@ for (const [name, start, end] of requiredMarkers) {
   const section = worker.slice(worker.indexOf(start) + start.length, worker.indexOf(end));
   if (!section.trim()) throw new Error('Refusing CMS build: empty generated section ' + name);
 }
-fs.writeFileSync(target,improveCodingChat(repairChat(worker)));
+fs.writeFileSync(target,worker);
