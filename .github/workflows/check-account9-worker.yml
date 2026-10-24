@@ -1,0 +1,23 @@
+name: Verify Account 9 Worker identity
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/check-account9-worker.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    environment: account9-staging
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          node --input-type=module <<'JS'
+          const base='https://api.cloudflare.com/client/v4/accounts/ceb3b48449319950191a4f6bae9b8b82';
+          for(const path of ['/workers/subdomain','/workers/scripts','/pages/projects/heavenlykey-studio']){const r=await fetch(base+path,{headers:{authorization:'Bearer '+process.env.CF_TOKEN}}),d=await r.json();console.log(JSON.stringify({path,status:r.status,success:d.success,result:r.ok?(path==='/workers/scripts'?d.result.map(x=>({id:x.id})):path==='/workers/subdomain'?d.result:{name:d.result?.name,subdomain:d.result?.subdomain}):undefined,codes:d.errors?.map(x=>x.code)}));}
+          JS
+        env:
+          CF_TOKEN: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
