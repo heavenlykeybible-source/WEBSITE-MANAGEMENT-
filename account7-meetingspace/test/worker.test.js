@@ -116,3 +116,11 @@ test('demo flag alone cannot bypass production authentication',async()=>{
  const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),{...mockEnv,ALLOW_UNAUTHENTICATED_DEMO:'true',ENVIRONMENT:'production'});
  assert.equal(r.status,503);
 });
+
+test('meeting client handles host removal and stops media',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await response.text();
+ assert.match(html,/m\.type==='removed'/);
+ assert.match(html,/Removed from meeting by host/);
+ assert.match(html,/stream\?\.getTracks\(\)\.forEach/);
+});
