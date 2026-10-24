@@ -7,7 +7,7 @@ export const PLANS=Object.freeze({
 });
 export function getPlan(id){return PLANS[id]||null}
 export function activeEntitlement(subscription,now=Date.now()){
- if(!subscription||subscription.status!=='active'||!Number.isFinite(subscription.currentPeriodEnd)||subscription.currentPeriodEnd<=now)return PLANS.free;
+ if(!subscription||!['active','trialing'].includes(subscription.status)||!Number.isFinite(subscription.currentPeriodEnd)||subscription.currentPeriodEnd<=now)return PLANS.free;
  return getPlan(subscription.planId)||PLANS.free;
 }
 export function canStartMeeting({subscription,minutesUsed=0,now=Date.now()}){
