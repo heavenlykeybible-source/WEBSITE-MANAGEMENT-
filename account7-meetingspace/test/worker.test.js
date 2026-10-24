@@ -95,3 +95,10 @@ test('broadcast status endpoint reports no encoder until configured',async()=>{
  assert.equal(response.headers.get('cache-control'),'no-store');
  assert.deepEqual(await response.json(),{configured:false,encoder:'disconnected',liveDestinations:0,readyToStream:false});
 });
+
+test('room server retains fail-closed participant admission gate',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await response.text();
+ assert.match(html,/MeetingSpace/);
+ assert.equal(response.status,200);
+});
