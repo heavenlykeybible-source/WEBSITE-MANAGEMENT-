@@ -19,7 +19,6 @@ export class MeetingRoom extends DurableObject {
   if(!demo&&claims.role==='owner'){
    const savedOwner=await this.ctx.storage.get('ownerUserId');
    if(savedOwner&&savedOwner!==claims.userId)return new Response('Room owner mismatch',{status:403});
-   if(!savedOwner)await this.ctx.storage.put('ownerUserId',claims.userId);
   }
   if(this.clients.size>=12)return new Response('Room full',{status:429});
   if(!demo&&claims.role==='owner'&&this.ownerId===claims.userId)return new Response('Owner already connected',{status:409});
@@ -30,7 +29,7 @@ export class MeetingRoom extends DurableObject {
   const pair=new WebSocketPair(),[client,server]=Object.values(pair);
   server.accept();
   const id=crypto.randomUUID(),admitted=claims.role==='owner';
-  if(admitted)this.ownerId=claims.userId;
+  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;}
   const record={socket:server,userId:claims.userId,role:claims.role,admitted};
   this.clients.set(id,record);
   if(admitted){
