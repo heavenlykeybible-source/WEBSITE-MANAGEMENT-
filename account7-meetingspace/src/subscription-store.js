@@ -12,7 +12,9 @@ export async function readMonthlyUsage(db,userId,{now=Date.now()}={}){
  if(!Number.isFinite(date.getTime()))throw Error('Invalid time');
  const periodStart=Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),1);
  const row=await db.prepare('SELECT COALESCE(SUM(billed_minutes),0) AS used FROM meeting_sessions WHERE owner_user_id=? AND started_at>=? AND started_at<?').bind(userId,periodStart,now).first();
- return Math.max(0,Number(row?.used)||0);
+ const used=Number(row?.used??0);
+ if(!Number.isFinite(used)||used<0)throw Error('Invalid stored usage');
+ return used;
 }
 export async function resolveMeetingAllowance(db,userId,{now=Date.now()}={}){
  const [subscription,minutesUsed]=await Promise.all([readSubscription(db,userId),readMonthlyUsage(db,userId,{now})]);
