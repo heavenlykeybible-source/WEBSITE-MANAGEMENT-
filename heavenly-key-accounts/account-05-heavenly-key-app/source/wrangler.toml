@@ -1,6 +1,7 @@
 name = "heavenly-key-app"
 main = "src/index.js"
 compatibility_date = "2026-10-10"
+compatibility_flags = ["global_fetch_strictly_public"]
 workers_dev = true
 
 # Account 5 hosts only public app assets and a basic health endpoint.
