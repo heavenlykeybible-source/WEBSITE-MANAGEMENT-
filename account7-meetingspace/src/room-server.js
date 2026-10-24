@@ -8,7 +8,7 @@ export class MeetingRoom extends DurableObject {
  notifyOwner(message){for(const c of this.clients.values())if(c.role==='owner'&&c.admitted)this.send(c.socket,message)}
  async fetch(request){
   if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return new Response('Upgrade required',{status:426});
-  const demo=this.env.ALLOW_UNAUTHENTICATED_DEMO==='true';
+  const demo=this.env.ALLOW_UNAUTHENTICATED_DEMO==='true'&&this.env.ENVIRONMENT==='development';
   const roomId=new URL(request.url).pathname.match(/^\/api\/rooms\/([A-Za-z0-9_-]{6,80})\/socket$/)?.[1];
   if(!roomId)return new Response('Invalid room',{status:400});
   const authorization=request.headers.get('Authorization')||'';
@@ -41,7 +41,7 @@ export class MeetingRoom extends DurableObject {
    if(++count>100){server.close(1008,'Rate limit');return}
    if(typeof event.data!=='string'||event.data.length>120000){server.close(1009,'Message too large');return}
    let msg;try{msg=JSON.parse(event.data)}catch{return}
-   if(record.role==='owner'&&msg.type==='admission-decision'){
+   if(record.role==='owner'&&record.admitted&&msg.type==='admission-decision'){
     const target=this.clients.get(msg.id);
     if(!target||target.admitted||!['admit','deny'].includes(msg.decision))return;
     if(msg.decision==='deny'){this.send(target.socket,{type:'denied'});target.socket.close(1008,'Admission denied');return}
@@ -51,7 +51,7 @@ export class MeetingRoom extends DurableObject {
     this.broadcast({type:'join',id:msg.id},msg.id);
     return;
    }
-   if(record.role==='owner'&&msg.type==='room-lock'&&typeof msg.locked==='boolean'){this.locked=msg.locked;this.send(server,{type:'room-lock',locked:this.locked});return}
+   if(record.role==='owner'&&record.admitted&&msg.type==='room-lock'&&typeof msg.locked==='boolean'){this.locked=msg.locked;this.send(server,{type:'room-lock',locked:this.locked});return}
    if(!record.admitted)return;
    if(msg.type==='chat'){
     if(typeof msg.text!=='string'||!msg.text.trim()||msg.text.length>2000)return;
