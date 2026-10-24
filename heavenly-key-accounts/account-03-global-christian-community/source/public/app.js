@@ -92,6 +92,7 @@ window.HKCommunityContent=Object.freeze({renderActivePreview(post){let settings=
 async function mountEntityFeed(box,kind,id){box.dataset.entityKind=kind;box.dataset.entityId=id;return mountFeed(box);}
 async function mountFeed(container=root,filter=null,append=false){
  const host=container.matches?.('[data-feed]')?container.parentElement:container;if(!host)return;
+ host._gcFeedScrollObserver?.disconnect();
  if(filter)host.dataset.postFilter=filter;const generation=String(Number(host.dataset.feedGeneration||0)+1);host.dataset.feedGeneration=generation;host.setAttribute('aria-busy','true');
  let notice=host.querySelector('[data-feed-status]');if(!notice){notice=el('div',null,'feed-status');notice.dataset.feedStatus='1';notice.setAttribute('role','status');host.append(notice);}notice.replaceChildren(el('span','Loading posts…'));
  const q=new URLSearchParams();if(host.dataset.entityKind)q.set(host.dataset.entityKind==='group'?'groupId':'spaceId',host.dataset.entityId);
@@ -99,11 +100,15 @@ async function mountFeed(container=root,filter=null,append=false){
  const postId=new URLSearchParams(location.search).get('post');if(postId&&page==='home')q.set('postId',postId);if(append&&host.dataset.nextBefore)q.set('before',host.dataset.nextBefore);
  try{
  const data=await api('/api/feed?'+q);if(host.dataset.feedGeneration!==generation)return;
- let feed=host.querySelector('[data-feed]');if(!append||!feed){const next=el('div',null,'feed');next.dataset.feed='1';if(feed)feed.replaceWith(next);else host.append(next);feed=next;}
+ let feed=host.querySelector('[data-feed]');if(!append||!feed){const next=el('div',null,'feed');next.dataset.feed='1';if(feed)feed.replaceWith(next);else{const publications=host.querySelector('.hk-official-feed');if(publications)publications.before(next);else host.append(next);}feed=next;}
  const seen=new Set([...feed.querySelectorAll('[data-post-id]')].map(x=>x.dataset.postId));for(const post of data.items||[])if(!seen.has(String(post.post_id))){feed.querySelector('.feed-empty')?.remove();feed.append(renderPost(post));seen.add(String(post.post_id));}
  if(!feed.children.length){const empty=el('section',null,'feed-empty'),saved=host.dataset.saved==='1',type=host.dataset.postFilter;empty.append(el('span',saved?'▣':'✦','empty-symbol'),el('h2',postId?'Post unavailable':saved?'Your saved collection':type==='article'?'Room for thoughtful articles':type==='video_link'?'Videos that build faith':'A place for meaningful connection'),el('p',postId?'This post may be private or no longer available.':saved?'Save helpful posts from their options menu to find them here.':type==='article'?'No articles are available in this feed yet. Share a teaching, testimony or reflection.':type==='video_link'?'No video posts are available in this feed yet. Share a helpful message using a video link.':'Share a thought, encourage someone, or find a group that shares your purpose.'));if(!postId&&!saved){const a=el('a','Explore Groups','btn secondary');a.href='groups.html';empty.append(a);}feed.append(empty);}
  host.querySelector('[data-load-more]')?.remove();host.dataset.nextBefore=data.nextBefore||'';notice.replaceChildren();
- if(data.nextBefore){const more=el('button','Load more posts','btn secondary load-more');more.dataset.loadMore='1';more.type='button';more.addEventListener('click',async()=>{more.disabled=true;await mountFeed(host,null,true);if(more.isConnected)more.disabled=false;});host.append(more);}
+ if(data.nextBefore){const more=el('button','Load more posts','btn secondary load-more');more.dataset.loadMore='1';more.type='button';more.addEventListener('click',async()=>{more.disabled=true;await mountFeed(host,null,true);if(more.isConnected)more.disabled=false;});const publications=host.querySelector('.hk-official-feed');if(publications)publications.before(more);else host.append(more);
+ if(page==='home'&&typeof IntersectionObserver==='function'){
+  const observer=new IntersectionObserver(entries=>{if(!more.isConnected){observer.disconnect();return;}if(entries.some(entry=>entry.isIntersecting)&&!more.disabled&&host.getAttribute('aria-busy')!=='true'){observer.disconnect();more.click();}},{rootMargin:'0px 0px 320px 0px'});host._gcFeedScrollObserver=observer;observer.observe(more);
+ }
+ }
  }catch(err){if(host.dataset.feedGeneration!==generation)return;notice.replaceChildren(el('span','Posts could not load. '+err.message));const retry=el('button','Try again','btn secondary');retry.type='button';retry.addEventListener('click',()=>mountFeed(host,null,append));notice.append(retry);}
  finally{if(host.dataset.feedGeneration===generation)host.setAttribute('aria-busy','false');}
 }

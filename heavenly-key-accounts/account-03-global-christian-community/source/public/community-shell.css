@@ -1,0 +1,42 @@
+/* Final homepage geometry: bounded rails, a continuous centre feed, and a real footer. */
+body[data-page=home].gc-composed-dashboard{--community-header-height:90px;--community-gap:18px;background:#eef2f7!important}
+body[data-page=home].gc-composed-dashboard .shell{width:100%!important;max-width:1640px!important;margin-inline:auto!important;padding:18px 24px 32px!important;box-sizing:border-box}
+body[data-page=home].gc-composed-dashboard .social-layout{width:100%!important;grid-template-columns:232px minmax(0,1fr) 288px!important;gap:var(--community-gap)!important;align-items:start!important}
+body[data-page=home].gc-composed-dashboard .social-layout>*{min-width:0!important;box-sizing:border-box;max-width:100%}
+body[data-page=home].gc-composed-dashboard .social-stream{grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important}
+body[data-page=home].gc-composed-dashboard .social-rail,
+body[data-page=home].gc-composed-dashboard .social-sidebar{position:sticky!important;top:calc(var(--community-header-height) + 12px)!important;max-height:calc(100dvh - var(--community-header-height) - 24px)!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-gutter:stable;align-self:start!important;grid-row:1!important;contain:inline-size}
+body[data-page=home].gc-composed-dashboard .social-rail{grid-column:1!important;color:#fff!important}
+body[data-page=home].gc-composed-dashboard .social-rail>*,
+body[data-page=home].gc-composed-dashboard .social-sidebar>*{flex-shrink:0;min-width:0;max-width:100%;box-sizing:border-box}
+body[data-page=home].gc-composed-dashboard .social-sidebar{grid-column:3!important;display:flex!important;flex-direction:column!important;gap:14px!important;padding:0 5px 4px 0!important;background:transparent!important}
+body[data-page=home].gc-composed-dashboard .social-sidebar .hk-reference-stack{display:flex!important;flex-direction:column;gap:14px!important;margin:0!important;min-width:0}
+body[data-page=home].gc-composed-dashboard .social-sidebar .hk-ref-panel,
+body[data-page=home].gc-composed-dashboard .social-sidebar>.card{border-radius:16px!important;border-color:#dde5ef!important;box-shadow:0 3px 14px #17345c06!important;overflow-wrap:anywhere}
+body[data-page=home].gc-composed-dashboard .social-rail .hk-community-ministry-note{order:20;color:#dce8fb!important;font-size:11px;line-height:1.6}
+body[data-page=home].gc-composed-dashboard .rail-premium-icon{width:20px!important;height:20px!important;flex:0 0 20px;fill:currentColor}
+body[data-page=home].gc-composed-dashboard .social-stream :is(.post,.composer-card,.gc-visitor-banner){border-radius:16px!important;box-shadow:0 3px 16px #17345c07!important}
+body[data-page=home].gc-composed-dashboard .social-stream :is(.post-text,.post-identity,.post-header,.hk-official-posts article){min-width:0;overflow-wrap:anywhere}
+body[data-page=home].gc-composed-dashboard .hk-official-feed{width:100%;max-width:100%;box-sizing:border-box;margin:22px 0!important;padding:0!important}
+body[data-page=home].gc-composed-dashboard .hk-official-posts{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:16px}
+body[data-page=home].gc-composed-dashboard .hk-official-posts article{padding:22px!important;border:1px solid #dce5ef;border-radius:16px!important;box-shadow:0 3px 16px #17345c07;min-width:0;max-width:100%;box-sizing:border-box;background:#fff}
+body[data-page=home].gc-composed-dashboard .hk-official-posts article>p{max-height:none!important;overflow:visible!important;font-size:14px;line-height:1.75;white-space:pre-line}
+body[data-page=home].gc-composed-dashboard .hk-official-posts h3{font-size:19px;line-height:1.4;color:#14355d}
+body[data-page=home].gc-composed-dashboard .hk-official-posts button{border:0;background:transparent;color:#174f94;padding:8px 0;font:700 13px system-ui;cursor:pointer}
+body[data-page=home].gc-composed-dashboard .gc-discovery-drawer{border:1px solid #dce5ef;border-radius:14px;background:#fff;margin:12px 0;padding:14px;min-width:0}
+body[data-page=home].gc-composed-dashboard .gc-discovery-drawer>summary{cursor:pointer;font-weight:700;color:#14355d}
+body[data-page=home].gc-composed-dashboard #hk-radio-compact{position:static!important;display:block!important;max-width:100%!important;width:auto!important;margin:0!important;white-space:normal;font-size:12px!important;border-radius:12px!important;box-shadow:none!important;box-sizing:border-box}
+body[data-page=home].gc-composed-dashboard>.hk-clean-footer{position:relative!important;clear:both;isolation:isolate;width:100%;box-sizing:border-box;margin-top:0!important;border-top:1px solid #dce5ef;z-index:0}
+body[data-page=home].gc-composed-dashboard :is(.social-stream,.social-sidebar,.social-rail) :is(img,video,iframe){max-width:100%}
+@media(min-width:1500px){body[data-page=home].gc-composed-dashboard .social-layout{grid-template-columns:248px minmax(0,1fr) 310px!important}}
+@media(min-width:901px) and (max-width:1199px){body[data-page=home].gc-composed-dashboard .social-layout{grid-template-columns:200px minmax(0,1fr)!important}}
+@media(max-width:1199px){
+ body[data-page=home].gc-composed-dashboard .gc-discovery-drawer .social-sidebar{position:static!important;top:auto!important;grid-column:auto!important;grid-row:auto!important;max-height:none!important;overflow:visible!important;scrollbar-gutter:auto;contain:none;padding:14px 0 0!important;display:flex!important}
+}
+@media(max-width:900px){
+ body[data-page=home].gc-composed-dashboard .shell{padding:12px 12px 24px!important}
+ body[data-page=home].gc-composed-dashboard .social-layout{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+ body[data-page=home].gc-composed-dashboard .social-stream{grid-column:1!important;grid-row:2!important}
+ body[data-page=home].gc-composed-dashboard .social-rail{position:static!important;top:auto!important;grid-column:1!important;grid-row:1!important;max-height:none!important;overflow:visible!important;scrollbar-gutter:auto;contain:none}
+ body[data-page=home].gc-composed-dashboard .hk-official-posts article{padding:18px!important}
+}
