@@ -8,6 +8,7 @@ send_metrics = false
 # Deploy only within the owner's verified Bible Cloudflare account.
 # No member databases, credentials, or protected resources are copied.
 [assets]
+not_found_handling = "404-page"
 directory = "../heavenly-key-website/bible"
 binding = "ASSETS"
 html_handling = "none"

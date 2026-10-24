@@ -7,6 +7,7 @@ workers_dev = true
 # Account 5 hosts only public app assets and a basic health endpoint.
 # Do NOT attach the original Accounts 1-4 databases or copy their credentials here.
 [assets]
+not_found_handling = "404-page"
 directory = "./public"
 binding = "ASSETS"
 run_worker_first = ["/api/*"]
