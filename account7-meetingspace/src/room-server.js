@@ -7,6 +7,7 @@ export class MeetingRoom extends DurableObject {
  send(socket,message){try{socket.send(JSON.stringify(message))}catch{}}
  broadcast(message,except=null){for(const [id,c] of this.clients)if(id!==except&&c.admitted)this.send(c.socket,message)}
  notifyOwner(message){for(const c of this.clients.values())if(c.role==='owner'&&c.admitted)this.send(c.socket,message)}
+ async alarm(){for(const c of this.clients.values()){this.send(c.socket,{type:'meeting-ended',reason:'time-limit'});try{c.socket.close(1000,'Meeting time limit reached')}catch{}}this.clients.clear();this.ownerId=null;this.locked=false;this.meetingDeadline=0;await this.ctx.storage.deleteAlarm();}
  async fetch(request){
   if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return new Response('Upgrade required',{status:426});
   const demo=this.env.ALLOW_UNAUTHENTICATED_DEMO==='true'&&this.env.ENVIRONMENT==='development';
@@ -31,7 +32,7 @@ export class MeetingRoom extends DurableObject {
   const pair=new WebSocketPair(),[client,server]=Object.values(pair);
   server.accept();
   const id=crypto.randomUUID(),admitted=claims.role==='owner';
-  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=plan.participants;this.meetingDeadline=Date.now()+plan.meetingMinutes*60000;}
+  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=plan.participants;this.meetingDeadline=Date.now()+plan.meetingMinutes*60000;await this.ctx.storage.setAlarm(this.meetingDeadline);}
   const record={socket:server,userId:claims.userId,role:claims.role,admitted};
   this.clients.set(id,record);
   if(admitted){
