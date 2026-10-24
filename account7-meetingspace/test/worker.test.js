@@ -124,3 +124,9 @@ test('meeting client handles host removal and stops media',async()=>{
  assert.match(html,/Removed from meeting by host/);
  assert.match(html,/stream\?\.getTracks\(\)\.forEach/);
 });
+
+test('browser offers a fixed WebSocket subprotocol with ticket',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await response.text();
+ assert.match(html,/\['meetingspace','mt\.'\+ticket\]/);
+});
