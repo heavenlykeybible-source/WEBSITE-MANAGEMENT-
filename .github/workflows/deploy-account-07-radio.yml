@@ -36,6 +36,14 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_RADIO_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_RADIO_ACCOUNT_ID }}
         run: node heavenly-key-accounts/account-07-unverified/scripts/preflight.mjs
+      - name: Preserve previous healthy existing Worker
+        working-directory: .
+        run: node scripts/test-existing-worker-release.mjs && node scripts/existing-worker-release.mjs snapshot
+        env:
+          RELEASE_WORKER: heavenlykeyradio
+          RELEASE_ORIGIN: https://radio.heavenlykey.org/
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_RADIO_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_RADIO_ACCOUNT_ID }}
       - name: Deploy Radio directly to existing Account 7 Worker
         working-directory: heavenly-key-accounts/account-07-unverified/source
         env:
@@ -44,3 +52,17 @@ jobs:
         run: npx --yes wrangler@4.152.0 deploy --config wrangler.toml --keep-vars
       - name: Verify deployed Radio and Account 2 programme
         run: node heavenly-key-accounts/account-07-unverified/scripts/verify-live.mjs https://heavenlykeyradio.heavenlykeyradio.workers.dev
+      - name: Verify release and restore previous version on failure
+        working-directory: .
+        run: node scripts/existing-worker-release.mjs verify
+        env:
+          RELEASE_WORKER: heavenlykeyradio
+          RELEASE_ORIGIN: https://radio.heavenlykey.org/
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_RADIO_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_RADIO_ACCOUNT_ID }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: heavenlykeyradio-previous-deployments
+          path: .release-state/
+          retention-days: 90

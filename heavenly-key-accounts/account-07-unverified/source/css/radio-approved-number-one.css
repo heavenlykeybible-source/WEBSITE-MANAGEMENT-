@@ -62,3 +62,9 @@
 #hk-floating-radio.hkr-mini.hkr-tiny.hkr-playing .hkr-bubble{box-shadow:0 0 0 2px #28c76f,0 3px 14px #0007!important}
 #hk-floating-radio.hkr-mini.hkr-tiny .hkr-art-player{display:none!important}
 @media(max-width:440px){#hk-floating-radio.hkr-mini.hkr-tiny{width:52px!important;max-width:52px!important}#hk-floating-radio.hkr-mini.hkr-tiny .hkr-bubble{width:52px!important;height:52px!important;max-width:52px!important}}
+
+/* A dedicated radio page must remain in normal flow on short phone screens. */
+#hk-floating-radio.hkr-page{position:relative!important;inset:auto!important;transform:none!important;width:min(370px,calc(100vw - 24px))!important;max-height:none!important;z-index:auto!important;box-sizing:border-box}
+#hk-radio-page-mount{min-width:0;max-width:100%;padding-bottom:env(safe-area-inset-bottom,0px)}
+#hk-floating-radio .hkr-status{overflow-wrap:anywhere;white-space:normal}
+@media(max-height:700px){#hk-floating-radio.hkr-page{width:min(330px,calc(100vw - 24px))!important}}

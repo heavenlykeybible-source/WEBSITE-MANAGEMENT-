@@ -28,7 +28,7 @@ function safeUrl(item){const u=new URL(item.url,window.HK_RADIO_API_ORIGIN||loca
 function disconnectLive(){const room=liveRoom;liveRoom=null;if(room)room.disconnect().catch(()=>{});audio.srcObject=null}
 function release(){disconnectLive();audio.pause();audio.removeAttribute('src');audio.load();display(false)}
 function stop(){desired=false;generation++;clearTimeout(poll);clearTimeout(retry);release();notice.textContent='Stopped. Tap Play to listen.'}
-function schedule(){clearTimeout(poll);if(desired)poll=setTimeout(()=>refresh(true).catch(()=>{if(desired)notice.textContent='Checking broadcast connection…'}).finally(schedule),30000)}
+function schedule(){clearTimeout(poll);if(desired||mount)poll=setTimeout(()=>refresh(true).catch(()=>{if(desired)notice.textContent='Checking broadcast connection…'}).finally(schedule),30000)}
 function reconnect(){clearTimeout(retry);if(!desired||retries>=4){if(desired){desired=false;notice.textContent='Connection unavailable. Tap Play to retry.'}return}notice.textContent='Connection interrupted. Reconnecting…';const turn=generation;retry=setTimeout(()=>{if(desired&&turn===generation)startCurrent().catch(reconnect)},Math.min(16000,2000*2**retries++))}
 async function startCurrent(){if(transport?.transport==='livekit')return startLive();return startTrack(index)}
 async function startLive(){
@@ -51,7 +51,7 @@ transport=null;
 if(data.transport==='youtube'){release();desired=false;notice.textContent='This programme has no radio audio stream.';clearTimeout(poll);return}
 
 const next=Array.isArray(data.items)?data.items.filter(x=>x&&typeof x.url==='string'):[];const previous=audio.src;items=next;index=Math.max(0,items.findIndex(x=>{try{return safeUrl(x)===previous}catch{return false}}));
-if(!items.length){release();desired=false;clearTimeout(poll);programme.textContent=data.title||'Heavenly Key Radio';notice.textContent='No playable programme is available right now.';return}
+if(!items.length){release();desired=false;clearTimeout(poll);programme.textContent=data.title||'Heavenly Key Radio';notice.textContent='Radio is currently off air. This page checks for the next programme automatically; tap Play when it is ready.';schedule();return}
 programme.textContent=items[index].title||data.title||'Heavenly Key Radio';if(allowSwitch&&desired&&turn===generation&&(liveRoom||safeUrl(items[index])!==previous))await startTrack(index);schedule();
 }finally{clearTimeout(timer);fetching=null}})();return fetching}
 button.onclick=async()=>{primeVolume();if(desired){stop();return}desired=true;generation++;retries=0;button.disabled=true;try{await refresh();if(desired&&(transport?.transport==='livekit'||items.length))await startCurrent()}catch(e){desired=false;release();notice.textContent=e.name==='NotAllowedError'?'Tap Play again to allow audio.':e.message||'Radio is unavailable.'}finally{button.disabled=false}};
