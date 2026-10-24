@@ -64,3 +64,7 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Room server defaults to three connected sockets (including owner) instead of twelve; signed `planId` ticket claim allows Starter 6 or Pro 12. Meeting ticket issuance/verification now signs and validates tier with legacy tickets falling back to Free.
 - **Security prerequisite:** only a trusted subscription-aware server may issue paid-tier tickets; NEVER accept planId from unverified browser input. Actual payment verification and tier revocation are not yet wired, so this is not production-ready enforcement.
 - Time-based meeting limits and aggregate monthly quota are NOT enforced in the Durable Object yet. No load/real-device tests have been run.
+
+## Meeting time limit groundwork (2026-10-24)
+- Durable Object now assigns a plan-derived meeting deadline when owner joins, refuses connections after the deadline, and closes connections on the next incoming signalling message after expiry. Browser handles `meeting-ended` and stops local media.
+- **Incomplete:** There is NO scheduled alarm or independent server timer yet, so idle calls may continue past deadline until another message or reconnect. In-memory deadline is lost on DO restart. Monthly quota accounting, plan revocation and billing enforcement remain unimplemented. Do NOT claim reliable time enforcement.
