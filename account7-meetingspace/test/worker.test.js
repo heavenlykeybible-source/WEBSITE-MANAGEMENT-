@@ -63,7 +63,7 @@ test('meeting socket refuses anonymous requests when secret is configured',async
  assert.equal(r.status,401);
 });
 test('explicit development demo flag permits existing socket flow',async()=>{
- const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),{...mockEnv,ALLOW_UNAUTHENTICATED_DEMO:'true'});
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),{...mockEnv,ALLOW_UNAUTHENTICATED_DEMO:'true',ENVIRONMENT:'development'});
  assert.equal(await r.text(),'routed:room123');
 });
 
@@ -110,4 +110,9 @@ test('meeting interface contains host waiting-room controls',async()=>{
  assert.match(html,/admission-decision/);
  assert.match(html,/id="roomLock"/);
  assert.match(html,/Waiting for host approval/);
+});
+
+test('demo flag alone cannot bypass production authentication',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),{...mockEnv,ALLOW_UNAUTHENTICATED_DEMO:'true',ENVIRONMENT:'production'});
+ assert.equal(r.status,503);
 });
