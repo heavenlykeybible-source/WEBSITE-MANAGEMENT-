@@ -15,7 +15,7 @@ test('disabled integration never contacts Account 3',async()=>{
 });
 test('public feed never forwards credentials, queries or arbitrary destinations',async()=>{
  let called=0;const app=createWorker(async(url,options)=>{
-  called++;assert.equal(url,'https://global.heavenlykey.org/api/feed');
+  called++;assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/feed');
   assert.deepEqual(options.headers,{Accept:'application/json'});
   assert.equal(options.redirect,'error');assert.equal(options.credentials,'omit');
   return reply([{profile_name:'A member',body:'A public testimony',email:'private',userId:33},{post_type:'video',body:'excluded'},{video_url:'https://example.test',body:'excluded'}]);
@@ -28,7 +28,7 @@ test('public feed never forwards credentials, queries or arbitrary destinations'
  assert.equal(called,1);
 });
 test('track summaries omit completion and private metadata',async()=>{
- const app=createWorker(async(url)=>{assert.equal(url,'https://global.heavenlykey.org/api/discipleship/tracks');return reply([{title:'Follow Christ',description:'Foundations',lessons:[{completed:1}],userId:1}]);});
+ const app=createWorker(async(url)=>{assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/discipleship/tracks');return reply([{title:'Follow Christ',description:'Foundations',lessons:[{completed:1}],userId:1}]);});
  const r=await app.fetch(req('/api/community/tracks'),enabled);
  assert.deepEqual(await r.json(),{items:[{title:'Follow Christ',description:'Foundations'}]});
 });

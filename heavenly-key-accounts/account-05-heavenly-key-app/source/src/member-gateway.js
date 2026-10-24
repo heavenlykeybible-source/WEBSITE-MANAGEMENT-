@@ -1,5 +1,5 @@
 // Account 3 owns accounts and sessions. This draft gateway creates no identity store.
-const ORIGIN = 'https://global.heavenlykey.org';
+const ORIGIN = 'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev';
 const COOKIE = '__Host-hk_session';
 const SESSION = /^[a-f0-9]{64}$/;
 const HEADERS = {'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','vary':'Cookie'};

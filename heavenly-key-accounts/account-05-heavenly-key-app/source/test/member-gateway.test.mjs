@@ -16,7 +16,7 @@ test('member integration is off by default and exposes no sign-in action or upst
 });
 test('login uses Account 3 and creates only a protected host cookie',async()=>{
  const r=await memberGateway(request('login','POST',{email:' Test@example.test ',password:'secret',role:'owner'},{Authorization:'Bearer attacker',Cookie:'gc_session=attacker'}),enabled,async(url,options)=>{
-  assert.equal(url,'https://global.heavenlykey.org/api/auth/login');assert.equal(options.headers.Origin,'https://global.heavenlykey.org');
+  assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/auth/login');assert.equal(options.headers.Origin,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev');
   assert.equal(options.headers.Cookie,undefined);assert.equal(options.headers.Authorization,undefined);
   assert.equal(options.credentials,'omit');assert.equal(options.redirect,'error');
   assert.deepEqual(JSON.parse(options.body),{email:'test@example.test',password:'secret'});
@@ -44,13 +44,13 @@ test('malformed, missing and duplicate cookies cannot authorize member reads',as
 });
 test('profile shows minimum member fields and strips backend role and private details',async()=>{
  const r=await memberGateway(request('session','GET',undefined,signed),enabled,async(url,options)=>{
-  assert.equal(url,'https://global.heavenlykey.org/api/me');assert.deepEqual(options.headers,{Accept:'application/json',Cookie:'gc_session='+ID});return json(member);
+  assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/me');assert.deepEqual(options.headers,{Accept:'application/json',Cookie:'gc_session='+ID});return json(member);
  });
  assert.deepEqual(await r.json(),{member:{displayName:'A believer',status:'active'}});assert.equal(r.headers.get('vary'),'Cookie');
 });
 test('expired and restricted sessions do not load lessons',async()=>{
  for(const restricted of [false,true]){
-  let calls=0;const r=await memberGateway(request('tracks','GET',undefined,signed),enabled,async(url)=>{calls++;assert.equal(url,'https://global.heavenlykey.org/api/me');return restricted?json({...member,user:{...member.user,status:'restricted'}}):json({error:'Expired'},401);});
+  let calls=0;const r=await memberGateway(request('tracks','GET',undefined,signed),enabled,async(url)=>{calls++;assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/me');return restricted?json({...member,user:{...member.user,status:'restricted'}}):json({error:'Expired'},401);});
   assert.equal(r.status,restricted?403:401);assert.equal(calls,1);
  }
 });
@@ -59,14 +59,14 @@ test('lessons use the existing identity and exclude arbitrary upstream data',asy
  const r=await memberGateway(request('tracks','GET',undefined,signed),enabled,async(url,options)=>{
   assert.equal(options.headers.Cookie,'gc_session='+ID);calls++;
   if(calls===1)return json(member);
-  assert.equal(url,'https://global.heavenlykey.org/api/discipleship/tracks');
+  assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/discipleship/tracks');
   return json({items:[{title:'Follow Christ',description:'Foundations',private:'excluded',lessons:[{lesson_id:8,title:'Repentance',scripture_reference:'Acts 3:19',lesson_text:'Read and reflect',reflection_question:'What will you do?',action_step:'Pray',completed:1,private:'excluded'},{lesson_id:-1,title:'Invalid'}]}]});
  });
  assert.equal(r.status,200);assert.deepEqual(await r.json(),{items:[{title:'Follow Christ',description:'Foundations',lessons:[{id:8,title:'Repentance',scripture:'Acts 3:19',body:'Read and reflect',question:'What will you do?',action:'Pray',completed:true}]}]});
 });
 test('completion forwards only reflection and never invents saved progress',async()=>{
  const r=await memberGateway(request('lessons/8/complete','POST',{reflection:'I will obey',userId:999,completed:true},signed),enabled,async(url,options)=>{
-  assert.equal(url,'https://global.heavenlykey.org/api/discipleship/lessons/8/complete');assert.deepEqual(JSON.parse(options.body),{reflection:'I will obey'});return json({completed:true});
+  assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/discipleship/lessons/8/complete');assert.deepEqual(JSON.parse(options.body),{reflection:'I will obey'});return json({completed:true});
  });
  assert.deepEqual(await r.json(),{completed:true});
  const bad=await memberGateway(request('lessons/8/complete','POST',{reflection:'x'.repeat(1201)},signed),enabled,async()=>{throw Error();});assert.equal(bad.status,400);
@@ -74,7 +74,7 @@ test('completion forwards only reflection and never invents saved progress',asyn
 });
 test('logout revokes upstream and clears the device cookie even on upstream failure',async()=>{
  for(const failed of [false,true]){
-  const r=await memberGateway(request('logout','POST',{},signed),enabled,async(url,options)=>{assert.equal(url,'https://global.heavenlykey.org/api/auth/logout');assert.equal(options.headers.Cookie,'gc_session='+ID);if(failed)throw Error('private');return json({ok:true});});
+  const r=await memberGateway(request('logout','POST',{},signed),enabled,async(url,options)=>{assert.equal(url,'https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev/api/auth/logout');assert.equal(options.headers.Cookie,'gc_session='+ID);if(failed)throw Error('private');return json({ok:true});});
   assert.equal(r.status,failed?502:200);assert.match(r.headers.get('set-cookie'),/Max-Age=0/);assert.doesNotMatch(await r.text(),/private/);
  }
 });

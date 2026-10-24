@@ -18,7 +18,7 @@ async function publicCommunity(request, env, upstreamFetch) {
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),7000);
   try {
     // Fixed reviewed destination: no arbitrary host, redirects, client headers or cookies.
-    const upstream=await upstreamFetch("https://global.heavenlykey.org"+COMMUNITY_READS[url.pathname],{
+    const upstream=await upstreamFetch("https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev"+COMMUNITY_READS[url.pathname],{
       method:"GET",headers:{Accept:"application/json"},redirect:"error",credentials:"omit",cache:"no-store",signal:controller.signal
     });
     if(!upstream.ok||!(upstream.headers.get("content-type")||"").includes("application/json"))throw new Error("Unavailable");
