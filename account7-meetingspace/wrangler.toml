@@ -1,0 +1,12 @@
+name = "heavenlykey-meetingspace"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+
+[durable_objects]
+bindings = [{ name = "ROOMS", class_name = "MeetingRoom" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MeetingRoom"]
+
+# Configure meeting.heavenlykey.org route only after staging verification.
