@@ -40,3 +40,12 @@ test('missing Origin on socket request is rejected',async()=>{
  const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket'}}),mockEnv);
  assert.equal(r.status,403);
 });
+
+test('meeting UI includes accessible chat and send controls',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await r.text();
+ assert.match(html,/id="chatLog" role="log"/);
+ assert.match(html,/id="chatInput"/);
+ assert.match(html,/id="chatSend"/);
+ assert.match(html,/createTextNode\(message\)/);
+});
