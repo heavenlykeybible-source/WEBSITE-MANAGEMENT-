@@ -62,5 +62,16 @@ export function createOwnerPasskeyRoutes({json,fail,body,reauthenticate,audit,wi
    fail('Unknown passkey endpoint',404);
   });
  }
- return {routes,consumeProof};
+ async function login(req,env){
+  const url=new URL(req.url);if(req.method!=='POST'||url.protocol!=='https:'||req.headers.get('origin')!==url.origin)fail('Use the secure Control Room sign-in page.',403);
+  const b=await body(req),identifier=String(b.user||'').trim().toLowerCase();if(!identifier||identifier.length>200)fail('Enter your Control Room username first',400);
+  const ip='pk:'+(req.headers.get('cf-connecting-ip')||'unknown'),attempts=await env.DB.prepare('SELECT COUNT(*) n FROM login_attempts WHERE ip=? AND ts>?').bind(ip,Date.now()-600000).first();if((attempts?.n||0)>=10)fail('Too many device sign-in attempts. Try again later.',429);
+  await env.DB.prepare('INSERT INTO login_attempts(ip,ts) VALUES(?,?)').bind(ip,Date.now()).run();
+  const user=await env.DB.prepare("SELECT * FROM users WHERE (username=? OR email=?) AND status='active' AND role='owner' AND kind='staff'").bind(identifier,identifier).first();if(!user)fail('Use password sign-in to register your device first.',401);
+  const credentials=await list(env,user);if(!credentials.length)fail('Use password sign-in, then register Face ID / fingerprint in AI permissions.',401);
+  if(url.pathname.endsWith('/options')){const options=await generateAuthenticationOptions({rpID:url.hostname,userVerification:'required',allowCredentials:credentials.map(c=>({id:c.id,transports:c.transports}))}),requestId=crypto.randomUUID();await challenge(env,user,'login',url.origin,options,requestId);return {options,requestId};}
+  const nonce=((req.headers.get('cookie')||'').match(/(?:^|;\s*)cr_passkey_login=([^;]+)/)||[])[1];if(!nonce||nonce!==b.request_id)fail('Device sign-in expired. Start again.',403);
+  return withOperationLock(env,'owner-passkeys:'+user.id,async()=>{const pending=await consume(env,user,'login',url.origin,nonce),credential=credentials.find(c=>c.id===b.credential?.id);if(!credential)fail('Device sign-in could not be verified.',403);let verified;try{verified=await verifyAuthenticationResponse({response:b.credential,expectedChallenge:pending.challenge,expectedOrigin:url.origin,expectedRPID:url.hostname,credential:{id:credential.id,publicKey:bytes(credential.publicKey),counter:credential.counter,transports:credential.transports},requireUserVerification:true});}catch{fail('Device sign-in could not be verified.',403);}if(!verified.verified)fail('Device sign-in could not be verified.',403);const {key,...saved}=credential;saved.counter=verified.authenticationInfo.newCounter;await save(env,key,saved);await audit(env,user.username,'passkey-login',ip);return {user};});
+ }
+ return {routes,consumeProof,login};
 }
