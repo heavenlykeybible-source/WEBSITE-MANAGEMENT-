@@ -66,3 +66,11 @@ test('explicit development demo flag permits existing socket flow',async()=>{
  const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),{...mockEnv,ALLOW_UNAUTHENTICATED_DEMO:'true'});
  assert.equal(await r.text(),'routed:room123');
 });
+
+test('WebRTC buffers early ICE candidates until remote description',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await r.text();
+ assert.match(html,/const pendingIce=new Map\(\)/);
+ assert.match(html,/if\(!pc\.remoteDescription\)/);
+ assert.match(html,/pendingIce\.delete\(m\.from\)/);
+});
