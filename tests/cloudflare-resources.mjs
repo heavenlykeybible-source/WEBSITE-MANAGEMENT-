@@ -24,6 +24,7 @@ globalThis.fetch=async(input,init)=>{
  const u=new URL(input);assert.equal(u.origin,'https://api.cloudflare.com');assert.ok(u.pathname.startsWith('/client/v4/accounts/'+account+'/'));assert.equal(init.redirect,'manual');
  if(init.method!=='GET')writes.push({url:u.pathname,init});
  if(u.pathname.endsWith('/workers/scripts'))return ok([]);
+ if(u.pathname.endsWith('/deployments')&&init.method==='GET')return ok({deployments:[{created_on:'2026-10-24',versions:[{version_id:'previous-version',percentage:100}]}]});
  if(u.pathname.endsWith('/settings'))return oldSettings?ok(oldSettings):Response.json({success:false},{status:404});
  if(u.pathname.endsWith('/subdomain'))return ok({subdomain:'account-seven'});
  if(u.pathname.endsWith('/d1/database')&&init.method==='GET')return ok(exists?[{uuid:database,name:'meeting-db'}]:[]);
@@ -98,8 +99,9 @@ try{
   oldSettings={bindings:[{type:'d1',name:'OLDDB',id:database}]};
   const before=writes.length;await assert.rejects(deployWorker(e.env,1,'meeting-app','export default {}',[{type:'r2_bucket',name:'OLDDB',bucket_name:'meeting-files'}]),x=>x.status===409);assert.equal(writes.length,before);
  });
+ await test('missing Worker refuses duplicate creation before any write',async()=>{oldSettings=null;const before=writes.length;await assert.rejects(deployWorker(e.env,1,'new-duplicate','export default {}',[]),e=>e.status===409);assert.equal(writes.length,before);});
  await test('generated Worker secrets stay encrypted, survive redeploy and support owner-only meeting launch',async()=>{
-  oldSettings=null;await deployWorker(e.env,1,'heavenly-key-zoom-studio','export default {}',[{type:'generated_secret',name:'AUTH_SECRET'}]);
+  oldSettings={bindings:[]};await deployWorker(e.env,1,'heavenly-key-zoom-studio','export default {}',[{type:'generated_secret',name:'AUTH_SECRET'}]);
   const upload=writes.findLast(x=>x.init.method==='PUT');
   const meta=JSON.parse(await upload.init.body.get('metadata').text()),secret=meta.bindings.find(x=>x.name==='AUTH_SECRET').text;
   assert.match(secret,/^[a-f0-9]{64}$/);

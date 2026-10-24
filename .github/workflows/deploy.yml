@@ -97,6 +97,7 @@ jobs:
           node tests/browser-agent-chromium.mjs
 
       - name: Preserve previous healthy existing Worker
+        id: release_snapshot
         working-directory: .
         run: node scripts/test-existing-worker-release.mjs && node scripts/existing-worker-release.mjs snapshot
         env:
@@ -111,6 +112,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Verify release and restore previous version on failure
+        if: always() && !cancelled() && steps.release_snapshot.outcome == 'success'
         working-directory: .
         run: node scripts/existing-worker-release.mjs verify
         env:
