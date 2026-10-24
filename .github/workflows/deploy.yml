@@ -11,7 +11,10 @@ on:
       - 'workspace/**'
       - 'browser-agent/**'
       - 'tests/browser-agent*.mjs'
-      - 'cms/build.mjs'
+      - 'cms/**'
+      - 'tests/**'
+      - 'scripts/existing-worker-release.mjs'
+      - 'scripts/test-existing-worker-release.mjs'
       - '.github/workflows/deploy.yml'
 
 permissions:
@@ -121,3 +124,4 @@ jobs:
           name: website-management-previous-deployments
           path: .release-state/
           retention-days: 90
+
