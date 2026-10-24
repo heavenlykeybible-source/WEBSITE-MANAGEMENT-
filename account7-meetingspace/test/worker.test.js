@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+globalThis.DurableObject = class {};
+const {default: worker} = await import('../src/worker.js');
+const mockEnv = {ROOMS:{idFromName(name){return name},get(name){return {fetch:async()=>new Response('routed:'+name)}}}};
+test('home renders branded application with defensive headers',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ assert.equal(r.status,200);
+ const html=await r.text();
+ assert.match(html,/Heavenly Key MeetingSpace/);
+ assert.match(html,/Create meeting/);
+ assert.match(html,/Join meeting/);
+ assert.equal(r.headers.get('x-content-type-options'),'nosniff');
+ assert.match(r.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+});
+test('unrecognized paths do not serve the application',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/not-found'),mockEnv);
+ assert.equal(r.status,404);
+});
+test('room socket requires WebSocket upgrade',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket'),mockEnv);
+ assert.equal(r.status,426);
+});
+test('room identifiers are constrained',async()=>{
+ for(const path of ['/api/rooms/short/socket','/api/rooms/bad%20room/socket','/api/rooms/room123/socket/extra']){
+  const r=await worker.fetch(new Request('https://example.test'+path),mockEnv);
+  assert.equal(r.status,404);
+ }
+});
+test('valid upgraded request reaches its room object',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket'}}),mockEnv);
+ assert.equal(await r.text(),'routed:room123');
+});
