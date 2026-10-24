@@ -1,3 +1,4 @@
+import {verifyCloudflareConnection} from './cloudflare-connection-manager.ts';
 import {SITES,planDeployment} from './deployment-engine.ts';
 import {AI_MODEL,PUBLIC_CMS_ORIGIN,validateDocument} from './cms-schema.ts';
 import {saveDraft,publishDraft,restoreDraft} from './cms-storage.ts';
@@ -44,6 +45,13 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
   const location=()=>keyOf(u);
   if(u.pathname==='/api/owner/password'&&request.method==='POST'){if(!accessActor&&!ownerHost)return fail('Owner sign-in required.',403);const data=await body(request,4096),password=data.generate===true?generatedPassword():data.password;await setOwnerPassword(env.DB,password,actor);return json({ok:true,password:data.generate===true?password:undefined,signInUrl:'https://heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev/'})}
   if(u.pathname==='/api/owner/logout'&&request.method==='POST')return new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','cache-control':'no-store','set-cookie':await ownerLogout(request,env.DB)}});
+  if(u.pathname==='/api/cloudflare/connections/verify'&&request.method==='POST'){
+   const data=await body(request,6000);
+   if(typeof data.token!=='string'||typeof data.accountId!=='string')return fail('Token and account ID required.');
+   const result=await verifyCloudflareConnection(data.token,data.accountId);
+   await env.DB.prepare('INSERT INTO cms_audit(actor,action,target) VALUES(?,?,?)').bind(actor,'cloudflare-connection-check',result.ok?'verified':'failed').run();
+   return json(result,result.ok?200:400);
+  }
   if(u.pathname==='/api/me')return json({actor,role:'administrator'});
   if(u.pathname==='/api/system/health'&&request.method==='GET'){
    let cms='unavailable',publishing='unavailable';
