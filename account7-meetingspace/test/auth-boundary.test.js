@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {requireVerifiedIdentity,authorizeRoomRole,parseBearer} from '../src/auth-boundary.js';
+const identity={verified:true,subject:'user-123'};
+const room={ownerId:'owner-456',moderators:{'user-123':['cohost']}};
+test('unverified identity is refused',()=>assert.throws(()=>requireVerifiedIdentity({verified:false,subject:'user-123'})));
+test('verified identity is accepted',()=>assert.equal(requireVerifiedIdentity(identity).subject,'user-123'));
+test('users cannot self-assign owner role',()=>assert.throws(()=>authorizeRoomRole({identity,room,role:'owner'})));
+test('server-granted moderator role is permitted',()=>assert.equal(authorizeRoomRole({identity,room,role:'cohost'}).role,'cohost'));
+test('blocked participants cannot join',()=>assert.throws(()=>authorizeRoomRole({identity,room:{...room,blockedUsers:['user-123']},role:'participant'})));
+test('bearer parser enforces a bounded token',()=>{assert.equal(parseBearer(new Request('https://example.test',{headers:{Authorization:'Bearer 1234567890'}})),'1234567890');assert.equal(parseBearer(new Request('https://example.test')),null)});
