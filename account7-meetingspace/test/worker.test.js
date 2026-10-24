@@ -29,7 +29,7 @@ test('room identifiers are constrained',async()=>{
 });
 test('valid upgraded request reaches its room object',async()=>{
  const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),mockEnv);
- assert.equal(await r.text(),'routed:room123');
+ assert.equal(r.status,503);
 });
 
 test('cross-origin socket requests are rejected',async()=>{
@@ -56,4 +56,13 @@ test('chat echoes to sender and identifies server-assigned participant',async()=
  assert.match(html,/serverParticipantId=m\.id/);
  assert.match(html,/m\.from===serverParticipantId/);
  assert.match(html,/server\.send\(JSON\.stringify\(\{type:'chat',from:id,text:msg\.text\.trim\(\)\}\)\)/);
+});
+
+test('meeting socket refuses anonymous requests when secret is configured',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),{...mockEnv,MEETING_TICKET_SECRET:'this-is-a-test-secret-long-enough-123456789'});
+ assert.equal(r.status,401);
+});
+test('explicit development demo flag permits existing socket flow',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),{...mockEnv,ALLOW_UNAUTHENTICATED_DEMO:'true'});
+ assert.equal(await r.text(),'routed:room123');
 });
