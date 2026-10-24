@@ -3,7 +3,7 @@ import {getPlan} from './subscription-plans.js';
 
 // Cloudflare Durable Object. Participants receive no media or chat until admitted.
 export class MeetingRoom extends DurableObject {
- constructor(ctx,env){super(ctx,env);this.clients=new Map();this.ownerId=null;this.locked=false;this.capacity=3;}
+ constructor(ctx,env){super(ctx,env);this.clients=new Map();this.ownerId=null;this.locked=false;this.capacity=3;this.meetingDeadline=0;}
  send(socket,message){try{socket.send(JSON.stringify(message))}catch{}}
  broadcast(message,except=null){for(const [id,c] of this.clients)if(id!==except&&c.admitted)this.send(c.socket,message)}
  notifyOwner(message){for(const c of this.clients.values())if(c.role==='owner'&&c.admitted)this.send(c.socket,message)}
@@ -21,6 +21,7 @@ export class MeetingRoom extends DurableObject {
    const savedOwner=await this.ctx.storage.get('ownerUserId');
    if(savedOwner&&savedOwner!==claims.userId)return new Response('Room owner mismatch',{status:403});
   }
+  if(this.meetingDeadline&&Date.now()>=this.meetingDeadline)return new Response('Meeting time limit reached',{status:403});
   if(this.clients.size>=Math.min(12,this.capacity))return new Response('Room full',{status:429});
   if(!demo&&claims.role==='owner'&&this.ownerId===claims.userId)return new Response('Owner already connected',{status:409});
   if(this.locked&&claims.role!=='owner')return new Response('Room locked',{status:403});
@@ -30,7 +31,7 @@ export class MeetingRoom extends DurableObject {
   const pair=new WebSocketPair(),[client,server]=Object.values(pair);
   server.accept();
   const id=crypto.randomUUID(),admitted=claims.role==='owner';
-  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;this.capacity=demo?3:(getPlan(claims.planId)?.participants||3);}
+  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=plan.participants;this.meetingDeadline=Date.now()+plan.meetingMinutes*60000;}
   const record={socket:server,userId:claims.userId,role:claims.role,admitted};
   this.clients.set(id,record);
   if(admitted){
@@ -43,7 +44,7 @@ export class MeetingRoom extends DurableObject {
   }
   let windowStart=Date.now(),count=0;
   server.addEventListener('message',event=>{
-   const now=Date.now();if(now-windowStart>10000){windowStart=now;count=0}
+   const now=Date.now();if(this.meetingDeadline&&now>=this.meetingDeadline){for(const c of this.clients.values()){this.send(c.socket,{type:'meeting-ended',reason:'time-limit'});c.socket.close(1000,'Meeting time limit reached')}this.clients.clear();this.ownerId=null;this.locked=false;return}if(now-windowStart>10000){windowStart=now;count=0}
    if(++count>100){server.close(1008,'Rate limit');return}
    if(typeof event.data!=='string'||event.data.length>120000){server.close(1009,'Message too large');return}
    let msg;try{msg=JSON.parse(event.data)}catch{return}
