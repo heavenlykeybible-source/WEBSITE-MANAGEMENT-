@@ -34,7 +34,7 @@ export class MeetingRoom extends DurableObject {
   const record={socket:server,userId:claims.userId,role:claims.role,admitted};
   this.clients.set(id,record);
   if(admitted){
-   this.send(server,{type:'peers',id,ids:[...this.clients].filter(([peerId,c])=>peerId!==id&&c.admitted).map(([peerId])=>peerId)});
+   this.send(server,{type:'peers',role:'owner',id,ids:[...this.clients].filter(([peerId,c])=>peerId!==id&&c.admitted).map(([peerId])=>peerId)});
    this.broadcast({type:'join',id},id);
    for(const [peerId,c] of this.clients)if(!c.admitted)this.send(server,{type:'admission-request',id:peerId});
   }else{
@@ -53,7 +53,7 @@ export class MeetingRoom extends DurableObject {
     if(msg.decision==='deny'){this.send(target.socket,{type:'denied'});target.socket.close(1008,'Admission denied');return}
     if(this.locked){this.send(server,{type:'error',message:'Room is locked'});return}
     target.admitted=true;
-    this.send(target.socket,{type:'peers',id:msg.id,ids:[...this.clients].filter(([peerId,c])=>peerId!==msg.id&&c.admitted).map(([peerId])=>peerId)});
+    this.send(target.socket,{type:'peers',role:target.role,id:msg.id,ids:[...this.clients].filter(([peerId,c])=>peerId!==msg.id&&c.admitted).map(([peerId])=>peerId)});
     this.broadcast({type:'join',id:msg.id},msg.id);
     return;
    }
