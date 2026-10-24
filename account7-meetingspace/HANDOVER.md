@@ -49,3 +49,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added `test/subscription-plans.test.js` covering quotas and expiration. Tests not yet executed.
 - **Not yet operational**: account signup, email verification, authentication, payment provider checkout/webhook validation, subscription renewal/cancellation, D1 integration, per-user room authorization, usage accounting and automatic meeting timeout. Do not advertise as live.
 - Current P2P topology is limited to 12; larger paid meeting tiers require a production media SFU, TURN and scaling validation.
+
+## Subscription backend progress (2026-10-24)
+- Added `src/subscription-store.js` for parameterized D1 subscription lookup, UTC monthly meeting-minute usage, and entitlement resolution.
+- Added `test/subscription-store.test.js` for active/expired subscriptions and quota handling. Tests have NOT been executed.
+- This store is NOT yet connected to worker routes or a D1 binding; usage is NOT enforced live. Payment provider and verified account identity still required.
