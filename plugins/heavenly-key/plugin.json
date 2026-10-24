@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dev-6ad89691c9888191af67c15b2c16161c",
+  "version": "1.0.1",
+  "description": "Managing our site",
+  "author": {
+    "name": "App developer"
+  },
+  "extensions": {
+    "com.openai": {
+      "apps": "./.app.json",
+      "interface": {
+        "capabilities": [],
+        "category": "Other",
+        "defaultPrompt": null,
+        "developerName": "App developer",
+        "displayName": "Heavenly key",
+        "longDescription": "Managing our site",
+        "shortDescription": "Managing our site"
+      }
+    }
+  }
+}

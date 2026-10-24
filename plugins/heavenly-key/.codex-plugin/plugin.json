@@ -1,0 +1,18 @@
+{
+  "apps": "./.app.json",
+  "author": {
+    "name": "App developer"
+  },
+  "description": "Managing our site",
+  "interface": {
+    "capabilities": [],
+    "category": "Other",
+    "defaultPrompt": null,
+    "developerName": "App developer",
+    "displayName": "Heavenly key",
+    "longDescription": "Managing our site",
+    "shortDescription": "Managing our site"
+  },
+  "name": "dev-6ad89691c9888191af67c15b2c16161c",
+  "version": "1.0.1"
+}

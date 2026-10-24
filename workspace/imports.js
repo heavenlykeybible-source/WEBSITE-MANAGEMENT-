@@ -49,6 +49,15 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
  if(sub==='workspace/catalog'&&m==='GET')return json({sources:(await env.DB.prepare('SELECT id,label,repo,branch,dir FROM github_sites WHERE owner_id IS NULL').all()).results,sites:(await env.DB.prepare('SELECT slug,name FROM sites ORDER BY name').all()).results,accounts:(await env.DB.prepare('SELECT id,label FROM cf_connections ORDER BY label').all()).results});
  if(sub==='workspace/candidates'&&m==='GET')return json(await sourceCandidates(env,user,u.searchParams.get('source')));
  if(sub==='workspace/workers'&&m==='GET'){const c=await connById(env,u.searchParams.get('connection')),d=await cf(env,c,'GET','/workers/scripts');return json({workers:(d.result||[]).map(w=>({name:w.id}))});}
+ if(sub==='workspace/upload-worker'&&m==='POST'){
+ const b=await body(req),conn=await connById(env,b.connection),name=String(b.worker||''),code=String(b.code||'');
+ if(!/^[a-z0-9][a-z0-9-]{0,62}$/.test(name))fail('Select the existing Worker');protectWorker(env,name);
+ if(!code||new TextEncoder().encode(code).length>1400000||!b.filename||!/[.]m?js$/i.test(b.filename))fail('Choose a bundled JavaScript Worker up to 1.4 MB');
+ if(!/export\s+(?:default\b|\{[^}]*\bdefault\b)/s.test(code)||/\b(?:from\s*['"]|import\s*(?:\(|['"{*]))/.test(code))fail('Upload a bundled ES-module Worker with every dependency included');
+ await cf(env,conn,'GET','/workers/scripts/'+name+'/settings');
+ const actor={kind:'owner',user,ow:null,agentId:await userAgentId(env,user)},result=await coreProposeWorker(env,actor,{connection:conn.id,name,code,note:'Owner upload '+String(b.filename).slice(0,120)+'. Existing Worker, bindings and secrets preserved.'});
+ return json({...result,status:'waiting'});
+ }
  if(sub==='workspace/scan'&&m==='POST')return json(await scanConnectedSource(env,user,await body(req)));
  if(sub==='workspace/stage'&&m==='POST')return json(await stageConnectedSource(env,user,await body(req)));
  return null;
