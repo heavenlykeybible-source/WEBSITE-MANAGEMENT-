@@ -37,3 +37,8 @@ Preserve the existing project and approved UI. Commit meaningful changes to this
 
 ## How to resume
 Fetch this file and source from the feature branch, run tests, fix any failing tests, then complete identity/ticket integration and end-to-end meeting verification. Do not deploy unfinished code as production.
+
+## Latest maintenance (2026-10-24)
+- Fixed owner persistence timing: a rejected/full connection no longer reserves ownership before socket admission.
+- WebSocket negotiation now echoes only the fixed `meetingspace` protocol.
+- Pending priority: execute tests, inspect Durable Object reconnect and hibernation behavior, implement trusted ticket issuance and real broadcast integrations.
