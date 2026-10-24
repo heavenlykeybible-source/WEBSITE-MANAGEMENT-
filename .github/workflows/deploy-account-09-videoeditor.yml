@@ -45,11 +45,14 @@ jobs:
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "::error::Missing ACCOUNT9_CF_API_TOKEN in account9-staging secrets"; exit 1; fi
           if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then echo "::error::Missing ACCOUNT9_CF_ACCOUNT_ID in account9-staging secrets"; exit 1; fi
+      - name: Verify access to the existing Account 9 Pages project
+        run: node scripts/check-deployment-access.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT9_CF_ACCOUNT_ID }}
       - name: Deploy Account 9 once to Cloudflare Pages production
         if: github.ref == 'refs/heads/main'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
-          accountId: ${{ secrets.ACCOUNT9_CF_ACCOUNT_ID }}
-          workingDirectory: heavenly-key-accounts/account-09-heavenly-key-videoeditor/source
-          command: pages deploy public --project-name=heavenlykey-studio --branch=main
+        run: npm exec --yes --package=wrangler@4.151.0 -- wrangler pages deploy public --project-name=heavenlykey-studio --branch=main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT9_CF_ACCOUNT_ID }}
