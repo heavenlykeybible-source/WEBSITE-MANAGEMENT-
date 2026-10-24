@@ -53,6 +53,13 @@ export class MeetingRoom extends DurableObject {
     return;
    }
    if(record.role==='owner'&&record.admitted&&msg.type==='room-lock'&&typeof msg.locked==='boolean'){this.locked=msg.locked;this.send(server,{type:'room-lock',locked:this.locked});return}
+   if(record.role==='owner'&&record.admitted&&msg.type==='remove-participant'&&typeof msg.id==='string'){
+    const target=this.clients.get(msg.id);
+    if(!target||target===record||!target.admitted)return;
+    this.send(target.socket,{type:'removed'});
+    target.socket.close(1008,'Removed by host');
+    return;
+   }
    if(!record.admitted)return;
    if(msg.type==='chat'){
     if(typeof msg.text!=='string'||!msg.text.trim()||msg.text.length>2000)return;
