@@ -1,7 +1,7 @@
 export function improveCodingChat(worker){
  worker=worker.replace("var inp=h('textarea',{rows:1,'aria-label':'Message your AI',placeholder:'Message your AI…'});var busy=false;","var inp=h('textarea',{rows:1,'aria-label':'Message your AI',placeholder:'Message your AI… Enter to send · Shift+Enter for a new line'});var busy=false;");
- worker=worker.replace("  var options=h('details',{class:'chat-options'}", "  inp.onkeydown=function(event){if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();send.onclick();}};\n  var options=h('details',{class:'chat-options'}");
- worker=worker.replace("var st=await api('ai');","var st=await api('ai');if(!CHAT_AI){var preferred=st.accounts.find(function(a){return a.provider!=='cloudflare';});if(preferred)CHAT_AI=String(preferred.id);}");
+ if(!worker.includes("inp.onkeydown=function(event)"))worker=worker.replace("  var options=h('details',{class:'chat-options'}", "  inp.onkeydown=function(event){if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();send.onclick();}};\n  var options=h('details',{class:'chat-options'}");
+ if(!worker.includes("var preferred=st.accounts.find"))worker=worker.replace("var st=await api('ai');","var st=await api('ai');if(!CHAT_AI){var preferred=st.accounts.find(function(a){return a.provider!=='cloudflare';});if(preferred)CHAT_AI=String(preferred.id);}");
  worker=worker.replace("await refreshAccess();\n  var log=", "refreshAccess();\n  var log=");
  worker=worker.replace("await verificationPanel(providerBox);", "verificationPanel(providerBox);");
  worker=worker.replace("try{var savedChats=await api('ai/history');", "api('ai/history').then(function(savedChats){").replace("CHAT_FILES=[];claude();}};}catch(e){}", "CHAT_FILES=[];claude();}};}).catch(function(){});");

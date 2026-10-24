@@ -1,9 +1,10 @@
+import {smoothChat} from './chat-session.mjs';
 import {improveCodingChat} from './chat-productivity.mjs';
 import {repairChat} from './chat-resilience.mjs';
 import fs from 'node:fs';
 import {build} from 'esbuild';
 const target=new URL('../control-room-worker.js',import.meta.url);
-let worker=improveCodingChat(repairChat(fs.readFileSync(target,'utf8')));
+let worker=smoothChat(improveCodingChat(repairChat(fs.readFileSync(target,'utf8'))));
 const operations='// BEGIN CONTROL OPERATIONS\n'+fs.readFileSync(new URL('../workspace/operations.js',import.meta.url),'utf8')+'\n// END CONTROL OPERATIONS';
 if(worker.includes('// BEGIN CONTROL OPERATIONS'))worker=worker.replace(/\/\/ BEGIN CONTROL OPERATIONS[\s\S]*?\/\/ END CONTROL OPERATIONS/,()=>operations);
 else worker=operations+'\n'+worker;
