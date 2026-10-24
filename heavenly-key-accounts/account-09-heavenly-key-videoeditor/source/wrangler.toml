@@ -4,12 +4,12 @@ pages_build_output_dir = "public"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "heavenlykey-studio"
-database_id = "106e04ec-8fd7-466d-a8ed-54a9c5b94a71"
+database_name = "heavenly-key-videoeditor-db"
+database_id = "37d1fd6a-4424-4cca-a757-ea347098a758"
 
 [[r2_buckets]]
 binding = "MEDIA"
-bucket_name = "heavenlykey-media"
+bucket_name = "heavenly-key-videoeditor-media"
 
 [ai]
 binding = "AI"
