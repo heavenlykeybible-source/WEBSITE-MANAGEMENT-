@@ -80,3 +80,11 @@ test('meeting ticket is not reflected in WebSocket response protocol',async()=>{
  const html=await r.text();
  assert.doesNotMatch(html,/Sec-WebSocket-Protocol/);
 });
+
+test('meeting room displays broadcast integration status',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await response.text();
+ assert.match(html,/Live broadcast destinations/);
+ assert.match(html,/Encoder: not connected/);
+ assert.match(html,/Broadcasting is not yet connected/);
+});
