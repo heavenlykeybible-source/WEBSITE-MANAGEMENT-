@@ -1,0 +1,39 @@
+name: Activate private Heavenly Key browser
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/account4-permissions-passkeys-20261023]
+    paths: ['.github/workflows/activate-private-browser.yml', 'scripts/activate-private-browser.mjs', 'scripts/test-activate-private-browser.mjs']
+permissions:
+  contents: read
+concurrency:
+  group: website-management-production
+  cancel-in-progress: false
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: account-4
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check browser policy and binding preservation
+        run: node tests/run.mjs && node tests/browser-agent.mjs && node scripts/test-activate-private-browser.mjs
+      - name: Preserve existing healthy Control Room
+        run: node scripts/activate-private-browser.mjs snapshot
+      - name: Deploy the private browser helper
+        run: npx --yes wrangler@4 deploy --config browser-agent/wrangler.jsonc --keep-vars
+      - name: Connect the private service without changing app bindings
+        run: node scripts/activate-private-browser.mjs attach
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: private-browser-activation-recovery
+          path: .browser-activation-state.json
+          include-hidden-files: true
+          retention-days: 30
