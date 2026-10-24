@@ -35,7 +35,7 @@ jobs:
       - name: Audit Bible before deployment
         run: npm test
       - name: Deploy Bible directly to Cloudflare from GitHub
-        run: npx wrangler deploy --config bible/wrangler.toml --keep-vars
+        run: npx wrangler deploy --config bible/wrangler.toml --name onlinebible --keep-vars
       - name: Verify published scripture and homepage
         env:
           BIBLE_LIVE_URL: ${{ vars.BIBLE_LIVE_URL }}

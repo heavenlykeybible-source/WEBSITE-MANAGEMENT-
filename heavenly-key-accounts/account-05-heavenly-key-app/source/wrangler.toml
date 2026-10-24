@@ -13,7 +13,7 @@ run_worker_first = ["/api/*"]
 
 # Enable only after Account 3 production public APIs and policy are verified.
 [vars]
-COMMUNITY_PUBLIC_READS_ENABLED = "false"
-COMMUNITY_MEMBER_ACCESS_ENABLED = "false"
+COMMUNITY_PUBLIC_READS_ENABLED = "true"
+COMMUNITY_MEMBER_ACCESS_ENABLED = "true"
 # Only read reviewed public website data. No member sessions, secrets or private routes.
 SITE_PUBLIC_SYNC_ENABLED = "true"
