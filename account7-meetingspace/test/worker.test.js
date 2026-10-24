@@ -74,3 +74,9 @@ test('WebRTC buffers early ICE candidates until remote description',async()=>{
  assert.match(html,/if\(!pc\.remoteDescription\)/);
  assert.match(html,/pendingIce\.delete\(m\.from\)/);
 });
+
+test('meeting ticket is not reflected in WebSocket response protocol',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await r.text();
+ assert.doesNotMatch(html,/Sec-WebSocket-Protocol/);
+});
