@@ -24,7 +24,7 @@ self.addEventListener('fetch',event=>{
     url.searchParams.has('chapter')&&!/^(?:[1-9]\d?|1[0-4]\d|150)$/.test(url.searchParams.get('chapter')))return;
  }
  const key=url.origin+url.pathname;
- event.respondWith(fetch(request).then(response=>{
+ event.respondWith(fetch(request,{cache:"no-cache"}).then(response=>{
   if(response.ok&&!/(?:private|no-store)/i.test(response.headers.get('cache-control')||''))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
   return response;
  }).catch(async()=>{
