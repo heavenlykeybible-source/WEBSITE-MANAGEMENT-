@@ -42,3 +42,10 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Fixed owner persistence timing: a rejected/full connection no longer reserves ownership before socket admission.
 - WebSocket negotiation now echoes only the fixed `meetingspace` protocol.
 - Pending priority: execute tests, inspect Durable Object reconnect and hibernation behavior, implement trusted ticket issuance and real broadcast integrations.
+
+## New feature: creator accounts and monthly subscriptions (2026-10-24)
+- Added `src/subscription-plans.js` with provisional Free (3 seats, 40 minutes/meeting, 120 minutes/month), Starter (6 seats, 120 minutes/meeting, 1,200 minutes/month), Pro (12 seats, 240 minutes/meeting, 6,000 minutes/month). **These are proposed defaults, not final commercial terms. Prices are intentionally unset.**
+- Added `migrations/0001_accounts_subscriptions.sql` for users, subscriptions, meeting sessions and payment webhook deduplication. Migration is NOT applied; no D1 binding is configured.
+- Added `test/subscription-plans.test.js` covering quotas and expiration. Tests not yet executed.
+- **Not yet operational**: account signup, email verification, authentication, payment provider checkout/webhook validation, subscription renewal/cancellation, D1 integration, per-user room authorization, usage accounting and automatic meeting timeout. Do not advertise as live.
+- Current P2P topology is limited to 12; larger paid meeting tiers require a production media SFU, TURN and scaling validation.
