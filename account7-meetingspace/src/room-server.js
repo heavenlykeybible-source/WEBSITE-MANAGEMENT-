@@ -17,6 +17,7 @@ export class MeetingRoom extends DurableObject {
   const claims=demo?{userId:crypto.randomUUID(),role:'owner'}:this.env.MEETING_TICKET_SECRET?await verifyMeetingTicket({ticket,roomId,secret:this.env.MEETING_TICKET_SECRET}):null;
   if(!claims)return new Response('Verified meeting identity required',{status:401});
   if(this.clients.size>=12)return new Response('Room full',{status:429});
+  if(!demo&&claims.role==='owner'&&this.ownerId===claims.userId)return new Response('Owner already connected',{status:409});
   if(this.locked&&claims.role!=='owner')return new Response('Room locked',{status:403});
   if(claims.role==='owner'&&this.ownerId&&this.ownerId!==claims.userId)return new Response('Room owner mismatch',{status:403});
   if(claims.role!=='owner'&&!this.ownerId)return new Response('Host has not joined',{status:403});
