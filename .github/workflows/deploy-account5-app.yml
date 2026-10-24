@@ -42,6 +42,7 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" || { echo '::error::Missing ACCOUNT5_CLOUDFLARE_API_TOKEN'; exit 1; }
           test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo '::error::Missing ACCOUNT5_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
       - name: Preserve previous healthy existing Worker
+        id: release_snapshot
         working-directory: .
         run: node scripts/test-existing-worker-release.mjs && node scripts/existing-worker-release.mjs snapshot
         env:
@@ -50,6 +51,7 @@ jobs:
       - name: Publish Account 5 Worker
         run: npx --no-install wrangler deploy --config wrangler.toml --keep-vars
       - name: Verify release and restore previous version on failure
+        if: always() && !cancelled() && steps.release_snapshot.outcome == 'success'
         working-directory: .
         run: node scripts/existing-worker-release.mjs verify
         env:

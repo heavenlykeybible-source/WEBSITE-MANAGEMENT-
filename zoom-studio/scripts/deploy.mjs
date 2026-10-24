@@ -1,7 +1,8 @@
-// Run from zoom-studio/. Requires Cloudflare sign-in or CI deployment credentials.
-// Deployment never provisions/reset accounts or changes secrets.
+// Update only the existing MeetingSpace Worker. Database migrations are a separate maintenance action.
 import {spawnSync} from 'node:child_process';
-const run=args=>{const r=spawnSync(args[0],args.slice(1),{stdio:'inherit',shell:false});if(r.error)throw r.error;if(r.status!==0)process.exit(r.status||1)};
+const releaseEnv={...process.env,RELEASE_WORKER:'heavenly-key-zoom-studio',RELEASE_ORIGIN:'https://meeting.heavenlykey.org/'};
+function run(args,env=process.env){const r=spawnSync(args[0],args.slice(1),{stdio:'inherit',shell:false,env});if(r.error)throw r.error;if(r.status!==0)throw Error('Existing MeetingSpace release stopped; inspect the failed step');}
 run([process.execPath,'scripts/configure.mjs']);
-run(['npx','--yes','wrangler@4','d1','migrations','apply','heavenly-key-zoom-studio-db','--remote','--config','wrangler.generated.json']);
-run(['npx','--yes','wrangler@4','deploy','--config','wrangler.generated.json']);
+run([process.execPath,'../scripts/existing-worker-release.mjs','snapshot'],releaseEnv);
+try{run(['npx','--yes','wrangler@4','deploy','--config','wrangler.generated.json','--keep-vars']);}
+finally{run([process.execPath,'../scripts/existing-worker-release.mjs','verify'],releaseEnv);}

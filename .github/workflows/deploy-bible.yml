@@ -35,6 +35,7 @@ jobs:
       - name: Audit Bible before deployment
         run: npm test
       - name: Preserve previous healthy existing Worker
+        id: release_snapshot
         working-directory: .
         run: node scripts/test-existing-worker-release.mjs && node scripts/existing-worker-release.mjs snapshot
         env:
@@ -52,6 +53,7 @@ jobs:
             echo '::warning::BIBLE_LIVE_URL is unset; live URL verification requires that variable.'
           fi
       - name: Verify release and restore previous version on failure
+        if: always() && !cancelled() && steps.release_snapshot.outcome == 'success'
         working-directory: .
         run: node scripts/existing-worker-release.mjs verify
         env:

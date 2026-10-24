@@ -1,4 +1,4 @@
-name: Deploy Heavenly Key Website to Cloudflare Pages
+name: "[RETIRED] Deploy Heavenly Key Website to Cloudflare Pages"
 
 on:
   push:
@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ false }} # Use the existing canonical Worker release instead.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -44,4 +45,4 @@ jobs:
       - name: Deploy Account 1 website to Cloudflare Pages
         shell: bash
         run: |
-          npx --yes wrangler@4 pages deploy "$SITE_DIR" --project-name "$CF_PAGES_PROJECT_NAME" --branch main
+          echo 'Use the existing Account 1 Worker deployment; legacy duplicate Pages publication is retired.'; exit 1
