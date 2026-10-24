@@ -28,6 +28,15 @@ test('room identifiers are constrained',async()=>{
  }
 });
 test('valid upgraded request reaches its room object',async()=>{
- const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket'}}),mockEnv);
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://example.test'}}),mockEnv);
  assert.equal(await r.text(),'routed:room123');
+});
+
+test('cross-origin socket requests are rejected',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket',Origin:'https://other.test'}}),mockEnv);
+ assert.equal(r.status,403);
+});
+test('missing Origin on socket request is rejected',async()=>{
+ const r=await worker.fetch(new Request('https://example.test/api/rooms/room123/socket',{headers:{Upgrade:'websocket'}}),mockEnv);
+ assert.equal(r.status,403);
 });
