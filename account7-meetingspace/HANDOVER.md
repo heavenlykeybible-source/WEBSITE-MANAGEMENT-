@@ -59,3 +59,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Subscription usage queries now reject corrupt/non-finite totals instead of granting extra time; regression test added.
 - Entitlement evaluation accepts time-valid `trialing` subscriptions as well as `active` subscriptions.
 - These are source changes only; tests and production enforcement are still pending.
+
+## Capacity enforcement groundwork (2026-10-24)
+- Room server defaults to three connected sockets (including owner) instead of twelve; signed `planId` ticket claim allows Starter 6 or Pro 12. Meeting ticket issuance/verification now signs and validates tier with legacy tickets falling back to Free.
+- **Security prerequisite:** only a trusted subscription-aware server may issue paid-tier tickets; NEVER accept planId from unverified browser input. Actual payment verification and tier revocation are not yet wired, so this is not production-ready enforcement.
+- Time-based meeting limits and aggregate monthly quota are NOT enforced in the Durable Object yet. No load/real-device tests have been run.
