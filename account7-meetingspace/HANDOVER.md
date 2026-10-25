@@ -178,3 +178,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Created `scripts/check-source.mjs`; `npm run check` now checks JavaScript syntax of every `src/*.js` and `test/*.js` file, instead of only `src/worker.js`. GitHub Actions workflow already invokes `npm run check` then `npm test`.
 - GitHub API confirms commits `16f29da` and `9dcb15d` were saved. Commit-scoped GitHub workflow lookup returned no runs; **do not infer that CI passed**.
 - Meeting-access API and UI now indicate when public creation is unavailable; account signup, validated participant invites, payment webhooks, D1 bindings, and scalable media remain pending.
+
+## 2026-10-25: Production readiness fail-closed gate
+- Added `src/launch-readiness.js` to represent nine release-critical requirements: verified identity, applied database migration, live subscriptions, verified payment webhooks, usage event integration, TURN, media load testing, automated tests, and staging end-to-end verification.
+- GET `/api/launch-readiness` now reports a deliberately fail-closed snapshot; it cannot report readiness just because the worker responds to HTTP. Added tests for the readiness model and worker route. **These tests have not been executed against the GitHub checkout.**
+- Do not mark checks complete based solely on environment variables. To make the gate pass in the future, require documented independent verification; avoid presenting this prototype as a production Zoom alternative.
