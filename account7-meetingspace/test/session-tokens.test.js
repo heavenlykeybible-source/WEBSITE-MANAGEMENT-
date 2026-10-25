@@ -27,3 +27,10 @@ test('short secrets and excessive TTLs are rejected',async()=>{
  await assert.rejects(()=>issueMeetingTicket({roomId:'room123',userId:'x',role:'host',secret:'short'}));
  await assert.rejects(()=>issueMeetingTicket({roomId:'room123',userId:'x',role:'host',secret,ttlSeconds:10000}));
 });
+
+test('signed meeting allowance cannot be changed or exceed ceiling',async()=>{
+ const token=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',planId:'pro',meetingMinutes:25,secret,now:1000});
+ const claims=await verifyMeetingTicket({ticket:token,roomId:'room123',secret,now:1001});
+ assert.equal(claims.meetingMinutes,25);
+ await assert.rejects(issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',meetingMinutes:241,secret,now:1000}),/Invalid meeting allowance/);
+});
