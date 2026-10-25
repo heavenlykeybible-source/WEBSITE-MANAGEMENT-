@@ -36,3 +36,25 @@ jobs:
         run: node scripts/build-account9-worker.mjs /tmp/account9-quality-worker.mjs
       - name: Validate packaged Worker JavaScript
         run: node --check /tmp/account9-quality-worker.mjs
+      - name: Smoke-test packaged Worker static routes
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import worker from '/tmp/account9-quality-worker.mjs';
+          const get = path => worker.fetch(new Request('https://video.example'+path), {});
+          for (const [path,type] of [['/','text/html'],['/timeline.js','text/javascript'],['/assets/logo-256.png','image/png']]) {
+            const response=await get(path);
+            assert.equal(response.status,200,path);
+            assert.ok(response.headers.get('content-type')?.includes(type),path+' content type');
+            assert.ok(response.headers.has('content-security-policy'),path+' security headers');
+            assert.ok((await response.arrayBuffer()).byteLength>0,path+' body');
+          }
+          const missing=await get('/missing-account9-resource');
+          assert.equal(missing.status,404);
+          const headers=await worker.fetch(new Request('https://video.example/',{method:'HEAD'}),{});
+          assert.equal(headers.status,200);
+          assert.equal((await headers.arrayBuffer()).byteLength,0);
+          const rejected=await worker.fetch(new Request('https://video.example/',{method:'POST'}),{});
+          assert.equal(rejected.status,405);
+          console.log('Account 9 Worker smoke tests passed.');
+          JS
