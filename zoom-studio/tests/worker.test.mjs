@@ -104,7 +104,9 @@ const r1 = await call('/api/team/meeting/report?meeting=' + m1.j.id, { token: A 
 ok(r1.j.attended.length === 1 && r1.j.attended[0].first === 1, 'first-time attendee is marked new');
 ok(r1.j.absent.length === 2, 'absent members are listed');
 ok((await call('/api/team/meeting/report?meeting=' + m1.j.id, { token: C })).s === 403, 'members cannot see the report');
-ok((await call('/api/team/followup', { token: A, body: { meeting: m1.j.id, audience: 'absent', text: 'We missed you', email: true } })).j.people === 2, 'follow-up reaches the absent members');
+const followup = await call('/api/team/followup', { token: A, body: { meeting: m1.j.id, audience: 'absent', text: 'We missed you', email: true } });
+ok(followup.j.people === 2, 'follow-up identifies absent members');
+ok(followup.j.emailed === 0, 'outbound follow-up emails are disabled unless explicitly configured');
 await call('/api/team/meeting/end', { token: A, body: { meeting: m1.j.id } });
 ok((await call('/api/team/meeting/join', { token: C, body: { meeting: m1.j.id } })).s === 400, 'ended meetings cannot be joined');
 const m2 = await call('/api/team/meeting/start', { token: A, body: { team: T, title: 'Midweek', link: 'https://studio.test/join.html?relay=wss%3A%2F%2Frelay.test&r=abc2&k=def2&a=1' } });
