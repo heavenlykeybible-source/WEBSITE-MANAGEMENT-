@@ -208,3 +208,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Explicit host ending and alarm shutdown call `finalizeMeetingUsage` with server time. Durable terminal marker is recorded before disconnect; a failed ledger update is logged, not treated as a successful charge. Added a Durable Object regression case for join and end database calls.
 - **NOT production-ready:** No `DB` binding or migrations applied in Cloudflare; no real login or payment processing. Full GitHub test suite has not passed. Disconnected-host lifecycle, retries for failed ledger writes, room reset/reconnect, and authoritative Cloudflare runtime testing require completion.
 - Source commits include `3acb217`, `101d987`, `319b146`, `b36c49e`; do not interpret them as deployment proof.
+
+## 2026-10-25: Usage finalization retry correction
+- `src/room-server.js` now retains/rearms the Durable Object alarm 60 seconds after a failed DB ledger finalization, instead of deleting the alarm and only logging the error. The persisted `meetingClosedAt` marker continues to prevent entry during retry. Added an isolated mocked-DB regression test.
+- Commits `cedbc2f`, `938ac71` saved on the development branch; no successful full test run or Cloudflare deployment confirmed. The D1 binding and SQL migrations have NOT been configured/applied.
+- IMPORTANT: host admission currently precedes allocating the WebSocketPair, so rare WebSocket initialization failure may begin accounting before a successful browser handshake. This and actual host disconnect and crashed-DO recovery still require an integration redesign and runtime verification.
