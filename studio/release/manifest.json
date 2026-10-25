@@ -2,8 +2,8 @@
   "format": "heavenly-key-studio-single-worker-v1",
   "worker": "heavenlykey-media",
   "bundle": "studio-worker.js",
-  "bytes": 531588,
-  "sha256": "30ab51f076caf1486fbbdb1462b39b87a8cc54404a09c63626a120fb03fc913d",
+  "bytes": 531924,
+  "sha256": "d4f856c71cf6b171c060353203a37842d15ab40eeee774f6142d91a7e4e9a470",
   "assetCount": 14,
   "assets": {
     "/assets/ministry/logo.svg": "95973432f94126d94294835f97d3d29a0e9806484784651a041e3d7d93f993a5",
@@ -24,7 +24,7 @@
   "sourceFiles": {
     "src/diagnostics.ts": "a8f1072c38631f4d66429addf372272787086a04ef6da9be30a805e57074e98a",
     "src/embedded-manifest.ts": "1ee866e24e17f33dd97ed3125261e1d54d915d736ecd8781117e4ce09ba1fe1c",
-    "src/index.ts": "387eef58e6a98deb884dd47c587a0706c8010265b63e160c6bcf5a934ea87e4c",
+    "src/index.ts": "516ac32c03ec6133beab2b4e2c763258fef23ec2cf607570beb2eb1a9b84010d",
     "src/livekit-config.ts": "307a86630f44721d1e51044958132565c9da5a92e686cd330cf3d72c11c71257",
     "src/livekit.ts": "b27be488af22dd9c1db872d58b2c8bbd8cdc3ff94338a6cbc216403aad1ae2ad",
     "src/public-broadcast.ts": "6c34811cd9e065084abf46ecf88012af31432b712660370c236bbadae6d0fdc0",

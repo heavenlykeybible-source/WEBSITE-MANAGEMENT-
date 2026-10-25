@@ -787,6 +787,11 @@ var engine = {
     const studioResponse = await studioAuthRoute(request, env);
     if (studioResponse) return studioResponse;
     if (url.pathname === "/health" && request.method === "GET") return json4({ ok: true, service: "heavenlykey-media-engine", version: env.MEDIA_ENGINE_VERSION ?? "v1" });
+    if (["GET", "HEAD"].includes(request.method)) {
+      if (url.pathname === "/api/broadcast/programme") return publicProgramme(request, env);
+      const listenerMedia = url.pathname.match(/^\/api\/broadcast\/media\/(\d+)\/object$/);
+      if (listenerMedia) return serveBroadcastMedia(request, env, Number(listenerMedia[1]));
+    }
     const marker = request.headers.get("X-Heavenly-Key-Internal");
     const auth = request.headers.get("Authorization") ?? "";
     if (marker === "media-engine-public-v1" && request.method === "GET" && url.pathname === "/api/broadcast/live") {

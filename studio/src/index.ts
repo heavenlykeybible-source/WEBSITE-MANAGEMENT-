@@ -33,6 +33,12 @@ const engine = {
   const url=new URL(request.url);
   const studioResponse=await studioAuthRoute(request,env);if(studioResponse)return studioResponse;
   if(url.pathname==='/health'&&request.method==='GET') return json({ok:true,service:'heavenlykey-media-engine',version:env.MEDIA_ENGINE_VERSION??'v1'});
+  // Published listener routes are public; Studio management remains authenticated.
+  if(['GET','HEAD'].includes(request.method)){
+    if(url.pathname==='/api/broadcast/programme')return publicProgramme(request,env);
+    const listenerMedia=url.pathname.match(/^\/api\/broadcast\/media\/(\d+)\/object$/);
+    if(listenerMedia)return serveBroadcastMedia(request,env,Number(listenerMedia[1]));
+  }
   const marker=request.headers.get('X-Heavenly-Key-Internal'); const auth=request.headers.get('Authorization')??'';
   if(marker==='media-engine-public-v1' && request.method==='GET' && url.pathname==='/api/broadcast/live') {
     const row=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,started_at,last_heartbeat_at,reconnect_deadline FROM live_sessions WHERE status IN ('live','reconnecting') ORDER BY session_id DESC LIMIT 1").first();
