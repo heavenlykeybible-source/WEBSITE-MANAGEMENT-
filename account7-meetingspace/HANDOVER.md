@@ -85,3 +85,10 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - `src/room-server.js` now persists `roomCapacity` and reloads it when a Durable Object instance is recreated, instead of defaulting every restarted room to three connections. Owner reconnection reuses stored plan capacity.
 - Added a regression test for enforcement of stored capacity on a recreated object. Test was committed but not executed; GitHub Actions has not reported a run, and local clone was blocked by unavailable DNS.
 - Production remaining: recover existing websocket sessions safely, protect room ownership/plan mutation under concurrent first joins, issue subscription-backed tickets, account signup, billing, monthly usage, media SFU/TURN, load tests and Cloudflare staging.
+
+## 2026-10-25: Admission, malformed signalling and lock recovery
+- Added `src/meeting-policy.js` with pure `safeMessage` and `mayJoinRoom` helpers; `test/meeting-policy.test.js` verifies malformed JSON, capacity, locks and closed sessions.
+- Live Durable Object now calls these helpers to reject malformed/non-object WebSocket JSON and enforce basic admission capacity and locked-room rules.
+- The owner room lock is persisted as `roomLocked` and reloaded when the object is recreated. Added regression coverage in `test/room-server.test.js`.
+- **Not yet verified:** Full tests were not executed; local GitHub clone fails because container cannot resolve github.com. Runtime end-to-end tests are required before launch.
+- Known architectural blocker: in-memory socket registry is not hibernation/restart safe; production subscription authorization, payments, full accounting and SFU/TURN remain outstanding.
