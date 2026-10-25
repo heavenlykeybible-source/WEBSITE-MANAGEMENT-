@@ -8,6 +8,9 @@ const original=readFileSync('index.html','utf8');
 assert.equal(html,original,'Source and public HTML must match');
 assert.ok(html.includes('aria-label="Studio sections"')&&html.includes("setAttribute('aria-pressed'"),'Navigation must expose active section to assistive technology');
 assert.ok(html.includes('button:focus-visible')&&html.includes('<label for="af">Choose audio</label>'),'Keyboard focus and audio upload label required');
+assert.ok(html.includes("if(exportURL){URL.revokeObjectURL(exportURL);exportURL=''}"),'Selecting a new video must invalidate the prior export');
+assert.ok(html.includes('audioBuffer=null;')&&html.includes("$('aexp').disabled=true"),'Loading an audio file must clear previously decoded audio');
+assert.ok(html.includes('v.onerror=()'),'Unsupported video codecs must show a helpful error');
 assert.equal(module,readFileSync('integrations.js','utf8'),'Integration modules must match');
 for(const id of ['vf','vexp','vdl','af','aexp','autocap','login','register','logout','pcloud','psave','pload','srtf','srtx','projects','account','video','audio']){
   assert.ok(html.includes('id="'+id+'"'),'Missing frontend element: '+id);
