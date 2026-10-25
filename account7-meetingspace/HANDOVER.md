@@ -126,3 +126,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added `src/account-registration.js` with `normalizedVerifiedIdentity` and `provisionVerifiedAccount` to insert a registered user ONLY for an identity-provider-verified principal with verified email. Includes email normalization, identity conflict protection and disabled account checks.
 - Added `test/account-registration.test.js` covering verified identities, provisioning and account conflict behavior; tests NOT yet executed.
 - Registration is **not live**: no configured identity provider, sign-in callback, public signup UI, working verified session, D1 binding or applied migration. Never expose a browser-controlled principal to the provisioning function.
+
+## 2026-10-25: Duration and usage finalization groundwork
+- Added `src/meeting-usage-ledger.js`: trusted server-side duration measurement, round-up of partial meeting minutes and conditional `ended_at IS NULL` D1 update for idempotent meeting finalization; if an update loses a race, re-read authoritative persisted billed minutes.
+- Added `test/meeting-usage-ledger.test.js` for duration calculations and duplicate finalization. Tests have not been executed.
+- **Not integrated**: the Durable Object currently does not call this D1 module on actual meeting closure. Reconciliation must account for crashes, date-period boundaries, payment period differences, and concurrent reservations. Monthly quotas are NOT reliably enforced. Do not launch subscriptions until end-to-end ledger testing is complete.
