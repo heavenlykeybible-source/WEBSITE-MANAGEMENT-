@@ -40,7 +40,7 @@ export class MeetingRoom extends DurableObject {
   const pair=new WebSocketPair(),[client,server]=Object.values(pair);
   server.accept();
   const id=crypto.randomUUID(),admitted=claims.role==='owner';
-  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12?savedCapacity:plan.participants;if(!savedCapacity)await this.ctx.storage.put('roomCapacity',this.capacity);this.meetingDeadline=persistedDeadline||Date.now()+plan.meetingMinutes*60000;if(!persistedDeadline)await this.ctx.storage.setAlarm(this.meetingDeadline);}
+  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12?savedCapacity:plan.participants;if(!savedCapacity)await this.ctx.storage.put('roomCapacity',this.capacity);this.meetingDeadline=persistedDeadline||Date.now()+Math.min(plan.meetingMinutes,Number.isInteger(claims.meetingMinutes)?claims.meetingMinutes:plan.meetingMinutes)*60000;if(!persistedDeadline)await this.ctx.storage.setAlarm(this.meetingDeadline);}
   const record={socket:server,userId:claims.userId,role:claims.role,admitted};
   this.clients.set(id,record);
   if(admitted){
