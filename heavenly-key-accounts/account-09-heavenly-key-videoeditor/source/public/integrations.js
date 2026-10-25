@@ -21,7 +21,7 @@
       for(const p of items){
         const li=el('li',{},list);el('span',{text:p.name+' · '+new Date(p.updated_at).toLocaleString()+' '},li);
         const open=el('button',{type:'button',text:'Open'},li);
-        open.onclick=async()=>{try{const d=await json('projects/'+encodeURIComponent(p.id));selected=d.id;const state=d.data||{};if(!validProjectLayers(state.layers||[]))throw Error('Cloud project has invalid captions or exceeds 500 captions.');layers.splice(0,layers.length,...(state.layers||[]));$('pn').value=d.name;$('asp').value=state.aspect||'16:9';$('vfx').value=state.filter||'none';$('vb').value=state.brightness||100;showLayers();dims();window.hkTimeline?.restoreClips(state.timeline||[]);status.textContent='Project opened. Re-select your media file.';}catch(e){status.textContent=e.message}};
+        open.onclick=async()=>{const generation=libraryGeneration;try{const d=await json('projects/'+encodeURIComponent(p.id));if(generation!==libraryGeneration)return;selected=d.id;const state=d.data||{};if(!validProjectLayers(state.layers||[]))throw Error('Cloud project has invalid captions or exceeds 500 captions.');layers.splice(0,layers.length,...(state.layers||[]));$('pn').value=d.name;$('asp').value=state.aspect||'16:9';$('vfx').value=state.filter||'none';$('vb').value=state.brightness||100;showLayers();dims();window.hkTimeline?.restoreClips(state.timeline||[]);status.textContent='Project opened. Re-select your media file.';}catch(e){status.textContent=e.message}};
         const remove=el('button',{type:'button',text:'Delete'},li);remove.onclick=async()=>{if(!confirm('Delete project '+p.name+'?'))return;try{await json('projects/'+encodeURIComponent(p.id),'DELETE');if(selected===p.id)selected=null;await loadProjects()}catch(e){status.textContent=e.message}};
       }
       status.textContent=items.length+' cloud project(s) available.';
@@ -40,11 +40,12 @@
       if(f.type.startsWith('video/')||f.type.startsWith('audio/')){
         const edit=el('button',{type:'button',text:'Edit in '+(f.type.startsWith('video/')?'Video':'Audio')+' Editor'},li);
         edit.onclick=async()=>{
+          const generation=libraryGeneration;
           edit.disabled=true;ms.textContent='Loading '+f.name+' into the editor…';
           try{
             const res=await fetch('/api/media/'+encodeURIComponent(f.id),{credentials:'same-origin'});
             if(!res.ok){const err=await res.json().catch(()=>({}));throw Error(err.error||'Cannot load cloud media');}
-            const blob=await res.blob();if(!blob.size)throw Error('Cloud media is empty');
+            const blob=await res.blob();if(generation!==libraryGeneration)return;if(!blob.size)throw Error('Cloud media is empty');
             const input=$(f.type.startsWith('video/')?'vf':'af');
             input.dispatchEvent(new CustomEvent('change',{bubbles:true,detail:{file:new File([blob],f.name,{type:f.type})}}));
             document.querySelector('nav button[data-p="'+(f.type.startsWith('video/')?'video':'audio')+'"]')?.click();
