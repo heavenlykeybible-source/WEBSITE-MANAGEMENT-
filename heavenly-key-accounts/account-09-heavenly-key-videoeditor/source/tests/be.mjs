@@ -99,6 +99,14 @@ const noLengthUpload = await onRequest({
   }),env,params:{path:['media']}
 });
 check('Media supports absent content length',noLengthUpload.status===200);
+const mediaCreated = await noLengthUpload.json();
+const deletedMedia = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:login.cookie});
+check('Media deletion succeeds for owned file',deletedMedia.status===200);
+const repeatedMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:login.cookie});
+check('Repeated media deletion reports not found',repeatedMediaDelete.status===404);
+const storageAfterDelete = await request('media',{cookie:login.cookie});
+check('Media deletion returns storage quota',storageAfterDelete.status===200&&storageAfterDelete.data.used===0);
+
 const noLengthWav = await onRequest({
   request: new Request('https://studio.example/api/transcribe',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},
