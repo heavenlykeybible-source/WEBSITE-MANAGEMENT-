@@ -245,3 +245,27 @@ test('concurrent closure requests share a single ledger finalization',async()=>{
  assert.equal(ledgerWrites,1);
  assert.ok(await room.ctx.storage.get('meetingClosedAt'));
 });
+
+test('host removal immediately revokes participant signalling even without close event',async()=>{
+ const servers=[];
+ const pairBefore=globalThis.WebSocketPair,responseBefore=globalThis.Response;
+ try{
+  globalThis.WebSocketPair=class {constructor(){const listeners={};const server={
+   listeners,accept(){},send(){},close(){},addEventListener(type,fn){listeners[type]=fn}
+  };servers.push(server);return {0:{},1:server}}};
+  globalThis.Response=class extends responseBefore {constructor(body,options){super(body,options?.status===101?{status:200}:options)}};
+  const room=makeRoom({MEETING_TICKET_SECRET:secret});
+  const host=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+  const guest=await issueMeetingTicket({roomId:'room123',userId:'guest',role:'participant',secret});
+  await room.fetch(socketRequest(host));
+  await room.fetch(socketRequest(guest));
+  const guestId=[...room.clients].find(([,record])=>record.userId==='guest')?.[0];
+  assert.ok(guestId);
+  await servers[0].listeners.message({data:JSON.stringify({type:'admission-decision',decision:'admit',id:guestId})});
+  assert.equal(room.clients.get(guestId)?.admitted,true);
+  await servers[0].listeners.message({data:JSON.stringify({type:'remove-participant',id:guestId})});
+  assert.equal(room.clients.has(guestId),false);
+  await servers[1].listeners.message({data:JSON.stringify({type:'chat',text:'not allowed'})});
+  assert.equal(room.clients.has(guestId),false);
+ }finally{globalThis.WebSocketPair=pairBefore;globalThis.Response=responseBefore}
+});
