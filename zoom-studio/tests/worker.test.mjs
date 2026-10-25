@@ -65,8 +65,8 @@ ok((await call('/api/teams', { token: A })).j.teams[0].role === 'leader', 'leade
 const inv = await call('/api/team/invite', { token: A, body: { team: T } }); ok(inv.j.url.includes('?join='), 'invite link made');
 ok((await call('/api/team/invite', { token: B, body: { team: T } })).s === 403, 'non-members cannot invite');
 const code = inv.j.code;
-const preview = await call('/api/team/invite-preview?code=' + code, { token: B });
-ok(preview.s === 200 && preview.j.group.id === T && preview.j.joined === false, 'invite preview reveals group without joining');
+const groupInvitePreview = await call('/api/team/invite-preview?code=' + code, { token: B });
+ok(groupInvitePreview.s === 200 && groupInvitePreview.j.group.id === T && groupInvitePreview.j.joined === false, 'invite preview reveals group without joining');
 ok((await call('/api/team/members?team=' + T, { token: A })).j.members.length === 1, 'preview does not enroll participant');
 ok((await call('/api/team/invite-preview?code=bad', { token: B })).s === 400, 'malformed invite preview refused');
 ok((await call('/api/team/join', { token: B, body: { code: 'invalid-code' } })).s === 400, 'malformed join code refused');
