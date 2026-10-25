@@ -50,12 +50,20 @@ export function consolidateAccount9Releases(items){
 }
 // Read-only queue projection: one actionable slot, older proposals retained
 // only in history for rollback/audit. No false claim of server-side mutation.
+const CLOSED_STATES=new Set(['declined','rejected','cancelled','canceled','superseded','failed']);
+const isActionable=item=>!CLOSED_STATES.has(String(item.status??'waiting').toLowerCase());
+
 export function projectAccount9Queue(items){
   if(!Array.isArray(items))throw TypeError('Proposal list required');
-  const current=chooseCurrentRelease(items);
-  const active=items.filter(item=>!isAccount9Release(item)||item===current).map(item=>({...item}));
-  const history=items.filter(item=>isAccount9Release(item)&&item!==current)
-    .map(item=>({...item,status:'superseded',superseded_by:current?.id??null}));
+  const relevant=items.filter(isAccount9Release);
+  // A cancelled or failed v6 must never hide an approved or pending v5.
+  const current=chooseCurrentRelease(relevant.filter(isActionable));
+  const active=items.filter(item=>!isAccount9Release(item)||(item===current&&isActionable(item)))
+    .map(item=>item===current?{...item,account:ACCOUNT9_TARGET.account,connection:ACCOUNT9_TARGET.connection,worker:ACCOUNT9_TARGET.worker}:{...item});
+  const history=relevant.filter(item=>item!==current).map(item=>{
+    if(!isActionable(item))return {...item};
+    return {...item,status:'superseded',superseded_by:current?.id??null};
+  });
   return {active,history,canonical_account:current?ACCOUNT9_TARGET.account:null};
 }
 // Pure ingestion reducer for Control Room integration. It replaces the
