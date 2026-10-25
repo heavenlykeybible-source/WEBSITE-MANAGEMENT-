@@ -8,6 +8,9 @@ const rows=[
  {id:29,account:'account8',version:'v2',worker:'meeting-space'}
 ];
 assert.equal(chooseCurrentRelease(rows)?.id,28,'Latest version replaces previous release');
+assert.equal(chooseCurrentRelease([{id:3,account:'account9',version:'v9'},{id:4,account:'account9',version:'v10'}])?.id,4,'v10 supersedes v9');
+assert.equal(chooseCurrentRelease([{id:3,account:'account9',version:'v5.9'},{id:4,account:'account9',version:'v5.10'}])?.id,4,'v5.10 supersedes v5.9');
+
 assert.deepEqual(supersededAccount9Ids(rows),[27],'Old Account 9 release is superseded');
 const consolidated=consolidateAccount9Releases(rows);
 assert.equal(consolidated.length,2,'Single Account 9 release remains');
