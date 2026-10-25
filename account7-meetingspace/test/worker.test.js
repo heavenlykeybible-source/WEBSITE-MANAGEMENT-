@@ -139,3 +139,12 @@ test('health endpoint responds without exposing secrets and rejects unsafe metho
  const post=await worker.fetch(new Request('https://example.test/api/health',{method:'POST'}),mockEnv);
  assert.equal(post.status,405);
 });
+
+test('meeting UI only offers participant removal controls to owners',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await response.text();
+ assert.match(html,/id="participantsList"/);
+ assert.match(html,/isRoomOwner=m.role==='owner'/);
+ assert.match(html,/if\(!isRoomOwner\|\|document.getElementById/);
+ assert.match(html,/type:'remove-participant'/);
+});
