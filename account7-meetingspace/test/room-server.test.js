@@ -160,3 +160,13 @@ test('host arrival and end call trusted database meeting lifecycle',async()=>{
   assert.ok(calls.some(x=>x.sql.includes('SET ended_at=')));
  }finally{globalThis.WebSocketPair=oldPair;globalThis.Response=oldResponse}
 });
+
+test('failed ledger finalization retains a scheduled retry instead of losing usage',async()=>{
+ const db={prepare(){return {bind(){return {first:async()=>({joinedAt:1000,endedAt:null,minutes:0}),run:async()=>{throw Error('D1 unavailable')}}}}}};
+ const room=makeRoom({MEETING_TICKET_SECRET:secret,DB:db});
+ await room.ctx.storage.put('ledgerRoomId','room123');
+ await room.ctx.storage.put('ledgerOwnerId','owner');
+ await assert.rejects(room.endMeeting('host-ended'),/D1 unavailable/);
+ assert.ok(await room.ctx.storage.get('meetingClosedAt'));
+ assert.ok((await room.ctx.storage.getAlarm())>Date.now());
+});
