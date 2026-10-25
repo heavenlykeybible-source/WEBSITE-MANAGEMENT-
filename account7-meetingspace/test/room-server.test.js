@@ -170,3 +170,21 @@ test('failed ledger finalization retains a scheduled retry instead of losing usa
  assert.ok(await room.ctx.storage.get('meetingClosedAt'));
  assert.ok((await room.ctx.storage.getAlarm())>Date.now());
 });
+
+test('retrying a failed ledger write bills the original meeting end time',async()=>{
+ const billedTimes=[];let fail=true;
+ const db={prepare(sql){return {bind(...args){return {
+  first:async()=>({joinedAt:1000,endedAt:null,minutes:0}),
+  run:async()=>{if(sql.includes('SET ended_at=')){billedTimes.push(args[0]);if(fail)throw Error('temporary database failure')}return {meta:{changes:1}}}
+ }}}}};
+ const room=makeRoom({MEETING_TICKET_SECRET:secret,DB:db});
+ await room.ctx.storage.put('ledgerRoomId','room123');
+ await room.ctx.storage.put('ledgerOwnerId','owner');
+ await assert.rejects(room.endMeeting('host-ended'),/temporary database failure/);
+ const originalEnd=await room.ctx.storage.get('meetingClosedAt');
+ fail=false;
+ await room.alarm();
+ assert.equal(billedTimes.length,2);
+ assert.deepEqual(billedTimes,[originalEnd,originalEnd]);
+ assert.equal(await room.ctx.storage.getAlarm(),null);
+});
