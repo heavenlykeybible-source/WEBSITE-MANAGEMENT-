@@ -1,7 +1,7 @@
 'use strict';
 // Cache only public editor code and brand assets. Account data and API
 // responses must never enter CacheStorage.
-const VERSION='hk-account9-offline-v1';
+const VERSION='hk-account9-offline-v2';
 const CORE=['/','/index.html','/integrations.js','/ai-tools.js','/gateway-ui.js','/voice-enhance.js','/timeline.js','/voice-studio.js','/manifest.json','/assets/favicon.png','/assets/logo-256.png','/assets/logo-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
@@ -18,12 +18,26 @@ self.addEventListener('fetch',event=>{
   const url=new URL(request.url);
   if(url.origin!==self.location.origin||url.pathname==='/api'||url.pathname.startsWith('/api/'))return;
   if(request.mode==='navigate'){
-    event.respondWith(fetch(request).catch(async()=>{
+    event.respondWith(fetch(request).then(response=>{
+      if(response.ok){
+        const copy=response.clone();
+        event.waitUntil(caches.open(VERSION).then(cache=>cache.put('/index.html',copy)));
+      }
+      return response;
+    }).catch(async()=>{
       const cache=await caches.open(VERSION);
       return (await cache.match('/index.html'))||Response.error();
     }));
     return;
   }
   if(!CORE.includes(url.pathname))return;
-  event.respondWith(caches.match(request).then(hit=>hit||fetch(request)));
+  event.respondWith(caches.open(VERSION).then(async cache=>{
+    const cached=await cache.match(request);
+    const fresh=fetch(request).then(response=>{
+      if(response.ok)event.waitUntil(cache.put(request,response.clone()));
+      return response;
+    }).catch(()=>null);
+    if(cached){event.waitUntil(fresh);return cached}
+    return (await fresh)||Response.error();
+  }));
 });
