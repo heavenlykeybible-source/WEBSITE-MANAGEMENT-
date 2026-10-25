@@ -18,6 +18,9 @@ try{
  const [a,b,admin,independent]=accounts,uid=a.data.userId,bid=b.data.userId;
  const emptyInbox=await req('/api/messages',null,a.cookie);assert.equal(emptyInbox.status,200,JSON.stringify(emptyInbox));assert.deepEqual(emptyInbox.data.items,[],'New members receive an empty inbox, never a missing API');
  assert.equal((await req('/api/messages')).status,401,'Private inbox requires authentication');
+ const studio=await req('/api/posts',{postFormat:'premium_text',body:'[theme=2]\n[bold]Encourage one another in Christ.[/bold]',designCategory:'faith'},a.cookie);assert.equal(studio.status,201,JSON.stringify(studio));
+ const studioPost=(await req('/api/feed?postId='+studio.data.postId,null,a.cookie)).data.items[0];assert.equal(JSON.parse(studioPost.design_settings).editor,'premium_text');assert.equal(studioPost.post_format,'design_card');
+ assert.equal((await req('/api/posts/'+studio.data.postId,{postFormat:'premium_text',body:'[theme=1]\n[italic]Grow together in Christ.[/italic]'},a.cookie,'PATCH')).status,200);
  const mine=(await req('/api/me',null,a.cookie)).data.profile;assert.equal(mine.locationVisibility,'private');assert.equal(mine.messagingVisibility,'connections');
  await req('/api/me/profile',{city:'Private city',church:'Private church',work:'Private job',locationVisibility:'connections',churchVisibility:'private',workVisibility:'private'},a.cookie,'PATCH');
  await req('/api/me/profile',{bio:'Changed bio only'},a.cookie,'PATCH');

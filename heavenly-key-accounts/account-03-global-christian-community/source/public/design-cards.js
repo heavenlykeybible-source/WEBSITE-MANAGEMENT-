@@ -99,7 +99,7 @@ export function parseVideoLink(value) {
 }
 export function validatePostPresentation(input) {
   const format=input.postFormat||'article';
-  if(!['design_card','article','video_link'].includes(format))throw Error('Choose Design Card, Article or Video Link.');
+  if(!['design_card','article','video_link','premium_text'].includes(format))throw Error('Choose Design Card, Article or Video Link.');
   const category=input.designCategory||'faith';
   if(!CATEGORIES.some(([id])=>id===category))throw Error('Choose a valid category.');
   const title=String(input.title??'').trim(),body=String(input.body??'').trim(),scripture=String(input.scripture??'').trim();
@@ -109,7 +109,12 @@ export function validatePostPresentation(input) {
   if(Array.isArray(input.mediaIds)&&input.mediaIds.length)throw Error('File attachments are disabled. Choose a Design Card or a video link.');
   const design=format==='video_link'?null:normalizeDesign(input.design);
   const video=format==='video_link'?parseVideoLink(input.videoUrl):null;
-  return {format,category,title,body,scripture,design,video};
+  if(format==='premium_text'){
+ if(/^\[theme=/.test(body)&&!/^\[theme=[0-5]\](?:\n|$)/.test(body))throw Error('Choose a supported text theme.');
+ if((body.match(/\[(?:\/)?(?:bold|italic|color(?:=#[0-9a-fA-F]{6})?)\]/g)||[]).length>150)throw Error('Too many style changes.');
+ return {format:'design_card',category,title,body,scripture,design:{...normalizeDesign(input.design),editor:'premium_text'},video:null};
+ }
+ return {format,category,title,body,scripture,design,video};
 }
 export const REPORT_REASONS = [['sexual_content','Pornography / sexual content'],['harassment','Harassment / bullying'],['threat','Threats / violence'],['hate_or_abuse','Hate / abusive language'],['scam','Scam / exploitation'],['spam','Spam'],['impersonation','Impersonation'],['religious_promotion_debate','Against the Christian purpose'],['other','Other policy violation']];
 export const COMMUNITY_RULES = [

@@ -41,3 +41,4 @@ test('design cards remain available without AI writing or search',async()=>{
 });
 
 test('premium Facebook and social card shapes are validated and saveable',()=>{assert.equal(normalizeDesign({templateId:'card-1151',size:'facebook'}).size,'facebook');assert.equal(normalizeDesign({templateId:'card-576',size:'social'}).size,'social');assert.throws(()=>normalizeDesign({size:'10px;color:red'}));});
+test('Recovered Premium Text Studio uses existing card storage and retains its editor marker',()=>{const p=validatePostPresentation({postFormat:'premium_text',body:'[theme=2]\n[bold]Faith in Christ[/bold]',designCategory:'faith'});assert.equal(p.format,'design_card');assert.equal(p.design.editor,'premium_text');assert.match(p.body,/\[bold\]/);assert.throws(()=>validatePostPresentation({postFormat:'premium_text',body:'[theme=9]\nInvalid'}));});

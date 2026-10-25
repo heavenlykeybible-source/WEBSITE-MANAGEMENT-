@@ -1,3 +1,4 @@
+import {communityRadio} from './community-radio';
 import type {Env} from "./types";
 import {passwordError} from "../public/password-policy.js";
 import {hashPassword,verifyPassword,createSession,getSession,destroySession,sessionCookie,clearSessionCookie,requireRole} from "./auth";
@@ -37,6 +38,7 @@ async function me(request:Request,env:Env){const u=await getSession(request,env)
 
 async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Response>{
   const url=new URL(request.url),p=url.pathname,m=request.method;
+  const radioResponse=await communityRadio(request);if(radioResponse)return radioResponse;
   if(m==="OPTIONS")return new Response(null,{status:204,headers:security(new Headers({"Allow":"GET,POST,PATCH,DELETE,OPTIONS"}))});
   if(!p.startsWith("/api/"))return error("Not found.",404);
   if(!["GET","HEAD","OPTIONS"].includes(m)){if(request.headers.get("Sec-Fetch-Site")==="cross-site")return error("Cross-site action denied.",403);const origin=request.headers.get("Origin");if(origin&&origin!==url.origin)return error("Use global.heavenlykey.org to perform this action.",403);}

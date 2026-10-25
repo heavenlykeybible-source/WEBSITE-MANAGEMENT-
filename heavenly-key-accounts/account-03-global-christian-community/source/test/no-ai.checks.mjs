@@ -62,7 +62,7 @@ test('every page uses the cleaned local footer and external connections allow co
  for(const path of pages){const html=read(path);if(html.includes('hk-standard-footer.js')){footers++;assert(html.includes('hk-standard-footer.js?v=20261021-noai1'),path);}
   for(const [,src]of html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)/gi))assert(!/^https?:/i.test(src),path+' executes unpinned external code');
  }
- assert(footers>=10);assert(read('public/index.html').includes('hk-footer-app-promo-20261015.js?v=20261021-noai1'));
+ assert(footers>=10);assert(!read('public/index.html').includes('hk-footer-app-promo-20261015.js'),'Community home does not load ministry advertisements');
  assert(read('public/hk-standard-footer.js').includes('cms-runtime-20261015.js?v=20261021-noai1'));
  const policy=read('public/_headers');assert(policy.includes("connect-src 'self' https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev/v1/content;"));
  assert(!read('public/cms-runtime-20261015.css').includes('hkem-public-assistant'));
