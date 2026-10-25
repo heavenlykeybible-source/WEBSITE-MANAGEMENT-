@@ -13,7 +13,16 @@ export function normalizeAccount(value){
 }
 export function isAccount9Release(item){
   if(!item||typeof item!=='object')return false;
-  if([item.account,item.accountId,item.slug,item.account_name,item.accountName].some(value=>normalizeAccount(value)==='account9'))return true;
+  const accountMatches=[item.account,item.accountId,item.slug,item.account_name,item.accountName].some(value=>normalizeAccount(value)==='account9');
+  const explicitConnection=item.connection??item.connection_id??item.connectionId;
+  const explicitWorker=item.worker??item.name??item.worker_name;
+  // A mismatched explicit deployment target must never be swallowed by Account 9.
+  if(accountMatches){
+    if(explicitWorker && explicitWorker!==ACCOUNT9_TARGET.worker)return false;
+    if(explicitConnection!==undefined && explicitConnection!==ACCOUNT9_TARGET.connection &&
+      explicitConnection!==8 && explicitConnection!=='8')return false;
+    return true;
+  }
   // Proposals submitted through the Control Room identify Cloudflare Account 9
   // by its saved connection ID. Keep the Worker name exact to avoid conflating apps.
   const target=item.worker||item.name||item.worker_name;
