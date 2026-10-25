@@ -29,3 +29,10 @@ test('billing finalization refuses invalid end timestamps',async()=>{
  await assert.rejects(finalizeMeetingUsage(db,'room123','owner',Number.NaN),/Invalid meeting end time/);
  await assert.rejects(finalizeMeetingUsage(db,'room123','owner',-2),/Invalid meeting end time/);
 });
+
+test('rejects invalid usage finalization timestamp before storage access',async()=>{
+ let queried=false;
+ const db={prepare(){queried=true;throw Error('Unexpected database query')}};
+ await assert.rejects(finalizeMeetingUsage(db,'room123','owner',NaN),/Invalid meeting end time/);
+ assert.equal(queried,false);
+});
