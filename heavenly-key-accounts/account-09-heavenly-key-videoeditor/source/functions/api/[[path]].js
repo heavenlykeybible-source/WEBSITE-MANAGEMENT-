@@ -277,8 +277,8 @@ export async function onRequest({ request: req, env, params }) {
             const sizeRow = await env.DB.prepare('SELECT size FROM media WHERE id=? AND user_id=?').bind(p[1],u.id).first();
             await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(sizeRow.size,u.id).run();
           }
+          return saved.meta.changes ? J({ ok: true }) : J({ error: 'Not found' }, 404);
         }
-        return J({ ok: true });
       }
     }
     return J({ error: 'Not found' }, 404);
