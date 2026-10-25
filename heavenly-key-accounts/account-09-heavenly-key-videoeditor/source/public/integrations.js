@@ -36,7 +36,7 @@
   const mediaRefresh=el('button',{type:'button',text:'Refresh media'},media);
   const ml=el('ul',{},media);const ms=el('div',{class:'status',role:'status',text:'Sign in to view cloud media.'},media);
   async function loadMedia(){try{const d=await json('media');ml.replaceChildren();for(const f of d.items){const li=el('li',{},ml);el('span',{text:f.name+' ('+(f.size/1048576).toFixed(1)+' MB) '},li);const a=el('a',{href:'/api/media/'+encodeURIComponent(f.id),text:'Open / Download'},li);a.target='_blank';a.rel='noopener noreferrer';
-      if(/^video\\/|^audio\\//.test(f.type)){
+      if(f.type.startsWith('video/')||f.type.startsWith('audio/')){
         const edit=el('button',{type:'button',text:'Edit in '+(f.type.startsWith('video/')?'Video':'Audio')+' Editor'},li);
         edit.onclick=async()=>{
           edit.disabled=true;ms.textContent='Loading '+f.name+' into the editor…';
