@@ -1,8 +1,8 @@
 'use strict';
 // Cache only public editor code and brand assets. Account data and API
 // responses must never enter CacheStorage.
-const VERSION='hk-account9-offline-v2';
-const CORE=['/','/index.html','/integrations.js','/ai-tools.js','/gateway-ui.js','/voice-enhance.js','/timeline.js','/voice-studio.js','/manifest.json','/assets/favicon.png','/assets/logo-256.png','/assets/logo-512.png'];
+const VERSION='hk-account9-offline-v3';
+const CORE=['/','/index.html','/integrations.js','/offline-status.js','/ai-tools.js','/gateway-ui.js','/voice-enhance.js','/timeline.js','/voice-studio.js','/manifest.json','/assets/favicon.png','/assets/logo-256.png','/assets/logo-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
 });
