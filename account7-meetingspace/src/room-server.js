@@ -35,7 +35,7 @@ export class MeetingRoom extends DurableObject {
   if(!demo&&claims.role==='owner'&&this.ownerId===claims.userId)return new Response('Owner already connected',{status:409});
   
   if(claims.role==='owner'&&this.ownerId&&this.ownerId!==claims.userId)return new Response('Room owner mismatch',{status:403});
-  if(claims.role!=='owner'&&!this.ownerId)return new Response('Host has not joined',{status:403});
+  if(claims.role!=='owner'&&!this.ownerId&&this.clients.size>=Math.max(0,this.capacity-1))return new Response('Waiting room is full until the host joins',{status:429});
   if([...this.clients.values()].some(c=>c.userId===claims.userId))return new Response('Identity already connected',{status:409});
   const pair=new WebSocketPair(),[client,server]=Object.values(pair);
   server.accept();
