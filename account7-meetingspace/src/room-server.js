@@ -27,6 +27,7 @@ export class MeetingRoom extends DurableObject {
   const persistedDeadline=await this.ctx.storage.getAlarm();
   if(persistedDeadline&&Date.now()>=persistedDeadline)return new Response('Meeting time limit reached',{status:403});
   if(persistedDeadline)this.meetingDeadline=persistedDeadline;
+  this.locked=(await this.ctx.storage.get('roomLocked'))===true;
   const savedCapacity=await this.ctx.storage.get('roomCapacity');
   if(Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12)this.capacity=savedCapacity;
   const admission=mayJoinRoom({isClosed:false,isExpired:false,isLocked:this.locked,role:claims.role,active:this.clients.size,capacity:Math.min(12,this.capacity)});
@@ -51,7 +52,7 @@ export class MeetingRoom extends DurableObject {
    this.notifyOwner({type:'admission-request',id});
   }
   let windowStart=Date.now(),count=0;
-  server.addEventListener('message',event=>{
+  server.addEventListener('message',async event=>{
    const now=Date.now();if(this.meetingDeadline&&now>=this.meetingDeadline){void this.alarm();return}if(now-windowStart>10000){windowStart=now;count=0}
    if(++count>100){server.close(1008,'Rate limit');return}
    if(typeof event.data!=='string'||event.data.length>120000){server.close(1009,'Message too large');return}
@@ -67,7 +68,7 @@ export class MeetingRoom extends DurableObject {
     this.broadcast({type:'join',id:msg.id},msg.id);
     return;
    }
-   if(record.role==='owner'&&record.admitted&&msg.type==='room-lock'&&typeof msg.locked==='boolean'){this.locked=msg.locked;this.send(server,{type:'room-lock',locked:this.locked});return}
+   if(record.role==='owner'&&record.admitted&&msg.type==='room-lock'&&typeof msg.locked==='boolean'){await this.ctx.storage.put('roomLocked',msg.locked);this.locked=msg.locked;this.send(server,{type:'room-lock',locked:this.locked});return}
    if(record.role==='owner'&&record.admitted&&msg.type==='remove-participant'&&typeof msg.id==='string'){
     const target=this.clients.get(msg.id);
     if(!target||target===record||!target.admitted)return;
