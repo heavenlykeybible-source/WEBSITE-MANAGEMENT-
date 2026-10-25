@@ -210,3 +210,18 @@ test('unexpected host socket close permanently ends the meeting',async()=>{
   assert.equal((await room.fetch(socketRequest(ticket))).status,410);
  }finally{globalThis.WebSocketPair=oldPair;globalThis.Response=oldResponse}
 });
+
+test('host room setup fails closed when D1 cannot record the start',async()=>{
+ const db={prepare(){return {bind(){return {run:async()=>{throw Error('D1 unavailable')}}}}}};
+ const room=makeRoom({MEETING_TICKET_SECRET:secret,DB:db});
+ const oldPair=globalThis.WebSocketPair;
+ let closed=false;
+ try{
+  globalThis.WebSocketPair=class {constructor(){return {0:{},1:{accept(){},send(){},addEventListener(){},close(){closed=true}}}}};
+  const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+  assert.equal((await room.fetch(socketRequest(ticket))).status,503);
+  assert.equal(closed,true);
+  assert.equal(room.clients.size,0);
+  assert.equal(room.ownerId,null);
+ }finally{globalThis.WebSocketPair=oldPair}
+});
