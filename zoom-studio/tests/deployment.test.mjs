@@ -13,24 +13,29 @@ function configure(extra={}) {
     fs.mkdirSync(path.join(dir,'scripts'));
     fs.copyFileSync(new URL('../scripts/configure.mjs',import.meta.url),path.join(dir,'scripts/configure.mjs'));
     const env={...process.env,STUDIO_D1_DATABASE_ID:database};
+    delete env.MEETINGSPACE_TARGET_ACCOUNT; delete env.MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID;
+    delete env.MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED;
     delete env.CLOUDFLARE_ACCOUNT_ID; delete env.CF_ACCOUNT_ID;
     const result=spawnSync(process.execPath,[path.join(dir,'scripts/configure.mjs')],{env:{...env,...extra},encoding:'utf8'});
     const file=path.join(dir,'wrangler.generated.json');
     return {...result,config:fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):null};
   } finally {fs.rmSync(dir,{recursive:true,force:true});}
 }
-test('meeting deployment always pins Account 7 and its separate resources',()=>{
-  const r=configure();assert.equal(r.status,0);assert.equal(r.config.account_id,target);
-  assert.equal(r.config.name,'heavenly-key-zoom-studio');
-  assert.equal(r.config.d1_databases[0].binding,'TEAMDB');
-  assert.equal(r.config.d1_databases[0].database_id,database);
+test('Account 8 is the default target and requires explicit credentials',()=>{
+ const r=configure();assert.notEqual(r.status,0);assert.equal(r.config,null);
+ assert.match(r.stderr,/requires a valid Cloudflare account ID/);
 });
-test('conflicting account variables stop deployment before writing configuration',()=>{
-  for(const key of ['CLOUDFLARE_ACCOUNT_ID','CF_ACCOUNT_ID']) {
-    const r=configure({[key]:'c324d871146f8fcc5e7dcd3da057011c'});
-    assert.notEqual(r.status,0);assert.equal(r.config,null);assert.match(r.stderr,/belongs to Account 7/);
-  }
-  assert.equal(configure({CLOUDFLARE_ACCOUNT_ID:target,CF_ACCOUNT_ID:target}).status,0);
+test('Account 7 Radio cannot be targeted by MeetingSpace',()=>{
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'7'});
+ assert.notEqual(r.status,0);assert.equal(r.config,null);
+ assert.match(r.stderr,/Account 7 is Heavenly Key Radio/);
+});
+test('conflicting account variables prevent Account 8 deployment',()=>{
+ for(const key of ['CLOUDFLARE_ACCOUNT_ID','CF_ACCOUNT_ID']) {
+  const r=configure({MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef',MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1',[key]:target});
+  assert.notEqual(r.status,0);assert.equal(r.config,null);
+  assert.match(r.stderr,/conflicts with Account 8/);
+ }
 });
 test('missing database stops deployment without creating a configuration',()=>{
   const r=configure({STUDIO_D1_DATABASE_ID:''});assert.notEqual(r.status,0);assert.equal(r.config,null);
