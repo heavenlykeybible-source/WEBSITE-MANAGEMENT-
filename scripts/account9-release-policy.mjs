@@ -59,7 +59,7 @@ export function projectAccount9Queue(items){
   // A cancelled or failed v6 must never hide an approved or pending v5.
   const current=chooseCurrentRelease(relevant.filter(isActionable));
   const active=items.filter(item=>!isAccount9Release(item)||(item===current&&isActionable(item)))
-    .map(item=>item===current?{...item,account:ACCOUNT9_TARGET.account,connection:ACCOUNT9_TARGET.connection,worker:ACCOUNT9_TARGET.worker}:{...item});
+    .map(item=>item===current?{...item,account:ACCOUNT9_TARGET.account,connection:item.connection??ACCOUNT9_TARGET.connection,worker:ACCOUNT9_TARGET.worker}:{...item});
   const history=relevant.filter(item=>item!==current).map(item=>{
     if(!isActionable(item))return {...item};
     return {...item,status:'superseded',superseded_by:current?.id??null};
