@@ -19,3 +19,13 @@ test('App download page home links are not ministry homepage links', () => {
   assert.ok(html.includes('id="choose-your-app"'));
   assert.ok(html.includes('href="https://apps.heavenlykey.org/downloads.html"'));
 });
+
+test('Specialised feature tiles open the real tool instead of the general app or ministry resources', () => {
+  const html = read('downloads.html');
+  const features = [...html.matchAll(/<a class="feature" href="([^"]+)">[\s\S]*?<h3>([^<]+)<\/h3>/g)];
+  const destinations = new Map(features.map(match => [match[2], match[1]]));
+  assert.equal(destinations.get('My Walk With God Calculator'), '/walk-offline.html');
+  assert.equal(destinations.get('Bible Study Portal'), '/creation-to-eternity.html');
+  assert.ok(html.includes('href="https://onlinebible.heavenlykey.org/">Open the Bible App →'));
+  assert.ok(html.includes('href="https://onlinebible.heavenlykey.org/install/">Bible installation instructions →'));
+});
