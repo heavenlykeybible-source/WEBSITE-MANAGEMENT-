@@ -173,3 +173,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added GET `/api/meeting-access` to report whether development demo mode is explicitly enabled, while indicating public sign-in and meeting creation are still unavailable.
 - The Create Meeting homepage action checks that endpoint. It proceeds only in explicitly enabled development demo mode; otherwise it explains verified account registration is not yet connected, rather than attempting a failed unauthenticated WebSocket connection.
 - Added a worker regression test for the unavailable production creation flow. The tests have been committed but not executed against the complete repository.
+
+## 2026-10-25: Full source syntax-check coverage
+- Created `scripts/check-source.mjs`; `npm run check` now checks JavaScript syntax of every `src/*.js` and `test/*.js` file, instead of only `src/worker.js`. GitHub Actions workflow already invokes `npm run check` then `npm test`.
+- GitHub API confirms commits `16f29da` and `9dcb15d` were saved. Commit-scoped GitHub workflow lookup returned no runs; **do not infer that CI passed**.
+- Meeting-access API and UI now indicate when public creation is unavailable; account signup, validated participant invites, payment webhooks, D1 bindings, and scalable media remain pending.
