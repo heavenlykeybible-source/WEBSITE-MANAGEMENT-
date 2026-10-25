@@ -12,10 +12,19 @@ test('meeting server rejects unauthenticated upgrade',async()=>{
  const room=makeRoom({MEETING_TICKET_SECRET:secret});
  assert.equal((await room.fetch(new Request(url,{headers:{Upgrade:'websocket'}}))).status,401);
 });
-test('participants cannot create a room before an owner joins',async()=>{
+test('ticketed guests may wait for their host without becoming admitted',async()=>{
  const ticket=await issueMeetingTicket({roomId:'room123',userId:'guest',role:'participant',secret});
  const room=makeRoom({MEETING_TICKET_SECRET:secret});
- assert.equal((await room.fetch(socketRequest(ticket))).status,403);
+ const originalPair=globalThis.WebSocketPair,originalResponse=globalThis.Response;
+ const messages=[];
+ try{
+  globalThis.WebSocketPair=class {constructor(){return {0:{},1:{accept(){},send(data){messages.push(JSON.parse(data))},addEventListener(){}}}}};
+  globalThis.Response=class extends originalResponse {constructor(body,opts){super(body,opts?.status===101?{status:200}:opts)}};
+  assert.equal((await room.fetch(socketRequest(ticket))).status,200);
+  assert.equal(room.clients.size,1);
+  assert.equal([...room.clients.values()][0].admitted,false);
+  assert.equal(messages[0].type,'waiting');
+ }finally{globalThis.WebSocketPair=originalPair;globalThis.Response=originalResponse}
 });
 test('room rejects tokens signed for a different meeting',async()=>{
  const ticket=await issueMeetingTicket({roomId:'room456',userId:'owner',role:'owner',secret});
@@ -89,4 +98,12 @@ test('new pro room uses signed plan capacity at initialization',async()=>{
   assert.equal(room.capacity,12);
   assert.equal(await room.ctx.storage.get('roomCapacity'),12);
  }finally{globalThis.Response=previousResponse;globalThis.WebSocketPair=previousPair}
+});
+
+test('room reserves capacity for the host when guests connect first',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ room.clients.set('guest-1',{admitted:false});
+ room.clients.set('guest-2',{admitted:false});
+ const ticket=await issueMeetingTicket({roomId:'room123',userId:'guest-3',role:'participant',secret});
+ assert.equal((await room.fetch(socketRequest(ticket))).status,429);
 });
