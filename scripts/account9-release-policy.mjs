@@ -53,6 +53,17 @@ export function projectAccount9Queue(items){
     .map(item=>({...item,status:'superseded',superseded_by:current?.id??null}));
   return {active,history,canonical_account:current?ACCOUNT9_TARGET.account:null};
 }
+// Pure ingestion reducer for Control Room integration. It replaces the
+// actionable Account 9 slot instead of appending another row. Callers must
+// persist the returned active and history records atomically on the server.
+export function upsertAccount9Release(queue,newRelease){
+  if(!queue||!Array.isArray(queue.active)||!Array.isArray(queue.history))throw TypeError('Invalid release queue');
+  if(!isAccount9Release(newRelease))throw TypeError('Not an Account 9 release');
+  const all=[...queue.active,...queue.history].filter(item=>item.id!==newRelease.id);
+  all.push({...newRelease});
+  const next=projectAccount9Queue(all);
+  return {active:next.active,history:next.history};
+}
 export function supersededAccount9Ids(items){
   if(!Array.isArray(items))throw TypeError('Release list required');
   const current=chooseCurrentRelease(items);
