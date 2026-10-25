@@ -121,3 +121,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Guests holding valid signed tickets can enter the waiting room before the host arrives, but remain `admitted=false` and cannot exchange meeting media or chat.
 - Room reserves one connection for a future host; added tests for pre-host waiting and seat reservation. Tests are NOT yet executed.
 - Waiting-room capacity defaults to Free (3 including host) until the host joins; production room creation and paid plan reservation must establish capacity independently before accepting many pre-host guests.
+
+## 2026-10-25: Identity-provider account provisioning groundwork
+- Added `src/account-registration.js` with `normalizedVerifiedIdentity` and `provisionVerifiedAccount` to insert a registered user ONLY for an identity-provider-verified principal with verified email. Includes email normalization, identity conflict protection and disabled account checks.
+- Added `test/account-registration.test.js` covering verified identities, provisioning and account conflict behavior; tests NOT yet executed.
+- Registration is **not live**: no configured identity provider, sign-in callback, public signup UI, working verified session, D1 binding or applied migration. Never expose a browser-controlled principal to the provisioning function.
