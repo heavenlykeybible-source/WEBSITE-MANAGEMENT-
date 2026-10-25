@@ -141,3 +141,6 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added a server-measured, idempotent meeting usage finalization module and unit tests: `src/meeting-usage-ledger.js`, `test/meeting-usage-ledger.test.js`. Server calculates rounded-up meeting minutes. An `ended_at IS NULL` conditional update prevents billing the same meeting twice; concurrent lost-update path rereads stored amount.
 - Hardened validation of room IDs and end timestamps; added invalid input regression tests. Code saved in GitHub, but tests have not yet been executed successfully.
 - **NOT CONNECTED** to actual meeting start/end events or production D1. Reservations currently use creation timestamp as `started_at`, which is NOT necessarily meeting join time; reconcile lifecycle before allowing paid billing. Subscription charges, notifications, renewals and usage enforcement remain unfinished.
+
+## 2026-10-25: Targeted usage tests
+- Executed Node.js tests against a manually reconstructed local copy of the usage ledger and its three focused tests: 3 passed, 0 failed (duration rounding, one-time finalization, invalid room IDs). This is NOT verification of the GitHub checkout, complete test suite, Cloudflare runtime or production deployment.
