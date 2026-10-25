@@ -81,6 +81,9 @@ assert.equal(manifest.start_url,'/','Offline application must launch at the edit
 assert.equal(manifest.display,'standalone','Offline app must be installable');
 assert.ok(manifest.icons.length>=2,'Installable app must include icons');
 assert.ok(html.includes('rel="manifest" href="/manifest.json"')&&html.includes("navigator.serviceWorker.register('/sw.js')"),'Editor must register the offline app');
+const offline=readFileSync('public/offline-status.js','utf8');
+new Script(offline,{filename:'account9-offline-status.js'});
+assert.ok(html.includes('src="/offline-status.js"')&&offline.includes("window.addEventListener('offline'"),'Offline status must report local editor availability');
 const sw=readFileSync('public/sw.js','utf8');
 new Script(sw,{filename:'account9-service-worker.js'});
 assert.ok(sw.includes("url.pathname.startsWith('/api/')")&&sw.includes("request.method!=='GET'"),'Service worker must bypass authenticated APIs and writes');
