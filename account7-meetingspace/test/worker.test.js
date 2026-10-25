@@ -222,3 +222,33 @@ test('socket disconnect cleans up media and preserves explicit meeting-end statu
  assert.match(html,/for\(const peerId of \[\.\.\.peers\.keys\(\)\]\)removePeer/);
  assert.match(html,/stream\?\.getTracks\(\)\.forEach\(track=>track\.stop\(\)\)/);
 });
+
+test('TURN ICE endpoint rejects unsigned connections and is never publicly cached',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/api/rooms/room123/ice'),mockEnv);
+ assert.equal(response.status,503);
+ const secret='meeting-worker-ice-test-secret-more-than-32-chars';
+ const unsigned=await worker.fetch(new Request('https://example.test/api/rooms/room123/ice'),{...mockEnv,MEETING_TICKET_SECRET:secret,DB:{prepare(){}}});
+ assert.equal(unsigned.status,401);
+});
+test('authenticated ICE lookup returns temporary TURN credentials without shared secret',async()=>{
+ const secret='meeting-worker-ice-test-secret-more-than-32-chars';
+ const relaySecret='meeting-turn-secret-more-than-thirty-two-characters';
+ const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner-123',role:'owner',secret});
+ const env={...mockEnv,MEETING_TICKET_SECRET:secret,DB:{prepare(){}},TURN_URLS:'turns:relay.example.org:5349?transport=tcp',TURN_SHARED_SECRET:relaySecret};
+ const response=await worker.fetch(new Request('https://example.test/api/rooms/room123/ice',{headers:{Authorization:'Bearer '+ticket}}),env);
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get('cache-control'),'no-store');
+ const result=await response.json();
+ assert.equal(result.relayConfigured,true);
+ assert.equal(result.iceServers.length,2);
+ assert.ok(result.iceServers[1].credential.length>10);
+ assert.equal(JSON.stringify(result).includes(relaySecret),false);
+ const unrelated=await worker.fetch(new Request('https://example.test/api/rooms/anotherroom/ice',{headers:{Authorization:'Bearer '+ticket}}),env);
+ assert.equal(unrelated.status,401);
+});
+test('WebRTC waits for relay configuration and keeps responsive call controls',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/await loadMeetingIce\(room\)/);
+ assert.match(html,/iceServers:meetingIceServers/);
+ assert.match(html,/id="callControls"/);
+});
