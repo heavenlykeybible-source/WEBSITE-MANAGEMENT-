@@ -2,7 +2,9 @@
 import {spawnSync} from 'node:child_process';
 const target=process.env.MEETINGSPACE_TARGET_ACCOUNT || '7';
 const worker=target==='8'?'heavenly-key-meetingspace':'heavenly-key-zoom-studio';
-const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:'https://meeting.heavenlykey.org/'};
+const origin=target==='8'?process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN:'https://meeting.heavenlykey.org/';
+if(target==='8' && (!origin || !/^https:\/\/[a-z0-9.-]+\/?$/i.test(origin))) throw Error('Set MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN to the confirmed HTTPS URL for Account 8');
+const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:origin};
 function run(args,env=process.env){const r=spawnSync(args[0],args.slice(1),{stdio:'inherit',shell:false,env});if(r.error)throw r.error;if(r.status!==0)throw Error('Existing MeetingSpace release stopped at '+args[1]+' (exit '+r.status+')');}
 run([process.execPath,'scripts/configure.mjs']);
 run([process.execPath,'../scripts/existing-worker-release.mjs','snapshot'],releaseEnv);
