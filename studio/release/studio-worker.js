@@ -783,6 +783,7 @@ function expiryHours(hours = 48) {
 }
 var engine = {
   async fetch(request, env) {
+    request = studioPublicRequest(request);
     const url = new URL(request.url);
     const studioResponse = await studioAuthRoute(request, env);
     if (studioResponse) return studioResponse;

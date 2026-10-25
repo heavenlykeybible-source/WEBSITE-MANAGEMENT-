@@ -1,5 +1,5 @@
 import {connectionDiagnostics} from './diagnostics';
-import {studioAuthRoute,studioOwner,type StudioAuthEnv} from './studio-auth';
+import {studioAuthRoute,studioOwner,studioPublicRequest,type StudioAuthEnv} from './studio-auth';
 import { multipartUpload, MAX_MEDIA_BYTES } from './uploads';
 import { LiveKitConnectionError, resolveLiveKitConfig, validateCloudConnection, checkLiveKitConnection, saveLiveKitConnection, liveKitConnectionStatus, recordLiveKitVerification, resetLiveKitConnection } from './livekit-config';
 import { publicProgramme, serveBroadcastMedia, isPlaybackURL } from "./public-broadcast";
@@ -30,6 +30,7 @@ function expiryHours(hours=48){return new Date(Date.now()+hours*3600000).toISOSt
 
 const engine = {
  async fetch(request:Request,env:Env):Promise<Response>{
+  request=studioPublicRequest(request);
   const url=new URL(request.url);
   const studioResponse=await studioAuthRoute(request,env);if(studioResponse)return studioResponse;
   if(url.pathname==='/health'&&request.method==='GET') return json({ok:true,service:'heavenlykey-media-engine',version:env.MEDIA_ENGINE_VERSION??'v1'});
