@@ -8,7 +8,8 @@ export class MeetingRoom extends DurableObject {
  send(socket,message){try{socket.send(JSON.stringify(message))}catch{}}
  broadcast(message,except=null){for(const [id,c] of this.clients)if(id!==except&&c.admitted)this.send(c.socket,message)}
  notifyOwner(message){for(const c of this.clients.values())if(c.role==='owner'&&c.admitted)this.send(c.socket,message)}
- async alarm(){for(const c of this.clients.values()){this.send(c.socket,{type:'meeting-ended',reason:'time-limit'});try{c.socket.close(1000,'Meeting time limit reached')}catch{}}this.clients.clear();this.ownerId=null;this.locked=false;this.meetingDeadline=0;await this.ctx.storage.put('meetingClosedAt',Date.now());await this.ctx.storage.deleteAlarm();}
+ async endMeeting(reason='time-limit'){for(const c of this.clients.values()){this.send(c.socket,{type:'meeting-ended',reason});try{c.socket.close(1000,'Meeting ended')}catch{}}this.clients.clear();this.ownerId=null;this.locked=false;this.meetingDeadline=0;await this.ctx.storage.put('meetingClosedAt',Date.now());await this.ctx.storage.deleteAlarm();}
+ async alarm(){await this.endMeeting('time-limit')}
  async fetch(request){
   if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return new Response('Upgrade required',{status:426});
   const demo=this.env.ALLOW_UNAUTHENTICATED_DEMO==='true'&&this.env.ENVIRONMENT==='development';
