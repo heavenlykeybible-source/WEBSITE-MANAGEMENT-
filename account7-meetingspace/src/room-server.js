@@ -9,7 +9,7 @@ export class MeetingRoom extends DurableObject {
  send(socket,message){try{socket.send(JSON.stringify(message))}catch{}}
  broadcast(message,except=null){for(const [id,c] of this.clients)if(id!==except&&c.admitted)this.send(c.socket,message)}
  notifyOwner(message){for(const c of this.clients.values())if(c.role==='owner'&&c.admitted)this.send(c.socket,message)}
- async endMeeting(reason='time-limit'){await this.ctx.storage.put('meetingClosedAt',Date.now());for(const c of this.clients.values()){this.send(c.socket,{type:'meeting-ended',reason});try{c.socket.close(1000,'Meeting ended')}catch{}}this.clients.clear();this.ownerId=null;this.locked=false;this.meetingDeadline=0;await this.ctx.storage.deleteAlarm();}
+ async endMeeting(reason='time-limit'){await this.ctx.storage.put('meetingClosedAt',Date.now());for(const c of this.clients.values()){this.send(c.socket,{type:'meeting-ended',reason});try{c.socket.close(1000,'Meeting ended')}catch{}}this.clients.clear();this.ownerId=null;this.locked=false;this.meetingDeadline=0;await this.ctx.storage.deleteAlarm();if(this.env.DB){const roomId=await this.ctx.storage.get('ledgerRoomId'),ownerId=await this.ctx.storage.get('ledgerOwnerId');if(roomId&&ownerId){try{await finalizeMeetingUsage(this.env.DB,roomId,ownerId,Date.now())}catch(error){console.error('Meeting usage finalization failed',error)}}}}
  async alarm(){await this.endMeeting('time-limit')}
  async fetch(request){
   if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return new Response('Upgrade required',{status:426});
@@ -42,7 +42,7 @@ export class MeetingRoom extends DurableObject {
   const pair=new WebSocketPair(),[client,server]=Object.values(pair);
   server.accept();
   const id=crypto.randomUUID(),admitted=claims.role==='owner';
-  if(admitted){if(!demo&&this.env.DB){await markVerifiedHostJoined(this.env.DB,roomId,claims.userId);await this.ctx.storage.put('ledgerRoomId',roomId)}if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12?savedCapacity:plan.participants;if(!savedCapacity)await this.ctx.storage.put('roomCapacity',this.capacity);this.meetingDeadline=persistedDeadline||Date.now()+Math.min(plan.meetingMinutes,Number.isInteger(claims.meetingMinutes)?claims.meetingMinutes:plan.meetingMinutes)*60000;if(!persistedDeadline)await this.ctx.storage.setAlarm(this.meetingDeadline);}
+  if(admitted){if(!demo&&this.env.DB){await markVerifiedHostJoined(this.env.DB,roomId,claims.userId);await this.ctx.storage.put('ledgerRoomId',roomId);await this.ctx.storage.put('ledgerOwnerId',claims.userId)}if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12?savedCapacity:plan.participants;if(!savedCapacity)await this.ctx.storage.put('roomCapacity',this.capacity);this.meetingDeadline=persistedDeadline||Date.now()+Math.min(plan.meetingMinutes,Number.isInteger(claims.meetingMinutes)?claims.meetingMinutes:plan.meetingMinutes)*60000;if(!persistedDeadline)await this.ctx.storage.setAlarm(this.meetingDeadline);}
   const record={socket:server,userId:claims.userId,role:claims.role,admitted};
   this.clients.set(id,record);
   if(admitted){
