@@ -5,11 +5,11 @@ import {markVerifiedHostJoined,finalizeMeetingUsage} from './meeting-usage-ledge
 
 // Cloudflare Durable Object. Participants receive no media or chat until admitted.
 export class MeetingRoom extends DurableObject {
- constructor(ctx,env){super(ctx,env);this.clients=new Map();this.ownerId=null;this.locked=false;this.capacity=3;this.meetingDeadline=0;}
+ constructor(ctx,env){super(ctx,env);this.clients=new Map();this.ownerId=null;this.locked=false;this.capacity=3;this.meetingDeadline=0;this.ending=false;}
  send(socket,message){try{socket.send(JSON.stringify(message))}catch{}}
  broadcast(message,except=null){for(const [id,c] of this.clients)if(id!==except&&c.admitted)this.send(c.socket,message)}
  notifyOwner(message){for(const c of this.clients.values())if(c.role==='owner'&&c.admitted)this.send(c.socket,message)}
- async endMeeting(reason='time-limit'){const storedEnd=await this.ctx.storage.get('meetingClosedAt');const endedAt=Number.isSafeInteger(storedEnd)&&storedEnd>0?storedEnd:Date.now();if(!storedEnd)await this.ctx.storage.put('meetingClosedAt',endedAt);for(const c of this.clients.values()){this.send(c.socket,{type:'meeting-ended',reason});try{c.socket.close(1000,'Meeting ended')}catch{}}this.clients.clear();this.ownerId=null;this.locked=false;this.meetingDeadline=0;if(this.env.DB){const roomId=await this.ctx.storage.get('ledgerRoomId'),ownerId=await this.ctx.storage.get('ledgerOwnerId');if(roomId&&ownerId){try{await finalizeMeetingUsage(this.env.DB,roomId,ownerId,endedAt)}catch(error){await this.ctx.storage.setAlarm(Date.now()+60000);throw error}}}await this.ctx.storage.deleteAlarm();}
+ async endMeeting(reason='time-limit'){this.ending=true;const storedEnd=await this.ctx.storage.get('meetingClosedAt');const endedAt=Number.isSafeInteger(storedEnd)&&storedEnd>0?storedEnd:Date.now();if(!storedEnd)await this.ctx.storage.put('meetingClosedAt',endedAt);for(const c of this.clients.values()){this.send(c.socket,{type:'meeting-ended',reason});try{c.socket.close(1000,'Meeting ended')}catch{}}this.clients.clear();this.ownerId=null;this.locked=false;this.meetingDeadline=0;if(this.env.DB){const roomId=await this.ctx.storage.get('ledgerRoomId'),ownerId=await this.ctx.storage.get('ledgerOwnerId');if(roomId&&ownerId){try{await finalizeMeetingUsage(this.env.DB,roomId,ownerId,endedAt)}catch(error){await this.ctx.storage.setAlarm(Date.now()+60000);throw error}}}await this.ctx.storage.deleteAlarm();}
  async alarm(){await this.endMeeting('time-limit')}
  async fetch(request){
   if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return new Response('Upgrade required',{status:426});
@@ -21,7 +21,7 @@ export class MeetingRoom extends DurableObject {
   const ticket=authorization.startsWith('Bearer ')?authorization.slice(7):tokenProtocol?.slice(3);
   const claims=demo?{userId:crypto.randomUUID(),role:'owner'}:this.env.MEETING_TICKET_SECRET?await verifyMeetingTicket({ticket,roomId,secret:this.env.MEETING_TICKET_SECRET}):null;
   if(!claims)return new Response('Verified meeting identity required',{status:401});
-  if(await this.ctx.storage.get('meetingClosedAt'))return new Response('Meeting has ended; create a new meeting room',{status:410});
+  if(this.ending||await this.ctx.storage.get('meetingClosedAt'))return new Response('Meeting has ended; create a new meeting room',{status:410});
   if(!demo&&claims.role==='owner'){
    const savedOwner=await this.ctx.storage.get('ownerUserId');
    if(savedOwner&&savedOwner!==claims.userId)return new Response('Room owner mismatch',{status:403});
