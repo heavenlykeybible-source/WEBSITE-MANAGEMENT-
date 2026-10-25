@@ -35,3 +35,21 @@ test('conflicting account variables stop deployment before writing configuration
 test('missing database stops deployment without creating a configuration',()=>{
   const r=configure({STUDIO_D1_DATABASE_ID:''});assert.notEqual(r.status,0);assert.equal(r.config,null);
 });
+
+test('Account 8 requires an explicit Cloudflare account ID',()=>{
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8'});
+ assert.notEqual(r.status,0);assert.equal(r.config,null);
+ assert.match(r.stderr,/requires a valid Cloudflare account ID/);
+});
+test('Account 8 selects its own Worker and D1 without overwriting Account 7',()=>{
+ const id='0123456789abcdef0123456789abcdef';
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:id});
+ assert.equal(r.status,0);
+ assert.equal(r.config.account_id,id);
+ assert.equal(r.config.name,'heavenly-key-meetingspace');
+ assert.equal(r.config.d1_databases[0].database_name,'heavenly-key-meetingspace-db');
+});
+test('Account 8 rejects a conflicting Cloudflare account environment',()=>{
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef',CF_ACCOUNT_ID:target});
+ assert.notEqual(r.status,0);assert.equal(r.config,null);
+});
