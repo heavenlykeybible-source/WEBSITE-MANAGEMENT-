@@ -48,12 +48,12 @@ const post = await fire('fetch',new Request('https://editor.test/projects',{meth
 assert.equal(post,undefined,'Mutating requests must bypass service worker');
 const remote = await fire('fetch',new Request('https://other.test/index.html'));
 assert.equal(remote,undefined,'Cross-origin requests must bypass the cache');
-let navigate = await fire('fetch',Object.assign(new Request('https://editor.test/'),{mode:'navigate'}));
+let navigate = await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
 assert.ok((await navigate.text()).includes('offline'),'Offline navigation must return cached editor');
 const script = await fire('fetch',new Request('https://editor.test/timeline.js'));
 assert.ok((await script.text()).includes('offline'),'Offline module must load from cache');
 offline=false;
-navigate = await fire('fetch',Object.assign(new Request('https://editor.test/'),{mode:'navigate'}));
+navigate = await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
 assert.equal(await navigate.text(),'live /','Online navigation must fetch current editor');
 assert.equal(await (await cache.match('/index.html')).text(),'live /','Online launch must refresh offline editor');
 assert.ok(networkCalls>=3,'Network refreshes must be attempted');
