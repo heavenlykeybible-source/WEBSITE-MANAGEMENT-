@@ -101,7 +101,7 @@ export class MeetingRoom extends DurableObject {
    if(this.clients.get(id)!==record)return;
    this.clients.delete(id);
    if(record.admitted)this.broadcast({type:'leave',id},id);
-   if(record.role==='owner'){this.ownerId=null;for(const c of this.clients.values())c.socket.close(1012,'Host disconnected');this.clients.clear();this.locked=false}
+   if(record.role==='owner'){void this.endMeeting('host-disconnected').catch(error=>console.error('Host disconnect finalization requires retry',error))}
   };
   server.addEventListener('close',cleanup);server.addEventListener('error',cleanup);
   const offered=(request.headers.get('Sec-WebSocket-Protocol')||'').split(',').map(v=>v.trim());
