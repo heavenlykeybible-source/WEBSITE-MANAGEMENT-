@@ -230,3 +230,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - The `endMeeting()` entry point now coalesces concurrent owner disconnect, manual end and alarm expiry onto one `finishMeeting()` promise; once it settles, future alarm retries may re-enter and use the persisted original end timestamp.
 - Regression test added to assert parallel shutdown requests share one finalization and one usage ledger write.
 - Commits `0a0cb80`, `49bc260`, `3541b05`. Tests not yet run in Cloudflare or complete Node checkout; production service still lacks configured D1, identity provider, billing, TURN/SFU and passing CI.
+
+## 2026-10-25: TURN credential groundwork and URL hardening
+- Repository contains `src/turn-credentials.js` issuing expiring coturn shared-secret HMAC-SHA1 credentials for an already verified identity; added regression coverage. This is a server utility only and **is not connected to browser ICE configuration** or a running TURN deployment.
+- Hardened TURN endpoint URI validation against embedded passwords, paths and unsupported transports; added regression coverage in `test/turn-credentials.test.js`. Commits `e7ab7cf`, `6073bdf`.
+- In a separate local Node test harness, an equivalent temporary TURN signing implementation passed three focused tests, including HMAC compatibility. This is **not verification of the GitHub checkout** or Cloudflare/coturn integration. Production setup still needs a real TURN relay, trusted authenticated issuance, connectivity tests and short-lived renewal.
