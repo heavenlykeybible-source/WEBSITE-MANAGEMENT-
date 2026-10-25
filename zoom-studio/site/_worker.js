@@ -266,8 +266,8 @@ async function teamRoutes(request, env, url, path, email, active) {
       const team = await DB.prepare('SELECT name FROM teams WHERE id=?').bind(mt.team).first();
       await DB.prepare('INSERT INTO messages(team,sender,name,text,kind,meta,ts) VALUES(?,?,?,?,?,NULL,?)').bind(mt.team, email, dname(email), 'To ' + labels[aud] + ' (' + mt.title + '): ' + text, 'announce', now).run();
       let sent = 0;
-      if (b.email === true && mailOn(env) && (await rate(env, 'fu:' + email, 5, 3600))) {
-        const cap = +env.MAX_EMAILS || 50;
+      if (b.email === true && env.MEETINGSPACE_FOLLOWUP_EMAIL_ENABLED === '1' && mailOn(env) && (await rate(env, 'fu:' + email, 3, 3600))) {
+        const cap = Math.max(1, Math.min(20, Number(env.MEETINGSPACE_FOLLOWUP_EMAIL_CAP) || 10));
         for (const e of list.slice(0, cap)) if (await mail(env, e, 'Follow-up: ' + team.name, '<p>' + eh(text) + '</p><p style="color:#666;font-size:12px">You received this because you are a member of "' + eh(team.name) + '" on Live Studio.</p>')) sent++;
       }
       return json({ ok: true, people: list.length, emailed: sent });
