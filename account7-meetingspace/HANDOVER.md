@@ -107,3 +107,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - `test/account-meeting-service.test.js` includes invalid room ID and fractional-quota regression cases (not executed).
 - `src/session-tokens.js` optionally carries signed `meetingMinutes`; `src/room-server.js` caps deadlines to this signed remaining balance. Tests were added but execution is unconfirmed. Latest GitHub commit workflow query returned zero runs.
 - Still required: authenticated session provider, D1 binding/migrations, verified payments, exact usage ledger updates, reconnection/hibernation, and scale/performance/security tests.
+
+## 2026-10-25: Host controls added to meeting UI
+- Added connected-participants list and owner-only Remove controls to `src/worker.js`; the existing server already checks owner privileges for `remove-participant` messages. The UI hides host-only panels from waiting guests and admitted participants.
+- Added `test/worker.test.js` checks for the owner guard and actual signalling command. Tests are committed but have NOT been run; browser verification still required.
+- NOTE: user accounts, subscriptions, paid access and actual video infrastructure remain incomplete. No verified public deployment.
