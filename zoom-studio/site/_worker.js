@@ -148,7 +148,8 @@ async function teamRoutes(request, env, url, path, email, active) {
       return json({ group: { id: row.id, name: row.name }, expires: row.expires, joined: !!(await roleOf(env, row.id, email)) });
     }
     case '/api/team/join': {
-      const code = String(b.code || '').replace(/[^0-9a-f]/g, '');
+      const code = String(b.code || '').toLowerCase();
+      if (!/^[0-9a-f]{12}$/.test(code)) return json({ error: 'Invalid invitation code.' }, 400);
       if (!(await rate(env, 'jn:' + email, 10, 900))) return json({ error: 'Too many attempts. Try again later.' }, 429);
       const iv = await DB.prepare('SELECT * FROM invites WHERE code=?').bind(code).first();
       if (!iv || iv.expires < now || iv.uses >= iv.max) return json({ error: 'This invite link has expired. Ask the leader for a new one.' }, 400);
