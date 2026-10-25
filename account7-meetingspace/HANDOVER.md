@@ -136,3 +136,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added `src/meeting-usage-ledger.js` and `test/meeting-usage-ledger.test.js` to compute meeting minutes on trusted server timestamps and finalize a D1 session only once with an `ended_at IS NULL` conditional update. On a concurrent finalization loss, the code reloads the actual saved minutes.
 - Session ID and owner ID input validation added. These commits are saved; tests have not been executed in the Cloudflare runtime.
 - **NOT integrated:** a secure meeting-start/end event pipeline that calls this ledger, monthly usage enforcement for concurrent meetings, and paid subscription webhooks. The ledger must not be exposed as a client-triggered unrestricted endpoint. The existing reservation creates a started_at timestamp before a host actually begins, which must be redesigned to avoid unfair usage accounting.
+
+## 2026-10-25: Billing usage safety
+- Added a server-measured, idempotent meeting usage finalization module and unit tests: `src/meeting-usage-ledger.js`, `test/meeting-usage-ledger.test.js`. Server calculates rounded-up meeting minutes. An `ended_at IS NULL` conditional update prevents billing the same meeting twice; concurrent lost-update path rereads stored amount.
+- Hardened validation of room IDs and end timestamps; added invalid input regression tests. Code saved in GitHub, but tests have not yet been executed successfully.
+- **NOT CONNECTED** to actual meeting start/end events or production D1. Reservations currently use creation timestamp as `started_at`, which is NOT necessarily meeting join time; reconcile lifecycle before allowing paid billing. Subscription charges, notifications, renewals and usage enforcement remain unfinished.
