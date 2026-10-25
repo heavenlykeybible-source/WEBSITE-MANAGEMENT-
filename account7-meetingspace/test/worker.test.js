@@ -285,3 +285,11 @@ test('late media permissions are revoked if admission ended during browser promp
  assert.match(html,/getUserMedia\(\{audio:true,video:true\}\);if\(!isAdmitted\)\{stream\.getTracks\(\)\.forEach\(track=>track\.stop\(\)\)/);
  assert.match(html,/getDisplayMedia\(\{video:true\}\);if\(!isAdmitted\)\{sharing\.getTracks\(\)\.forEach\(track=>track\.stop\(\)\)/);
 });
+
+test('waiting room automatically removes withdrawn requests and deduplicates repeated requests',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/m.type==='admission-withdrawn'/);
+ assert.match(html,/getElementById\('waiting-'\+m.id\)\?\.remove\(\)/);
+ assert.match(html,/if\(document.getElementById\('waiting-'\+m.id\)\)return/);
+ assert.match(html,/row.id='waiting-'\+m.id/);
+});
