@@ -73,3 +73,10 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added `alarm()` to close sockets at the meeting deadline even when participants are idle, and persisted the deadline with `ctx.storage.setAlarm`.
 - New WebSocket upgrades read `ctx.storage.getAlarm()` to reject expired sessions after object restarts. Added regression test for expired persisted alarm.
 - Still needs Cloudflare runtime integration testing and recovery verification; in-memory connected client state is NOT hibernation safe. No monthly quota ledger or payment-backed ticket issuance yet.
+
+## 2026-10-25: Expired room replay protection
+- Room `alarm()` now persists `meetingClosedAt`, and socket upgrades return HTTP 410 for permanently expired room IDs; generate a fresh ID for the next meeting.
+- Incoming signalling after timeout uses the same durable alarm shutdown code (instead of clearing only transient in-memory state). Added regression test for room reuse after alarm.
+- Fixed owner reconnect to keep the existing alarm deadline rather than reset it.
+- GitHub Actions workflow runs were queried for commit `636096a36b66e2d8bf360b0c34bd0d1b2815c03b`; none were returned. Local Git clone was blocked by missing network DNS, so full tests are NOT verified.
+- Still outstanding: safe room capacity after DO restart; authenticated signup/session and subscription-backed ticket issuance; billing/usage; SFU/TURN/recording; test + staging + production verification.
