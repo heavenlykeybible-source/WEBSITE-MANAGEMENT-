@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const read=name=>readFileSync(new URL('../public/'+name,import.meta.url),'utf8');
+test('App home and directory have discoverable popup launch buttons',()=>{for(const page of ['index.html','downloads.html']){const html=read(page);assert.ok(html.includes('data-app-launcher'),page);assert.ok(html.includes('/app-launcher.js'),page);assert.ok(html.includes('/app-launcher.css'),page);}});
+test('Each app launcher destination has an explicit unique URL',()=>{const source=read('app-launcher.js');const urls=[...source.matchAll(/\['[^']+','[^']+','([^']+)'/g)].map(m=>m[1]);assert.ok(urls.length>=10);assert.equal(new Set(urls).size,urls.length);for(const url of urls)assert.ok(url.startsWith('/')||url.startsWith('https://'));});
+test('App launcher does not frame external apps or weaken iframe protections',()=>{const source=read('app-launcher.js'),headers=read('_headers');assert.ok(!source.includes('createElement(\'iframe\')'));assert.ok(headers.includes('X-Frame-Options: DENY'));assert.ok(headers.includes("frame-ancestors 'none'"));});
