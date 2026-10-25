@@ -138,6 +138,15 @@ async function teamRoutes(request, env, url, path, email, active) {
       await DB.prepare('INSERT INTO invites(code,team,by,expires,uses,max) VALUES(?,?,?,?,0,100)').bind(code, T, email, now + 7 * 864e5).run();
       return json({ code, url: url.origin + '/?join=' + code });
     }
+    case '/api/team/invite-preview': {
+      // Read-only preview: accepting an invitation remains a separate explicit action.
+      const code = String(url.searchParams.get('code') || '').toLowerCase();
+      if (!/^[0-9a-f]{12}$/.test(code)) return json({ error: 'Invalid invitation.' }, 400);
+      if (!(await rate(env, 'preview:' + email, 30, 900))) return json({ error: 'Too many requests.' }, 429);
+      const row = await DB.prepare('SELECT t.id,t.name,i.expires,i.uses,i.max FROM invites i JOIN teams t ON t.id=i.team WHERE i.code=?').bind(code).first();
+      if (!row || row.expires <= now || row.uses >= row.max) return json({ error: 'Invitation expired or unavailable.' }, 404);
+      return json({ group: { id: row.id, name: row.name }, expires: row.expires, joined: !!(await roleOf(env, row.id, email)) });
+    }
     case '/api/team/join': {
       const code = String(b.code || '').replace(/[^0-9a-f]/g, '');
       if (!(await rate(env, 'jn:' + email, 10, 900))) return json({ error: 'Too many attempts. Try again later.' }, 429);
