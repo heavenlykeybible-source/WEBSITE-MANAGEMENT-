@@ -22,3 +22,7 @@ Follow-up should start with an in-app group announcements page and a next-meetin
 ## Acceptance checks before launch
 
 Test guest admission, host permissions, camera/microphone, screen sharing, network reconnection, mobile browsers, group invite acceptance/rejection, member exit, rate limits, and notification opt-out on the deployed Account 8 Worker. Verify actual Cloudflare usage and limits before increasing participant caps. Do not claim that this design alone implements those features.
+
+## Current enforced limits
+
+The meeting signalling Durable Object defaults to **8 simultaneous sockets per room**, including the host, and allows a configured `MEETING_ROOM_CAP` between 2 and 12. This is a resource-protection limit, **not** a verified audience capacity promise; peer-to-peer video scales poorly as participants increase. The backend enforces HTTP read/write methods for group APIs. Follow-up emails are **off by default** and require `MEETINGSPACE_FOLLOWUP_EMAIL_ENABLED=1`, a configured email provider, and the sender's explicit email choice. The per-follow-up cap is 10, configurable with `MEETINGSPACE_FOLLOWUP_EMAIL_CAP` up to 20, with a three-per-hour rate limit. These safeguards do not establish individual recipients' notification preferences; keep external email disabled until recipient opt-in/unsubscribe is implemented and reviewed.
