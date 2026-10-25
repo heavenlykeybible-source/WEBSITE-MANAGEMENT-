@@ -16,6 +16,8 @@ try{
  assert.equal((await req('/api/auth/register',{email:'underage@example.invalid',password:'TestingAudit8825',fullName:'Age test',ageConfirmed:false,standardsAccepted:true})).status,400);
  const accounts=[];for(let i=0;i<4;i++){const a=await req('/api/auth/register',{ageConfirmed:true,standardsAccepted:true,email:`audit-${source}-${i}@example.invalid`,password:'TestingAudit8825',fullName:i===0?'Unsearchable Legal Identity':'Audit User '+i,displayName:'Audit display '+i,country:'Nigeria'});assert.equal(a.status,201,JSON.stringify(a));accounts.push(a);}
  const [a,b,admin,independent]=accounts,uid=a.data.userId,bid=b.data.userId;
+ const emptyInbox=await req('/api/messages',null,a.cookie);assert.equal(emptyInbox.status,200,JSON.stringify(emptyInbox));assert.deepEqual(emptyInbox.data.items,[],'New members receive an empty inbox, never a missing API');
+ assert.equal((await req('/api/messages')).status,401,'Private inbox requires authentication');
  const mine=(await req('/api/me',null,a.cookie)).data.profile;assert.equal(mine.locationVisibility,'private');assert.equal(mine.messagingVisibility,'connections');
  await req('/api/me/profile',{city:'Private city',church:'Private church',work:'Private job',locationVisibility:'connections',churchVisibility:'private',workVisibility:'private'},a.cookie,'PATCH');
  await req('/api/me/profile',{bio:'Changed bio only'},a.cookie,'PATCH');

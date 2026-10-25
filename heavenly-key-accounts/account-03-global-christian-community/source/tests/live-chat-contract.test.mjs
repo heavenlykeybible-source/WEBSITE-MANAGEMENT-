@@ -1,1 +1,11 @@
-import fs from 'node:fs';import assert from 'node:assert/strict';const html=fs.readFileSync(new URL('../public/messages.html',import.meta.url),'utf8');const js=fs.readFileSync(new URL('../public/community-live-chat.js',import.meta.url),'utf8');const css=fs.readFileSync(new URL('../public/community-live-chat.css',import.meta.url),'utf8');assert.match(html,/community-live-chat\.js/);assert.match(html,/https:\/\/www\.heavenlykey\.org\//);assert.doesNotMatch(html,/alldaywow247\.workers\.dev/);assert.match(js,/setInterval\(\(\)=>loadThread/);assert.match(js,/New fellowship message received/);assert.match(js,/Read/);assert.match(js,/Delivered/);assert.match(js,/Typing/);assert.match(js,/credentials:'same-origin'/);assert.match(css,/@media\(max-width:760px\)/);assert.match(css,/community-chat-bubble\.mine/);console.log('live chat contract: ok');
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+const read=p=>fs.readFileSync(new URL(p,import.meta.url),'utf8');
+const html=read('../public/messages.html'),legacy=read('../public/community-live-chat.js');
+assert.doesNotMatch(html,/<script[^>]+src="community-live-chat\.js/);
+let calls=0;
+const forbidden=()=>{calls++;throw Error('Legacy messenger must not run')};
+vm.runInNewContext(legacy,{fetch:forbidden,document:new Proxy({},{get:forbidden}),setInterval:forbidden,setTimeout:forbidden});
+assert.equal(calls,0,'Cached pages cannot mount a competing messenger or call obsolete APIs');
+console.log('PASS cached and current pages use one messaging implementation');
