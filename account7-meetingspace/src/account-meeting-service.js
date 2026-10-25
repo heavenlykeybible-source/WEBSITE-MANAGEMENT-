@@ -20,7 +20,8 @@ export async function issueOwnerTicketForAccount({db,verifiedPrincipal,roomId,si
    if(winner?.ownerId!==ownerId)return {allowed:false,reason:'Room could not be reserved'};
   }
  }
- const ticket=await issueMeetingTicket({roomId,userId:ownerId,role:'owner',planId:allowance.plan.id,secret:signingSecret});
+ const meetingMinutes=Math.max(1,Math.floor(Math.min(allowance.plan.meetingMinutes,allowance.remainingMinutes)));
+ const ticket=await issueMeetingTicket({roomId,userId:ownerId,role:'owner',planId:allowance.plan.id,meetingMinutes,secret:signingSecret});
  return {allowed:true,ticket,plan:allowance.plan.id,participants:allowance.plan.participants,
-  meetingMinutes:Math.min(allowance.plan.meetingMinutes,allowance.remainingMinutes)};
+  meetingMinutes};
 }
