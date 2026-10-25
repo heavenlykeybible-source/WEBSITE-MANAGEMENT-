@@ -1,0 +1,40 @@
+name: Account 8 MeetingSpace tests
+on:
+  push:
+    branches:
+      - feature/account8-meetingspace-hardening-20261025
+    paths:
+      - 'zoom-studio/**'
+      - '.github/workflows/account8-meetingspace-tests.yml'
+  pull_request:
+    paths:
+      - 'zoom-studio/**'
+      - '.github/workflows/account8-meetingspace-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: account8-meetingspace-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    name: Node 22 backend and deployment regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: zoom-studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+      - name: Check Account 8 deployment guard
+        env:
+          MEETINGSPACE_TARGET_ACCOUNT: '7'
+        run: |
+          if node scripts/configure.mjs; then
+            echo "MeetingSpace must reject Account 7" >&2
+            exit 1
+          fi
