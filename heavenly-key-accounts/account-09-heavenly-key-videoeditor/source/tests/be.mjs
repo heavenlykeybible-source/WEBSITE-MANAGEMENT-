@@ -4,6 +4,10 @@ import { onRequest } from '../functions/api/[[path]].js';
 
 const db = new DatabaseSync(':memory:');
 db.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8'));
+const auditIndex=db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_audit_user_action_at'").get();
+if(!auditIndex)throw Error('Missing audit event query index');
+db.exec(readFileSync(new URL('../migrations/0003_audit_event_index.sql',import.meta.url),'utf8'));
+
 const objects = new Map();
 const env = {
   DB: { prepare(sql) {
