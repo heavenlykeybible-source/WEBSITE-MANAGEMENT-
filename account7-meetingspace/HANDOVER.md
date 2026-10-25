@@ -116,3 +116,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 ## 2026-10-25: Post-disconnect signaling guard
 - `src/room-server.js` now ignores messages from sockets that have already been removed from the active client registry. This closes a race where removed participants could continue processing old signal/chat events before connection shutdown.
 - Commit `0f90e97bf8671ee8a5cdbee006640f33535e89ab` saved on development branch. Runtime and full test suite remain unverified; DO socket recovery remains incomplete.
+
+## 2026-10-25: Waiting room before host arrival
+- Guests holding valid signed tickets can enter the waiting room before the host arrives, but remain `admitted=false` and cannot exchange meeting media or chat.
+- Room reserves one connection for a future host; added tests for pre-host waiting and seat reservation. Tests are NOT yet executed.
+- Waiting-room capacity defaults to Free (3 including host) until the host joins; production room creation and paid plan reservation must establish capacity independently before accepting many pre-host guests.
