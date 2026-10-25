@@ -37,3 +37,16 @@ The repository's manual workflow `.github/workflows/deploy-account-09-videoedito
 The workflow must fail before deploying if source files, the `public/` assets, `wrangler.toml`, preflight checks, or backend tests are missing. Source must be committed under `heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/`. Deploy only the `public/` directory while retaining Pages Functions at `functions/`.
 
 Before release, confirm the selected Cloudflare account has the expected Pages project, correct D1/R2/Workers AI bindings, live schema and role setup. A successful workflow does not itself prove video export, real AI captioning, login, or compatibility on iOS Safari.
+
+
+## Current release route and resource verification — 25 October 2026
+
+**Canonical release route:** `scripts/build-account9-worker.mjs` packages the complete Account 9 frontend and API into the existing `heavenlykey-studio` Worker release used by Control Room. The legacy `.github/workflows/deploy-account-09-videoeditor.yml` is intentionally retired; do not use its Pages deployment steps as an active deployment procedure. GitHub Actions `quality-account9-videoeditor.yml` runs source checks and packaged Worker smoke tests but **does not deploy**.
+
+The connected Cloudflare Account 9 resource listing confirms:
+- D1: `heavenly-key-videoeditor-db`, ID `37d1fd6a-4424-4cca-a757-ea347098a758`
+- R2: `heavenly-key-videoeditor-media`
+
+These listing checks do **not** establish that a Worker has valid bindings, migrations, live permissions, a matching secret configuration, or functioning public DNS. An authorized deployment operator must confirm the deployed Worker identity, D1 schema/migrations, R2 `MEDIA` and `DB` bindings, and Workers AI `AI` binding. Owner/admin provisioning and preview production release require independent permissioned actions. Do not store owner passwords, tokens, or private AI connection credentials in Git.
+
+Release requirements: current successful quality gate, real Cloudflare authentication/storage/transcription smoke tests, verified browser audio and WebM exports, Safari/iOS/Android tests, error monitoring, custom-domain confirmation, and explicit production sign-off. No live launch is asserted by this documentation.
