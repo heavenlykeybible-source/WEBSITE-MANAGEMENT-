@@ -10,7 +10,7 @@ const chosen=()=>{const i=Number($('clipList').value);return $('clipList').value
 function paint(selected=0){const list=$('clipList');list.replaceChildren();clips.forEach((c,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=(i+1)+'. '+c.start.toFixed(2)+'–'+c.end.toFixed(2)+'s / '+c.speed+'×';list.append(o)});if(clips.length)list.value=String(Math.min(clips.length-1,Math.max(0,selected)));else list.value='';info(clips.length+' clip(s) ready.');}
 const ready=()=>Number.isFinite(v.duration)&&v.duration>0;
 const seek=t=>new Promise((resolve,reject)=>{if(!ready())return reject(Error('Load a video first.'));t=Math.min(v.duration,Math.max(0,t));if(Math.abs(v.currentTime-t)<.02)return resolve();let timer;const done=()=>{clearTimeout(timer);v.removeEventListener('seeked',done);resolve()};timer=setTimeout(()=>{v.removeEventListener('seeked',done);reject(Error('Video seeking timed out.'))},10000);v.addEventListener('seeked',done);v.currentTime=t});
-function setBusy(b){for(const id of ['clipExport','clipPlay','clipAdd','clipSplit','clipUpdate','clipRemove','clipUp','clipDown','clipUndo','clipRedo','clipList','clipStart','clipEnd','clipSpeed'])$(id).disabled=b;$('clipCancel').disabled=!b}
+function setBusy(b){for(const id of ['vf','vexp','clipExport','clipPlay','clipAdd','clipSplit','clipUpdate','clipRemove','clipUp','clipDown','clipUndo','clipRedo','clipList','clipStart','clipEnd','clipSpeed'])$(id).disabled=b;$('clipCancel').disabled=!b}
 v.addEventListener('loadedmetadata',()=>{invalidateExport();$('clipEnd').value=v.duration.toFixed(2);info('Video ready. Add a clip.')});
 $('clipAdd').onclick=()=>{const start=Number($('clipStart').value),end=Number($('clipEnd').value);if(clips.length>=200)return info('Timeline limit is 200 clips.');if(!ready()||!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>v.duration+.02)return info('Choose valid start and end times.');save();clips.push({start,end:Math.min(end,v.duration),speed:Number($('clipSpeed').value)});paint(clips.length-1)};
 $('clipUpdate').onclick=()=>{const i=chosen(),current=clips[i];if(!current)return info('Select a clip to update.');const start=Number($('clipStart').value),end=Number($('clipEnd').value),speed=Number($('clipSpeed').value);if(!ready()||!Number.isFinite(start)||!Number.isFinite(end)||!Number.isFinite(speed)||start<0||end<=start||end>v.duration+.02||speed<.25||speed>4)return info('Enter a valid clip start, end and playback speed.');save();clips[i]={start,end:Math.min(end,v.duration),speed};paint(i)};
@@ -24,6 +24,7 @@ $('clipRedo').onclick=()=>{if(!redo.length)return;invalidateExport();undo.push(J
 $('clipCancel').onclick=()=>{if(session)session.cancelled=true;v.pause()};
 async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
+ if($('vexp').disabled)return info('Another video export or media change is in progress.');
  if(!ready()||!clips.length)return info('Load a video and add timeline clips.');
  if(clips.some(c=>c.end>v.duration+.02))return info('A clip exceeds the current video duration. Reload the original source or correct the clips.');
  const totalSeconds=clips.reduce((n,c)=>n+(c.end-c.start)/c.speed,0);
