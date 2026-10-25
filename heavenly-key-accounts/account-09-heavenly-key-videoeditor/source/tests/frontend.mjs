@@ -24,7 +24,7 @@ assert.ok(html.includes('href="#studio-main" class="skip-link"')&&html.includes(
 for(const check of ["Number(m[4].padEnd(3,'0'))/1000",'if(!caption||!Number.isFinite(start)||!Number.isFinite(end)||end<=start||layers.length>=500)']) assert.ok(html.includes(check),'Safe SRT parser must reject invalid timing and cap subtitles: '+check);
 assert.ok(html.includes('aria-label="Studio sections"')&&html.includes("setAttribute('aria-pressed'"),'Navigation must expose active section to assistive technology');
 assert.ok(html.includes('button:focus-visible')&&html.includes('<label for="af">Choose audio</label>'),'Keyboard focus and audio upload label required');
-assert.ok(html.includes("if(exportURL){URL.revokeObjectURL(exportURL);exportURL=''}"),'Selecting a new video must invalidate the prior export');
+assert.ok(html.includes('invalidateVideoDownload();if(sourceURL)'),'Selecting a new video must invalidate the prior export');
 assert.ok(html.includes('audioBuffer=null;')&&html.includes("$('aexp').disabled=true"),'Loading an audio file must clear previously decoded audio');
 assert.ok(html.includes('v.onerror=()'),'Unsupported video codecs must show a helpful error');
 assert.equal(module,readFileSync('integrations.js','utf8'),'Integration modules must match');
