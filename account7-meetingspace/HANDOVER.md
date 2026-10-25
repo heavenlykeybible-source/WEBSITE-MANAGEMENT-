@@ -189,3 +189,9 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added pending D1 migration `migrations/0002_single_active_room.sql`: a partial unique index on `meeting_sessions(owner_user_id)` where `ended_at IS NULL`. This provides the database-level concurrency invariant once applied. **Migration NOT applied**, and existing open reservations must be reconciled first.
 - IMPORTANT: Room reservations currently set `started_at` before actual host arrival; billing remains disconnected and stale reservations could prevent another meeting. Design a reservation expiration and lifecycle reconciliation mechanism before paid launch.
 - Code and tests committed, but the full test suite, migrations and deployed runtime have NOT been verified.
+
+## 2026-10-25: Stale reservation audit
+- Added `src/reservation-audit.js`: a read-only, bounded D1 query that flags open meeting reservations older than a configurable threshold. It does NOT automatically close or bill them; host session activity must first be verified.
+- Added `test/reservation-audit.test.js` for read-only behavior, cutoff filtering and limit validation.
+- Reconstructed these two files in a local Node.js test environment and ran `node --test`: 2 tests passed, 0 failed. This is **targeted verification only**, NOT the GitHub full suite or a Cloudflare integration test.
+- The current `started_at` record is created when reserving a room (not upon verified host media start), so automatic usage finalization could overcharge. Keep cleanup manual pending lifecycle design.
