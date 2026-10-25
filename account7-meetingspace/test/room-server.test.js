@@ -140,3 +140,23 @@ test('persisted room lock is sent to reconnecting verified owner',async()=>{
   assert.ok(messages.some(message=>message.type==='room-lock'&&message.locked===true));
  }finally{globalThis.WebSocketPair=oldPair;globalThis.Response=oldResponse}
 });
+
+test('host arrival and end call trusted database meeting lifecycle',async()=>{
+ const calls=[];
+ const db={prepare(sql){return {bind(...args){calls.push({sql,args});return {
+  run:async()=>({meta:{changes:1}}),
+  first:async()=>({joinedAt:1000,endedAt:null,minutes:0})
+ }}}}};
+ const room=makeRoom({MEETING_TICKET_SECRET:secret,DB:db});
+ const oldPair=globalThis.WebSocketPair,oldResponse=globalThis.Response;
+ try{
+  globalThis.WebSocketPair=class {constructor(){return {0:{},1:{accept(){},send(){},addEventListener(){},close(){}}}}};
+  globalThis.Response=class extends oldResponse {constructor(body,options){super(body,options?.status===101?{status:200}:options)}};
+  const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+  await room.fetch(socketRequest(ticket));
+  assert.ok(calls.some(x=>x.sql.includes('host_joined_at')));
+  assert.equal(await room.ctx.storage.get('ledgerOwnerId'),'owner');
+  await room.endMeeting('host-ended');
+  assert.ok(calls.some(x=>x.sql.includes('SET ended_at=')));
+ }finally{globalThis.WebSocketPair=oldPair;globalThis.Response=oldResponse}
+});
