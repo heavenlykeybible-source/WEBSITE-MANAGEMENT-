@@ -131,3 +131,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added `src/meeting-usage-ledger.js`: trusted server-side duration measurement, round-up of partial meeting minutes and conditional `ended_at IS NULL` D1 update for idempotent meeting finalization; if an update loses a race, re-read authoritative persisted billed minutes.
 - Added `test/meeting-usage-ledger.test.js` for duration calculations and duplicate finalization. Tests have not been executed.
 - **Not integrated**: the Durable Object currently does not call this D1 module on actual meeting closure. Reconciliation must account for crashes, date-period boundaries, payment period differences, and concurrent reservations. Monthly quotas are NOT reliably enforced. Do not launch subscriptions until end-to-end ledger testing is complete.
+
+## 2026-10-25: Server-measured usage ledger
+- Added `src/meeting-usage-ledger.js` and `test/meeting-usage-ledger.test.js` to compute meeting minutes on trusted server timestamps and finalize a D1 session only once with an `ended_at IS NULL` conditional update. On a concurrent finalization loss, the code reloads the actual saved minutes.
+- Session ID and owner ID input validation added. These commits are saved; tests have not been executed in the Cloudflare runtime.
+- **NOT integrated:** a secure meeting-start/end event pipeline that calls this ledger, monthly usage enforcement for concurrent meetings, and paid subscription webhooks. The ledger must not be exposed as a client-triggered unrestricted endpoint. The existing reservation creates a started_at timestamp before a host actually begins, which must be redesigned to avoid unfair usage accounting.
