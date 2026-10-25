@@ -23,3 +23,9 @@ test('meeting finalization records time only once',async()=>{
 test('ledger rejects invalid meeting identifiers',async()=>{
  await assert.rejects(finalizeMeetingUsage({prepare(){}},'bad room','owner',61000),/Missing trusted meeting context/);
 });
+
+test('billing finalization refuses invalid end timestamps',async()=>{
+ const db={prepare(){throw Error('Unexpected database access')}};
+ await assert.rejects(finalizeMeetingUsage(db,'room123','owner',Number.NaN),/Invalid meeting end time/);
+ await assert.rejects(finalizeMeetingUsage(db,'room123','owner',-2),/Invalid meeting end time/);
+});
