@@ -41,6 +41,20 @@ const stale=upsertAccount9Release(upgraded,{id:31,account:'account9',version:'v4
 assert.equal(stale.active.find(is=>is.account==='account9').id,30,'Older upload cannot downgrade active release');
 
 assert.equal(rows[0].status,undefined,'Original proposal rows stay untouched');
+const canceledLatest=[
+  {id:40,account:'account9',version:'v5',status:'waiting',worker:'heavenlykey-studio'},
+  {id:41,account:'account9',version:'v6',status:'cancelled',worker:'heavenlykey-studio'},
+  {id:42,account:'account9',version:'v7',status:'failed',worker:'heavenlykey-studio'},
+  {id:43,account:'account8',version:'v1',status:'waiting',worker:'meeting-space'}
+];
+const safeQueue=projectAccount9Queue(canceledLatest);
+assert.deepEqual(safeQueue.active.map(x=>x.id),[40,43],'Failed latest release must not displace last actionable version');
+assert.equal(safeQueue.history.length,2,'Closed releases stay visible in history');
+assert.equal(safeQueue.history[0].status,'cancelled','Existing cancellation reason is preserved');
+assert.equal(safeQueue.history[1].status,'failed','Existing failure reason is preserved');
+assert.deepEqual(projectAccount9Queue([]),{active:[],history:[],canonical_account:null},'Empty queue handled');
+assert.deepEqual(consolidateAccount9Releases(consolidated),consolidated,'Deduplication is idempotent');
+
 
 assert.equal(consolidated.filter(x=>x.account==='account9').length,1,'One canonical Account 9');
 assert.ok(consolidated.some(x=>x.id===29),'Unrelated accounts remain unchanged');
