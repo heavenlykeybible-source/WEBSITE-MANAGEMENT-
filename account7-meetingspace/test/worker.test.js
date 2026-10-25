@@ -302,3 +302,10 @@ test('embedded browser module parses as executable JavaScript',async()=>{
  assert.equal(matches.length,1);
  assert.doesNotThrow(()=>new Script(matches[0][1],{filename:'meetingspace-browser.js'}));
 });
+
+test('meeting switch and chat actions require correct admission lifecycle',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/Leave the current meeting before joining another room/);
+ assert.match(html,/isAdmitted=false;isRoomOwner=false;isRoomLocked=false/);
+ assert.match(html,/Wait for host approval before sending messages/);
+});
