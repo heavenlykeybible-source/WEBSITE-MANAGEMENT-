@@ -1,6 +1,8 @@
 // Deploy the existing MeetingSpace Worker without migrating or replacing its database.
 import {spawnSync} from 'node:child_process';
-const releaseEnv={...process.env,RELEASE_WORKER:'heavenly-key-zoom-studio',RELEASE_ORIGIN:'https://meeting.heavenlykey.org/'};
+const target=process.env.MEETINGSPACE_TARGET_ACCOUNT || '7';
+const worker=target==='8'?'heavenly-key-meetingspace':'heavenly-key-zoom-studio';
+const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:'https://meeting.heavenlykey.org/'};
 function run(args,env=process.env){const r=spawnSync(args[0],args.slice(1),{stdio:'inherit',shell:false,env});if(r.error)throw r.error;if(r.status!==0)throw Error('Existing MeetingSpace release stopped at '+args[1]+' (exit '+r.status+')');}
 run([process.execPath,'scripts/configure.mjs']);
 run([process.execPath,'../scripts/existing-worker-release.mjs','snapshot'],releaseEnv);
