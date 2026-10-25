@@ -84,5 +84,5 @@ test('home loads current welcome assets and CSS makes guest/member sections mutu
  assert(css.includes('.gc-approved-guest .gc-active-section{display:none!important}'));
  assert(css.includes('@media(max-width:420px)'));
  assert(source.includes("location.hash==='#register'?'register':'login'"));
- assert(source.includes("navigate(me.user.status==='restricted'?'safety.html':'index.html')"));
+ assert(source.includes("navigate(me.user.status==='restricted'?'safety.html':authDestination())"));
 });
