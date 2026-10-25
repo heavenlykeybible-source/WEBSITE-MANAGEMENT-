@@ -70,6 +70,7 @@ export class MeetingRoom extends DurableObject {
     this.broadcast({type:'join',id:msg.id},msg.id);
     return;
    }
+   if(record.role==='owner'&&record.admitted&&msg.type==='end-meeting'){await this.endMeeting('host-ended');return}
    if(record.role==='owner'&&record.admitted&&msg.type==='room-lock'&&typeof msg.locked==='boolean'){await this.ctx.storage.put('roomLocked',msg.locked);this.locked=msg.locked;this.send(server,{type:'room-lock',locked:this.locked});return}
    if(record.role==='owner'&&record.admitted&&msg.type==='remove-participant'&&typeof msg.id==='string'){
     const target=this.clients.get(msg.id);
