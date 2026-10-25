@@ -269,3 +269,13 @@ test('waiting guests are not told they are admitted and cannot send chat before 
  assert.match(html,/\$\('chatSend'\)\.disabled=false/);
  assert.match(html,/Host declined admission';ws\?\.close\(\)/);
 });
+
+test('camera screen sharing and chat remain disabled until meeting admission',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/id="chatSend" disabled/);
+ assert.match(html,/let isRoomLocked=false,isRoomOwner=false,isAdmitted=false/);
+ assert.match(html,/if\(!isAdmitted\).*Camera and microphone are available after host admission/);
+ assert.match(html,/if\(!isAdmitted\).*Screen sharing is available after host admission/);
+ assert.match(html,/isAdmitted=true;isRoomOwner/);
+ assert.match(html,/ws.onclose=\(\)=>\{isAdmitted=false/);
+});
