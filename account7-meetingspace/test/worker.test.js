@@ -177,3 +177,15 @@ test('meeting access endpoint discloses public creation availability without cre
  const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
  assert.match(html,/Meeting creation requires a registered, verified account/);
 });
+
+test('launch readiness endpoint does not confuse liveness with deployment approval',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/api/launch-readiness'),mockEnv);
+ assert.equal(response.status,200);
+ const status=await response.json();
+ assert.equal(status.ready,false);
+ assert.ok(status.missing.includes('identityVerified'));
+ assert.ok(status.missing.includes('stagingE2EPassed'));
+ assert.equal(response.headers.get('cache-control'),'no-store');
+ const denied=await worker.fetch(new Request('https://example.test/api/launch-readiness',{method:'POST'}),mockEnv);
+ assert.equal(denied.status,405);
+});
