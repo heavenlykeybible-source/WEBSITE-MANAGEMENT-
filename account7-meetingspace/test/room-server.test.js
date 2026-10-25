@@ -225,3 +225,23 @@ test('host room setup fails closed when D1 cannot record the start',async()=>{
   assert.equal(room.ownerId,null);
  }finally{globalThis.WebSocketPair=oldPair}
 });
+
+test('concurrent closure requests share a single ledger finalization',async()=>{
+ let finish;
+ let ledgerWrites=0;
+ const gate=new Promise(resolve=>{finish=resolve});
+ const db={prepare(sql){return {bind(...args){return {
+  first:async()=>({joinedAt:1000,endedAt:null,minutes:0}),
+  run:async()=>{if(sql.includes('SET ended_at=')){ledgerWrites++;await gate}return {meta:{changes:1}}}
+ }}}}};
+ const room=makeRoom({MEETING_TICKET_SECRET:secret,DB:db});
+ await room.ctx.storage.put('ledgerRoomId','room123');
+ await room.ctx.storage.put('ledgerOwnerId','owner');
+ const first=room.endMeeting('host-ended');
+ const second=room.endMeeting('time-limit');
+ assert.equal(first,second);
+ finish();
+ await Promise.all([first,second]);
+ assert.equal(ledgerWrites,1);
+ assert.ok(await room.ctx.storage.get('meetingClosedAt'));
+});
