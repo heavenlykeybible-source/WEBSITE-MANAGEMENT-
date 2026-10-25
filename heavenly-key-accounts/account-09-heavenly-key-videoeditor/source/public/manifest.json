@@ -1,0 +1,22 @@
+{
+  "name": "Heavenly Key VideoEditor",
+  "short_name": "HK VideoEditor",
+  "description": "Offline-capable video and audio editor. Cloud projects require an internet connection.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#10172a",
+  "icons": [
+    {
+      "src": "/assets/logo-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
