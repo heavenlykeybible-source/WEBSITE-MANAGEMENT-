@@ -209,7 +209,8 @@ export async function onRequest({ request: req, env, params }) {
         const d = JSON.stringify(b?.data ?? {}), name = String(b?.name || 'Untitled').slice(0, 100);
         if (!d || d.length > 1e6) return J({ error: 'Project is too large.' }, 413);
         const id = rnd(12);
-        await env.DB.prepare('INSERT INTO projects VALUES(?,?,?,?,?)').bind(id, u.id, name, d, Date.now()).run();
+        const saved = await env.DB.prepare('INSERT INTO projects(id,user_id,name,data,updated_at) SELECT ?,?,?,?,? WHERE (SELECT COUNT(*) FROM projects WHERE user_id=?) < 200').bind(id,u.id,name,d,Date.now(),u.id).run();
+        if (!saved.meta.changes) return J({ error: 'Project limit reached (200). Delete an existing project.' }, 409);
         return J({ id });
       }
       if (p[1] && m === 'GET') {
