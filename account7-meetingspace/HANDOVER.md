@@ -183,3 +183,9 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added `src/launch-readiness.js` to represent nine release-critical requirements: verified identity, applied database migration, live subscriptions, verified payment webhooks, usage event integration, TURN, media load testing, automated tests, and staging end-to-end verification.
 - GET `/api/launch-readiness` now reports a deliberately fail-closed snapshot; it cannot report readiness just because the worker responds to HTTP. Added tests for the readiness model and worker route. **These tests have not been executed against the GitHub checkout.**
 - Do not mark checks complete based solely on environment variables. To make the gate pass in the future, require documented independent verification; avoid presenting this prototype as a production Zoom alternative.
+
+## 2026-10-25: One active meeting per account safety
+- Owner ticket service now rejects reopening a finished meeting or starting another unclosed room while an account already has one. Added tests covering both cases.
+- Added pending D1 migration `migrations/0002_single_active_room.sql`: a partial unique index on `meeting_sessions(owner_user_id)` where `ended_at IS NULL`. This provides the database-level concurrency invariant once applied. **Migration NOT applied**, and existing open reservations must be reconciled first.
+- IMPORTANT: Room reservations currently set `started_at` before actual host arrival; billing remains disconnected and stale reservations could prevent another meeting. Design a reservation expiration and lifecycle reconciliation mechanism before paid launch.
+- Code and tests committed, but the full test suite, migrations and deployed runtime have NOT been verified.
