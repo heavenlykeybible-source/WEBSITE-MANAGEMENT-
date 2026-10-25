@@ -74,6 +74,8 @@ const removed = await request('projects/'+project.data.id,{method:'DELETE',cooki
 check('Removing a project frees a quota slot',removed.status===200);
 const afterRemoval = await request('projects',{method:'POST',cookie:login.cookie,body:{name:'Replacement',data:{}}});
 check('Project creation resumes after deletion',afterRemoval.status===200);
+const missingProjectDelete = await request('projects/not-a-real-project',{method:'DELETE',cookie:login.cookie});
+check('Deleting a nonexistent cloud project returns 404',missingProjectDelete.status===404);
 
 const anonymousGateway = await request('ai-connections');
 check('AI accounts cannot be listed anonymously', anonymousGateway.status === 401);
