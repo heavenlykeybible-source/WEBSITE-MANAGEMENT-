@@ -44,10 +44,8 @@
             const res=await fetch('/api/media/'+encodeURIComponent(f.id),{credentials:'same-origin'});
             if(!res.ok){const err=await res.json().catch(()=>({}));throw Error(err.error||'Cannot load cloud media');}
             const blob=await res.blob();if(!blob.size)throw Error('Cloud media is empty');
-            if(!window.DataTransfer)throw Error('This browser requires downloading the file before editing.');
-            const input=$(f.type.startsWith('video/')?'vf':'af'),dt=new DataTransfer();
-            dt.items.add(new File([blob],f.name,{type:f.type}));input.files=dt.files;
-            input.dispatchEvent(new Event('change',{bubbles:true}));
+            const input=$(f.type.startsWith('video/')?'vf':'af');
+            input.dispatchEvent(new CustomEvent('change',{bubbles:true,detail:{file:new File([blob],f.name,{type:f.type})}}));
             document.querySelector('nav button[data-p="'+(f.type.startsWith('video/')?'video':'audio')+'"]')?.click();
             ms.textContent=f.name+' loaded into the editor.';
           }catch(e){ms.textContent='Could not load media: '+e.message}
