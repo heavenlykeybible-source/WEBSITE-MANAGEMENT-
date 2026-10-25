@@ -7,6 +7,9 @@ on:
       - 'scripts/build-account9-worker.mjs'
       - 'scripts/verify-account9-release.mjs'
       - 'release-packages/account9-control-room-full.mjs'
+      - 'release-packages/account9-active-release.json'
+      - 'scripts/account9-release-policy.mjs'
+      - 'scripts/test-account9-release-policy.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   pull_request:
     paths:
@@ -14,6 +17,9 @@ on:
       - 'scripts/build-account9-worker.mjs'
       - 'scripts/verify-account9-release.mjs'
       - 'release-packages/account9-control-room-full.mjs'
+      - 'release-packages/account9-active-release.json'
+      - 'scripts/account9-release-policy.mjs'
+      - 'scripts/test-account9-release-policy.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   workflow_dispatch:
 
@@ -38,6 +44,8 @@ jobs:
         run: npm run check
       - name: Build canonical Worker bundle
         run: node scripts/build-account9-worker.mjs /tmp/account9-quality-worker.mjs
+      - name: Enforce single Account 9 release identity
+        run: node scripts/test-account9-release-policy.mjs
       - name: Verify Control Room release matches latest source
         run: node scripts/verify-account9-release.mjs
       - name: Validate packaged Worker JavaScript
