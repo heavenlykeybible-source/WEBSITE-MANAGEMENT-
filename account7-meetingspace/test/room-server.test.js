@@ -58,3 +58,13 @@ test('expired meeting alarm permanently closes room to replayed tickets',async()
  assert.ok(await room.ctx.storage.get('meetingClosedAt'));
  assert.equal((await room.fetch(socketRequest(ticket))).status,410);
 });
+
+test('restored room capacity takes effect before accepting a new socket',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ await room.ctx.storage.put('roomCapacity',2);
+ room.clients.set('first',{});
+ room.clients.set('second',{});
+ const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',planId:'pro',secret});
+ assert.equal((await room.fetch(socketRequest(ticket))).status,429);
+ assert.equal(room.capacity,2);
+});
