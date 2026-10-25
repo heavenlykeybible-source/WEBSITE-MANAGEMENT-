@@ -6,6 +6,8 @@ const module=readFileSync('public/integrations.js','utf8');
 const headers=readFileSync('public/_headers','utf8');
 const original=readFileSync('index.html','utf8');
 assert.equal(html,original,'Source and public HTML must match');
+assert.ok(html.includes('aria-label="Studio sections"')&&html.includes("setAttribute('aria-pressed'"),'Navigation must expose active section to assistive technology');
+assert.ok(html.includes('button:focus-visible')&&html.includes('<label for="af">Choose audio</label>'),'Keyboard focus and audio upload label required');
 assert.equal(module,readFileSync('integrations.js','utf8'),'Integration modules must match');
 for(const id of ['vf','vexp','vdl','af','aexp','autocap','login','register','logout','pcloud','psave','pload','srtf','srtx','projects','account','video','audio']){
   assert.ok(html.includes('id="'+id+'"'),'Missing frontend element: '+id);
