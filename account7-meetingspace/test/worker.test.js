@@ -130,3 +130,12 @@ test('browser offers a fixed WebSocket subprotocol with ticket',async()=>{
  const html=await response.text();
  assert.match(html,/\['meetingspace','mt\.'\+ticket\]/);
 });
+
+test('health endpoint responds without exposing secrets and rejects unsafe methods',async()=>{
+ const health=await worker.fetch(new Request('https://example.test/api/health'),mockEnv);
+ assert.equal(health.status,200);
+ assert.equal(health.headers.get('cache-control'),'no-store');
+ assert.deepEqual(await health.json(),{service:'heavenlykey-meetingspace',status:'ok',version:'0.1.1'});
+ const post=await worker.fetch(new Request('https://example.test/api/health',{method:'POST'}),mockEnv);
+ assert.equal(post.status,405);
+});
