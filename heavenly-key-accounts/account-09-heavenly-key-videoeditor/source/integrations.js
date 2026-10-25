@@ -46,16 +46,17 @@
     try{
       const sr=16000, seconds=8, maxChunks=12, total=Math.min(Math.ceil(audioBuffer.duration/seconds),maxChunks);
       const generated=[];
+      const channels=Array.from({length:audioBuffer.numberOfChannels},(_,i)=>audioBuffer.getChannelData(i));
       for(let k=0;k<total;k++){
         message('vm','Transcribing chunk '+(k+1)+' of '+total+'…');
         const start=k*seconds, end=Math.min(audioBuffer.duration,start+seconds), count=Math.floor((end-start)*sr);
         const pcm=new ArrayBuffer(44+count*2),dv=new DataView(pcm),u=new Uint8Array(pcm);
         const put=(off,s)=>{for(let i=0;i<s.length;i++)u[off+i]=s.charCodeAt(i)};
         put(0,'RIFF');dv.setUint32(4,36+count*2,true);put(8,'WAVEfmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);put(36,'data');dv.setUint32(40,count*2,true);
-        for(let i=0;i<count;i++){const at=Math.min(audioBuffer.length-1,Math.floor((start+i/sr)*audioBuffer.sampleRate));let sum=0;for(let ch=0;ch<audioBuffer.numberOfChannels;ch++)sum+=audioBuffer.getChannelData(ch)[at];const v=Math.max(-1,Math.min(1,sum/audioBuffer.numberOfChannels));dv.setInt16(44+i*2,Math.round(v*32767),true)}
+        for(let i=0;i<count;i++){const at=Math.min(audioBuffer.length-1,Math.floor((start+i/sr)*audioBuffer.sampleRate));let sum=0;for(const channel of channels)sum+=channel[at];const v=Math.max(-1,Math.min(1,sum/audioBuffer.numberOfChannels));dv.setInt16(44+i*2,Math.round(v*32767),true)}
         const response=await fetch('/api/transcribe',{method:'POST',credentials:'same-origin',headers:{'content-type':'audio/wav','x-requested-with':'hk'},body:new Blob([pcm],{type:'audio/wav'})});
         const result=await response.json();if(!response.ok)throw Error(result.error||'Transcription failed');
-        const words=Array.isArray(result.words)?result.words:[];if(words.length){for(let i=0;i<words.length;i+=8){const part=words.slice(i,i+8);generated.push({text:part.map(w=>w.word).join(' ').trim(),start:start+Number(part[0].start||0),end:start+Number(part[part.length-1].end||seconds),pos:'bottom',style:'outline',anim:'none',color:'#ffffff'})}}
+        const words=Array.isArray(result.words)?result.words:[];if(words.length){for(let i=0;i<words.length;i+=8){const part=words.slice(i,i+8);generated.push({text:part.map(w=>w.word).join(' ').trim(),start:Math.min(end,Math.max(start,start+Number(part[0].start||0))),end:Math.min(end,Math.max(start,start+Number(part[part.length-1].end||seconds))),pos:'bottom',style:'outline',anim:'none',color:'#ffffff'})}}
         else if(result.text)generated.push({text:result.text,start,end,pos:'bottom',style:'outline',anim:'none',color:'#ffffff'});
       }
       layers.push(...generated.filter(l=>l.text&&l.end>l.start));showLayers();message('vm','Added '+generated.length+' AI caption segments. Review timing before exporting.'+(audioBuffer.duration>maxChunks*seconds?' Only the first 96 seconds were processed.':''));
