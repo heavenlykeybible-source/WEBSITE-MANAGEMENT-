@@ -4,21 +4,22 @@ const wrap=document.createElement('section');wrap.className='panel';wrap.style.m
 wrap.innerHTML='<h2>Multi-Clip Timeline</h2><p class="muted">Edit clips from the loaded video. Export renders the full timeline in real time as WebM on supported browsers.</p><div class="tools"><div><label for="clipStart">Start (seconds)</label><input id="clipStart" type="number" min="0" step=".1" value="0"></div><div><label for="clipEnd">End (seconds)</label><input id="clipEnd" type="number" min="0" step=".1" value="0"></div><div><label for="clipSpeed">Speed</label><select id="clipSpeed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div></div><div class="actions"><button id="clipAdd">Add clip</button><button id="clipSplit">Split at playhead</button><button id="clipUndo">Undo</button><button id="clipRedo">Redo</button><button id="clipRemove">Remove</button><button id="clipUp">Move up</button><button id="clipDown">Move down</button><button id="clipPlay">Preview timeline</button></div><label for="clipList">Timeline clips</label><select id="clipList" size="5" aria-label="Timeline clips"></select><div class="actions"><button id="clipExport">Export timeline (WebM)</button><button id="clipCancel" disabled>Stop preview/export</button><a id="clipDownload" download="heavenly-key-timeline.webm" hidden>Download timeline</a></div><div id="clipStatus" class="status" role="status">Load a video to begin.</div>';host.append(wrap);
 let clips=[],undo=[],redo=[],session=null,exportUrl=null;
 const info=t=>$('clipStatus').textContent=t;
-const save=()=>{undo.push(JSON.stringify(clips));if(undo.length>40)undo.shift();redo=[]};
+const invalidateExport=()=>{if(exportUrl){URL.revokeObjectURL(exportUrl);exportUrl=null;}$('clipDownload').removeAttribute('href');$('clipDownload').hidden=true};
+const save=()=>{invalidateExport();undo.push(JSON.stringify(clips));if(undo.length>40)undo.shift();redo=[]};
 const chosen=()=>{const i=Number($('clipList').value);return $('clipList').value===''?-1:i};
-function paint(selected=0){const list=$('clipList');list.replaceChildren();clips.forEach((c,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=(i+1)+'. '+c.start.toFixed(2)+'–'+c.end.toFixed(2)+'s / '+c.speed+'×';list.append(o)});if(clips.length)list.value=String(Math.min(clips.length-1,Math.max(0,selected)));info(clips.length+' clip(s) ready.');}
+function paint(selected=0){const list=$('clipList');list.replaceChildren();clips.forEach((c,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=(i+1)+'. '+c.start.toFixed(2)+'–'+c.end.toFixed(2)+'s / '+c.speed+'×';list.append(o)});if(clips.length)list.value=String(Math.min(clips.length-1,Math.max(0,selected)));else list.value='';info(clips.length+' clip(s) ready.');}
 const ready=()=>Number.isFinite(v.duration)&&v.duration>0;
 const seek=t=>new Promise((resolve,reject)=>{if(!ready())return reject(Error('Load a video first.'));t=Math.min(v.duration,Math.max(0,t));if(Math.abs(v.currentTime-t)<.02)return resolve();let timer;const done=()=>{clearTimeout(timer);v.removeEventListener('seeked',done);resolve()};timer=setTimeout(()=>{v.removeEventListener('seeked',done);reject(Error('Video seeking timed out.'))},10000);v.addEventListener('seeked',done);v.currentTime=t});
 function setBusy(b){for(const id of ['clipExport','clipPlay','clipAdd','clipSplit','clipRemove','clipUp','clipDown','clipUndo','clipRedo','clipList','clipStart','clipEnd','clipSpeed'])$(id).disabled=b;$('clipCancel').disabled=!b}
-v.addEventListener('loadedmetadata',()=>{$('clipEnd').value=v.duration.toFixed(2);info('Video ready. Add a clip.')});
-$('clipAdd').onclick=()=>{const start=Number($('clipStart').value),end=Number($('clipEnd').value);if(!ready()||!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>v.duration+.02)return info('Choose valid start and end times.');save();clips.push({start,end:Math.min(end,v.duration),speed:Number($('clipSpeed').value)});paint(clips.length-1)};
+v.addEventListener('loadedmetadata',()=>{invalidateExport();$('clipEnd').value=v.duration.toFixed(2);info('Video ready. Add a clip.')});
+$('clipAdd').onclick=()=>{const start=Number($('clipStart').value),end=Number($('clipEnd').value);if(clips.length>=200)return info('Timeline limit is 200 clips.');if(!ready()||!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>v.duration+.02)return info('Choose valid start and end times.');save();clips.push({start,end:Math.min(end,v.duration),speed:Number($('clipSpeed').value)});paint(clips.length-1)};
 $('clipList').onchange=()=>{const c=clips[chosen()];if(c){$('clipStart').value=c.start;$('clipEnd').value=c.end;$('clipSpeed').value=String(c.speed);v.currentTime=c.start}};
-$('clipSplit').onclick=()=>{const i=chosen(),c=clips[i],t=v.currentTime;if(!c||t<=c.start+.05||t>=c.end-.05)return info('Select a clip and seek inside it.');save();clips.splice(i,1,{...c,end:t},{...c,start:t});paint(i)};
+$('clipSplit').onclick=()=>{const i=chosen(),c=clips[i],t=v.currentTime;if(clips.length>=200)return info('Timeline limit is 200 clips.');if(!c||t<=c.start+.05||t>=c.end-.05)return info('Select a clip and seek inside it.');save();clips.splice(i,1,{...c,end:t},{...c,start:t});paint(i)};
 $('clipRemove').onclick=()=>{const i=chosen();if(i<0)return;save();clips.splice(i,1);paint(Math.max(0,i-1))};
 function move(dir){const i=chosen(),j=i+dir;if(i<0||j<0||j>=clips.length)return;save();[clips[i],clips[j]]=[clips[j],clips[i]];paint(j)}
 $('clipUp').onclick=()=>move(-1);$('clipDown').onclick=()=>move(1);
-$('clipUndo').onclick=()=>{if(!undo.length)return;redo.push(JSON.stringify(clips));clips=JSON.parse(undo.pop());paint()};
-$('clipRedo').onclick=()=>{if(!redo.length)return;undo.push(JSON.stringify(clips));clips=JSON.parse(redo.pop());paint()};
+$('clipUndo').onclick=()=>{if(!undo.length)return;invalidateExport();redo.push(JSON.stringify(clips));clips=JSON.parse(undo.pop());paint()};
+$('clipRedo').onclick=()=>{if(!redo.length)return;invalidateExport();undo.push(JSON.stringify(clips));clips=JSON.parse(redo.pop());paint()};
 $('clipCancel').onclick=()=>{if(session)session.cancelled=true;v.pause()};
 async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
@@ -78,7 +79,7 @@ window.hkTimeline={
   const valid=data.every(c=>c&&Number.isFinite(c.start)&&Number.isFinite(c.end)&&
     Number.isFinite(c.speed)&&c.start>=0&&c.end>c.start&&c.speed>=.25&&c.speed<=4);
   if(!valid)return info('Saved timeline contains invalid clips.');
-  clips=data.map(c=>({start:c.start,end:c.end,speed:c.speed}));
+  invalidateExport();clips=data.map(c=>({start:c.start,end:c.end,speed:c.speed}));
   undo=[];redo=[];paint();info('Timeline restored. Reload the original video to preview or export.');
  }
 };
