@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { runInNewContext } from 'node:vm';
+import { Script, runInNewContext } from 'node:vm';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 const html=readFileSync('public/index.html','utf8');
@@ -15,6 +15,9 @@ assert.ok(Number.isNaN(toSeconds('00:61:00,000')),'Invalid SRT minutes must be r
 
 const headers=readFileSync('public/_headers','utf8');
 const original=readFileSync('index.html','utf8');
+const inlineScripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(match=>match[1]).filter(Boolean);
+assert.ok(inlineScripts.length>0,'Editor inline application script is missing');
+for(const code of inlineScripts) new Script(code,{filename:'account9-inline-editor.js'});
 assert.equal(html,original,'Source and public HTML must match');
 assert.ok(html.includes('href="#studio-main" class="skip-link"')&&html.includes('<main id="studio-main" tabindex="-1">'),'Keyboard skip link must target primary editor content');
 for(const check of ["Number(m[4].padEnd(3,'0'))/1000",'if(!caption||!Number.isFinite(start)||!Number.isFinite(end)||end<=start||layers.length>=500)']) assert.ok(html.includes(check),'Safe SRT parser must reject invalid timing and cap subtitles: '+check);
