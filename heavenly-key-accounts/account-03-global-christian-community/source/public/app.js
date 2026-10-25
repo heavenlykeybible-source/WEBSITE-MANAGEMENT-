@@ -91,11 +91,12 @@ x.append(reactions(p));const actions=el("div",null,"actions"),reply=el("button",
 window.HKCommunityContent=Object.freeze({renderActivePreview(post){let settings=null;try{settings=post.design_settings?JSON.parse(post.design_settings):null;}catch{}const preview=designCard(post.title,post.body,post.scripture,settings,post.design_category);preview.querySelectorAll('details').forEach(n=>n.remove());return preview;},renderActivePost:renderPost});
 async function mountEntityFeed(box,kind,id){box.dataset.entityKind=kind;box.dataset.entityId=id;return mountFeed(box);}
 function renderMinistryPost(post){
+ const content=String(post.body||'').split('\n').filter(line=>!/^\s*(Design template|Editorial source ID|Content type):/i.test(line)).join('\n').trim();
  const article=el('article',null,'card post-card ministry-post');article.dataset.postId='ministry:'+post.post_id;article.dataset.feedOrder=post.created_at||'';
  const head=el('header',null,'post-head'),author=el('a',post.author_name||'Heavenly Key Evangelistic Movement');author.href='/heavenly-key';
  head.append(memberAvatar(post.author_name,post.author_photo),author,el('small','Ministry-managed profile'));
  const time=el('time',dateTime(post.created_at).toLocaleString());time.dateTime=post.created_at||'';head.append(time);article.append(head,el('h3',post.title));
- const body=el('p',post.body);body.style.whiteSpace='pre-wrap';if((post.body||'').length>600){body.textContent=post.body.slice(0,600)+'…';const more=el('button','Read more','btn secondary');more.type='button';more.onclick=()=>{body.textContent=post.body;more.remove();};article.append(body,more);}else article.append(body);
+ const body=el('p',content);body.style.whiteSpace='pre-wrap';if(content.length>600){body.textContent=content.slice(0,600)+'…';const more=el('button','Read more','btn secondary');more.type='button';more.onclick=()=>{body.textContent=content;more.remove();};article.append(body,more);}else article.append(body);
  return article;
 }
 async function mountFeed(container=root,filter=null,append=false){
