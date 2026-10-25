@@ -48,6 +48,7 @@ const playlist={mode:'playlist',items:[{url:'/api/broadcast/media/42/object',tit
 let p=player(playlist,true);
 const play=p.document.querySelector('.hkr-play');const pending=play.onclick();p.resolve();await pending;
 assert.equal(p.audio().paused,false,'Play during initial programme loading must start audio');assert.match(p.audio().src,/42\/object$/);
+p.audio().currentTime=12;const beforePause=p.audio().src;await play.onclick();assert.equal(p.audio().paused,true);assert.equal(p.audio().currentTime,12);assert.equal(p.audio().src,beforePause);await play.onclick();assert.equal(p.audio().paused,false);assert.equal(p.audio().currentTime,12);
 p.document.querySelector('.hkr-next').onclick();await tick();assert.match(p.audio().src,/43\/object$/);
 p.document.querySelector('.hkr-stop').onclick();assert.equal(p.audio().paused,true);assert.equal(p.timers.size,0,'Stop clears polling and reconnect timers');
 p=player({mode:'live',transport:'livekit',sessionId:7,title:'Live message',items:[]});await tick();await p.document.querySelector('.hkr-play').onclick();
