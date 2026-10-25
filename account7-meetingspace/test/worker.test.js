@@ -1,3 +1,4 @@
+import {issueMeetingTicket} from '../src/session-tokens.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 globalThis.DurableObject = class {};
@@ -188,4 +189,15 @@ test('launch readiness endpoint does not confuse liveness with deployment approv
  assert.equal(response.headers.get('cache-control'),'no-store');
  const denied=await worker.fetch(new Request('https://example.test/api/launch-readiness',{method:'POST'}),mockEnv);
  assert.equal(denied.status,405);
+});
+
+test('valid authenticated ticket still requires configured usage database',async()=>{
+ const secret='worker-gateway-signing-key-at-least-32-characters';
+ const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+ const request=new Request('https://example.test/api/rooms/room123/socket',{
+  headers:{Upgrade:'websocket',Origin:'https://example.test','Sec-WebSocket-Protocol':'mt.'+ticket}
+ });
+ const response=await worker.fetch(request,{...mockEnv,MEETING_TICKET_SECRET:secret});
+ assert.equal(response.status,503);
+ assert.match(await response.text(),/database is not configured/);
 });
