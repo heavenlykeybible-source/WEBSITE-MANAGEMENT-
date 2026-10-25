@@ -255,3 +255,9 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Fixed a browser permission race: a camera/microphone or screen-sharing permission dialog could complete after the meeting was denied or disconnected. The client now rechecks `isAdmitted` immediately after the media promise resolves and stops the resulting tracks if access ended.
 - Source-level regression checks were added in `test/worker.test.js`. Commits `90e9e40` and `f88618e`.
 - These static tests are not a substitute for an actual Playwright/mobile browser test or a complete Node test run. Full Cloudflare CI and deployment remain unverified.
+
+## 2026-10-25: Waiting-room cleanup and immediate participant revocation
+- Server sends `admission-withdrawn` when a waiting guest disconnects, so host approval queues no longer show stale requests. The client removes the matching row and ignores duplicates.
+- Host denial and Remove actions immediately delete the participant's server-side registry record BEFORE sending closure notifications, ensuring further chat/signalling messages are rejected even if the browser never fires a WebSocket close callback.
+- Added regression tests for host UI synchronization, generated browser JavaScript syntax using Node `vm.Script`, and removal behavior without simulated close events.
+- Commits `28e5ac2`, `3f86ab2`, `ba7ce7f`, `054d856`, `fc61e9d`, `2693b86`. Full suite remains unverified; direct GitHub runtime testing is not available from container, Cloudflare staging not deployed.
