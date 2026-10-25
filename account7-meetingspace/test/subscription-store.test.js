@@ -14,7 +14,9 @@ test('active subscription and monthly usage resolve a pro allowance',async()=>{
  assert.equal(allowance.allowed,true);
  assert.equal(allowance.remainingMinutes,5800);
  assert.equal(calls.length,2);
- assert.ok(calls.every(c=>c.args[0]==='owner1'));
+ assert.ok(calls.some(c=>c.sql.includes('FROM subscriptions')&&c.args[0]==='owner1'));
+ assert.ok(calls.some(c=>c.sql.includes('FROM meeting_sessions')&&c.args[0]===now&&c.args[1]==='owner1'));
+ assert.match(calls.find(c=>c.sql.includes('FROM meeting_sessions')).sql,/host_joined_at/);
 });
 test('expired subscription falls back to free and quota is enforced',async()=>{
  const {db}=dbFor({subscription:{planId:'pro',status:'active',currentPeriodEnd:now-1},used:120});
