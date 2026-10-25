@@ -64,6 +64,19 @@ const project = await request('projects', { method: 'POST', cookie: login.cookie
 check('Project creation succeeds', project.status === 200 && !!project.data?.id);
 const projects = await request('projects', { cookie: login.cookie });
 check('Project listing succeeds', projects.status === 200 && Array.isArray(projects.data));
+const secondRegistered = await request('register',{method:'POST',body:{email:'other-user@example.com',password:'separate long passphrase'}});
+check('A second member account can register',secondRegistered.status===200);
+const secondLogin = await request('login',{method:'POST',body:{email:'other-user@example.com',password:'separate long passphrase'}});
+check('A second member can authenticate',secondLogin.status===200);
+const otherProject = await request('projects/'+project.data.id,{cookie:secondLogin.cookie});
+check('Project data is isolated between users',otherProject.status===404);
+const otherEdit = await request('projects/'+project.data.id,{method:'PUT',cookie:secondLogin.cookie,body:{name:'Unauthorized',data:{}}});
+check('Members cannot edit other members projects',otherEdit.status===404);
+const otherDelete = await request('projects/'+project.data.id,{method:'DELETE',cookie:secondLogin.cookie});
+check('Members cannot delete other members projects',otherDelete.status===404);
+const unsafeOrigin = await request('projects',{method:'POST',cookie:login.cookie,headers:{origin:'https://malicious.example'},body:{name:'Blocked',data:{}}});
+check('Cross-site project modifications are rejected',unsafeOrigin.status===403);
+
 const accountId = db.prepare('SELECT id FROM users WHERE email=?').get('smoke@example.com').id;
 const seed = db.prepare('INSERT INTO projects(id,user_id,name,data,updated_at) VALUES(?,?,?,?,?)');
 for(let n=1;n<200;n++) seed.run('project-seed-'+n,accountId,'Seed project','{}',Date.now());
@@ -100,6 +113,11 @@ const noLengthUpload = await onRequest({
 });
 check('Media supports absent content length',noLengthUpload.status===200);
 const mediaCreated = await noLengthUpload.json();
+const otherMediaRead = await request('media/'+mediaCreated.id,{cookie:secondLogin.cookie});
+check('Members cannot read another member media',otherMediaRead.status===404);
+const otherMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:secondLogin.cookie});
+check('Members cannot delete another member media',otherMediaDelete.status===404);
+
 const deletedMedia = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:login.cookie});
 check('Media deletion succeeds for owned file',deletedMedia.status===200);
 const repeatedMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:login.cookie});
