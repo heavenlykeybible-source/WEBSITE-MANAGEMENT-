@@ -153,3 +153,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added owner-only `end-meeting` server command reusing the same terminal meeting closure as timed expiry. Added `End meeting for everyone` browser control inside owner-only panel, with confirmation.
 - Durable Object writes `meetingClosedAt`, cancels alarm, closes connected sockets, and rejects tickets for ended room IDs. Regression tests added to `test/worker.test.js` and `test/room-server.test.js`.
 - Tests are committed but NOT yet successfully executed. Billing ledger finalization is not wired to this event, and production WebSocket hibernation recovery remains incomplete. Do not launch without runtime tests.
+
+## 2026-10-25: Durable meeting termination race correction
+- Modified `src/room-server.js`: meeting terminal marker `meetingClosedAt` is persisted before connected sockets are notified and closed. This narrows the window in which an old ticket could join during host termination or subscription timeout.
+- Added a regression test verifying the persistent terminal marker is visible before socket close callbacks. Code was committed; full test execution and production Cloudflare behavior are NOT verified.
+- GitHub clone from the execution container fails due to DNS resolution, so the connected GitHub API remains the source of saved edits. No deployment or payment configuration was changed.
