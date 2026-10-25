@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy:
-        description: 'Deploy Zoom Studio to its dedicated Cloudflare Worker'
+        description: 'Deploy Account 8 MeetingSpace to its confirmed dedicated Cloudflare Worker'
         type: boolean
         default: false
 permissions:
@@ -31,7 +31,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
     needs: checks
     runs-on: ubuntu-latest
-    environment: zoom-studio
+    environment: account8-meetingspace-production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,7 +40,10 @@ jobs:
       - name: Deploy the dedicated studio
         working-directory: zoom-studio
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          STUDIO_D1_DATABASE_ID: ${{ secrets.STUDIO_D1_DATABASE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.MEETINGSPACE_ACCOUNT8_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID }}
+          MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID: ${{ secrets.MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID }}
+          STUDIO_D1_DATABASE_ID: ${{ secrets.MEETINGSPACE_ACCOUNT8_D1_DATABASE_ID }}
+          MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED: '1'
+          MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN: ${{ vars.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN }}
         run: npm run deploy

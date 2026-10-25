@@ -115,6 +115,8 @@ const sysMsg = (env, team, text, kind = 'sys', meta = null) => env.TEAMDB.prepar
 async function teamRoutes(request, env, url, path, email, active) {
   if (!env.TEAMDB) return json({ error: 'Groups are not set up yet.' }, 501);
   const DB = env.TEAMDB, now = Date.now(), post = request.method === 'POST';
+  const readRoutes = new Set(['/api/teams','/api/team/invite-preview','/api/team/members','/api/team/messages','/api/team/meetings','/api/team/meeting/report','/api/programs']);
+  if (readRoutes.has(path) ? request.method !== 'GET' : !post) return json({ error: 'Method not allowed.' }, 405);
   let b = {}; if (post) { try { b = await request.json(); } catch {} }
   const T = String(b.team || url.searchParams.get('team') || '').replace(/[^0-9a-f]/g, '');
   const need = async (roles) => { const r = await roleOf(env, T, email); return r && (!roles || roles.includes(r)) ? r : null; };
@@ -138,8 +140,18 @@ async function teamRoutes(request, env, url, path, email, active) {
       await DB.prepare('INSERT INTO invites(code,team,by,expires,uses,max) VALUES(?,?,?,?,0,100)').bind(code, T, email, now + 7 * 864e5).run();
       return json({ code, url: url.origin + '/?join=' + code });
     }
+    case '/api/team/invite-preview': {
+      // Read-only preview: accepting an invitation remains a separate explicit action.
+      const code = String(url.searchParams.get('code') || '').toLowerCase();
+      if (!/^[0-9a-f]{12}$/.test(code)) return json({ error: 'Invalid invitation.' }, 400);
+      if (!(await rate(env, 'preview:' + email, 30, 900))) return json({ error: 'Too many requests.' }, 429);
+      const row = await DB.prepare('SELECT t.id,t.name,i.expires,i.uses,i.max FROM invites i JOIN teams t ON t.id=i.team WHERE i.code=?').bind(code).first();
+      if (!row || row.expires <= now || row.uses >= row.max) return json({ error: 'Invitation expired or unavailable.' }, 404);
+      return json({ group: { id: row.id, name: row.name }, expires: row.expires, joined: !!(await roleOf(env, row.id, email)) });
+    }
     case '/api/team/join': {
-      const code = String(b.code || '').replace(/[^0-9a-f]/g, '');
+      const code = String(b.code || '').toLowerCase();
+      if (!/^[0-9a-f]{12}$/.test(code)) return json({ error: 'Invalid invitation code.' }, 400);
       if (!(await rate(env, 'jn:' + email, 10, 900))) return json({ error: 'Too many attempts. Try again later.' }, 429);
       const iv = await DB.prepare('SELECT * FROM invites WHERE code=?').bind(code).first();
       if (!iv || iv.expires < now || iv.uses >= iv.max) return json({ error: 'This invite link has expired. Ask the leader for a new one.' }, 400);
@@ -254,8 +266,8 @@ async function teamRoutes(request, env, url, path, email, active) {
       const team = await DB.prepare('SELECT name FROM teams WHERE id=?').bind(mt.team).first();
       await DB.prepare('INSERT INTO messages(team,sender,name,text,kind,meta,ts) VALUES(?,?,?,?,?,NULL,?)').bind(mt.team, email, dname(email), 'To ' + labels[aud] + ' (' + mt.title + '): ' + text, 'announce', now).run();
       let sent = 0;
-      if (b.email === true && mailOn(env) && (await rate(env, 'fu:' + email, 5, 3600))) {
-        const cap = +env.MAX_EMAILS || 50;
+      if (b.email === true && env.MEETINGSPACE_FOLLOWUP_EMAIL_ENABLED === '1' && mailOn(env) && (await rate(env, 'fu:' + email, 3, 3600))) {
+        const cap = Math.max(1, Math.min(20, Number(env.MEETINGSPACE_FOLLOWUP_EMAIL_CAP) || 10));
         for (const e of list.slice(0, cap)) if (await mail(env, e, 'Follow-up: ' + team.name, '<p>' + eh(text) + '</p><p style="color:#666;font-size:12px">You received this because you are a member of "' + eh(team.name) + '" on Live Studio.</p>')) sent++;
       }
       return json({ ok: true, people: list.length, emailed: sent });

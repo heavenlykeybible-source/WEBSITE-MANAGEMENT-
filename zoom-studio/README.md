@@ -6,19 +6,23 @@ The responsive blue, white and gold template includes the supplied ministry bann
 
 Run `npm test` in this directory (Node 22+). The existing repository also requires `node tests/run.mjs` from its root. Browser/device/network testing is separate; see AUDIT-UPDATE.md.
 
-## Cloudflare deployment
+## Cloudflare deployment — Account 8 only
 
-Use a dedicated Worker named `heavenly-key-zoom-studio` and a dedicated D1 database named `heavenly-key-zoom-studio-db`, separate from existing production resources. This meeting app targets Account 7 (`6401a8f41a41f5325ba5bd4d006b4ff5`) only. The generated configuration pins that account and rejects conflicting account environment variables. Account 2 belongs to the separate Studio and must not be changed. Account 8 is not this deployment target. The repository's root Worker configuration and bindings are preserved.
+**Account 7 is Heavenly Key Radio; Account 8 is Heavenly Key MeetingSpace; Account 9 is VideoEditor.** Historical references to an Account 7 Zoom Studio release are legacy information and MUST NOT be used to target a new MeetingSpace deployment.
 
-1. In the intended Cloudflare account, create the dedicated D1 database and retain its ID. If the studio already has a database, preserve it and inspect its schema before migration; do not replace it or seed over its accounts.
-2. Set `STUDIO_D1_DATABASE_ID` locally to that ID. Run `npm run deploy` with Cloudflare authentication. This applies tracked additive migrations and uploads the Worker/assets. Configure `AUTH_SECRET` as a private Worker secret before activating accounts. Existing deployments must retain that secret.
-3. Initial owner/admin provisioning is a separate private operation described in ACCOUNT-SETUP.md. Supply the user's chosen password privately; it is never committed. No build or deployment job seeds production accounts.
-4. Add `RELAY_URL` and a matching private `RELAY_SECRET` only when a running relay is available. This activates streaming and guest rooms; website deployment alone does not supply that server. Add OAuth credentials and optional email/payment settings for their respective integrations.
-5. Open `/api/health` to check binding configuration, then test real owner/admin login, user creation, camera, guests and platform streaming.
+MeetingSpace's dedicated Cloudflare Worker is `heavenly-key-meetingspace`; its D1 database name is `heavenly-key-meetingspace-db`. Do not point these at Account 7 resources, an existing Studio database or a shared production database. Current hardening work lives on branch `feature/account8-meetingspace-hardening-20261025` until reviewed/merged.
 
-The manual GitHub Actions workflow provides the same deployment after checks. It requires deployment credentials in the `zoom-studio` environment: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `STUDIO_D1_DATABASE_ID`. No deployment credentials were supplied with the ZIP. Commits run checks only; selecting the explicit Deploy option initiates a production deployment.
+1. Confirm the actual Account 8 Cloudflare account ID and dedicated existing or new D1 database ID. If reusing data, back it up and inspect schema/migrations before any write.
+2. Set `MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID`, `STUDIO_D1_DATABASE_ID`, `MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED=1` and the **verified** `MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN` in the trusted deployment environment. The original Cloudflare credentials must agree with the dedicated Account 8 identity. Never commit credentials or owner passwords.
+3. From `zoom-studio/`, run `npm test` (Node 22+), then `npm run configure`. Generated Wrangler config rejects Account 7 and conflicting Cloudflare account identifiers. Examine D1 and Worker bindings and any required migrations before running `npm run deploy`.
+4. Preserve account secrets, particularly `AUTH_SECRET`, and configure the actual room signalling service (Durable Object or verified relay and `RELAY_SECRET`) before promising live guest meetings. A Worker website alone does **not** supply a media relay or a global TURN service.
+5. Verify `/api/health` at the exact Account 8 release origin, then perform mobile/desktop camera, microphone, screen sharing, guest access, group invitation, follow-up, reconnection and moderation tests. Browser compatibility and free-tier Cloudflare consumption need real measurement before public launch.
 
-Only site/ is public. Server utilities, test fixtures and password hashes must never be served as assets. The existing Pages site.zip method remains supported; the generated Wrangler configuration instead deploys this as a Worker with static assets.
+The read-only group invitation preview is implemented; membership requires explicit confirmation in the interface. Follow-up reminders and advanced automated meeting-to-group features remain future work; see `ACCOUNT8-FREE-TIER-DESIGN.md`.
+
+CI: `.github/workflows/account8-meetingspace-tests.yml` runs the Node tests for changes to `zoom-studio/`. It does not deploy. Any historical manual deploy workflow must be independently audited for Account 7 environment variables before use. Do **not** assume a green workflow means real devices or production infrastructure were tested.
+
+Only `site/` is public. Never serve test fixtures, server scripts or secrets as static assets.
 
 ## Deployment through the Control Room
 

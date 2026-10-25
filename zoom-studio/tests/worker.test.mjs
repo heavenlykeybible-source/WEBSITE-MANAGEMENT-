@@ -65,7 +65,15 @@ ok((await call('/api/teams', { token: A })).j.teams[0].role === 'leader', 'leade
 const inv = await call('/api/team/invite', { token: A, body: { team: T } }); ok(inv.j.url.includes('?join='), 'invite link made');
 ok((await call('/api/team/invite', { token: B, body: { team: T } })).s === 403, 'non-members cannot invite');
 const code = inv.j.code;
+ok((await call('/api/team/join?code='+code,{token:B})).s===405,'GET cannot mutate group membership');
+ok((await call('/api/team/invite-preview?code='+code,{token:B,method:'POST'})).s===405,'POST cannot bypass read-only preview');
+const groupInvitePreview = await call('/api/team/invite-preview?code=' + code, { token: B });
+ok(groupInvitePreview.s === 200 && groupInvitePreview.j.group.id === T && groupInvitePreview.j.joined === false, 'invite preview reveals group without joining');
+ok((await call('/api/team/members?team=' + T, { token: A })).j.members.length === 1, 'preview does not enroll participant');
+ok((await call('/api/team/invite-preview?code=bad', { token: B })).s === 400, 'malformed invite preview refused');
+ok((await call('/api/team/join', { token: B, body: { code: 'invalid-code' } })).s === 400, 'malformed join code refused');
 ok((await call('/api/team/join', { token: B, body: { code } })).j.team.id === T, 'member joins by invite');
+ok((await call('/api/team/invite-preview?code=' + code, { token: B })).j.joined === true, 'preview identifies existing member');
 ok((await call('/api/team/join', { token: C, body: { code } })).j.team.id === T, 'second member joins');
 ok((await call('/api/team/join', { token: C, body: { code: 'ffffffffffff' } })).s === 400, 'bad invite refused');
 const ml = await call('/api/team/members?team=' + T, { token: A }); ok(ml.j.members.length === 3 && ml.j.members.every(m => m.email), 'leader sees member emails');
@@ -96,7 +104,9 @@ const r1 = await call('/api/team/meeting/report?meeting=' + m1.j.id, { token: A 
 ok(r1.j.attended.length === 1 && r1.j.attended[0].first === 1, 'first-time attendee is marked new');
 ok(r1.j.absent.length === 2, 'absent members are listed');
 ok((await call('/api/team/meeting/report?meeting=' + m1.j.id, { token: C })).s === 403, 'members cannot see the report');
-ok((await call('/api/team/followup', { token: A, body: { meeting: m1.j.id, audience: 'absent', text: 'We missed you', email: true } })).j.people === 2, 'follow-up reaches the absent members');
+const followup = await call('/api/team/followup', { token: A, body: { meeting: m1.j.id, audience: 'absent', text: 'We missed you', email: true } });
+ok(followup.j.people === 2, 'follow-up identifies absent members');
+ok(followup.j.emailed === 0, 'outbound follow-up emails are disabled unless explicitly configured');
 await call('/api/team/meeting/end', { token: A, body: { meeting: m1.j.id } });
 ok((await call('/api/team/meeting/join', { token: C, body: { meeting: m1.j.id } })).s === 400, 'ended meetings cannot be joined');
 const m2 = await call('/api/team/meeting/start', { token: A, body: { team: T, title: 'Midweek', link: 'https://studio.test/join.html?relay=wss%3A%2F%2Frelay.test&r=abc2&k=def2&a=1' } });
