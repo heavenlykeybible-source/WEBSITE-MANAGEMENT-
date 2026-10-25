@@ -43,13 +43,30 @@ test('Account 8 requires an explicit Cloudflare account ID',()=>{
 });
 test('Account 8 selects its own Worker and D1 without overwriting Account 7',()=>{
  const id='0123456789abcdef0123456789abcdef';
- const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:id});
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:id,MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'});
  assert.equal(r.status,0);
  assert.equal(r.config.account_id,id);
  assert.equal(r.config.name,'heavenly-key-meetingspace');
  assert.equal(r.config.d1_databases[0].database_name,'heavenly-key-meetingspace-db');
 });
 test('Account 8 rejects a conflicting Cloudflare account environment',()=>{
- const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef',CF_ACCOUNT_ID:target});
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef',MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1',CF_ACCOUNT_ID:target});
  assert.notEqual(r.status,0);assert.equal(r.config,null);
+});
+
+test('Account 8 requires explicit confirmation of its D1 database',()=>{
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef'});
+ assert.notEqual(r.status,0);assert.equal(r.config,null);
+ assert.match(r.stderr,/Confirm the Account 8 D1 database/);
+});
+test('Account 8 cannot reuse the Account 7 Cloudflare identity',()=>{
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:target,MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'});
+ assert.notEqual(r.status,0);assert.equal(r.config,null);
+ assert.match(r.stderr,/cannot reuse the legacy Account 7/);
+});
+test('malformed D1 IDs are rejected before configuration is generated',()=>{
+ for(const id of ['11111111-1111-1111-1111-11111111111Z','------------------------------------']) {
+  const r=configure({STUDIO_D1_DATABASE_ID:id});
+  assert.notEqual(r.status,0);assert.equal(r.config,null);
+ }
 });
