@@ -68,7 +68,7 @@ export class MeetingRoom extends DurableObject {
     const target=this.clients.get(msg.id);
     if(!target||target.admitted||!['admit','deny'].includes(msg.decision))return;
     if(msg.decision==='admit'&&this.clients.size>this.capacity){this.send(server,{type:'error',message:'Meeting capacity has been reached'});return}
-    if(msg.decision==='deny'){this.send(target.socket,{type:'denied'});target.socket.close(1008,'Admission denied');return}
+    if(msg.decision==='deny'){this.clients.delete(msg.id);this.send(target.socket,{type:'denied'});this.notifyOwner({type:'admission-withdrawn',id:msg.id});target.socket.close(1008,'Admission denied');return}
     if(this.locked){this.send(server,{type:'error',message:'Room is locked'});return}
     target.admitted=true;
     this.send(target.socket,{type:'peers',role:target.role,id:msg.id,ids:[...this.clients].filter(([peerId,c])=>peerId!==msg.id&&c.admitted).map(([peerId])=>peerId)});
@@ -80,7 +80,9 @@ export class MeetingRoom extends DurableObject {
    if(record.role==='owner'&&record.admitted&&msg.type==='remove-participant'&&typeof msg.id==='string'){
     const target=this.clients.get(msg.id);
     if(!target||target===record||!target.admitted)return;
+    this.clients.delete(msg.id);
     this.send(target.socket,{type:'removed'});
+    this.broadcast({type:'leave',id:msg.id},msg.id);
     target.socket.close(1008,'Removed by host');
     return;
    }
