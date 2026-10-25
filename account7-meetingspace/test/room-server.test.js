@@ -188,3 +188,25 @@ test('retrying a failed ledger write bills the original meeting end time',async(
  assert.deepEqual(billedTimes,[originalEnd,originalEnd]);
  assert.equal(await room.ctx.storage.getAlarm(),null);
 });
+
+test('immediate shutdown gate rejects tickets during meeting finalization',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ room.ending=true;
+ const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+ assert.equal((await room.fetch(socketRequest(ticket))).status,410);
+});
+test('unexpected host socket close permanently ends the meeting',async()=>{
+ const handlers={};
+ const oldPair=globalThis.WebSocketPair,oldResponse=globalThis.Response;
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ try{
+  globalThis.WebSocketPair=class {constructor(){return {0:{},1:{accept(){},send(){},close(){},addEventListener(type,handler){handlers[type]=handler}}}}};
+  globalThis.Response=class extends oldResponse {constructor(body,options){super(body,options?.status===101?{status:200}:options)}};
+  const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+  await room.fetch(socketRequest(ticket));
+  handlers.close();
+  for(let i=0;i<10&&!await room.ctx.storage.get('meetingClosedAt');i++)await new Promise(resolve=>setImmediate(resolve));
+  assert.ok(await room.ctx.storage.get('meetingClosedAt'));
+  assert.equal((await room.fetch(socketRequest(ticket))).status,410);
+ }finally{globalThis.WebSocketPair=oldPair;globalThis.Response=oldResponse}
+});
