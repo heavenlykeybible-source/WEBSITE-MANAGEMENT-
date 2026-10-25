@@ -39,6 +39,7 @@ assert.ok(html.includes('invalidateVideoDownload();if(sourceURL)'),'Selecting a 
 assert.ok(html.includes('audioBuffer=null;')&&html.includes("$('aexp').disabled=true"),'Loading an audio file must clear previously decoded audio');
 assert.ok(html.includes('v.onerror=()'),'Unsupported video codecs must show a helpful error');
 assert.equal(module,readFileSync('integrations.js','utf8'),'Integration modules must match');
+assert.ok(module.includes('const generation=libraryGeneration')&&module.includes('if(generation!==libraryGeneration)return')&&module.includes('libraryGeneration++;selected=null;list.replaceChildren();ml.replaceChildren()'),'Cloud library responses must not display after logout');
 for(const id of ['vf','vexp','vdl','af','aexp','autocap','login','register','logout','pcloud','psave','pload','srtf','srtx','projects','account','video','audio']){
   assert.ok(html.includes('id="'+id+'"'),'Missing frontend element: '+id);
 }
