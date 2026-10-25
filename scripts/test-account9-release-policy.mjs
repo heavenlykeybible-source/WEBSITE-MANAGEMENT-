@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {chooseCurrentRelease,consolidateAccount9Releases,supersededAccount9Ids,projectAccount9Queue} from './account9-release-policy.mjs';
+import {chooseCurrentRelease,consolidateAccount9Releases,supersededAccount9Ids,projectAccount9Queue,upsertAccount9Release} from './account9-release-policy.mjs';
 
 const rows=[
  {id:27,account:'account-09',version:'v4',created_at:'2026-10-25T09:00:00Z',worker:'heavenlykey-studio'},
@@ -20,6 +20,15 @@ assert.equal(queue.active.filter(item=>item.worker==='heavenlykey-studio').lengt
 assert.equal(queue.history.length,1,'Previous release retained in history');
 assert.equal(queue.history[0].status,'superseded','Older release cannot be deployed as active');
 assert.equal(queue.history[0].superseded_by,28,'Audit history points to the current release');
+const v6={id:30,account:'account9',version:'v6',created_at:'2026-10-25T12:00:00Z',worker:'heavenlykey-studio'};
+const upgraded=upsertAccount9Release(queue,v6);
+assert.equal(upgraded.active.filter(is=>is.worker==='heavenlykey-studio').length,1,'New upload replaces old Account 9 slot');
+assert.equal(upgraded.active.find(is=>is.account==='account9').id,30,'Version 6 supersedes Version 5');
+assert.equal(upgraded.history.length,2,'Old versions are retained only in release history');
+assert.equal(upsertAccount9Release(upgraded,v6).history.length,2,'Retrying same release does not duplicate history');
+const stale=upsertAccount9Release(upgraded,{id:31,account:'account9',version:'v4'});
+assert.equal(stale.active.find(is=>is.account==='account9').id,30,'Older upload cannot downgrade active release');
+
 assert.equal(rows[0].status,undefined,'Original proposal rows stay untouched');
 
 assert.equal(consolidated.filter(x=>x.account==='account9').length,1,'One canonical Account 9');
