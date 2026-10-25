@@ -144,3 +144,7 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 
 ## 2026-10-25: Targeted usage tests
 - Executed Node.js tests against a manually reconstructed local copy of the usage ledger and its three focused tests: 3 passed, 0 failed (duration rounding, one-time finalization, invalid room IDs). This is NOT verification of the GitHub checkout, complete test suite, Cloudflare runtime or production deployment.
+
+## 2026-10-25: Verified-email ticket gate
+- Owner ticket issuance now requires BOTH a verified authenticated principal and `emailVerified === true`; the account meeting service tests now use verified-email identities and include an unverified-email rejection regression.
+- New commits were saved; these changes and the full repository still require a green automated test suite before release.
