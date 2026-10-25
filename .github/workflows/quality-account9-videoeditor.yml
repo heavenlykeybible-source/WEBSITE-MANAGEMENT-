@@ -5,11 +5,15 @@ on:
     paths:
       - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
       - 'scripts/build-account9-worker.mjs'
+      - 'scripts/verify-account9-release.mjs'
+      - 'release-packages/account9-control-room-full.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   pull_request:
     paths:
       - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
       - 'scripts/build-account9-worker.mjs'
+      - 'scripts/verify-account9-release.mjs'
+      - 'release-packages/account9-control-room-full.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   workflow_dispatch:
 
@@ -34,6 +38,8 @@ jobs:
         run: npm run check
       - name: Build canonical Worker bundle
         run: node scripts/build-account9-worker.mjs /tmp/account9-quality-worker.mjs
+      - name: Verify Control Room release matches latest source
+        run: node scripts/verify-account9-release.mjs
       - name: Validate packaged Worker JavaScript
         run: node --check /tmp/account9-quality-worker.mjs
       - name: Smoke-test packaged Worker static routes
