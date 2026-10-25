@@ -70,13 +70,7 @@ ok(groupInvitePreview.s === 200 && groupInvitePreview.j.group.id === T && groupI
 ok((await call('/api/team/members?team=' + T, { token: A })).j.members.length === 1, 'preview does not enroll participant');
 ok((await call('/api/team/invite-preview?code=bad', { token: B })).s === 400, 'malformed invite preview refused');
 ok((await call('/api/team/join', { token: B, body: { code: 'invalid-code' } })).s === 400, 'malformed join code refused');
-const preview = await call('/api/team/invite-preview?code=' + code, { token: B });
-ok(preview.s === 200 && preview.j.group.id === T && preview.j.joined === false, 'invite preview reveals group without joining');
-ok((await call('/api/team/members?team=' + T, { token: A })).j.members.length === 1, 'preview does not enroll participant');
-ok((await call('/api/team/invite-preview?code=bad', { token: B })).s === 400, 'malformed invite preview refused');
-ok((await call('/api/team/join', { token: B, body: { code: 'invalid-code' } })).s === 400, 'malformed join code refused');
 ok((await call('/api/team/join', { token: B, body: { code } })).j.team.id === T, 'member joins by invite');
-ok((await call('/api/team/invite-preview?code=' + code, { token: B })).j.joined === true, 'preview identifies existing member');
 ok((await call('/api/team/invite-preview?code=' + code, { token: B })).j.joined === true, 'preview identifies existing member');
 ok((await call('/api/team/join', { token: C, body: { code } })).j.team.id === T, 'second member joins');
 ok((await call('/api/team/join', { token: C, body: { code: 'ffffffffffff' } })).s === 400, 'bad invite refused');
