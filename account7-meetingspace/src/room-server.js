@@ -46,6 +46,7 @@ export class MeetingRoom extends DurableObject {
   this.clients.set(id,record);
   if(admitted){
    this.send(server,{type:'peers',role:'owner',id,ids:[...this.clients].filter(([peerId,c])=>peerId!==id&&c.admitted).map(([peerId])=>peerId)});
+   this.send(server,{type:'room-lock',locked:this.locked});
    this.broadcast({type:'join',id},id);
    for(const [peerId,c] of this.clients)if(!c.admitted)this.send(server,{type:'admission-request',id:peerId});
   }else{
