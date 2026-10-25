@@ -252,3 +252,11 @@ test('WebRTC waits for relay configuration and keeps responsive call controls',a
  assert.match(html,/iceServers:meetingIceServers/);
  assert.match(html,/id="callControls"/);
 });
+
+test('temporary network disconnect retains the peer instead of closing immediately',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/pc.connectionState==='disconnected'/);
+ assert.match(html,/attempting to recover/);
+ assert.match(html,/connectionState==='failed'/);
+ assert.match(html,/Sharing this room link alone does not grant access/);
+});
