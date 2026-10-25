@@ -74,6 +74,7 @@ assert.ok(module.includes("const originalLogout=$('logout').onclick")&&module.in
 assert.ok(module.includes("try{await json('me');await Promise.allSettled"),'Cloud libraries must only load after verified login');
 for (const wiring of ["input.dispatchEvent(new CustomEvent('change'", "fetch('/api/media/'+encodeURIComponent(f.id)", "f.type.startsWith('video/')||f.type.startsWith('audio/')"]) assert.ok(module.includes(wiring),'Cloud media editor import missing: '+wiring);
 assert.ok(module.includes('Math.min(end,Math.max(start'),'Caption word timings must remain within each processed chunk');
+assert.ok(module.includes('Math.max(0,500-layers.length)')&&module.includes('generated.filter(l=>l.text&&l.end>l.start).slice(0,remaining)')&&module.includes('invalidateVideoDownload();layers.push(...accepted)'), 'AI caption generation must respect 500-caption limit and invalidate exports');
 assert.ok(timelineScript.includes('rec.pause()') && timelineScript.includes('rec.resume()'),'Export recorder must skip clip seeking');
 for (const safeguard of ["invalidateExport();undo.push", "invalidateExport();clips=data.map", "if(session)return info('Stop preview or export", "if(clips.length>=200)", "'clipRemove','clipUp','clipDown','clipUndo','clipRedo'"]) {
   assert.ok(timelineScript.includes(safeguard),'Missing timeline regression safeguard: '+safeguard);
