@@ -13,7 +13,7 @@ const cache = {
 const caches = {
   async open() { return cache; },
   async match(request) { return cache.match(request); },
-  async keys() { return ['hk-account9-offline-v4','hk-account9-offline-v5']; },
+  async keys() { return ['hk-account9-offline-v5','hk-account9-offline-v6']; },
   async delete() { return true; }
 };
 let offline=true, networkCalls=0, privateNext=false;
@@ -55,6 +55,8 @@ const privateRoute=await fire('fetch',{url:'https://editor.test/private/dashboar
 assert.equal(privateRoute,undefined,'Non-editor navigations must bypass offline caching');
 const tokenized=await fire('fetch',{url:'https://editor.test/?session=secret',method:'GET',mode:'navigate'});
 assert.equal(tokenized,undefined,'Query-token navigations must bypass the offline cache');
+const tokenizedAsset=await fire('fetch',new Request('https://editor.test/timeline.js?access_token=private'));
+assert.equal(tokenizedAsset,undefined,'Query-bearing static requests must bypass offline caching');
 const script = await fire('fetch',new Request('https://editor.test/timeline.js'));
 assert.ok((await script.text()).includes('offline'),'Offline module must load from cache');
 offline=false;
