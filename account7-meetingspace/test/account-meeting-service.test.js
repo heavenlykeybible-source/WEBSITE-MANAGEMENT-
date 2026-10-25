@@ -8,7 +8,7 @@ const principal={authenticated:true,emailVerified:true,userId:'account-1'};
 function mockDb({owner=null,used=0,subscription=null,activeRoom=null,endedAt=null}={}){
  let savedOwner=owner;
  return {prepare(sql){return {bind(...args){return {
-  first:async()=>sql.includes('FROM subscriptions')?subscription:sql.includes('SUM(billed_minutes)')?{used}:sql.includes('room_id<>?')?activeRoom?{roomId:activeRoom}:null:sql.includes('FROM meeting_sessions')?savedOwner?{ownerId:savedOwner,endedAt}:null:null,
+  first:async()=>sql.includes('FROM subscriptions')?subscription:sql.includes('COALESCE(SUM(')?{used}:sql.includes('room_id<>?')?activeRoom?{roomId:activeRoom}:null:sql.includes('FROM meeting_sessions')?savedOwner?{ownerId:savedOwner,endedAt}:null:null,
   run:async()=>{if(!savedOwner){savedOwner=args[1];return {meta:{changes:1}}}return {meta:{changes:0}}}
  }}}}};
 }
