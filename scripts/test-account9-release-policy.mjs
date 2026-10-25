@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {chooseCurrentRelease,consolidateAccount9Releases,supersededAccount9Ids} from './account9-release-policy.mjs';
+import {chooseCurrentRelease,consolidateAccount9Releases,supersededAccount9Ids,projectAccount9Queue} from './account9-release-policy.mjs';
 
 const rows=[
  {id:27,account:'account-09',version:'v4',created_at:'2026-10-25T09:00:00Z',worker:'heavenlykey-studio'},
@@ -14,6 +14,14 @@ assert.equal(chooseCurrentRelease([{id:3,account:'account9',version:'v5.9'},{id:
 assert.deepEqual(supersededAccount9Ids(rows),[27],'Old Account 9 release is superseded');
 const consolidated=consolidateAccount9Releases(rows);
 assert.equal(consolidated.length,2,'Single Account 9 release remains');
+const queue=projectAccount9Queue(rows);
+assert.equal(queue.active.length,2,'Queue shows one current Account 9 and preserves another account');
+assert.equal(queue.active.filter(item=>item.worker==='heavenlykey-studio').length,1,'Only one Account 9 is actionable');
+assert.equal(queue.history.length,1,'Previous release retained in history');
+assert.equal(queue.history[0].status,'superseded','Older release cannot be deployed as active');
+assert.equal(queue.history[0].superseded_by,28,'Audit history points to the current release');
+assert.equal(rows[0].status,undefined,'Original proposal rows stay untouched');
+
 assert.equal(consolidated.filter(x=>x.account==='account9').length,1,'One canonical Account 9');
 assert.ok(consolidated.some(x=>x.id===29),'Unrelated accounts remain unchanged');
 assert.equal(consolidated.find(x=>x.id===28).worker,'heavenlykey-studio','Worker target is preserved');
