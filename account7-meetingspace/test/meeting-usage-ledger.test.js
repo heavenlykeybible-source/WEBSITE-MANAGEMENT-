@@ -19,3 +19,7 @@ test('meeting finalization records time only once',async()=>{
  assert.deepEqual(await finalizeMeetingUsage(db,'room123','owner',999999),{changed:false,minutes:2});
  assert.equal(writes,1);
 });
+
+test('ledger rejects invalid meeting identifiers',async()=>{
+ await assert.rejects(finalizeMeetingUsage({prepare(){}},'bad room','owner',61000),/Missing trusted meeting context/);
+});
