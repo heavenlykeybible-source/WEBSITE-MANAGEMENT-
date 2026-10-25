@@ -20,7 +20,8 @@ export function chooseCurrentRelease(items){
   const relevant=items.filter(isAccount9Release);
   if(!relevant.length)return null;
   relevant.sort((a,b)=>{
-    const av=Number(a.version)||0,bv=Number(b.version)||0;
+    const version=x=>Number(String(x.version??'').match(/(?:^|[^0-9])(\\d+)(?:\\.\\d+)*$/)?.[1]??0);
+    const av=version(a),bv=version(b);
     if(av!==bv)return bv-av;
     const at=Date.parse(a.created_at||a.createdAt||'')||0;
     const bt=Date.parse(b.created_at||b.createdAt||'')||0;
