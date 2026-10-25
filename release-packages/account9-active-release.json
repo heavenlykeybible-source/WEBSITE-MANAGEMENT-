@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "account": "account9",
+  "app": "Heavenly Key VideoEditor",
+  "worker": "heavenlykey-studio",
+  "cloudflare_connection": "Cloudflare Account 9",
+  "deployment_artifact": "release-packages/account9-control-room-full.mjs",
+  "active_proposal": 28,
+  "supersedes_proposals": [
+    27
+  ],
+  "strategy": "replace-in-place",
+  "max_active_deployments": 1,
+  "retain_existing_database": true,
+  "bindings": {
+    "DB": "37d1fd6a-4424-4cca-a757-ea347098a758",
+    "MEDIA": "heavenly-key-videoeditor-media",
+    "AI": "AI"
+  },
+  "policy": "Only the latest approved Account 9 release may deploy to the existing Worker. Earlier waiting proposals must be superseded or declined before deploying a newer release. Never create a second Worker or a second Account 9."
+}
