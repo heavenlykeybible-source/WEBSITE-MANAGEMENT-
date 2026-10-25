@@ -155,3 +155,14 @@ test('meeting UI includes owner-only end-for-everyone control',async()=>{
  assert.match(html,/if\(isRoomOwner&&confirm/);
  assert.match(html,/type:'end-meeting'/);
 });
+
+test('public subscription catalog shows limits without enabling unconfigured payments',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/api/plans'),mockEnv);
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.subscriptionsAvailable,false);
+ assert.equal(data.pricingConfigured,false);
+ assert.deepEqual(data.plans.map(p=>p.participants),[3,6,12]);
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/id="planCards"/);
+});
