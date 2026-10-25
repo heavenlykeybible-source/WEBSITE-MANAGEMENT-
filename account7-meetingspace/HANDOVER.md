@@ -224,3 +224,9 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Worker WebSocket gateway now verifies meeting ticket and refuses authenticated connections with HTTP 503 unless `env.DB.prepare` is configured; the explicit development demo path is unaffected. This prevents real authenticated meetings silently accumulating no usage when D1 is absent.
 - Added `test/worker.test.js` case that supplies a valid signed ticket without DB and expects 503. Commits `b52b8fd`, `6bce293` saved.
 - **Do not invent D1 database identifiers:** add the actual D1 binding named `DB` in Cloudflare configuration after owner creates the resource, safely apply migrations `0001`, `0002`, `0003` after stale session reconciliation, and run a staging smoke test; checkout tests/Cloudflare deployment have not passed. Authenticated accounts and payment webhooks are not connected.
+
+## 2026-10-25: Concurrent room shutdown safety
+- `src/room-server.js` now snapshots and clears the socket registry before closing sockets, preventing recursive cleanup from a host close event during explicit shutdown.
+- The `endMeeting()` entry point now coalesces concurrent owner disconnect, manual end and alarm expiry onto one `finishMeeting()` promise; once it settles, future alarm retries may re-enter and use the persisted original end timestamp.
+- Regression test added to assert parallel shutdown requests share one finalization and one usage ledger write.
+- Commits `0a0cb80`, `49bc260`, `3541b05`. Tests not yet run in Cloudflare or complete Node checkout; production service still lacks configured D1, identity provider, billing, TURN/SFU and passing CI.
