@@ -92,3 +92,6 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - The owner room lock is persisted as `roomLocked` and reloaded when the object is recreated. Added regression coverage in `test/room-server.test.js`.
 - **Not yet verified:** Full tests were not executed; local GitHub clone fails because container cannot resolve github.com. Runtime end-to-end tests are required before launch.
 - Known architectural blocker: in-memory socket registry is not hibernation/restart safe; production subscription authorization, payments, full accounting and SFU/TURN remain outstanding.
+
+## Deployment diagnostics
+- Added `GET /api/health` with a no-store JSON liveness response and 405 for other methods; added `test/worker.test.js` coverage. This is liveness only, NOT proof that video, billing, databases or Durable Objects work.
