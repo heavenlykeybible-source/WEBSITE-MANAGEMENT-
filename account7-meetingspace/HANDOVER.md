@@ -163,3 +163,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - When an owner reconnects, the Durable Object now sends the persisted `roomLocked` state to the host UI immediately after peer initialization. Added a regression test for this state message.
 - Added a second capacity check at admission time to prevent promoting waiting participants when the saved capacity is already exceeded.
 - All changes were committed on `feature/account7-meetingspace`; tests have not been executed against the checkout. Existing production blockers (identity, billing, scalable media/TURN/SFU, full CI, live verification) remain.
+
+## 2026-10-25: Public subscription plan catalog
+- `src/worker.js` now exposes GET `/api/plans` with provisional Free/Starter/Pro participant and minute limits and renders the information on the home page. The API explicitly marks `subscriptionsAvailable:false` and `pricingConfigured:false` instead of displaying false checkout success.
+- `test/worker.test.js` has new tests for those states and plan limits; tests are committed but NOT yet executed against the full repository.
+- Payment processing, provider setup, checkout, account identity and plan entitlement enforcement remain incomplete and unverified; do not launch paid registrations yet.
