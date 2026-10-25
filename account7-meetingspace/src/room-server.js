@@ -102,6 +102,7 @@ export class MeetingRoom extends DurableObject {
    if(this.clients.get(id)!==record)return;
    this.clients.delete(id);
    if(record.admitted)this.broadcast({type:'leave',id},id);
+   else this.notifyOwner({type:'admission-withdrawn',id});
    if(record.role==='owner'){void this.endMeeting('host-disconnected').catch(error=>console.error('Host disconnect finalization requires retry',error))}
   };
   server.addEventListener('close',cleanup);server.addEventListener('error',cleanup);
