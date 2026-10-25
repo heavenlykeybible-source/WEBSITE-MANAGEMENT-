@@ -5,6 +5,7 @@ export function measuredMeetingMinutes(startedAt,endedAt){
 }
 export async function finalizeMeetingUsage(db,roomId,ownerId,endedAt){
  if(!db?.prepare||typeof roomId!=='string'||!/^[A-Za-z0-9_-]{6,80}$/.test(roomId)||typeof ownerId!=='string'||!ownerId)throw Error('Missing trusted meeting context');
+ if(!Number.isSafeInteger(endedAt)||endedAt<=0)throw Error('Invalid meeting end time');
  const current=await db.prepare('SELECT started_at AS startedAt,ended_at AS endedAt,billed_minutes AS minutes FROM meeting_sessions WHERE room_id=? AND owner_user_id=?').bind(roomId,ownerId).first();
  if(!current)throw Error('Unknown meeting');
  if(current.endedAt!=null)return {changed:false,minutes:current.minutes};
