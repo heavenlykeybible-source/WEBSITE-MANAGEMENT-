@@ -19,6 +19,7 @@ const inlineScripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/
 assert.ok(inlineScripts.length>0,'Editor inline application script is missing');
 for(const code of inlineScripts) new Script(code,{filename:'account9-inline-editor.js'});
 assert.equal(html,original,'Source and public HTML must match');
+assert.ok(html.includes('const revision=++audioLoadRevision')&&html.includes('if(revision!==audioLoadRevision)return;'),'Old audio decoding must not replace a more recent file');
 assert.ok(html.includes('href="#studio-main" class="skip-link"')&&html.includes('<main id="studio-main" tabindex="-1">'),'Keyboard skip link must target primary editor content');
 for(const check of ["Number(m[4].padEnd(3,'0'))/1000",'if(!caption||!Number.isFinite(start)||!Number.isFinite(end)||end<=start||layers.length>=500)']) assert.ok(html.includes(check),'Safe SRT parser must reject invalid timing and cap subtitles: '+check);
 assert.ok(html.includes('aria-label="Studio sections"')&&html.includes("setAttribute('aria-pressed'"),'Navigation must expose active section to assistive technology');
