@@ -36,3 +36,16 @@ Source prepared for review; no production deployment or staging publication perf
 Desktop/narrow-screen browser visual acceptance remains unverified: the supplied browser rejects local-file URLs. An isolated component fixture was generated for attempted QA but was not published. Do not treat DOM-adapter tests or responsive CSS as real-device visual verification.
 
 Before release: inspect the editor in an approved HTTPS preview at desktop and phone widths, complete authenticated production acceptance after deployment, and confirm the approved release SHA. Preserve the current production database, media bucket, sessions, secrets and bindings. No migration or resource change is needed.
+
+
+## Additional reconciliation and checks
+
+Merged the concurrent 6072743 update without replacing its member-journey, autosave, stable-preview, privacy or navigation repairs. Added executable DOM tests using pinned linkedom and an in-process actual Worker/SQLite test for title-free/category-free creation, Unicode round trips, author-only editing, blocked terms, held posts and length limits. The standard build includes these tests.
+
+Additional corrections: optional titles remain editable within collapsed options; changing a category no longer overrides the selected colour; inactive video URL fields cannot block another post format; Publish is prominent with draft tools collapsed; touch targets and card text sizing are improved. Public advertising remains disabled at the route and service layers; historical records and protected administration are preserved.
+
+Rechecked npm run build (TypeScript, frontend syntax, regressions and Worker bundle), npm run test:care, and root node tests/run.mjs successfully after reconciliation. The disposable local Worker API audit passed with NODE_OPTIONS pointing to a temporary, uncommitted loopback-only fallback for os.networkInterfaces, which this container denies. No production resource operations occurred.
+
+Copy comparison: apps/global-christian-community lacks design-cards.js and has older frontend code; alternate-global-community differs in frontend, design validation, services and Wrangler settings. Neither was copied over the canonical source; the existing Account 3 deployment workflow targets the canonical source path.
+
+Desktop/mobile visual acceptance remains unverified: Chromium was unavailable and its download failed. Real production sign-in, publishing, messages, Groups, Spaces and radio playback still need authenticated acceptance after staging. No deployment or production database/secret/binding changes were performed.

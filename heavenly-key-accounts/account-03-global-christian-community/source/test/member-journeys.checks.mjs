@@ -11,6 +11,7 @@ class ComposerNode {
  append(...nodes){for(const n of nodes){n.remove();n.parentElement=this;n.moves++;this.children.push(n);}}
  remove(){if(this.parentElement){const p=this.parentElement;p.children=p.children.filter(n=>n!==this);this.parentElement=null;}}
  after(n){const p=this.parentElement;n.remove();n.parentElement=p;n.moves++;p.children.splice(p.children.indexOf(this)+1,0,n);}
+ insertBefore(n,reference){n.remove();n.parentElement=this;n.moves++;const i=this.children.indexOf(reference);this.children.splice(i<0?this.children.length:i,0,n);return n;}
  replaceChildren(...nodes){for(const n of [...this.children])n.remove();this.append(...nodes);}
  setAttribute(k,v){(this.attrs??={})[k]=v;}
  addEventListener(k,fn){(this.listeners[k]??=[]).push(fn);}
@@ -38,7 +39,7 @@ async function composerFixture(existing=null){
 }
 test('Composer keeps optional fields collapsed and preserves title focus while typing an article',async()=>{
  const f=await composerFixture(),format=f.field('postFormat'),title=f.field('title'),category=f.field('designCategory');
- assert.equal(category.parentElement.parentElement.tagName,'details');assert.equal(category.required,false);assert.equal(title.parentElement.hidden,true);assert.equal(f.avatars[0],'member-photo');
+ assert.equal(category.parentElement.parentElement.tagName,'details');assert.equal(category.required,false);assert.equal(title.parentElement.parentElement.tagName,'details');assert.equal(f.avatars[0],'member-photo');
  format.value='article';await f.form.emit('change');assert.equal(title.required,true);assert.equal(title.parentElement.hidden,false);
  title.focus();const moves=title.parentElement.moves;title.value='My article';await f.form.emit('input');await f.form.emit('input');assert.equal(title.parentElement.moves,moves,'Typing must not detach/reinsert the focused field');
  format.value='video_link';await f.form.emit('change');assert.equal(title.required,false);assert.equal(f.field('videoUrl').required,true);

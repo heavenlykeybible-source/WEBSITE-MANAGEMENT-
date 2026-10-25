@@ -710,6 +710,14 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #a7
 .easy-card-extras label{margin-top:10px}
 @media(max-width:600px){.easy-design-swatch{width:43px;height:43px}.easy-card-write{min-height:145px;padding:12px;font-size:1.2rem}.design-preview .design-card:has(.easy-card-write){min-height:210px}}
 
+/* Keep the everyday action clear while preserving draft tools. */
+.composer-drafts{align-self:center;font-size:.9rem}
+.composer-drafts summary{cursor:pointer;padding:10px;color:#29456f}
+.composer-drafts[open]{display:flex;flex-wrap:wrap;gap:8px}
+.easy-design-swatch{width:44px;height:44px;min-width:44px}
+.dc-font-large .easy-card-write{font-size:clamp(1.3rem,3.6vw,2rem)}
+.dc-font-spacious .easy-card-write{font-size:clamp(1.5rem,4vw,2.3rem)}
+@media(max-width:600px){.composer-dialog .actions>.btn.primary{width:100%;min-height:48px}.composer-drafts{width:100%}.easy-design-colours{gap:10px}.easy-design-swatch{width:44px;height:44px}}
 /* Keep the direct editor contained on narrow screens and touch devices. */
 .easy-card-write{box-sizing:border-box;min-width:0;max-width:100%;overflow-wrap:anywhere;touch-action:manipulation}
 .easy-design-swatch{touch-action:manipulation}
