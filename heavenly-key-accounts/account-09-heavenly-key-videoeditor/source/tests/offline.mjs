@@ -16,10 +16,11 @@ const caches = {
   async keys() { return ['hk-account9-offline-v3','hk-account9-offline-v4']; },
   async delete() { return true; }
 };
-let offline=true, networkCalls=0;
+let offline=true, networkCalls=0, privateNext=false;
 const fetch = async request => {
   networkCalls++;
   if (offline) throw Error('Offline');
+  if(privateNext){privateNext=false;return new Response('private editor',{headers:{'cache-control':'private, no-store'}})}
   return new Response('live '+keyOf(request));
 };
 const self = {
@@ -58,5 +59,9 @@ offline=false;
 navigate = await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
 assert.equal(await navigate.text(),'live /','Online navigation must fetch current editor');
 assert.equal(await (await cache.match('/index.html')).text(),'live /','Online launch must refresh offline editor');
+privateNext=true;
+navigate=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
+assert.equal(await navigate.text(),'private editor','Private response is still delivered to the requester');
+assert.equal(await (await cache.match('/index.html')).text(),'live /','Private response must never overwrite public offline editor');
 assert.ok(networkCalls>=3,'Network refreshes must be attempted');
 console.log('PASS offline editor lifecycle, API exclusion, and cache refresh');
