@@ -9,7 +9,7 @@ const chosen=()=>{const i=Number($('clipList').value);return $('clipList').value
 function paint(selected=0){const list=$('clipList');list.replaceChildren();clips.forEach((c,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=(i+1)+'. '+c.start.toFixed(2)+'–'+c.end.toFixed(2)+'s / '+c.speed+'×';list.append(o)});if(clips.length)list.value=String(Math.min(clips.length-1,Math.max(0,selected)));info(clips.length+' clip(s) ready.');}
 const ready=()=>Number.isFinite(v.duration)&&v.duration>0;
 const seek=t=>new Promise((resolve,reject)=>{if(!ready())return reject(Error('Load a video first.'));t=Math.min(v.duration,Math.max(0,t));if(Math.abs(v.currentTime-t)<.02)return resolve();let timer;const done=()=>{clearTimeout(timer);v.removeEventListener('seeked',done);resolve()};timer=setTimeout(()=>{v.removeEventListener('seeked',done);reject(Error('Video seeking timed out.'))},10000);v.addEventListener('seeked',done);v.currentTime=t});
-function setBusy(b){for(const id of ['clipExport','clipPlay','clipAdd','clipSplit'])$(id).disabled=b;$('clipCancel').disabled=!b}
+function setBusy(b){for(const id of ['clipExport','clipPlay','clipAdd','clipSplit','clipRemove','clipUp','clipDown','clipUndo','clipRedo','clipList','clipStart','clipEnd','clipSpeed'])$(id).disabled=b;$('clipCancel').disabled=!b}
 v.addEventListener('loadedmetadata',()=>{$('clipEnd').value=v.duration.toFixed(2);info('Video ready. Add a clip.')});
 $('clipAdd').onclick=()=>{const start=Number($('clipStart').value),end=Number($('clipEnd').value);if(!ready()||!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>v.duration+.02)return info('Choose valid start and end times.');save();clips.push({start,end:Math.min(end,v.duration),speed:Number($('clipSpeed').value)});paint(clips.length-1)};
 $('clipList').onchange=()=>{const c=clips[chosen()];if(c){$('clipStart').value=c.start;$('clipEnd').value=c.end;$('clipSpeed').value=String(c.speed);v.currentTime=c.start}};
@@ -44,9 +44,11 @@ async function runTimeline(record){
   for(let i=0;i<clips.length;i++){
    if(state.cancelled)break;
    const c=clips[i];v.pause();if(rec&&rec.state==='recording')rec.pause();await seek(c.start);v.playbackRate=c.speed;
+   if(state.cancelled)break;
    if(rec&&rec.state==='inactive')rec.start(250);
    info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length);
    await v.play();
+   if(state.cancelled){v.pause();break;}
    if(rec&&rec.state==='paused')rec.resume();
    await new Promise((resolve,reject)=>{
     let completed=false,timer;const finish=(err)=>{if(completed)return;completed=true;clearInterval(timer);v.removeEventListener('ended',end);v.removeEventListener('error',error);err?reject(err):resolve()};
@@ -71,6 +73,7 @@ async function runTimeline(record){
 window.hkTimeline={
  getClips:()=>clips.map(c=>({...c})),
  restoreClips:(data)=>{
+  if(session)return info('Stop preview or export before restoring a timeline.');
   if(!Array.isArray(data)||data.length>200)return info('Saved timeline is invalid or too long.');
   const valid=data.every(c=>c&&Number.isFinite(c.start)&&Number.isFinite(c.end)&&
     Number.isFinite(c.speed)&&c.start>=0&&c.end>c.start&&c.speed>=.25&&c.speed<=4);
