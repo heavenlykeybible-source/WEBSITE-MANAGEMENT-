@@ -279,3 +279,9 @@ test('camera screen sharing and chat remain disabled until meeting admission',as
  assert.match(html,/isAdmitted=true;isRoomOwner/);
  assert.match(html,/ws.onclose=\(\)=>\{isAdmitted=false/);
 });
+
+test('late media permissions are revoked if admission ended during browser prompt',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/getUserMedia\(\{audio:true,video:true\}\);if\(!isAdmitted\)\{stream\.getTracks\(\)\.forEach\(track=>track\.stop\(\)\)/);
+ assert.match(html,/getDisplayMedia\(\{video:true\}\);if\(!isAdmitted\)\{sharing\.getTracks\(\)\.forEach\(track=>track\.stop\(\)\)/);
+});
