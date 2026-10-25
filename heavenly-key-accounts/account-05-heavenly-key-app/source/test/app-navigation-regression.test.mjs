@@ -26,6 +26,6 @@ test('Specialised feature tiles open the real tool instead of the general app or
   const destinations = new Map(features.map(match => [match[2], match[1]]));
   assert.equal(destinations.get('My Walk With God Calculator'), '/walk-offline.html');
   assert.equal(destinations.get('Bible Study Portal'), '/creation-to-eternity.html');
-  assert.ok(html.includes('href="https://onlinebible.heavenlykey.org/">Open the Bible App →'));
+  assert.ok(html.includes('href="https://onlinebible.heavenlykey.org/">Use this app now →'));
   assert.ok(html.includes('href="https://onlinebible.heavenlykey.org/install/">Bible installation instructions →'));
 });
