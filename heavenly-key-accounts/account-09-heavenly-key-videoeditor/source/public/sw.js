@@ -1,7 +1,7 @@
 'use strict';
 // Cache only public editor code and brand assets. Account data and API
 // responses must never enter CacheStorage.
-const VERSION='hk-account9-offline-v4';
+const VERSION='hk-account9-offline-v5';
 const CORE=['/','/index.html','/integrations.js','/offline-status.js','/ai-tools.js','/gateway-ui.js','/voice-enhance.js','/timeline.js','/voice-studio.js','/manifest.json','/assets/favicon.png','/assets/logo-256.png','/assets/logo-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
@@ -19,9 +19,9 @@ self.addEventListener('fetch',event=>{
   if(url.origin!==self.location.origin||url.pathname==='/api'||url.pathname.startsWith('/api/'))return;
   // Only the public editor entry point is safe to save as offline HTML.
   if(request.mode==='navigate'){
-    if(url.pathname!=='/'&&url.pathname!=='/index.html')return;
+    if((url.pathname!=='/'&&url.pathname!=='/index.html')||url.search)return;
     event.respondWith(fetch(request).then(response=>{
-      if(response.ok&&response.type!=='opaque'&&!/private|no-store/i.test(response.headers.get('cache-control')||'')){
+      if(response.ok&&response.type!=='opaque'&&!response.headers.has('set-cookie')&&!/private|no-store/i.test(response.headers.get('cache-control')||'')){
         const copy=response.clone();
         event.waitUntil(caches.open(VERSION).then(cache=>cache.put('/index.html',copy)));
       }
@@ -36,7 +36,7 @@ self.addEventListener('fetch',event=>{
   event.respondWith(caches.open(VERSION).then(async cache=>{
     const cached=await cache.match(request);
     const fresh=fetch(request).then(response=>{
-      if(response.ok&&response.type!=='opaque'&&!/private|no-store/i.test(response.headers.get('cache-control')||''))event.waitUntil(cache.put(request,response.clone()));
+      if(response.ok&&response.type!=='opaque'&&!response.headers.has('set-cookie')&&!/private|no-store/i.test(response.headers.get('cache-control')||''))event.waitUntil(cache.put(request,response.clone()));
       return response;
     }).catch(()=>null);
     if(cached){event.waitUntil(fresh);return cached}
