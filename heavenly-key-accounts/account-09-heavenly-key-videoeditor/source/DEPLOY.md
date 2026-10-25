@@ -25,6 +25,10 @@ A fresh database must apply `schema.sql`, which includes the user `role` column.
 
 No live deployment was made while creating this ZIP. Real credentials and bindings must be configured in the correct Cloudflare account before enabling production.
 
+## Existing database audit-index migration
+
+Before staging, back up the existing Account 9 D1 database and apply `migrations/0003_audit_event_index.sql` once. It adds an idempotent composite audit index to accelerate login-throttling and AI-usage lookups. New databases created using the current `schema.sql` already include it. The migration is committed only; it has not been executed on live D1.
+
 ## Preflight
 Run `npm run check` from the Account 9 source directory before dispatching GitHub Actions. The owner/admin SQL provisioning script is documented in `OWNER-ADMIN-SETUP.md`. Do not deploy before bindings and database migrations are verified.
 
