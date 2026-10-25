@@ -30,7 +30,7 @@ export class MeetingRoom extends DurableObject {
   this.locked=(await this.ctx.storage.get('roomLocked'))===true;
   const savedCapacity=await this.ctx.storage.get('roomCapacity');
   if(Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12)this.capacity=savedCapacity;
-  const admission=mayJoinRoom({isClosed:false,isExpired:false,isLocked:this.locked,role:claims.role,active:this.clients.size,capacity:Math.min(12,this.capacity)});
+  const admission=mayJoinRoom({isClosed:false,isExpired:false,isLocked:this.locked,role:claims.role,active:this.clients.size,capacity:Math.min(12,claims.role==='owner'&&!this.ownerId&&!savedCapacity?(getPlan(demo?'free':claims.planId)||getPlan('free')).participants:this.capacity)});
   if(!admission.allowed)return new Response(admission.reason,{status:admission.status});
   if(!demo&&claims.role==='owner'&&this.ownerId===claims.userId)return new Response('Owner already connected',{status:409});
   
