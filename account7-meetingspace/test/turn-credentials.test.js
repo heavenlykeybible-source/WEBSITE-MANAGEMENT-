@@ -16,3 +16,9 @@ test('TURN credential issuance validates identity, relay URLs and lifetime',asyn
  await assert.rejects(issueTurnCredentials({...options,ttlSeconds:7200}),/lifetime/);
  await assert.rejects(issueTurnCredentials({...options,sharedSecret:'short'}),/not configured/);
 });
+
+test('TURN relay endpoint validation refuses credential injection and unsupported schemes',async()=>{
+ for(const url of ['turn:user:password@relay.example.org','turns:relay.example.org/path','turn:relay.example.org?transport=invalid']){
+  await assert.rejects(issueTurnCredentials({...options,turnUrls:[url]}),/Invalid TURN URLs/);
+ }
+});
