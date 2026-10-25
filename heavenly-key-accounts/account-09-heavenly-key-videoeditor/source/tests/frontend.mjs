@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
+import { runInNewContext } from 'node:vm';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 const html=readFileSync('public/index.html','utf8');
 const module=readFileSync('public/integrations.js','utf8');
+const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
+assert.ok(srtParser,'Missing SRT time parser');
+const toSeconds=runInNewContext(srtParser+'; parseTime');
+assert.equal(toSeconds('00:00:01,5'),1.5,'Single-digit millisecond groups must represent tenths');
+assert.equal(toSeconds('01:02:03,045'),3723.045,'Three-digit millisecond groups must retain precision');
+assert.ok(Number.isNaN(toSeconds('00:61:00,000')),'Invalid SRT minutes must be rejected');
+
 const headers=readFileSync('public/_headers','utf8');
 const original=readFileSync('index.html','utf8');
 assert.equal(html,original,'Source and public HTML must match');
