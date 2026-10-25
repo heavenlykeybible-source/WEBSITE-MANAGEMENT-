@@ -5,10 +5,10 @@ import {verifyMeetingTicket} from '../src/session-tokens.js';
 const secret='account-test-signing-key-do-not-use-in-production-123';
 const now=Date.UTC(2026,9,25,12);
 const principal={authenticated:true,emailVerified:true,userId:'account-1'};
-function mockDb({owner=null,used=0,subscription=null}={}){
+function mockDb({owner=null,used=0,subscription=null,activeRoom=null,endedAt=null}={}){
  let savedOwner=owner;
  return {prepare(sql){return {bind(...args){return {
-  first:async()=>sql.includes('FROM subscriptions')?subscription:sql.includes('SUM(billed_minutes)')?{used}:sql.includes('FROM meeting_sessions')?savedOwner?{ownerId:savedOwner}:null:null,
+  first:async()=>sql.includes('FROM subscriptions')?subscription:sql.includes('SUM(billed_minutes)')?{used}:sql.includes('room_id<>?')?activeRoom?{roomId:activeRoom}:null:sql.includes('FROM meeting_sessions')?savedOwner?{ownerId:savedOwner,endedAt}:null:null,
   run:async()=>{if(!savedOwner){savedOwner=args[1];return {meta:{changes:1}}}return {meta:{changes:0}}}
  }}}}};
 }
@@ -43,4 +43,15 @@ test('fractional remaining quota cannot issue one whole meeting minute',async()=
 
 test('meeting ticket issuance requires verified email',async()=>{
  await assert.rejects(issueOwnerTicketForAccount({db:mockDb(),verifiedPrincipal:{...principal,emailVerified:false},roomId:'room123',signingSecret:secret,now}),/Verified account/);
+});
+
+test('refuses owner tickets for a previously completed room',async()=>{
+ const result=await issueOwnerTicketForAccount({db:mockDb({owner:'account-1',endedAt:now-1000}),verifiedPrincipal:principal,roomId:'room123',signingSecret:secret,now});
+ assert.equal(result.allowed,false);
+ assert.match(result.reason,/already ended/);
+});
+test('blocks simultaneous room reservations for the same account',async()=>{
+ const result=await issueOwnerTicketForAccount({db:mockDb({activeRoom:'room456'}),verifiedPrincipal:principal,roomId:'room123',signingSecret:secret,now});
+ assert.equal(result.allowed,false);
+ assert.match(result.reason,/already active/);
 });
