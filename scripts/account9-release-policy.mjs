@@ -43,6 +43,16 @@ export function consolidateAccount9Releases(items){
     return {...item,account:ACCOUNT9_TARGET.account,connection:ACCOUNT9_TARGET.connection,worker:ACCOUNT9_TARGET.worker};
   });
 }
+// Read-only queue projection: one actionable slot, older proposals retained
+// only in history for rollback/audit. No false claim of server-side mutation.
+export function projectAccount9Queue(items){
+  if(!Array.isArray(items))throw TypeError('Proposal list required');
+  const current=chooseCurrentRelease(items);
+  const active=items.filter(item=>!isAccount9Release(item)||item===current).map(item=>({...item}));
+  const history=items.filter(item=>isAccount9Release(item)&&item!==current)
+    .map(item=>({...item,status:'superseded',superseded_by:current?.id??null}));
+  return {active,history,canonical_account:current?ACCOUNT9_TARGET.account:null};
+}
 export function supersededAccount9Ids(items){
   if(!Array.isArray(items))throw TypeError('Release list required');
   const current=chooseCurrentRelease(items);
