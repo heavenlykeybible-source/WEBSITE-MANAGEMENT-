@@ -168,3 +168,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - `src/worker.js` now exposes GET `/api/plans` with provisional Free/Starter/Pro participant and minute limits and renders the information on the home page. The API explicitly marks `subscriptionsAvailable:false` and `pricingConfigured:false` instead of displaying false checkout success.
 - `test/worker.test.js` has new tests for those states and plan limits; tests are committed but NOT yet executed against the full repository.
 - Payment processing, provider setup, checkout, account identity and plan entitlement enforcement remain incomplete and unverified; do not launch paid registrations yet.
+
+## 2026-10-25: Honest production meeting-creation gate
+- Added GET `/api/meeting-access` to report whether development demo mode is explicitly enabled, while indicating public sign-in and meeting creation are still unavailable.
+- The Create Meeting homepage action checks that endpoint. It proceeds only in explicitly enabled development demo mode; otherwise it explains verified account registration is not yet connected, rather than attempting a failed unauthenticated WebSocket connection.
+- Added a worker regression test for the unavailable production creation flow. The tests have been committed but not executed against the complete repository.
