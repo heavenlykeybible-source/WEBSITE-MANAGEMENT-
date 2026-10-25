@@ -117,3 +117,12 @@ test('host-ended meeting persists terminal room state',async()=>{
  const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
  assert.equal((await room.fetch(socketRequest(ticket))).status,410);
 });
+
+test('terminal state is persisted before sockets close',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ let closedAfterPersistence=false;
+ room.clients.set('guest',{socket:{send(){},close(){closedAfterPersistence=room.ctx.storage.get('meetingClosedAt').then(Boolean)}}});
+ await room.endMeeting('host-ended');
+ assert.equal(await closedAfterPersistence,true);
+ assert.equal(await room.ctx.storage.getAlarm(),null);
+});
