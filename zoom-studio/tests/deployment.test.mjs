@@ -53,6 +53,9 @@ test('Account 8 selects its own Worker and D1 without overwriting Account 7',()=
  assert.equal(r.config.account_id,id);
  assert.equal(r.config.name,'heavenly-key-meetingspace');
  assert.equal(r.config.d1_databases[0].database_name,'heavenly-key-meetingspace-db');
+ assert.equal(r.config.main,'build/meeting-worker.mjs');
+ assert.equal(r.config.durable_objects.bindings[0].name,'MEETING_ROOMS');
+ assert.equal(r.config.migrations[0].new_sqlite_classes[0],'MeetingRooms');
 });
 test('Account 8 rejects a conflicting Cloudflare account environment',()=>{
  const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef',MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1',CF_ACCOUNT_ID:target});
