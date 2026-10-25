@@ -202,3 +202,9 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - `src/subscription-store.js` now counts both finalized billed minutes and elapsed verified active meeting minutes in the monthly usage query. Updated unit test SQL bindings and account ticket mocks.
 - **Outstanding integration:** Durable Object does not yet invoke `markVerifiedHostJoined` or `finalizeMeetingUsage` via trusted DB events. Until this is wired and tested, subscriptions and actual billing remain unimplemented. Earlier migration 0002's unique index could trap stale reservations; do not apply migrations without reconciliation.
 - No full repository CI pass or live Cloudflare D1 runtime test is confirmed; no migration has been deployed. Do not claim production billing is ready.
+
+## 2026-10-25: Durable Object to D1 meeting lifecycle integration
+- On verified owner WebSocket upgrade, `src/room-server.js` now calls `markVerifiedHostJoined(env.DB,roomId,ownerId)` **before** WebSocketPair allocation when a D1 binding exists, and persists the ledger room and owner IDs in Durable Object storage.
+- Explicit host ending and alarm shutdown call `finalizeMeetingUsage` with server time. Durable terminal marker is recorded before disconnect; a failed ledger update is logged, not treated as a successful charge. Added a Durable Object regression case for join and end database calls.
+- **NOT production-ready:** No `DB` binding or migrations applied in Cloudflare; no real login or payment processing. Full GitHub test suite has not passed. Disconnected-host lifecycle, retries for failed ledger writes, room reset/reconnect, and authoritative Cloudflare runtime testing require completion.
+- Source commits include `3acb217`, `101d987`, `319b146`, `b36c49e`; do not interpret them as deployment proof.
