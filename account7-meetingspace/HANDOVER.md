@@ -195,3 +195,10 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added `test/reservation-audit.test.js` for read-only behavior, cutoff filtering and limit validation.
 - Reconstructed these two files in a local Node.js test environment and ran `node --test`: 2 tests passed, 0 failed. This is **targeted verification only**, NOT the GitHub full suite or a Cloudflare integration test.
 - The current `started_at` record is created when reserving a room (not upon verified host media start), so automatic usage finalization could overcharge. Keep cleanup manual pending lifecycle design.
+
+## 2026-10-25: Host start and active minute accounting (code committed, deployment pending)
+- Created `migrations/0003_host_lifecycle.sql` adding `host_joined_at` to distinguish room reservation from actual verified host admission. This migration is **not applied**.
+- `src/meeting-usage-ledger.js` now exports `markVerifiedHostJoined` (idempotent first host start) and finalizes unused reservations with **zero meeting minutes**; rejects corrupt timestamps. Added targeted regression tests.
+- `src/subscription-store.js` now counts both finalized billed minutes and elapsed verified active meeting minutes in the monthly usage query. Updated unit test SQL bindings and account ticket mocks.
+- **Outstanding integration:** Durable Object does not yet invoke `markVerifiedHostJoined` or `finalizeMeetingUsage` via trusted DB events. Until this is wired and tested, subscriptions and actual billing remain unimplemented. Earlier migration 0002's unique index could trap stale reservations; do not apply migrations without reconciliation.
+- No full repository CI pass or live Cloudflare D1 runtime test is confirmed; no migration has been deployed. Do not claim production billing is ready.
