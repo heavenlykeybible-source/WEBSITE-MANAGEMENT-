@@ -11,7 +11,7 @@ export async function readMonthlyUsage(db,userId,{now=Date.now()}={}){
  const date=new Date(now);
  if(!Number.isFinite(date.getTime()))throw Error('Invalid time');
  const periodStart=Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),1);
- const row=await db.prepare('SELECT COALESCE(SUM(billed_minutes),0) AS used FROM meeting_sessions WHERE owner_user_id=? AND started_at>=? AND started_at<?').bind(userId,periodStart,now).first();
+ const row=await db.prepare('SELECT COALESCE(SUM(CASE WHEN ended_at IS NULL AND host_joined_at IS NOT NULL THEN CAST((MAX(0, ? - host_joined_at)+59999)/60000 AS INTEGER) ELSE billed_minutes END),0) AS used FROM meeting_sessions WHERE owner_user_id=? AND started_at>=? AND started_at<?').bind(now,userId,periodStart,now).first();
  const used=Number(row?.used??0);
  if(!Number.isFinite(used)||used<0)throw Error('Invalid stored usage');
  return used;
