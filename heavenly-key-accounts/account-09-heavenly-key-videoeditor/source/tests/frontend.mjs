@@ -73,4 +73,13 @@ for (const safeguard of ["invalidateExport();undo.push", "invalidateExport();cli
   assert.ok(timelineScript.includes(safeguard),'Missing timeline regression safeguard: '+safeguard);
 }
 assert.ok(timelineScript.includes("else list.value=''") ,'Empty timeline must clear selected clip');
+const manifest=JSON.parse(readFileSync('public/manifest.json','utf8'));
+assert.equal(manifest.start_url,'/','Offline application must launch at the editor root');
+assert.equal(manifest.display,'standalone','Offline app must be installable');
+assert.ok(manifest.icons.length>=2,'Installable app must include icons');
+assert.ok(html.includes('rel="manifest" href="/manifest.json"')&&html.includes("navigator.serviceWorker.register('/sw.js')"),'Editor must register the offline app');
+const sw=readFileSync('public/sw.js','utf8');
+new Script(sw,{filename:'account9-service-worker.js'});
+assert.ok(sw.includes("url.pathname.startsWith('/api/')")&&sw.includes("request.method!=='GET'"),'Service worker must bypass authenticated APIs and writes');
+assert.ok(sw.includes("request.mode==='navigate'")&&sw.includes("cache.match('/index.html')"),'Offline navigation must fall back to cached editor');
 console.log('PASS frontend integration wiring, duplicate source and security headers');
