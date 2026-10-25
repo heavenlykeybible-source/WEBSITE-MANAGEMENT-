@@ -13,7 +13,7 @@ export default {
    const target=new URL(viewer?'/api/media-engine/livekit/viewer-token':url.pathname,base);
    // This public endpoint is exclusively the radio channel, regardless of caller input.
    if(url.pathname.endsWith('/programme')||viewer)target.searchParams.set('channel','radio');
-   const headers=new Headers();headers.set('X-Heavenly-Key-Internal','media-engine-public-v1');headers.set('Authorization','Bearer '+env.RADIO_PUBLIC_API_KEY);if(request.headers.has('Range'))headers.set('Range',request.headers.get('Range'));
+   const headers=new Headers();headers.set('Authorization','Bearer '+env.RADIO_PUBLIC_API_KEY);if(request.headers.has('Range'))headers.set('Range',request.headers.get('Range'));
    // Account 2 verifies this server-side token; never expose it in browser assets.
    let response;try{response=await fetch(new Request(target,{method:request.method,headers,redirect:'manual',signal:AbortSignal.timeout(15000)}));}catch{return Response.json({error:'Broadcast engine unreachable'},{status:502,headers:{'Cache-Control':'no-store'}});}
    if(response.status>=300&&response.status<400)return Response.json({error:'Unexpected broadcast redirect'},{status:502,headers:{'Cache-Control':'no-store'}});
