@@ -32,3 +32,11 @@ test('monthly usage cap prevents new meeting issuance',async()=>{
  const result=await issueOwnerTicketForAccount({db:mockDb({used:120}),verifiedPrincipal:principal,roomId:'room123',signingSecret:secret,now});
  assert.equal(result.allowed,false);
 });
+
+test('rejects invalid room IDs before performing subscription writes',async()=>{
+ await assert.rejects(issueOwnerTicketForAccount({db:mockDb(),verifiedPrincipal:principal,roomId:'bad id',signingSecret:secret,now}),/Invalid meeting ID/);
+});
+test('fractional remaining quota cannot issue one whole meeting minute',async()=>{
+ const result=await issueOwnerTicketForAccount({db:mockDb({used:119.5}),verifiedPrincipal:principal,roomId:'room123',signingSecret:secret,now});
+ assert.equal(result.allowed,false);
+});
