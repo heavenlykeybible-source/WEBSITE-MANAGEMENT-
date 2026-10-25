@@ -225,8 +225,8 @@ export async function onRequest({ request: req, env, params }) {
         return r.meta.changes ? J({ ok: true }) : J({ error: 'Not found' }, 404);
       }
       if (p[1] && m === 'DELETE') {
-        await env.DB.prepare('DELETE FROM projects WHERE id=? AND user_id=?').bind(p[1], u.id).run();
-        return J({ ok: true });
+        const removed = await env.DB.prepare('DELETE FROM projects WHERE id=? AND user_id=?').bind(p[1], u.id).run();
+        return removed.meta.changes ? J({ ok: true }) : J({ error: 'Not found' }, 404);
       }
     }
     if (a === 'media') {
