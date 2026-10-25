@@ -244,3 +244,9 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added focused source-oriented tests for responsive controls, socket cleanup, TURN authorization and credential secrecy, relay loading, and network state messaging. These tests **have not been executed in the actual GitHub checkout or browser**.
 - Files changed: `src/worker.js`, `test/worker.test.js`. Commits include `f1cd4f3`, `32af76e`, `e4d06a3`, `601331a`, `db07dc7`, `d9260d5`, `8d93466`, `dc8ee00`, `be4933e`, `8baac93`.
 - Critical release blockers: actual Cloudflare D1 binding/migrations, configured coturn relay and secret, authenticated account/ticket issuance, payment webhook verification, full test suite, cross-device TURN/media tests, and SFU for large meetings. No deployment performed.
+
+## 2026-10-25: Admission and media privacy improvement
+- Added explicit browser admission state `isAdmitted`. The UI no longer reports the WebSocket handshake alone as successful meeting admission; it waits for the server's `peers` acceptance message.
+- Camera, microphone, screen sharing and the send-chat button are blocked before server admission; failed/closed sockets reset permission state and disable chat. Denied admissions close the socket.
+- Added frontend regression assertions in `test/worker.test.js`. Commits `b177c34`, `9821557`, `dcecaf6`, `cd59ad2` saved to branch.
+- Only source-level tests were authored, not run in the full checkout; integration security tests for media, peer permission events and TURN access are still needed. No production deploy or payment activation.
