@@ -4,7 +4,7 @@ import {issueMeetingTicket} from './session-tokens.js';
 // This service must be called only AFTER verifying the session on the trusted server.
 // Never take userId, role or planId from an unauthenticated JSON request.
 export async function issueOwnerTicketForAccount({db,verifiedPrincipal,roomId,signingSecret,now=Date.now()}){
- if(!verifiedPrincipal?.authenticated||typeof verifiedPrincipal.userId!=='string'||!verifiedPrincipal.userId)
+ if(verifiedPrincipal?.authenticated!==true||verifiedPrincipal.emailVerified!==true||typeof verifiedPrincipal.userId!=='string'||!verifiedPrincipal.userId)
   throw Error('Verified account session required');
  if(typeof signingSecret!=='string'||signingSecret.length<32)throw Error('Ticket signing not configured');
  if(typeof roomId!=='string'||!/^[A-Za-z0-9_-]{6,80}$/.test(roomId))throw Error('Invalid meeting ID');
