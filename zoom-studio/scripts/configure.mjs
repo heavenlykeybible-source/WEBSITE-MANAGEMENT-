@@ -1,7 +1,7 @@
 // Generate a safe, explicit deployment config. Never silently select another account.
 import fs from 'node:fs';
-const target=process.env.MEETINGSPACE_TARGET_ACCOUNT || '7';
-if(!['7','8'].includes(target)) throw Error('MEETINGSPACE_TARGET_ACCOUNT must be 7 or 8');
+const target=process.env.MEETINGSPACE_TARGET_ACCOUNT || '8';
+if(target!=='8') throw Error('This is Account 8 MeetingSpace; Account 7 is Heavenly Key Radio and must not be targeted');
 const legacyId='6401a8f41a41f5325ba5bd4d006b4ff5';
 const accountId=target==='7'?legacyId:process.env.MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID;
 if(!/^[a-f0-9]{32}$/i.test(accountId||'')) throw Error('Account '+target+' requires a valid Cloudflare account ID; deployment stopped');
