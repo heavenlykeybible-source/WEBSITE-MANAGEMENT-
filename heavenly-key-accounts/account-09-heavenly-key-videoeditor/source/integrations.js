@@ -13,10 +13,11 @@
   const refresh=el('button',{type:'button',text:'Refresh projects'},panel);
   const list=el('ul',{},panel);
   const status=el('div',{class:'status',role:'status',text:'Sign in to manage cloud projects.'},panel);
-  let selected=null;
+  let selected=null,libraryGeneration=0;
   async function loadProjects(){
+    const generation=libraryGeneration;
     try {
-      const items=await json('projects');list.replaceChildren();
+      const items=await json('projects');if(generation!==libraryGeneration)return;list.replaceChildren();
       for(const p of items){
         const li=el('li',{},list);el('span',{text:p.name+' · '+new Date(p.updated_at).toLocaleString()+' '},li);
         const open=el('button',{type:'button',text:'Open'},li);
@@ -24,7 +25,7 @@
         const remove=el('button',{type:'button',text:'Delete'},li);remove.onclick=async()=>{if(!confirm('Delete project '+p.name+'?'))return;try{await json('projects/'+encodeURIComponent(p.id),'DELETE');if(selected===p.id)selected=null;await loadProjects()}catch(e){status.textContent=e.message}};
       }
       status.textContent=items.length+' cloud project(s) available.';
-    }catch(e){status.textContent=e.message}
+    }catch(e){if(generation===libraryGeneration)status.textContent=e.message}
   }
   refresh.onclick=loadProjects;
   const update=el('button',{type:'button',text:'Update selected cloud project'},panel);
@@ -35,7 +36,7 @@
   const upload=el('button',{type:'button',text:'Upload selected file'},media);
   const mediaRefresh=el('button',{type:'button',text:'Refresh media'},media);
   const ml=el('ul',{},media);const ms=el('div',{class:'status',role:'status',text:'Sign in to view cloud media.'},media);
-  async function loadMedia(){try{const d=await json('media');ml.replaceChildren();for(const f of d.items){const li=el('li',{},ml);el('span',{text:f.name+' ('+(f.size/1048576).toFixed(1)+' MB) '},li);const a=el('a',{href:'/api/media/'+encodeURIComponent(f.id),text:'Open / Download'},li);a.target='_blank';a.rel='noopener noreferrer';
+  async function loadMedia(){const generation=libraryGeneration;try{const d=await json('media');if(generation!==libraryGeneration)return;ml.replaceChildren();for(const f of d.items){const li=el('li',{},ml);el('span',{text:f.name+' ('+(f.size/1048576).toFixed(1)+' MB) '},li);const a=el('a',{href:'/api/media/'+encodeURIComponent(f.id),text:'Open / Download'},li);a.target='_blank';a.rel='noopener noreferrer';
       if(f.type.startsWith('video/')||f.type.startsWith('audio/')){
         const edit=el('button',{type:'button',text:'Edit in '+(f.type.startsWith('video/')?'Video':'Audio')+' Editor'},li);
         edit.onclick=async()=>{
@@ -83,6 +84,6 @@
     }catch(e){message('vm','Transcription failed: '+e.message)}finally{button.disabled=false}
   };
   const originalLogin=$('login').onclick;$('login').onclick=async()=>{await originalLogin();try{await json('me');await Promise.allSettled([loadProjects(),loadMedia()])}catch{status.textContent='Sign in to manage cloud projects.';ms.textContent='Sign in to manage cloud media.'}};
-  const originalLogout=$('logout').onclick;$('logout').onclick=async()=>{await originalLogout();try{await json('me')}catch{selected=null;list.replaceChildren();ml.replaceChildren();status.textContent='Signed out. Cloud projects hidden.';ms.textContent='Signed out. Cloud media hidden.'}};
+  const originalLogout=$('logout').onclick;$('logout').onclick=async()=>{libraryGeneration++;selected=null;list.replaceChildren();ml.replaceChildren();await originalLogout();try{await json('me')}catch{selected=null;list.replaceChildren();ml.replaceChildren();status.textContent='Signed out. Cloud projects hidden.';ms.textContent='Signed out. Cloud media hidden.'}};
   json('me').then(d=>{message('authmsg','Signed in: '+d.email+' ('+d.role+')');loadProjects();loadMedia()}).catch(()=>{});
 })();
