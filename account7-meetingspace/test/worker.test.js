@@ -1,3 +1,4 @@
+import {Script} from 'node:vm';
 import {issueMeetingTicket} from '../src/session-tokens.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -292,4 +293,12 @@ test('waiting room automatically removes withdrawn requests and deduplicates rep
  assert.match(html,/getElementById\('waiting-'\+m.id\)\?\.remove\(\)/);
  assert.match(html,/if\(document.getElementById\('waiting-'\+m.id\)\)return/);
  assert.match(html,/row.id='waiting-'\+m.id/);
+});
+
+test('embedded browser module parses as executable JavaScript',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/'),mockEnv);
+ const html=await response.text();
+ const matches=[...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
+ assert.equal(matches.length,1);
+ assert.doesNotThrow(()=>new Script(matches[0][1],{filename:'meetingspace-browser.js'}));
 });
