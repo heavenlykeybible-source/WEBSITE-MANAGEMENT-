@@ -64,6 +64,17 @@ const project = await request('projects', { method: 'POST', cookie: login.cookie
 check('Project creation succeeds', project.status === 200 && !!project.data?.id);
 const projects = await request('projects', { cookie: login.cookie });
 check('Project listing succeeds', projects.status === 200 && Array.isArray(projects.data));
+const accountId = db.prepare('SELECT id FROM users WHERE email=?').get('smoke@example.com').id;
+const seed = db.prepare('INSERT INTO projects(id,user_id,name,data,updated_at) VALUES(?,?,?,?,?)');
+for(let n=1;n<200;n++) seed.run('project-seed-'+n,accountId,'Seed project','{}',Date.now());
+const overflow = await request('projects',{method:'POST',cookie:login.cookie,body:{name:'Beyond limit',data:{}}});
+check('Project quota rejects creation past 200',overflow.status===409);
+check('Project quota retains exactly 200 records',db.prepare('SELECT COUNT(*) count FROM projects WHERE user_id=?').get(accountId).count===200);
+const removed = await request('projects/'+project.data.id,{method:'DELETE',cookie:login.cookie});
+check('Removing a project frees a quota slot',removed.status===200);
+const afterRemoval = await request('projects',{method:'POST',cookie:login.cookie,body:{name:'Replacement',data:{}}});
+check('Project creation resumes after deletion',afterRemoval.status===200);
+
 const anonymousGateway = await request('ai-connections');
 check('AI accounts cannot be listed anonymously', anonymousGateway.status === 401);
 const accounts = await request('ai-connections', { cookie: login.cookie });
