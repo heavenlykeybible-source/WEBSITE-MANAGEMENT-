@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {parseHTML} from 'linkedom';
+import {improveWaitingPreviews} from '../cms/waiting-previews.mjs';
+const source=fs.readFileSync('control-room-worker.js','utf8');
+assert.equal(improveWaitingPreviews(source),source,'Build integration must be idempotent');
+const queue=source.slice(source.indexOf('async function waiting('),source.indexOf('async function openP('));
+assert.match(queue,/workerDemoCard\(p.id,content\)/);
+assert.doesNotMatch(queue,/Review proposed Worker source and settings/);
+const {document}=parseHTML('<html><body></body></html>');
+function h(tag,attrs,...children){const el=document.createElement(tag);for(const [k,v]of Object.entries(attrs||{})){if(k.startsWith('on'))el[k]=v;else el.setAttribute(k==='class'?'class':k,v);}for(const c of children)el.append(typeof c==='string'?document.createTextNode(c):c);return el;}
+const ctx={h,api:async()=>({url:'/demo/',files:['/index.html','/about.html','/app.js'],notice:'Frontend only; backend disabled.'})};vm.createContext(ctx);
+vm.runInContext(fs.readFileSync('workspace/review-layout-client.js','utf8')+'\n'+fs.readFileSync('workspace/release-preview-client.js','utf8'),ctx);
+const frame=h('iframe',{}),pre=h('pre',{},'export default '+ 'x'.repeat(100000)),out=ctx.previewFirstReview([h('h3',{},'Review'),frame,pre]);
+assert.equal(out[1],frame);assert.equal(out[2].tagName,'DETAILS');assert.equal(out[2].hasAttribute('open'),false);assert.equal(out[2].querySelector('pre'),pre);assert.match(pre.getAttribute('style'),/overflow:auto/);
+const mount=h('section',{});await ctx.workerDemoCard(22,mount);
+const demo=mount.querySelector('iframe');assert.equal(demo.getAttribute('src'),'/demo/index.html');assert.equal(demo.getAttribute('sandbox').includes('allow-same-origin'),false);
+assert.equal(mount.querySelectorAll('option').length,2);
+const buttons=[...mount.querySelectorAll('button')];buttons.find(b=>b.textContent==='Phone').onclick();assert.equal(demo.style.width,'390px');buttons.find(b=>b.textContent==='Desktop').onclick();assert.equal(demo.style.width,'100%');
+ctx.api=async()=>{throw Error('No embedded assets')};const unavailable=h('section',{});await ctx.workerDemoCard(23,unavailable);assert.match(unavailable.textContent,/no usable website demo/);assert.equal(unavailable.querySelector('details').hasAttribute('open'),false);
+console.log('PASS Waiting Room: rendered demo in queue, code collapsed, bounded source, responsive controls, included page list and honest missing-preview state');

@@ -1,3 +1,4 @@
+import {improveWaitingPreviews} from './waiting-previews.mjs';
 import {smoothChat} from './chat-session.mjs';
 import {improveCodingChat} from './chat-productivity.mjs';
 import {repairChat} from './chat-resilience.mjs';
@@ -29,7 +30,7 @@ if(worker.includes('// BEGIN OWNER PASSKEY CLIENT'))worker=worker.replace(/\/\/ 
 else worker=worker.replace('async function passwordDialog(',passkeySection+'\nasync function passwordDialog(');
 const oauthServer='// BEGIN CLOUDFLARE OAUTH SERVER\n'+fs.readFileSync(new URL('../workspace/cloudflare-oauth.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/release-preview.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/studio-sso.js',import.meta.url),'utf8')+'\n// END CLOUDFLARE OAUTH SERVER';
 if(worker.includes('// BEGIN CLOUDFLARE OAUTH SERVER'))worker=worker.replace(/\/\/ BEGIN CLOUDFLARE OAUTH SERVER[\s\S]*?\/\/ END CLOUDFLARE OAUTH SERVER/,()=>oauthServer);else worker=oauthServer+'\n'+worker;
-const releaseClient='// BEGIN RELEASE CLIENT\n'+(fs.readFileSync(new URL('../workspace/release-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/release-preview-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/studio-sso-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/database-recovery-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END RELEASE CLIENT';
+const releaseClient='// BEGIN RELEASE CLIENT\n'+(fs.readFileSync(new URL('../workspace/release-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/release-preview-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/review-layout-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/studio-sso-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/database-recovery-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END RELEASE CLIENT';
 if(worker.includes('// BEGIN RELEASE CLIENT'))worker=worker.replace(/\/\/ BEGIN RELEASE CLIENT[\s\S]*?\/\/ END RELEASE CLIENT/,()=>releaseClient);else worker=worker.replace('async function claude()',()=>releaseClient+'\nasync function claude()');
 worker=worker.replace('const tok = await unseal(env, conn.token_enc);','const tok = await cfOAuthToken(env, conn);');
 if(!worker.includes('const oauthConnection=await cfOAuthRoutes'))worker=worker.replace('  const operations=await controlOperationsRoutes','  const oauthConnection=await cfOAuthRoutes(req,env,user,sub,m);if(oauthConnection)return oauthConnection;\n  const operations=await controlOperationsRoutes');
@@ -63,6 +64,7 @@ if(!worker.includes('const recoveryPoints=await recoveryPointRoutes'))worker=wor
 if(!worker.includes("'Database recovery points'"))worker=worker.replace("actions.appendChild(h('button',{onclick:function(){workerRecovery(connection,w,recovery);}},'Review rollback versions'));", "actions.appendChild(h('button',{onclick:function(){workerRecovery(connection,w,recovery);}},'Review rollback versions'));actions.appendChild(h('button',{onclick:function(){databaseRecoveryCard(connection,w.name,recovery);}},'Database recovery points'));");
 if(!worker.includes('const tinyfish=await tinyfishRoutes'))worker=worker.replace('  const operations=await controlOperationsRoutes','  const tinyfish=await tinyfishRoutes(req,env,user,sub,m);if(tinyfish)return tinyfish;\n  const operations=await controlOperationsRoutes');
 if(!worker.includes('const renamedPortals=await renamePublicPortals'))worker=worker.replace('  const domains=await domainWorkspaceRoutes','  const renamedPortals=await renamePublicPortals(req,env,user,sub,m);if(renamedPortals)return renamedPortals;\n  const domains=await domainWorkspaceRoutes');
+worker=improveWaitingPreviews(worker);
 if (!worker.trim()) throw new Error('Refusing CMS build: active Worker source is empty');
 const requiredMarkers = [
   ['VISUAL CMS CLIENT', '// BEGIN VISUAL CMS CLIENT', '// END VISUAL CMS CLIENT'],
