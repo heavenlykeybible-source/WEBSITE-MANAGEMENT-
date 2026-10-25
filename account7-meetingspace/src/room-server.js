@@ -1,3 +1,4 @@
+import {safeMessage} from './meeting-policy.js';
 import {verifyMeetingTicket} from './session-tokens.js';
 import {getPlan} from './subscription-plans.js';
 
@@ -53,7 +54,8 @@ export class MeetingRoom extends DurableObject {
    const now=Date.now();if(this.meetingDeadline&&now>=this.meetingDeadline){void this.alarm();return}if(now-windowStart>10000){windowStart=now;count=0}
    if(++count>100){server.close(1008,'Rate limit');return}
    if(typeof event.data!=='string'||event.data.length>120000){server.close(1009,'Message too large');return}
-   let msg;try{msg=JSON.parse(event.data)}catch{return}
+   const msg=safeMessage(event.data);
+   if(!msg)return;
    if(record.role==='owner'&&record.admitted&&msg.type==='admission-decision'){
     const target=this.clients.get(msg.id);
     if(!target||target.admitted||!['admit','deny'].includes(msg.decision))return;
