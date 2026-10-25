@@ -36,6 +36,8 @@ assert.ok(timelineScript.includes('window.hkTimeline='),'Timeline state bridge m
 assert.ok(html.includes('timeline:window.hkTimeline?.getClips()'),'Project snapshots must contain timeline');
 assert.ok(html.includes('restoreClips(d.timeline||[])'),'Local projects must restore timeline');
 assert.ok(module.includes('restoreClips(state.timeline||[])'),'Cloud projects must restore timeline');
+assert.ok(module.includes("const originalLogout=$('logout').onclick")&&module.includes('selected=null;list.replaceChildren();ml.replaceChildren()'),'Sign out must clear private cloud library data');
+assert.ok(module.includes("try{await json('me');await Promise.allSettled"),'Cloud libraries must only load after verified login');
 for (const wiring of ['new DataTransfer()', "input.dispatchEvent(new Event('change'", "fetch('/api/media/'+encodeURIComponent(f.id)", "f.type.startsWith('video/')||f.type.startsWith('audio/')"]) assert.ok(module.includes(wiring),'Cloud media editor import missing: '+wiring);
 assert.ok(module.includes('Math.min(end,Math.max(start'),'Caption word timings must remain within each processed chunk');
 assert.ok(timelineScript.includes('rec.pause()') && timelineScript.includes('rec.resume()'),'Export recorder must skip clip seeking');
