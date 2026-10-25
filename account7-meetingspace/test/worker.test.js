@@ -148,3 +148,10 @@ test('meeting UI only offers participant removal controls to owners',async()=>{
  assert.match(html,/if\(!isRoomOwner\|\|document.getElementById/);
  assert.match(html,/type:'remove-participant'/);
 });
+
+test('meeting UI includes owner-only end-for-everyone control',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/id="endMeeting"/);
+ assert.match(html,/if\(isRoomOwner&&confirm/);
+ assert.match(html,/type:'end-meeting'/);
+});
