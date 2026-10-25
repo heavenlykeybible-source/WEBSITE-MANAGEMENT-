@@ -148,3 +148,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 ## 2026-10-25: Verified-email ticket gate
 - Owner ticket issuance now requires BOTH a verified authenticated principal and `emailVerified === true`; the account meeting service tests now use verified-email identities and include an unverified-email rejection regression.
 - New commits were saved; these changes and the full repository still require a green automated test suite before release.
+
+## 2026-10-25: Host ends meeting for everyone
+- Added owner-only `end-meeting` server command reusing the same terminal meeting closure as timed expiry. Added `End meeting for everyone` browser control inside owner-only panel, with confirmation.
+- Durable Object writes `meetingClosedAt`, cancels alarm, closes connected sockets, and rejects tickets for ended room IDs. Regression tests added to `test/worker.test.js` and `test/room-server.test.js`.
+- Tests are committed but NOT yet successfully executed. Billing ledger finalization is not wired to this event, and production WebSocket hibernation recovery remains incomplete. Do not launch without runtime tests.
