@@ -12,6 +12,17 @@ assert.equal(chooseCurrentRelease([{id:3,account:'account9',version:'v9'},{id:4,
 assert.equal(chooseCurrentRelease([{id:3,account:'account9',version:'v5.9'},{id:4,account:'account9',version:'v5.10'}])?.id,4,'v5.10 supersedes v5.9');
 
 assert.deepEqual(supersededAccount9Ids(rows),[27],'Old Account 9 release is superseded');
+const controlRoomRows=[
+ {id:27,kind:'worker',name:'heavenlykey-studio',connection:8,version:'v4'},
+ {id:28,kind:'worker',name:'heavenlykey-studio',connection:'8',version:'v5'},
+ {id:30,kind:'worker',name:'heavenlykey-studio',connection:4,version:'v1'},
+ {id:31,account_name:'Account 09',worker:'heavenlykey-studio',version:'v2'}
+];
+const roomQueue=projectAccount9Queue(controlRoomRows);
+assert.equal(roomQueue.active.filter(x=>x.name==='heavenlykey-studio'&&String(x.connection)==='8').length,1,'Control Room connection 8 must have one active Worker proposal');
+assert.deepEqual(roomQueue.history.map(x=>x.id).sort((a,b)=>a-b),[27,31],'Previous target proposals must be superseded');
+assert.ok(roomQueue.active.some(x=>x.id===30),'Identical Worker names on a different account stay untouched');
+
 const consolidated=consolidateAccount9Releases(rows);
 assert.equal(consolidated.length,2,'Single Account 9 release remains');
 const queue=projectAccount9Queue(rows);
