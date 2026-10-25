@@ -68,3 +68,11 @@ test('restored room capacity takes effect before accepting a new socket',async()
  assert.equal((await room.fetch(socketRequest(ticket))).status,429);
  assert.equal(room.capacity,2);
 });
+
+test('a persisted host lock refuses a new participant after object recreation',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ await room.ctx.storage.put('roomLocked',true);
+ room.ownerId='owner';
+ const guestTicket=await issueMeetingTicket({roomId:'room123',userId:'guest',role:'participant',secret});
+ assert.equal((await room.fetch(socketRequest(guestTicket))).status,403);
+});
