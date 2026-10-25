@@ -7,6 +7,7 @@ const headers=readFileSync('public/_headers','utf8');
 const original=readFileSync('index.html','utf8');
 assert.equal(html,original,'Source and public HTML must match');
 assert.ok(html.includes('href="#studio-main" class="skip-link"')&&html.includes('<main id="studio-main" tabindex="-1">'),'Keyboard skip link must target primary editor content');
+for(const check of ["Number(m[4].padEnd(3,'0'))/1000",'if(!caption||!Number.isFinite(start)||!Number.isFinite(end)||end<=start||layers.length>=500)']) assert.ok(html.includes(check),'Safe SRT parser must reject invalid timing and cap subtitles: '+check);
 assert.ok(html.includes('aria-label="Studio sections"')&&html.includes("setAttribute('aria-pressed'"),'Navigation must expose active section to assistive technology');
 assert.ok(html.includes('button:focus-visible')&&html.includes('<label for="af">Choose audio</label>'),'Keyboard focus and audio upload label required');
 assert.ok(html.includes("if(exportURL){URL.revokeObjectURL(exportURL);exportURL=''}"),'Selecting a new video must invalidate the prior export');
