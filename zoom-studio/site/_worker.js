@@ -115,6 +115,8 @@ const sysMsg = (env, team, text, kind = 'sys', meta = null) => env.TEAMDB.prepar
 async function teamRoutes(request, env, url, path, email, active) {
   if (!env.TEAMDB) return json({ error: 'Groups are not set up yet.' }, 501);
   const DB = env.TEAMDB, now = Date.now(), post = request.method === 'POST';
+  const readRoutes = new Set(['/api/teams','/api/team/invite-preview','/api/team/members','/api/team/messages','/api/team/meetings','/api/team/meeting/report','/api/programs']);
+  if (readRoutes.has(path) ? request.method !== 'GET' : !post) return json({ error: 'Method not allowed.' }, 405);
   let b = {}; if (post) { try { b = await request.json(); } catch {} }
   const T = String(b.team || url.searchParams.get('team') || '').replace(/[^0-9a-f]/g, '');
   const need = async (roles) => { const r = await roleOf(env, T, email); return r && (!roles || roles.includes(r)) ? r : null; };
