@@ -31,9 +31,9 @@ function communityWelcome(){
  if(session?.user?.userId)return null;
  const banner=el('section',null,'gc-visitor-banner');
  banner.setAttribute('aria-labelledby','gc-welcome-title');
- const image=el('img');image.src='assets/global-christian-community-approved-banner.jpeg';
+ const image=el('img');image.src='assets/global-christian-social-network-approved-banner.jpeg';
  image.alt='Global Christian Social Network — Together We Take Christ To The Nations Of The World';
- image.width=1536;image.height=614;image.fetchPriority='high';image.decoding='async';
+ image.width=1983;image.height=793;image.fetchPriority='high';image.decoding='async';
  // Other public views keep their compact invitation and existing page styling.
  if(page!=='home'){
   const actions=el('div',null,'gc-visitor-actions'),join=el('a','Join the Community','btn gold'),signin=el('a','Sign In','btn primary');
