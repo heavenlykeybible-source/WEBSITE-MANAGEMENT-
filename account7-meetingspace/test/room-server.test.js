@@ -76,3 +76,17 @@ test('a persisted host lock refuses a new participant after object recreation',a
  const guestTicket=await issueMeetingTicket({roomId:'room123',userId:'guest',role:'participant',secret});
  assert.equal((await room.fetch(socketRequest(guestTicket))).status,403);
 });
+
+test('new pro room uses signed plan capacity at initialization',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',planId:'pro',secret});
+ const previousPair=globalThis.WebSocketPair;
+ const previousResponse=globalThis.Response;
+ try{
+  globalThis.WebSocketPair=class {constructor(){return {0:{},1:{accept(){},send(){},addEventListener(){}}}}};
+  globalThis.Response=class extends previousResponse {constructor(body,options){super(body,options?.status===101?{status:200}:options)}};
+  await room.fetch(socketRequest(ticket));
+  assert.equal(room.capacity,12);
+  assert.equal(await room.ctx.storage.get('roomCapacity'),12);
+ }finally{globalThis.Response=previousResponse;globalThis.WebSocketPair=previousPair}
+});
