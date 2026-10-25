@@ -112,3 +112,7 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Added connected-participants list and owner-only Remove controls to `src/worker.js`; the existing server already checks owner privileges for `remove-participant` messages. The UI hides host-only panels from waiting guests and admitted participants.
 - Added `test/worker.test.js` checks for the owner guard and actual signalling command. Tests are committed but have NOT been run; browser verification still required.
 - NOTE: user accounts, subscriptions, paid access and actual video infrastructure remain incomplete. No verified public deployment.
+
+## 2026-10-25: Post-disconnect signaling guard
+- `src/room-server.js` now ignores messages from sockets that have already been removed from the active client registry. This closes a race where removed participants could continue processing old signal/chat events before connection shutdown.
+- Commit `0f90e97bf8671ee8a5cdbee006640f33535e89ab` saved on development branch. Runtime and full test suite remain unverified; DO socket recovery remains incomplete.
