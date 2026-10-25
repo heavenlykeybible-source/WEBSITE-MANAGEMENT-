@@ -87,6 +87,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
     const id=await createSession(env,{userId:Number(row.user_id),role:row.role,status:row.status});
     return json({ok:true,userId:Number(row.user_id),role:row.role},200,{"Set-Cookie":sessionCookie(id)});
   }
+  if(p==="/api/auth/logout"&&m==="POST"){await destroySession(request,env);return json({ok:true},200,{"Set-Cookie":clearSessionCookie()});}
   const current=await getSession(request,env);
   if(current?.status==='restricted'&&!['/api/me','/api/me/safety','/api/me/requests','/api/auth/logout','/api/care/preferences'].includes(p))return error('Your account is locked pending administrator review. Open Safety & privacy to read the reason and request review.',403);
   // Timed restrictions do not change account roles/status or release administrator locks.

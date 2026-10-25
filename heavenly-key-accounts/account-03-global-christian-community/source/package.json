@@ -23,11 +23,13 @@
     "test:spaces": "node --test test/spaces.checks.mjs",
     "test:care": "node --test test/community-care.checks.mjs",
     "test:home": "node --test test/approved-home-layout.checks.mjs test/approved-dashboard.checks.mjs test/home-loading.checks.mjs test/no-ai.checks.mjs",
-    "test:security": "node --test test/session-security.checks.mjs"
+    "test:security": "node --test test/session-security.checks.mjs",
+    "test:browser": "node test/browser-posting.checks.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261015.1",
     "linkedom": "0.18.13",
+    "playwright": "1.62.1",
     "typescript": "^5.5.0",
     "wrangler": "4.151.0"
   }

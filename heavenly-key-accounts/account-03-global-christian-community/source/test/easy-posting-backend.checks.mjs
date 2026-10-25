@@ -29,5 +29,8 @@ test('Easy posting: real Worker and SQLite round-trip, ownership and moderation'
  env.COMMUNITY_BLOCKED_WORDS='blockedphrase';assert.equal((await req('/api/posts',{...input,body:'A blockedphrase message'},member)).status,400);assert.equal((await req('/api/posts/'+id,{...input,body:'A blockedphrase message'},member,'PATCH')).status,400);assert.equal((await read()).data.items[0].body,'Updated hope');
  delete env.COMMUNITY_BLOCKED_WORDS;const held=await req('/api/posts',{...input,body:'You are stupid'},member);assert.equal(held.status,201);assert.equal(held.data.status,'held');assert.equal((await req('/api/feed?postId='+held.data.postId)).data.items.length,0);
  assert.equal((await req('/api/posts',{...input,body:'x'.repeat(10001)},member)).status,400);
+
+ const deniedLogout=await req('/api/auth/logout',{},member,'POST',{Origin:'https://untrusted.invalid'});assert.equal(deniedLogout.status,403);assert.equal((await req('/api/me',null,member)).status,200);
+ const signedOut=await req('/api/auth/logout',{},member);assert.equal(signedOut.status,200);assert.ok(signedOut.cookies.some(c=>c.includes('gc_session=;')&&c.includes('Max-Age=0')));assert.equal((await req('/api/me',null,member)).status,401);assert.equal((await req('/api/posts',input,member)).status,401);
  }finally{globalThis.fetch=realFetch;db.close();rmSync(dir,{recursive:true,force:true});}
 });
