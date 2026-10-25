@@ -35,7 +35,26 @@
   const upload=el('button',{type:'button',text:'Upload selected file'},media);
   const mediaRefresh=el('button',{type:'button',text:'Refresh media'},media);
   const ml=el('ul',{},media);const ms=el('div',{class:'status',role:'status',text:'Sign in to view cloud media.'},media);
-  async function loadMedia(){try{const d=await json('media');ml.replaceChildren();for(const f of d.items){const li=el('li',{},ml);el('span',{text:f.name+' ('+(f.size/1048576).toFixed(1)+' MB) '},li);const a=el('a',{href:'/api/media/'+encodeURIComponent(f.id),text:'Open / Download'},li);a.target='_blank';a.rel='noopener noreferrer';const del=el('button',{type:'button',text:'Delete'},li);del.onclick=async()=>{if(!confirm('Delete '+f.name+'?'))return;try{await json('media/'+encodeURIComponent(f.id),'DELETE');await loadMedia()}catch(e){ms.textContent=e.message}}}ms.textContent='Storage used: '+(d.used/1048576).toFixed(1)+' / '+(d.quota/1048576).toFixed(0)+' MB'}catch(e){ms.textContent=e.message}}
+  async function loadMedia(){try{const d=await json('media');ml.replaceChildren();for(const f of d.items){const li=el('li',{},ml);el('span',{text:f.name+' ('+(f.size/1048576).toFixed(1)+' MB) '},li);const a=el('a',{href:'/api/media/'+encodeURIComponent(f.id),text:'Open / Download'},li);a.target='_blank';a.rel='noopener noreferrer';
+      if(/^video\\/|^audio\\//.test(f.type)){
+        const edit=el('button',{type:'button',text:'Edit in '+(f.type.startsWith('video/')?'Video':'Audio')+' Editor'},li);
+        edit.onclick=async()=>{
+          edit.disabled=true;ms.textContent='Loading '+f.name+' into the editor…';
+          try{
+            const res=await fetch('/api/media/'+encodeURIComponent(f.id),{credentials:'same-origin'});
+            if(!res.ok){const err=await res.json().catch(()=>({}));throw Error(err.error||'Cannot load cloud media');}
+            const blob=await res.blob();if(!blob.size)throw Error('Cloud media is empty');
+            if(!window.DataTransfer)throw Error('This browser requires downloading the file before editing.');
+            const input=$(f.type.startsWith('video/')?'vf':'af'),dt=new DataTransfer();
+            dt.items.add(new File([blob],f.name,{type:f.type}));input.files=dt.files;
+            input.dispatchEvent(new Event('change',{bubbles:true}));
+            document.querySelector('nav button[data-p="'+(f.type.startsWith('video/')?'video':'audio')+'"]')?.click();
+            ms.textContent=f.name+' loaded into the editor.';
+          }catch(e){ms.textContent='Could not load media: '+e.message}
+          finally{edit.disabled=false}
+        };
+      }
+      const del=el('button',{type:'button',text:'Delete'},li);del.onclick=async()=>{if(!confirm('Delete '+f.name+'?'))return;try{await json('media/'+encodeURIComponent(f.id),'DELETE');await loadMedia()}catch(e){ms.textContent=e.message}}}ms.textContent='Storage used: '+(d.used/1048576).toFixed(1)+' / '+(d.quota/1048576).toFixed(0)+' MB'}catch(e){ms.textContent=e.message}}
   mediaRefresh.onclick=loadMedia;
   upload.onclick=async()=>{const f=picker.files?.[0];if(!f)return ms.textContent='Choose a file.';if(f.size>50*1048576)return ms.textContent='File exceeds 50 MB.';upload.disabled=true;ms.textContent='Uploading…';try{const r=await fetch('/api/media?name='+encodeURIComponent(f.name),{method:'POST',credentials:'same-origin',headers:{'content-type':f.type||'application/octet-stream','x-requested-with':'hk'},body:f});const d=await r.json();if(!r.ok)throw Error(d.error||'Upload failed');ms.textContent='Uploaded '+f.name;await loadMedia()}catch(e){ms.textContent=e.message}finally{upload.disabled=false}};
   // AI transcription: decode audio locally and send short, mono 16 kHz WAV chunks.
