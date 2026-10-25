@@ -166,3 +166,14 @@ test('public subscription catalog shows limits without enabling unconfigured pay
  const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
  assert.match(html,/id="planCards"/);
 });
+
+test('meeting access endpoint discloses public creation availability without credentials',async()=>{
+ const response=await worker.fetch(new Request('https://example.test/api/meeting-access'),mockEnv);
+ assert.equal(response.status,200);
+ const access=await response.json();
+ assert.equal(access.publicMeetingCreationAvailable,false);
+ assert.equal(access.signInConnected,false);
+ assert.equal(access.developmentDemo,false);
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/Meeting creation requires a registered, verified account/);
+});
