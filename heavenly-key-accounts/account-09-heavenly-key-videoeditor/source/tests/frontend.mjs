@@ -52,6 +52,8 @@ execFileSync(process.execPath,['--check','public/integrations.js'],{stdio:'inher
 execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
 const timelineScript=readFileSync('timeline.js','utf8');
 assert.ok(timelineScript.includes('window.hkTimeline='),'Timeline state bridge must exist');
+assert.ok(timelineScript.includes('id="clipUpdate"')&&timelineScript.includes("$('clipUpdate').onclick=()=>")&&timelineScript.includes('clips[i]={start,end:Math.min(end,v.duration),speed}'),'Timeline selected clip edits must update trim and speed');
+assert.ok(timelineScript.includes("'clipSplit','clipUpdate','clipRemove'"),'Editing clips must lock during timeline export');
 assert.ok(html.includes('timeline:window.hkTimeline?.getClips()'),'Project snapshots must contain timeline');
 assert.ok(html.includes('restoreClips(d.timeline||[])'),'Local projects must restore timeline');
 assert.ok(module.includes('restoreClips(state.timeline||[])'),'Cloud projects must restore timeline');
