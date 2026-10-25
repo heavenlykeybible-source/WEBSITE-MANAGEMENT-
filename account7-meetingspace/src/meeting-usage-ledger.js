@@ -6,6 +6,7 @@ export async function markVerifiedHostJoined(db,roomId,ownerId,joinedAt=Date.now
  if(update.meta?.changes===1)return {started:true,joinedAt};
  const existing=await db.prepare('SELECT host_joined_at AS joinedAt,ended_at AS endedAt FROM meeting_sessions WHERE room_id=? AND owner_user_id=?').bind(roomId,ownerId).first();
  if(!existing||existing.endedAt!=null)throw Error('Meeting is not open');
+ if(!Number.isSafeInteger(existing.joinedAt)||existing.joinedAt<=0)throw Error('Verified start timestamp missing');
  return {started:false,joinedAt:existing.joinedAt};
 }
 
@@ -20,6 +21,7 @@ export async function finalizeMeetingUsage(db,roomId,ownerId,endedAt){
  const current=await db.prepare('SELECT host_joined_at AS joinedAt,ended_at AS endedAt,billed_minutes AS minutes FROM meeting_sessions WHERE room_id=? AND owner_user_id=?').bind(roomId,ownerId).first();
  if(!current)throw Error('Unknown meeting');
  if(current.endedAt!=null)return {changed:false,minutes:current.minutes};
+ if(current.joinedAt!=null&&(!Number.isSafeInteger(current.joinedAt)||current.joinedAt<=0))throw Error('Invalid stored host join time');
  const minutes=current.joinedAt==null?0:measuredMeetingMinutes(current.joinedAt,endedAt);
  const result=await db.prepare('UPDATE meeting_sessions SET ended_at=?,billed_minutes=? WHERE room_id=? AND owner_user_id=? AND ended_at IS NULL').bind(endedAt,minutes,roomId,ownerId).run();
  if(result.meta?.changes===1)return {changed:true,minutes};
