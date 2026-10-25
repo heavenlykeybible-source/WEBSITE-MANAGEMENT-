@@ -100,8 +100,8 @@ export function parseVideoLink(value) {
 export function validatePostPresentation(input) {
   const format=input.postFormat||'article';
   if(!['design_card','article','video_link','premium_text'].includes(format))throw Error('Choose Design Card, Article or Video Link.');
-  const category=input.designCategory||'faith';
-  if(!CATEGORIES.some(([id])=>id===category))throw Error('Choose a valid category.');
+  const category=String(input.designCategory??'').trim();
+  if(category&&!CATEGORIES.some(([id])=>id===category))throw Error('Choose a valid category.');
   const title=String(input.title??'').trim(),body=String(input.body??'').trim(),scripture=String(input.scripture??'').trim();
   if(title.length>180||scripture.length>240)throw Error('Use a title of up to 180 characters and a scripture reference of up to 240 characters.');
   if(body.length<2||body.length>(format==='article'?30000:10000))throw Error(format==='article'?'Write between 2 and 30,000 characters.':'Write between 2 and 10,000 characters.');

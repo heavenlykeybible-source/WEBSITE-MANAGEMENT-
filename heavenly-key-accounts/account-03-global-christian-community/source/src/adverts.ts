@@ -26,7 +26,8 @@ export async function saveAdvert(env:Env,actor:SessionUser,input:any,id?:number)
  ]);return {advertId:Number((results[0].results?.[0] as any)?.advert_id)};
 }
 export async function listAdverts(env:Env,before:number){const rows=await env.DB.prepare("SELECT * FROM community_adverts WHERE (?=0 OR advert_id<?) ORDER BY advert_id DESC LIMIT 51").bind(before,before).all<any>();return {items:rows.results.slice(0,50),nextBefore:rows.results.length>50?rows.results[49].advert_id:null};}
-export async function publicAdverts(env:Env){const now=new Date().toISOString();const rows=await env.DB.prepare("SELECT advert_id,title,body,sponsor,link_url,image_url,button_label,placement FROM (SELECT advert_id,title,body,sponsor,link_url,image_url,button_label,placement,ROW_NUMBER() OVER(PARTITION BY placement ORDER BY priority DESC,advert_id DESC) AS slot FROM community_adverts WHERE status='published' AND (starts_at IS NULL OR starts_at<=?) AND (ends_at IS NULL OR ends_at>?)) WHERE slot<=2 ORDER BY placement,slot").bind(now,now).all();return {items:rows.results};}
+// Ministry platforms do not serve advertising, including previously published records.
+export async function publicAdverts(_env:Env){return {items:[]};}
 export async function uploadImage(env:Env,actor:SessionUser,request:Request){
  const limit=2*1024*1024;if(Number(request.headers.get("Content-Length"))>limit)fail("Advert images must be at most 2 MB.",413);
  const reader=request.body?.getReader();if(!reader)fail("Choose an advert image.");let size=0;const chunks:Uint8Array[]=[];

@@ -30,8 +30,8 @@ function fixture(){
 test('every guest receives the approved banner, encouraging cards and real registration/sign-in destinations',()=>{
  for(let i=0;i<2;i++){
   const banner=welcome(null),image=banner.children[0],copy=banner.children[1];
-  assert.equal(image.src,'assets/global-christian-community-approved-banner.jpeg');
-  assert.equal(image.width,1536);assert.equal(image.height,614);assert.equal(image.fetchPriority,'high');
+  assert.equal(image.src,'assets/global-christian-social-network-approved-banner.jpeg');
+  assert.equal(image.width,1983);assert.equal(image.height,793);assert.equal(image.fetchPriority,'high');
   assert.equal(banner.attributes['aria-labelledby'],copy.querySelector('h2').id);
   assert.equal(copy.querySelectorAll('.gc-welcome-feature').length,3);
   assert.match(copy.querySelector('.gc-welcome-intro').textContent,/grow together in Christ/);
@@ -84,5 +84,5 @@ test('home loads current welcome assets and CSS makes guest/member sections mutu
  assert(css.includes('.gc-approved-guest .gc-active-section{display:none!important}'));
  assert(css.includes('@media(max-width:420px)'));
  assert(source.includes("location.hash==='#register'?'register':'login'"));
- assert(source.includes("navigate(me.user.status==='restricted'?'safety.html':'index.html')"));
+ assert(source.includes("navigate(me.user.status==='restricted'?'safety.html':authDestination())"));
 });

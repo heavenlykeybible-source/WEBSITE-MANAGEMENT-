@@ -87,6 +87,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
     const id=await createSession(env,{userId:Number(row.user_id),role:row.role,status:row.status});
     return json({ok:true,userId:Number(row.user_id),role:row.role},200,{"Set-Cookie":sessionCookie(id)});
   }
+  if(p==="/api/auth/logout"&&m==="POST"){await destroySession(request,env);return json({ok:true},200,{"Set-Cookie":clearSessionCookie()});}
   const current=await getSession(request,env);
   if(current?.status==='restricted'&&!['/api/me','/api/me/safety','/api/me/requests','/api/auth/logout','/api/care/preferences'].includes(p))return error('Your account is locked pending administrator review. Open Safety & privacy to read the reason and request review.',403);
   // Timed restrictions do not change account roles/status or release administrator locks.
@@ -96,7 +97,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   {const x=p.match(/^\/api\/admin\/care\/readings\/(\d+)$/);if(x&&m==='PATCH'){const u=await requireRole(request,env,'administrator');if(!u)return error('Administrator access required.',403);Care.requireCare(env);return json(await Care.approveReading(env,u,Number(x[1]),await body(request)));}}
   if(p==="/api/admin/adverts/images"&&m==="POST"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);return json(await Adverts.uploadImage(env,admin,request),201);}
   {const match=p.match(/^\/api\/adverts\/images\/([a-f0-9-]{36})$/);if(match&&m==="GET"){const image=await Adverts.image(env,match[1]);if(!image)return error("Advert image unavailable.",404);return new Response(image.body,{headers:security(new Headers({"Content-Type":image.mime,"Cache-Control":"public, max-age=60","ETag":image.etag}))});}}
-  if(p==="/api/adverts"&&m==="GET")return json(await Adverts.publicAdverts(env));
+  if(p==="/api/adverts"&&m==="GET")return json({items:[]});
   if(p==="/api/admin/social-signin"&&m==="GET"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);return json(await Social.settings(env,url.origin));}
   {const match=p.match(/^\/api\/admin\/social-signin\/(google|facebook)$/);if(match&&m==="POST"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);const result=await Social.saveSettings(env,match[1],await body(request));await env.DB.prepare("INSERT INTO safety_audit(actor_user_id,action,target_type,target_id,reason) VALUES(?,'social_signin_settings','provider',0,?)").bind(admin.userId,match[1]).run();return json(result);}}
   if(p==="/api/admin/adverts"&&m==="GET"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);const before=Number(url.searchParams.get("before")||0);if(!Number.isSafeInteger(before)||before<0)return error("Invalid advert cursor.");return json(await Adverts.listAdverts(env,before));}

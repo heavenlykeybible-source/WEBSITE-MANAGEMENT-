@@ -693,3 +693,45 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #a7
  .hk-family-promo nav a{max-width:100%;overflow-wrap:anywhere;}
 }
 
+
+/* Easy Design Card composer: type directly on the finished design. */
+.easy-design-colours{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:14px 0}
+.easy-design-label{width:100%;font-weight:750;margin:0 0 2px;color:#203a60}
+.easy-design-swatch{width:38px;height:38px;min-width:38px;border-radius:12px;border:2px solid #ffffff;box-shadow:0 0 0 1px #bdc9dd;cursor:pointer;padding:0}
+.easy-design-swatch[aria-pressed="true"]{box-shadow:0 0 0 3px #1455b9,0 2px 12px #203b6755}
+.easy-design-swatch:focus-visible{outline:3px solid #1c63bd;outline-offset:4px}
+.design-preview .design-card:has(.easy-card-write){min-height:250px;width:100%;max-width:620px;margin-inline:auto;display:grid;place-items:center}
+.design-preview .design-card:has(.easy-card-write) .dc-inner{width:100%;display:flex;flex-direction:column;align-items:stretch;justify-content:center;min-width:0;min-height:230px}
+.easy-card-write{display:block;width:100%;min-height:180px;max-height:55vh;resize:vertical;overflow:auto;background:transparent!important;color:var(--dc-text,#fff)!important;border:1px dashed transparent;border-radius:12px;font:inherit;font-size:clamp(1.12rem,3.2vw,1.7rem);font-weight:650;line-height:1.45;text-align:inherit;padding:18px;white-space:pre-wrap;box-shadow:none!important;outline:0;field-sizing:content;caret-color:currentColor}
+.easy-card-write::placeholder{color:inherit;opacity:.7}
+.easy-card-write:focus-visible{outline:2px solid var(--dc-accent,#ffda70);outline-offset:3px;background:#ffffff12!important}
+.easy-card-extras{margin:10px 0 16px;padding:10px 14px;border:1px solid #dfe6f2;border-radius:12px;background:#f9fbff}
+.easy-card-extras summary{cursor:pointer;font-weight:650;color:#29456f}
+.easy-card-extras label{margin-top:10px}
+@media(max-width:600px){.easy-design-swatch{width:43px;height:43px}.easy-card-write{min-height:145px;padding:12px;font-size:1.2rem}.design-preview .design-card:has(.easy-card-write){min-height:210px}}
+
+/* Keep the everyday action clear while preserving draft tools. */
+.composer-drafts{align-self:center;font-size:.9rem}
+.composer-drafts summary{cursor:pointer;padding:10px;color:#29456f}
+.composer-drafts[open]{display:flex;flex-wrap:wrap;gap:8px}
+.easy-design-swatch{width:44px;height:44px;min-width:44px}
+.dc-font-large .easy-card-write{font-size:clamp(1.3rem,3.6vw,2rem)}
+.dc-font-spacious .easy-card-write{font-size:clamp(1.5rem,4vw,2.3rem)}
+@media(max-width:600px){.composer-dialog .actions>.btn.primary{width:100%;min-height:48px}.composer-drafts{width:100%}.easy-design-colours{gap:10px}.easy-design-swatch{width:44px;height:44px}}
+/* Keep the direct editor contained on narrow screens and touch devices. */
+.easy-card-write{box-sizing:border-box;min-width:0;max-width:100%;overflow-wrap:anywhere;touch-action:manipulation}
+.easy-design-swatch{touch-action:manipulation}
+@media(max-width:420px){.easy-design-colours{gap:8px}.easy-design-swatch{width:44px;height:44px;min-width:44px}}
+
+/* Keep publishing within reach while the optional settings scroll. */
+.composer-dialog>form>.actions{position:sticky;bottom:-22px;z-index:3;background:#fff;padding:12px 0!important;margin-top:4px;box-shadow:0 -8px 16px #ffffffed;align-items:center}
+.composer-dialog>form>.actions>.btn.primary{min-height:44px!important;flex:1}
+.composer-dialog .composer-drafts{flex:0 0 auto}
+.composer-dialog .composer-drafts[open]{flex:1 0 100%}
+@media(max-width:760px){.composer-dialog>form>.actions{bottom:-16px}.composer-dialog .composer-drafts{width:auto}.composer-dialog>form>.actions>.btn.primary{width:auto;min-height:48px!important}}
+
+body[data-page] .composer-dialog>form>.actions>.btn.primary{background:#174f98!important;color:#fff!important;border:1px solid #174f98!important;border-radius:12px;font-size:.95rem!important;font-weight:750;box-shadow:0 3px 8px #174f9829}
+body[data-page] .composer-dialog>form>.actions>.btn.primary:hover{background:#123f7a!important;color:#fff!important}
+body[data-page] .composer-dialog>form>.actions>.btn.primary:disabled{opacity:.6;cursor:wait}
+
+@media(max-width:760px){.top .brand-name{white-space:normal;line-height:1.15}.top .brand-global{display:block}body.social-page:not([data-page=home]) .social-rail{display:none!important}}

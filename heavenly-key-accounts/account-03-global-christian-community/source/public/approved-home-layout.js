@@ -8,6 +8,7 @@ function setMemberState(session){
 }
 function update(e){
   if(e.detail?.page!=='home'){
+    document.querySelector('.top .nav')?.classList.remove('gc-premium-header');
     document.body.classList.remove('gc-approved-member','gc-approved-guest');
     return;
   }
