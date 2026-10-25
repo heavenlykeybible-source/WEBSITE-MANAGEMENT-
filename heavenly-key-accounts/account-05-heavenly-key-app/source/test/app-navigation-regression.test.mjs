@@ -1,21 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-const read=name=>readFileSync(new URL('../public/'+name,import.meta.url),'utf8');
-test('Account 5 internal app discovery remains on the app domain',()=>{
- for(const file of ['index.html','experience.html']){
-  const html=read(file);
-  assert.match(html,/href="\\/downloads\\.html#download"/,file+' must lead to the local download directory');
-  assert.match(html,/href="\\/downloads\\.html#choose-your-app"/,file+' must lead to local individual app directory');
-  assert.doesNotMatch(html,/heavenlykey\\.org\\/pages\\/app\\.html#(?:download|choose-your-app)/,file+' must not route discovery to the ministry homepage');
- }
+const read = name => readFileSync(new URL('../public/' + name, import.meta.url), 'utf8');
+test('App discovery and download controls stay on apps.heavenlykey.org', () => {
+  for (const name of ['index.html', 'experience.html']) {
+    const html = read(name);
+    assert.ok(html.includes('href="/downloads.html#download"'), name + ' missing local download link');
+    assert.ok(html.includes('href="/downloads.html#choose-your-app"'), name + ' missing local app directory link');
+    assert.ok(!html.includes('heavenlykey.org/pages/app.html#'), name + ' has old ministry page app link');
+  }
 });
-test('Download directory keeps app home distinct from ministry website',()=>{
- const html=read('downloads.html');
- assert.match(html,/<a href="\\/" aria-label="Heavenly Key App home">/);
- assert.match(html,/<a href="\\/">App Home<\\/a>/);
- assert.match(html,/<a href="https:\\/\\/www\\.heavenlykey\\.org\\/">Main Website<\\/a>/);
- assert.match(html,/id="download"/);
- assert.match(html,/id="choose-your-app"/);
- assert.match(html,/href="https:\\/\\/apps\\.heavenlykey\\.org\\/downloads\\.html"/);
+test('App download page home links are not ministry homepage links', () => {
+  const html = read('downloads.html');
+  assert.ok(html.includes('href="/" aria-label="Heavenly Key App home"'));
+  assert.ok(html.includes('href="/">App Home</a>'));
+  assert.ok(html.includes('href="https://www.heavenlykey.org/">Main Website</a>'));
+  assert.ok(html.includes('id="download"'));
+  assert.ok(html.includes('id="choose-your-app"'));
+  assert.ok(html.includes('href="https://apps.heavenlykey.org/downloads.html"'));
 });
