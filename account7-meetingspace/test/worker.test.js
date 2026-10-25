@@ -260,3 +260,12 @@ test('temporary network disconnect retains the peer instead of closing immediate
  assert.match(html,/connectionState==='failed'/);
  assert.match(html,/Sharing this room link alone does not grant access/);
 });
+
+test('waiting guests are not told they are admitted and cannot send chat before approval',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/Connected securely — awaiting meeting admission/);
+ assert.match(html,/Waiting for host approval/);
+ assert.match(html,/\$\('chatSend'\)\.disabled=true/);
+ assert.match(html,/\$\('chatSend'\)\.disabled=false/);
+ assert.match(html,/Host declined admission';ws\?\.close\(\)/);
+});
