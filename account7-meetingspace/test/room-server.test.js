@@ -49,3 +49,12 @@ test('expired persisted alarm blocks connection before socket allocation',async(
  const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
  assert.equal((await room.fetch(socketRequest(ticket))).status,403);
 });
+
+test('expired meeting alarm permanently closes room to replayed tickets',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+ await room.ctx.storage.setAlarm(Date.now()-1000);
+ await room.alarm();
+ assert.ok(await room.ctx.storage.get('meetingClosedAt'));
+ assert.equal((await room.fetch(socketRequest(ticket))).status,410);
+});
