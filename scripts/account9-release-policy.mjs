@@ -20,9 +20,13 @@ export function chooseCurrentRelease(items){
   const relevant=items.filter(isAccount9Release);
   if(!relevant.length)return null;
   relevant.sort((a,b)=>{
-    const version=x=>Number(String(x.version??'').match(/(?:^|[^0-9])(\\d+)(?:\\.\\d+)*$/)?.[1]??0);
-    const av=version(a),bv=version(b);
-    if(av!==bv)return bv-av;
+    // Compare numeric components, not lexicographically (v10 > v9).
+    const version=x=>String(x.version??'').trim().replace(/^v/i,'').split('.').map(n=>/^\d+$/.test(n)?Number(n):0);
+    const va=version(a),vb=version(b);
+    for(let i=0;i<Math.max(va.length,vb.length);i++){
+      const diff=(vb[i]||0)-(va[i]||0);
+      if(diff)return diff;
+    }
     const at=Date.parse(a.created_at||a.createdAt||'')||0;
     const bt=Date.parse(b.created_at||b.createdAt||'')||0;
     if(at!==bt)return bt-at;
