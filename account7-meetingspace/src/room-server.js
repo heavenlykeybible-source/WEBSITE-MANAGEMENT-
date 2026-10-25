@@ -26,6 +26,8 @@ export class MeetingRoom extends DurableObject {
   const persistedDeadline=await this.ctx.storage.getAlarm();
   if(persistedDeadline&&Date.now()>=persistedDeadline)return new Response('Meeting time limit reached',{status:403});
   if(persistedDeadline)this.meetingDeadline=persistedDeadline;
+  const savedCapacity=await this.ctx.storage.get('roomCapacity');
+  if(Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12)this.capacity=savedCapacity;
   if(this.clients.size>=Math.min(12,this.capacity))return new Response('Room full',{status:429});
   if(!demo&&claims.role==='owner'&&this.ownerId===claims.userId)return new Response('Owner already connected',{status:409});
   if(this.locked&&claims.role!=='owner')return new Response('Room locked',{status:403});
@@ -35,7 +37,7 @@ export class MeetingRoom extends DurableObject {
   const pair=new WebSocketPair(),[client,server]=Object.values(pair);
   server.accept();
   const id=crypto.randomUUID(),admitted=claims.role==='owner';
-  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=plan.participants;this.meetingDeadline=persistedDeadline||Date.now()+plan.meetingMinutes*60000;if(!persistedDeadline)await this.ctx.storage.setAlarm(this.meetingDeadline);}
+  if(admitted){if(!demo&&!(await this.ctx.storage.get('ownerUserId')))await this.ctx.storage.put('ownerUserId',claims.userId);this.ownerId=claims.userId;const plan=demo?getPlan('free'):(getPlan(claims.planId)||getPlan('free'));this.capacity=Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12?savedCapacity:plan.participants;if(!savedCapacity)await this.ctx.storage.put('roomCapacity',this.capacity);this.meetingDeadline=persistedDeadline||Date.now()+plan.meetingMinutes*60000;if(!persistedDeadline)await this.ctx.storage.setAlarm(this.meetingDeadline);}
   const record={socket:server,userId:claims.userId,role:claims.role,admitted};
   this.clients.set(id,record);
   if(admitted){
