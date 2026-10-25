@@ -158,3 +158,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Modified `src/room-server.js`: meeting terminal marker `meetingClosedAt` is persisted before connected sockets are notified and closed. This narrows the window in which an old ticket could join during host termination or subscription timeout.
 - Added a regression test verifying the persistent terminal marker is visible before socket close callbacks. Code was committed; full test execution and production Cloudflare behavior are NOT verified.
 - GitHub clone from the execution container fails due to DNS resolution, so the connected GitHub API remains the source of saved edits. No deployment or payment configuration was changed.
+
+## 2026-10-25: Room lock synchronization and capacity checks
+- When an owner reconnects, the Durable Object now sends the persisted `roomLocked` state to the host UI immediately after peer initialization. Added a regression test for this state message.
+- Added a second capacity check at admission time to prevent promoting waiting participants when the saved capacity is already exceeded.
+- All changes were committed on `feature/account7-meetingspace`; tests have not been executed against the checkout. Existing production blockers (identity, billing, scalable media/TURN/SFU, full CI, live verification) remain.
