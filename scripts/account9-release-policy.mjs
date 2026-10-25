@@ -8,7 +8,7 @@ export const ACCOUNT9_TARGET=Object.freeze({
 export function normalizeAccount(value){
   if(typeof value!=='string')return null;
   const s=value.trim().toLowerCase().replace(/[\s_-]+/g,'');
-  if(s==='9'||s==='account9'||s==='heavenlykeyvideoeditor'||s==='videoeditor')return 'account9';
+  if(s==='9'||s==='account9'||s==='account09'||s==='heavenlykeyvideoeditor'||s==='videoeditor')return 'account9';
   return null;
 }
 export function isAccount9Release(item){
