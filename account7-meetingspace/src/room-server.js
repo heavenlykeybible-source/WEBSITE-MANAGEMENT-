@@ -1,4 +1,4 @@
-import {safeMessage} from './meeting-policy.js';
+import {safeMessage,mayJoinRoom} from './meeting-policy.js';
 import {verifyMeetingTicket} from './session-tokens.js';
 import {getPlan} from './subscription-plans.js';
 
@@ -29,9 +29,10 @@ export class MeetingRoom extends DurableObject {
   if(persistedDeadline)this.meetingDeadline=persistedDeadline;
   const savedCapacity=await this.ctx.storage.get('roomCapacity');
   if(Number.isInteger(savedCapacity)&&savedCapacity>=1&&savedCapacity<=12)this.capacity=savedCapacity;
-  if(this.clients.size>=Math.min(12,this.capacity))return new Response('Room full',{status:429});
+  const admission=mayJoinRoom({isClosed:false,isExpired:false,isLocked:this.locked,role:claims.role,active:this.clients.size,capacity:Math.min(12,this.capacity)});
+  if(!admission.allowed)return new Response(admission.reason,{status:admission.status});
   if(!demo&&claims.role==='owner'&&this.ownerId===claims.userId)return new Response('Owner already connected',{status:409});
-  if(this.locked&&claims.role!=='owner')return new Response('Room locked',{status:403});
+  
   if(claims.role==='owner'&&this.ownerId&&this.ownerId!==claims.userId)return new Response('Room owner mismatch',{status:403});
   if(claims.role!=='owner'&&!this.ownerId)return new Response('Host has not joined',{status:403});
   if([...this.clients.values()].some(c=>c.userId===claims.userId))return new Response('Identity already connected',{status:409});
