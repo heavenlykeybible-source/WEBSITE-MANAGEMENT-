@@ -250,3 +250,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Camera, microphone, screen sharing and the send-chat button are blocked before server admission; failed/closed sockets reset permission state and disable chat. Denied admissions close the socket.
 - Added frontend regression assertions in `test/worker.test.js`. Commits `b177c34`, `9821557`, `dcecaf6`, `cd59ad2` saved to branch.
 - Only source-level tests were authored, not run in the full checkout; integration security tests for media, peer permission events and TURN access are still needed. No production deploy or payment activation.
+
+## 2026-10-25: Revoking media permissions during admission loss
+- Fixed a browser permission race: a camera/microphone or screen-sharing permission dialog could complete after the meeting was denied or disconnected. The client now rechecks `isAdmitted` immediately after the media promise resolves and stops the resulting tracks if access ended.
+- Source-level regression checks were added in `test/worker.test.js`. Commits `90e9e40` and `f88618e`.
+- These static tests are not a substitute for an actual Playwright/mobile browser test or a complete Node test run. Full Cloudflare CI and deployment remain unverified.
