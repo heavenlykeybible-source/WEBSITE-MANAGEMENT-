@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 class Node {
  constructor(tag,text){this.tag=tag;this.textContent=text||'';this.dataset={};this.children=[];this.attributes={};this.parentElement=null;}
- append(...items){for(const item of items){item.parentElement=this;this.children.push(item);}}
+ append(...items){for(const item of items){if(item.parentElement)item.remove();item.parentElement=this;this.children.push(item);}}
  replaceChildren(...items){this.children=[];this.append(...items);}
  replaceWith(next){const p=this.parentElement;p.children[p.children.indexOf(this)]=next;next.parentElement=p;}
  remove(){if(this.parentElement)this.parentElement.children=this.parentElement.children.filter(x=>x!==this);}
@@ -15,7 +15,7 @@ class Node {
  querySelectorAll(selector){const keys={'[data-feed]':'feed','[data-feed-status]':'feedStatus','[data-post-id]':'postId','[data-load-more]':'loadMore'};return this.children.flatMap(n=>[...(keys[selector]&&n.dataset[keys[selector]]!==undefined?[n]:[]),...n.querySelectorAll(selector)]);}
 }
 test('Feed keeps the newest filter response and deduplicates paginated posts',async()=>{
- const source=readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),start=source.indexOf('async function mountFeed('),end=source.indexOf('function feedTabs(',start),requests=[],host=new Node('section'),context={URLSearchParams,location:{search:''},page:'home',root:host,el:(tag,text)=>new Node(tag,text),api:url=>new Promise(resolve=>requests.push({url,resolve})),renderPost:p=>{const n=new Node('article',p.body);n.dataset.postId=String(p.post_id);return n;}};
+ const source=readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),start=source.indexOf('async function mountFeed('),end=source.indexOf('function feedTabs(',start),requests=[],host=new Node('section'),context={URLSearchParams,dateTime:value=>new Date(value||0),location:{search:''},page:'home',root:host,el:(tag,text)=>new Node(tag,text),api:url=>new Promise(resolve=>requests.push({url,resolve})),renderPost:p=>{const n=new Node('article',p.body);n.dataset.postId=String(p.post_id);return n;}};
  const mount=vm.runInNewContext(source.slice(start,end)+'\nmountFeed;',context);
  const old=mount(host,'article'),latest=mount(host,'video_link');assert.ok(requests[1].url.includes('video_link'));
  requests[1].resolve({items:[{post_id:2,body:'New selection'}],nextBefore:2});await latest;
@@ -110,3 +110,12 @@ test('Community HTML navigation and referenced scripts/styles/images exist',asyn
 });
 
 
+
+test('Latest feed interleaves ministry and member posts without confusing IDs or exhausting either source',async()=>{
+ const source=readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),start=source.indexOf('async function mountFeed('),end=source.indexOf('function feedTabs(',start),host=new Node('section'),calls=[];
+ const item=(p,ministry=false)=>{const n=new Node('article',p.body);n.dataset.postId=(ministry?'ministry:':'')+p.post_id;n.dataset.feedOrder=p.created_at;return n;};
+ const context={URLSearchParams,dateTime:v=>new Date(v||0),location:{search:''},page:'home',root:host,el:(t,x)=>new Node(t,x),renderPost:p=>item(p),renderMinistryPost:p=>item(p,true),api:async url=>{calls.push(url);return url.startsWith('/api/ministry/')?{items:[{post_id:1,body:'Ministry',created_at:'2026-10-25T10:00:00Z'}]}:{items:[{post_id:1,body:'Member',created_at:'2026-10-25T11:00:00Z'}],nextBefore:null};}};
+ const mount=vm.runInNewContext(source.slice(start,end)+'\nmountFeed;',context);await mount(host);
+ assert.deepEqual(host.querySelectorAll('[data-post-id]').map(n=>n.dataset.postId),['1','ministry:1']);
+ host.dataset.saved='1';await mount(host);assert.deepEqual(host.querySelectorAll('[data-post-id]').map(n=>n.dataset.postId),['1']);assert.equal(calls.filter(x=>x.startsWith('/api/ministry/')).length,1,'Editorial posts never leak into Saved or Connections filters');
+});
