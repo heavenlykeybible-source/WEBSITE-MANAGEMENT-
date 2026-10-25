@@ -27,6 +27,7 @@ const bind=window.HKRadioPlayback||function(audio,render){let playing=false;cons
 function safeUrl(item){const u=new URL(item.url,window.HK_RADIO_API_ORIGIN||location.origin);if(u.username||u.password||(u.protocol!=='https:'&&!(u.protocol==='http:'&&u.origin===location.origin)))throw Error('Radio source is unavailable.');return u.href}
 function disconnectLive(){const room=liveRoom;liveRoom=null;if(room)room.disconnect().catch(()=>{});audio.srcObject=null}
 function release(){disconnectLive();audio.pause();audio.removeAttribute('src');audio.load();display(false)}
+function pause(){desired=false;generation++;clearTimeout(poll);clearTimeout(retry);audio.pause();display(false);notice.textContent='Paused. Tap Play to resume.'}
 function stop(){desired=false;generation++;clearTimeout(poll);clearTimeout(retry);release();notice.textContent='Stopped. Tap Play to listen.'}
 function schedule(){clearTimeout(poll);if(desired||mount)poll=setTimeout(()=>refresh(true).catch(()=>{if(desired)notice.textContent='Checking broadcast connection…'}).finally(schedule),30000)}
 function reconnect(){clearTimeout(retry);if(!desired||retries>=4){if(desired){desired=false;notice.textContent='Connection unavailable. Tap Play to retry.'}return}notice.textContent='Connection interrupted. Reconnecting…';const turn=generation;retry=setTimeout(()=>{if(desired&&turn===generation)startCurrent().catch(reconnect)},Math.min(16000,2000*2**retries++))}
@@ -54,7 +55,7 @@ const next=Array.isArray(data.items)?data.items.filter(x=>x&&typeof x.url==='str
 if(!items.length){release();desired=false;clearTimeout(poll);programme.textContent=data.title||'Heavenly Key Radio';notice.textContent='Radio is currently off air. This page checks for the next programme automatically; tap Play when it is ready.';schedule();return}
 programme.textContent=items[index].title||data.title||'Heavenly Key Radio';if(allowSwitch&&desired&&turn===generation&&(liveRoom||safeUrl(items[index])!==previous))await startTrack(index);schedule();
 }finally{clearTimeout(timer);fetching=null}})();return fetching}
-button.onclick=async()=>{primeVolume();if(desired){stop();return}desired=true;generation++;retries=0;button.disabled=true;try{await refresh();if(desired&&(transport?.transport==='livekit'||items.length))await startCurrent()}catch(e){desired=false;release();notice.textContent=e.name==='NotAllowedError'?'Tap Play again to allow audio.':e.message||'Radio is unavailable.'}finally{button.disabled=false}};
+button.onclick=async()=>{primeVolume();if(desired){pause();return}desired=true;generation++;retries=0;button.disabled=true;try{await refresh();if(desired&&(transport?.transport==='livekit'||items.length))await startCurrent()}catch(e){desired=false;release();notice.textContent=e.name==='NotAllowedError'?'Tap Play again to allow audio.':e.message||'Radio is unavailable.'}finally{button.disabled=false}};
 $('.hkr-stop').onclick=stop;
 $('.hkr-mute').onclick=()=>{audio.muted=!audio.muted;$('.hkr-mute').textContent=audio.muted?'🔇':'🔊';$('.hkr-mute').setAttribute('aria-label',audio.muted?'Unmute radio':'Mute radio')};
 volumeInput.oninput=e=>{volumeLevel=Math.max(0,Math.min(1,Number(e.target.value)));if(gainNode)gainNode.gain.setValueAtTime(volumeLevel,audioContext.currentTime);else if(nativeVolume)audio.volume=volumeLevel;volumeInput.setAttribute('aria-valuetext',Math.round(volumeLevel*100)+'%')};
@@ -63,7 +64,7 @@ function attachPlayback(){bind(audio,display);audio.addEventListener('ended',()=
 audio.addEventListener('error',()=>{display(false);reconnect()});audio.addEventListener('waiting',()=>{if(desired)notice.textContent='Buffering…'});}
 attachPlayback();
 if('mediaSession' in navigator){
- const actions={play:()=>{if(!desired)button.click()},pause:()=>{if(desired)stop()},stop:()=>stop(),nexttrack:()=>$('.hkr-next').click(),previoustrack:()=>$('.hkr-prev').click()};
+ const actions={play:()=>{if(!desired)button.click()},pause:()=>{if(desired)pause()},stop:()=>stop(),nexttrack:()=>$('.hkr-next').click(),previoustrack:()=>$('.hkr-prev').click()};
  for(const [action,handler] of Object.entries(actions)){try{navigator.mediaSession.setActionHandler(action,handler)}catch{}}
 }
 let anchor;function returnToAnchor(){if(anchor?.isConnected){anchor.replaceWith(root);anchor=null}}
