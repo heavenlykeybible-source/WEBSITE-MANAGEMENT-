@@ -1,0 +1,38 @@
+name: Account 9 VideoEditor quality gate
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
+      - 'scripts/build-account9-worker.mjs'
+      - '.github/workflows/quality-account9-videoeditor.yml'
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
+      - 'scripts/build-account9-worker.mjs'
+      - '.github/workflows/quality-account9-videoeditor.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: account9-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate app, syntax, backend and frontend
+        working-directory: heavenly-key-accounts/account-09-heavenly-key-videoeditor/source
+        run: npm run check
+      - name: Build canonical Worker bundle
+        run: node scripts/build-account9-worker.mjs /tmp/account9-quality-worker.mjs
+      - name: Validate packaged Worker JavaScript
+        run: node --check /tmp/account9-quality-worker.mjs
