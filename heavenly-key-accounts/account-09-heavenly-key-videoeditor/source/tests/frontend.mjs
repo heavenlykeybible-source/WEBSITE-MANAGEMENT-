@@ -35,4 +35,8 @@ assert.ok(html.includes('timeline:window.hkTimeline?.getClips()'),'Project snaps
 assert.ok(html.includes('restoreClips(d.timeline||[])'),'Local projects must restore timeline');
 assert.ok(module.includes('restoreClips(state.timeline||[])'),'Cloud projects must restore timeline');
 assert.ok(timelineScript.includes('rec.pause()') && timelineScript.includes('rec.resume()'),'Export recorder must skip clip seeking');
+for (const safeguard of ["invalidateExport();undo.push", "invalidateExport();clips=data.map", "if(session)return info('Stop preview or export", "if(clips.length>=200)", "'clipRemove','clipUp','clipDown','clipUndo','clipRedo'"]) {
+  assert.ok(timelineScript.includes(safeguard),'Missing timeline regression safeguard: '+safeguard);
+}
+assert.ok(timelineScript.includes("else list.value=''") ,'Empty timeline must clear selected clip');
 console.log('PASS frontend integration wiring, duplicate source and security headers');
