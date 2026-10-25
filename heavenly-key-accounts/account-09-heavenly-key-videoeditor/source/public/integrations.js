@@ -76,7 +76,7 @@
         const words=Array.isArray(result.words)?result.words:[];if(words.length){for(let i=0;i<words.length;i+=8){const part=words.slice(i,i+8);generated.push({text:part.map(w=>w.word).join(' ').trim(),start:Math.min(end,Math.max(start,start+Number(part[0].start||0))),end:Math.min(end,Math.max(start,start+Number(part[part.length-1].end||seconds))),pos:'bottom',style:'outline',anim:'none',color:'#ffffff'})}}
         else if(result.text)generated.push({text:result.text,start,end,pos:'bottom',style:'outline',anim:'none',color:'#ffffff'});
       }
-      layers.push(...generated.filter(l=>l.text&&l.end>l.start));showLayers();message('vm','Added '+generated.length+' AI caption segments. Review timing before exporting.'+(audioBuffer.duration>maxChunks*seconds?' Only the first 96 seconds were processed.':''));
+      const remaining=Math.max(0,500-layers.length);const accepted=generated.filter(l=>l.text&&l.end>l.start).slice(0,remaining);if(accepted.length)invalidateVideoDownload();layers.push(...accepted);showLayers();message('vm','Added '+accepted.length+' AI caption segments. Review timing before exporting.'+(audioBuffer.duration>maxChunks*seconds?' Only the first 96 seconds were processed.':''));
     }catch(e){message('vm','Transcription failed: '+e.message)}finally{button.disabled=false}
   };
   const originalLogin=$('login').onclick;$('login').onclick=async()=>{await originalLogin();try{await json('me');await Promise.allSettled([loadProjects(),loadMedia()])}catch{status.textContent='Sign in to manage cloud projects.';ms.textContent='Sign in to manage cloud media.'}};
