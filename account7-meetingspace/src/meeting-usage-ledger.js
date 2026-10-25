@@ -10,5 +10,8 @@ export async function finalizeMeetingUsage(db,roomId,ownerId,endedAt){
  if(current.endedAt!==null)return {changed:false,minutes:current.minutes};
  const minutes=measuredMeetingMinutes(current.startedAt,endedAt);
  const result=await db.prepare('UPDATE meeting_sessions SET ended_at=?,billed_minutes=? WHERE room_id=? AND owner_user_id=? AND ended_at IS NULL').bind(endedAt,minutes,roomId,ownerId).run();
- return {changed:result.meta?.changes===1,minutes};
+ if(result.meta?.changes===1)return {changed:true,minutes};
+ const latest=await db.prepare('SELECT billed_minutes AS minutes FROM meeting_sessions WHERE room_id=? AND owner_user_id=?').bind(roomId,ownerId).first();
+ if(!latest)throw Error('Meeting disappeared during finalization');
+ return {changed:false,minutes:latest.minutes};
 }
