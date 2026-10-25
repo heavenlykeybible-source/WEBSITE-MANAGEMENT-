@@ -4,10 +4,10 @@ export function measuredMeetingMinutes(startedAt,endedAt){
  return Math.ceil((endedAt-startedAt)/60000);
 }
 export async function finalizeMeetingUsage(db,roomId,ownerId,endedAt){
- if(!db?.prepare||!roomId||!ownerId)throw Error('Missing trusted meeting context');
+ if(!db?.prepare||typeof roomId!=='string'||!/^[A-Za-z0-9_-]{6,80}$/.test(roomId)||typeof ownerId!=='string'||!ownerId)throw Error('Missing trusted meeting context');
  const current=await db.prepare('SELECT started_at AS startedAt,ended_at AS endedAt,billed_minutes AS minutes FROM meeting_sessions WHERE room_id=? AND owner_user_id=?').bind(roomId,ownerId).first();
  if(!current)throw Error('Unknown meeting');
- if(current.endedAt!==null)return {changed:false,minutes:current.minutes};
+ if(current.endedAt!=null)return {changed:false,minutes:current.minutes};
  const minutes=measuredMeetingMinutes(current.startedAt,endedAt);
  const result=await db.prepare('UPDATE meeting_sessions SET ended_at=?,billed_minutes=? WHERE room_id=? AND owner_user_id=? AND ended_at IS NULL').bind(endedAt,minutes,roomId,ownerId).run();
  if(result.meta?.changes===1)return {changed:true,minutes};
