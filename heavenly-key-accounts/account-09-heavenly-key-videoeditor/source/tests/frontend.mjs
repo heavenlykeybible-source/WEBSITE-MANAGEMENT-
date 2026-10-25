@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 const html=readFileSync('public/index.html','utf8');
 const module=readFileSync('public/integrations.js','utf8');
+assert.ok(html.includes('function invalidateVideoDownload()')&&html.includes("$('ve').addEventListener('input',invalidateVideoDownload)"),'Video changes must invalidate stale downloads');
 assert.ok(html.includes('if(f.size>2*1024*1024)')&&html.includes('start<0||end<=start||layers.length>=500'),'Caption import and manual entry must reject oversized or invalid input');
 const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
 assert.ok(srtParser,'Missing SRT time parser');
