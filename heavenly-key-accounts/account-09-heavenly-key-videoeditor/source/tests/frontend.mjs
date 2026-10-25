@@ -27,6 +27,7 @@ assert.equal(validLayers([{text:'Hello',start:0,end:2}]),true,'Valid project cap
 assert.equal(validLayers([{text:'Broken',start:3,end:1}]),false,'Reversed timestamps rejected');
 assert.equal(validLayers({layers:[]}),false,'Non-array captions rejected');
 assert.ok(module.includes('validProjectLayers(state.layers||[])'),'Cloud project loading must validate caption layers');
+assert.ok(html.includes('e.detail?.file'),'Video and audio inputs must support a cloud-loaded File');
 for(const code of inlineScripts) new Script(code,{filename:'account9-inline-editor.js'});
 assert.equal(html,original,'Source and public HTML must match');
 assert.ok(html.includes('const revision=++audioLoadRevision')&&html.includes('if(revision!==audioLoadRevision)return;'),'Old audio decoding must not replace a more recent file');
@@ -71,7 +72,7 @@ assert.ok(html.includes('restoreClips(d.timeline||[])'),'Local projects must res
 assert.ok(module.includes('restoreClips(state.timeline||[])'),'Cloud projects must restore timeline');
 assert.ok(module.includes("const originalLogout=$('logout').onclick")&&module.includes('selected=null;list.replaceChildren();ml.replaceChildren()'),'Sign out must clear private cloud library data');
 assert.ok(module.includes("try{await json('me');await Promise.allSettled"),'Cloud libraries must only load after verified login');
-for (const wiring of ['new DataTransfer()', "input.dispatchEvent(new Event('change'", "fetch('/api/media/'+encodeURIComponent(f.id)", "f.type.startsWith('video/')||f.type.startsWith('audio/')"]) assert.ok(module.includes(wiring),'Cloud media editor import missing: '+wiring);
+for (const wiring of ["input.dispatchEvent(new CustomEvent('change'", "e.detail?.file", "fetch('/api/media/'+encodeURIComponent(f.id)", "f.type.startsWith('video/')||f.type.startsWith('audio/')"]) assert.ok(module.includes(wiring),'Cloud media editor import missing: '+wiring);
 assert.ok(module.includes('Math.min(end,Math.max(start'),'Caption word timings must remain within each processed chunk');
 assert.ok(timelineScript.includes('rec.pause()') && timelineScript.includes('rec.resume()'),'Export recorder must skip clip seeking');
 for (const safeguard of ["invalidateExport();undo.push", "invalidateExport();clips=data.map", "if(session)return info('Stop preview or export", "if(clips.length>=200)", "'clipRemove','clipUp','clipDown','clipUndo','clipRedo'"]) {
