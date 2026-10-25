@@ -101,3 +101,9 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Ticket format now optionally signs `meetingMinutes` to enforce remaining monthly time on top of the plan maximum; Durable Object deadline is capped by this signed allowance. Regression coverage added.
 - Critical blocker: There is **no working identity/session provider**, D1 binding, account signup, payment processor webhook validation, or active worker endpoint invoking the service. Never expose this function to unauthenticated client input or treat it as deployed. D1 session billing/usage needs transaction-safe accounting; the current room insert is groundwork only.
 - Existing test suite has not been run successfully; no production deployment or end-to-end subscription validation.
+
+## 2026-10-25: Subscription ticket safety follow-up
+- `src/account-meeting-service.js` now validates room IDs and request time before reservation, refuses issuance when less than one full subscription minute remains, and reserves meetings only under a verified server principal.
+- `test/account-meeting-service.test.js` includes invalid room ID and fractional-quota regression cases (not executed).
+- `src/session-tokens.js` optionally carries signed `meetingMinutes`; `src/room-server.js` caps deadlines to this signed remaining balance. Tests were added but execution is unconfirmed. Latest GitHub commit workflow query returned zero runs.
+- Still required: authenticated session provider, D1 binding/migrations, verified payments, exact usage ledger updates, reconnection/hibernation, and scale/performance/security tests.
