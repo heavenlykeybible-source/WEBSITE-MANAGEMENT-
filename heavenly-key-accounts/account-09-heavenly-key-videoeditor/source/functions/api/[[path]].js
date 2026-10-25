@@ -268,7 +268,8 @@ export async function onRequest({ request: req, env, params }) {
         return o ? new Response(o.body, { headers: { 'content-type': r.type, 'content-disposition': `inline; filename="${String(r.name).replace(/[\r\n"\\]/g, '_')}"`, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-security-policy': "sandbox; default-src 'none'" } }) : J({ error: 'Missing file' }, 404);
       }
       if (p[1] && m === 'DELETE') {
-        const r = await env.DB.prepare('SELECT r2_key FROM media WHERE id=? AND user_id=?').bind(p[1], u.id).first();
+        const r = await env.DB.prepare('SELECT r2_key FROM media WHERE id=? AND user_id=? AND deleted=0').bind(p[1], u.id).first();
+        if (!r) return J({ error: 'Not found' }, 404);
         if (r) {
           await env.MEDIA.delete(r.r2_key);
           const saved = await env.DB.prepare('UPDATE media SET deleted=1 WHERE id=? AND user_id=? AND deleted=0').bind(p[1],u.id).run();
