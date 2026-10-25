@@ -22,6 +22,15 @@ const roomQueue=projectAccount9Queue(controlRoomRows);
 assert.equal(roomQueue.active.filter(x=>x.name==='heavenlykey-studio'&&String(x.connection)==='8').length,1,'Control Room connection 8 must have one active Worker proposal');
 assert.deepEqual(roomQueue.history.map(x=>x.id).sort((a,b)=>a-b),[27,31],'Previous target proposals must be superseded');
 assert.ok(roomQueue.active.some(x=>x.id===30),'Identical Worker names on a different account stay untouched');
+const mismatched=[
+  {id:81,account:'account9',worker:'meeting-space',connection:8,version:'v9'},
+  {id:82,account:'account9',worker:'heavenlykey-studio',connection:4,version:'v10'},
+  {id:83,account:'account9',worker:'heavenlykey-studio',connection:8,version:'v5'}
+];
+const protectedQueue=projectAccount9Queue(mismatched);
+assert.deepEqual(protectedQueue.active.map(x=>x.id),[81,82,83],'Never swallow different Workers or Cloudflare accounts because of a mistaken label');
+assert.equal(protectedQueue.history.length,0,'No unrelated deployments are superseded');
+
 
 const consolidated=consolidateAccount9Releases(rows);
 assert.equal(consolidated.length,2,'Single Account 9 release remains');
