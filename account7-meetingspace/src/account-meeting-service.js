@@ -12,8 +12,11 @@ export async function issueOwnerTicketForAccount({db,verifiedPrincipal,roomId,si
  const ownerId=verifiedPrincipal.userId;
  const allowance=await resolveMeetingAllowance(db,ownerId,{now});
  if(!allowance.allowed||allowance.remainingMinutes<1)return {allowed:false,reason:'Monthly meeting allowance exhausted',plan:allowance.plan.id};
- const existing=await db.prepare('SELECT owner_user_id AS ownerId FROM meeting_sessions WHERE room_id=? LIMIT 1').bind(roomId).first();
+ const existing=await db.prepare('SELECT owner_user_id AS ownerId, ended_at AS endedAt FROM meeting_sessions WHERE room_id=? LIMIT 1').bind(roomId).first();
  if(existing&&existing.ownerId!==ownerId)return {allowed:false,reason:'Room is owned by another account'};
+ if(existing&&existing.endedAt!=null)return {allowed:false,reason:'Meeting has already ended; create a new room'};
+ const anotherActive=await db.prepare('SELECT room_id AS roomId FROM meeting_sessions WHERE owner_user_id=? AND ended_at IS NULL AND room_id<>? LIMIT 1').bind(ownerId,roomId).first();
+ if(anotherActive)return {allowed:false,reason:'Another meeting is already active on this account'};
  if(!existing){
   const result=await db.prepare('INSERT OR IGNORE INTO meeting_sessions (id,owner_user_id,room_id,started_at,billed_minutes) VALUES (?,?,?,?,0)')
     .bind(crypto.randomUUID(),ownerId,roomId,now).run();
