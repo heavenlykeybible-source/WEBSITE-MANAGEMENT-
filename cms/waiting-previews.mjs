@@ -13,5 +13,8 @@ export function improveWaitingPreviews(worker) {
     if(!review.includes(anchor))throw new Error('Review layout integration point missing');
     review=review.replace(anchor,layout+anchor);
   }
-  return worker.slice(0,start)+review+worker.slice(end);
+  worker=worker.slice(0,start)+review+worker.slice(end);
+  const menuCSS='/* mobile navigation links */\n.sidenav>a.btn{display:flex;align-items:center;white-space:normal;overflow-wrap:normal;word-break:normal;min-height:44px}\n@media(max-width:1024px){.sidenav{align-items:center}.sidenav>a.btn{flex:0 0 auto;width:auto;max-width:none;white-space:nowrap;align-self:center;margin:4px 5px 4px 0}.sidenav>button{flex-shrink:0}.sidenav{min-height:0}}\n';
+  if(!worker.includes('/* mobile navigation links */'))worker=worker.replace('</style>',menuCSS+'</style>');
+  return worker;
 }
