@@ -6,6 +6,7 @@ const html=readFileSync('public/index.html','utf8');
 const module=readFileSync('public/integrations.js','utf8');
 assert.ok(html.includes("$('vf').disabled=true")&&html.includes("exportStream.getTracks().forEach(t=>t.stop())")&&html.includes("exportRecorder.state!=='inactive'"),'Video exports must block source switching and clean up media tracks');
 assert.ok(html.includes("limit>600")&&html.includes("Browser export is limited to ten minutes"),'Single video export must respect browser resource limits');
+assert.ok(html.includes("'video/mp4'")&&html.includes("type.startsWith('video/mp4')?'mp4':'webm'"),'Single-video export must select a native MP4 or WebM extension matching its encoder');
 assert.ok(html.includes('function invalidateVideoDownload()')&&html.includes("$('ve').addEventListener('input',invalidateVideoDownload)"),'Video changes must invalidate stale downloads');
 assert.ok(html.includes('if(f.size>2*1024*1024)')&&html.includes('start<0||end<=start||layers.length>=500'),'Caption import and manual entry must reject oversized or invalid input');
 const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
