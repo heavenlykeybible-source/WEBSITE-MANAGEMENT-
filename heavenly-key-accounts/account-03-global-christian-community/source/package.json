@@ -16,7 +16,7 @@
     "test:design": "node --test test/design-cards.checks.mjs",
     "test:groups": "node --test test/group-controls.checks.mjs",
     "test:registration": "node --test test/registration.checks.mjs",
-    "test:feed": "node --test test/frontend-feed.checks.mjs && node --test test/community-radio.checks.mjs",
+    "test:feed": "node --test test/frontend-feed.checks.mjs && node --test test/community-radio.checks.mjs && node --test test/member-journeys.checks.mjs",
     "test:stewardship": "node --test test/stewardship.checks.mjs",
     "test:social-adverts": "node --test test/social-adverts.checks.mjs",
     "test:active": "node --test test/active-content.checks.mjs",

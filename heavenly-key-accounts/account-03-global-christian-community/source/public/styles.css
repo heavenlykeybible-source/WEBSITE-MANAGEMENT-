@@ -709,3 +709,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #a7
 .easy-card-extras summary{cursor:pointer;font-weight:650;color:#29456f}
 .easy-card-extras label{margin-top:10px}
 @media(max-width:600px){.easy-design-swatch{width:43px;height:43px}.easy-card-write{min-height:145px;padding:12px;font-size:1.2rem}.design-preview .design-card:has(.easy-card-write){min-height:210px}}
+
+/* Keep the direct editor contained on narrow screens and touch devices. */
+.easy-card-write{box-sizing:border-box;min-width:0;max-width:100%;overflow-wrap:anywhere;touch-action:manipulation}
+.easy-design-swatch{touch-action:manipulation}
+@media(max-width:420px){.easy-design-colours{gap:8px}.easy-design-swatch{width:44px;height:44px;min-width:44px}}

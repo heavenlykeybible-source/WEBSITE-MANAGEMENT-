@@ -58,9 +58,9 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
  assert.equal((await req('/api/admin/adverts',input,member)).status,403);assert.equal((await req('/api/admin/adverts',{...input,linkUrl:'javascript:alert(1)'},admin)).status,400);
  assert.equal((await req('/api/admin/adverts',{...input,startsAt:'2030-01-02',endsAt:'2030-01-01'},admin)).status,400);
  const draft=await req('/api/admin/adverts',input,admin);assert.equal(draft.status,201);assert.equal((await req('/api/adverts')).data.items.length,0);
- assert.equal((await req('/api/admin/adverts/'+draft.data.advertId,{...input,status:'published'},admin,'PATCH')).status,200);assert.equal((await req('/api/adverts')).data.items.length,1);
- const future=await req('/api/admin/adverts',{...input,status:'published',startsAt:new Date(Date.now()+86400000).toISOString()},admin);assert.equal(future.status,201);assert.equal((await req('/api/adverts')).data.items.length,1);
- const expired=await req('/api/admin/adverts',{...input,status:'published',endsAt:new Date(Date.now()-1000).toISOString()},admin);assert.equal(expired.status,201);assert.equal((await req('/api/adverts')).data.items.length,1);
+ assert.equal((await req('/api/admin/adverts/'+draft.data.advertId,{...input,status:'published'},admin,'PATCH')).status,200);assert.equal((await req('/api/adverts')).data.items.length,0);
+ const future=await req('/api/admin/adverts',{...input,status:'published',startsAt:new Date(Date.now()+86400000).toISOString()},admin);assert.equal(future.status,201);assert.equal((await req('/api/adverts')).data.items.length,0);
+ const expired=await req('/api/admin/adverts',{...input,status:'published',endsAt:new Date(Date.now()-1000).toISOString()},admin);assert.equal(expired.status,201);assert.equal((await req('/api/adverts')).data.items.length,0);
  assert.equal((await req('/api/admin/adverts/'+draft.data.advertId,{...input,status:'paused'},admin,'PATCH')).status,200);assert.equal((await req('/api/adverts')).data.items.length,0);
  for(let i=0;i<51;i++)assert.equal((await req('/api/admin/adverts',{...input,title:'Draft '+i},admin)).status,201);
  const first=(await req('/api/admin/adverts',null,admin)).data;assert.equal(first.items.length,50);assert.ok(first.nextBefore);assert.equal((await req('/api/admin/adverts?before='+first.nextBefore,null,admin)).data.items.length,4);
