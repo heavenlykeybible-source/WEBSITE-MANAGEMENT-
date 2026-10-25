@@ -7,9 +7,11 @@ export async function issueOwnerTicketForAccount({db,verifiedPrincipal,roomId,si
  if(!verifiedPrincipal?.authenticated||typeof verifiedPrincipal.userId!=='string'||!verifiedPrincipal.userId)
   throw Error('Verified account session required');
  if(typeof signingSecret!=='string'||signingSecret.length<32)throw Error('Ticket signing not configured');
+ if(typeof roomId!=='string'||!/^[A-Za-z0-9_-]{6,80}$/.test(roomId))throw Error('Invalid meeting ID');
+ if(!Number.isFinite(now)||now<=0)throw Error('Invalid request time');
  const ownerId=verifiedPrincipal.userId;
  const allowance=await resolveMeetingAllowance(db,ownerId,{now});
- if(!allowance.allowed)return {allowed:false,reason:'Monthly meeting allowance exhausted',plan:allowance.plan.id};
+ if(!allowance.allowed||allowance.remainingMinutes<1)return {allowed:false,reason:'Monthly meeting allowance exhausted',plan:allowance.plan.id};
  const existing=await db.prepare('SELECT owner_user_id AS ownerId FROM meeting_sessions WHERE room_id=? LIMIT 1').bind(roomId).first();
  if(existing&&existing.ownerId!==ownerId)return {allowed:false,reason:'Room is owned by another account'};
  if(!existing){
@@ -20,7 +22,7 @@ export async function issueOwnerTicketForAccount({db,verifiedPrincipal,roomId,si
    if(winner?.ownerId!==ownerId)return {allowed:false,reason:'Room could not be reserved'};
   }
  }
- const meetingMinutes=Math.max(1,Math.floor(Math.min(allowance.plan.meetingMinutes,allowance.remainingMinutes)));
+ const meetingMinutes=Math.floor(Math.min(allowance.plan.meetingMinutes,allowance.remainingMinutes));
  const ticket=await issueMeetingTicket({roomId,userId:ownerId,role:'owner',planId:allowance.plan.id,meetingMinutes,secret:signingSecret});
  return {allowed:true,ticket,plan:allowance.plan.id,participants:allowance.plan.participants,
   meetingMinutes};
