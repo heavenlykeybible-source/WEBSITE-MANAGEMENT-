@@ -13,6 +13,6 @@ const databaseId=process.env.STUDIO_D1_DATABASE_ID;
 if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(databaseId||'')) throw Error('Set STUDIO_D1_DATABASE_ID to the intended dedicated database ID');
 if(target==='8' && process.env.MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED!=='1') throw Error('Confirm the Account 8 D1 database explicitly with MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED=1');
 const worker='heavenly-key-meetingspace';
-const config={account_id:accountId,name:worker,main:'site/_worker.js',compatibility_date:'2026-10-19',workers_dev:true,assets:{directory:'./site',binding:'ASSETS',run_worker_first:['/api/*','/p/*']},d1_databases:[{binding:'TEAMDB',database_name:'heavenly-key-meetingspace-db',database_id:databaseId,migrations_dir:'migrations'}],ai:{binding:'AI'}};
+const config={account_id:accountId,name:worker,main:'build/meeting-worker.mjs',compatibility_date:'2026-10-19',workers_dev:true,durable_objects:{bindings:[{name:'MEETING_ROOMS',class_name:'MeetingRooms'}]},migrations:[{tag:'account8-meetingrooms-v1',new_sqlite_classes:['MeetingRooms']}],d1_databases:[{binding:'TEAMDB',database_name:'heavenly-key-meetingspace-db',database_id:databaseId,migrations_dir:'migrations'}],ai:{binding:'AI'}};
 fs.writeFileSync(new URL('../wrangler.generated.json',import.meta.url),JSON.stringify(config,null,2)+'\n');
 console.log('MeetingSpace configuration prepared for Account '+target+'; no deployment performed.');
