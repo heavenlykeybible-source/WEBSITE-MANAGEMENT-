@@ -80,3 +80,8 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 - Fixed owner reconnect to keep the existing alarm deadline rather than reset it.
 - GitHub Actions workflow runs were queried for commit `636096a36b66e2d8bf360b0c34bd0d1b2815c03b`; none were returned. Local Git clone was blocked by missing network DNS, so full tests are NOT verified.
 - Still outstanding: safe room capacity after DO restart; authenticated signup/session and subscription-backed ticket issuance; billing/usage; SFU/TURN/recording; test + staging + production verification.
+
+## 2026-10-25: Room capacity persistence
+- `src/room-server.js` now persists `roomCapacity` and reloads it when a Durable Object instance is recreated, instead of defaulting every restarted room to three connections. Owner reconnection reuses stored plan capacity.
+- Added a regression test for enforcement of stored capacity on a recreated object. Test was committed but not executed; GitHub Actions has not reported a run, and local clone was blocked by unavailable DNS.
+- Production remaining: recover existing websocket sessions safely, protect room ownership/plan mutation under concurrent first joins, issue subscription-backed tickets, account signup, billing, monthly usage, media SFU/TURN, load tests and Cloudflare staging.
