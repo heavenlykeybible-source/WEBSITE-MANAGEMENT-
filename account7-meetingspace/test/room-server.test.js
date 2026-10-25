@@ -107,3 +107,13 @@ test('room reserves capacity for the host when guests connect first',async()=>{
  const ticket=await issueMeetingTicket({roomId:'room123',userId:'guest-3',role:'participant',secret});
  assert.equal((await room.fetch(socketRequest(ticket))).status,429);
 });
+
+test('host-ended meeting persists terminal room state',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ await room.ctx.storage.setAlarm(Date.now()+60000);
+ await room.endMeeting('host-ended');
+ assert.ok(await room.ctx.storage.get('meetingClosedAt'));
+ assert.equal(await room.ctx.storage.getAlarm(),null);
+ const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+ assert.equal((await room.fetch(socketRequest(ticket))).status,410);
+});
