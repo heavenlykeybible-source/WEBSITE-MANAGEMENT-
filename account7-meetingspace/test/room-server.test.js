@@ -126,3 +126,17 @@ test('terminal state is persisted before sockets close',async()=>{
  assert.equal(await closedAfterPersistence,true);
  assert.equal(await room.ctx.storage.getAlarm(),null);
 });
+
+test('persisted room lock is sent to reconnecting verified owner',async()=>{
+ const room=makeRoom({MEETING_TICKET_SECRET:secret});
+ await room.ctx.storage.put('roomLocked',true);
+ const messages=[];
+ const oldPair=globalThis.WebSocketPair,oldResponse=globalThis.Response;
+ try{
+  globalThis.WebSocketPair=class {constructor(){return {0:{},1:{accept(){},send(raw){messages.push(JSON.parse(raw))},addEventListener(){}}}}};
+  globalThis.Response=class extends oldResponse {constructor(body,opts){super(body,opts?.status===101?{status:200}:opts)}};
+  const ticket=await issueMeetingTicket({roomId:'room123',userId:'owner',role:'owner',secret});
+  await room.fetch(socketRequest(ticket));
+  assert.ok(messages.some(message=>message.type==='room-lock'&&message.locked===true));
+ }finally{globalThis.WebSocketPair=oldPair;globalThis.Response=oldResponse}
+});
