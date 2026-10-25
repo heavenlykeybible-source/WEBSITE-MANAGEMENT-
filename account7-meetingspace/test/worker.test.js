@@ -201,3 +201,24 @@ test('valid authenticated ticket still requires configured usage database',async
  assert.equal(response.status,503);
  assert.match(await response.text(),/database is not configured/);
 });
+
+test('responsive meeting design has keyboard focus and mobile toolbar',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/id="callControls"/);
+ assert.match(html,/@media\(max-width:700px\)/);
+ assert.match(html,/:focus-visible/);
+ assert.match(html,/prefers-reduced-motion/);
+});
+test('peer connection supports receiving media before camera permission and adding tracks later',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/addTransceiver\('audio'/);
+ assert.match(html,/addTransceiver\('video'/);
+ assert.match(html,/replaceTrack\(track\)/);
+ assert.match(html,/pc\.createOffer\(\)/);
+});
+test('socket disconnect cleans up media and preserves explicit meeting-end status',async()=>{
+ const html=await (await worker.fetch(new Request('https://example.test/'),mockEnv)).text();
+ assert.match(html,/ws\.onclose=/);
+ assert.match(html,/for\(const peerId of \[\.\.\.peers\.keys\(\)\]\)removePeer/);
+ assert.match(html,/stream\?\.getTracks\(\)\.forEach\(track=>track\.stop\(\)\)/);
+});
