@@ -56,3 +56,8 @@ test('first verified host join is recorded only once',async()=>{
  assert.deepEqual(await markVerifiedHostJoined(db,'room123','owner',2000),{started:false,joinedAt:1000});
  assert.equal(writes,1);
 });
+
+test('rejects corrupt persisted host join time without billing',async()=>{
+ const db={prepare(sql){return {bind(){return {first:async()=>({joinedAt:-2,endedAt:null,minutes:0}),run:async()=>{throw Error('Must not bill')}}}}}};
+ await assert.rejects(finalizeMeetingUsage(db,'room123','owner',61001),/Invalid stored host join time/);
+});
