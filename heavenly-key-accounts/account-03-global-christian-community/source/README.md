@@ -1,4 +1,4 @@
-# Global Christian Community — Cloudflare Workers Git import
+# Global Christian Social Network — Cloudflare Workers Git import
 
 This is the working application, with its TypeScript API, static frontend,
 approved banner, Design Cards, ACTIVE, migrations and tests. Do not deploy the
@@ -10,7 +10,7 @@ repository root or one of the preserved snapshots instead of this directory.
 | --- | --- |
 | GitHub repository | `heavenlykeybible-source/onlinebible` |
 | Branch | `build/global-christian-community-active-layout-20261021` |
-| Root directory | `Global Christian Community/implementation` |
+| Root directory | `Global Christian Social Network/implementation` |
 | Worker name | `heavenly-key-global-community` |
 | Build command | `npm run build` |
 | Deploy command for an inactive version | `npm run upload:version` |
