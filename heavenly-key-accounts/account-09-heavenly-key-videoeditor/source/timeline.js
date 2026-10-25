@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),v=$('v'),canvas=$('cv'),host=$('video');if(!v||!canvas||!host)return;
 const wrap=document.createElement('section');wrap.className='panel';wrap.style.marginTop='16px';
-wrap.innerHTML='<h2>Multi-Clip Timeline</h2><p class="muted">Edit clips from the loaded video. Export renders the full timeline in real time as WebM on supported browsers.</p><div class="tools"><div><label for="clipStart">Start (seconds)</label><input id="clipStart" type="number" min="0" step=".1" value="0"></div><div><label for="clipEnd">End (seconds)</label><input id="clipEnd" type="number" min="0" step=".1" value="0"></div><div><label for="clipSpeed">Speed</label><select id="clipSpeed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div></div><div class="actions"><button id="clipAdd">Add clip</button><button id="clipSplit">Split at playhead</button><button id="clipUpdate">Update selected clip</button><button id="clipUndo">Undo</button><button id="clipRedo">Redo</button><button id="clipRemove">Remove</button><button id="clipUp">Move up</button><button id="clipDown">Move down</button><button id="clipPlay">Preview timeline</button></div><label for="clipList">Timeline clips</label><select id="clipList" size="5" aria-label="Timeline clips"></select><div class="actions"><button id="clipExport">Export timeline (WebM)</button><button id="clipCancel" disabled>Stop preview/export</button><a id="clipDownload" download="heavenly-key-timeline.webm" hidden>Download timeline</a></div><div id="clipStatus" class="status" role="status">Load a video to begin.</div>';host.append(wrap);
+wrap.innerHTML='<h2>Multi-Clip Timeline</h2><p class="muted">Edit clips from the loaded video. Export renders the timeline in real time as WebM or native MP4 where supported by your browser.</p><div class="tools"><div><label for="clipStart">Start (seconds)</label><input id="clipStart" type="number" min="0" step=".1" value="0"></div><div><label for="clipEnd">End (seconds)</label><input id="clipEnd" type="number" min="0" step=".1" value="0"></div><div><label for="clipSpeed">Speed</label><select id="clipSpeed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div></div><div class="actions"><button id="clipAdd">Add clip</button><button id="clipSplit">Split at playhead</button><button id="clipUpdate">Update selected clip</button><button id="clipUndo">Undo</button><button id="clipRedo">Redo</button><button id="clipRemove">Remove</button><button id="clipUp">Move up</button><button id="clipDown">Move down</button><button id="clipPlay">Preview timeline</button></div><label for="clipList">Timeline clips</label><select id="clipList" size="5" aria-label="Timeline clips"></select><div class="actions"><button id="clipExport">Export timeline (MP4 / WebM)</button><button id="clipCancel" disabled>Stop preview/export</button><a id="clipDownload" download="heavenly-key-timeline.webm" hidden>Download timeline</a></div><div id="clipStatus" class="status" role="status">Load a video to begin.</div>';host.append(wrap);
 let clips=[],undo=[],redo=[],session=null,exportUrl=null;
 const info=t=>$('clipStatus').textContent=t;
 const invalidateExport=()=>{if(exportUrl){URL.revokeObjectURL(exportUrl);exportUrl=null;}$('clipDownload').removeAttribute('href');$('clipDownload').hidden=true};
@@ -30,8 +30,8 @@ async function runTimeline(record){
  const totalSeconds=clips.reduce((n,c)=>n+(c.end-c.start)/c.speed,0);
  if(record&&totalSeconds>600)return info('Browser export is limited to ten minutes. Shorten the timeline.');
  if(record&&(!canvas.captureStream||!window.MediaRecorder))return info('WebM export is unavailable in this browser.');
- const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t)):null;
- if(record&&!mime)return info('Browser does not support WebM encoding.');
+ const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
+ if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
  const state={cancelled:false};session=state;setBusy(true);
  const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null;
  try{
@@ -67,8 +67,8 @@ async function runTimeline(record){
   if(record){
    const blob=new Blob(fragments,{type:mime});if(!blob.size)throw Error('Encoder generated an empty video.');
    if(exportUrl)URL.revokeObjectURL(exportUrl);exportUrl=URL.createObjectURL(blob);
-   $('clipDownload').href=exportUrl;$('clipDownload').hidden=false;
-   info('Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the WebM file.');
+   $('clipDownload').href=exportUrl;$('clipDownload').download='heavenly-key-timeline.'+(mime.startsWith('video/mp4')?'mp4':'webm');$('clipDownload').hidden=false;
+   info('Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
   }else info('Timeline preview complete.');
  }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}info('Timeline failed: '+e.message)}
  finally{v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration);if(stream)stream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
