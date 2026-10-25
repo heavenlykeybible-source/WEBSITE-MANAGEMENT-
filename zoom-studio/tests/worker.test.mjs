@@ -65,6 +65,8 @@ ok((await call('/api/teams', { token: A })).j.teams[0].role === 'leader', 'leade
 const inv = await call('/api/team/invite', { token: A, body: { team: T } }); ok(inv.j.url.includes('?join='), 'invite link made');
 ok((await call('/api/team/invite', { token: B, body: { team: T } })).s === 403, 'non-members cannot invite');
 const code = inv.j.code;
+ok((await call('/api/team/join?code='+code,{token:B})).s===405,'GET cannot mutate group membership');
+ok((await call('/api/team/invite-preview?code='+code,{token:B,method:'POST'})).s===405,'POST cannot bypass read-only preview');
 const groupInvitePreview = await call('/api/team/invite-preview?code=' + code, { token: B });
 ok(groupInvitePreview.s === 200 && groupInvitePreview.j.group.id === T && groupInvitePreview.j.joined === false, 'invite preview reveals group without joining');
 ok((await call('/api/team/members?team=' + T, { token: A })).j.members.length === 1, 'preview does not enroll participant');
