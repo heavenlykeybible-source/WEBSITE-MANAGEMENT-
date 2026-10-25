@@ -81,6 +81,7 @@
       layers.push(...generated.filter(l=>l.text&&l.end>l.start));showLayers();message('vm','Added '+generated.length+' AI caption segments. Review timing before exporting.'+(audioBuffer.duration>maxChunks*seconds?' Only the first 96 seconds were processed.':''));
     }catch(e){message('vm','Transcription failed: '+e.message)}finally{button.disabled=false}
   };
-  const originalLogin=$('login').onclick;$('login').onclick=async()=>{await originalLogin();await Promise.allSettled([loadProjects(),loadMedia()])};
+  const originalLogin=$('login').onclick;$('login').onclick=async()=>{await originalLogin();try{await json('me');await Promise.allSettled([loadProjects(),loadMedia()])}catch{status.textContent='Sign in to manage cloud projects.';ms.textContent='Sign in to manage cloud media.'}};
+  const originalLogout=$('logout').onclick;$('logout').onclick=async()=>{await originalLogout();try{await json('me')}catch{selected=null;list.replaceChildren();ml.replaceChildren();status.textContent='Signed out. Cloud projects hidden.';ms.textContent='Signed out. Cloud media hidden.'}};
   json('me').then(d=>{message('authmsg','Signed in: '+d.email+' ('+d.role+')');loadProjects();loadMedia()}).catch(()=>{});
 })();
