@@ -95,3 +95,9 @@ Fetch this file and source from the feature branch, run tests, fix any failing t
 
 ## Deployment diagnostics
 - Added `GET /api/health` with a no-store JSON liveness response and 405 for other methods; added `test/worker.test.js` coverage. This is liveness only, NOT proof that video, billing, databases or Durable Objects work.
+
+## 2026-10-25: Subscription-aware owner ticket service
+- Added `src/account-meeting-service.js` to require a verified principal, check D1 subscription and monthly usage, reserve the room in D1, and mint a room-specific signed owner ticket. Tests added in `test/account-meeting-service.test.js` (NOT yet run).
+- Ticket format now optionally signs `meetingMinutes` to enforce remaining monthly time on top of the plan maximum; Durable Object deadline is capped by this signed allowance. Regression coverage added.
+- Critical blocker: There is **no working identity/session provider**, D1 binding, account signup, payment processor webhook validation, or active worker endpoint invoking the service. Never expose this function to unauthenticated client input or treat it as deployed. D1 session billing/usage needs transaction-safe accounting; the current room insert is groundwork only.
+- Existing test suite has not been run successfully; no production deployment or end-to-end subscription validation.
