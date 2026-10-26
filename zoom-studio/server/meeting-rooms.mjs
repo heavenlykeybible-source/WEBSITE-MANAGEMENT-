@@ -1,7 +1,7 @@
 // One hibernating Durable Object per meeting. Media stays browser-to-browser;
 // this service carries admission, chat and WebRTC signalling only.
 const roomClean=(s,n)=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n);
-const signalPayloadOk=data=>!!data&&typeof data==='object'&&!Array.isArray(data)&&Object.keys(data).length<=6;
+const signalPayloadOk=data=>{if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).length!==1)return false;if(data.sdp){const s=data.sdp;return !!s&&typeof s==='object'&&!Array.isArray(s)&&['offer','answer'].includes(s.type)&&typeof s.sdp==='string'&&s.sdp.length>0&&s.sdp.length<=18000;}if(data.c){const c=data.c;return !!c&&typeof c==='object'&&!Array.isArray(c)&&typeof c.candidate==='string'&&c.candidate.length<=12000;}return false;};
 // TURN is optional: configure TURN_URLS and TURN_SHARED_SECRET for coturn REST auth.
 // Credentials are minted per room and expire automatically; never publish the shared secret.
 async function meetingICE(env, room) {
