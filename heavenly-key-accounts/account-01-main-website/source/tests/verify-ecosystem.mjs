@@ -19,6 +19,8 @@ assert.match(section, /One Platform • Multiple Kingdom Solutions/);
 assert.match(section, /equipping the saints to be ready for the coming of Jesus Christ/);
 assert.match(section, /Taking Christ to the Nations of the World/);
 assert.match(section, /Join Live Meeting/);
+assert.match(section, /https:\/\/global\\.heavenlykey\\.org\//, 'Social network must link to verified public domain');
+assert.ok(!section.includes('community.heavenlykey.org'), 'Broken social domain should not return');
 assert.match(section, /Upcoming Meetings/);
 assert.match(section, /Zoom-style live meetings for fellowship, Bible study and prayer/);
 assert.equal((section.match(/Ministry Use Only/g)||[]).length,3);
