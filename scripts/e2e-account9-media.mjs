@@ -219,6 +219,9 @@ try{
  await page.locator('#clipAudioFadeIn').evaluate(el=>{el.value='2';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipVideoGain').evaluate(el=>{el.value='35';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipExportBitrate').evaluate(el=>{el.value='10000000';el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await page.locator('#clipPipPosition').evaluate(el=>{el.value='bl';el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await page.locator('#clipPipOffset').evaluate(el=>{el.value='1.2';el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await page.locator('#clipPipSize').evaluate(el=>{el.value='.5';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#psave').click();
  assert.equal((await page.evaluate(()=>JSON.parse(localStorage.getItem('hk-editor-project')))).fit,'cover','Local project must persist video fit');
  assert.match(await page.locator('#pm').textContent(),/Saved on this device/);
@@ -229,6 +232,9 @@ try{
  await page.locator('#clipAudioFadeIn').evaluate(el=>{el.value='0';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipVideoGain').evaluate(el=>{el.value='100';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipExportBitrate').evaluate(el=>{el.value='2500000';el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await page.locator('#clipPipPosition').evaluate(el=>{el.value='tr';el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await page.locator('#clipPipOffset').evaluate(el=>{el.value='0';el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await page.locator('#clipPipSize').evaluate(el=>{el.value='.25';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#pn').fill('Changed project');
  await page.locator('#pload').click();
  assert.equal(await page.locator('#pn').inputValue(),'Account 9 media E2E');
@@ -239,6 +245,9 @@ try{
  assert.equal(await page.locator('#clipAudioFadeIn').inputValue(),'2','Project must restore soundtrack fade-in');
  assert.equal(await page.locator('#clipVideoGain').inputValue(),'35','Project must restore original-audio volume');
  assert.equal(await page.locator('#clipExportBitrate').inputValue(),'10000000','Project must restore export bitrate');
+ assert.equal(await page.locator('#clipPipPosition').inputValue(),'bl','Project must restore overlay position');
+ assert.equal(await page.locator('#clipPipOffset').inputValue(),'1.2','Project must restore overlay timing');
+ assert.equal(await page.locator('#clipPipSize').inputValue(),'.5','Project must restore overlay size');
  console.log('PASS audio file import, WAV trimming/export/decode and local project save/reopen');
  assert.deepEqual(errors,[],'Browser page must not raise uncaught errors');
  console.log('PASS real video import, metadata, timeline clip/preview, timeline export/replay and single export/replay');
