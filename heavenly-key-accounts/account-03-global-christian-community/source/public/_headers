@@ -4,3 +4,12 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://heavenlykey.org https://www.heavenlykey.org https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev; connect-src 'self' https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev/v1/content; frame-src https://radio.heavenlykey.org https://bible.heavenlykey.org https://editor.heavenlykey.org https://app.heavenlykey.org https://heavenlykey.org https://heavenlykey.alldaywow247.workers.dev/api/broadcast/community-player https://www.youtube-nocookie.com https://www.youtube.com https://www.facebook.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   Permissions-Policy: camera=(self), microphone=(self), geolocation=()
+
+/assets/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/*.css
+  Cache-Control: public, max-age=300, stale-while-revalidate=3600
+
+/*.js
+  Cache-Control: public, max-age=300, stale-while-revalidate=3600
