@@ -16,6 +16,8 @@ assert.equal(toSeconds('00:00:01,5'),1.5,'Single-digit millisecond groups must r
 assert.equal(toSeconds('01:02:03,045'),3723.045,'Three-digit millisecond groups must retain precision');
 assert.ok(Number.isNaN(toSeconds('00:61:00,000')),'Invalid SRT minutes must be rejected');
 
+assert.ok(html.includes('Video export timed out')&&html.includes('Video decoding failed during export'),'Single-video export must fail instead of stalling');
+assert.ok(html.includes('id="register" disabled'),'Public registration must display closed state');
 const headers=readFileSync('public/_headers','utf8');
 const original=readFileSync('index.html','utf8');
 const inlineScripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(match=>match[1]).filter(Boolean);
@@ -56,6 +58,8 @@ for(const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhanc
 const timeline=readFileSync('timeline.js','utf8');
 for(const feature of ['clipAdd','clipSplit','clipUndo','clipRedo','clipExport','clipDownload'])
   assert.ok(timeline.includes(feature),'Timeline missing '+feature);
+assert.ok(timeline.includes('clipDuplicate')&&timeline.includes("clips.splice(i+1,0,{...clips[i]})"),'Duplicate clip must preserve clip trim/speed and insert after selection');
+assert.ok(timeline.includes("event.key.toLowerCase()")&&timeline.includes("event.preventDefault();$(action).click()")&&timeline.includes("['INPUT','TEXTAREA','SELECT']"),'Timeline hotkeys must not interfere with form editing');
 const voice=readFileSync('voice-studio.js','utf8');
 assert.ok(voice.includes('/api/voice-synthesize'),'Voice synthesis API not connected');
 const enhancement=readFileSync('voice-enhance.js','utf8');
@@ -63,12 +67,47 @@ assert.ok(enhancement.includes('enhanceDownload'),'Enhanced audio download contr
 assert.ok(headers.includes('Content-Security-Policy'),'Missing CSP');
 execFileSync(process.execPath,['--check','public/integrations.js'],{stdio:'inherit'});
 execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
+assert.ok(html.includes('id="fitmode"')&&html.includes("state.fit==='cover'")===false,'Framing selector stays in editor with cloud handling in module');
+assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'"),'Local/cloud project framing must restore');
 const timelineScript=readFileSync('timeline.js','utf8');
+assert.ok(timeline.includes("scale=Math.min((w*sz)/pip.videoWidth,(h-2*margin)/pip.videoHeight)"),'Picture-in-picture must fit tall videos within canvas height');
+for(const feature of ['id="clipPipOpacity"',"ctx.globalAlpha=opacity","pipOpacity:Number($('clipPipOpacity').value)","data.pipOpacity>=0&&data.pipOpacity<=100"]) assert.ok(timeline.includes(feature),'Picture-in-picture opacity missing '+feature);
+assert.ok(timeline.includes("!file.type&&/\\.(mp4|webm|mov|m4v)$/i.test(file.name)"),'Overlay file import should handle browsers omitting video MIME type');
+assert.ok(timeline.includes("pipLane.addEventListener('drop'") && timeline.includes('loadPipFile(file)'),'Overlay lane must import dropped videos through the safe shared handler');
+assert.ok(timeline.includes("pip.addEventListener('error'") && timeline.includes('Overlay cannot be decoded.'),'Overlay decode failures must be visible');
+assert.ok(timeline.includes('id="clipPipTrack"') && timeline.includes('function paintPip()') && timeline.includes('paintSoundtrack();paintPip();'),'Secondary video timeline lane must render and restore');
+assert.ok(timeline.includes('timelineProgress=progress'),'Overlay renderer must receive live timeline progress');
+assert.ok(timeline.includes('progress=timelineProgress-offset'),'Overlay renderer must not refer to runTimeline local elapsed');
+for(const feature of ['id="clipPipFadeIn"','id="clipPipFadeOut"','ctx.globalAlpha=opacity*envelope',"pipFadeIn:Number($('clipPipFadeIn').value)","pipFadeOut:Number($('clipPipFadeOut').value)"]) assert.ok(timeline.includes(feature),'PiP fades missing '+feature);
+for(const feature of ['id="clipPipLoop"', "loop&&remaining>0?position%remaining:position", "pipLoop:$('clipPipLoop').checked", "typeof data.pipLoop==='boolean'"]) assert.ok(timeline.includes(feature),'Overlay loop control missing '+feature);
+for(const feature of ['id="clipPipIn"','id="clipPipLength"','position>=length','pipIn>=pip.duration',"pipIn:Number($('clipPipIn').value)","pipLength:Number($('clipPipLength').value)"]) assert.ok(timeline.includes(feature),'PiP independent trim missing '+feature);
+for(const feature of ['id="clipPipFile"','id="clipPipSize"','id="clipPipPosition"','id="clipPipOffset"',"drawOverlay:ctx=>","syncPip(progress)"]) assert.ok(timeline.includes(feature),'Picture-in-picture missing '+feature);
+assert.ok(html.includes("window.hkTimeline?.drawOverlay?.(cx)"),'Secondary video must reach canvas preview and export');
+
+for(const expected of ['function loadSoundtrack(file)', 'audioLane.addEventListener("dragover"', 'audioLane.addEventListener("drop"', 'loadSoundtrack(file)']) assert.ok(timeline.includes(expected),'Soundtrack drop zone missing '+expected);
+for(const expected of ['id="clipDropZone"', "dropZone.addEventListener('drop'", "dropZone.addEventListener('dragover'", "new CustomEvent('change',{detail:{file}})"]) assert.ok(timeline.includes(expected),'Video drop zone missing '+expected);
+
+assert.ok(timeline.includes('clipFade')&&timeline.includes('fadeOpacity:')&&html.includes('window.hkTimeline?.fadeOpacity?.()'),'Clip edge fade must reach canvas export and preview renderer');
+for(const speed of ['.25','.5','1','1.5','2','3','4']) assert.ok(timelineScript.includes('<option value="'+speed+'">'),'Timeline speed selector missing '+speed+'×');
+for(const feature of ["id=\"clipTrack\"", "track.addEventListener('dragstart'", "track.addEventListener('drop'", "clips.splice(to,0,moved)", "total.toFixed(2)"]) assert.ok(timelineScript.includes(feature),'Visual draggable timeline missing '+feature);
+for(const feature of ['id="clipAudio"','id="clipAudioGain"','createMediaStreamDestination()','soundtrack.currentTime=soundtrack.loop?(audioStart+elapsed-audioOffset)%soundtrack.duration:audioStart+elapsed-audioOffset','soundtrack.pause()','soundtrackNode.stream.getAudioTracks()']) assert.ok(timelineScript.includes(feature),'Missing soundtrack mixing feature: '+feature);
+for(const feature of ['id="clipAudioLoop"',"soundtrack.loop=$('clipAudioLoop').checked",'(audioStart+elapsed-audioOffset)%soundtrack.duration',"'clipAudioGain','clipVideoGain','clipAudioLoop','clipAudioStart','clipAudioOffset'"]) assert.ok(timelineScript.includes(feature),'Soundtrack loop control missing '+feature);
+for(const feature of ['id="clipAudioStart"', "const audioStart=Number($('clipAudioStart').value),audioOffset=Number($('clipAudioOffset').value)", 'audioStart>=soundtrack.duration']) assert.ok(timelineScript.includes(feature),'Soundtrack in-point missing '+feature);
+for(const feature of ['id="clipVideoGain"', "originalGain.gain.value=Number($('clipVideoGain').value)/100", "originalGain.connect(soundtrackNode)"]) assert.ok(timelineScript.includes(feature),'Original sound mixing control missing '+feature);
+for(const safeguard of ['Unable to prepare original audio mix', 'audioTracks.length&&videoGain!==1', 'gainNode.gain.value=videoGain', 'v.volume=volume']) assert.ok(timelineScript.includes(safeguard),'Missing original-audio-only volume path: '+safeguard);
+for(const feature of ['id="clipAudioOffset"', 'progress>=audioOffset', 'progress<audioOffset?0:envelope', 'Soundtrack placement must be between 0 and 600 seconds']) assert.ok(timelineScript.includes(feature),'Soundtrack placement missing '+feature);
+for(const safeguard of ['Soundtrack metadata timed out', 'Cannot decode the selected soundtrack', 'Selected soundtrack has an invalid duration']) assert.ok(timelineScript.includes(safeguard),'Missing soundtrack metadata guard: '+safeguard);
+for(const feature of ['id="clipExportFps"','id="clipExportBitrate"',"stream=canvas.captureStream(fps)","videoBitsPerSecond",'["clipExportFps","clipExportBitrate"]']) assert.ok(timelineScript.includes(feature),'Export quality control missing '+feature);
+for(const feature of ['id="clipAudioFadeIn"','id="clipAudioFadeOut"',"soundtrackGain.gain.value=Number($('clipAudioGain').value)/100*(progress<audioOffset?0:envelope)","(totalSeconds-progress)/fadeOut"]) assert.ok(timelineScript.includes(feature),'Soundtrack fade control missing '+feature);
 assert.ok(timelineScript.includes("'video/mp4'")&&timelineScript.includes("mime.startsWith('video/mp4')?'mp4':'webm'"),'Timeline export must select correct browser-supported format and extension');
 assert.ok(timelineScript.includes('window.hkTimeline='),'Timeline state bridge must exist');
 assert.ok(timelineScript.includes("['vf','vexp','clipExport'")&&timelineScript.includes("if($('vexp').disabled)return info"),'Timeline must lock source changes and prevent concurrent exports');
-assert.ok(timelineScript.includes('id="clipUpdate"')&&timelineScript.includes("$('clipUpdate').onclick=()=>")&&timelineScript.includes('clips[i]={start,end:Math.min(end,v.duration),speed}'),'Timeline selected clip edits must update trim and speed');
-assert.ok(timelineScript.includes("'clipSplit','clipUpdate','clipRemove'"),'Editing clips must lock during timeline export');
+assert.ok(timelineScript.includes('id="clipUpdate"')&&timelineScript.includes("$('clipUpdate').onclick=()=>")&&timelineScript.includes('clips[i]={start,end:Math.min(end,v.duration),speed,fade}'),'Timeline selected clip edits must update trim and speed');
+assert.ok(timelineScript.includes("'clipSplit','clipUpdate','clipDuplicate','clipRemove'"),'Editing clips must lock during timeline export');
+assert.ok(timelineScript.includes('getSettings:()=>')&&timelineScript.includes('restoreSettings:(data)=>'),'Timeline settings must support save and restore');
+assert.ok(html.includes('timelineSettings:window.hkTimeline?.getSettings()||{}'),'Project save must retain timeline settings');
+assert.ok(html.includes('restoreSettings(d.timelineSettings)'),'Local project must restore timeline settings');
+assert.ok(module.includes('restoreSettings(state.timelineSettings)'),'Cloud project must restore timeline settings');
 assert.ok(html.includes('timeline:window.hkTimeline?.getClips()'),'Project snapshots must contain timeline');
 assert.ok(html.includes('restoreClips(d.timeline||[])'),'Local projects must restore timeline');
 assert.ok(module.includes('restoreClips(state.timeline||[])'),'Cloud projects must restore timeline');
