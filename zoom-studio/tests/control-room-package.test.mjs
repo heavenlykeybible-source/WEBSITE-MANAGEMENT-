@@ -288,6 +288,13 @@ test('WebRTC relay rejects unknown, malformed and oversized signaling data',asyn
   const n=g.messages.length;await message(s.room,s.host,{t:'sig',to:g.d.id,data});assert.equal(g.messages.length,n+1);
  }
 });
+test('host watch links require HTTPS and reject insecure URLs',async()=>{
+ const s=await openRoom(),g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ await message(s.room,s.host,{t:'watch',url:'http://example.org/watch'});
+ assert.equal(s.host.d.watch,'');assert.equal(g.messages.at(-1).url,'');
+ await message(s.room,s.host,{t:'watch',url:'https://example.org/watch'});
+ assert.equal(s.host.d.watch,'https://example.org/watch');assert.equal(g.messages.at(-1).url,'https://example.org/watch');
+});
 test('audience moderation, promotion, expiry and host disconnect work across hibernation',async()=>{
  const s=await openRoom(),aud=s.add();await message(s.room,aud,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});assert.equal(aud.d.ok,true);assert.equal(aud.d.stage,false);
  await message(s.room,s.host,{t:'audchat',on:false});await message(s.room,aud,{t:'chat',text:'not allowed'});assert.equal(aud.messages.at(-1).t,'note');
