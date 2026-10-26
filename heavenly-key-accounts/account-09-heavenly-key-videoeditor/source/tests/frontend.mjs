@@ -59,6 +59,7 @@ const timeline=readFileSync('timeline.js','utf8');
 for(const feature of ['clipAdd','clipSplit','clipUndo','clipRedo','clipExport','clipDownload'])
   assert.ok(timeline.includes(feature),'Timeline missing '+feature);
 assert.ok(timeline.includes('clipDuplicate')&&timeline.includes("clips.splice(i+1,0,{...clips[i]})"),'Duplicate clip must preserve clip trim/speed and insert after selection');
+assert.ok(timeline.includes("event.key.toLowerCase()")&&timeline.includes("event.preventDefault();$(action).click()")&&timeline.includes("['INPUT','TEXTAREA','SELECT']"),'Timeline hotkeys must not interfere with form editing');
 const voice=readFileSync('voice-studio.js','utf8');
 assert.ok(voice.includes('/api/voice-synthesize'),'Voice synthesis API not connected');
 const enhancement=readFileSync('voice-enhance.js','utf8');
