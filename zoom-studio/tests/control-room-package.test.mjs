@@ -81,6 +81,26 @@ test('meeting room rejects excess peers before allocating WebSockets',async()=>{
 function roomToken(extra={}){const p=Buffer.from(JSON.stringify({k:'meeting',u:'owner@test.local',r:'11111111-1111-4111-8111-111111111111',exp:Date.now()+60000,pe:Date.now()+86400000,...extra})).toString('base64url');return p+'.'+createHmac('sha256',secret).update(p).digest('hex');}
 const message=(room,w,m)=>room.webSocketMessage(w,JSON.stringify(m));
 async function openRoom(){const s=meeting(),host=s.add();await message(s.room,host,{t:'host',token:roomToken()});return {...s,host,key:host.messages.at(-1).key};}
+test('TURN relay credentials are time-limited and never expose the shared secret',async()=>{
+ const s=meeting();s.room.env.TURN_URLS='turn:relay.example:3478,turns:relay.example:5349';
+ s.room.env.TURN_SHARED_SECRET='test-only-turn-secret';
+ const host=s.add();await message(s.room,host,{t:'host',token:roomToken()});
+ const config=host.messages.at(-1);
+ assert.equal(config.t,'created');
+ assert.equal(config.ice.length,2);
+ const relay=config.ice[1];
+ assert.deepEqual(relay.urls,['turn:relay.example:3478','turns:relay.example:5349']);
+ assert.ok(relay.username.endsWith(':'+host.d.room));
+ const expires=Number(relay.username.split(':')[0]);
+ assert.ok(expires*1000>Date.now()+3500_000 && expires*1000<Date.now()+3700_000);
+ assert.equal(relay.credential,createHmac('sha1',s.room.env.TURN_SHARED_SECRET).update(relay.username).digest('base64'));
+ assert.equal(JSON.stringify(config).includes(s.room.env.TURN_SHARED_SECRET),false);
+ const guest=s.add();await message(s.room,guest,{t:'join',room:host.d.room,key:config.key,aud:true});
+ assert.deepEqual(guest.messages.find(m=>m.t==='welcome').ice,config.ice.map(x=>x.urls ? x : x));
+});
+test('TURN falls back to STUN when no relay secret is installed',async()=>{
+ const s=await openRoom();assert.equal(s.host.messages[0].ice.length,1);
+});
 test('meeting host requires purpose, matching room and unexpired signed access',async()=>{
  for(const token of ['bad',roomToken({k:'control-owner'}),roomToken({r:'another'}),roomToken({exp:Date.now()-1}),roomToken({pe:Date.now()-1})]){const s=meeting(),w=s.add();await message(s.room,w,{t:'host',token});assert.equal(w.readyState,3);}
  const s=await openRoom();assert.equal(s.host.messages[0].t,'created');const other=s.add();await message(s.room,other,{t:'host',token:roomToken()});assert.equal(other.readyState,3);
