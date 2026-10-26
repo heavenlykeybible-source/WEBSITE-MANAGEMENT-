@@ -45,6 +45,13 @@ try{
  await page.locator('#clipEnd').fill('1.5');
  await page.locator('#clipAdd').click();
  assert.equal(await page.locator('#clipList option').count(),1);
+ await page.locator('#clipDuplicate').click();
+ assert.equal(await page.locator('#clipList option').count(),2,'Duplicating a clip should add a second clip');
+ await page.locator('#clipUp').click();
+ assert.equal(await page.locator('#clipList option').count(),2,'Reordering must keep both clips');
+ await page.locator('#clipUndo').click();
+ await page.locator('#clipRedo').click();
+ assert.equal(await page.locator('#clipList option').count(),2,'Undo/redo must preserve timeline');
  await page.locator('#clipPlay').click();
  await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('preview complete'),{timeout:20000});
  await page.locator('#clipExport').click();
