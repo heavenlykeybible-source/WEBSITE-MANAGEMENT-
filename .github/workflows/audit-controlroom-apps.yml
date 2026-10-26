@@ -1,0 +1,34 @@
+name: Audit live Control Room assistants and app routes
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/audit-controlroom-apps.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    environment: account-4
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect saved deployment destination and public application routes
+        env:
+          CF_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node --input-type=module <<'JS'
+          const base='https://api.cloudflare.com/client/v4/accounts/'+process.env.CF_ACCOUNT;
+          async function cf(path){const r=await fetch(base+path,{headers:{Authorization:'Bearer '+process.env.CF_TOKEN},signal:AbortSignal.timeout(15000)});const d=await r.json();return {status:r.status,data:d};}
+          for(const path of ['/workers/subdomain','/workers/scripts']){
+            const {status,data}=await cf(path);
+            console.log(JSON.stringify({inspection:path,status,success:data.success,result:path.endsWith('scripts')?(data.result||[]).map(x=>({name:x.id,modified:x.modified_on})):data.result?.subdomain,errors:(data.errors||[]).map(x=>({code:x.code}))}));
+          }
+          for(const host of ['controlroom.heavenlykey.org','control.heavenlykey.org','apps.heavenlykey.org','app.heavenlykey.org','bible.heavenlykey.org','global.heavenlykey.org','radio.heavenlykey.org','meeting.heavenlykey.org','mediaeditor.heavenlykey.org','heavenlykey.org','website-management.emmanuel2026miracle.workers.dev','heavenlykey-cms-public.emmanuel2026miracle.workers.dev']){
+            try{const r=await fetch('https://'+host+'/',{signal:AbortSignal.timeout(15000)});const text=await r.text();console.log(JSON.stringify({host,status:r.status,final:r.url,title:text.match(/<title[^>]*>([^<]*)/i)?.[1],controlRoomFeatures:{home:text.includes('Manage your websites, review AI work'),chatReview:text.includes('function proposalCard'),screens:text.includes('function websiteScreens')},links:[...text.matchAll(/(?:href|src)=["'](https:\/\/[^"' ]+)/g)].map(x=>x[1]).filter(x=>/heavenlykey/.test(x)).slice(0,25)}));}catch(e){console.log(JSON.stringify({host,error:e.message}));}
+          }
+          try{const r=await fetch('https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev/v1/assistant',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://apps.heavenlykey.org'},body:JSON.stringify({message:'What is the official Heavenly Key website?'}),signal:AbortSignal.timeout(30000)});console.log(JSON.stringify({assistantProbe:r.status,body:(await r.text()).slice(0,1500)}));}catch(e){console.log(JSON.stringify({assistantProbeError:e.message}));}
+          JS
