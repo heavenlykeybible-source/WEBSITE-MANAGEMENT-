@@ -211,6 +211,15 @@ test('host admission respects speaker slots reserved for promoted audience',asyn
  await message(s.room,s.host,{t:'admit',gid:waiting.d.id});
  assert.equal(waiting.d.stage,false);
 });
+test('an active speaker admission pass cannot be reused for a second stage connection',async()=>{
+ const s=await openRoom(),first=s.add();
+ await message(s.room,first,{t:'join',room:s.host.d.room,key:s.key,aud:false,pass:'same-session'});
+ await message(s.room,s.host,{t:'admit',gid:first.d.id});assert.equal(first.d.stage,true);
+ const duplicate=s.add();await message(s.room,duplicate,{t:'join',room:s.host.d.room,key:s.key,aud:false,pass:'same-session'});
+ assert.equal(duplicate.d.stage,false);
+ assert.equal(duplicate.d.ok,false);
+ assert.ok(s.host.messages.some(m=>m.t==='waiting'&&m.gid===duplicate.d.id));
+});
 test('reconnecting approved speaker cannot steal a reserved stage slot',async()=>{
  const s=await openRoom(),speakers=[];
  for(let i=0;i<6;i++){const g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:false,pass:'approved-'+i});await message(s.room,s.host,{t:'admit',gid:g.d.id});speakers.push(g);}
