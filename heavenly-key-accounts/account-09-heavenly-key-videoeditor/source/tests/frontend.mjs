@@ -72,6 +72,7 @@ assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'
 const timelineScript=readFileSync('timeline.js','utf8');
 assert.ok(timeline.includes('clipFade')&&timeline.includes('fadeOpacity:')&&html.includes('window.hkTimeline?.fadeOpacity?.()'),'Clip edge fade must reach canvas export and preview renderer');
 for(const speed of ['.25','.5','1','1.5','2','3','4']) assert.ok(timelineScript.includes('<option value="'+speed+'">'),'Timeline speed selector missing '+speed+'×');
+for(const feature of ["id=\"clipTrack\"", "track.addEventListener('dragstart'", "track.addEventListener('drop'", "clips.splice(to,0,moved)", "total.toFixed(2)"]) assert.ok(timelineScript.includes(feature),'Visual draggable timeline missing '+feature);
 assert.ok(timelineScript.includes("'video/mp4'")&&timelineScript.includes("mime.startsWith('video/mp4')?'mp4':'webm'"),'Timeline export must select correct browser-supported format and extension');
 assert.ok(timelineScript.includes('window.hkTimeline='),'Timeline state bridge must exist');
 assert.ok(timelineScript.includes("['vf','vexp','clipExport'")&&timelineScript.includes("if($('vexp').disabled)return info"),'Timeline must lock source changes and prevent concurrent exports');
