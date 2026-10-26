@@ -28,7 +28,20 @@ function paintSoundtrack(){
 }
 soundtrack.addEventListener('loadedmetadata',paintSoundtrack);
 for(const id of ["clipAudioGain","clipVideoGain","clipAudioLoop","clipAudioStart","clipAudioOffset","clipAudioFadeIn","clipAudioFadeOut"])$(id).addEventListener("change",()=>{if(!session){invalidateExport();paintSoundtrack()}});
-$("clipAudio").addEventListener("change",()=>{if(session)return;const file=$("clipAudio").files?.[0];soundtrack.pause();soundtrack.removeAttribute("src");soundtrack.load();if(soundtrackUrl)URL.revokeObjectURL(soundtrackUrl);soundtrackUrl=null;invalidateExport();if(!file){soundtrackStatus.textContent="No separate soundtrack loaded.";paintSoundtrack();return;}if(!file.type.startsWith("audio/")||file.size>100*1024*1024){$("clipAudio").value="";soundtrackStatus.textContent="Choose an audio file smaller than 100 MB.";paintSoundtrack();return;}soundtrackUrl=URL.createObjectURL(file);soundtrack.src=soundtrackUrl;soundtrackStatus.textContent="Loaded: "+file.name+" (separate soundtrack)";paintSoundtrack();});
+function loadSoundtrack(file){
+ if(session)return info('Stop preview or export before changing the soundtrack.');
+ soundtrack.pause();soundtrack.removeAttribute("src");soundtrack.load();
+ if(soundtrackUrl)URL.revokeObjectURL(soundtrackUrl);soundtrackUrl=null;invalidateExport();
+ if(!file){soundtrackStatus.textContent="No separate soundtrack loaded.";paintSoundtrack();return;}
+ if(!file.type.startsWith("audio/")||file.size>100*1024*1024){$("clipAudio").value="";soundtrackStatus.textContent="Choose an audio file smaller than 100 MB.";paintSoundtrack();return;}
+ soundtrackUrl=URL.createObjectURL(file);soundtrack.src=soundtrackUrl;soundtrackStatus.textContent="Loaded: "+file.name+" (separate soundtrack)";paintSoundtrack();
+}
+$("clipAudio").addEventListener("change",()=>loadSoundtrack($("clipAudio").files?.[0]));
+const audioLane=$("clipAudioTrack");
+audioLane.setAttribute("tabindex","0");
+audioLane.setAttribute("aria-label","Soundtrack timeline lane. Drop an audio file here.");
+audioLane.addEventListener("dragover",event=>{if(session)return;event.preventDefault();event.dataTransfer.dropEffect="copy";});
+audioLane.addEventListener("drop",event=>{event.preventDefault();if(session)return info('Stop preview or export before changing the soundtrack.');const file=[...(event.dataTransfer?.files||[])].find(f=>f.type.startsWith("audio/"));if(!file)return info('Drop a supported audio file.');loadSoundtrack(file);});
 const info=t=>$('clipStatus').textContent=t;
 const invalidateExport=()=>{if(exportUrl){URL.revokeObjectURL(exportUrl);exportUrl=null;}$('clipDownload').removeAttribute('href');$('clipDownload').hidden=true};
 for(const id of ["clipExportFps","clipExportBitrate"])$(id).addEventListener("change",()=>{if(!session)invalidateExport()});
