@@ -102,6 +102,15 @@ assert.ok(appDock.includes('target="_blank"')&&appDock.includes('noopener norefe
 assert.ok(appDock.includes("function minimize()")&&appDock.includes("function close()"),'Popup minimize/close behavior missing');
 assert.ok(appDockCss.includes('.hk-dock-pole')&&appDockCss.includes('right:'),'Red pole must be anchored to right');
 assert.ok(appDock.includes('app.native'),'Unverified integrations must not masquerade as working apps');
+assert.ok(appDock.includes("aria-controls','hk-app-window'"),'Launcher buttons must identify their panel');
+assert.ok(appDock.includes("aria-pressed','false'"),'Launcher buttons must expose their selected state');
+assert.ok(appDock.includes("url:'https://bible.heavenlykey.org/study-extensions.html'"),'Bible Study must route to the dedicated study extension, not the general Bible homepage');
+assert.ok(appDock.includes("new URL(active.url,location.href).href"),'Share URL must be absolute for international visitors');
+assert.ok(appDock.includes('navigator.share')&&appDock.includes('navigator.clipboard'),'Share and copy fallback must remain supported');
+assert.ok(appDock.includes("if(app.id==='assistant')"),'Assistant launch must prefer the approved first-party widget');
+assert.ok(appDock.includes('iframe')&&appDock.includes("referrerPolicy='strict-origin-when-cross-origin'"),'External app frames must keep the privacy policy');
+assert.ok(appDockCss.includes('.hk-app-minimized[hidden]'),'Minimized app restore control must honor hidden state');
+
 
 
 assert.equal((appDock.match(/[{]id:'(?:radio|assistant|bible|social|walk|study|eternity)'/g)||[]).length,7,'Dock must have exactly seven approved apps');
