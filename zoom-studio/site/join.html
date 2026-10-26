@@ -58,13 +58,13 @@ input[type=text]{flex:1;min-width:150px}
 <script>
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),relay=q.get('relay')||'',room=q.get('r')||'',key=q.get('k')||'',AUD=q.get('a')==='1';
 const pass=(()=>{try{let p=sessionStorage.getItem('gp');if(!p){p=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');sessionStorage.setItem('gp',p)}return p}catch(e){return String(Math.random()).slice(2)}})();
-const NSPATH='https://cdn.jsdelivr.net/npm/@shiguredo/noise-suppression@2022.4.2/dist';let proc=null;
+const NSPATH='https://cdn.jsdelivr.net/npm/@shiguredo/noise-suppression@2022.4.2/dist';let proc=null,rawMedia=null;
 function loadNS(){return window.Shiguredo?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src=NSPATH+'/noise_suppression.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
 let ws=null,pc=null,ice=[],local=null,camTrack=null,shareTrack=null,over=false,tries=0,pend=[],hand=false,sharing=false,onStage=false,joined=false;
 const show=id=>['pre','wait','live','done'].forEach(s=>$(s).hidden=s!==id);
 const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
 const note=t=>{$('nt').textContent=t};
-function stopLocal(){try{proc&&proc.stopProcessing()}catch(e){}proc=null;if(local)local.getTracks().forEach(t=>t.stop());local=null}
+function stopLocal(){try{proc&&proc.stopProcessing()}catch(e){}proc=null;if(local)local.getTracks().forEach(t=>t.stop());if(rawMedia&&rawMedia!==local)rawMedia.getTracks().forEach(t=>t.stop());local=null;rawMedia=null}
 function end(msg){over=true;try{ws&&ws.close()}catch(e){}try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();show('done');$('dm').textContent=msg}
 function mode(stage){onStage=stage;$('stg').hidden=!stage;$('audv').hidden=stage;$('aorow').hidden=true;if(!stage)$('invrow').hidden=$('invrow').hidden}
 if(AUD){$('nrrow').hidden=true;$('ti').textContent='Join the audience';$('intro').textContent='You are joining as a viewer. You can chat, raise your hand and react. The host may invite you to the stage. You do not need an account.';$('aorow').hidden=true;
@@ -74,7 +74,7 @@ $('oklab').insertAdjacentHTML('beforeend',' <a href="/privacy.html" target="_bla
 $('pm').textContent=AUD?'':'Use headphones to avoid echo. Your browser will ask to use your camera and microphone.';
 if(!/^wss:\/\//.test(relay)||!/^[A-Za-z0-9_-]{1,64}$/.test(room)||!/^\w+$/.test(key)||!relay.startsWith('wss://'+location.host+'/meeting/'+room)){$('pm').textContent='This invite link is incomplete. Ask the host for a new one.';$('go').disabled=true}
 
-async function getMedia(ao){const m=await getMedia0(ao);if(!m||!$('nr').checked||!m.getAudioTracks().length)return m;
+async function getMedia(ao){const m=await getMedia0(ao);rawMedia=m;if(!m||!$('nr').checked||!m.getAudioTracks().length)return m;
  try{await loadNS();proc=new Shiguredo.NoiseSuppressionProcessor(NSPATH);const pt=await proc.startProcessing(m.getAudioTracks()[0]);return new MediaStream([...m.getVideoTracks(),pt])}catch(e){proc=null;note('Strong noise removal is not available on this device. Standard noise removal is on.');return m}}
 async function getMedia0(ao){
  try{return await navigator.mediaDevices.getUserMedia({video:ao?false:{width:1280,height:720,facingMode:'user'},audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
@@ -114,7 +114,7 @@ function onMsg(m){switch(m.t){
  case 'audchat':note(m.on?'Audience chat is on.':'The host turned audience chat off.');break;
  case 'slow':note(m.sec?'Slow mode: one message every '+m.sec+' seconds.':'Slow mode is off.');break;
  case 'promoted':$('invrow').hidden=false;break;
- case 'demoted':try{pc&&pc.close()}catch(e){}pc=null;stopLocal();onStage=false;mode(false);note('You are back in the audience.');break;
+ case 'demoted':try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;stopLocal();onStage=false;mode(false);note('You are back in the audience.');break;
  case 'sig':onSig(m.data);break}}
 
 $('inv').onclick=async()=>{$('invrow').hidden=true;local=await getMedia(false);if(!local){$('invrow').hidden=false;note('Could not use your microphone or camera.');return}
