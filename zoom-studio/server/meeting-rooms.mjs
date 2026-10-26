@@ -33,6 +33,8 @@ export class MeetingRooms {
   const url=new URL(request.url);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
+  const roomPath=url.pathname.match(/^\/meeting\/([a-f0-9-]{36})(?:\/room)?\/?$/i);
+  if(!roomPath||url.search)return new Response('Invalid meeting route',{status:404});
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
   const capacity=capacityForRoom(this.env);
   if(this.sockets().length>=capacity)return new Response('Room is full',{status:429});
@@ -40,7 +42,7 @@ export class MeetingRooms {
   if(this.sockets().filter(w=>!this.data(w).role).length>=Math.min(4,Math.max(1,capacity-1)))return new Response('Too many pending connections',{status:429});
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
-  this.save(server,{role:'',room:url.pathname.split('/')[2],until:Date.now()+15000});
+  this.save(server,{role:'',room:roomPath[1].toLowerCase(),until:Date.now()+15000});
   await this.state.storage.setAlarm(Date.now()+16000);
   return new Response(null,{status:101,webSocket:client});
  }
