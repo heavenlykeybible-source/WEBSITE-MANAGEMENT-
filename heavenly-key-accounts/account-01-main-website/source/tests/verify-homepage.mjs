@@ -78,4 +78,18 @@ for(const page of publicPages.filter(p=>p!=='radio')){
  assert.ok(pageThemes.includes('data-hk-page="'+page+'"'), 'No page-specific visual theme for '+page);
 }
 
+
+const notFound=readFileSync(resolve(dir,'404.html'),'utf8');
+const serverError=readFileSync(resolve(dir,'500.html'),'utf8');
+for(const [name,page] of [['404',notFound],['500',serverError]]){
+ assert.match(page,/<meta name="robots" content="noindex/, 'Error pages must not be indexed: '+name);
+ for(const destination of ['/', 'https://global.heavenlykey.org/', 'https://app.heavenlykey.org/', 'https://bible.heavenlykey.org/', 'https://radio.heavenlykey.org/', '/pages/contact']){
+  assert.ok(page.includes('href="'+destination+'"'), 'Error page '+name+' is missing recovery destination '+destination);
+ }
+ assert.ok(!/stack trace|exception at|internal server error/i.test(page), 'Public error page must not expose technical error details: '+name);
+}
+assert.ok(sw.includes('"/404.html"')&&sw.includes('"/500.html"'), 'Branded recovery pages must be available offline');
+assert.ok(sw.includes('status: res.status'), 'Public error recovery must preserve correct HTTP error status');
+assert.ok(sw.includes('res.status === 404 || res.status >= 500'), 'HTML navigation errors must be handled explicitly');
+
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
