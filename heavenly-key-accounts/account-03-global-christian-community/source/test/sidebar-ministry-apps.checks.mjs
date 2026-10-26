@@ -27,3 +27,7 @@ assert(footerSource.includes("document.querySelector('footer.community-footer')"
 assert(!footerSource.includes("document.querySelectorAll('footer'))old.remove()"),'Community footer must not remove unrelated page footers');
 assert(!footerSource.includes('footer.append(invitation)'),'Eternity invitation must stay in its original location');
 console.log('Active Global Christian Community sidebar and footer contracts verified');
+
+assert(source.includes("feedback.setAttribute('aria-live','polite')"),'App status must be accessible to screen readers');
+assert(source.includes("feedback.textContent='Application closed.'"),'Closing an app must provide confirmation');
+assert(css.includes('env(safe-area-inset-bottom)'),'App window must support phone safe areas');
