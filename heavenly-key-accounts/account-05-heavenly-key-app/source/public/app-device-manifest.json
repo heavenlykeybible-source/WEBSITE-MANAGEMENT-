@@ -1,0 +1,422 @@
+[
+  {
+    "app": "all-in-one",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/download/android/",
+    "qr": "/qr/android.svg",
+    "target": "/experience.html"
+  },
+  {
+    "app": "all-in-one",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/download/iphone/",
+    "qr": "/qr/iphone.svg",
+    "target": "/experience.html"
+  },
+  {
+    "app": "all-in-one",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/download/ipad/",
+    "qr": "/qr/ipad.svg",
+    "target": "/experience.html"
+  },
+  {
+    "app": "all-in-one",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/download/windows/",
+    "qr": "/qr/windows.svg",
+    "target": "/experience.html"
+  },
+  {
+    "app": "all-in-one",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/download/mac/",
+    "qr": "/qr/mac.svg",
+    "target": "/experience.html"
+  },
+  {
+    "app": "bible",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/bible/android/",
+    "qr": "/qr/bible-android.svg",
+    "target": "https://onlinebible.heavenlykey.org/"
+  },
+  {
+    "app": "bible",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/bible/iphone/",
+    "qr": "/qr/bible-iphone.svg",
+    "target": "https://onlinebible.heavenlykey.org/"
+  },
+  {
+    "app": "bible",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/bible/ipad/",
+    "qr": "/qr/bible-ipad.svg",
+    "target": "https://onlinebible.heavenlykey.org/"
+  },
+  {
+    "app": "bible",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/bible/windows/",
+    "qr": "/qr/bible-windows.svg",
+    "target": "https://onlinebible.heavenlykey.org/"
+  },
+  {
+    "app": "bible",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/bible/mac/",
+    "qr": "/qr/bible-mac.svg",
+    "target": "https://onlinebible.heavenlykey.org/"
+  },
+  {
+    "app": "social-network",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/social-network/android/",
+    "qr": "/qr/social-network-android.svg",
+    "target": "https://global.heavenlykey.org/"
+  },
+  {
+    "app": "social-network",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/social-network/iphone/",
+    "qr": "/qr/social-network-iphone.svg",
+    "target": "https://global.heavenlykey.org/"
+  },
+  {
+    "app": "social-network",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/social-network/ipad/",
+    "qr": "/qr/social-network-ipad.svg",
+    "target": "https://global.heavenlykey.org/"
+  },
+  {
+    "app": "social-network",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/social-network/windows/",
+    "qr": "/qr/social-network-windows.svg",
+    "target": "https://global.heavenlykey.org/"
+  },
+  {
+    "app": "social-network",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/social-network/mac/",
+    "qr": "/qr/social-network-mac.svg",
+    "target": "https://global.heavenlykey.org/"
+  },
+  {
+    "app": "radio",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/radio/android/",
+    "qr": "/qr/radio-android.svg",
+    "target": "https://radio.heavenlykey.org/"
+  },
+  {
+    "app": "radio",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/radio/iphone/",
+    "qr": "/qr/radio-iphone.svg",
+    "target": "https://radio.heavenlykey.org/"
+  },
+  {
+    "app": "radio",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/radio/ipad/",
+    "qr": "/qr/radio-ipad.svg",
+    "target": "https://radio.heavenlykey.org/"
+  },
+  {
+    "app": "radio",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/radio/windows/",
+    "qr": "/qr/radio-windows.svg",
+    "target": "https://radio.heavenlykey.org/"
+  },
+  {
+    "app": "radio",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/radio/mac/",
+    "qr": "/qr/radio-mac.svg",
+    "target": "https://radio.heavenlykey.org/"
+  },
+  {
+    "app": "walk-with-god",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/walk-with-god/android/",
+    "qr": "/qr/walk-with-god-android.svg",
+    "target": "/walk-offline.html"
+  },
+  {
+    "app": "walk-with-god",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/walk-with-god/iphone/",
+    "qr": "/qr/walk-with-god-iphone.svg",
+    "target": "/walk-offline.html"
+  },
+  {
+    "app": "walk-with-god",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/walk-with-god/ipad/",
+    "qr": "/qr/walk-with-god-ipad.svg",
+    "target": "/walk-offline.html"
+  },
+  {
+    "app": "walk-with-god",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/walk-with-god/windows/",
+    "qr": "/qr/walk-with-god-windows.svg",
+    "target": "/walk-offline.html"
+  },
+  {
+    "app": "walk-with-god",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/walk-with-god/mac/",
+    "qr": "/qr/walk-with-god-mac.svg",
+    "target": "/walk-offline.html"
+  },
+  {
+    "app": "bible-study",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/bible-study/android/",
+    "qr": "/qr/bible-study-android.svg",
+    "target": "/creation-to-eternity.html"
+  },
+  {
+    "app": "bible-study",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/bible-study/iphone/",
+    "qr": "/qr/bible-study-iphone.svg",
+    "target": "/creation-to-eternity.html"
+  },
+  {
+    "app": "bible-study",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/bible-study/ipad/",
+    "qr": "/qr/bible-study-ipad.svg",
+    "target": "/creation-to-eternity.html"
+  },
+  {
+    "app": "bible-study",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/bible-study/windows/",
+    "qr": "/qr/bible-study-windows.svg",
+    "target": "/creation-to-eternity.html"
+  },
+  {
+    "app": "bible-study",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/bible-study/mac/",
+    "qr": "/qr/bible-study-mac.svg",
+    "target": "/creation-to-eternity.html"
+  },
+  {
+    "app": "audio-bible",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/audio-bible/android/",
+    "qr": "/qr/audio-bible-android.svg",
+    "target": "/audio-bible.html"
+  },
+  {
+    "app": "audio-bible",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/audio-bible/iphone/",
+    "qr": "/qr/audio-bible-iphone.svg",
+    "target": "/audio-bible.html"
+  },
+  {
+    "app": "audio-bible",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/audio-bible/ipad/",
+    "qr": "/qr/audio-bible-ipad.svg",
+    "target": "/audio-bible.html"
+  },
+  {
+    "app": "audio-bible",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/audio-bible/windows/",
+    "qr": "/qr/audio-bible-windows.svg",
+    "target": "/audio-bible.html"
+  },
+  {
+    "app": "audio-bible",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/audio-bible/mac/",
+    "qr": "/qr/audio-bible-mac.svg",
+    "target": "/audio-bible.html"
+  },
+  {
+    "app": "hymns",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/hymns/android/",
+    "qr": "/qr/hymns-android.svg",
+    "target": "/hymns.html"
+  },
+  {
+    "app": "hymns",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/hymns/iphone/",
+    "qr": "/qr/hymns-iphone.svg",
+    "target": "/hymns.html"
+  },
+  {
+    "app": "hymns",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/hymns/ipad/",
+    "qr": "/qr/hymns-ipad.svg",
+    "target": "/hymns.html"
+  },
+  {
+    "app": "hymns",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/hymns/windows/",
+    "qr": "/qr/hymns-windows.svg",
+    "target": "/hymns.html"
+  },
+  {
+    "app": "hymns",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/hymns/mac/",
+    "qr": "/qr/hymns-mac.svg",
+    "target": "/hymns.html"
+  },
+  {
+    "app": "audio-hymnal",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/audio-hymnal/android/",
+    "qr": "/qr/audio-hymnal-android.svg",
+    "target": "/audio-hymns.html"
+  },
+  {
+    "app": "audio-hymnal",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/audio-hymnal/iphone/",
+    "qr": "/qr/audio-hymnal-iphone.svg",
+    "target": "/audio-hymns.html"
+  },
+  {
+    "app": "audio-hymnal",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/audio-hymnal/ipad/",
+    "qr": "/qr/audio-hymnal-ipad.svg",
+    "target": "/audio-hymns.html"
+  },
+  {
+    "app": "audio-hymnal",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/audio-hymnal/windows/",
+    "qr": "/qr/audio-hymnal-windows.svg",
+    "target": "/audio-hymns.html"
+  },
+  {
+    "app": "audio-hymnal",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/audio-hymnal/mac/",
+    "qr": "/qr/audio-hymnal-mac.svg",
+    "target": "/audio-hymns.html"
+  },
+  {
+    "app": "reading-plan",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/reading-plan/android/",
+    "qr": "/qr/reading-plan-android.svg",
+    "target": "/devotional.html"
+  },
+  {
+    "app": "reading-plan",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/reading-plan/iphone/",
+    "qr": "/qr/reading-plan-iphone.svg",
+    "target": "/devotional.html"
+  },
+  {
+    "app": "reading-plan",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/reading-plan/ipad/",
+    "qr": "/qr/reading-plan-ipad.svg",
+    "target": "/devotional.html"
+  },
+  {
+    "app": "reading-plan",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/reading-plan/windows/",
+    "qr": "/qr/reading-plan-windows.svg",
+    "target": "/devotional.html"
+  },
+  {
+    "app": "reading-plan",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/reading-plan/mac/",
+    "qr": "/qr/reading-plan-mac.svg",
+    "target": "/devotional.html"
+  },
+  {
+    "app": "meetings",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/meetings/android/",
+    "qr": "/qr/meetings-android.svg",
+    "target": "https://meeting.heavenlykey.org/"
+  },
+  {
+    "app": "meetings",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/meetings/iphone/",
+    "qr": "/qr/meetings-iphone.svg",
+    "target": "https://meeting.heavenlykey.org/"
+  },
+  {
+    "app": "meetings",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/meetings/ipad/",
+    "qr": "/qr/meetings-ipad.svg",
+    "target": "https://meeting.heavenlykey.org/"
+  },
+  {
+    "app": "meetings",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/meetings/windows/",
+    "qr": "/qr/meetings-windows.svg",
+    "target": "https://meeting.heavenlykey.org/"
+  },
+  {
+    "app": "meetings",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/meetings/mac/",
+    "qr": "/qr/meetings-mac.svg",
+    "target": "https://meeting.heavenlykey.org/"
+  },
+  {
+    "app": "videoeditor",
+    "device": "android",
+    "url": "https://apps.heavenlykey.org/install/videoeditor/android/",
+    "qr": "/qr/videoeditor-android.svg",
+    "target": "https://editor.heavenlykey.org/"
+  },
+  {
+    "app": "videoeditor",
+    "device": "iphone",
+    "url": "https://apps.heavenlykey.org/install/videoeditor/iphone/",
+    "qr": "/qr/videoeditor-iphone.svg",
+    "target": "https://editor.heavenlykey.org/"
+  },
+  {
+    "app": "videoeditor",
+    "device": "ipad",
+    "url": "https://apps.heavenlykey.org/install/videoeditor/ipad/",
+    "qr": "/qr/videoeditor-ipad.svg",
+    "target": "https://editor.heavenlykey.org/"
+  },
+  {
+    "app": "videoeditor",
+    "device": "windows",
+    "url": "https://apps.heavenlykey.org/install/videoeditor/windows/",
+    "qr": "/qr/videoeditor-windows.svg",
+    "target": "https://editor.heavenlykey.org/"
+  },
+  {
+    "app": "videoeditor",
+    "device": "mac",
+    "url": "https://apps.heavenlykey.org/install/videoeditor/mac/",
+    "qr": "/qr/videoeditor-mac.svg",
+    "target": "https://editor.heavenlykey.org/"
+  }
+]

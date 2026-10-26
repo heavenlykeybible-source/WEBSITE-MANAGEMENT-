@@ -83,7 +83,7 @@ test('premium page assets, CSP, navigation and app preservation',()=>{
  assert.match(html,/aria-label="Main navigation"/);
  assert.match(html,/aria-label="Follow Heavenly Key"/);
  assert.match(html,/href="\/experience\.html"/);
- assert.match(get('public/premium-download-options.js'),/heavenly-key-app\.heavenlykeyapp\.workers\.dev/);
+ assert.match(get('public/premium-download-options.js'),/apps\.heavenlykey\.org/);
  assert.doesNotMatch(get('public/premium-download-options.js'),/api\.qrserver\.com/);
 });
 
