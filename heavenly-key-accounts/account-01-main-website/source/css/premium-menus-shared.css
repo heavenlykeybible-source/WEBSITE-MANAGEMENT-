@@ -80,3 +80,5 @@ body header.site-header #main-nav :is(a,summary,button):focus-visible{
 @media(prefers-reduced-motion:reduce){
  body header.site-header #main-nav :is(a,summary){transition:none!important;transform:none!important}
 }
+
+body header.site-header #main-nav details.hk-nav-current>summary{border-color:#d6ad4c!important;box-shadow:inset 0 -3px 0 #d6ad4c,0 4px 14px #805a2622!important}
