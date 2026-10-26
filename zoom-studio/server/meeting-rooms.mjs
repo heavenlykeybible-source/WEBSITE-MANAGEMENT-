@@ -84,7 +84,7 @@ export class MeetingRooms {
   }
   const host=this.host(),h=host&&this.data(host);
   if(!h||h.until<=now){this.end('The meeting has ended.');return;}
-  const chat=()=>{if(now-(d.last||0)<800)return;d.last=now;this.save(ws,d);this.broadcast({t:'chat',from:d.id,name:d.role==='host'?'Host':d.name,text:roomClean(m.text,300)});};
+  const chat=()=>{const text=typeof m.text==='string'?roomClean(m.text,300):'';if(!text||now-(d.last||0)<800)return;d.last=now;this.save(ws,d);this.broadcast({t:'chat',from:d.id,name:d.role==='host'?'Host':d.name,text});};
   if(d.role==='host'){
    // h and d are separate attachment snapshots. Save room controls through h.
    if(m.t==='lock'){h.locked=!!m.on;this.save(host,h);}
