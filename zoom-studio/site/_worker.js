@@ -408,7 +408,7 @@ export default {
       if (path === '/api/signup' ? !(await rate(env, 'su:' + ipa, 5, 3600)) : !((await rate(env, 'li:' + ipa, 30, 900)) && (await rate(env, 'le:' + email, 8, 900)))) return json({ error: 'Too many attempts. Please wait a few minutes and try again.' }, 429);
       let u = await getUser(env, email);
       if (path === '/api/signup') {
-        return json({ error: 'Private preview: registration is closed. Contact the Heavenly Key administrator for an approved account.' }, 403);
+        if (env.MEETINGSPACE_PRIVATE_PREVIEW !== '0') return json({ error: 'Private preview: registration is closed. Contact the Heavenly Key administrator for an approved account.' }, 403);
         if (reserved(env, email) || email.endsWith('@studio.local')) return json({ error: 'Ask the owner or an admin to create this account.' }, 403);
         if (b.agree !== true) return json({ error: 'Please confirm you are 18 or older and agree to the Terms and Privacy Policy.' }, 400);
         if (!stretched(password)) return json({ error: 'Please refresh the page and try again.' }, 400);
@@ -420,7 +420,7 @@ export default {
         if (mailOn(env)) await sendVerify(env, url, email);
       } else if (!u || (await pw(env, password, u.salt)) !== u.hash) return json({ error: 'Wrong email or password.' }, 401);
       if (u.banned) return json({ error: 'This account is suspended.' }, 403);
-      if (path === '/api/login' && accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'This private preview requires administrator approval.' }, 403);
+      if (path === '/api/login' && env.MEETINGSPACE_PRIVATE_PREVIEW !== '0' && accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'This private preview requires administrator approval.' }, 403);
       if (path === '/api/login') { u.seen = Date.now(); u.warned = 0; await putUser(env, email, u); }
       return json({ token: await sign(env.AUTH_SECRET, { e: email, t: u.tv || 0, exp: Date.now() + 30 * 864e5 }) });
     }
