@@ -1,21 +1,3 @@
-function proposalDecisionMessage(kind,result){
- if(result.status==='rejected')return 'Proposal declined. Nothing was published.';
- if(result.status==='changes_requested')return 'Changes requested. Nothing was published.';
- if(result.status!=='approved')return 'The result needs verification. Check release status before trying again.';
- if(result.release_status!=='succeeded')return 'Congratulations, your proposal has been approved. Deployment is not yet confirmed.';
- if(kind==='worker')return 'Congratulations, your proposal has been approved and the Worker has been deployed. Live functionality still needs verification.';
- if(kind==='github')return 'Congratulations, your proposal has been approved and the code has been saved to GitHub. Website deployment is not yet confirmed.';
- if(kind==='cloudflare_resource')return 'Congratulations, your proposal has been approved and the resource has been created.';
- return 'Congratulations, your proposal has been approved and publication has completed.';
-}
-function proposalDecisionNotice(message,isError,id){
- var old=document.getElementById('proposal-decision-notice');if(old)old.remove();
- var box=h('section',{id:'proposal-decision-notice',role:isError?'alert':'status','aria-live':isError?'assertive':'polite',style:'position:fixed;bottom:20px;right:20px;z-index:2147483647;width:min(460px,calc(100vw - 40px));max-height:60vh;overflow:auto;padding:20px;border:2px solid '+(isError?'#a20b2d':'#176039')+';border-radius:14px;background:#fff;color:#16233e;box-shadow:0 8px 32px #0003'},h('strong',{},isError?'Action needs attention':'Proposal update'),h('p',{},message));
- if(isError)box.appendChild(h('button',{class:'sm',onclick:async function(){this.disabled=true;try{var current=await api('proposals/'+id);proposalDecisionNotice('Current proposal status: '+current.proposal.status+'. Review Releases before retrying a deployment.',false,id);}catch(e){proposalDecisionNotice('Could not check the result: '+e.message,true,id);}}},'Check result'));
- box.appendChild(h('button',{class:'sm',onclick:releaseHistory},'View release details'));
- box.appendChild(h('button',{class:'sm',onclick:function(){box.remove();}},'Dismiss'));
- document.body.appendChild(box);
-}
 // BEGIN NATIVE WORKSPACE SERVER
 // Native GitHub -> private immutable scan -> reviewed destination. No browser service.
 async function importSource(env,user,id){return ghById(env,id,scopeOf({kind:'owner',user,ow:null}));}
@@ -3460,6 +3442,24 @@ preview.appendChild(h('div',{class:'preview-shell'},h('div',{class:'preview-head
 var filters=h('div',{class:'filters'});['waiting','approved','rejected','changes_requested','uncertain'].forEach(function(x){filters.appendChild(h('button',{class:st===x?'selected':'sm',onclick:function(){waiting(x);}},x==='changes_requested'?'Changes requested':x.charAt(0).toUpperCase()+x.slice(1)));});
 show(nav(),h('div',{class:'eyebrow'},'Review & release'),h('h3',{class:'page-title'},'The Waiting Room'),h('p',{class:'page-intro'},'Every proposal arrives here before publication. Expand a row to preview the work, then open its full approval review.'),h('div',{class:'stat-grid'},h('div',{class:'stat'},h('strong',{},String(d.proposals.length)),h('span',{},'Items in this view')),h('div',{class:'stat'},h('strong',{},'WAT'),h('span',{},'Lagos time · UTC+1')),h('div',{class:'stat'},h('strong',{},'Review first'),h('span',{},'Your approval controls publication'))),filters,h('div',{class:'queue-table-wrap'},queueTable));TAB=st;if(st==='waiting')WAITN=d.proposals.length;
 }catch(e){oops(e);}}
+function proposalDecisionMessage(kind,result){
+ if(result.status==='rejected')return 'Proposal declined. Nothing was published.';
+ if(result.status==='changes_requested')return 'Changes requested. Nothing was published.';
+ if(result.status!=='approved')return 'The result needs verification. Check release status before trying again.';
+ if(result.release_status!=='succeeded')return 'Congratulations, your proposal has been approved. Deployment is not yet confirmed.';
+ if(kind==='worker')return 'Congratulations, your proposal has been approved and the Worker has been deployed. Live functionality still needs verification.';
+ if(kind==='github')return 'Congratulations, your proposal has been approved and the code has been saved to GitHub. Website deployment is not yet confirmed.';
+ if(kind==='cloudflare_resource')return 'Congratulations, your proposal has been approved and the resource has been created.';
+ return 'Congratulations, your proposal has been approved and publication has completed.';
+}
+function proposalDecisionNotice(message,isError,id){
+ var old=document.getElementById('proposal-decision-notice');if(old)old.remove();
+ var box=h('section',{id:'proposal-decision-notice',role:isError?'alert':'status','aria-live':isError?'assertive':'polite',style:'position:fixed;bottom:20px;right:20px;z-index:2147483647;width:min(460px,calc(100vw - 40px));max-height:60vh;overflow:auto;padding:20px;border:2px solid '+(isError?'#a20b2d':'#176039')+';border-radius:14px;background:#fff;color:#16233e;box-shadow:0 8px 32px #0003'},h('strong',{},isError?'Action needs attention':'Proposal update'),h('p',{},message));
+ if(isError)box.appendChild(h('button',{class:'sm',onclick:async function(){this.disabled=true;try{var current=await api('proposals/'+id);proposalDecisionNotice('Current proposal status: '+current.proposal.status+'. Review Releases before retrying a deployment.',false,id);}catch(e){proposalDecisionNotice('Could not check the result: '+e.message,true,id);}}},'Check result'));
+ box.appendChild(h('button',{class:'sm',onclick:releaseHistory},'View release details'));
+ box.appendChild(h('button',{class:'sm',onclick:function(){box.remove();}},'Dismiss'));
+ document.body.appendChild(box);
+}
 async function openP(id,inChat){try{var d=await api('proposals/'+id);var P=d.proposal;var popup=null,c=h('textarea',{rows:2,placeholder:'Comment for the agent (optional)'});
   var staged=null,stageError='';var password=h('input',{type:'password',autocomplete:'current-password',placeholder:'Your current password to approve'}),reviewed=h('input',{type:'checkbox',style:'width:auto;margin-right:8px'});
   if(P.status==='waiting'&&own()){try{staged=await api('proposals/'+id+'/stage','POST',{});if(P.kind==='page')d.before=JSON.parse(staged.before.content_json);if(P.kind==='design')d.before=staged.before;if(P.kind==='remote'&&staged.before)d.remote.before=staged.before;}catch(e){stageError=e.message;}}

@@ -10,7 +10,7 @@ const MINISTRY_FACTS=[
 'Official contact details and current service schedules must be checked on the ministry website; do not invent them.',
 'The Online Assistant does not have authority to give binding pastoral counselling, promise healing or access private account information.'
 ].join('\\n');
-const origins=new Set(['https://studioroom.heavenlykey.org','https://controlroom.heavenlykey.org','https://meeting.heavenlykey.org','https://radio.heavenlykey.org','https://mediaeditor.heavenlykey.org','https://studio.heavenlykey.org','https://control.heavenlykey.org','https://heavenlykey.org','https://www.heavenlykey.org','https://global.heavenlykey.org','https://bible.heavenlykey.org','https://app.heavenlykey.org','https://heavenlykey.alldaywow247.workers.dev','https://onlinebible.heavenlykeybible.workers.dev','https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev','https://heavenly-key-app.heavenlykeyapp.workers.dev','https://heavenlykey-control-room.emmanuel2026miracle.workers.dev']);
+const origins=new Set(['https://apps.heavenlykey.org','https://studioroom.heavenlykey.org','https://controlroom.heavenlykey.org','https://meeting.heavenlykey.org','https://radio.heavenlykey.org','https://mediaeditor.heavenlykey.org','https://studio.heavenlykey.org','https://control.heavenlykey.org','https://heavenlykey.org','https://www.heavenlykey.org','https://global.heavenlykey.org','https://bible.heavenlykey.org','https://app.heavenlykey.org','https://heavenlykey.alldaywow247.workers.dev','https://onlinebible.heavenlykeybible.workers.dev','https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev','https://heavenly-key-app.heavenlykeyapp.workers.dev','https://heavenlykey-control-room.emmanuel2026miracle.workers.dev']);
 function reply(data,status=200,origin='*') {return Response.json(data,{status,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'GET, HEAD, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Vary':'Origin'}})}
 export async function publicRoute(request,env){
  const u=new URL(request.url),origin=request.headers.get('Origin');
@@ -38,6 +38,7 @@ export async function publicRoute(request,env){
   if(origin&&!origins.has(origin))return reply({error:'Use the Heavenly Key website assistant'},403);
   if(Number(request.headers.get('Content-Length')||0)>65536)return reply({error:'Message is too long'},413);
   let body;try{const raw=await request.text();if(raw.length>65536)return reply({error:'Message is too long'},413);body=JSON.parse(raw)}catch{return reply({error:'Enter a message'},400)}
+  if(!body||typeof body!=='object'||Array.isArray(body))return reply({error:'Enter a message'},400,origin||'*');
   const message=typeof body.message==='string'?body.message.trim():'';
   if(!message||message.length>2000)return reply({error:'Enter a message of up to 2,000 characters'},400);
   if(!env.GEMINI_API_KEY)return reply({error:'The assistant is awaiting secure Gemini API configuration.'},503,origin||'*');
