@@ -191,6 +191,15 @@ test('promoted audience reconnects as an admitted speaker and demotion revokes t
  await message(s.room,s.host,{t:'demote',gid:reconnect.d.id});
  assert.equal(reconnect.d.stage,false);assert.ok(!s.host.d.admitted.includes('persistent-viewer'));
 });
+test('empty and malformed meeting chat never reaches participants',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ const before=guest.messages.filter(m=>m.t==='chat').length;
+ for(const value of ['', '   ', null, 42, '<>'])await message(s.room,s.host,{t:'chat',text:value});
+ assert.equal(guest.messages.filter(m=>m.t==='chat').length,before);
+ await message(s.room,s.host,{t:'chat',text:'Welcome everyone'});
+ assert.equal(guest.messages.filter(m=>m.t==='chat').at(-1).text,'Welcome everyone');
+});
 test('meeting signaling ignores malformed SDP/ICE payloads',async()=>{
  const s=await openRoom(),g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:false});
  await message(s.room,s.host,{t:'admit',gid:g.d.id});
