@@ -60,7 +60,7 @@ try{
  await page.locator('#clipRedo').click();
  assert.equal(await page.locator('#clipList option').count(),2,'Undo/redo must preserve timeline');
  await page.locator('#clipPlay').click();
- assert.equal(typeof await page.evaluate(()=>window.hkTimeline.fadeOpacity),'function','Fade renderer must be available');
+ assert.equal(await page.evaluate(()=>typeof window.hkTimeline.fadeOpacity),'function','Fade renderer must be available');
  await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('preview complete'),{timeout:20000});
  await page.locator('#clipExport').click();
  await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
