@@ -118,3 +118,10 @@ test('Account 8 deployment verifies the exact bundled build ID after publishing'
  assert.match(deploy,/RELEASE_HEALTH_EXPECT=JSON\.stringify\(\{\.\.\.expectedHealth,releaseId:/);
  assert.match(deploy,/existing-worker-release\.mjs','verify'\],releaseEnv/);
 });
+
+test('Rollback validation uses saved previous health instead of requiring new release ID',()=>{
+ const release=fs.readFileSync(new URL('../../scripts/existing-worker-release.mjs',import.meta.url),'utf8');
+ assert.match(release,/rollbackHealth:JSON\.parse\(process\.env\.RELEASE_ROLLBACK_HEALTH_EXPECT/);
+ assert.match(release,/await healthy\(saved\.rollbackHealth\)/);
+ assert.match(release,/async function healthy\(expectedOverride\)/);
+});
