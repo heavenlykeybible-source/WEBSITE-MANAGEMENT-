@@ -44,6 +44,8 @@ for(const page of publicPages){
  const pageHtml=readFileSync(resolve(dir,'pages',page+'.html'),'utf8');
  assert.ok(pageHtml.includes('/css/global-clean-finish.css'), 'Missing shared background on '+page);
  assert.doesNotMatch(pageHtml,/href=["'](?:\/pages\/radio(?:\.html)?|\.\/radio\.html)["']/i,'Old radio link found on '+page);
+ assert.doesNotMatch(pageHtml,/href=["'](?:https:\/\/heavenlykey\.org)?\/pages\/[a-z0-9-]+\.html(?:[?#][^"']*)?["']/i,'Public links must not expose .html on '+page);
+ assert.doesNotMatch(pageHtml,/href=["'](?:\.\/)?[a-z0-9-]+\.html(?:[?#][^"']*)?["']/i,'Relative .html navigation must not recur on '+page);
 }
 
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
