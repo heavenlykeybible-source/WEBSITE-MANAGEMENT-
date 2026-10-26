@@ -30,7 +30,7 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           const u=new URL(process.env.ACCOUNT9_LIVE_URL);
-          const hosts=['editor.heavenlykey.org','mediaeditor.heavenlykey.org','videoeditor.heavenlykey.org'];
+          const hosts=['mediaeditor.heavenlykey.org'];
           if(u.protocol!=='https:'||!hosts.includes(u.hostname)||u.port||u.pathname!=='/'||u.search||u.hash||u.username||u.password)throw Error('Use an approved Account 9 HTTPS origin.');
           JS
       - name: Verify live editor and Cloudflare resources
