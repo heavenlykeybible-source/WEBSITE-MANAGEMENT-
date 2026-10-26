@@ -389,34 +389,34 @@
     "device": "android",
     "url": "https://apps.heavenlykey.org/install/videoeditor/android/",
     "qr": "/qr/videoeditor-android.svg",
-    "target": "https://editor.heavenlykey.org/"
+    "target": "https://mediaeditor.heavenlykey.org/"
   },
   {
     "app": "videoeditor",
     "device": "iphone",
     "url": "https://apps.heavenlykey.org/install/videoeditor/iphone/",
     "qr": "/qr/videoeditor-iphone.svg",
-    "target": "https://editor.heavenlykey.org/"
+    "target": "https://mediaeditor.heavenlykey.org/"
   },
   {
     "app": "videoeditor",
     "device": "ipad",
     "url": "https://apps.heavenlykey.org/install/videoeditor/ipad/",
     "qr": "/qr/videoeditor-ipad.svg",
-    "target": "https://editor.heavenlykey.org/"
+    "target": "https://mediaeditor.heavenlykey.org/"
   },
   {
     "app": "videoeditor",
     "device": "windows",
     "url": "https://apps.heavenlykey.org/install/videoeditor/windows/",
     "qr": "/qr/videoeditor-windows.svg",
-    "target": "https://editor.heavenlykey.org/"
+    "target": "https://mediaeditor.heavenlykey.org/"
   },
   {
     "app": "videoeditor",
     "device": "mac",
     "url": "https://apps.heavenlykey.org/install/videoeditor/mac/",
     "qr": "/qr/videoeditor-mac.svg",
-    "target": "https://editor.heavenlykey.org/"
+    "target": "https://mediaeditor.heavenlykey.org/"
   }
 ]
