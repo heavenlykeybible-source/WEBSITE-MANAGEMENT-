@@ -24,4 +24,6 @@ jobs:
           node-version: '22'
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node --check public-assistant/worker.mjs
+      - run: node --test tests/public-chat-recovery.test.mjs
+      - run: node tests/public-assistant-deploy.mjs
       - run: node scripts/deploy-public-assistant.mjs
