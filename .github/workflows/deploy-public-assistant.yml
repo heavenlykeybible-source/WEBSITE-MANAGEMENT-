@@ -1,29 +1,19 @@
-name: Repair existing Heavenly Key public assistant
+name: Verify legacy Account 4 public assistant
 on:
-  push:
-    branches: [main]
-    paths: ['public-assistant/**', 'scripts/deploy-public-assistant.mjs', '.github/workflows/deploy-public-assistant.yml']
   workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: heavenlykey-public-assistant
-  cancel-in-progress: false
 jobs:
-  deploy:
-    environment: account-4
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: node --check public-assistant/worker.mjs
-      - run: node --test tests/public-chat-recovery.test.mjs
-      - run: node tests/public-assistant-deploy.mjs
-      - run: node scripts/deploy-public-assistant.mjs
+      - name: Read legacy compatibility endpoint without deploying
+        run: |
+          node --input-type=module <<'JS'
+          const r=await fetch('https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev/health',{signal:AbortSignal.timeout(20000)});
+          if(!r.ok)throw Error('Legacy assistant health HTTP '+r.status);
+          console.log('Legacy assistant responds. Public assistant development targets Account 5; this workflow never uploads or deletes Workers.');
+          JS

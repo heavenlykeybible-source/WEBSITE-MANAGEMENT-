@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "policy": "One independent application per Worker; dedicated platforms retain their own accounts. Account 5 is the public directory and small-app host.",
+  "services": [
+    {"id":"control-room","account":4,"worker":"website-management","origin":"https://controlroom.heavenlykey.org","state":"active"},
+    {"id":"app-directory","account":5,"worker":"heavenly-key-app","accountSubdomain":"heavenlykeyapp","origin":"https://apps.heavenlykey.org","state":"active"},
+    {"id":"public-assistant","account":5,"worker":"heavenlykey-public-assistant","accountSubdomain":"heavenlykeyapp","origin":"https://heavenlykey-public-assistant.heavenlykeyapp.workers.dev","state":"migration-target","source":"public-assistant/app-worker.mjs"},
+    {"id":"public-assistant-legacy","account":4,"worker":"heavenlykey-cms-public","origin":"https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev","state":"compatibility-only","retirement":"Keep until all callers have switched and the new endpoint has passed live inference checks."},
+    {"id":"walk-with-god","account":5,"worker":"heavenlykey-walk-with-god","origin":"https://apps.heavenlykey.org/walk-offline.html","state":"planned-separation"},
+    {"id":"eternity-in-view","account":5,"worker":"heavenlykey-eternity-in-view","state":"planned-separation"},
+    {"id":"bible-study-portal","account":5,"worker":"heavenlykey-bible-study","origin":"https://apps.heavenlykey.org/creation-to-eternity.html","state":"planned-separation","label":"From Creation to Eternity Bible study"},
+    {"id":"community","account":3,"worker":"heavenly-key-global-community","origin":"https://global.heavenlykey.org","state":"active"},
+    {"id":"bible","account":6,"worker":"onlinebible","origin":"https://onlinebible.heavenlykey.org","state":"active"},
+    {"id":"radio","account":7,"worker":"heavenlykeyradio","origin":"https://radio.heavenlykey.org","state":"active"},
+    {"id":"meeting","account":8,"worker":"heavenly-key-meetingspace","origin":"https://meeting.heavenlykey.org","state":"active"},
+    {"id":"video-editor","account":9,"worker":"heavenlykey-studio","origin":"https://mediaeditor.heavenlykey.org","state":"domain-repair-required"}
+  ]
+}

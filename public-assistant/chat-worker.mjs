@@ -1,6 +1,6 @@
 import {ministryContext} from './knowledge.mjs';
 export {PublicChatLimits} from './quota-object.mjs';
-const ORIGINS=new Set(['https://heavenlykey.org','https://www.heavenlykey.org','https://apps.heavenlykey.org','https://onlinebible.heavenlykey.org','https://global.heavenlykey.org','https://radio.heavenlykey.org','https://meeting.heavenlykey.org','https://mediaeditor.heavenlykey.org','https://bible.heavenlykey.org','https://app.heavenlykey.org','https://studio.heavenlykey.org','https://studioroom.heavenlykey.org','https://controlroom.heavenlykey.org','https://heavenlykey.alldaywow247.workers.dev','https://onlinebible.heavenlykeybible.workers.dev','https://heavenly-key-app.heavenlykeyapp.workers.dev']);
+const ORIGINS=new Set(['https://heavenlykey-public-assistant.heavenlykeyapp.workers.dev','https://heavenlykey.org','https://www.heavenlykey.org','https://apps.heavenlykey.org','https://onlinebible.heavenlykey.org','https://global.heavenlykey.org','https://radio.heavenlykey.org','https://meeting.heavenlykey.org','https://mediaeditor.heavenlykey.org','https://bible.heavenlykey.org','https://app.heavenlykey.org','https://studio.heavenlykey.org','https://studioroom.heavenlykey.org','https://controlroom.heavenlykey.org','https://heavenlykey.alldaywow247.workers.dev','https://onlinebible.heavenlykeybible.workers.dev','https://heavenly-key-app.heavenlykeyapp.workers.dev']);
 const MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 export default {async fetch(request,env){
  const origin=request.headers.get('Origin'),url=new URL(request.url);

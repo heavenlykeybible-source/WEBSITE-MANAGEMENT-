@@ -1,0 +1,29 @@
+name: Deploy independent Account 5 Online Assistant
+on:
+  push:
+    branches: [main]
+    paths: ['public-assistant/**', 'config/platform-services.json', 'scripts/deploy-account5-assistant.mjs', 'tests/account5-assistant.test.mjs', '.github/workflows/deploy-account5-assistant.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: account5-public-assistant
+  cancel-in-progress: false
+jobs:
+  deploy:
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node tests/run.mjs
+      - run: node --test tests/public-chat-recovery.test.mjs tests/account5-assistant.test.mjs
+      - name: Deploy only the independent Account 5 assistant
+        run: node scripts/deploy-account5-assistant.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT5_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT5_CLOUDFLARE_ACCOUNT_ID }}
