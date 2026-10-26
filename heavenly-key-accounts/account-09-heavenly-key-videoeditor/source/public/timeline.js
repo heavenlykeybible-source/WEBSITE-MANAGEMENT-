@@ -27,6 +27,16 @@ track.addEventListener('dragstart',event=>{const tile=event.target.closest('butt
 track.addEventListener('dragover',event=>{if(!session&&draggedIndex>=0&&event.target.closest('button[data-index]'))event.preventDefault()});
 track.addEventListener('drop',event=>{const tile=event.target.closest('button[data-index]');if(!tile||session||draggedIndex<0)return;event.preventDefault();const from=draggedIndex,to=Number(tile.dataset.index);draggedIndex=-1;if(from===to||!clips[from]||!clips[to])return;save();const [moved]=clips.splice(from,1);clips.splice(to,0,moved);paint(to)});
 track.addEventListener('dragend',()=>{draggedIndex=-1});
+track.addEventListener('keydown',event=>{
+ const tile=event.target.closest('button[data-index]');
+ if(!tile||session||!event.altKey||!['ArrowLeft','ArrowRight'].includes(event.key))return;
+ event.preventDefault();
+ const from=Number(tile.dataset.index),to=from+(event.key==='ArrowLeft'?-1:1);
+ if(to<0||to>=clips.length)return;
+ save();const [moved]=clips.splice(from,1);clips.splice(to,0,moved);paint(to);
+ track.children[to]?.focus();
+});
+
 const ready=()=>Number.isFinite(v.duration)&&v.duration>0;
 const seek=t=>new Promise((resolve,reject)=>{if(!ready())return reject(Error('Load a video first.'));t=Math.min(v.duration,Math.max(0,t));if(Math.abs(v.currentTime-t)<.02)return resolve();let timer;const done=()=>{clearTimeout(timer);v.removeEventListener('seeked',done);resolve()};timer=setTimeout(()=>{v.removeEventListener('seeked',done);reject(Error('Video seeking timed out.'))},10000);v.addEventListener('seeked',done);v.currentTime=t});
 function setBusy(b){for(const id of ['vf','vexp','clipExport','clipPlay','clipAdd','clipSplit','clipUpdate','clipDuplicate','clipRemove','clipUp','clipDown','clipUndo','clipRedo','clipList','clipStart','clipEnd','clipSpeed','clipFade'])$(id).disabled=b;$('clipCancel').disabled=!b}
