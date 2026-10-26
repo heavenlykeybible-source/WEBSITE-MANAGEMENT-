@@ -131,3 +131,11 @@ test('Guest WebRTC signaling buffers candidates and reconnects through admission
   assert.match(guest,/if\(pc&&pc\.remoteDescription\)/);
   assert.match(guest,/if\(!local\)\{\$\('invrow'\)\.hidden=false/);
 });
+
+test('Guest screen sharing closes capture tracks on manual stop and room exit', () => {
+  const source=readFileSync(resolve(root,'site/join.html'),'utf8');
+  assert.match(source,/shareTrack=null;try\{pc&&pc\.close\(\)\}/);
+  assert.match(source,/if\(t&&t\.readyState==='live'\)t\.stop\(\)/);
+  assert.match(source,/camTrack=null;sharing=false/);
+  assert.match(source,/shareTrack=t;sharing=true/);
+});
