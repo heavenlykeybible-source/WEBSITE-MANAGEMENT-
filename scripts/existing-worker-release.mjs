@@ -26,9 +26,21 @@ async function healthy(expectedOverride){
  const text=await r.text();
  if(!text.trim()||/Unknown ministry portal|error code: 522/.test(text))throw Error('Public application content unavailable');
 }
+// Optional read-only smoke checks for freshly published public pages, never used against the old snapshot.
+async function smokePages(){
+ const paths=String(process.env.RELEASE_SMOKE_PATHS||'').split(',').filter(Boolean);
+ for(const path of paths){
+  if(!/^\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.html$/i.test(path))throw Error('Invalid release smoke-test page path');
+  const r=await fetch(new URL(path,origin),{redirect:'manual',cache:'no-store',signal:AbortSignal.timeout(20000)});
+  if(!r.ok)throw Error('Release page '+path+' returned HTTP '+r.status);
+  if(!(r.headers.get('content-type')||'').toLowerCase().includes('text/html'))throw Error('Release page '+path+' did not return HTML');
+  const html=await r.text();if(!html.includes('<html')&&!html.includes('<!doctype html'))throw Error('Release page '+path+' is missing HTML content');
+  if(!/no-store/i.test(r.headers.get('cache-control')||''))throw Error('Release page '+path+' must not be cached');
+ }
+}
 if(action==='snapshot'){
  const settings=await api('/settings'),bindings=await manifest(settings),databases=[];for(const b of settings.bindings.filter(x=>x.type==='d1')){const d=await api('/d1/database/'+encodeURIComponent(b.id)+'/time_travel/bookmark');if(typeof d.bookmark!=='string'||!d.bookmark)throw Error('Database recovery checkpoint unavailable for '+b.name+'; no upload allowed');databases.push({binding:b.name,database_id:b.id,bookmark:d.bookmark,captured_at:new Date().toISOString()});}await healthy();const d=await api('/deployments'),list=(d.deployments||[]).sort((a,b)=>Date.parse(b.created_on)-Date.parse(a.created_on));if(!list[0]?.versions?.length)throw Error('Cannot preserve previous active deployment');await mkdir('.release-state',{recursive:true});await writeFile(file,JSON.stringify({account,worker,origin,bindings,databases,rollbackHealth:JSON.parse(process.env.RELEASE_ROLLBACK_HEALTH_EXPECT||process.env.RELEASE_HEALTH_EXPECT||'{"ok":true}'),current:list[0],previous:list.slice(1,4),created:new Date().toISOString()},null,2));console.log('Existing Worker verified; previous deployment versions saved. No Worker or resource created.');
 }else if(action==='verify'){
- const saved=JSON.parse(await readFile(file));if(saved.account!==account||saved.worker!==worker||saved.origin!==origin)throw Error('Rollback identity mismatch');let failure;for(let n=0;n<3;n++){try{await preserved(saved);await healthy();console.log('Published existing Worker passes live health check');process.exit(0)}catch(e){failure=e;if(n<2)await new Promise(r=>setTimeout(r,3000));}}
+ const saved=JSON.parse(await readFile(file));if(saved.account!==account||saved.worker!==worker||saved.origin!==origin)throw Error('Rollback identity mismatch');let failure;for(let n=0;n<3;n++){try{await preserved(saved);await healthy();await smokePages();console.log('Published existing Worker passes live health and page checks');process.exit(0)}catch(e){failure=e;if(n<2)await new Promise(r=>setTimeout(r,3000));}}
  await api('/deployments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({strategy:'percentage',versions:saved.current.versions,annotations:{'workers/message':'Restore previous healthy deployment after failed release check'}})});await preserved(saved);await healthy(saved.rollbackHealth);throw Error('New release failed health check; previous healthy deployment restored. '+failure.message);
 }else throw Error('Use snapshot or verify');
