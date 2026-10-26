@@ -1,0 +1,39 @@
+name: Account 9 live launch verification
+on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: 'Approved Account 9 HTTPS origin (for example https://mediaeditor.heavenlykey.org/)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: account9-live-verification
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment: account9-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify authorized origin
+        env:
+          ACCOUNT9_LIVE_URL: ${{ inputs.site_url }}
+        run: |
+          node --input-type=module <<'JS'
+          const u=new URL(process.env.ACCOUNT9_LIVE_URL);
+          const hosts=['editor.heavenlykey.org','mediaeditor.heavenlykey.org','videoeditor.heavenlykey.org'];
+          if(u.protocol!=='https:'||!hosts.includes(u.hostname)||u.port||u.pathname!=='/'||u.search||u.hash||u.username||u.password)throw Error('Use an approved Account 9 HTTPS origin.');
+          JS
+      - name: Verify live editor and Cloudflare resources
+        env:
+          ACCOUNT9_LIVE_URL: ${{ inputs.site_url }}
+        run: node scripts/smoke-account9-live.mjs
