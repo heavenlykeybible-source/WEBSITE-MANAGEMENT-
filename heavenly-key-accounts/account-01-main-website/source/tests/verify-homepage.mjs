@@ -118,6 +118,8 @@ assert.ok(appDockCss.includes('.hk-app-minimized[hidden]'),'Minimized app restor
 
 assert.equal((appDock.match(/[{]id:'(?:radio|assistant|bible|social|walk|study|eternity)'/g)||[]).length,7,'Dock must have exactly seven approved apps');
 assert.ok(appDock.includes("id:'assistant'")&&appDock.includes("launcher.click()"),'Assistant tab must open the existing approved assistant');
+assert.ok(appDock.includes('if(active)close();launcher.click()'),'Opening the approved assistant must close any competing app panel');
+assert.ok(appDock.includes("focus({preventScroll:true})"),'App popup must expose keyboard focus when opened');
 assert.ok(appDock.includes("window.open('https://wa.me/")||appDock.includes("navigator.share"),'App-specific sharing is required');
 assert.ok(appDock.includes("frame.allow='autoplay; clipboard-write'"),'Radio embedding needs media support');
 assert.ok(appDock.includes("bar.setPointerCapture"),'Popup drag must support pointer input');
