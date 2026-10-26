@@ -195,6 +195,22 @@ test('expired speaker invitations free slots and cannot be accepted late',async(
  await message(s.room,audience[6],{t:'ready'});
  assert.equal(audience[6].d.stage,true);
 });
+test('host admission respects speaker slots reserved for promoted audience',async()=>{
+ const s=await openRoom(),audience=[];
+ for(let i=0;i<6;i++){
+  const g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true});audience.push(g);
+  await message(s.room,s.host,{t:'promote',gid:g.d.id});
+ }
+ const waiting=s.add();await message(s.room,waiting,{t:'join',room:s.host.d.room,key:s.key,aud:false});
+ await message(s.room,s.host,{t:'admit',gid:waiting.d.id});
+ assert.equal(waiting.d.stage,false);
+ assert.equal(waiting.d.ok,false);
+ assert.match(s.host.messages.at(-1).text,/stage is full/i);
+ await message(s.room,audience[0],{t:'ready'});
+ assert.equal(audience[0].d.stage,true);
+ await message(s.room,s.host,{t:'admit',gid:waiting.d.id});
+ assert.equal(waiting.d.stage,false);
+});
 test('pending audience promotions reserve stage capacity',async()=>{
  const s=await openRoom(),audience=[];
  for(let i=0;i<7;i++){
