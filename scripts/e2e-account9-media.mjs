@@ -97,6 +97,10 @@ try{
  await page.locator('#clipVideoGain').dispatchEvent('change');
  assert.match(await page.locator('#clipAudioTrack').textContent(),/35% original audio/,'Original-video volume control must update audio lane');
  await page.locator('#clipAudioStart').fill('10');
+ await page.locator('#clipExportFps').selectOption('24');
+ await page.locator('#clipExportBitrate').selectOption('2500000');
+ assert.equal(await page.locator('#clipExportFps').inputValue(),'24');
+ assert.equal(await page.locator('#clipExportBitrate').inputValue(),'2500000');
  await page.locator('#clipExport').click();
  await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('Soundtrack start must be within'),{timeout:10000});
  assert.equal(await page.locator('#clipDownload').isHidden(),true,'Invalid soundtrack start must not generate an export');
