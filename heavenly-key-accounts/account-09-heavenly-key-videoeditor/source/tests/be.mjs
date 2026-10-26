@@ -54,6 +54,20 @@ async function request(path, { method = 'GET', body, cookie, headers = {} } = {}
   return { response, status: response.status, data: type.includes('json') ? await response.json() : null,
     cookie: (response.headers.get('set-cookie') || '').split(';')[0] };
 }
+const healthy = await request('health');
+check('Health reports D1, media and AI bindings ready', healthy.status === 200 && healthy.data?.status === 'ready' && Object.keys(healthy.data).length === 1);
+const missingAI = await onRequest({
+  request:new Request('https://studio.example/api/health'),
+  env:{...env,AI:null},
+  params:{path:['health']}
+});
+check('Health rejects missing Workers AI without leaking resources', missingAI.status === 503 && (await missingAI.json()).status === 'degraded');
+const missingStorage = await onRequest({
+  request:new Request('https://studio.example/api/health'),
+  env:{...env,MEDIA:null},
+  params:{path:['health']}
+});
+check('Health rejects missing private media binding', missingStorage.status === 503);
 const invalid = await request('register', { method: 'POST', body: { email: 'invalid', password: 'long enough password' } });
 check('Invalid registration rejected', invalid.status === 400);
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
