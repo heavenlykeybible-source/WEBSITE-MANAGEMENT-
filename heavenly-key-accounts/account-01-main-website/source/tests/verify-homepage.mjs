@@ -103,6 +103,8 @@ assert.ok(appDock.includes("function minimize()")&&appDock.includes("function cl
 assert.ok(appDockCss.includes('.hk-dock-pole')&&appDockCss.includes('right:'),'Red pole must be anchored to right');
 assert.ok(appDock.includes('app.native'),'Unverified integrations must not masquerade as working apps');
 assert.ok(appDock.includes("id!=='radio'")&&appDock.includes('frames.delete(id)'), 'Inactive apps should not persist after switching; radio alone may remain active');
+assert.ok(!appDock.includes('apps.\\n  for'), 'The frame cleanup loop must never be accidentally commented out');
+assert.ok(/\/\/ Keep only Revival Radio[^\n]*\n\s*for\(const \[id,frame\] of frames\)/.test(appDock),'Frame cleanup loop must follow its comment on an actual new line');
 assert.ok(appDock.includes("aria-controls','hk-app-window'"),'Launcher buttons must identify their panel');
 assert.ok(appDock.includes("aria-pressed','false'"),'Launcher buttons must expose their selected state');
 assert.ok(appDock.includes("url:'https://bible.heavenlykey.org/study-extensions.html'"),'Bible Study must route to the dedicated study extension, not the general Bible homepage');
