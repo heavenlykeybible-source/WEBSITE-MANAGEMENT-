@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 import { runInNewContext } from 'node:vm';
+import { spawnSync } from 'node:child_process';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = readFileSync(resolve(root, 'site/sw.js'), 'utf8');
@@ -42,4 +43,11 @@ test('offline worker never intercepts authenticated API, non-GET or private page
   assert.equal(intercepts('/?ticket=single-use'), false);
   assert.equal(intercepts('/icons/icon-192.png', { credentials: 'include' }), false);
   await Promise.all(pending);
+});
+
+test('production preflight refuses unresolved privacy and terms templates', () => {
+  const run=spawnSync(process.execPath,[resolve(root,'scripts/legal-preflight.mjs')],{encoding:'utf8'});
+  assert.equal(run.status,1);
+  assert.match(run.stderr,/privacy\.html/);
+  assert.match(run.stderr,/terms\.html/);
 });
