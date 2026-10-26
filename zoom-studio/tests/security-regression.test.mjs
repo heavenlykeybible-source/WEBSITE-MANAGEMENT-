@@ -224,3 +224,8 @@ test('Guest join acknowledgement timeout closes stalled sockets and cleans up ti
  assert.match(guest,/case 'welcome':clearTimeout\(joinAckTimer\);joinAckTimer=null/);
  assert.match(guest,/ws\.onclose=\(\)=>\{if\(over\|\|ws!==currentSocket\)return;clearTimeout\(openTimer\);openTimer=null;clearTimeout\(joinAckTimer\)/);
 });
+
+test('ICE restart attempts only count when signaling is stable', () => {
+ const host=readFileSync(resolve(root,'site/index.html'),'utf8');
+ assert.match(host,/if\(!pc\|\|pc\.signalingState!=='stable'\|\|!guests\.has\(g\.id\)\|\|g\.restartAttempts>=2\)return;\s*g\.restartAttempts\+\+/);
+});
