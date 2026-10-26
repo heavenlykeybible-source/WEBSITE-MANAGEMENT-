@@ -47,3 +47,33 @@ jobs:
           JS
 
 # Recheck the Cloudflare Account 9 token and domain mapping after the owner updated permissions.
+
+      - name: Diagnose live domain and conflicting DNS records
+        if: always()
+        env:
+          CF_TOKEN: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          const token=process.env.CF_TOKEN;
+          const head={authorization:'Bearer '+token};
+          async function inspect(url){
+            const response=await fetch(url,{headers:head,signal:AbortSignal.timeout(14000)});
+            const body=await response.json().catch(()=>null);
+            return {ok:response.ok&&body?.success===true,result:body?.result,errorCodes:(body?.errors||[]).map(x=>x.code)};
+          }
+          const zones=await inspect('https://api.cloudflare.com/client/v4/zones?name=heavenlykey.org');
+          if(!zones.ok){console.log('DNS ZONE READ NOT AUTHORIZED',JSON.stringify(zones.errorCodes));}
+          else{
+            const zone=(zones.result||[]).find(x=>x.name==='heavenlykey.org');
+            if(!zone)console.log('ZONE NOT FOUND under authorized token');
+            else{
+              console.log('Zone status:',zone.status);
+              const dns=await inspect('https://api.cloudflare.com/client/v4/zones/'+zone.id+'/dns_records?name=mediaeditor.heavenlykey.org');
+              if(dns.ok){
+                for(const record of dns.result||[])console.log('Domain record:',JSON.stringify({id:record.id,type:record.type,proxied:record.proxied,content:record.type==='A'||record.type==='AAAA'?'[IP address masked]':record.content}));
+              }else console.log('DNS RECORD READ NOT AUTHORIZED',JSON.stringify(dns.errorCodes));
+            }
+          }
+          const publicSite=await fetch('https://mediaeditor.heavenlykey.org/',{signal:AbortSignal.timeout(15000),redirect:'manual'}).catch(e=>({status:0,error:e.message}));
+          console.log('Public origin HTTP:',publicSite.status,'location:',publicSite.headers?.get('location')||'');
+          JS
