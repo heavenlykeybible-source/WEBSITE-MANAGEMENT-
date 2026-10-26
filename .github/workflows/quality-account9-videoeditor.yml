@@ -6,7 +6,6 @@ on:
       - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
       - 'scripts/build-account9-worker.mjs'
       - 'scripts/e2e-account9-media.mjs'
-      - 'scripts/e2e-account9-media.mjs'
       - 'scripts/verify-account9-release.mjs'
       - 'release-packages/account9-control-room-full.mjs'
       - 'release-packages/account9-active-release.json'
@@ -18,6 +17,7 @@ on:
   pull_request:
     paths:
       - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
+      - 'scripts/e2e-account9-media.mjs'
       - 'scripts/build-account9-worker.mjs'
       - 'scripts/verify-account9-release.mjs'
       - 'release-packages/account9-control-room-full.mjs'
