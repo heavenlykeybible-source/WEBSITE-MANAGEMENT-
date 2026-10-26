@@ -37,6 +37,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Verify Account 8 deployment authorization
+        env:
+          MEETINGSPACE_TOKEN: ${{ secrets.MEETINGSPACE_ACCOUNT8_API_TOKEN }}
+        run: |
+          if [ -z "$MEETINGSPACE_TOKEN" ]; then
+            echo "::error::Account 8 deployment needs MEETINGSPACE_ACCOUNT8_API_TOKEN in the account8-meetingspace-production environment or repository Actions secrets."
+            exit 1
+          fi
       - name: Deploy the dedicated studio
         working-directory: zoom-studio
         env:
