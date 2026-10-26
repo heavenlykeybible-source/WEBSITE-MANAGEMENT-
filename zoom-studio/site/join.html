@@ -92,7 +92,7 @@ function connect(){
  ws=new WebSocket(relay.replace(/\/+$/,'')+'/room');
  ws.onopen=()=>{send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked});if(!joined)show('wait')};
  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}onMsg(m)};
- ws.onclose=()=>{if(over)return;joined=false;try{pc&&pc.close()}catch(e){}pc=null;pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
+ ws.onclose=()=>{if(over)return;joined=false;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
  ws.onerror=()=>{}}
 
 function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
