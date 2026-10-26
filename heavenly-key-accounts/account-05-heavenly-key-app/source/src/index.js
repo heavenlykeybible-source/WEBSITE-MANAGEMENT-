@@ -7,7 +7,10 @@ const JSON_HEADERS={
   "content-type":"application/json; charset=utf-8",
   "cache-control":"no-store",
   "x-content-type-options":"nosniff",
-  "referrer-policy":"no-referrer"
+  "referrer-policy":"no-referrer",
+  "x-frame-options":"DENY",
+  "permissions-policy":"camera=(), microphone=(), geolocation=()",
+  "cross-origin-resource-policy":"same-origin"
 };
 // Public-only allowlist. Account 3 still owns identity, moderation and data.
 const COMMUNITY_READS = {"/api/community/feed":"/api/feed", "/api/community/tracks":"/api/discipleship/tracks"};

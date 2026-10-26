@@ -13,6 +13,10 @@ test('Visitor: health returns real JSON without caching or credential exposure',
  assert.equal(res.status,200);
  assert.equal(res.headers.get('cache-control'),'no-store');
  assert.equal(res.headers.get('x-content-type-options'),'nosniff');
+ assert.equal(res.headers.get('x-frame-options'),'DENY');
+ assert.equal(res.headers.get('cross-origin-resource-policy'),'same-origin');
+ assert.match(res.headers.get('permissions-policy'),/camera=\(\)/);
+ assert.equal(res.headers.get('referrer-policy'),'no-referrer');
  assert.deepEqual(await res.json(),{service:'heavenly-key-app',status:'ok',release:'starter'});
  const head=await worker.fetch(new Request('https://app.example.test/api/health',{method:'HEAD'}),{});
  assert.equal(head.status,200);
