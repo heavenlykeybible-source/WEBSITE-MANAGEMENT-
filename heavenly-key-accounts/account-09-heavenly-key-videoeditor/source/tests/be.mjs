@@ -55,6 +55,8 @@ async function request(path, { method = 'GET', body, cookie, headers = {} } = {}
   return { response, status: response.status, data: type.includes('json') ? await response.json() : null,
     cookie: (response.headers.get('set-cookie') || '').split(';')[0] };
 }
+const malformedRegistration=await request('register',{method:'POST',body:{email:{toString:'not-an-email'},password:{value:'invalid'}}});
+check('Registration rejects non-string credentials',malformedRegistration.status===400);
 const oversizedLogin=await request('login',{method:'POST',body:{email:'user@example.com',password:'x'.repeat(1025)}});
 check('Oversized login password rejected before password hashing',oversizedLogin.status===400);
 const malformedLogin=await request('login',{method:'POST',body:{email:{value:'user@example.com'},password:'123456789012'}});
