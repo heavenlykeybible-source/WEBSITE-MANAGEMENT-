@@ -24,7 +24,7 @@
  * is tracked as a known limitation in KNOWN-ISSUES.md.
  */
 const ASSET_VERSION = "1.2.5";
-const CACHE_VERSION = "hk-v19-ecosystem";
+const CACHE_VERSION = "hk-v20-error-recovery";
 const APP_SHELL_CACHE = CACHE_VERSION + "-shell";
 const PAGES_CACHE = CACHE_VERSION + "-pages";
 
@@ -34,6 +34,8 @@ const APP_SHELL = [
   "/css/heavenly-ecosystem.css?v=20261026",
   "/assets/ministry/rotating-world-land.svg",
   "/offline.html",
+  "/404.html",
+  "/500.html",
   `/css/tokens.css?v=${ASSET_VERSION}`,
   `/css/base.css?v=${ASSET_VERSION}`,
   `/css/components.css?v=${ASSET_VERSION}`,
@@ -118,8 +120,20 @@ self.addEventListener("fetch", (event) => {
   if (req.headers.get("accept") && req.headers.get("accept").includes("text/html")) {
     event.respondWith(
       fetch(req)
-        .then((res) => {
-          // Never persist 404/500 error pages or responses marked private/no-store.
+        .then(async (res) => {
+          // Keep correct status codes and preserve JSON/API responses; render friendly
+          // recovery pages only for public HTML navigation when the Worker controls it.
+          if (res.status === 404 || res.status >= 500) {
+            const fallbackPath = res.status === 404 ? "/404.html" : "/500.html";
+            const fallback = await caches.match(fallbackPath) || await fetch(fallbackPath);
+            if (fallback.ok) return new Response(fallback.body, {
+              status: res.status,
+              statusText: res.statusText,
+              headers: {"Content-Type": "text/html; charset=utf-8",
+                "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"}
+            });
+          }
+          // Never persist error pages or responses marked private/no-store.
           if (res.ok && res.type !== "opaque" && !/private|no-store/i.test(res.headers.get("cache-control") || "")) {
             const resClone = res.clone();
             caches.open(PAGES_CACHE).then((cache) => cache.put(req, resClone));
