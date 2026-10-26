@@ -100,6 +100,8 @@ const badName=await request('projects',{method:'POST',cookie:login.cookie,body:{
 check('Authenticated project creation rejects object names',badName.status===400);
 const tooLongName=await request('projects',{method:'POST',cookie:login.cookie,body:{name:'x'.repeat(101),data:{}}});
 check('Authenticated project creation rejects oversized names',tooLongName.status===400);
+const invalidData=await request('projects',{method:'POST',cookie:login.cookie,body:{name:'Invalid',data:['unexpected']}});
+check('Cloud project creation rejects array data',invalidData.status===400);
 const project = await request('projects', { method: 'POST', cookie: login.cookie, body: { name: 'Smoke test', data: { layers: [] } } });
 check('Project creation succeeds', project.status === 200 && !!project.data?.id);
 const badUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:{bad:true},data:{}}});
