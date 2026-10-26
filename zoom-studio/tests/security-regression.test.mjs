@@ -173,3 +173,11 @@ test('Screen sharing restores the actual camera and stops captures after setup f
  assert.match(source,/if\(capture\)capture\.getTracks\(\)\.forEach\(t=>t\.stop\(\)\)/);
  assert.match(source,/if\(s&&camTrack\)await s\.replaceTrack\(camTrack\)/);
 });
+
+test('Host room start prevents duplicate concurrent creation and ignores stale events', () => {
+ const host=readFileSync(resolve(root,'site/index.html'),'utf8');
+ assert.match(host,/if\(gStarting\)return/);
+ assert.match(host,/gStarting=true;\$\('grs'\)\.disabled=true/);
+ assert.match(host,/finally\{gStarting=false;\$\('grs'\)\.disabled=false\}/);
+ assert.match(host,/w\.onmessage=e=>\{if\(gws!==w\)return/);
+});
