@@ -274,7 +274,17 @@ export async function onRequest({ request: req, env, params }) {
         if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
         const announced = req.headers.get('content-length');
         if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
+        if(req.body && typeof req.body.getReader==='function'){
+          // Reject oversized uploads while streaming; do not buffer unbounded bodies.
+          const reader=req.body.getReader(),chunks=[];let total=0;
+          try{for(;;){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAXFILE){await reader.cancel().catch(()=>{});return J({error:'File must be under 50 MB.'},413);}chunks.push(value);}}
+          finally{reader.releaseLock();}
+          const payload=new Uint8Array(total);let offset=0;for(const chunk of chunks){payload.set(chunk,offset);offset+=chunk.byteLength;}
+          return await saveMediaUpload(payload);
+        }
         const payload = await req.arrayBuffer();
+        return await saveMediaUpload(payload);
+        async function saveMediaUpload(payload){
         const size = payload.byteLength;
         if (size <= 0 || size > MAXFILE || (announced !== null && Number(announced) !== size)) return J({ error: 'File size is invalid or exceeds 50 MB.' }, 413);
         const reservation = await env.DB.prepare('UPDATE users SET storage_used=storage_used+? WHERE id=? AND storage_used+?<=?').bind(size,u.id,size,QUOTA).run();
@@ -292,6 +302,7 @@ export async function onRequest({ request: req, env, params }) {
           if (!id || !key || !(await env.DB.prepare('SELECT 1 x FROM media WHERE id=? AND user_id=?').bind(id||'',u.id).first())) {
             await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(size,u.id).run();
           }
+        }
         }
       }
       if (p[1] && m === 'GET') {
