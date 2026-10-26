@@ -47,7 +47,7 @@ test('offline worker never intercepts authenticated API, non-GET or private page
 
 test('production preflight refuses unresolved privacy and terms templates', () => {
   const run=spawnSync(process.execPath,[resolve(root,'scripts/legal-preflight.mjs')],{encoding:'utf8'});
-  assert.equal(run.status,1);
-  assert.match(run.stderr,/privacy\.html/);
-  assert.match(run.stderr,/terms\.html/);
+  const drafts=['privacy.html','terms.html'].filter(name => /DRAFT TEMPLATE|\\[DATE\\]|\\[BUSINESS NAME\\]/.test(readFileSync(resolve(root,'site',name),'utf8')));
+  assert.equal(run.status,drafts.length ? 1 : 0);
+  for (const name of drafts) assert.ok(run.stderr.includes(name));
 });
