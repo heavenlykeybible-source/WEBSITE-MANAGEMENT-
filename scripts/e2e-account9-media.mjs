@@ -41,6 +41,11 @@ try{
  await page.waitForFunction(()=>!document.getElementById('vexp').disabled,{timeout:15000});
  const duration=await page.locator('#v').evaluate(v=>v.duration);
  assert.ok(duration>2,'Imported source must have metadata');
+ await page.locator('#fitmode').selectOption('cover');
+ assert.equal(await page.locator('#fitmode').inputValue(),'cover');
+ await page.locator('#asp').selectOption('9:16');
+ const canvasDimensions=await page.locator('#cv').evaluate(c=>[c.width,c.height]);
+ assert.deepEqual(canvasDimensions,[720,1280],'Portrait canvas must resize properly');
  await page.locator('#clipStart').fill('0.2');
  await page.locator('#clipEnd').fill('1.5');
  await page.locator('#clipFade').selectOption('.5');
@@ -95,10 +100,12 @@ try{
  await page.locator('nav button[data-p="projects"]').click();
  await page.locator('#pn').fill('Account 9 media E2E');
  await page.locator('#psave').click();
+ assert.equal((await page.evaluate(()=>JSON.parse(localStorage.getItem('hk-editor-project')))).fit,'cover','Local project must persist video fit');
  assert.match(await page.locator('#pm').textContent(),/Saved on this device/);
  await page.locator('#pn').fill('Changed project');
  await page.locator('#pload').click();
  assert.equal(await page.locator('#pn').inputValue(),'Account 9 media E2E');
+ assert.equal(await page.locator('#fitmode').inputValue(),'cover','Reopening project restores framing');
  console.log('PASS audio file import, WAV trimming/export/decode and local project save/reopen');
  assert.deepEqual(errors,[],'Browser page must not raise uncaught errors');
  console.log('PASS real video import, metadata, timeline clip/preview, timeline export/replay and single export/replay');
