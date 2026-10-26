@@ -19,6 +19,21 @@ try{
   assert.equal(health.status,200,'Cloudflare DB, R2, and AI bindings or D1 schema are not ready');
   assert.deepEqual(data,{status:'ready'},'Health must be the minimal healthy response');
   console.log('PASS live Cloudflare D1 schema, R2 and AI binding readiness');
+  // Verify public asset routing, security headers and private endpoint isolation.
+  for(const [route,mime] of [['/timeline.js','javascript'],['/integrations.js','javascript'],['/sw.js','javascript'],['/manifest.json','json']]){
+    const response=await get(route);
+    assert.equal(response.status,200,'Missing deployed editor asset '+route);
+    assert.ok((response.headers.get('content-type')||'').includes(mime),'Incorrect MIME for '+route);
+    assert.ok((await response.arrayBuffer()).byteLength>0,'Empty asset '+route);
+  }
+  console.log('PASS live editor assets and PWA');
+  for(const path of ['/api/me','/api/projects','/api/media']){
+    const result=await get(path);
+    assert.equal(result.status,401,'Unauthenticated private API exposed: '+path);
+    const payload=await result.text();
+    assert.ok(!/pass_hash|token_hash|r2_key/.test(payload),'Private data leaked from '+path);
+  }
+  console.log('PASS unauthenticated cloud data protection');
 }catch(error){
   console.error('Account 9 live smoke failed:',error.message);
   process.exitCode=1;
