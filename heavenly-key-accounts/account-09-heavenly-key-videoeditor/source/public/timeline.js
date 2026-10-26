@@ -273,7 +273,7 @@ window.hkTimeline={
    ['fps','clipExportFps',[24,30,60]],['bitrate','clipExportBitrate',[2500000,5000000,10000000]]])
     if(allowed.includes(data[key]))$(id).value=String(data[key]);
   if(typeof data.audioLoop==='boolean')$('clipAudioLoop').checked=data.audioLoop;
-  if([.25,.35,.5].includes(data.pipSize))$('clipPipSize').value=String(data.pipSize);
+  if([.25,.35,.5].includes(data.pipSize))$('clipPipSize').value=[...$('clipPipSize').options].find(option=>Number(option.value)===data.pipSize)?.value||$('clipPipSize').value;
   if(Number.isFinite(data.pipOpacity)&&data.pipOpacity>=0&&data.pipOpacity<=100)$('clipPipOpacity').value=String(data.pipOpacity);
   if(['tr','tl','br','bl'].includes(data.pipPosition))$('clipPipPosition').value=data.pipPosition;
   if(Number.isFinite(data.pipOffset)&&data.pipOffset>=0&&data.pipOffset<=600)$('clipPipOffset').value=String(data.pipOffset);
