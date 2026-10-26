@@ -26,7 +26,7 @@ function init(){
    const launcher=document.querySelector('#hkem-assistant .hkem-launcher');
    if(launcher){if(active)minimize();launcher.click();return;}
   }
-  active=app;title.textContent=app.name;pageLink.href=app.url;mini.textContent='Restore '+app.name;
+  active=app;title.textContent=app.name;pageLink.href=new URL(app.url,location.href).href;mini.textContent='Restore '+app.name;
   for(const [id,frame] of frames){frame.hidden=id!==app.id;}
   if(app.native&&!frames.has(app.id)){const placeholder=document.createElement('div');placeholder.className='hk-app-window-native';placeholder.setAttribute('role','status');placeholder.textContent=app.name+' is available through its dedicated app page. Open it in a new tab using Visit App Page while integrated in-page access is being completed.';win.insertBefore(placeholder,win.querySelector('.hk-app-window-actions'));frames.set(app.id,placeholder);} else if(!app.native&&!frames.has(app.id)){
    const frame=document.createElement('iframe');frame.className='hk-app-window-frame';frame.title=app.name;frame.loading='lazy';frame.referrerPolicy='strict-origin-when-cross-origin';frame.allow='autoplay; clipboard-write';frame.src=app.url;frame.hidden=false;
@@ -41,7 +41,7 @@ function init(){
  win.addEventListener('click',async e=>{
  const action=e.target.closest('[data-action]')?.dataset.action;if(!action)return;
  if(action==='minimize')minimize();else if(action==='close')close();
- else if(action==='share'&&active){const data={title:'Heavenly Key — '+active.name,text:'Share this ministry resource to bless others',url:active.url};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(data.url);e.target.textContent='Link Copied';setTimeout(()=>{e.target.textContent='Share This to Bless Others'},1800)}else window.open('https://wa.me/?text='+encodeURIComponent(data.text+' '+data.url),'_blank','noopener,noreferrer')}catch(err){if(err.name!=='AbortError')console.warn('Share was not completed');}}
+ else if(action==='share'&&active){const data={title:'Heavenly Key — '+active.name,text:'Share this ministry resource to bless others',url:new URL(active.url,location.href).href};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(data.url);e.target.textContent='Link Copied';setTimeout(()=>{e.target.textContent='Share This to Bless Others'},1800)}else window.open('https://wa.me/?text='+encodeURIComponent(data.text+' '+data.url),'_blank','noopener,noreferrer')}catch(err){if(err.name!=='AbortError')console.warn('Share was not completed');}}
  });
  mini.addEventListener('click',()=>{if(active)select(active)});
  bar.addEventListener('pointerdown',e=>{if(e.target.closest('button')||matchMedia('(max-width:720px)').matches||e.button!==0)return;const box=win.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,left:box.left,top:box.top};win.style.position='fixed';win.style.left=box.left+'px';win.style.top=box.top+'px';win.style.right='auto';bar.setPointerCapture(e.pointerId)});
