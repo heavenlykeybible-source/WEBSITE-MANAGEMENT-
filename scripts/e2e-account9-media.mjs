@@ -120,6 +120,10 @@ try{
  await page.locator('#clipAudioStart').fill('0.25');
  await page.locator('#clipAudioStart').dispatchEvent('change');
  await page.locator('#clipAudioLoop').check();
+ await page.locator('#clipAudioFadeIn').selectOption('1');
+ await page.locator('#clipAudioFadeOut').selectOption('1');
+ assert.equal(await page.locator('#clipAudioFadeIn').inputValue(),'1');
+ assert.equal(await page.locator('#clipAudioFadeOut').inputValue(),'1');
  assert.equal(await page.locator('#clipDownload').isHidden(),true,'Soundtrack loop change must invalidate prior export');
  // Export again without reselecting the soundtrack: Web Audio must not reuse a closed source node.
  await page.locator('#clipExport').click();
