@@ -98,6 +98,12 @@ try{
  execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-f','lavfi','-i','sine=frequency=500:sample_rate=44100','-t','2.1',audioInput],{timeout:30000});
  await page.locator('#clipAudio').setInputFiles(audioInput);
  assert.match(await page.locator('#clipAudioStatus').textContent(),/sample.wav/,'Separate soundtrack must be loaded');
+ await page.evaluate(()=>{
+  const file=document.getElementById('clipAudio').files[0],dt=new DataTransfer();dt.items.add(file);
+  document.getElementById('clipAudioTrack').dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:dt}));
+ });
+ assert.match(await page.locator('#clipAudioStatus').textContent(),/sample.wav/,'Soundtrack drag-and-drop must import audio');
+
  await page.waitForFunction(()=>document.getElementById('clipAudioTrack').textContent.includes('2.10s'),{timeout:10000});
  assert.match(await page.locator('#clipAudioTrack').textContent(),/70% soundtrack volume · 100% original audio/,'Audio lane must display separate mix levels');
  await page.locator('#clipVideoGain').fill('35');
