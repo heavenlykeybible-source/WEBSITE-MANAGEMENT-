@@ -61,6 +61,14 @@ jobs:
         run: node scripts/verify-account9-release.mjs
       - name: Validate packaged Worker JavaScript
         run: node --check /tmp/account9-quality-worker.mjs
+      - name: Retain verified Account 9 Worker for controlled release review
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: account9-reviewed-worker
+          path: /tmp/account9-quality-worker.mjs
+          retention-days: 7
+          if-no-files-found: error
       - name: Exercise packaged Worker health and auth boundaries
         run: node scripts/test-account9-worker-health.mjs /tmp/account9-quality-worker.mjs
       - name: Smoke-test packaged Worker static routes
