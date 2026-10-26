@@ -70,6 +70,7 @@ execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
 assert.ok(html.includes('id="fitmode"')&&html.includes("state.fit==='cover'")===false,'Framing selector stays in editor with cloud handling in module');
 assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'"),'Local/cloud project framing must restore');
 const timelineScript=readFileSync('timeline.js','utf8');
+for(const expected of ['function loadSoundtrack(file)', 'audioLane.addEventListener("dragover"', 'audioLane.addEventListener("drop"', 'loadSoundtrack(file)']) assert.ok(timeline.includes(expected),'Soundtrack drop zone missing '+expected);
 for(const expected of ['id="clipDropZone"', "dropZone.addEventListener('drop'", "dropZone.addEventListener('dragover'", "new CustomEvent('change',{detail:{file}})"]) assert.ok(timeline.includes(expected),'Video drop zone missing '+expected);
 
 assert.ok(timeline.includes('clipFade')&&timeline.includes('fadeOpacity:')&&html.includes('window.hkTimeline?.fadeOpacity?.()'),'Clip edge fade must reach canvas export and preview renderer');
