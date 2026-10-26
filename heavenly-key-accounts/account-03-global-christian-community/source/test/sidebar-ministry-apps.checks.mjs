@@ -35,3 +35,5 @@ assert(css.includes('env(safe-area-inset-bottom)'),'App window must support phon
 assert(source.includes('const boundButtons=new WeakSet()'),'Sidebar controls must track attached handlers by element identity');
 assert(source.includes('if(boundButtons.has(button))'),'Reused sidebar controls must not receive duplicate click handlers');
 assert(source.includes("apps.find(item=>item.id===button.dataset.app)"),'Cloned sidebar controls must reconnect to their matching apps');
+
+assert(source.includes("restore.focus({preventScroll:true})"),'Minimized community apps must move keyboard focus to the restore control');
