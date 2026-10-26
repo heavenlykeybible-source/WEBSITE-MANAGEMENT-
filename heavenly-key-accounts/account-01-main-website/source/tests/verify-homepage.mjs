@@ -18,7 +18,7 @@ const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
 assert.equal(new Set(ids).size,ids.length,'Duplicate HTML IDs');
 for(const [img] of html.matchAll(/<img\b[^>]*>/g))assert.match(img,/\balt=/,'Missing alt attribute');
 for(const [anchor] of html.matchAll(/<a\b[^>]*target="_blank"[^>]*>/g))assert.match(anchor,/rel="[^"]*noopener/,'Unsafe new tab');
-assert.ok(html.includes('css/homepage-polish.css'),'Homepage finishing stylesheet is not linked');
+assert.ok(!html.includes('css/homepage-polish.css'),'Do not alter existing homepage-wide design');
 const ecosystem=html.indexOf('data-cms-section="ecosystem"');
 assert.ok(ecosystem>html.indexOf('data-cms-section="welcome"')&&ecosystem<html.indexOf('data-cms-section="assignment"'),'Ecosystem position changed');
 const globe=readFileSync(resolve(dir,'css/heavenly-ecosystem.css'),'utf8');
