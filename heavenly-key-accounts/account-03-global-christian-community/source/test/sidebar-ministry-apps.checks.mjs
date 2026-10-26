@@ -16,6 +16,7 @@ assert(source.includes("document.querySelector('.social-sidebar')"),'Launcher mu
 assert(source.includes('aside.lastElementChild')&&source.includes('aside.append(existing)'),'Dock must stay at sidebar bottom');
 assert(source.includes('navigator.share')&&source.includes('navigator.clipboard'),'Sharing and fallback required');
 assert(source.includes('open(active,true)'),'Restore control must reopen the minimized app');
+assert(source.includes('for(const frame of frames.values())frame.remove();frames.clear()'),'Closing an app must release retained radio frames');
 assert(source.includes("if(!restoring&&active?.id===app.id"),'Restore must not trigger the active-app minimize toggle');
 assert(source.includes("visit.rel='noopener noreferrer'"),'App page must open securely');
 assert(css.includes('@media(max-width:750px)'),'Mobile design required');
