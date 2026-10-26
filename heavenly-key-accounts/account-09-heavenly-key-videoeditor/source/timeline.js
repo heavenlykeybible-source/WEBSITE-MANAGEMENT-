@@ -6,6 +6,11 @@ let clips=[],undo=[],redo=[],session=null,exportUrl=null,activeClip=null,soundtr
 const pip=document.createElement('video');pip.muted=true;pip.playsInline=true;pip.preload='auto';
 function paintPip(){const lane=$('clipPipTrack');lane.replaceChildren();if(!pipUrl){lane.textContent='Overlay lane: no second video selected';return;}const offset=Number($('clipPipOffset').value),length=Number($('clipPipLength').value),start=Number($('clipPipIn').value),loop=$('clipPipLoop').checked;const label=document.createElement('div');label.textContent='Video overlay · starts '+offset.toFixed(1)+'s · source '+start.toFixed(1)+'s · length '+length.toFixed(1)+'s'+(loop?' · looping':'');lane.append(label);const bar=document.createElement('div');bar.style.height='9px';bar.style.borderRadius='5px';bar.style.marginTop='6px';bar.style.background='linear-gradient(90deg,#8e44ad,#2980b9)';bar.style.width='100%';lane.append(bar);}
 pip.addEventListener('loadedmetadata',paintPip);
+pip.addEventListener('error',()=>{
+ if(!pipUrl)return;
+ $('clipPipStatus').textContent='Overlay cannot be decoded. Try a compatible MP4 or WebM video.';
+ pip.pause();paintPip();
+});
 const pipLane=$('clipPipTrack');
 pipLane.tabIndex=0;
 pipLane.setAttribute('aria-label','Second video timeline lane. Drop a video file here.');
