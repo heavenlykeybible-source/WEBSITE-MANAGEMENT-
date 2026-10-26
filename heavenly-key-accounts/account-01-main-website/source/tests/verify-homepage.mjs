@@ -132,6 +132,10 @@ assert.ok(appDock.includes('mount.appendChild(dock)'),'Shared seven-app pole mus
 assert.ok(publicMaster.includes("'/js/president-app-dock.js?v=20261026e'"),'Public subpages must load one shared app feature implementation');
 assert.ok(publicMaster.includes("'/css/president-app-dock.css?v=20261026e'"),'Public subpages must load its matching CSS');
 assert.ok(appDockCss.includes('.hk-page-app-section .hk-app-dock'),'Right-side reserved subpage position must be styled');
+const eternityPage=readFileSync(resolve(dir,'eternity-in-view/index.html'),'utf8');
+assert.ok(eternityPage.includes('/js/president-app-dock.js')&&eternityPage.includes('/css/president-app-dock.css'),'Eternity in View must load the shared feature area');
+assert.ok(publicMaster.includes("if(path!=='/'&&path!=='/index'){await load"),'All standard public pages including radio must load the app pole');
+
 
 
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
