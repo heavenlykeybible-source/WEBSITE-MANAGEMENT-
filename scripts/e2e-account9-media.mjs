@@ -49,6 +49,10 @@ try{
  await page.locator('#clipStart').fill('0.2');
  await page.locator('#clipEnd').fill('1.5');
  await page.locator('#clipFade').selectOption('.5');
+ await page.locator('#clipSpeed').evaluate(el=>{el.insertAdjacentHTML('beforeend','<option value="0" id="invalidSpeed">Invalid test speed</option>');el.value='0';});
+ await page.locator('#clipAdd').click();
+ assert.equal(await page.locator('#clipList option').count(),0,'Invalid clip speed must be rejected before adding a clip');
+ await page.locator('#clipSpeed').selectOption('1');
  await page.locator('#clipAdd').click();
  assert.equal((await page.evaluate(()=>window.hkTimeline.getClips()))[0].fade,.5,'Fade selection must be saved on the clip');
  assert.equal(await page.locator('#clipList option').count(),1);
