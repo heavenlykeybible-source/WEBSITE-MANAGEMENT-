@@ -114,6 +114,9 @@ assert.ok(appDock.includes("if(app.id==='assistant'&&!restoring)"),'Assistant la
 assert.ok(appDock.includes('iframe')&&appDock.includes("referrerPolicy='strict-origin-when-cross-origin'"),'External app frames must keep the privacy policy');
 assert.ok(appDockCss.includes('.hk-app-minimized[hidden]'),'Minimized app restore control must honor hidden state');
 assert.ok(appDock.includes("select(active,true)"),'Restore must reopen the selected app rather than toggle it closed');
+assert.ok(appDock.includes('/assets/ministry/approved-ai-transparent-original.png'),'Official assistant portrait must be used');
+assert.ok(!appDock.includes('🤖'),'Robot assistant icon is not approved');
+assert.ok(appDockCss.includes('.hk-dock-tab[data-app="assistant"] .hk-dock-icon img'),'Official portrait must be sized in the launcher');
 
 
 
