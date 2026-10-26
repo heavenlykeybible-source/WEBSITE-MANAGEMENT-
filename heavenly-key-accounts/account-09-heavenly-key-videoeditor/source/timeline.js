@@ -20,6 +20,7 @@ for(const id of ["clipAudioGain","clipVideoGain","clipAudioLoop","clipAudioStart
 $("clipAudio").addEventListener("change",()=>{if(session)return;const file=$("clipAudio").files?.[0];soundtrack.pause();soundtrack.removeAttribute("src");soundtrack.load();if(soundtrackUrl)URL.revokeObjectURL(soundtrackUrl);soundtrackUrl=null;invalidateExport();if(!file){soundtrackStatus.textContent="No separate soundtrack loaded.";paintSoundtrack();return;}if(!file.type.startsWith("audio/")||file.size>100*1024*1024){$("clipAudio").value="";soundtrackStatus.textContent="Choose an audio file smaller than 100 MB.";paintSoundtrack();return;}soundtrackUrl=URL.createObjectURL(file);soundtrack.src=soundtrackUrl;soundtrackStatus.textContent="Loaded: "+file.name+" (separate soundtrack)";paintSoundtrack();});
 const info=t=>$('clipStatus').textContent=t;
 const invalidateExport=()=>{if(exportUrl){URL.revokeObjectURL(exportUrl);exportUrl=null;}$('clipDownload').removeAttribute('href');$('clipDownload').hidden=true};
+for(const id of ["clipExportFps","clipExportBitrate"])$(id).addEventListener("change",()=>{if(!session)invalidateExport()});
 const save=()=>{invalidateExport();undo.push(JSON.stringify(clips));if(undo.length>40)undo.shift();redo=[]};
 const chosen=()=>{const i=Number($('clipList').value);return $('clipList').value===''?-1:i};
 function paint(selected=0){
