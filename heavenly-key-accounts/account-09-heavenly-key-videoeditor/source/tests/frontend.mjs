@@ -16,6 +16,8 @@ assert.equal(toSeconds('00:00:01,5'),1.5,'Single-digit millisecond groups must r
 assert.equal(toSeconds('01:02:03,045'),3723.045,'Three-digit millisecond groups must retain precision');
 assert.ok(Number.isNaN(toSeconds('00:61:00,000')),'Invalid SRT minutes must be rejected');
 
+assert.ok(html.includes('Video export timed out')&&html.includes('Video decoding failed during export'),'Single-video export must fail instead of stalling');
+assert.ok(html.includes('id="register" disabled'),'Public registration must display closed state');
 const headers=readFileSync('public/_headers','utf8');
 const original=readFileSync('index.html','utf8');
 const inlineScripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(match=>match[1]).filter(Boolean);
