@@ -100,3 +100,10 @@ test('Account 8 deploy verifies MeetingSpace health endpoint rather than just a 
  assert.match(deploy,/RELEASE_HEALTH_EXPECT:JSON\.stringify\(expectedHealth\)/);
  assert.match(deploy,/privatePreview\?\{\}:\{turnConfigured:true\}/);
 });
+
+test('Account 8 can inspect an existing private preview before requiring TURN from a new public release',()=>{
+ const deploy=fs.readFileSync(new URL('../scripts/deploy.mjs',import.meta.url),'utf8');
+ assert.match(deploy,/const snapshotEnv=\{\.\.\.releaseEnv,RELEASE_HEALTH_EXPECT:JSON\.stringify\(\{ok:true,meetingConfigured:true\}\)\}/);
+ assert.match(deploy,/existing-worker-release\.mjs','snapshot'\],snapshotEnv/);
+ assert.match(deploy,/existing-worker-release\.mjs','verify'\],releaseEnv/);
+});
