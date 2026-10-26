@@ -24,10 +24,10 @@ const error=(message:string,status=400)=>json({error:{message}},status);
 async function body(request:Request){
   if(!(request.headers.get("Content-Type")||"").toLowerCase().startsWith("application/json"))throw Object.assign(new Error("Send application/json."),{status:415});
   const limit=131072;if(Number(request.headers.get("Content-Length"))>limit)throw Object.assign(new Error("Request too large."),{status:413});
-  const reader=request.body?.getReader();if(!reader)throw new Error("Send a valid JSON object.");
+  const reader=request.body?.getReader();if(!reader)throw Object.assign(new Error("Send a valid JSON object."),{status:400});
   const parts:Uint8Array[]=[];let total=0;try{while(true){const {value,done}=await reader.read();if(done)break;total+=value.length;if(total>limit){await reader.cancel();throw Object.assign(new Error("Request too large."),{status:413});}parts.push(value);}}finally{reader.releaseLock();}
   const bytes=new Uint8Array(total);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.length;}
-  try{const value=JSON.parse(new TextDecoder().decode(bytes));if(!value||Array.isArray(value)||typeof value!=="object")throw new Error();return value;}catch{throw new Error("Send a valid JSON object.");}
+  try{const value=JSON.parse(new TextDecoder().decode(bytes));if(!value||Array.isArray(value)||typeof value!=="object")throw new Error();return value;}catch{throw Object.assign(new Error("Send a valid JSON object."),{status:400});}
 }
 async function sourceKey(request:Request){const address=request.headers.get("CF-Connecting-IP")||"local";const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(address));return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");}
 const cleanEmail=(v:any)=>String(v||"").trim().toLowerCase().slice(0,160);
