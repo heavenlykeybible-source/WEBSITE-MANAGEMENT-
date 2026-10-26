@@ -89,3 +89,9 @@ test('authentication throttling keys do not contain raw email addresses',()=>{
  assert.match(worker,/"login:"\+await rateKey\(email\)/);
  assert.doesNotMatch(worker,/"(?:register|login):"\+email/);
 });
+
+test('Community API enforces HTTPS transport and same-origin resource policy',()=>{
+ const worker=readFileSync(new URL('src/index.ts',base),'utf8');
+ assert.match(worker,/headers\.set\("Strict-Transport-Security","max-age=31536000"\)/);
+ assert.match(worker,/headers\.set\("Cross-Origin-Resource-Policy","same-origin"\)/);
+});
