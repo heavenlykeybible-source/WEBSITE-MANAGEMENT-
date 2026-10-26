@@ -87,6 +87,20 @@ test('invalid meeting room capacity uses a safe finite default',async()=>{
   assert.equal(overflow.readyState,3,'invalid cap '+bad+' must not allow unlimited guests');
  }
 });
+test('invalid meeting capacity settings fall back safely and fractional limits round down',async()=>{
+ const s=await openRoom();
+ for(const bad of ['NaN','Infinity','-3','0']){
+  s.room.env.MEETING_ROOM_CAP=bad;
+  for(let i=0;i<24;i++){const g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true});assert.equal(g.d.role,'guest');g.readyState=3;}
+ }
+ s.room.env.MEETING_ROOM_CAP='3.9';
+ const a=s.add(),b=s.add();
+ await message(s.room,a,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ await message(s.room,b,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ assert.equal(a.d.role,'guest');assert.equal(b.d.role,'guest');
+ const c=s.add();await message(s.room,c,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ assert.equal(c.readyState,3);
+});
 test('meeting room counts audience and speaker guests together against capacity',async()=>{
  const s=await openRoom();s.room.env.MEETING_ROOM_CAP='4';
  const first=s.add(),second=s.add(),third=s.add();
