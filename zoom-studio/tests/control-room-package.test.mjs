@@ -18,9 +18,27 @@ test('complete Control Room bundle serves exact public assets and excludes priva
  }
  for(const name of ['_worker.js','_headers','server/setup-accounts.mjs','../schema.sql'])assert.equal((await app.fetch(new Request('https://meeting/'+name),{},{})).status,404);
  const r=await app.fetch(new Request('https://meeting/'),{},{});const etag=r.headers.get('etag');assert.ok(etag);
- assert.equal((await app.fetch(new Request('https://meeting/',{headers:{'if-none-match':etag}}),{},{})).status,304);
+ assert.equal((await app.fetch(new Request('https://meeting/',{headers:{'if-none-match':etag}}),{},{})).status,200);
+ for(const pathname of ['/', '/join.html']) {
+  const first=await app.fetch(new Request('https://meeting'+pathname),{},{});
+  const conditional=await app.fetch(new Request('https://meeting'+pathname,{headers:{'if-none-match':first.headers.get('etag')}}),{},{});
+  assert.equal(conditional.status,200,'private meeting pages must ignore conditional cache requests');
+  assert.equal(conditional.headers.get('cache-control'),'no-store');
+ }
+
  assert.equal((await app.fetch(new Request('https://meeting/',{method:'HEAD'}),{},{})).status,200);
  assert.equal((await app.fetch(new Request('https://meeting/',{method:'POST'}),{},{})).status,405);
+ for (const pathname of ['/', '/index.html', '/join.html']) {
+   const response=await app.fetch(new Request('https://meeting'+pathname),{},{});
+   assert.equal(response.headers.get('cache-control'),'no-store');
+   assert.equal(response.headers.get('x-content-type-options'),'nosniff');
+   assert.equal(response.headers.get('x-frame-options'),'DENY');
+   assert.equal(response.headers.get('referrer-policy'),'no-referrer');
+   assert.match(response.headers.get('content-security-policy')||'',/frame-ancestors 'none'/);
+ }
+ const staticAsset=await app.fetch(new Request('https://meeting/studio-theme.css'),{},{});
+ assert.equal(staticAsset.headers.get('x-content-type-options'),'nosniff');
+
 });
 function database(){
  const raw=new DatabaseSync(':memory:');let migrations=0;
@@ -54,6 +72,12 @@ test('missing database yields a clear setup failure while public template still 
 const {MeetingRooms}=await import(pathToFileURL(path.join(root,'build/meeting-worker.mjs')));
 function socket(data){return {readyState:1,messages:[],serializeAttachment(d){assert.ok(Buffer.byteLength(JSON.stringify(d))<=2048,'hibernation attachment fits platform limit');this.d=structuredClone(d)},deserializeAttachment(){return structuredClone(this.d)},send(m){this.messages.push(JSON.parse(m))},close(){this.readyState=3},d:structuredClone(data)};}
 function meeting(){const all=[],state={getWebSockets(){return all},storage:{async setAlarm(){}}};return {all,state,room:new MeetingRooms(state,{AUTH_SECRET:secret}),add(data={}){const w=socket({role:'',room:'11111111-1111-4111-8111-111111111111',until:Date.now()+15000,...data});all.push(w);return w}};}
+test('meeting room rejects excess peers before allocating WebSockets',async()=>{
+ const s=meeting();for(let i=0;i<8;i++)s.add();
+ const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
+ const response=await s.room.fetch(req);
+ assert.equal(response.status,429);
+});
 function roomToken(extra={}){const p=Buffer.from(JSON.stringify({k:'meeting',u:'owner@test.local',r:'11111111-1111-4111-8111-111111111111',exp:Date.now()+60000,pe:Date.now()+86400000,...extra})).toString('base64url');return p+'.'+createHmac('sha256',secret).update(p).digest('hex');}
 const message=(room,w,m)=>room.webSocketMessage(w,JSON.stringify(m));
 async function openRoom(){const s=meeting(),host=s.add();await message(s.room,host,{t:'host',token:roomToken()});return {...s,host,key:host.messages.at(-1).key};}

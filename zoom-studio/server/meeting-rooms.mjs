@@ -19,7 +19,9 @@ export class MeetingRooms {
   const url=new URL(request.url);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
-  if(this.sockets().length>=126)return new Response('Room is full',{status:429});
+  // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
+  const capacity=Math.max(2,Math.min(12,Number(this.env.MEETING_ROOM_CAP)||8));
+  if(this.sockets().length>=capacity)return new Response('Room is full',{status:429});
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
   this.save(server,{role:'',room:url.pathname.split('/')[2],until:Date.now()+15000});
