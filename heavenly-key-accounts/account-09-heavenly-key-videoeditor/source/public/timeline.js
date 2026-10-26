@@ -230,7 +230,8 @@ window.hkTimeline={
   audioLoop:$('clipAudioLoop').checked,audioStart:Number($('clipAudioStart').value),
   audioOffset:Number($('clipAudioOffset').value),fadeIn:Number($('clipAudioFadeIn').value),
   fadeOut:Number($('clipAudioFadeOut').value),fps:Number($('clipExportFps').value),
-  bitrate:Number($('clipExportBitrate').value)
+  bitrate:Number($('clipExportBitrate').value),
+  pipSize:Number($('clipPipSize').value),pipPosition:$('clipPipPosition').value,pipOffset:Number($('clipPipOffset').value)
  }),
  restoreSettings:(data)=>{
   if(session)return info('Stop preview or export before restoring settings.');
@@ -242,6 +243,9 @@ window.hkTimeline={
    ['fps','clipExportFps',[24,30,60]],['bitrate','clipExportBitrate',[2500000,5000000,10000000]]])
     if(allowed.includes(data[key]))$(id).value=String(data[key]);
   if(typeof data.audioLoop==='boolean')$('clipAudioLoop').checked=data.audioLoop;
+  if([.25,.35,.5].includes(data.pipSize))$('clipPipSize').value=String(data.pipSize);
+  if(['tr','tl','br','bl'].includes(data.pipPosition))$('clipPipPosition').value=data.pipPosition;
+  if(Number.isFinite(data.pipOffset)&&data.pipOffset>=0&&data.pipOffset<=600)$('clipPipOffset').value=String(data.pipOffset);
   invalidateExport();paintSoundtrack();
  },
  getClips:()=>clips.map(c=>({...c})),
