@@ -31,5 +31,8 @@
 .hk-app-window{z-index:101}
 .hk-app-minimized[hidden]{display:none!important}
 .hk-app-window-frame[hidden]{display:none!important}
-@media(min-width:721px){.president-section .president-photo{padding-right:min(235px,19vw)!important;box-sizing:border-box}}
+@media(min-width:721px){.president-section .president-photo{box-sizing:border-box}}
 @media(max-width:720px){.president-section .president-photo{padding-right:0!important}.hk-app-dock{right:0!important}.hk-app-window{max-width:none!important;resize:none}}
+
+/* Keep the source portrait uncropped by the launcher and clarify external embeds. */
+.hk-app-window-help a{color:#145b43;text-decoration:underline;font-weight:700}.hk-app-window-frame{min-height:0}.hk-app-dock{isolation:isolate}
