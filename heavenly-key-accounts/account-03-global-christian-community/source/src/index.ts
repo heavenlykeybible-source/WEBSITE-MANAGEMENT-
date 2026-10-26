@@ -15,6 +15,8 @@ import * as Care from "./community-care";
 const security=(headers=new Headers())=>{
   headers.set("X-Content-Type-Options","nosniff");headers.set("X-Frame-Options","DENY");headers.set("Referrer-Policy","strict-origin-when-cross-origin");
   headers.set("Permissions-Policy","camera=(self), microphone=(self), geolocation=()");
+  headers.set("Strict-Transport-Security","max-age=31536000");
+  headers.set("Cross-Origin-Resource-Policy","same-origin");
   return headers;
 };
 const json=(data:unknown,status=200,extra?:Record<string,string>)=>{const h=security(new Headers({"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...(extra||{})}));return new Response(JSON.stringify(data),{status,headers:h});};
