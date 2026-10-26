@@ -5,9 +5,11 @@
   "worker": "heavenlykey-studio",
   "cloudflare_connection": "Cloudflare Account 9",
   "deployment_artifact": "release-packages/account9-control-room-full.mjs",
-  "active_proposal": 28,
+  "active_proposal": 32,
   "supersedes_proposals": [
-    27
+    27,
+    28,
+    29
   ],
   "strategy": "replace-in-place",
   "max_active_deployments": 1,
@@ -17,5 +19,6 @@
     "MEDIA": "heavenly-key-videoeditor-media",
     "AI": "AI"
   },
-  "policy": "Only the latest approved Account 9 release may deploy to the existing Worker. Earlier waiting proposals must be superseded or declined before deploying a newer release. Never create a second Worker or a second Account 9."
+  "policy": "Only the latest approved Account 9 release may deploy to the existing Worker. Earlier waiting proposals must be superseded or declined before deploying a newer release. Never create a second Worker or a second Account 9.",
+  "public_domain": "mediaeditor.heavenlykey.org"
 }
