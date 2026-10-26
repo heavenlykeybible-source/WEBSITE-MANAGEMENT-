@@ -18,7 +18,7 @@ min.type=close.type='button';min.setAttribute('aria-label','Minimize application
 const bottom=make('div','hk-community-app-bottom'),share=make('button',null,'Share to Bless Others'),visit=make('a',null,'Visit App Page ↗');
 share.type='button';visit.target='_blank';visit.rel='noopener noreferrer';bottom.append(share,visit);const feedback=make('p','hk-community-app-feedback','Choose a ministry application to get started.');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');panel.append(head,feedback,bottom);
 const restore=make('button','hk-community-app-restore','Restore App');restore.type='button';restore.hidden=true;restore.setAttribute('aria-controls',panel.id);
-const allButtons=new Set();
+const allButtons=new Set();const boundButtons=new WeakSet();
 function minimize(){if(active)feedback.textContent=active.name+' minimized. Select Restore App to continue.';panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
 function closeApp(){active=null;panel.dataset.open='false';restore.hidden=true;for(const frame of frames.values())frame.remove();frames.clear();feedback.textContent='Application closed.';allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
 function open(app, restoring=false){
@@ -43,16 +43,16 @@ function build(aside){
  const existing=aside.querySelector('.hk-community-apps');if(existing){
   // Rebind controls when a client-side navigation system clones the sidebar markup.
   for(const button of existing.querySelectorAll('.hk-community-app-btn')){
-   if(button.dataset.hkBound==='true')continue;
+   if(boundButtons.has(button)){allButtons.add(button);continue;}
    const app=apps.find(item=>item.id===button.dataset.app);
    if(!app)continue;
-   button.dataset.hkBound='true';button.addEventListener('click',()=>open(app));allButtons.add(button);
+   boundButtons.add(button);button.addEventListener('click',()=>open(app));allButtons.add(button);
   }
   if(existing!==aside.lastElementChild)aside.append(existing);return;
  }
  const section=make('section','hk-community-apps');section.setAttribute('aria-label','Heavenly Key ministry application launcher');
  const title=make('h2',null,'✦ Heavenly Key Apps');const grid=make('div','hk-community-app-grid');section.append(title,grid);
- for(const app of apps){const button=make('button','hk-community-app-btn');button.type='button';button.dataset.app=app.id;button.setAttribute('aria-pressed','false');button.setAttribute('aria-controls',panel.id);button.setAttribute('aria-label','Open '+app.name);const orb=make('span','hk-community-app-orb');if(app.id==='assistant'){const img=document.createElement('img');img.src=officialPortrait;img.alt='Official Heavenly Key Online Assistant portrait';img.loading='lazy';orb.append(img)}else orb.textContent=app.icon;const label=make('span',null,app.name);button.append(orb,label);button.dataset.hkBound='true';button.addEventListener('click',()=>open(app));allButtons.add(button);grid.append(button)}
+ for(const app of apps){const button=make('button','hk-community-app-btn');button.type='button';button.dataset.app=app.id;button.setAttribute('aria-pressed','false');button.setAttribute('aria-controls',panel.id);button.setAttribute('aria-label','Open '+app.name);const orb=make('span','hk-community-app-orb');if(app.id==='assistant'){const img=document.createElement('img');img.src=officialPortrait;img.alt='Official Heavenly Key Online Assistant portrait';img.loading='lazy';orb.append(img)}else orb.textContent=app.icon;const label=make('span',null,app.name);button.append(orb,label);boundButtons.add(button);button.addEventListener('click',()=>open(app));allButtons.add(button);grid.append(button)}
  const action=make('div','hk-community-app-actions'),trigger=make('button',null,'Explore Ministry Apps');trigger.type='button';trigger.addEventListener('click',()=>open(apps[0]));action.append(trigger);section.append(action);
  aside.append(section);
 }
