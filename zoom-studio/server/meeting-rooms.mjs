@@ -15,7 +15,7 @@ async function meetingICE(env, room) {
  ice.push({urls,username,credential});
  return ice;
 }
-const capacityForRoom=env=>Math.max(2,Math.min(100,Number(env.MEETING_ROOM_CAP)||25));
+const capacityForRoom=env=>{const n=Number(env.MEETING_ROOM_CAP);return Number.isFinite(n)&&n>0?Math.max(2,Math.min(100,Math.floor(n))):25;};
 export class MeetingRooms {
  constructor(state,env){this.state=state;this.env=env;}
  sockets(){return this.state.getWebSockets().filter(w=>w.readyState===1);}
@@ -34,7 +34,7 @@ export class MeetingRooms {
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
-  const capacity=Math.max(2,Math.min(100,Number(this.env.MEETING_ROOM_CAP)||25));
+  const capacity=capacityForRoom(this.env);
   if(this.sockets().length>=capacity)return new Response('Room is full',{status:429});
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
