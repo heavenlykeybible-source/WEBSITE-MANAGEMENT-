@@ -1,8 +1,11 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),v=$('v'),canvas=$('cv'),host=$('video');if(!v||!canvas||!host)return;
 const wrap=document.createElement('section');wrap.className='panel';wrap.style.marginTop='16px';
-wrap.innerHTML='<h2>Multi-Clip Timeline</h2><p class="muted">Edit clips from the loaded video. Export renders the timeline in real time as WebM or native MP4 where supported by your browser. Keyboard shortcuts (outside text fields): Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo, Shift+D duplicate, Delete remove.</p><div class="tools"><div><label for="clipStart">Start (seconds)</label><input id="clipStart" type="number" min="0" step=".1" value="0"></div><div><label for="clipEnd">End (seconds)</label><input id="clipEnd" type="number" min="0" step=".1" value="0"></div><div><label for="clipSpeed">Speed</label><select id="clipSpeed"><option value=".25">0.25×</option><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option></select></div><div><label for="clipFade">Fade at clip edges</label><select id="clipFade"><option value="0">None</option><option value=".2">0.2 seconds</option><option value=".5">0.5 seconds</option><option value="1">1 second</option></select></div></div><div class="actions"><button id="clipAdd">Add clip</button><button id="clipSplit">Split at playhead</button><button id="clipUpdate">Update selected clip</button><button id="clipUndo">Undo</button><button id="clipRedo">Redo</button><button id="clipDuplicate">Duplicate clip</button><button id="clipRemove">Remove</button><button id="clipUp">Move up</button><button id="clipDown">Move down</button><button id="clipPlay">Preview timeline</button></div><p class="muted">Drag a clip to reorder it, or select a clip to edit it.</p><div id="clipTrack" role="list" aria-label="Visual timeline" style="display:flex;gap:6px;overflow-x:auto;padding:8px 0"></div><label for="clipList">Timeline clips</label><select id="clipList" size="5" aria-label="Timeline clips"></select><div class="actions"><button id="clipExport">Export timeline (MP4 / WebM)</button><button id="clipCancel" disabled>Stop preview/export</button><a id="clipDownload" download="heavenly-key-timeline.webm" hidden>Download timeline</a></div><div id="clipStatus" class="status" role="status">Load a video to begin.</div>';host.append(wrap);
-let clips=[],undo=[],redo=[],session=null,exportUrl=null,activeClip=null;
+wrap.innerHTML='<h2>Multi-Clip Timeline</h2><p class="muted">Edit clips from the loaded video. Export renders the timeline in real time as WebM or native MP4 where supported by your browser. Keyboard shortcuts (outside text fields): Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo, Shift+D duplicate, Delete remove.</p><div class="tools"><div><label for="clipStart">Start (seconds)</label><input id="clipStart" type="number" min="0" step=".1" value="0"></div><div><label for="clipEnd">End (seconds)</label><input id="clipEnd" type="number" min="0" step=".1" value="0"></div><div><label for="clipSpeed">Speed</label><select id="clipSpeed"><option value=".25">0.25×</option><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option></select></div><div><label for="clipFade">Fade at clip edges</label><select id="clipFade"><option value="0">None</option><option value=".2">0.2 seconds</option><option value=".5">0.5 seconds</option><option value="1">1 second</option></select></div></div><div class="actions"><button id="clipAdd">Add clip</button><button id="clipSplit">Split at playhead</button><button id="clipUpdate">Update selected clip</button><button id="clipUndo">Undo</button><button id="clipRedo">Redo</button><button id="clipDuplicate">Duplicate clip</button><button id="clipRemove">Remove</button><button id="clipUp">Move up</button><button id="clipDown">Move down</button><button id="clipPlay">Preview timeline</button></div><p class="muted">Drag a clip to reorder it, or select a clip to edit it.</p><div id="clipTrack" role="list" aria-label="Visual timeline" style="display:flex;gap:6px;overflow-x:auto;padding:8px 0"></div><div class="tools"><div><label for="clipAudio">Optional soundtrack (audio file)</label><input id="clipAudio" type="file" accept="audio/*"></div><div><label for="clipAudioGain">Soundtrack volume</label><input id="clipAudioGain" type="range" min="0" max="100" value="70"></div></div><p id="clipAudioStatus" class="muted">No separate soundtrack loaded. The audio file stays on this device and must be reselected after reopening.</p><label for="clipList">Timeline clips</label><select id="clipList" size="5" aria-label="Timeline clips"></select><div class="actions"><button id="clipExport">Export timeline (MP4 / WebM)</button><button id="clipCancel" disabled>Stop preview/export</button><a id="clipDownload" download="heavenly-key-timeline.webm" hidden>Download timeline</a></div><div id="clipStatus" class="status" role="status">Load a video to begin.</div>';host.append(wrap);
+let clips=[],undo=[],redo=[],session=null,exportUrl=null,activeClip=null,soundtrackUrl=null;
+const soundtrack=document.createElement("audio");soundtrack.preload="auto";
+const soundtrackStatus=$("clipAudioStatus");
+$("clipAudio").addEventListener("change",()=>{if(session)return;const file=$("clipAudio").files?.[0];soundtrack.pause();soundtrack.removeAttribute("src");soundtrack.load();if(soundtrackUrl)URL.revokeObjectURL(soundtrackUrl);soundtrackUrl=null;invalidateExport();if(!file){soundtrackStatus.textContent="No separate soundtrack loaded.";return;}if(!file.type.startsWith("audio/")||file.size>100*1024*1024){$("clipAudio").value="";soundtrackStatus.textContent="Choose an audio file smaller than 100 MB.";return;}soundtrackUrl=URL.createObjectURL(file);soundtrack.src=soundtrackUrl;soundtrackStatus.textContent="Loaded: "+file.name+" (separate soundtrack)";});
 const info=t=>$('clipStatus').textContent=t;
 const invalidateExport=()=>{if(exportUrl){URL.revokeObjectURL(exportUrl);exportUrl=null;}$('clipDownload').removeAttribute('href');$('clipDownload').hidden=true};
 const save=()=>{invalidateExport();undo.push(JSON.stringify(clips));if(undo.length>40)undo.shift();redo=[]};
@@ -39,7 +42,7 @@ track.addEventListener('keydown',event=>{
 
 const ready=()=>Number.isFinite(v.duration)&&v.duration>0;
 const seek=t=>new Promise((resolve,reject)=>{if(!ready())return reject(Error('Load a video first.'));t=Math.min(v.duration,Math.max(0,t));if(Math.abs(v.currentTime-t)<.02)return resolve();let timer;const done=()=>{clearTimeout(timer);v.removeEventListener('seeked',done);resolve()};timer=setTimeout(()=>{v.removeEventListener('seeked',done);reject(Error('Video seeking timed out.'))},10000);v.addEventListener('seeked',done);v.currentTime=t});
-function setBusy(b){for(const id of ['vf','vexp','clipExport','clipPlay','clipAdd','clipSplit','clipUpdate','clipDuplicate','clipRemove','clipUp','clipDown','clipUndo','clipRedo','clipList','clipStart','clipEnd','clipSpeed','clipFade'])$(id).disabled=b;$('clipCancel').disabled=!b}
+function setBusy(b){for(const id of ['vf','vexp','clipExport','clipPlay','clipAdd','clipSplit','clipUpdate','clipDuplicate','clipRemove','clipUp','clipDown','clipUndo','clipRedo','clipList','clipStart','clipEnd','clipSpeed','clipFade','clipAudio','clipAudioGain'])$(id).disabled=b;$('clipCancel').disabled=!b}
 v.addEventListener('loadstart',()=>{if(session){session.cancelled=true;v.pause();}invalidateExport();clips=[];undo=[];redo=[];paint();info('Loading video. Previous timeline cleared to prevent editing the wrong file.');});
 v.addEventListener('loadedmetadata',()=>{invalidateExport();$('clipStart').value='0';$('clipEnd').value=v.duration.toFixed(2);info('Video ready. Add a clip.')});
 $('clipAdd').onclick=()=>{const start=Number($('clipStart').value),end=Number($('clipEnd').value),speed=Number($('clipSpeed').value),fade=Number($('clipFade').value);if(clips.length>=200)return info('Timeline limit is 200 clips.');if(!ready()||!Number.isFinite(start)||!Number.isFinite(end)||!Number.isFinite(speed)||!Number.isFinite(fade)||start<0||end<=start||end>v.duration+.02||speed<.25||speed>4||fade<0||fade>1)return info('Choose valid start, end, speed and fade settings.');save();clips.push({start,end:Math.min(end,v.duration),speed,fade});paint(clips.length-1)};
@@ -64,12 +67,28 @@ async function runTimeline(record){
  const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
  if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
  const state={cancelled:false};session=state;setBusy(true);
- const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null;
+ const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null,audioContext=null,soundtrackNode=null;let elapsed=0;
  try{
   const fragments=[];let finished;
+  if(soundtrackUrl){
+   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+   if(!AudioContextClass)throw Error('Soundtrack mixing requires Web Audio support.');
+   audioContext=new AudioContextClass();await audioContext.resume();
+   const destination=audioContext.createMediaStreamDestination();
+   const soundtrackSource=audioContext.createMediaElementSource(soundtrack);
+   const gain=audioContext.createGain();gain.gain.value=Number($('clipAudioGain').value)/100;
+   soundtrackSource.connect(gain);gain.connect(destination);
+   if(!record)gain.connect(audioContext.destination);
+   soundtrackNode=destination;
+  }
   if(record){
    stream=canvas.captureStream(30);
-   try{if(v.captureStream){const source=v.captureStream();for(const track of source.getAudioTracks())stream.addTrack(track)}}catch{}
+   if(soundtrackNode){
+    try{if(v.captureStream){const original=v.captureStream();if(original.getAudioTracks().length){const source=audioContext.createMediaStreamSource(original);source.connect(soundtrackNode)}}}catch{}
+    for(const track of soundtrackNode.stream.getAudioTracks())stream.addTrack(track);
+   }else{
+    try{if(v.captureStream){const source=v.captureStream();for(const track of source.getAudioTracks())stream.addTrack(track)}}catch{}
+   }
    rec=new MediaRecorder(stream,{mimeType:mime});
    finished=new Promise((resolve,reject)=>{rec.onstop=resolve;rec.onerror=e=>reject(e.error||Error('Encoder failed'))});
    rec.ondataavailable=e=>{if(e.data.size)fragments.push(e.data)};
@@ -77,11 +96,12 @@ async function runTimeline(record){
   }
   for(let i=0;i<clips.length;i++){
    if(state.cancelled)break;
-   const c=clips[i];v.pause();activeClip=null;if(rec&&rec.state==='recording')rec.pause();await seek(c.start);v.playbackRate=c.speed;activeClip=c;
+   const c=clips[i];v.pause();soundtrack.pause();activeClip=null;if(rec&&rec.state==='recording')rec.pause();await seek(c.start);v.playbackRate=c.speed;activeClip=c;
    if(state.cancelled)break;
    if(rec&&rec.state==='inactive')rec.start(250);
    info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length);
    await v.play();
+   if(soundtrackUrl&&elapsed<soundtrack.duration){soundtrack.currentTime=elapsed;await soundtrack.play();}
    if(state.cancelled){v.pause();break;}
    if(rec&&rec.state==='paused')rec.resume();
    await new Promise((resolve,reject)=>{
@@ -91,6 +111,7 @@ async function runTimeline(record){
     const started=Date.now(),maxMs=Math.max(15000,((c.end-c.start)/c.speed+12)*1000);
     timer=setInterval(()=>{if(state.cancelled||v.currentTime>=c.end-.03||v.ended)return finish();if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
    });
+   soundtrack.pause();elapsed+=(c.end-c.start)/c.speed;
   }
   v.pause();
   if(rec&&rec.state!=='inactive'){rec.stop();await finished}
@@ -102,7 +123,7 @@ async function runTimeline(record){
    info('Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
   }else info('Timeline preview complete.');
  }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}info('Timeline failed: '+e.message)}
- finally{activeClip=null;v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration);if(stream)stream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
+ finally{activeClip=null;v.pause();soundtrack.pause();if(audioContext)await audioContext.close();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration);if(stream)stream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
 }
 window.hkTimeline={
  fadeOpacity:()=>{
