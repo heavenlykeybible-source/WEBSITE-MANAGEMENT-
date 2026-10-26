@@ -6,7 +6,7 @@ const roomClean=(s,n)=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').trim().sli
 async function meetingICE(env, room) {
  const ice=[{urls:'stun:stun.cloudflare.com:3478'}];
  const urls=String(env.TURN_URLS||'').split(',').map(u=>u.trim()).filter(u=>/^turns?:[^\s,]+$/.test(u)).slice(0,4);
- if(!urls.length||!env.TURN_SHARED_SECRET)return ice;
+ if(!urls.length||String(env.TURN_SHARED_SECRET||'').length<32)return ice;
  const username=Math.floor(Date.now()/1000)+3600+':'+room;
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.TURN_SHARED_SECRET),{name:'HMAC',hash:'SHA-1'},false,['sign']);
  const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(username)));
