@@ -3,7 +3,7 @@ name: Deploy Website Management to Cloudflare
 on:
   workflow_dispatch:
   push:
-    branches: [fix/account4-permissions-passkeys-20261023]
+    branches: [main, fix/account4-permissions-passkeys-20261023]
     paths:
       - 'control-room-worker.js'
       - 'ai/**'
