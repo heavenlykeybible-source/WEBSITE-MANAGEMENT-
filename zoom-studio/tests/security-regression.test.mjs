@@ -26,7 +26,9 @@ test('offline worker never intercepts authenticated API, non-GET or private page
   const intercepts = (path, { method='GET', authorization=false, credentials='same-origin', mode='same-origin' }={}) => {
     let handled = false;
     const headers = new Headers(authorization ? { authorization: 'Bearer secret' } : {});
-    const request = { url: 'https://meeting.example' + path, method, headers, credentials, mode };
+    const request = mode === 'navigate' ?
+      { url: 'https://meeting.example' + path, method, headers, credentials, mode } :
+      new Request('https://meeting.example' + path, { method, headers, credentials });
     handlers.fetch({ request, respondWith(promise) { handled = true; pending.push(promise); } });
     return handled;
   };
