@@ -10,6 +10,7 @@ on:
       - 'release-packages/account9-active-release.json'
       - 'scripts/account9-release-policy.mjs'
       - 'scripts/test-account9-release-policy.mjs'
+      - 'scripts/smoke-account9-live.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   pull_request:
     paths:
@@ -20,6 +21,7 @@ on:
       - 'release-packages/account9-active-release.json'
       - 'scripts/account9-release-policy.mjs'
       - 'scripts/test-account9-release-policy.mjs'
+      - 'scripts/smoke-account9-live.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   workflow_dispatch:
 
@@ -44,6 +46,8 @@ jobs:
         run: npm run check
       - name: Build canonical Worker bundle
         run: node scripts/build-account9-worker.mjs /tmp/account9-quality-worker.mjs
+      - name: Validate live launch checker syntax
+        run: node --check scripts/smoke-account9-live.mjs
       - name: Enforce single Account 9 release identity
         run: node scripts/test-account9-release-policy.mjs
       - name: Verify Control Room release matches latest source
