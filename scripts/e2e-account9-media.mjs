@@ -119,6 +119,12 @@ try{
  assert.equal(await page.locator('#clipDownload').isHidden(),true,'Invalid soundtrack start must not generate an export');
  await page.locator('#clipAudioStart').fill('0');
  await page.locator('#clipAudioStart').dispatchEvent('change');
+ await page.locator('#clipPipFile').setInputFiles(sample);
+ await page.waitForFunction(()=>document.querySelector('#clipPipStatus').textContent.includes('Overlay loaded'),{timeout:10000});
+ await page.locator('#clipPipSize').selectOption('.25');
+ await page.locator('#clipPipPosition').selectOption('br');
+ await page.locator('#clipPipOffset').fill('0.2');
+ assert.equal(await page.locator('#clipPipPosition').inputValue(),'br','Overlay position must be configurable');
  await page.locator('#clipExport').click();
  await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
  const first=page.waitForEvent('download');
