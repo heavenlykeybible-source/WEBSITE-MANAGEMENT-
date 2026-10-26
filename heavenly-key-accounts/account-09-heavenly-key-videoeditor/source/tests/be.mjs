@@ -68,6 +68,13 @@ const missingStorage = await onRequest({
   params:{path:['health']}
 });
 check('Health rejects missing private media binding', missingStorage.status === 503);
+const uninitializedSchema = await onRequest({
+  request:new Request('https://studio.example/api/health'),
+  env:{...env,DB:{prepare(){throw Error('no such table: users')}}},
+  params:{path:['health']}
+});
+check('Health detects uninitialized or missing D1 schema without leaking errors',uninitializedSchema.status===503&&(await uninitializedSchema.json()).status==='degraded');
+
 const invalid = await request('register', { method: 'POST', body: { email: 'invalid', password: 'long enough password' } });
 check('Invalid registration rejected', invalid.status === 400);
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
