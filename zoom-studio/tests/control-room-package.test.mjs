@@ -191,7 +191,7 @@ test('expired speaker invitations free slots and cannot be accepted late',async(
  await message(s.room,audience[0],{t:'ready'});
  assert.equal(audience[0].d.stage,false);
  assert.equal(audience[0].d.invited,false);
- assert.match(audience[0].messages.at(-1).text,/invitation expired/i);
+ assert.equal(audience[0].messages.at(-1).t,'invitation-expired');
  await message(s.room,audience[6],{t:'ready'});
  assert.equal(audience[6].d.stage,true);
 });
