@@ -102,6 +102,10 @@ const tooLongName=await request('projects',{method:'POST',cookie:login.cookie,bo
 check('Authenticated project creation rejects oversized names',tooLongName.status===400);
 const project = await request('projects', { method: 'POST', cookie: login.cookie, body: { name: 'Smoke test', data: { layers: [] } } });
 check('Project creation succeeds', project.status === 200 && !!project.data?.id);
+const badUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:{bad:true},data:{}}});
+check('Authenticated project update rejects object names',badUpdate.status===400);
+const oversizedUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'x'.repeat(101),data:{}}});
+check('Authenticated project update rejects oversized names',oversizedUpdate.status===400);
 const projects = await request('projects', { cookie: login.cookie });
 check('Project listing succeeds', projects.status === 200 && Array.isArray(projects.data));
 const secondRegistered = await request('register',{method:'POST',body:{email:'other-user@example.com',password:'separate long passphrase'}});
