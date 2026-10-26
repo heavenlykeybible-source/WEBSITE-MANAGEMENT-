@@ -150,3 +150,5 @@ console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tab
 assert.ok(appDock.includes("feedback.setAttribute('aria-live','polite')"),'App guidance must announce changes accessibly');
 assert.ok(appDock.includes("feedback.textContent='Application closed.'"),'Closing an app must confirm the action');
 assert.ok(appDockCss.includes('env(safe-area-inset-bottom)'),'App dock must accommodate phone safe areas');
+
+assert.ok(appDock.includes('mini.focus({preventScroll:true})'),'Minimized main website apps must focus the restore control');
