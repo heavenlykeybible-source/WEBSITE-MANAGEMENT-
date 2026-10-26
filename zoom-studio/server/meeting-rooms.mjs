@@ -107,7 +107,7 @@ export class MeetingRooms {
    }
   }else if(d.ok){
    if(m.t==='sig'&&d.stage&&signalPayloadOk(m.data))this.send(host,{t:'sig',from:d.id,data:m.data});
-   else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt<60000&&this.stage().length<6){d.invited=false;d.invitedAt=0;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.includes(d.pass)){h.admitted=h.admitted.concat(d.pass).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
+   else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt>=60000){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'note',text:'Invitation expired. Please ask the host again.'});}else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt<60000&&this.stage().length<6){d.invited=false;d.invitedAt=0;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.includes(d.pass)){h.admitted=h.admitted.concat(d.pass).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
