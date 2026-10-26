@@ -16,7 +16,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || url.origin !== self.location.origin ||
       request.mode === 'navigate' && url.pathname !== '/' && url.pathname !== '/join.html') return;
   if (url.pathname.startsWith('/api/') || request.headers.has('authorization') ||
-      request.credentials === 'include' && !SHELL.includes(url.pathname)) return;
+      request.credentials === 'include' || url.search) return;
   const isShell = SHELL.includes(url.pathname);
   const isStatic = STATIC_PATH.test(url.pathname);
   if (!isShell && !isStatic) return;
