@@ -1,0 +1,33 @@
+/* Heavenly Key global finish: subtle premium backdrop, no changes to approved brand, hero or content. */
+:root{--hk-finish-deep:#003f29;--hk-finish-gold:#d7ac3d}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body:not(.hk-admin){
+  background-color:#f8fbf8;
+  background-image:
+    radial-gradient(ellipse at 7% 12%,rgba(9,111,79,.075),transparent 35rem),
+    radial-gradient(ellipse at 93% 34%,rgba(218,170,62,.095),transparent 31rem),
+    radial-gradient(ellipse at 50% 82%,rgba(18,92,91,.045),transparent 44rem),
+    linear-gradient(180deg,#fffefa 0%,#f5faf7 52%,#fffef9 100%);
+  background-attachment:scroll;
+}
+body:not(.hk-admin) :is(main, .inner-main){position:relative}
+body:not(.hk-admin) :is(main, .inner-main) :is(img,video){max-width:100%}
+body:not(.hk-admin) :is(main, .inner-main) p{overflow-wrap:break-word}
+body:not(.hk-admin) :is(main, .inner-main) a:focus-visible,
+body:not(.hk-admin) :is(main, .inner-main) button:focus-visible{
+  outline:3px solid var(--hk-finish-gold);outline-offset:3px;
+}
+body:not(.hk-admin) :is(.inner-main,.hk-premium-inner .inner-main){
+  border-radius:clamp(14px,2vw,24px);
+  box-shadow:0 14px 45px rgba(0,47,35,.075);
+}
+body:not(.hk-admin) :is(.inner-main,.hk-premium-inner .inner-main) :is(h2,h3){
+  text-wrap:balance;
+}
+body:not(.hk-admin) :is(.inner-main,.hk-premium-inner .inner-main) a:not(.button):not(.tile-button):not(.feature-button):hover{
+  text-underline-offset:4px;
+}
+@media(max-width:600px){
+  body:not(.hk-admin) :is(.inner-main,.hk-premium-inner .inner-main){box-shadow:0 8px 24px rgba(0,47,35,.055)}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const dir=resolve(fileURLToPath(new URL('..',import.meta.url)));
+const js=readFileSync(resolve(dir,'public/sidebar-ministry-apps.js'),'utf8');
+const css=readFileSync(resolve(dir,'public/sidebar-ministry-apps.css'),'utf8');
+const pages=['index','account','fellowship','groups','grow','messages','missions','prayer','profile','safety','salvation','spaces'];
+for(const page of pages){const html=readFileSync(resolve(dir,'public/'+page+'.html'),'utf8');assert.ok(html.includes('sidebar-ministry-apps.js')&&html.includes('sidebar-ministry-apps.css'),'Missing launcher assets on '+page)}
+for(const id of ['study','assistant','eternity','community','radio','editor','calculator'])assert.ok(js.includes("id:'"+id+"'"),'Missing sidebar app '+id);
+assert.equal((js.match(/\{id:'(?:study|assistant|eternity|community|radio|editor|calculator)'/g)||[]).length,7);
+assert.ok(js.includes('approved-ai-transparent-original.png'),'Official approved assistant portrait must be used');
+assert.ok(js.includes("document.querySelector('.social-sidebar')"),'Launcher must appear inside the community right sidebar');
+assert.ok(js.includes('aside.append(section)'),'Launcher must appear at the bottom of the right sidebar');
+assert.ok(js.includes('aside.lastElementChild')&&js.includes('aside.append(existing)'),'Launcher must stay at right sidebar bottom as feed loads');
+assert.ok(js.includes('Math.max(8,window.innerWidth-b.width-8)'),'Dragging must be clamped for narrow screens');
+assert.ok(js.includes("official.click()"),'AI entry must use approved existing community assistant');
+assert.ok(js.includes("if(id!==app.id&&id!=='radio')"),'Radio must persist through app switching');
+assert.ok(js.includes('navigator.share')&&js.includes('navigator.clipboard'),'Sharing fallback must be available');
+assert.ok(js.includes("visit.rel='noopener noreferrer'"),'External app visits must be safe');
+assert.ok(css.includes('.hk-community-app-panel')&&css.includes('@media(max-width:750px)'),'Popup must adapt on mobile');
+assert.ok(!/googlesyndication|adsbygoogle|doubleclick\.net/.test(js+css),'No ad integrations in app launcher');
+console.log('Global Community premium sidebar launcher checks passed.');

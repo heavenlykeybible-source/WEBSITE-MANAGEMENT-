@@ -1,0 +1,99 @@
+/* Heavenly Key visual identity: distinct page experiences, one consistent ministry brand.
+   This layer changes decorative presentation only; page copy and features remain untouched. */
+body[data-hk-page]{--page-main:#07533c;--page-accent:#e0b64e;--page-pale:#f0f9f1;--page-image:url('/assets/ministry/outreach-1.jpg');background:radial-gradient(circle at 95% 9%,color-mix(in srgb,var(--page-accent) 12%,transparent),transparent 31rem),linear-gradient(180deg,#fdfdf9,var(--page-pale) 57%,#fff);}
+body[data-hk-page="about"],body[data-hk-page="the-ministry"]{--page-main:#00583b;--page-accent:#edc25b;--page-pale:#ecf8f0;--page-image:url('/assets/ministry/outreach-1.jpg')}
+body[data-hk-page="what-we-believe"]{--page-main:#183e76;--page-accent:#e7c971;--page-pale:#f0f5ff;--page-image:url('/assets/ministry/sermons-header.jpg')}
+body[data-hk-page="meet-the-pastor"]{--page-main:#62294a;--page-accent:#e8b87a;--page-pale:#fff3f7;--page-image:url('/assets/ministry/ministries-header.jpg')}
+body[data-hk-page="ministries"]{--page-main:#096156;--page-accent:#f4c466;--page-pale:#ebfaf6;--page-image:url('/assets/ministry/ministries-header.jpg')}
+body[data-hk-page="grdpc"]{--page-main:#263d83;--page-accent:#f1cf82;--page-pale:#f0f2ff;--page-image:url('/assets/ministry/outreach-1.jpg')}
+body[data-hk-page="partner"]{--page-main:#815023;--page-accent:#fff0b1;--page-pale:#fff7e8;--page-image:url('/assets/ministry/hero-people-laptop.jpg')}
+body[data-hk-page="contact"]{--page-main:#005e56;--page-accent:#f0c465;--page-pale:#f0fcf9;--page-image:url('/assets/ministry/outreach-1.jpg')}
+body[data-hk-page="steps-to-salvation"],body[data-hk-page="i-said-yes"]{--page-main:#7a2443;--page-accent:#ffdb81;--page-pale:#fff3f5;--page-image:url('/assets/ministry/sermons-header.jpg')}
+body[data-hk-page="resources"]{--page-main:#254b87;--page-accent:#d9c276;--page-pale:#f2f7ff;--page-image:url('/assets/ministry/hero-people-laptop.jpg')}
+body[data-hk-page="social-handles"]{--page-main:#6e3a84;--page-accent:#f0cb84;--page-pale:#faf3ff;--page-image:url('/assets/ministry/global-community-network.svg')}
+body[data-hk-page="privacy"],body[data-hk-page="terms"]{--page-main:#254b50;--page-accent:#d8c38a;--page-pale:#f3f7f6;--page-image:url('/assets/ministry/hero-people-laptop.jpg')}
+body[data-hk-page]:is(.hk-premium-inner,.hk-premium-legal) :is(.inner-hero,.page-banner),
+body[data-hk-page] :is(.inner-hero,.page-banner){
+  position:relative;isolation:isolate;overflow:hidden;
+  background:linear-gradient(115deg,color-mix(in srgb,var(--page-main) 94%,black),color-mix(in srgb,var(--page-main) 73%,#241038))!important;
+  border-bottom:5px solid var(--page-accent)!important;
+  padding-block:clamp(54px,7vw,100px)!important;
+}
+body[data-hk-page] :is(.inner-hero,.page-banner)::before{
+ content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+ background-image:linear-gradient(100deg,color-mix(in srgb,var(--page-main) 90%,transparent) 0%,color-mix(in srgb,var(--page-main) 70%,transparent) 56%,color-mix(in srgb,var(--page-main) 25%,transparent) 100%),var(--page-image);
+ background-position:center,right center;background-size:cover;opacity:.82;
+}
+body[data-hk-page] :is(.inner-hero,.page-banner)::after{
+ content:"";position:absolute;z-index:0;right:max(-110px,-8vw);top:-125px;
+ width:clamp(230px,28vw,460px);aspect-ratio:1;border-radius:50%;
+ border:2px solid color-mix(in srgb,var(--page-accent) 50%,transparent);
+ box-shadow:0 0 0 38px #ffffff0a,0 0 0 83px #ffffff09;pointer-events:none;
+}
+body[data-hk-page] :is(.inner-hero,.page-banner)>*{position:relative;z-index:1}
+body[data-hk-page] :is(.inner-hero,.page-banner) :is(h1,p,.eyebrow){text-shadow:0 2px 12px #00191764}
+body[data-hk-page] :is(.inner-hero,.page-banner) h1{font-family:Georgia,serif!important;max-width:950px;line-height:1.13!important;letter-spacing:-.025em;color:#fff!important}
+body[data-hk-page] :is(.inner-hero,.page-banner) .eyebrow{display:inline-block;color:var(--page-accent)!important;letter-spacing:.14em;font-weight:850;text-transform:uppercase}
+body[data-hk-page] :is(.inner-main,.content-section>.container){
+  position:relative;isolation:isolate;
+  background:linear-gradient(145deg,#fffffffa,#fffefaed);
+  border:1px solid color-mix(in srgb,var(--page-main) 15%,#fff);
+  border-top:5px solid var(--page-accent);
+  border-radius:clamp(15px,2vw,26px);
+  box-shadow:0 20px 50px color-mix(in srgb,var(--page-main) 10%,transparent);
+}
+body[data-hk-page] :is(.inner-main,.content-section>.container) :is(h2,h3){
+ color:var(--page-main);line-height:1.23;text-wrap:balance;
+}
+body[data-hk-page] :is(.inner-main,.content-section>.container) h2{
+ border-left:5px solid var(--page-accent);padding-left:16px;margin-top:1.8rem;
+}
+body[data-hk-page] :is(.inner-main,.content-section>.container) a:focus-visible{outline:3px solid var(--page-accent);outline-offset:3px}
+body[data-hk-page] .hk-page-journey{
+ display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+ width:min(1120px,calc(100% - 38px));margin:24px auto 0;padding:18px clamp(17px,3vw,28px);
+ background:linear-gradient(105deg,#fff,#fafcf9);border-left:5px solid var(--page-accent);
+ border-radius:15px;box-shadow:0 6px 22px #123d2913;
+}
+body[data-hk-page] .hk-page-journey strong{color:var(--page-main);font-size:clamp(16px,2vw,20px)}
+body[data-hk-page] .hk-page-journey p{margin:4px 0 0;color:#476053;font-size:14px}
+body[data-hk-page] .hk-page-journey nav{display:flex;flex-wrap:wrap;gap:8px}
+body[data-hk-page] .hk-page-journey a{border:1px solid color-mix(in srgb,var(--page-main) 25%,#fff);border-radius:999px;padding:9px 14px;font-size:13px;font-weight:800;color:var(--page-main);background:#fff;text-decoration:none}
+body[data-hk-page] .hk-page-journey a:hover{background:var(--page-main);color:#fff}
+@media(max-width:620px){
+ body[data-hk-page] :is(.inner-hero,.page-banner){padding:52px 16px!important}
+ body[data-hk-page] :is(.inner-hero,.page-banner)::before{background-position:center}
+ body[data-hk-page] .hk-page-journey{padding:16px}
+ body[data-hk-page] :is(.inner-main,.content-section>.container){border-radius:14px}
+}
+@media(prefers-reduced-motion:reduce){body[data-hk-page] .hk-page-journey a{transition:none}}
+
+/* Specialist layouts: prayer programme and social connections. */
+body[data-hk-page="grdpc"] main#main{position:relative;isolation:isolate}
+body[data-hk-page="grdpc"] main#main>h1{
+  font-family:Georgia,serif;letter-spacing:-.03em;line-height:1.15;text-wrap:balance;
+}
+body[data-hk-page="grdpc"] main#main>.eyebrow{letter-spacing:.13em;font-weight:800}
+body[data-hk-page="grdpc"] main#main>section{
+  border-radius:clamp(14px,2vw,22px);
+  box-shadow:0 11px 35px #132b5320;border:1px solid #203c8220;
+}
+body[data-hk-page="grdpc"] main#main>section.schedule{border-top:5px solid #ecc66f}
+body[data-hk-page="social-handles"] .salvation-hero{
+  position:relative;isolation:isolate;overflow:hidden;
+  background:linear-gradient(115deg,#34265b,#7a3d80)!important;
+  border-bottom:5px solid #ebc885!important;
+}
+body[data-hk-page="social-handles"] .salvation-hero::before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(95deg,#38275be0,#673a8b99),var(--page-image) right center/cover no-repeat;
+}
+body[data-hk-page="social-handles"] .social-handles-grid>a{
+  background:linear-gradient(150deg,#fff,#faf6ff);border:1px solid #65388526;
+  border-top:4px solid #ddba77;border-radius:19px;
+  box-shadow:0 11px 26px #3c265720;transition:transform .2s,box-shadow .2s;
+}
+body[data-hk-page="social-handles"] .social-handles-grid>a:hover{
+  transform:translateY(-4px);box-shadow:0 19px 33px #3c26573a;
+}
+@media(prefers-reduced-motion:reduce){body[data-hk-page="social-handles"] .social-handles-grid>a{transition:none;transform:none}}

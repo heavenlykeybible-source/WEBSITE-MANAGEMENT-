@@ -1,0 +1,31 @@
+name: Verify Account 1 Homepage
+on:
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-01-main-website/source/**'
+      - '.github/workflows/verify-account1-homepage.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'heavenly-key-accounts/account-01-main-website/source/**'
+      - '.github/workflows/verify-account1-homepage.yml'
+permissions:
+  contents: read
+jobs:
+  homepage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Account 1 homepage links, section order and accessibility
+        working-directory: heavenly-key-accounts/account-01-main-website/source
+        run: node tests/verify-homepage.mjs
+      - name: Simulate branded 404 and temporary-error navigation
+        working-directory: heavenly-key-accounts/account-01-main-website/source
+        run: node tests/verify-error-response.mjs
+      - name: Check ecosystem cards, assets and globe
+        working-directory: heavenly-key-accounts/account-01-main-website/source
+        run: node tests/verify-ecosystem.mjs
