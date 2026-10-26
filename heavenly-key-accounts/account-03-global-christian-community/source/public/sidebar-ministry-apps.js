@@ -20,7 +20,7 @@ share.type='button';visit.target='_blank';visit.rel='noopener noreferrer';bottom
 const restore=make('button','hk-community-app-restore','Restore App');restore.type='button';restore.hidden=true;restore.setAttribute('aria-controls',panel.id);
 const allButtons=new Set();
 function minimize(){panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
-function closeApp(){const current=active;active=null;panel.dataset.open='false';restore.hidden=true;if(current&&frames.has(current.id)){frames.get(current.id).remove();frames.delete(current.id)}allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
+function closeApp(){active=null;panel.dataset.open='false';restore.hidden=true;for(const frame of frames.values())frame.remove();frames.clear();allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
 function open(app, restoring=false){
  if(app.id==='assistant'&&!restoring){
   const official=document.querySelector('.hk-ai-small-icon');
