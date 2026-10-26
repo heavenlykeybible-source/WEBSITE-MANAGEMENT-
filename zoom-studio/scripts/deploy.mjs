@@ -7,7 +7,8 @@ const origin=process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN;
 if(!origin || !/^https:\/\/[a-z0-9.-]+\/?$/i.test(origin)) throw Error('Set MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN to the confirmed HTTPS URL for Account 8');
 const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:origin};
 function run(args,env=process.env){const r=spawnSync(args[0],args.slice(1),{stdio:'inherit',shell:false,env});if(r.error)throw r.error;if(r.status!==0)throw Error('Existing MeetingSpace release stopped at '+args[1]+' (exit '+r.status+')');}
-run([process.execPath,'scripts/legal-preflight.mjs']);
+if(process.env.MEETINGSPACE_PRIVATE_PREVIEW!=='1') run([process.execPath,'scripts/legal-preflight.mjs']);
+else console.log('Private preview only: legal publication gate deferred; public signup disabled in Worker');
 run([process.execPath,'scripts/bundle-control-room.mjs']);
 run([process.execPath,'scripts/configure.mjs']);
 run([process.execPath,'scripts/verify-deployment-identity.mjs']);
