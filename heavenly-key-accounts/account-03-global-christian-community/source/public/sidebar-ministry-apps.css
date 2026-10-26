@@ -38,3 +38,6 @@
 @media(max-width:750px){.hk-community-app-panel{top:max(8px,env(safe-area-inset-top))!important;height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));max-height:none!important;min-width:0!important;min-height:0!important}.hk-community-app-restore{bottom:max(12px,env(safe-area-inset-bottom))}}
 @media(max-width:360px){.hk-community-app-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hk-community-app-btn{min-height:96px}}
 @media(prefers-reduced-motion:reduce){.hk-community-app-orb{transition:none!important}}
+
+/* Contextual application guidance for new and returning visitors. */
+.hk-community-app-feedback{margin:0;padding:8px 12px;font:600 12px/1.45 system-ui,sans-serif;color:#243f5a;background:#eef4fa;border-bottom:1px solid #d8e5f2}
