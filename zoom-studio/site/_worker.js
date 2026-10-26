@@ -115,6 +115,8 @@ const sysMsg = (env, team, text, kind = 'sys', meta = null) => env.TEAMDB.prepar
 async function teamRoutes(request, env, url, path, email, active) {
   if (!env.TEAMDB) return json({ error: 'Groups are not set up yet.' }, 501);
   const DB = env.TEAMDB, now = Date.now(), post = request.method === 'POST';
+  const readRoutes = new Set(['/api/teams','/api/team/invite-preview','/api/team/members','/api/team/messages','/api/team/meetings','/api/team/meeting/report','/api/programs']);
+  if (readRoutes.has(path) ? request.method !== 'GET' : !post) return json({ error: 'Method not allowed.' }, 405);
   let b = {}; if (post) { try { b = await request.json(); } catch {} }
   const T = String(b.team || url.searchParams.get('team') || '').replace(/[^0-9a-f]/g, '');
   const need = async (roles) => { const r = await roleOf(env, T, email); return r && (!roles || roles.includes(r)) ? r : null; };
@@ -138,8 +140,18 @@ async function teamRoutes(request, env, url, path, email, active) {
       await DB.prepare('INSERT INTO invites(code,team,by,expires,uses,max) VALUES(?,?,?,?,0,100)').bind(code, T, email, now + 7 * 864e5).run();
       return json({ code, url: url.origin + '/?join=' + code });
     }
+    case '/api/team/invite-preview': {
+      // Read-only preview: accepting an invitation remains a separate explicit action.
+      const code = String(url.searchParams.get('code') || '').toLowerCase();
+      if (!/^[0-9a-f]{12}$/.test(code)) return json({ error: 'Invalid invitation.' }, 400);
+      if (!(await rate(env, 'preview:' + email, 30, 900))) return json({ error: 'Too many requests.' }, 429);
+      const row = await DB.prepare('SELECT t.id,t.name,i.expires,i.uses,i.max FROM invites i JOIN teams t ON t.id=i.team WHERE i.code=?').bind(code).first();
+      if (!row || row.expires <= now || row.uses >= row.max) return json({ error: 'Invitation expired or unavailable.' }, 404);
+      return json({ group: { id: row.id, name: row.name }, expires: row.expires, joined: !!(await roleOf(env, row.id, email)) });
+    }
     case '/api/team/join': {
-      const code = String(b.code || '').replace(/[^0-9a-f]/g, '');
+      const code = String(b.code || '').toLowerCase();
+      if (!/^[0-9a-f]{12}$/.test(code)) return json({ error: 'Invalid invitation code.' }, 400);
       if (!(await rate(env, 'jn:' + email, 10, 900))) return json({ error: 'Too many attempts. Try again later.' }, 429);
       const iv = await DB.prepare('SELECT * FROM invites WHERE code=?').bind(code).first();
       if (!iv || iv.expires < now || iv.uses >= iv.max) return json({ error: 'This invite link has expired. Ask the leader for a new one.' }, 400);
@@ -254,8 +266,8 @@ async function teamRoutes(request, env, url, path, email, active) {
       const team = await DB.prepare('SELECT name FROM teams WHERE id=?').bind(mt.team).first();
       await DB.prepare('INSERT INTO messages(team,sender,name,text,kind,meta,ts) VALUES(?,?,?,?,?,NULL,?)').bind(mt.team, email, dname(email), 'To ' + labels[aud] + ' (' + mt.title + '): ' + text, 'announce', now).run();
       let sent = 0;
-      if (b.email === true && mailOn(env) && (await rate(env, 'fu:' + email, 5, 3600))) {
-        const cap = +env.MAX_EMAILS || 50;
+      if (b.email === true && env.MEETINGSPACE_FOLLOWUP_EMAIL_ENABLED === '1' && mailOn(env) && (await rate(env, 'fu:' + email, 3, 3600))) {
+        const cap = Math.max(1, Math.min(20, Number(env.MEETINGSPACE_FOLLOWUP_EMAIL_CAP) || 10));
         for (const e of list.slice(0, cap)) if (await mail(env, e, 'Follow-up: ' + team.name, '<p>' + eh(text) + '</p><p style="color:#666;font-size:12px">You received this because you are a member of "' + eh(team.name) + '" on Live Studio.</p>')) sent++;
       }
       return json({ ok: true, people: list.length, emailed: sent });
@@ -353,7 +365,7 @@ export default {
     if (pm) return programPage(env, url, pm[1]);
     if (!path.startsWith('/api/')) {
       const r = await env.ASSETS.fetch(request), h = new Headers(r.headers);
-      h.set('x-content-type-options', 'nosniff'); h.set('referrer-policy', 'strict-origin-when-cross-origin'); h.set('x-frame-options', 'DENY');
+      h.set('x-content-type-options', 'nosniff'); h.set('referrer-policy', 'no-referrer'); h.set('x-frame-options', 'DENY');
       h.set('permissions-policy', 'camera=(self), microphone=(self), display-capture=(self), geolocation=()');
       h.set('content-security-policy', "frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'");
       return new Response(r.body, { status: r.status, statusText: r.statusText, headers: h });
@@ -396,6 +408,7 @@ export default {
       if (path === '/api/signup' ? !(await rate(env, 'su:' + ipa, 5, 3600)) : !((await rate(env, 'li:' + ipa, 30, 900)) && (await rate(env, 'le:' + email, 8, 900)))) return json({ error: 'Too many attempts. Please wait a few minutes and try again.' }, 429);
       let u = await getUser(env, email);
       if (path === '/api/signup') {
+        if (env.MEETINGSPACE_PRIVATE_PREVIEW !== '0') return json({ error: 'Private preview: registration is closed. Contact the Heavenly Key administrator for an approved account.' }, 403);
         if (reserved(env, email) || email.endsWith('@studio.local')) return json({ error: 'Ask the owner or an admin to create this account.' }, 403);
         if (b.agree !== true) return json({ error: 'Please confirm you are 18 or older and agree to the Terms and Privacy Policy.' }, 400);
         if (!stretched(password)) return json({ error: 'Please refresh the page and try again.' }, 400);
@@ -407,6 +420,7 @@ export default {
         if (mailOn(env)) await sendVerify(env, url, email);
       } else if (!u || (await pw(env, password, u.salt)) !== u.hash) return json({ error: 'Wrong email or password.' }, 401);
       if (u.banned) return json({ error: 'This account is suspended.' }, 403);
+      if (path === '/api/login' && env.MEETINGSPACE_PRIVATE_PREVIEW !== '0' && accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'This private preview requires administrator approval.' }, 403);
       if (path === '/api/login') { u.seen = Date.now(); u.warned = 0; await putUser(env, email, u); }
       return json({ token: await sign(env.AUTH_SECRET, { e: email, t: u.tv || 0, exp: Date.now() + 30 * 864e5 }) });
     }
@@ -448,6 +462,7 @@ export default {
     if (!email) return json({ error: 'Please sign in.' }, 401);
     const u = await getUser(env, email); if (!u || (u.tv || 0) !== (tk.t || 0)) return json({ error: 'Please sign in.' }, 401);
     if (u.banned) return json({ error: 'This account is suspended.' }, 403);
+    if (env.MEETINGSPACE_PRIVATE_PREVIEW !== '0' && accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'Account awaiting administrator approval.' }, 403);
     const role = accountRole(env, email, u);
     const active = role !== 'user' || (u.paidUntil || 0) > Date.now();
     const verified = u.verified !== false;
@@ -541,7 +556,7 @@ export default {
           if (reserved(env, t) && !(role === 'owner' && t === 'admin@studio.local' && nextRole === 'admin')) return json({ error: 'This login is reserved. Choose another username.' }, 403);
           const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
           // INSERT (not upsert): concurrent creates must never replace an existing password.
-          const result = await env.TEAMDB.prepare('INSERT OR IGNORE INTO users(email,salt,hash,paid,verified,banned,tv,created,seen,role) VALUES(?,?,?,0,1,0,0,?,?,?)').bind(t, salt, await pw(env, b.password, salt), now, now, nextRole).run();
+          const result = await env.TEAMDB.prepare('INSERT OR IGNORE INTO users(email,salt,hash,paid,verified,banned,tv,created,seen,role,terms) VALUES(?,?,?,0,1,0,0,?,?,?,?)').bind(t, salt, await pw(env, b.password, salt), now, now, nextRole, 'private-approved').run();
           return result.meta.changes ? json({ ok: true, email: t, role: nextRole }, 201) : json({ error: 'That account already exists.' }, 409);
         }
         if (!tu) return json({ error: 'User not found.' }, 404);
@@ -555,6 +570,7 @@ export default {
           if (role !== 'owner' || !['user', 'admin'].includes(b.role) || reserved(env, t)) return json({ error: 'Only the owner can change admin roles.' }, 403);
           tu.role = b.role; tu.tv = (tu.tv || 0) + 1;
         }
+        else if (path === '/api/admin/approve') { tu.terms = b.approved === true ? 'private-approved' : 'private-revoked'; tu.tv = (tu.tv || 0) + 1; }
         else if (path === '/api/admin/grant') { const d = Math.max(-30, Math.min(365, +b.days || 0)); tu.paidUntil = Math.max(now, tu.paidUntil || 0) + d * 864e5; if (d < 0 && tu.paidUntil < now) tu.paidUntil = 0; }
         else if (path === '/api/admin/ban') { tu.banned = !!b.banned; tu.tv = (tu.tv || 0) + 1; }
         else return json({ error: 'Not found' }, 404);
