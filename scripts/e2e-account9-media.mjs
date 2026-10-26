@@ -68,6 +68,17 @@ try{
  await page.locator('#clipUndo').click();
  await page.locator('#clipRedo').click();
  assert.equal(await page.locator('#clipList option').count(),2,'Undo/redo must preserve timeline');
+ assert.equal(await page.locator('#clipTrack button').count(),2,'Visual timeline must show two draggable clips');
+ await page.locator('#clipList').selectOption('1');
+ await page.locator('#clipSpeed').selectOption('1.5');
+ await page.locator('#clipUpdate').click();
+ assert.equal((await page.evaluate(()=>window.hkTimeline.getClips()))[1].speed,1.5,'Clip update must change selected clip');
+ await page.locator('#clipTrack button').nth(1).dragTo(page.locator('#clipTrack button').nth(0));
+ assert.deepEqual(await page.evaluate(()=>window.hkTimeline.getClips().map(c=>c.speed)),[1.5,1],'Drag-and-drop must change clip order');
+ await page.locator('#clipUndo').click();
+ assert.deepEqual(await page.evaluate(()=>window.hkTimeline.getClips().map(c=>c.speed)),[1,1.5],'Undo must restore order after drag');
+ await page.locator('#clipRedo').click();
+ assert.deepEqual(await page.evaluate(()=>window.hkTimeline.getClips().map(c=>c.speed)),[1.5,1],'Redo must restore dragged order');
  await page.locator('#clipPlay').click();
  assert.equal(await page.evaluate(()=>typeof window.hkTimeline.fadeOpacity),'function','Fade renderer must be available');
  await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('preview complete'),{timeout:20000});
