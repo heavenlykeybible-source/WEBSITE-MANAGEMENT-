@@ -140,3 +140,11 @@ test('Guest screen sharing closes capture tracks on manual stop and room exit', 
   assert.match(source,/camTrack=null;sharing=false/);
   assert.match(source,/shareTrack=t;sharing=true/);
 });
+
+test('Audio processing releases the original microphone and screen share on stage demotion', () => {
+ const source=readFileSync(resolve(root,'site/join.html'),'utf8');
+ assert.match(source,/rawMedia=m/);
+ assert.match(source,/rawMedia&&rawMedia!==local/);
+ assert.match(source,/rawMedia\.getTracks\(\)\.forEach\(t=>t\.stop\(\)\)/);
+ assert.match(source,/case 'demoted':try\{shareTrack&&shareTrack\.stop\(\)\}/);
+});
