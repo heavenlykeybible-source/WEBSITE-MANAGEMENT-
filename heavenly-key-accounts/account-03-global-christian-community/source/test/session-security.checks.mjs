@@ -104,3 +104,9 @@ test('Community health and readiness routes are bounded and avoid leaking depend
  assert.match(worker,/env\.SESSIONS\.get\("health:readiness"\)/);
  assert.match(worker,/catch\{return json\(\{ready:false\},503\);\}/);
 });
+
+test('malformed JSON requests return a client error instead of an internal server error',()=>{
+ const worker=readFileSync(new URL('src/index.ts',base),'utf8');
+ assert.match(worker,/if\(!reader\)throw Object\.assign\(new Error\("Send a valid JSON object\."\),\{status:400\}\)/);
+ assert.match(worker,/catch\{throw Object\.assign\(new Error\("Send a valid JSON object\."\),\{status:400\}\);\}/);
+});
