@@ -464,7 +464,7 @@ export default {
     if (u.banned) return json({ error: 'This account is suspended.' }, 403);
     if (env.MEETINGSPACE_PRIVATE_PREVIEW !== '0' && accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'Account awaiting administrator approval.' }, 403);
     const role = accountRole(env, email, u);
-    const active = role !== 'user' || (u.paidUntil || 0) > Date.now();
+    const active = role !== 'user' || (env.MEETINGSPACE_PRIVATE_PREVIEW !== '0' && u.terms === 'private-approved') || (u.paidUntil || 0) > Date.now();
     const verified = u.verified !== false;
     if (!verified && (path === '/api/meeting-token' || path === '/api/relay-token' || path === '/api/pay/start' || path === '/api/golive/start' || path.startsWith('/api/connect/') || path === '/api/tts' || path.startsWith('/api/team') || path.startsWith('/api/program'))) return json({ error: 'Please confirm your email first. Check your inbox.' }, 403);
     if (path === '/api/resend' && request.method === 'POST') {
