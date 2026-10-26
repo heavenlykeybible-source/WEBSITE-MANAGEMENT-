@@ -133,7 +133,7 @@ test('short TURN secrets never generate unusable relay credentials',async()=>{
  const config=host.messages.at(-1);assert.equal(config.t,'created');assert.equal(config.ice.length,1);
 });
 test('Invalid TURN endpoints are excluded from guest and host ICE configuration',async()=>{
- const s=meeting();s.room.env.TURN_URLS='turn:bad-user@relay.example,turn:relay.example:99999,turn:relay.example:3478';
+ const s=meeting();s.room.env.TURN_URLS='turn:bad-user@relay.example,turn:relay.example:99999,turn:relay.example:0,turn:relay.example:3478';
  s.room.env.TURN_SHARED_SECRET='test-only-long-enough-turn-secret';
  const host=s.add();await message(s.room,host,{t:'host',token:roomToken()});
  const ice=host.messages.at(-1).ice;
