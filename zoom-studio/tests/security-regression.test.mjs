@@ -119,3 +119,15 @@ test('Account 8 generated Worker config keeps registration closed by default', (
   }
   assert.equal(check('0').vars.MEETINGSPACE_PRIVATE_PREVIEW,'0');
 });
+
+test('Guest WebRTC signaling buffers candidates and reconnects through admission', () => {
+  const host=readFileSync(resolve(root,'site/index.html'),'utf8');
+  const guest=readFileSync(resolve(root,'site/join.html'),'utf8');
+  assert.match(host,/pendingIce:\[\]/);
+  assert.match(host,/if\(g\.pc\.remoteDescription\)/);
+  assert.match(host,/g\.pendingIce\.splice\(0\)/);
+  assert.match(guest,/joined=false;try\{pc&&pc\.close\(\)\}/);
+  assert.match(guest,/show\('wait'\)/);
+  assert.match(guest,/if\(pc&&pc\.remoteDescription\)/);
+  assert.match(guest,/if\(!local\)\{\$\('invrow'\)\.hidden=false/);
+});
