@@ -93,6 +93,12 @@ try{
  assert.match(await page.locator('#clipAudioStatus').textContent(),/sample.wav/,'Separate soundtrack must be loaded');
  await page.waitForFunction(()=>document.getElementById('clipAudioTrack').textContent.includes('2.10s'),{timeout:10000});
  assert.match(await page.locator('#clipAudioTrack').textContent(),/70% volume/,'Audio lane must display soundtrack volume');
+ await page.locator('#clipAudioStart').fill('10');
+ await page.locator('#clipExport').click();
+ await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('Soundtrack start must be within'),{timeout:10000});
+ assert.equal(await page.locator('#clipDownload').isHidden(),true,'Invalid soundtrack start must not generate an export');
+ await page.locator('#clipAudioStart').fill('0');
+ await page.locator('#clipAudioStart').dispatchEvent('change');
  await page.locator('#clipExport').click();
  await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
  const first=page.waitForEvent('download');
