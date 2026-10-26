@@ -203,3 +203,10 @@ test('Guest WebSocket connection timeout is bounded and cleaned up', () => {
  assert.match(guest,/currentSocket\.readyState===WebSocket\.CONNECTING/);
  assert.match(guest,/clearTimeout\(openTimer\);openTimer=null/);
 });
+
+test('Guest handles ICE restart offers on existing peer connection without losing media tracks', () => {
+ const source=readFileSync(resolve(root,'site/join.html'),'utf8');
+ assert.match(source,/if\(pc&&pc\.signalingState==='stable'&&d\.sdp\.type==='offer'\)/);
+ assert.match(source,/await pc\.setRemoteDescription\(d\.sdp\);\s*const answer=await pc\.createAnswer\(\)/);
+ assert.match(source,/await pc\.setLocalDescription\(answer\)/);
+});
