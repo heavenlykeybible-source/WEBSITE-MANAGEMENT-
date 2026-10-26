@@ -148,6 +148,23 @@ test('locked meeting rejects both audience and speaker newcomers while existing 
  const reopened=s.add();await message(s.room,reopened,{t:'join',room:s.host.d.room,key:s.key,aud:true});
  assert.equal(reopened.d.ok,true);
 });
+test('promoted audience reconnects as an admitted speaker and demotion revokes the shortcut',async()=>{
+ const s=await openRoom(),g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true,pass:'persistent-viewer'});
+ await message(s.room,s.host,{t:'promote',gid:g.d.id});await message(s.room,g,{t:'ready',ao:true});
+ assert.equal(g.d.stage,true);assert.ok(s.host.d.admitted.includes('persistent-viewer'));
+ g.readyState=3;s.room.webSocketClose(g);
+ const reconnect=s.add();await message(s.room,reconnect,{t:'join',room:s.host.d.room,key:s.key,aud:false,pass:'persistent-viewer'});
+ assert.equal(reconnect.d.stage,true);
+ await message(s.room,s.host,{t:'demote',gid:reconnect.d.id});
+ assert.equal(reconnect.d.stage,false);assert.ok(!s.host.d.admitted.includes('persistent-viewer'));
+});
+test('meeting signaling ignores malformed SDP/ICE payloads',async()=>{
+ const s=await openRoom(),g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:false});
+ await message(s.room,s.host,{t:'admit',gid:g.d.id});
+ const n=g.messages.length;await message(s.room,s.host,{t:'sig',to:g.d.id,data:null});
+ await message(s.room,s.host,{t:'sig',to:g.d.id,data:['malformed']});assert.equal(g.messages.length,n);
+ const count=s.host.messages.length;await message(s.room,g,{t:'sig',data:'invalid'});assert.equal(s.host.messages.length,count);
+});
 test('audience moderation, promotion, expiry and host disconnect work across hibernation',async()=>{
  const s=await openRoom(),aud=s.add();await message(s.room,aud,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});assert.equal(aud.d.ok,true);assert.equal(aud.d.stage,false);
  await message(s.room,s.host,{t:'audchat',on:false});await message(s.room,aud,{t:'chat',text:'not allowed'});assert.equal(aud.messages.at(-1).t,'note');
