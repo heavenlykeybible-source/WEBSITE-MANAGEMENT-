@@ -229,3 +229,9 @@ test('ICE restart attempts only count when signaling is stable', () => {
  const host=readFileSync(resolve(root,'site/index.html'),'utf8');
  assert.match(host,/if\(!pc\|\|pc\.signalingState!=='stable'\|\|!guests\.has\(g\.id\)\|\|g\.restartAttempts>=2\)return;\s*g\.restartAttempts\+\+/);
 });
+
+test('Host ignores rejected late ICE candidates without breaking further signaling', () => {
+ const host=readFileSync(resolve(root,'site/index.html'),'utf8');
+ assert.match(host,/g\.pc\.addIceCandidate\(d\.c\)\.catch\(\(\)=>\{\}\)/);
+ assert.match(host,/else if\(g\.pendingIce\.length<100\)g\.pendingIce\.push\(d\.c\)/);
+});
