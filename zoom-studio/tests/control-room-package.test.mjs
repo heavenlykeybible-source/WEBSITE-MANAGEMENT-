@@ -181,6 +181,18 @@ test('locked meeting rejects both audience and speaker newcomers while existing 
  const reopened=s.add();await message(s.room,reopened,{t:'join',room:s.host.d.room,key:s.key,aud:true});
  assert.equal(reopened.d.ok,true);
 });
+test('expired speaker invitations free slots and cannot be accepted late',async()=>{
+ const s=await openRoom(),audience=[];
+ for(let i=0;i<7;i++){const g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true});audience.push(g);}
+ for(const g of audience.slice(0,6))await message(s.room,s.host,{t:'promote',gid:g.d.id});
+ audience[0].d.invitedAt=Date.now()-61000;
+ await message(s.room,s.host,{t:'promote',gid:audience[6].d.id});
+ assert.equal(audience[6].d.invited,true);
+ await message(s.room,audience[0],{t:'ready'});
+ assert.equal(audience[0].d.stage,false);
+ await message(s.room,audience[6],{t:'ready'});
+ assert.equal(audience[6].d.stage,true);
+});
 test('pending audience promotions reserve stage capacity',async()=>{
  const s=await openRoom(),audience=[];
  for(let i=0;i<7;i++){
