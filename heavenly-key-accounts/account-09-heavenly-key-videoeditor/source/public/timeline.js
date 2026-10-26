@@ -162,6 +162,25 @@ window.hkTimeline={
   if(span<=0)return 0;
   return Math.max(0,Math.min(1,1-Math.min((v.currentTime-c.start)/span,(c.end-v.currentTime)/span)));
  },
+ getSettings:()=>({
+  audioGain:Number($('clipAudioGain').value),videoGain:Number($('clipVideoGain').value),
+  audioLoop:$('clipAudioLoop').checked,audioStart:Number($('clipAudioStart').value),
+  audioOffset:Number($('clipAudioOffset').value),fadeIn:Number($('clipAudioFadeIn').value),
+  fadeOut:Number($('clipAudioFadeOut').value),fps:Number($('clipExportFps').value),
+  bitrate:Number($('clipExportBitrate').value)
+ }),
+ restoreSettings:(data)=>{
+  if(session)return info('Stop preview or export before restoring settings.');
+  if(!data||typeof data!=='object'||Array.isArray(data))return;
+  const numeric=[['audioGain','clipAudioGain',0,100],['videoGain','clipVideoGain',0,100],
+   ['audioStart','clipAudioStart',0,600],['audioOffset','clipAudioOffset',0,600]];
+  for(const [key,id,min,max] of numeric)if(Number.isFinite(data[key])&&data[key]>=min&&data[key]<=max)$(id).value=String(data[key]);
+  for(const [key,id,allowed] of [['fadeIn','clipAudioFadeIn',[0,1,2,4]],['fadeOut','clipAudioFadeOut',[0,1,2,4]],
+   ['fps','clipExportFps',[24,30,60]],['bitrate','clipExportBitrate',[2500000,5000000,10000000]]])
+    if(allowed.includes(data[key]))$(id).value=String(data[key]);
+  if(typeof data.audioLoop==='boolean')$('clipAudioLoop').checked=data.audioLoop;
+  invalidateExport();paintSoundtrack();
+ },
  getClips:()=>clips.map(c=>({...c})),
  restoreClips:(data)=>{
   if(session)return info('Stop preview or export before restoring a timeline.');
