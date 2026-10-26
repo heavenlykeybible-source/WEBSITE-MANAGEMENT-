@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 import { runInNewContext } from 'node:vm';
@@ -45,9 +46,23 @@ test('offline worker never intercepts authenticated API, non-GET or private page
   await Promise.all(pending);
 });
 
-test('production preflight refuses unresolved privacy and terms templates', () => {
-  const run=spawnSync(process.execPath,[resolve(root,'scripts/legal-preflight.mjs')],{encoding:'utf8'});
-  const drafts=['privacy.html','terms.html'].filter(name => /DRAFT TEMPLATE|\\[DATE\\]|\\[BUSINESS NAME\\]/.test(readFileSync(resolve(root,'site',name),'utf8')));
-  assert.equal(run.status,drafts.length ? 1 : 0);
-  for (const name of drafts) assert.ok(run.stderr.includes(name));
+test('production preflight rejects templates but accepts finalized notices', () => {
+  const rootTmp=mkdtempSync(resolve(tmpdir(),'account8-legal-'));
+  try {
+    mkdirSync(resolve(rootTmp,'scripts'));
+    mkdirSync(resolve(rootTmp,'site'));
+    copyFileSync(resolve(root,'scripts/legal-preflight.mjs'),resolve(rootTmp,'scripts/legal-preflight.mjs'));
+    const check=()=>spawnSync(process.execPath,[resolve(rootTmp,'scripts/legal-preflight.mjs')],{encoding:'utf8'});
+    writeFileSync(resolve(rootTmp,'site/privacy.html'),'<p>DRAFT TEMPLATE. [BUSINESS NAME] [DATE]</p>');
+    writeFileSync(resolve(rootTmp,'site/terms.html'),'<p>Terms for [ADDRESS], [LAWYER TO CONFIRM]</p>');
+    let result=check();
+    assert.equal(result.status,1);
+    assert.match(result.stderr,/privacy\\.html/);
+    assert.match(result.stderr,/terms\\.html/);
+    writeFileSync(resolve(rootTmp,'site/privacy.html'),'<h1>Privacy Policy</h1><p>Example finalized policy content.</p>');
+    writeFileSync(resolve(rootTmp,'site/terms.html'),'<h1>Terms of Service</h1><p>Example finalized terms content.</p>');
+    result=check();
+    assert.equal(result.status,0);
+    assert.match(result.stdout,/preflight passed/);
+  } finally { rmSync(rootTmp,{recursive:true,force:true}); }
 });
