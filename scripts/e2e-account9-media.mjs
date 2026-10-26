@@ -87,6 +87,10 @@ try{
  await page.locator('#clipPlay').click();
  assert.equal(await page.evaluate(()=>typeof window.hkTimeline.fadeOpacity),'function','Fade renderer must be available');
  await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('preview complete'),{timeout:20000});
+ const audioInput=join(work,'sample.wav');
+ execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-f','lavfi','-i','sine=frequency=500:sample_rate=44100','-t','2.1',audioInput],{timeout:30000});
+ await page.locator('#clipAudio').setInputFiles(audioInput);
+ assert.match(await page.locator('#clipAudioStatus').textContent(),/sample.wav/,'Separate soundtrack must be loaded');
  await page.locator('#clipExport').click();
  await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
  const first=page.waitForEvent('download');
@@ -95,6 +99,8 @@ try{
  const timelinePath=join(work,'timeline.'+timelineDownload.suggestedFilename().split('.').pop());
  await timelineDownload.saveAs(timelinePath);
  await verifyVideo(timelinePath);
+ const audioCodec=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=noprint_wrappers=1:nokey=1',timelinePath],{encoding:'utf8'}).trim();
+ assert.ok(audioCodec.length>0,'Timeline soundtrack export must include a decodable audio stream');
  await page.locator('#vexp').click();
  await page.waitForFunction(()=>!document.getElementById('vdl').hidden,{timeout:30000});
  const second=page.waitForEvent('download');
@@ -103,8 +109,7 @@ try{
  const videoPath=join(work,'single.'+videoDownload.suggestedFilename().split('.').pop());
  await videoDownload.saveAs(videoPath);
  await verifyVideo(videoPath);
- const audioInput=join(work,'sample.wav');
- execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-f','lavfi','-i','sine=frequency=500:sample_rate=44100','-t','2.1',audioInput],{timeout:30000});
+
  await page.locator('nav button[data-p="audio"]').click();
  await page.locator('#af').setInputFiles(audioInput);
  await page.waitForFunction(()=>!document.getElementById('aexp').disabled,{timeout:15000});
