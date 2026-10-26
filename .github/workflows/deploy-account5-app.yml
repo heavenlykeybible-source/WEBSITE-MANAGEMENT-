@@ -5,6 +5,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'config/approved-homepage-footer.json'
+      - 'scripts/cleanup/sync-footer.mjs'
       - 'heavenly-key-accounts/account-05-heavenly-key-app/source/**'
       - '.github/workflows/deploy-account5-app.yml'
       - 'scripts/verify-account5-live.mjs'
@@ -31,6 +33,9 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT5_CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
+      - name: Build the single approved homepage footer
+        working-directory: ${{ github.workspace }}
+        run: node scripts/cleanup/sync-footer.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

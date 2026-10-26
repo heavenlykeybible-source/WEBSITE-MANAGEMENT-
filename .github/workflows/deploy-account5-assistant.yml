@@ -2,7 +2,7 @@ name: Deploy independent Account 5 Online Assistant
 on:
   push:
     branches: [main]
-    paths: ['public-assistant/**', 'scripts/deploy-account5-assistant.mjs', 'tests/account5-assistant.test.mjs', '.github/workflows/deploy-account5-assistant.yml']
+    paths: ['config/approved-homepage-footer.json', 'scripts/cleanup/sync-footer.mjs', 'public-assistant/**', 'scripts/deploy-account5-assistant.mjs', 'tests/account5-assistant.test.mjs', '.github/workflows/deploy-account5-assistant.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,6 +16,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Build the single approved homepage footer
+        working-directory: ${{ github.workspace }}
+        run: node scripts/cleanup/sync-footer.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
