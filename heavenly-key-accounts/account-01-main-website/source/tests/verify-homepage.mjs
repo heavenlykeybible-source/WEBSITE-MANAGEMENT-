@@ -103,4 +103,13 @@ assert.ok(appDock.includes("function minimize()")&&appDock.includes("function cl
 assert.ok(appDockCss.includes('.hk-dock-pole')&&appDockCss.includes('right:'),'Red pole must be anchored to right');
 assert.ok(appDock.includes('app.native'),'Unverified integrations must not masquerade as working apps');
 
+
+assert.equal((appDock.match(/\\{id:'(?:radio|assistant|bible|social|walk|study|eternity)'/g)||[]).length,7,'Dock must have exactly seven approved apps');
+assert.ok(appDock.includes("id:'assistant'")&&appDock.includes("launcher.click()"),'Assistant tab must open the existing approved assistant');
+assert.ok(appDock.includes("window.open('https://wa.me/")||appDock.includes("navigator.share"),'App-specific sharing is required');
+assert.ok(appDock.includes("frame.allow='autoplay; clipboard-write'"),'Radio embedding needs media support');
+assert.ok(appDock.includes("bar.setPointerCapture"),'Popup drag must support pointer input');
+assert.ok(!/googlesyndication|doubleclick\\.net|adsbygoogle|adservice\\.google/.test(appDock+appDockCss),'The dock must not contain ad integrations');
+assert.ok(appDockCss.includes('@media(max-width:720px)'),'Dock must support mobile viewports');
+
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
