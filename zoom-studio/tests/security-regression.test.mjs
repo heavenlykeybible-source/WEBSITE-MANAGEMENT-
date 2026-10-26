@@ -181,3 +181,10 @@ test('Host room start prevents duplicate concurrent creation and ignores stale e
  assert.match(host,/finally\{gStarting=false;\$\('grs'\)\.disabled=false\}/);
  assert.match(host,/w\.onmessage=e=>\{if\(gws!==w\)return/);
 });
+
+test('Guest signaling bounds early ICE candidates and ignores stale WebSocket messages', () => {
+ const source=readFileSync(resolve(root,'site/join.html'),'utf8');
+ assert.match(source,/if\(pend\.length<100\)pend\.push\(d\.c\)/);
+ assert.match(source,/ws\.onmessage=e=>\{if\(over\|\|ws!==currentSocket\)return/);
+ assert.match(source,/ws\.onopen=\(\)=>\{if\(over\|\|ws!==currentSocket\)return/);
+});
