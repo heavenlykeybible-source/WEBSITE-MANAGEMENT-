@@ -206,7 +206,13 @@ test('Guest WebSocket connection timeout is bounded and cleaned up', () => {
 
 test('Guest handles ICE restart offers on existing peer connection without losing media tracks', () => {
  const source=readFileSync(resolve(root,'site/join.html'),'utf8');
- assert.match(source,/if\(pc&&pc\.signalingState==='stable'&&d\.sdp\.type==='offer'\)/);
+ assert.match(source,/if\(pc&&pc\.signalingState==='stable'&&d\.sdp\.type==='offer'&&pc\.connectionState!=='closed'\)/);
  assert.match(source,/await pc\.setRemoteDescription\(d\.sdp\);\s*const answer=await pc\.createAnswer\(\)/);
  assert.match(source,/await pc\.setLocalDescription\(answer\)/);
+});
+
+test('Guest ignores stale ICE candidates after peer connection closure', () => {
+ const source=readFileSync(resolve(root,'site/join.html'),'utf8');
+ assert.match(source,/pc\.signalingState!=='closed'&&pc\.remoteDescription/);
+ assert.match(source,/pc\.addIceCandidate\(d\.c\)\.catch\(\(\)=>\{\}\)/);
 });
