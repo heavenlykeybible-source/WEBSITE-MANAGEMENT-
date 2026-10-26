@@ -81,3 +81,11 @@ test('malformed rate-limit records are rejected without crashing',()=>{
  assert.match(worker,/Number\.isSafeInteger\(parsed\?\.n\)/);
  assert.match(worker,/catch\{ \/\* Ignore malformed or obsolete rate-limit state\. \*\/ \}/);
 });
+
+test('authentication throttling keys do not contain raw email addresses',()=>{
+ const worker=readFileSync(new URL('src/index.ts',base),'utf8');
+ assert.match(worker,/async function rateKey\(value:string\):Promise<string>/);
+ assert.match(worker,/"register:"\+await rateKey\(email\)/);
+ assert.match(worker,/"login:"\+await rateKey\(email\)/);
+ assert.doesNotMatch(worker,/"(?:register|login):"\+email/);
+});
