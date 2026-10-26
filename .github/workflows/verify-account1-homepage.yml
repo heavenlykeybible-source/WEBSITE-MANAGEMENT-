@@ -23,6 +23,9 @@ jobs:
       - name: Check Account 1 homepage links, section order and accessibility
         working-directory: heavenly-key-accounts/account-01-main-website/source
         run: node tests/verify-homepage.mjs
+      - name: Simulate branded 404 and temporary-error navigation
+        working-directory: heavenly-key-accounts/account-01-main-website/source
+        run: node tests/verify-error-response.mjs
       - name: Check ecosystem cards, assets and globe
         working-directory: heavenly-key-accounts/account-01-main-website/source
         run: node tests/verify-ecosystem.mjs
