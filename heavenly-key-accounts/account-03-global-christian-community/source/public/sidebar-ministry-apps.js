@@ -20,7 +20,7 @@ share.type='button';visit.target='_blank';visit.rel='noopener noreferrer';bottom
 const restore=make('button','hk-community-app-restore','Restore App');restore.type='button';restore.hidden=true;restore.setAttribute('aria-controls',panel.id);
 const allButtons=new Set();const boundButtons=new WeakSet();
 function minimize(){if(active)feedback.textContent=active.name+' minimized. Select Restore App to continue.';panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'));if(active)restore.focus({preventScroll:true})}
-function closeApp(){active=null;panel.dataset.open='false';restore.hidden=true;for(const frame of frames.values())frame.remove();frames.clear();feedback.textContent='Application closed.';allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
+function closeApp(){const previous=active;active=null;panel.dataset.open='false';restore.hidden=true;for(const frame of frames.values())frame.remove();frames.clear();feedback.textContent='Application closed.';allButtons.forEach(b=>b.setAttribute('aria-pressed','false'));const tab=previous&&Array.from(allButtons).find(b=>b.isConnected&&b.dataset.app===previous.id);if(tab)tab.focus({preventScroll:true})}
 function open(app, restoring=false){
  if(app.id==='assistant'&&!restoring){
   const official=document.querySelector('.hk-ai-small-icon');
