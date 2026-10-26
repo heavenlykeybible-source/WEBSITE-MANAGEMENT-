@@ -105,7 +105,7 @@ export async function onRequest({ request: req, env, params }) {
       // Public signups are intentionally closed until explicitly approved by the owner.
       if (env.ALLOW_PUBLIC_REGISTRATION !== 'true') return J({ error: 'Registration is currently closed. Contact an administrator.' }, 403);
       const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid registration data.' }, 400);
-      const email = String(b.email || '').trim().toLowerCase(), pw = String(b.password || '');
+      const email = typeof b.email==='string' ? b.email.trim().toLowerCase() : '', pw = typeof b.password==='string' ? b.password : '';
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return J({ error: 'Enter a valid email address.' }, 400);
       if (pw.length < 12 || pw.length > 200) return J({ error: 'Password must be at least 12 characters.' }, 400);
       if (['emmanuelmeta247@gmail.com'].includes(email)) return J({ error: 'This address requires owner provisioning.' }, 403);
