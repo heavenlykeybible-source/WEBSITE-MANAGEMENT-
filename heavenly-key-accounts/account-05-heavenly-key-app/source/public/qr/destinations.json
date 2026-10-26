@@ -1,0 +1,141 @@
+[
+  {
+    "id": "android",
+    "url": "https://apps.heavenlykey.org/download/android/",
+    "qr": "/qr/android.svg",
+    "kind": "device",
+    "sha256": "37d8d8d7be778655774ae46a8f7fe6c8efe0cea83e2bf6157be141e1d0d8ef57"
+  },
+  {
+    "id": "iphone",
+    "url": "https://apps.heavenlykey.org/download/iphone/",
+    "qr": "/qr/iphone.svg",
+    "kind": "device",
+    "sha256": "6420ea25e56d8c58070b58db769d06019ad1637f865c37d31c29a3136dff148b"
+  },
+  {
+    "id": "ipad",
+    "url": "https://apps.heavenlykey.org/download/ipad/",
+    "qr": "/qr/ipad.svg",
+    "kind": "device",
+    "sha256": "3a66ce504d28fce2bfcaea8c9813414fd23a4c4d04460f1c177b7316ad985424"
+  },
+  {
+    "id": "windows",
+    "url": "https://apps.heavenlykey.org/download/windows/",
+    "qr": "/qr/windows.svg",
+    "kind": "device",
+    "sha256": "b2a5572da1c68136de766cce419fa3a149b6b8eb5767b6732e002fb9f9799583"
+  },
+  {
+    "id": "mac",
+    "url": "https://apps.heavenlykey.org/download/mac/",
+    "qr": "/qr/mac.svg",
+    "kind": "device",
+    "sha256": "ec82cc88d158b18cf2996ae4c2b29ddb33a7613aab8c77f09570022c1ac06126"
+  },
+  {
+    "id": "public-assistant",
+    "name": "Online Assistant",
+    "url": "https://apps.heavenlykey.org/assistant.html",
+    "qr": "/qr/app-public-assistant.svg",
+    "kind": "app",
+    "sha256": "d75a5454c20dea076307e9ce1fb616a50a299d199a2e94bd1c93ad8cd4dde127"
+  },
+  {
+    "id": "walk-with-god",
+    "name": "My Walk With God",
+    "url": "https://apps.heavenlykey.org/walk-offline.html",
+    "qr": "/qr/app-walk-with-god.svg",
+    "kind": "app",
+    "sha256": "715e72a5ec45fe4c6861cc28903fe23bb43e86926b2bbe7d5b2b578fc83c6b37"
+  },
+  {
+    "id": "eternity-in-view",
+    "name": "Eternity in View",
+    "url": "https://apps.heavenlykey.org/eternity-in-view/",
+    "qr": "/qr/app-eternity-in-view.svg",
+    "kind": "app",
+    "sha256": "7f3ecb4ae4bb8274545bab474ea71d83c7beea36dfe19b9d28c198d1723fe180"
+  },
+  {
+    "id": "bible-study-portal",
+    "name": "From Creation to Eternity",
+    "url": "https://apps.heavenlykey.org/creation-to-eternity.html",
+    "qr": "/qr/app-bible-study-portal.svg",
+    "kind": "app",
+    "sha256": "a50b82031a91dc83a901faee197c8c7a59f008442a3b19d2b3e10cba66f69f50"
+  },
+  {
+    "id": "community",
+    "name": "Global Christian Community",
+    "url": "https://global.heavenlykey.org",
+    "qr": "/qr/app-community.svg",
+    "kind": "app",
+    "sha256": "a64e5a334c4cdb534c3cc58ba332f7157fa1db4551527ea82c4e20ebef82efb4"
+  },
+  {
+    "id": "bible",
+    "name": "Heavenly Key Bible Platform",
+    "url": "https://onlinebible.heavenlykey.org",
+    "qr": "/qr/app-bible.svg",
+    "kind": "app",
+    "sha256": "4ef94b3820fd596848b99c3be4b47f4d9f066619fbf1dce649d7409fa24bc166"
+  },
+  {
+    "id": "radio",
+    "name": "Revival Radio",
+    "url": "https://radio.heavenlykey.org",
+    "qr": "/qr/app-radio.svg",
+    "kind": "app",
+    "sha256": "efd05c7b4d8b36aa1f6d0d8a74b6696769cabf2aba15e7f1ef69df89380010d3"
+  },
+  {
+    "id": "meeting",
+    "name": "Meeting Space",
+    "url": "https://meeting.heavenlykey.org",
+    "qr": "/qr/app-meeting.svg",
+    "kind": "app",
+    "sha256": "5425627e51d1ed4ef89cfc5e49745deeeeff2b561ffb16a8a43223597f7cb691"
+  },
+  {
+    "id": "bible-reader",
+    "name": "KJV Bible Reader",
+    "url": "https://apps.heavenlykey.org/bible.html",
+    "qr": "/qr/app-bible-reader.svg",
+    "kind": "app",
+    "sha256": "b519ce0a6c46cd32e403b89cf896c30f75840efa3004f7ef0ef1ff8c6fb6dde4"
+  },
+  {
+    "id": "audio-bible",
+    "name": "Audio Bible",
+    "url": "https://apps.heavenlykey.org/audio-bible.html",
+    "qr": "/qr/app-audio-bible.svg",
+    "kind": "app",
+    "sha256": "1be6a820c3811e9b41a380585502cd33bcf1832a11e7b3ee8f2b45b925994c60"
+  },
+  {
+    "id": "hymns",
+    "name": "Hymn Library",
+    "url": "https://apps.heavenlykey.org/hymns.html",
+    "qr": "/qr/app-hymns.svg",
+    "kind": "app",
+    "sha256": "724b92856dfb05d656646a94fb199f8d7aa30f108e89003d80c4c5ebda320b0e"
+  },
+  {
+    "id": "audio-hymns",
+    "name": "Audio Hymnal",
+    "url": "https://apps.heavenlykey.org/audio-hymns.html",
+    "qr": "/qr/app-audio-hymns.svg",
+    "kind": "app",
+    "sha256": "8bb8a4dc2c5810b072c24e681c5888615afb067c6bc74c9f1b2d9d4822e2e064"
+  },
+  {
+    "id": "daily-reading",
+    "name": "Daily Reading Plan",
+    "url": "https://apps.heavenlykey.org/devotional.html",
+    "qr": "/qr/app-daily-reading.svg",
+    "kind": "app",
+    "sha256": "e37adf2d66c00eaec03c9214143624a58a2f4a4d677dd5e4e997747f5b18deed"
+  }
+]
