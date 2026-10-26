@@ -101,6 +101,9 @@ try{
  await verifyVideo(timelinePath);
  const audioCodec=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=noprint_wrappers=1:nokey=1',timelinePath],{encoding:'utf8'}).trim();
  assert.ok(audioCodec.length>0,'Timeline soundtrack export must include a decodable audio stream');
+ // Enable looping and verify that changing the soundtrack option invalidates a stale download.
+ await page.locator('#clipAudioLoop').check();
+ assert.equal(await page.locator('#clipDownload').isHidden(),true,'Soundtrack loop change must invalidate prior export');
  // Export again without reselecting the soundtrack: Web Audio must not reuse a closed source node.
  await page.locator('#clipExport').click();
  await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
