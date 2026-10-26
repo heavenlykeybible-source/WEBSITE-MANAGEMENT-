@@ -137,5 +137,635 @@
     "qr": "/qr/app-daily-reading.svg",
     "kind": "app",
     "sha256": "e37adf2d66c00eaec03c9214143624a58a2f4a4d677dd5e4e997747f5b18deed"
+  },
+  {
+    "id": "public-assistant-android",
+    "app": "public-assistant",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=public-assistant",
+    "qr": "/qr/app-public-assistant-android.svg",
+    "sha256": "373a272d3a8a3aab0e851f52ac1e88e2103c4b5d69a851893f1023687c358448"
+  },
+  {
+    "id": "public-assistant-iphone",
+    "app": "public-assistant",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=public-assistant",
+    "qr": "/qr/app-public-assistant-iphone.svg",
+    "sha256": "3802dc9c4c866b4cea72ef700264258213c3a79c7d54805f5f89e2ae2cb84bc0"
+  },
+  {
+    "id": "public-assistant-ipad",
+    "app": "public-assistant",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=public-assistant",
+    "qr": "/qr/app-public-assistant-ipad.svg",
+    "sha256": "19949f49d9801d69f87aa11ec2efd280b9c53860b7d0dd18a109fab2a2394d69"
+  },
+  {
+    "id": "public-assistant-windows",
+    "app": "public-assistant",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=public-assistant",
+    "qr": "/qr/app-public-assistant-windows.svg",
+    "sha256": "1ecb3929447c3dc5fc09da594f3da21221fdb0dee87457886c4322d409ef2f9a"
+  },
+  {
+    "id": "public-assistant-mac",
+    "app": "public-assistant",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=public-assistant",
+    "qr": "/qr/app-public-assistant-mac.svg",
+    "sha256": "977e073a37d43c5d29e79a48a712e651f6a4ff4b147233544d5b4ddc1c2e98dd"
+  },
+  {
+    "id": "walk-with-god-android",
+    "app": "walk-with-god",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=walk-with-god",
+    "qr": "/qr/app-walk-with-god-android.svg",
+    "sha256": "4afccaf887186f5eabe887f794aaf890167d9f5bae4a5ac24d908c7c20b8bc34"
+  },
+  {
+    "id": "walk-with-god-iphone",
+    "app": "walk-with-god",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=walk-with-god",
+    "qr": "/qr/app-walk-with-god-iphone.svg",
+    "sha256": "76aebea7ab3158b13a0d7c577ed482a7cbe2b6a605a76ae8f3b364f068f72040"
+  },
+  {
+    "id": "walk-with-god-ipad",
+    "app": "walk-with-god",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=walk-with-god",
+    "qr": "/qr/app-walk-with-god-ipad.svg",
+    "sha256": "c9e2963cf91d4b87911455cd3cfed6fbc80cd8db27c7db9b5c426e17d7f7ae82"
+  },
+  {
+    "id": "walk-with-god-windows",
+    "app": "walk-with-god",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=walk-with-god",
+    "qr": "/qr/app-walk-with-god-windows.svg",
+    "sha256": "45d61046e78f2631af3df2c4b220f1384d863d5bb62c31000a6b4026e9e95a2c"
+  },
+  {
+    "id": "walk-with-god-mac",
+    "app": "walk-with-god",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=walk-with-god",
+    "qr": "/qr/app-walk-with-god-mac.svg",
+    "sha256": "31ef363de3e9570bbf53d8e22920ee43f354f6de6096f0340b796e3bddd6de93"
+  },
+  {
+    "id": "eternity-in-view-android",
+    "app": "eternity-in-view",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=eternity-in-view",
+    "qr": "/qr/app-eternity-in-view-android.svg",
+    "sha256": "773fd6290881c79d224390d5c264e649b70a9ff13c662cdfd9e27ed37a88bef7"
+  },
+  {
+    "id": "eternity-in-view-iphone",
+    "app": "eternity-in-view",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=eternity-in-view",
+    "qr": "/qr/app-eternity-in-view-iphone.svg",
+    "sha256": "27ff13aa86e189b24233a80e8a76c06a8f6703461589f7fea4d6582df4488b5b"
+  },
+  {
+    "id": "eternity-in-view-ipad",
+    "app": "eternity-in-view",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=eternity-in-view",
+    "qr": "/qr/app-eternity-in-view-ipad.svg",
+    "sha256": "b9dd4b4dbea771184c7143a71052df59ea45b539bed056f422270d5f02f217ff"
+  },
+  {
+    "id": "eternity-in-view-windows",
+    "app": "eternity-in-view",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=eternity-in-view",
+    "qr": "/qr/app-eternity-in-view-windows.svg",
+    "sha256": "76eb3ec5b2de25eec2e9b0e91c49e7a7bc4be92eea409f819f2aa6497b5666ae"
+  },
+  {
+    "id": "eternity-in-view-mac",
+    "app": "eternity-in-view",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=eternity-in-view",
+    "qr": "/qr/app-eternity-in-view-mac.svg",
+    "sha256": "208ba09612e2da2d42f5b3e3693420e1bb33da7257ea496fc7ba67127335d5b5"
+  },
+  {
+    "id": "bible-study-portal-android",
+    "app": "bible-study-portal",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=bible-study-portal",
+    "qr": "/qr/app-bible-study-portal-android.svg",
+    "sha256": "7e63952a410c5603c5ed4e3a6bd2a1e4730e9add3ebcf6f3db1006c7d4ab0df0"
+  },
+  {
+    "id": "bible-study-portal-iphone",
+    "app": "bible-study-portal",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=bible-study-portal",
+    "qr": "/qr/app-bible-study-portal-iphone.svg",
+    "sha256": "55d849f94777d3b78d39bc598362b2d70b7f5839d793357f738e49d2c06cdda9"
+  },
+  {
+    "id": "bible-study-portal-ipad",
+    "app": "bible-study-portal",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=bible-study-portal",
+    "qr": "/qr/app-bible-study-portal-ipad.svg",
+    "sha256": "a3c01ea67ff5f3830f78533b6af8b6a203433d9249b5ae6ea1be2ebf62a05817"
+  },
+  {
+    "id": "bible-study-portal-windows",
+    "app": "bible-study-portal",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=bible-study-portal",
+    "qr": "/qr/app-bible-study-portal-windows.svg",
+    "sha256": "370abd324f31c0f4faf95183a6feb73d69d1b2c80d962320c006a3f1cdcf15c1"
+  },
+  {
+    "id": "bible-study-portal-mac",
+    "app": "bible-study-portal",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=bible-study-portal",
+    "qr": "/qr/app-bible-study-portal-mac.svg",
+    "sha256": "de0a5469b6e891c800482a2850cb78c280a43b1ed1b28ca9302b380a09e8f3e5"
+  },
+  {
+    "id": "community-android",
+    "app": "community",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=community",
+    "qr": "/qr/app-community-android.svg",
+    "sha256": "00be5a29f8888826ffef20b7d30b28ecf2d2fdb83e4aaedd7a7d37e3da10bb3b"
+  },
+  {
+    "id": "community-iphone",
+    "app": "community",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=community",
+    "qr": "/qr/app-community-iphone.svg",
+    "sha256": "c0503a948fb59bce9dedb2bd3ed581276d32d432261f1c1c8c7e4563e828bbf7"
+  },
+  {
+    "id": "community-ipad",
+    "app": "community",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=community",
+    "qr": "/qr/app-community-ipad.svg",
+    "sha256": "a0e79e6bce6d553ee2d81bc4a97bad7492cf4e840a99a7706c88ff3726ad35cf"
+  },
+  {
+    "id": "community-windows",
+    "app": "community",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=community",
+    "qr": "/qr/app-community-windows.svg",
+    "sha256": "f6208bbb0844b1b411ebdd452578ca3e2fc6528c33f0ac28b0b56ad5e750f2c1"
+  },
+  {
+    "id": "community-mac",
+    "app": "community",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=community",
+    "qr": "/qr/app-community-mac.svg",
+    "sha256": "39fcc24c59694a1a560269807ad7ba327ff8a3420fa2d166c97d7378eaa824f6"
+  },
+  {
+    "id": "bible-android",
+    "app": "bible",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=bible",
+    "qr": "/qr/app-bible-android.svg",
+    "sha256": "77648052dc79b552d6ac6e6e6d1767f28ccb670ff9529ff777ccc02ce361535f"
+  },
+  {
+    "id": "bible-iphone",
+    "app": "bible",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=bible",
+    "qr": "/qr/app-bible-iphone.svg",
+    "sha256": "46fe78d048ca097e703b8ef990848bebfe8f4b9fecfb3d92cd77cbb7b54d1821"
+  },
+  {
+    "id": "bible-ipad",
+    "app": "bible",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=bible",
+    "qr": "/qr/app-bible-ipad.svg",
+    "sha256": "d1ffde56667a9323e1e1e2d1e4f37c420192991767ee91896f06ec583c4ee2a5"
+  },
+  {
+    "id": "bible-windows",
+    "app": "bible",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=bible",
+    "qr": "/qr/app-bible-windows.svg",
+    "sha256": "f6835fe492e3f14caa33600c78c8780948cfe6be392f4a8f02a7e7da1110a444"
+  },
+  {
+    "id": "bible-mac",
+    "app": "bible",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=bible",
+    "qr": "/qr/app-bible-mac.svg",
+    "sha256": "6daeea97a1de1ff7b118e0fecfb35e48e1a88e6af3dc97b9e9614cf6f4c6a8e3"
+  },
+  {
+    "id": "radio-android",
+    "app": "radio",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=radio",
+    "qr": "/qr/app-radio-android.svg",
+    "sha256": "f55c0fff8b8a76dc0d4b8c4e47bcd89cb53663f79a75c4ac995e296e402217bb"
+  },
+  {
+    "id": "radio-iphone",
+    "app": "radio",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=radio",
+    "qr": "/qr/app-radio-iphone.svg",
+    "sha256": "d34e5011002967310e673603d0da1091ecc9da923f542c4375509c38851b9774"
+  },
+  {
+    "id": "radio-ipad",
+    "app": "radio",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=radio",
+    "qr": "/qr/app-radio-ipad.svg",
+    "sha256": "ea3081bd743985127040f37a3e536b7923d2cf70a03fdbae0be9f690024f8e17"
+  },
+  {
+    "id": "radio-windows",
+    "app": "radio",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=radio",
+    "qr": "/qr/app-radio-windows.svg",
+    "sha256": "783698923e0bfa37f3982cf79c1c97cd6e72013714f43dc0543a84db830f2772"
+  },
+  {
+    "id": "radio-mac",
+    "app": "radio",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=radio",
+    "qr": "/qr/app-radio-mac.svg",
+    "sha256": "8aefcf7c05ed51503c936abf12b259aa598ab25394ad12c7edef049c8bff5d19"
+  },
+  {
+    "id": "meeting-android",
+    "app": "meeting",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=meeting",
+    "qr": "/qr/app-meeting-android.svg",
+    "sha256": "26427556eaf8c07d8a0ffa6be48d2635d98bebc208af59b642364616628e0744"
+  },
+  {
+    "id": "meeting-iphone",
+    "app": "meeting",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=meeting",
+    "qr": "/qr/app-meeting-iphone.svg",
+    "sha256": "bda1d13766a8f9c76729eb01a5923682c76999fd7e3ffe2d7369f394d595e70d"
+  },
+  {
+    "id": "meeting-ipad",
+    "app": "meeting",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=meeting",
+    "qr": "/qr/app-meeting-ipad.svg",
+    "sha256": "46b0c1cf3c3a75648fd9c10d77a61a4561b3047ee96e4e20c27bf71ee2c7c0c8"
+  },
+  {
+    "id": "meeting-windows",
+    "app": "meeting",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=meeting",
+    "qr": "/qr/app-meeting-windows.svg",
+    "sha256": "9fe1d6583ea48d9e6caf211abb009f012eab9af82896480969b60cf59d2be846"
+  },
+  {
+    "id": "meeting-mac",
+    "app": "meeting",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=meeting",
+    "qr": "/qr/app-meeting-mac.svg",
+    "sha256": "4f902c196dfbf7f540a5423408fbe349339d044a1eb2cbeb8f9d95b2aab73aea"
+  },
+  {
+    "id": "bible-reader-android",
+    "app": "bible-reader",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=bible-reader",
+    "qr": "/qr/app-bible-reader-android.svg",
+    "sha256": "95bbad44a1ccb7624a93cbbda32f7bca99fa2d2052ed92668f20f59b2789879e"
+  },
+  {
+    "id": "bible-reader-iphone",
+    "app": "bible-reader",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=bible-reader",
+    "qr": "/qr/app-bible-reader-iphone.svg",
+    "sha256": "0aae4eb6e499f3b1d4b11c6962cc926ac999c2a72be06ebf1342c8c3cfccdae1"
+  },
+  {
+    "id": "bible-reader-ipad",
+    "app": "bible-reader",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=bible-reader",
+    "qr": "/qr/app-bible-reader-ipad.svg",
+    "sha256": "46262ac4d94ea64616f2967023297e41b3b0acbd5c03a3d1caa52cea47eff8db"
+  },
+  {
+    "id": "bible-reader-windows",
+    "app": "bible-reader",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=bible-reader",
+    "qr": "/qr/app-bible-reader-windows.svg",
+    "sha256": "03cddee6550a1a4ccdd23c78adf839262a1a22808502b41665d3759254ceb008"
+  },
+  {
+    "id": "bible-reader-mac",
+    "app": "bible-reader",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=bible-reader",
+    "qr": "/qr/app-bible-reader-mac.svg",
+    "sha256": "26ffdeb63d2b5ce32966eefca48b33c8c80612c13b39adaa7f59efad1049f4f5"
+  },
+  {
+    "id": "audio-bible-android",
+    "app": "audio-bible",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=audio-bible",
+    "qr": "/qr/app-audio-bible-android.svg",
+    "sha256": "09930fbd5792097f0cc167bb3845329a43a18a644aac3a3aaca8d83f1e688a22"
+  },
+  {
+    "id": "audio-bible-iphone",
+    "app": "audio-bible",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=audio-bible",
+    "qr": "/qr/app-audio-bible-iphone.svg",
+    "sha256": "eb071144048584d64652d572f1514491a01970a0d6c313c63bdb0023252f61c8"
+  },
+  {
+    "id": "audio-bible-ipad",
+    "app": "audio-bible",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=audio-bible",
+    "qr": "/qr/app-audio-bible-ipad.svg",
+    "sha256": "264648f9a29c4b870863bb29a5d0c2f7db199420ee57d89750af7c604804ea83"
+  },
+  {
+    "id": "audio-bible-windows",
+    "app": "audio-bible",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=audio-bible",
+    "qr": "/qr/app-audio-bible-windows.svg",
+    "sha256": "7c551aeb4133fd9ef8cd5f216b6503c1bcafb1a57597c0d53c5810342269027a"
+  },
+  {
+    "id": "audio-bible-mac",
+    "app": "audio-bible",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=audio-bible",
+    "qr": "/qr/app-audio-bible-mac.svg",
+    "sha256": "45eeea77ede39f588096d9b414b5bcb124c7dad3e5d8da06528e762119a97e37"
+  },
+  {
+    "id": "hymns-android",
+    "app": "hymns",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=hymns",
+    "qr": "/qr/app-hymns-android.svg",
+    "sha256": "d07ca5b6746e669365575c129cd9c497d7a39a5eac9e598be869e4cc5cc8da16"
+  },
+  {
+    "id": "hymns-iphone",
+    "app": "hymns",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=hymns",
+    "qr": "/qr/app-hymns-iphone.svg",
+    "sha256": "a590916506cccc1eda880d2950a6106a5dc4acbc6466abe5428241724b833cad"
+  },
+  {
+    "id": "hymns-ipad",
+    "app": "hymns",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=hymns",
+    "qr": "/qr/app-hymns-ipad.svg",
+    "sha256": "88c8e0a9d6cf2705edce1dfd1b6b60cc44cdef82c5f81f21437e03fdf0a9a571"
+  },
+  {
+    "id": "hymns-windows",
+    "app": "hymns",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=hymns",
+    "qr": "/qr/app-hymns-windows.svg",
+    "sha256": "0c30de6c113342df7628347757659ff7edd513ccd61642fc97e5d85b01b92354"
+  },
+  {
+    "id": "hymns-mac",
+    "app": "hymns",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=hymns",
+    "qr": "/qr/app-hymns-mac.svg",
+    "sha256": "4ec5823cec10601ca9ee232bdf9c725e79c51227da2a1104dfb76775bcb2d86e"
+  },
+  {
+    "id": "audio-hymns-android",
+    "app": "audio-hymns",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=audio-hymns",
+    "qr": "/qr/app-audio-hymns-android.svg",
+    "sha256": "fa6f92632229eddb3e0bd43ff07d38b5d6b173b569faa35d06d52bde0eb0438d"
+  },
+  {
+    "id": "audio-hymns-iphone",
+    "app": "audio-hymns",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=audio-hymns",
+    "qr": "/qr/app-audio-hymns-iphone.svg",
+    "sha256": "73b02a2f8ebe93470a9263f1e1779b4c4645021e5bec6df43c795cbe0f434585"
+  },
+  {
+    "id": "audio-hymns-ipad",
+    "app": "audio-hymns",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=audio-hymns",
+    "qr": "/qr/app-audio-hymns-ipad.svg",
+    "sha256": "5caacad3ff27d4eb453560ddeeff37c89d86e12abd0052576c5aad84ab11d123"
+  },
+  {
+    "id": "audio-hymns-windows",
+    "app": "audio-hymns",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=audio-hymns",
+    "qr": "/qr/app-audio-hymns-windows.svg",
+    "sha256": "abd222dc5241a5e09b8c702fcff35a6508b6dea70ee8bcaf010bfc9989424aa3"
+  },
+  {
+    "id": "audio-hymns-mac",
+    "app": "audio-hymns",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=audio-hymns",
+    "qr": "/qr/app-audio-hymns-mac.svg",
+    "sha256": "2d3263d33154f904d7b77c23535b71bc42ce5f72b29c6e7e44435e4c2d9a8a92"
+  },
+  {
+    "id": "daily-reading-android",
+    "app": "daily-reading",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=daily-reading",
+    "qr": "/qr/app-daily-reading-android.svg",
+    "sha256": "edfc977952bc710d7e622430f03b47006f3b409ba2bb022ca0b95b6e5459b05a"
+  },
+  {
+    "id": "daily-reading-iphone",
+    "app": "daily-reading",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=daily-reading",
+    "qr": "/qr/app-daily-reading-iphone.svg",
+    "sha256": "c342634f1480c220cdc2743a0131be2eebb023a5d4c86eac07d8e15e9819f3ea"
+  },
+  {
+    "id": "daily-reading-ipad",
+    "app": "daily-reading",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=daily-reading",
+    "qr": "/qr/app-daily-reading-ipad.svg",
+    "sha256": "e275520adc76263bb495fb6084bc48eef4f81a3173c2639dd8498119bc66856d"
+  },
+  {
+    "id": "daily-reading-windows",
+    "app": "daily-reading",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=daily-reading",
+    "qr": "/qr/app-daily-reading-windows.svg",
+    "sha256": "28747f7900670699817dc58779495d6a584aeb3e07bd7abffb59677b29cc567a"
+  },
+  {
+    "id": "daily-reading-mac",
+    "app": "daily-reading",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=daily-reading",
+    "qr": "/qr/app-daily-reading-mac.svg",
+    "sha256": "0e974e9c81aa2acff4be931ca8b40cdf9835b7e1cd3824dcd126e8131fecdb77"
+  },
+  {
+    "id": "all-in-one-android",
+    "app": "all-in-one",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=all-in-one",
+    "qr": "/qr/app-all-in-one-android.svg",
+    "sha256": "25ed6f49f2a3a1db13468d169c3595453a7729d89e83e8bdb4e653bbeb0d5fbd"
+  },
+  {
+    "id": "all-in-one-iphone",
+    "app": "all-in-one",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=all-in-one",
+    "qr": "/qr/app-all-in-one-iphone.svg",
+    "sha256": "8c0757a5a2bad15ef3d2fb44af8df5e0ebbcaa48b5072ae1f78262000fe83f44"
+  },
+  {
+    "id": "all-in-one-ipad",
+    "app": "all-in-one",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=all-in-one",
+    "qr": "/qr/app-all-in-one-ipad.svg",
+    "sha256": "bb9b7a3c19eee04dec2a438bd8912f239f411680d41bdfb06b1981eb217fd76b"
+  },
+  {
+    "id": "all-in-one-windows",
+    "app": "all-in-one",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=all-in-one",
+    "qr": "/qr/app-all-in-one-windows.svg",
+    "sha256": "492637c1e06ecb4bf765f3ea6e48d60ac1d2ef9748c68bf178a00ef8a2a09881"
+  },
+  {
+    "id": "all-in-one-mac",
+    "app": "all-in-one",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=all-in-one",
+    "qr": "/qr/app-all-in-one-mac.svg",
+    "sha256": "04334690c63a77fbc99368f35f20ee6deece6071f303c82a791672ab40ab8ffb"
   }
 ]
