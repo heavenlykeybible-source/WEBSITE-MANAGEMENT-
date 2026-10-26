@@ -180,9 +180,10 @@ test('meeting transport rejects wrong origins and non-WebSocket requests; unauth
  const w=s.add({until:Date.now()-1});await s.room.alarm();assert.equal(w.readyState,3);
 });
 test('native meeting token uses current account permissions and does not claim RTMP is configured',async()=>{
- const d=database(),env={TEAMDB:d.DB,AUTH_SECRET:secret,MEETING_ROOMS:{}};
+ const d=database(),env={TEAMDB:d.DB,AUTH_SECRET:secret,MEETING_ROOMS:{idFromName(){return 'test-room-id'},get(){return {fetch(){}}}}};
  const loginResponse=await login(env,ticket());const html=await loginResponse.text(),token=JSON.parse(html.match(/localStorage.setItem\("ls_tok",("[^"]+")\)/)[1]);
  const r=await app.fetch(new Request('https://meeting/api/meeting-token',{headers:{authorization:'Bearer '+token}}),env,{}),j=await r.json();assert.equal(r.status,200);assert.match(j.url,/^wss:\/\/meeting\/meeting\/[a-f0-9-]{36}$/);
+ const invalidHealth=await (await app.fetch(new Request('https://meeting/api/health'),{...env,MEETING_ROOMS:{}},{})).json();assert.equal(invalidHealth.meetingConfigured,false);
  const health=await (await app.fetch(new Request('https://meeting/api/health'),env,{})).json();assert.equal(health.meetingConfigured,true);assert.equal(health.relayConfigured,false);assert.equal(health.turnConfigured,false);
  assert.equal((await app.fetch(new Request('https://meeting/api/meeting-token'),env,{})).status,401);d.raw.close();
 });
