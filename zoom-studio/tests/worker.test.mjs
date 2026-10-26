@@ -16,7 +16,7 @@ class D1 { constructor() { this.db = new DatabaseSync(':memory:'); }
   async batch(st) { this.db.exec('BEGIN'); try { for (const s of st) await s.run(); this.db.exec('COMMIT'); } catch (e) { this.db.exec('ROLLBACK'); throw e; } return []; } }
 const schema = fs.readFileSync(here + '../server/schema.sql', 'utf8');
 const teamdb = new D1(); teamdb.db.exec(schema);
-const env = { TEAMDB: teamdb, AUTH_SECRET: 'a'.repeat(40), RELAY_SECRET: 'r'.repeat(40), RELAY_URL: 'wss://relay.test', CURRENCY: 'NGN', ADMIN_EMAILS: '', PAYSTACK_SECRET: 'sk_test_x', ASSETS: { fetch: async () => new Response('asset') } };
+const env = { MEETINGSPACE_PRIVATE_PREVIEW: '0', TEAMDB: teamdb, AUTH_SECRET: 'a'.repeat(40), RELAY_SECRET: 'r'.repeat(40), RELAY_URL: 'wss://relay.test', CURRENCY: 'NGN', ADMIN_EMAILS: '', PAYSTACK_SECRET: 'sk_test_x', ASSETS: { fetch: async () => new Response('asset') } };
 
 let pass = 0, fail = 0, ipn = 0;
 // the browser stretches the password before sending it; the test uses a stand-in with the same shape (64 hex characters)
