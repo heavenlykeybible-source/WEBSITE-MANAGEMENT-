@@ -40,3 +40,6 @@ assert(source.includes("restore.focus({preventScroll:true})"),'Minimized communi
 
 assert(source.includes("b.isConnected&&b.dataset.app===previous.id"),'Closing an app must not focus a removed sidebar button');
 assert(source.includes("if(tab)tab.focus({preventScroll:true})"),'Closing an app must restore keyboard focus to its launcher');
+
+assert(csp.includes('Strict-Transport-Security: max-age=31536000'),'Static pages must advertise HTTPS transport security');
+assert(csp.includes('Cross-Origin-Resource-Policy: same-origin'),'Static pages must prevent unintended cross-origin resource embedding');
