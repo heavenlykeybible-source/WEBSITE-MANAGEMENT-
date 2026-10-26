@@ -8,7 +8,7 @@ const origin=process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN;
 if(!origin || !/^https:\/\/[a-z0-9.-]+\/?$/i.test(origin)) throw Error('Set MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN to the confirmed HTTPS URL for Account 8');
 const privatePreview=process.env.MEETINGSPACE_PRIVATE_PREVIEW==='1';
 const expectedHealth={ok:true,meetingConfigured:true,...(privatePreview?{}:{turnConfigured:true})};
-const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:origin,RELEASE_HEALTH_PATH:'/api/health',RELEASE_HEALTH_EXPECT:JSON.stringify(expectedHealth)};
+const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:origin,RELEASE_HEALTH_PATH:'/api/health',RELEASE_HEALTH_EXPECT:JSON.stringify(expectedHealth),RELEASE_SMOKE_PATHS:'/index.html,/join.html'};
 // The currently deployed private preview may not yet have TURN; only the *new* public release must.
 const snapshotEnv={...releaseEnv,RELEASE_HEALTH_EXPECT:JSON.stringify({ok:true,meetingConfigured:true})};
 function run(args,env=process.env){const r=spawnSync(args[0],args.slice(1),{stdio:'inherit',shell:false,env});if(r.error)throw r.error;if(r.status!==0)throw Error('Existing MeetingSpace release stopped at '+args[1]+' (exit '+r.status+')');}
