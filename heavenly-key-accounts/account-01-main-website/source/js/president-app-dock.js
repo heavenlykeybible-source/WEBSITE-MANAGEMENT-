@@ -27,7 +27,7 @@ function init(){
    if(launcher){if(active)minimize();launcher.click();return;}
   }
   active=app;title.textContent=app.name;pageLink.href=new URL(app.url,location.href).href;mini.textContent='Restore '+app.name;
-  for(const [id,frame] of frames){frame.hidden=id!==app.id;}
+  // Keep only Revival Radio alive while another app is selected; unload other inactive apps.\n  for(const [id,frame] of frames){if(id!==app.id&&id!=='radio'){frame.remove();frames.delete(id);}else frame.hidden=id!==app.id;}
   if(app.native&&!frames.has(app.id)){const placeholder=document.createElement('div');placeholder.className='hk-app-window-native';placeholder.setAttribute('role','status');placeholder.textContent=app.id==='assistant'?'The Online Assistant is not ready inside this window. Use Visit App Page to return to the homepage and open its assistant launcher.':app.name+' can be opened using Visit App Page. In-page integration is not yet available.';win.insertBefore(placeholder,win.querySelector('.hk-app-window-actions'));frames.set(app.id,placeholder);} else if(!app.native&&!frames.has(app.id)){
    const frame=document.createElement('iframe');frame.className='hk-app-window-frame';frame.title=app.name;frame.loading='lazy';frame.referrerPolicy='strict-origin-when-cross-origin';frame.allow='autoplay; clipboard-write';frame.src=app.url;frame.hidden=false;
    win.insertBefore(frame,win.querySelector('.hk-app-window-actions'));frames.set(app.id,frame);
