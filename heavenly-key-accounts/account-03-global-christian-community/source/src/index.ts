@@ -209,7 +209,7 @@ export default {
   },
   async fetch(request:Request,env:Env,ctx?:ExecutionContext):Promise<Response>{
     try{return await route(request,env,ctx);}
-    catch(e:any){const internal=e instanceof TypeError||e instanceof ReferenceError||e instanceof SyntaxError||/D1_|SQLITE|constraint failed|no such table|binding|TypeError/i.test(String(e?.message))||!(e instanceof Error);return error(internal?"The request could not be completed. Please try again.":e.message,internal?500:Number((e as any)?.status)||400);}
+    catch(e:any){const status=Number(e?.status);const expected=e instanceof Error&&Number.isInteger(status)&&status>=400&&status<500;return error(expected?e.message:"The request could not be completed. Please try again.",expected?status:500);}
   }
 };
 
