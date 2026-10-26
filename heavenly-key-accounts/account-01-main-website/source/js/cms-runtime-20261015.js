@@ -84,9 +84,9 @@
   const close=document.createElement('button');close.type='button';close.textContent='×';close.className='hkem-chat-close';close.setAttribute('aria-label','Close chat');header.append(close);
   const messages=document.createElement('div');messages.className='hkem-chat-messages';messages.setAttribute('role','log');messages.setAttribute('aria-live','polite');messages.setAttribute('aria-relevant','additions');
   const addMessage=(who,value)=>{const bubble=document.createElement('div');bubble.className='hkem-chat-bubble '+(who==='visitor'?'hkem-chat-visitor':'hkem-chat-bot');bubble.textContent=value;messages.append(bubble);messages.scrollTop=messages.scrollHeight;return bubble};
-  const welcome=document.createElement('div');welcome.className='hkem-chat-welcome';const welcomeText=document.createElement('p');welcomeText.textContent='Welcome to Heavenly Key Evangelistic Movement. How may I help you today?';welcome.append(welcomeText);const contact=document.createElement('button');contact.type='button';contact.className='hkem-chat-suggestion';contact.textContent='I want to talk to Evangelist Emmanuel Ogheneochuko Adiohwo';welcome.append(contact);messages.append(welcome);
+  const welcome=document.createElement('div');welcome.className='hkem-chat-welcome';const welcomeText=document.createElement('p');welcomeText.textContent='Welcome to Heavenly Key Evangelistic Movement. How may I help you today?';welcome.append(welcomeText);messages.append(welcome);
   const form=document.createElement('form');form.className='hkem-chat-form';const input=document.createElement('textarea');input.rows=1;input.maxLength=2000;input.placeholder='Type a message…';input.setAttribute('aria-label','Your message');const send=document.createElement('button');send.type='submit';send.textContent='➤';send.setAttribute('aria-label','Send message');form.append(input,send);
-  contact.addEventListener('click',()=>{input.value=contact.textContent;form.requestSubmit()});
+
   const note=document.createElement('small');note.className='hkem-chat-note';note.textContent='AI may make mistakes. Please verify important information.';
   panel.append(header,messages,form,note);root.append(panel,toggle);document.body.append(root);
   const setOpen=open=>{panel.hidden=!open;toggle.setAttribute('aria-expanded',String(open));toggle.hidden=open;if(open)input.focus()};

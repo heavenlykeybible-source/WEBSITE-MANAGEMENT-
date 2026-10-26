@@ -1,17 +1,18 @@
-// One bounded state record, containing only hashes and counters. No messages, credentials or member data.
+// One object per hashed client: bounded counters, no shared global budget or chat data.
 export class PublicChatLimits {
- constructor(state){this.state=state;}
+ constructor(state,env={}){this.state=state;const n=Number(env.ASSISTANT_CLIENT_HOURLY_LIMIT);this.limit=Number.isInteger(n)&&n>=1&&n<=10000?n:120;}
  async fetch(request){
   if(request.method!=='POST')return new Response(null,{status:405});
   let input;try{input=await request.json()}catch{return new Response(null,{status:400})}
   if(!/^[a-f0-9]{64}$/.test(input?.hash||''))return new Response(null,{status:400});
-  const now=Date.now(),day=Math.floor(now/86400000),hour=Math.floor(now/3600000);
+  const now=Date.now(),hour=Math.floor(now/3600000);
   const allowed=await this.state.storage.transaction(async tx=>{
-   let budget=await tx.get('budget');if(!budget||budget.day!==day)budget={day,count:0,clients:{}};
-   let client=budget.clients[input.hash];if(!client||client.hour!==hour)client={hour,count:0};
-   if(budget.count>=200||client.count>=30)return false;
-   client.count++;budget.count++;budget.clients[input.hash]=client;await tx.put('budget',budget);return true;
+   let client=await tx.get('client');if(!client||client.hour!==hour)client={hour,count:0};
+   if(client.count>=this.limit)return false;
+   client.count++;await tx.put('client',client);return true;
   });
+  if(allowed&&this.state.storage.setAlarm)await this.state.storage.setAlarm((hour+2)*3600000);
   return new Response(null,{status:allowed?204:429});
  }
+ async alarm(){await this.state.storage.deleteAll();}
 }
