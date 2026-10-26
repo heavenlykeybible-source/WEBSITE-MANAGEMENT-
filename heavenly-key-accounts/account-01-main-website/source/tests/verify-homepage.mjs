@@ -5,6 +5,10 @@ import {dirname,resolve,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const dir=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const html=readFileSync(resolve(dir,'index.html'),'utf8');
+const sharedJs=readFileSync(resolve(dir,'js/main.js'),'utf8');
+assert.ok(!sharedJs.includes('/pages/legal-requests.html'), 'Broken Legal Requests link must not recur');
+assert.ok(sharedJs.includes('/pages/contact'), 'Legal Requests must lead to the verified Contact page');
+assert.ok(!sharedJs.includes('/pages/terms.html'), 'Terms URL should use the verified clean route');
 const attrs=[...html.matchAll(/\b(?:href|src)=(["'])(.*?)\1/g)].map(m=>m[2]);
 const missing=[];
 for(const value of new Set(attrs)){
