@@ -211,6 +211,17 @@ test('host admission respects speaker slots reserved for promoted audience',asyn
  await message(s.room,s.host,{t:'admit',gid:waiting.d.id});
  assert.equal(waiting.d.stage,false);
 });
+test('reconnecting approved speaker cannot steal a reserved stage slot',async()=>{
+ const s=await openRoom(),speakers=[];
+ for(let i=0;i<5;i++){const g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:false,pass:'approved-'+i});await message(s.room,s.host,{t:'admit',gid:g.d.id});speakers.push(g);}
+ const leaving=speakers[0];leaving.readyState=3;s.room.webSocketClose(leaving);
+ const viewer=s.add();await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ await message(s.room,s.host,{t:'promote',gid:viewer.d.id});assert.equal(viewer.d.invited,true);
+ const returning=s.add();await message(s.room,returning,{t:'join',room:s.host.d.room,key:s.key,aud:false,pass:'approved-0'});
+ assert.equal(returning.d.stage,false);
+ assert.equal(returning.d.ok,false);
+ await message(s.room,viewer,{t:'ready'});assert.equal(viewer.d.stage,true);
+});
 test('host admission respects stage reservations for invited audience',async()=>{
  const s=await openRoom(),audience=[];
  for(let i=0;i<6;i++){const g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true});audience.push(g);}
