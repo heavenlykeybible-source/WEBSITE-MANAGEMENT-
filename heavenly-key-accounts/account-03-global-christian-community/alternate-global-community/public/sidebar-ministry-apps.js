@@ -22,6 +22,10 @@ const allButtons=new Set();
 function minimize(){panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
 function closeApp(){const current=active;active=null;panel.dataset.open='false';restore.hidden=true;if(current&&frames.has(current.id)){frames.get(current.id).remove();frames.delete(current.id)}allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
 function open(app){
+ if(app.id==='assistant'){
+  const official=document.querySelector('.hk-ai-small-icon');
+  if(official){closeApp();official.click();return;}
+ }
  if(active?.id===app.id&&panel.dataset.open==='true'){minimize();return}
  active=app;name.textContent=app.name;visit.href=app.url;restore.textContent='Restore '+app.name;
  for(const [id,el] of frames){if(id!==app.id&&id!=='radio'){el.remove();frames.delete(id)}else el.hidden=id!==app.id}
