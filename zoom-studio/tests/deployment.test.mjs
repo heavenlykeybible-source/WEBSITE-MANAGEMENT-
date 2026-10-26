@@ -107,3 +107,14 @@ test('Account 8 can inspect an existing private preview before requiring TURN fr
  assert.match(deploy,/existing-worker-release\.mjs','snapshot'\],snapshotEnv/);
  assert.match(deploy,/existing-worker-release\.mjs','verify'\],releaseEnv/);
 });
+
+test('Account 8 deployment verifies the exact bundled build ID after publishing',()=>{
+ const deploy=fs.readFileSync(new URL('../scripts/deploy.mjs',import.meta.url),'utf8');
+ const bundle=fs.readFileSync(new URL('../scripts/bundle-control-room.mjs',import.meta.url),'utf8');
+ const backend=fs.readFileSync(new URL('../site/_worker.js',import.meta.url),'utf8');
+ assert.match(bundle,/const MEETING_RELEASE_ID=/);
+ assert.match(backend,/releaseId: typeof MEETING_RELEASE_ID === 'string'/);
+ assert.match(deploy,/releaseMatch=built\.match/);
+ assert.match(deploy,/RELEASE_HEALTH_EXPECT=JSON\.stringify\(\{\.\.\.expectedHealth,releaseId:/);
+ assert.match(deploy,/existing-worker-release\.mjs','verify'\],releaseEnv/);
+});
