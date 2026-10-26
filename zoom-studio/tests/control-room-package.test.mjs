@@ -78,6 +78,16 @@ test('missing database yields a clear setup failure while public template still 
 const {MeetingRooms}=await import(pathToFileURL(path.join(root,'build/meeting-worker.mjs')));
 function socket(data){return {readyState:1,messages:[],serializeAttachment(d){assert.ok(Buffer.byteLength(JSON.stringify(d))<=2048,'hibernation attachment fits platform limit');this.d=structuredClone(d)},deserializeAttachment(){return structuredClone(this.d)},send(m){this.messages.push(JSON.parse(m))},close(){this.readyState=3},d:structuredClone(data)};}
 function meeting(){const all=[],state={getWebSockets(){return all},storage:{async setAlarm(){}}};return {all,state,room:new MeetingRooms(state,{AUTH_SECRET:secret}),add(data={}){const w=socket({role:'',room:'11111111-1111-4111-8111-111111111111',until:Date.now()+15000,...data});all.push(w);return w}};}
+test('meeting room counts audience and speaker guests together against capacity',async()=>{
+ const s=await openRoom();s.room.env.MEETING_ROOM_CAP='4';
+ const first=s.add(),second=s.add(),third=s.add();
+ await message(s.room,first,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ await message(s.room,second,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ await message(s.room,third,{t:'join',room:s.host.d.room,key:s.key,aud:false});
+ assert.equal(first.d.role,'guest');assert.equal(second.d.role,'guest');assert.equal(third.d.role,'guest');
+ const extra=s.add();await message(s.room,extra,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ assert.equal(extra.readyState,3);assert.match(extra.messages.at(-1).msg,/full/);
+});
 test('meeting room rejects excess peers before allocating WebSockets',async()=>{
  const s=meeting();for(let i=0;i<25;i++)s.add();
  const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
