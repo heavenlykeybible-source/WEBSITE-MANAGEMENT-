@@ -612,7 +612,7 @@ export default {
       if (!active) return json({ error: 'Choose a plan to start a guest room.' }, 402);
       if (!(await rate(env, 'meeting:' + email, 20, 3600))) return json({ error: 'Too many rooms started. Try again later.' }, 429);
       const room = crypto.randomUUID();
-      return json({ url: 'wss://' + url.host + '/meeting/' + room, token: await sign(env.AUTH_SECRET, { k: 'meeting', r: room, u: email, exp: Date.now() + 10 * 60000, pe: role !== 'user' ? Date.now() + 86400000 : u.paidUntil }) });
+      return json({ url: 'wss://' + url.host + '/meeting/' + room, token: await sign(env.AUTH_SECRET, { k: 'meeting', r: room, u: email, exp: Date.now() + 10 * 60000, pe: (role !== 'user' || (env.MEETINGSPACE_PRIVATE_PREVIEW !== '0' && u.terms === 'private-approved')) ? Date.now() + 86400000 : u.paidUntil }) });
     }
     if (path === '/api/relay-token' || path === '/api/meeting-token') {
       if (!env.RELAY_SECRET || !env.RELAY_URL) return json({ error: 'Streaming server is not set up.' }, 501);
