@@ -32,7 +32,6 @@ const APP_SHELL = [
   "/",
   "/index.html",
   "/css/heavenly-ecosystem.css?v=20261026",
-  "/css/homepage-polish.css?v=20261026",
   "/assets/ministry/rotating-world-land.svg",
   "/offline.html",
   `/css/tokens.css?v=${ASSET_VERSION}`,
@@ -78,6 +77,8 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
 
   if (req.method !== "GET") return; // never cache POSTs (form submissions)
+  // Never intercept or persist resources from other origins (including external apps).
+  if (url.origin !== self.location.origin) return;
 
   // API calls: never cache — always hit the network. (Cached Bible chapters,
   // devotionals, and articles are handled at the page level once AI 1's API
