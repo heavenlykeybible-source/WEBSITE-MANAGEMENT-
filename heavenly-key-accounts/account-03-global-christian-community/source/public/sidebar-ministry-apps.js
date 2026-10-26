@@ -19,7 +19,7 @@ const bottom=make('div','hk-community-app-bottom'),share=make('button',null,'Sha
 share.type='button';visit.target='_blank';visit.rel='noopener noreferrer';bottom.append(share,visit);const feedback=make('p','hk-community-app-feedback','Choose a ministry application to get started.');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');panel.append(head,feedback,bottom);
 const restore=make('button','hk-community-app-restore','Restore App');restore.type='button';restore.hidden=true;restore.setAttribute('aria-controls',panel.id);
 const allButtons=new Set();const boundButtons=new WeakSet();
-function minimize(){if(active)feedback.textContent=active.name+' minimized. Select Restore App to continue.';panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
+function minimize(){if(active)feedback.textContent=active.name+' minimized. Select Restore App to continue.';panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'));if(active)restore.focus({preventScroll:true})}
 function closeApp(){active=null;panel.dataset.open='false';restore.hidden=true;for(const frame of frames.values())frame.remove();frames.clear();feedback.textContent='Application closed.';allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
 function open(app, restoring=false){
  if(app.id==='assistant'&&!restoring){
