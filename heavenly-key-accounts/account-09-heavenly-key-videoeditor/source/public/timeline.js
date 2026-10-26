@@ -20,7 +20,7 @@ pipLane.addEventListener('drop',e=>{
 });
 function loadPipFile(file){
  if(session)return info('Stop preview or export before changing the overlay video.');
- if(file&&(!file.type.startsWith('video/')||file.size>150*1024*1024))return info('Select a video under 150 MB.');
+ if(file&&(!(file.type.startsWith('video/')||(!file.type&&/\.(mp4|webm|mov|m4v)$/i.test(file.name)))||file.size>150*1024*1024))return info('Select a supported video under 150 MB.');
  pip.pause();pip.removeAttribute('src');pip.load();
  if(pipUrl)URL.revokeObjectURL(pipUrl);pipUrl=null;invalidateExport();
  if(!file){$('clipPipStatus').textContent='No second video loaded.';paintPip();return;}
