@@ -111,6 +111,13 @@ test('meeting room counts audience and speaker guests together against capacity'
  const extra=s.add();await message(s.room,extra,{t:'join',room:s.host.d.room,key:s.key,aud:true});
  assert.equal(extra.readyState,3);assert.match(extra.messages.at(-1).msg,/full/);
 });
+test('unauthenticated WebSocket upgrades cannot exhaust the entire room',async()=>{
+ const s=meeting();for(let i=0;i<4;i++)s.add();
+ const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
+ const response=await s.room.fetch(req);
+ assert.equal(response.status,429);
+ assert.match(await response.text(),/pending connections/i);
+});
 test('meeting room rejects excess peers before allocating WebSockets',async()=>{
  const s=meeting();for(let i=0;i<25;i++)s.add();
  const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
