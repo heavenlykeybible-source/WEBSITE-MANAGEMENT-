@@ -47,6 +47,11 @@ try{
  assert.equal(await page.locator('#clipList option').count(),1);
  await page.locator('#clipDuplicate').click();
  assert.equal(await page.locator('#clipList option').count(),2,'Duplicating a clip should add a second clip');
+ await page.locator('#clipList').blur();
+ await page.keyboard.press('Control+z');
+ assert.equal(await page.locator('#clipList option').count(),1,'Shortcut Ctrl+Z should undo duplication');
+ await page.keyboard.press('Control+Shift+z');
+ assert.equal(await page.locator('#clipList option').count(),2,'Shortcut Ctrl+Shift+Z should redo duplication');
  await page.locator('#clipUp').click();
  assert.equal(await page.locator('#clipList option').count(),2,'Reordering must keep both clips');
  await page.locator('#clipUndo').click();
