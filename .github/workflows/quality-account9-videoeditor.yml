@@ -12,6 +12,7 @@ on:
       - 'scripts/test-account9-release-policy.mjs'
       - 'scripts/smoke-account9-live.mjs'
       - 'scripts/test-account9-worker-health.mjs'
+      - 'scripts/connect-account9-mediaeditor.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   pull_request:
     paths:
@@ -24,6 +25,7 @@ on:
       - 'scripts/test-account9-release-policy.mjs'
       - 'scripts/smoke-account9-live.mjs'
       - 'scripts/test-account9-worker-health.mjs'
+      - 'scripts/connect-account9-mediaeditor.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   workflow_dispatch:
 
@@ -80,3 +82,16 @@ jobs:
           assert.equal(rejected.status,405);
           console.log('Account 9 Worker smoke tests passed.');
           JS
+
+  connect-mediaeditor:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: account9-staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attach sole mediaeditor domain to existing Worker
+        env:
+          CF_TOKEN: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
+        run: node scripts/connect-account9-mediaeditor.mjs
