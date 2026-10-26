@@ -60,12 +60,12 @@ const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),r
 const pass=(()=>{try{let p=sessionStorage.getItem('gp');if(!p){p=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');sessionStorage.setItem('gp',p)}return p}catch(e){return String(Math.random()).slice(2)}})();
 const NSPATH='https://cdn.jsdelivr.net/npm/@shiguredo/noise-suppression@2022.4.2/dist';let proc=null,rawMedia=null;
 function loadNS(){return window.Shiguredo?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src=NSPATH+'/noise_suppression.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
-let ws=null,pc=null,ice=[],local=null,camTrack=null,shareTrack=null,over=false,tries=0,pend=[],hand=false,sharing=false,onStage=false,joined=false,connecting=false;
+let ws=null,pc=null,ice=[],local=null,camTrack=null,shareTrack=null,over=false,tries=0,pend=[],hand=false,sharing=false,onStage=false,joined=false,connecting=false,openTimer=null;
 const show=id=>['pre','wait','live','done'].forEach(s=>$(s).hidden=s!==id);
 const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
 const note=t=>{$('nt').textContent=t};
 function stopLocal(){try{proc&&proc.stopProcessing()}catch(e){}proc=null;if(local)local.getTracks().forEach(t=>t.stop());if(rawMedia&&rawMedia!==local)rawMedia.getTracks().forEach(t=>t.stop());local=null;rawMedia=null}
-function end(msg){over=true;connecting=false;try{ws&&ws.close()}catch(e){}try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();show('done');$('dm').textContent=msg}
+function end(msg){over=true;connecting=false;clearTimeout(openTimer);openTimer=null;try{ws&&ws.close()}catch(e){}try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();show('done');$('dm').textContent=msg}
 function mode(stage){onStage=stage;$('stg').hidden=!stage;$('audv').hidden=stage;$('aorow').hidden=true;if(!stage)$('invrow').hidden=$('invrow').hidden}
 if(AUD){$('nrrow').hidden=true;$('ti').textContent='Join the audience';$('intro').textContent='You are joining as a viewer. You can chat, raise your hand and react. The host may invite you to the stage. You do not need an account.';$('aorow').hidden=true;
  $('oktx').textContent='I understand my name and chat messages will be visible to the host and everyone in the room, and may appear on the broadcast. I agree to the Privacy Policy.'}
@@ -94,9 +94,10 @@ function connect(){
  if(over)return;
  try{ws=new WebSocket(relay.replace(/\/+$/,'')+'/room')}catch(e){connecting=false;end('The meeting link could not open. Ask the host for a new invitation.');return}
  const currentSocket=ws;
- ws.onopen=()=>{if(over||ws!==currentSocket)return;send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked});if(!joined)show('wait')};
+ clearTimeout(openTimer);openTimer=setTimeout(()=>{if(!over&&ws===currentSocket&&currentSocket.readyState===WebSocket.CONNECTING)currentSocket.close()},12000);
+ ws.onopen=()=>{clearTimeout(openTimer);openTimer=null;if(over||ws!==currentSocket)return;send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked});if(!joined)show('wait')};
  ws.onmessage=e=>{if(over||ws!==currentSocket)return;let m;try{m=JSON.parse(e.data)}catch{return}onMsg(m)};
- ws.onclose=()=>{if(over||ws!==currentSocket)return;joined=false;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
+ ws.onclose=()=>{if(over||ws!==currentSocket)return;clearTimeout(openTimer);openTimer=null;joined=false;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
  ws.onerror=()=>{}}
 
 function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
