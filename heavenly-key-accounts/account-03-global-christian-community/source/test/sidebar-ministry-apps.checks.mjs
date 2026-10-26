@@ -37,3 +37,6 @@ assert(source.includes('if(boundButtons.has(button))'),'Reused sidebar controls 
 assert(source.includes("apps.find(item=>item.id===button.dataset.app)"),'Cloned sidebar controls must reconnect to their matching apps');
 
 assert(source.includes("restore.focus({preventScroll:true})"),'Minimized community apps must move keyboard focus to the restore control');
+
+assert(source.includes("b.isConnected&&b.dataset.app===previous.id"),'Closing an app must not focus a removed sidebar button');
+assert(source.includes("if(tab)tab.focus({preventScroll:true})"),'Closing an app must restore keyboard focus to its launcher');
