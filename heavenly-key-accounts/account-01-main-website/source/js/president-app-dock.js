@@ -10,7 +10,9 @@ const apps=[
 {id:'eternity',name:'Eternity in View',icon:'✦',url:'/eternity-in-view/'}
 ];
 function init(){
- const grid=document.querySelector('.president-section .president-grid');if(!grid||document.querySelector('.hk-app-dock'))return;
+ const grid=document.querySelector('.president-section .president-grid');if(document.querySelector('.hk-app-dock'))return;
+ let mount=grid;
+ if(!mount){const footer=document.querySelector('footer');if(!footer)return;const section=document.createElement('section');section.className='hk-page-app-section';section.setAttribute('aria-label','Explore Heavenly Key ministry applications');const inner=document.createElement('div');inner.className='hk-page-app-inner';const heading=document.createElement('div');heading.className='hk-page-app-heading';const eyebrow=document.createElement('p');eyebrow.textContent='Heavenly Key Ministry Apps';const title=document.createElement('h2');title.textContent='Explore Our Ministry Applications';const description=document.createElement('span');description.textContent='Open an application, share it to bless others, or visit its dedicated page.';heading.append(eyebrow,title,description);inner.appendChild(heading);section.appendChild(inner);footer.before(section);mount=inner;}
  const dock=document.createElement('aside');dock.className='hk-app-dock';dock.setAttribute('aria-label','Heavenly Key ministry apps');
  const list=document.createElement('div');list.className='hk-dock-list';
  const pole=document.createElement('div');pole.className='hk-dock-pole';pole.setAttribute('aria-hidden','true');
@@ -29,7 +31,7 @@ function init(){
   active=app;title.textContent=app.name;pageLink.href=new URL(app.url,location.href).href;mini.textContent='Restore '+app.name;
   // Keep only Revival Radio alive while another app is selected; unload other inactive apps.
   for(const [id,frame] of frames){if(id!==app.id&&id!=='radio'){frame.remove();frames.delete(id);}else frame.hidden=id!==app.id;}
-  if(app.native&&!frames.has(app.id)){const placeholder=document.createElement('div');placeholder.className='hk-app-window-native';placeholder.setAttribute('role','status');placeholder.textContent=app.id==='assistant'?'The Online Assistant is not ready inside this window. Use Visit App Page to return to the homepage and open its assistant launcher.':app.name+' can be opened using Visit App Page. In-page integration is not yet available.';win.insertBefore(placeholder,win.querySelector('.hk-app-window-actions'));frames.set(app.id,placeholder);} else if(!app.native&&!frames.has(app.id)){
+  if((app.native||new URL(app.url,location.href).pathname===location.pathname)&&!frames.has(app.id)){const placeholder=document.createElement('div');placeholder.className='hk-app-window-native';placeholder.setAttribute('role','status');placeholder.textContent=app.id==='assistant'?'The Online Assistant is not ready inside this window. Use Visit App Page to return to the homepage and open its assistant launcher.':app.name+' can be opened using Visit App Page. In-page integration is not yet available.';win.insertBefore(placeholder,win.querySelector('.hk-app-window-actions'));frames.set(app.id,placeholder);} else if(!app.native&&!frames.has(app.id)){
    const frame=document.createElement('iframe');frame.className='hk-app-window-frame';frame.title=app.name;frame.loading='lazy';frame.referrerPolicy='strict-origin-when-cross-origin';frame.allow='autoplay; clipboard-write';frame.src=app.url;frame.hidden=false;
    win.insertBefore(frame,win.querySelector('.hk-app-window-actions'));frames.set(app.id,frame);
   }else if(frames.has(app.id))frames.get(app.id).hidden=false;
@@ -49,7 +51,7 @@ function init(){
  bar.addEventListener('pointermove',e=>{if(!drag)return;const rect=win.getBoundingClientRect();win.style.left=Math.max(8,Math.min(Math.max(8,window.innerWidth-rect.width-8),drag.left+e.clientX-drag.x))+'px';win.style.top=Math.max(8,Math.min(Math.max(8,window.innerHeight-80),drag.top+e.clientY-drag.y))+'px';win.style.right='auto';});
  bar.addEventListener('pointerup',()=>drag=null);bar.addEventListener('pointercancel',()=>drag=null);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&win.dataset.open==='true')minimize()});
- dock.append(win,list,pole);grid.appendChild(dock);document.body.appendChild(mini);
+ dock.append(win,list,pole);mount.appendChild(dock);document.body.appendChild(mini);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
