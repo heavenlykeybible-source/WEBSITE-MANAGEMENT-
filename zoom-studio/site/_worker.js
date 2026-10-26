@@ -462,7 +462,7 @@ export default {
     if (!email) return json({ error: 'Please sign in.' }, 401);
     const u = await getUser(env, email); if (!u || (u.tv || 0) !== (tk.t || 0)) return json({ error: 'Please sign in.' }, 401);
     if (u.banned) return json({ error: 'This account is suspended.' }, 403);
-    if (accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'Account awaiting administrator approval.' }, 403);
+    if (env.MEETINGSPACE_PRIVATE_PREVIEW !== '0' && accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'Account awaiting administrator approval.' }, 403);
     const role = accountRole(env, email, u);
     const active = role !== 'user' || (u.paidUntil || 0) > Date.now();
     const verified = u.verified !== false;
