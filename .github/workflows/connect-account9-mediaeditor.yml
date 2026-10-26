@@ -45,3 +45,5 @@ jobs:
           if(!verified||verified.service!==worker||!verified.enabled)throw Error('Final domain-to-Worker verification failed.');
           console.log('PASS canonical Account 9 domain route verified');
           JS
+
+# Recheck the Cloudflare Account 9 token and domain mapping after the owner updated permissions.
