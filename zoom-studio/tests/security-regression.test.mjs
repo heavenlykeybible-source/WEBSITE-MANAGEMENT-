@@ -196,3 +196,10 @@ test('Host room creation has a bounded handshake and safe cleanup', () => {
  assert.match(host,/function gStop\(msg\)\{clearTimeout\(gHandshakeTimer\)/);
  assert.match(host,/if\(m\.t==='created'\)\{clearTimeout\(gHandshakeTimer\)/);
 });
+
+test('Guest WebSocket connection timeout is bounded and cleaned up', () => {
+ const guest=readFileSync(resolve(root,'site/join.html'),'utf8');
+ assert.match(guest,/openTimer=setTimeout\(\(\)=>\{/);
+ assert.match(guest,/currentSocket\.readyState===WebSocket\.CONNECTING/);
+ assert.match(guest,/clearTimeout\(openTimer\);openTimer=null/);
+});
