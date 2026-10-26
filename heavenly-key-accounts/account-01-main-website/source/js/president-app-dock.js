@@ -24,14 +24,14 @@ function init(){
   if(active?.id===app.id&&win.dataset.open==='true'){minimize();return;}
   if(app.id==='assistant'){
    const launcher=document.querySelector('#hkem-assistant .hkem-launcher');
-   if(launcher){minimize();launcher.click();return;}
+   if(launcher){if(active)minimize();launcher.click();return;}
   }
   active=app;title.textContent=app.name;pageLink.href=app.url;mini.textContent='Restore '+app.name;
   for(const [id,frame] of frames){frame.hidden=id!==app.id;}
   if(app.native&&!frames.has(app.id)){const placeholder=document.createElement('div');placeholder.className='hk-app-window-native';placeholder.setAttribute('role','status');placeholder.textContent=app.name+' is available through its dedicated app page. Open it in a new tab using Visit App Page while integrated in-page access is being completed.';win.insertBefore(placeholder,win.querySelector('.hk-app-window-actions'));frames.set(app.id,placeholder);} else if(!app.native&&!frames.has(app.id)){
    const frame=document.createElement('iframe');frame.className='hk-app-window-frame';frame.title=app.name;frame.loading='lazy';frame.referrerPolicy='strict-origin-when-cross-origin';frame.allow='autoplay; clipboard-write';frame.src=app.url;frame.hidden=false;
    win.insertBefore(frame,win.querySelector('.hk-app-window-actions'));frames.set(app.id,frame);
-  }else frames.get(app.id).hidden=false;
+  }else if(frames.has(app.id))frames.get(app.id).hidden=false;
   list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.app===app.id)));
   win.style.removeProperty('left');win.style.removeProperty('top');win.style.removeProperty('right');win.dataset.open='true';mini.hidden=true;
  }
