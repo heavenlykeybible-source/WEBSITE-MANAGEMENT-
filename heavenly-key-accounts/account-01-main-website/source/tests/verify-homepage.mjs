@@ -65,4 +65,17 @@ for(const [name,pageHtml] of [['homepage',html],...publicPages.map(page=>[page,r
  }
 }
 
+
+const pageThemes=readFileSync(resolve(dir,'css/distinctive-pages.css'),'utf8');
+const homeFinish=readFileSync(resolve(dir,'css/homepage-distinctive.css'),'utf8');
+assert.ok(html.includes('homepage-distinctive.css')&&html.includes('hk-home-premium'),'Homepage must use the approved original design with premium finishing');
+assert.match(homeFinish,/\.welcome\b/,'Homepage hero finishing is missing');
+assert.ok(pageThemes.includes('data-hk-page="contact"'),'Contact benchmark page theme is missing');
+for(const page of publicPages.filter(p=>p!=='radio')){
+ const pageHtml=readFileSync(resolve(dir,'pages',page+'.html'),'utf8');
+ assert.ok(pageHtml.includes('data-hk-page="'+page+'"'), 'Missing distinct theme identity on '+page);
+ assert.ok(pageHtml.includes('/css/distinctive-pages.css'), 'Distinctive theme stylesheet missing from '+page);
+ assert.ok(pageThemes.includes('data-hk-page="'+page+'"'), 'No page-specific visual theme for '+page);
+}
+
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
