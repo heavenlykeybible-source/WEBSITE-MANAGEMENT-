@@ -39,6 +39,13 @@ try{
  await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'load'});
  await page.locator('#vf').setInputFiles(sample);
  await page.waitForFunction(()=>!document.getElementById('vexp').disabled,{timeout:15000});
+ // Verify the new drop zone imports a real video File through the existing editor handler.
+ await page.evaluate(()=>{
+  const file=document.getElementById('vf').files[0],dt=new DataTransfer();dt.items.add(file);
+  document.getElementById('clipDropZone').dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:dt}));
+ });
+ await page.waitForFunction(()=>document.getElementById('v').readyState>=1&&!document.getElementById('vexp').disabled,{timeout:15000});
+ assert.match(await page.locator('#vm').textContent(),/sample.webm/,'Drop zone must load the video in the primary editor');
  const duration=await page.locator('#v').evaluate(v=>v.duration);
  assert.ok(duration>2,'Imported source must have metadata');
  await page.locator('#fitmode').selectOption('cover');
