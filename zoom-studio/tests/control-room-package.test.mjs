@@ -19,6 +19,13 @@ test('complete Control Room bundle serves exact public assets and excludes priva
  for(const name of ['_worker.js','_headers','server/setup-accounts.mjs','../schema.sql'])assert.equal((await app.fetch(new Request('https://meeting/'+name),{},{})).status,404);
  const r=await app.fetch(new Request('https://meeting/'),{},{});const etag=r.headers.get('etag');assert.ok(etag);
  assert.equal((await app.fetch(new Request('https://meeting/',{headers:{'if-none-match':etag}}),{},{})).status,304);
+ for(const pathname of ['/', '/join.html']) {
+  const first=await app.fetch(new Request('https://meeting'+pathname),{},{});
+  const conditional=await app.fetch(new Request('https://meeting'+pathname,{headers:{'if-none-match':first.headers.get('etag')}}),{},{});
+  assert.equal(conditional.status,200,'private meeting pages must ignore conditional cache requests');
+  assert.equal(conditional.headers.get('cache-control'),'no-store');
+ }
+
  assert.equal((await app.fetch(new Request('https://meeting/',{method:'HEAD'}),{},{})).status,200);
  assert.equal((await app.fetch(new Request('https://meeting/',{method:'POST'}),{},{})).status,405);
  for (const pathname of ['/', '/index.html', '/join.html']) {
