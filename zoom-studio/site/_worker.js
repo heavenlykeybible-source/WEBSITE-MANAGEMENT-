@@ -365,7 +365,7 @@ export default {
     if (pm) return programPage(env, url, pm[1]);
     if (!path.startsWith('/api/')) {
       const r = await env.ASSETS.fetch(request), h = new Headers(r.headers);
-      h.set('x-content-type-options', 'nosniff'); h.set('referrer-policy', 'strict-origin-when-cross-origin'); h.set('x-frame-options', 'DENY');
+      h.set('x-content-type-options', 'nosniff'); h.set('referrer-policy', 'no-referrer'); h.set('x-frame-options', 'DENY');
       h.set('permissions-policy', 'camera=(self), microphone=(self), display-capture=(self), geolocation=()');
       h.set('content-security-policy', "frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'");
       return new Response(r.body, { status: r.status, statusText: r.statusText, headers: h });
