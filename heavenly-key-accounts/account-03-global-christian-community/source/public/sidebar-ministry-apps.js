@@ -16,18 +16,18 @@ const panel=make('section','hk-community-app-panel');panel.id='hk-community-app-
 const head=make('div','hk-community-app-head'),name=make('strong',null,'Heavenly Key App'),min=make('button',null,'−'),close=make('button',null,'×');
 min.type=close.type='button';min.setAttribute('aria-label','Minimize application');close.setAttribute('aria-label','Close application');head.append(name,min,close);
 const bottom=make('div','hk-community-app-bottom'),share=make('button',null,'Share to Bless Others'),visit=make('a',null,'Visit App Page ↗');
-share.type='button';visit.target='_blank';visit.rel='noopener noreferrer';bottom.append(share,visit);panel.append(head,bottom);
+share.type='button';visit.target='_blank';visit.rel='noopener noreferrer';bottom.append(share,visit);const feedback=make('p','hk-community-app-feedback','Choose a ministry application to get started.');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');panel.append(head,feedback,bottom);
 const restore=make('button','hk-community-app-restore','Restore App');restore.type='button';restore.hidden=true;restore.setAttribute('aria-controls',panel.id);
 const allButtons=new Set();
-function minimize(){panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
-function closeApp(){active=null;panel.dataset.open='false';restore.hidden=true;for(const frame of frames.values())frame.remove();frames.clear();allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
+function minimize(){if(active)feedback.textContent=active.name+' minimized. Select Restore App to continue.';panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
+function closeApp(){active=null;panel.dataset.open='false';restore.hidden=true;for(const frame of frames.values())frame.remove();frames.clear();feedback.textContent='Application closed.';allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
 function open(app, restoring=false){
  if(app.id==='assistant'&&!restoring){
   const official=document.querySelector('.hk-ai-small-icon');
   if(official){closeApp();official.click();return;}
  }
  if(!restoring&&active?.id===app.id&&panel.dataset.open==='true'){minimize();return}
- active=app;name.textContent=app.name;visit.href=app.url;restore.textContent='Restore '+app.name;
+ active=app;feedback.textContent=app.name+' opened. Use Visit App Page if the embedded application is unavailable.';name.textContent=app.name;visit.href=app.url;restore.textContent='Restore '+app.name;
  for(const [id,el] of frames){if(id!==app.id&&id!=='radio'){el.remove();frames.delete(id)}else el.hidden=id!==app.id}
  if(!frames.has(app.id)){
   let body;
