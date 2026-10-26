@@ -91,13 +91,19 @@ export async function onRequest({ request: req, env, params }) {
           await env.DB.prepare('SELECT id FROM audit LIMIT 1').all();
           dbReady = true;
         }
-      } catch { dbReady = false; }
+      } catch (error) {
+        dbReady = false;
+        // Cloudflare logs identify the failing schema probe; public API remains redacted.
+        console.error('Account9 health: D1 readiness probe failed', String(error?.message || error).slice(0,200));
+      }
       const storageReady = Boolean(env.MEDIA && typeof env.MEDIA.get === 'function' && typeof env.MEDIA.put === 'function');
       const aiReady = Boolean(env.AI && typeof env.AI.run === 'function');
       const ready = dbReady && storageReady && aiReady;
       return J({ status: ready ? 'ready' : 'degraded' }, ready ? 200 : 503);
     }
     if (a === 'register' && m === 'POST') {
+      // Public signups are intentionally closed until explicitly approved by the owner.
+      if (env.ALLOW_PUBLIC_REGISTRATION !== 'true') return J({ error: 'Registration is currently closed. Contact an administrator.' }, 403);
       const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid registration data.' }, 400);
       const email = String(b.email || '').trim().toLowerCase(), pw = String(b.password || '');
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return J({ error: 'Enter a valid email address.' }, 400);
