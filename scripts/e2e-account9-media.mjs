@@ -123,6 +123,7 @@ try{
  await page.waitForFunction(()=>document.querySelector('#clipPipStatus').textContent.includes('Overlay loaded'),{timeout:10000});
  await page.locator('#clipPipSize').selectOption('.25');
  await page.locator('#clipPipPosition').selectOption('br');
+ await page.locator('#clipPipOpacity').evaluate(el=>{el.value='55';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipPipOffset').fill('0.2');
  assert.equal(await page.locator('#clipPipPosition').inputValue(),'br','Overlay position must be configurable');
  await page.locator('#clipExport').click();
@@ -220,6 +221,7 @@ try{
  await page.locator('#clipVideoGain').evaluate(el=>{el.value='35';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipExportBitrate').evaluate(el=>{el.value='10000000';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipPipPosition').evaluate(el=>{el.value='bl';el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await page.locator('#clipPipOpacity').evaluate(el=>{el.value='55';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipPipOffset').evaluate(el=>{el.value='1.2';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipPipSize').evaluate(el=>{el.value='.5';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#psave').click();
@@ -233,6 +235,7 @@ try{
  await page.locator('#clipVideoGain').evaluate(el=>{el.value='100';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipExportBitrate').evaluate(el=>{el.value='2500000';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipPipPosition').evaluate(el=>{el.value='tr';el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await page.locator('#clipPipOpacity').evaluate(el=>{el.value='100';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipPipOffset').evaluate(el=>{el.value='0';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#clipPipSize').evaluate(el=>{el.value='.25';el.dispatchEvent(new Event('change',{bubbles:true}))});
  await page.locator('#pn').fill('Changed project');
@@ -246,6 +249,7 @@ try{
  assert.equal(await page.locator('#clipVideoGain').inputValue(),'35','Project must restore original-audio volume');
  assert.equal(await page.locator('#clipExportBitrate').inputValue(),'10000000','Project must restore export bitrate');
  assert.equal(await page.locator('#clipPipPosition').inputValue(),'bl','Project must restore overlay position');
+ assert.equal(await page.locator('#clipPipOpacity').inputValue(),'55','Project must restore overlay opacity');
  assert.equal(await page.locator('#clipPipOffset').inputValue(),'1.2','Project must restore overlay timing');
  assert.equal(await page.locator('#clipPipSize').inputValue(),'.5','Project must restore overlay size');
  console.log('PASS audio file import, WAV trimming/export/decode and local project save/reopen');
