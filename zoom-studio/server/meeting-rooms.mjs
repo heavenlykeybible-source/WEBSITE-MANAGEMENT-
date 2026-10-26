@@ -1,7 +1,19 @@
 // One hibernating Durable Object per meeting. Media stays browser-to-browser;
 // this service carries admission, chat and WebRTC signalling only.
 const roomClean=(s,n)=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n);
-const roomICE=[{urls:'stun:stun.cloudflare.com:3478'}];
+// TURN is optional: configure TURN_URLS and TURN_SHARED_SECRET for coturn REST auth.
+// Credentials are minted per room and expire automatically; never publish the shared secret.
+async function meetingICE(env, room) {
+ const ice=[{urls:'stun:stun.cloudflare.com:3478'}];
+ const urls=String(env.TURN_URLS||'').split(',').map(u=>u.trim()).filter(u=>/^turns?:[^\s,]+$/.test(u)).slice(0,4);
+ if(!urls.length||!env.TURN_SHARED_SECRET)return ice;
+ const username=Math.floor(Date.now()/1000)+3600+':'+room;
+ const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.TURN_SHARED_SECRET),{name:'HMAC',hash:'SHA-1'},false,['sign']);
+ const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(username)));
+ const credential=btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
+ ice.push({urls,username,credential});
+ return ice;
+}
 const capacityForRoom=env=>Math.max(2,Math.min(100,Number(env.MEETING_ROOM_CAP)||25));
 export class MeetingRooms {
  constructor(state,env){this.state=state;this.env=env;}
@@ -51,7 +63,7 @@ export class MeetingRooms {
     if(!a||a.k!=='meeting'||a.r!==d.room||!a.u||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
     if(this.host())return this.close(ws,{t:'error',msg:'This room already has a host.'});
     Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,now+86400000),locked:false,watch:'',audChat:true,slow:0,admitted:[]});
-    this.save(ws,d);return this.send(ws,{t:'created',room:d.room,key:d.key,ice:roomICE});
+    this.save(ws,d);return this.send(ws,{t:'created',room:d.room,key:d.key,ice:await meetingICE(this.env,d.room)});
    }
    if(m.t==='join'){
     const host=this.host(),h=host&&this.data(host);
@@ -61,7 +73,7 @@ export class MeetingRooms {
     if(guests.filter(w=>this.data(w).aud===aud).length>=(aud?Math.max(1,capacityForRoom(this.env)-1):Math.min(18,capacityForRoom(this.env)-1)))return this.close(ws,{t:'error',msg:'This room is full.'});
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),ok:aud,aud,stage:false,invited:false,ao:!!m.ao,last:0});
     if(!aud&&d.pass&&h.admitted.includes(d.pass)&&this.stage().length<6){d.ok=true;d.stage=true;}
-    this.save(ws,d);this.send(ws,{t:'welcome',ice:roomICE,watch:h.watch,chat:h.audChat,slow:h.slow});
+    this.save(ws,d);this.send(ws,{t:'welcome',ice:await meetingICE(this.env,d.room),watch:h.watch,chat:h.audChat,slow:h.slow});
     if(d.ok)this.send(ws,{t:'admitted'});
     if(d.stage)this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});
     else if(!aud)this.send(host,{t:'waiting',gid:d.id,name:d.name,ao:d.ao});
