@@ -152,6 +152,28 @@ try{
  await videoDownload.saveAs(videoPath);
  await verifyVideo(videoPath);
 
+ // An original-audio-only video must still export a usable audio track with gain processing.
+ const avSample=join(work,'sample-with-audio.webm');
+ execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-i',sample,'-i',audioInput,'-c:v','copy','-c:a','libopus','-shortest',avSample],{timeout:30000});
+ await page.locator('#clipAudio').setInputFiles([]);
+ await page.locator('#vf').setInputFiles(avSample);
+ await page.waitForFunction(()=>!document.getElementById('clipAdd').disabled&&document.getElementById('v').duration>0,{timeout:15000});
+ await page.locator('#clipStart').fill('0.2');
+ await page.locator('#clipEnd').fill('1.5');
+ await page.locator('#clipAdd').click();
+ await page.locator('#clipVideoGain').fill('30');
+ await page.locator('#clipVideoGain').dispatchEvent('change');
+ await page.locator('#clipExport').click();
+ await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
+ const mixEvent=page.waitForEvent('download');
+ await page.locator('#clipDownload').click();
+ const mixDownload=await mixEvent;
+ const mixPath=join(work,'original-only.'+mixDownload.suggestedFilename().split('.').pop());
+ await mixDownload.saveAs(mixPath);
+ await verifyVideo(mixPath);
+ const mixedAudio=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=noprint_wrappers=1:nokey=1',mixPath],{encoding:'utf8'}).trim();
+ assert.ok(mixedAudio,'Original video audio must survive volume adjustment without a soundtrack');
+
  await page.locator('nav button[data-p="audio"]').click();
  await page.locator('#af').setInputFiles(audioInput);
  await page.waitForFunction(()=>!document.getElementById('aexp').disabled,{timeout:15000});
