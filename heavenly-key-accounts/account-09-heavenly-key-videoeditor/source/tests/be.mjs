@@ -55,6 +55,10 @@ async function request(path, { method = 'GET', body, cookie, headers = {} } = {}
   return { response, status: response.status, data: type.includes('json') ? await response.json() : null,
     cookie: (response.headers.get('set-cookie') || '').split(';')[0] };
 }
+const oversizedLogin=await request('login',{method:'POST',body:{email:'user@example.com',password:'x'.repeat(1025)}});
+check('Oversized login password rejected before password hashing',oversizedLogin.status===400);
+const malformedLogin=await request('login',{method:'POST',body:{email:{value:'user@example.com'},password:'123456789012'}});
+check('Malformed login email rejected before database lookup',malformedLogin.status===400);
 const healthy = await request('health');
 check('Health reports D1, media and AI bindings ready', healthy.status === 200 && healthy.data?.status === 'ready' && Object.keys(healthy.data).length === 1);
 const missingAI = await onRequest({
