@@ -9,6 +9,12 @@ import {createHmac} from 'node:crypto';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 execFileSync(process.execPath,[path.join(root,'scripts/bundle-control-room.mjs')]);
 const {default:app}=await import(pathToFileURL(path.join(root,'build/meeting-worker.mjs')));
+test('TURN readiness requires a valid relay URL and a sufficiently long secret',async()=>{
+ const health=async env=>(await (await app.fetch(new Request('https://meeting/api/health'),env,{})).json()).turnConfigured;
+ assert.equal(await health({TURN_URLS:'invalid',TURN_SHARED_SECRET:'x'.repeat(40)}),false);
+ assert.equal(await health({TURN_URLS:'turn:relay.example.org:3478',TURN_SHARED_SECRET:'short'}),false);
+ assert.equal(await health({TURN_URLS:'turn:relay.example.org:3478',TURN_SHARED_SECRET:'x'.repeat(40)}),true);
+});
 test('complete Control Room bundle serves exact public assets and excludes private sources',async()=>{
  for(const name of ['index.html','studio-theme.css','bg/globe-doves.jpg','icons/icon-192.png']){
   // Icon naming differs between supplied packages; check the actual manifest below.
