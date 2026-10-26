@@ -32,4 +32,18 @@ const ecosystem=html.indexOf('data-cms-section="ecosystem"');
 assert.ok(ecosystem>html.indexOf('data-cms-section="welcome"')&&ecosystem<html.indexOf('data-cms-section="assignment"'),'Ecosystem position changed');
 const globe=readFileSync(resolve(dir,'css/heavenly-ecosystem.css'),'utf8');
 assert.match(globe,/@keyframes hk-land-drift/);
+
+// All public pages use the shared unobtrusive finish without changing ministry content.
+const publicPages=['about','contact','grdpc','i-said-yes','meet-the-pastor','ministries','partner','privacy','radio','resources','social-handles','steps-to-salvation','terms','the-ministry','what-we-believe'];
+const finish=readFileSync(resolve(dir,'css/global-clean-finish.css'),'utf8');
+assert.ok(finish.includes('background-image:'),'Premium backdrop must remain available');
+assert.ok(html.includes('css/global-clean-finish.css'),'Homepage must include shared finish');
+assert.ok(html.includes('https://radio.heavenlykey.org/'),'Homepage radio must point to verified current service');
+assert.doesNotMatch(html,/href=["']pages\/radio(?:\.html)?["']/i,'Old homepage radio links must not recur');
+for(const page of publicPages){
+ const pageHtml=readFileSync(resolve(dir,'pages',page+'.html'),'utf8');
+ assert.ok(pageHtml.includes('/css/global-clean-finish.css'), 'Missing shared background on '+page);
+ assert.doesNotMatch(pageHtml,/href=["'](?:\/pages\/radio(?:\.html)?|\.\/radio\.html)["']/i,'Old radio link found on '+page);
+}
+
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
