@@ -56,3 +56,6 @@
 .hk-app-window-bar button{min-width:44px;min-height:44px}
 @media(max-width:720px){.hk-app-window{top: max(8px,env(safe-area-inset-top))!important;height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));max-height:none!important;min-width:0!important;min-height:0!important}.hk-app-minimized{bottom:max(12px,env(safe-area-inset-bottom))}.hk-page-app-section .hk-app-dock{max-width:100%}}
 @media(max-width:360px){.hk-dock-tab,.hk-page-app-section .hk-dock-tab{width:min(210px,68vw);min-height:52px}.hk-dock-list{padding-right:8px}.hk-dock-pole{width:12px}}
+
+/* Contextual guidance for visitors, including assistive technology. */
+.hk-app-feedback{margin:0;padding:8px 12px;font:600 12px/1.45 system-ui,sans-serif;color:#244736;background:#f1f8f3;border-bottom:1px solid #d9e7de}
