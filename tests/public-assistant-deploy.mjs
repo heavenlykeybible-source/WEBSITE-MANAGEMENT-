@@ -18,14 +18,14 @@ try{
    if(method==='PUT'){
     uploaded=JSON.parse(await init.body.get('metadata').text());
     const source=await init.body.get('assistant.mjs').text();assert.ok(source.length>10000);
-    if(mode==='missing'){assert.deepEqual(uploaded.bindings,[{type:'d1',name:'LIMITS',id:'public-counter-id'},{type:'ai',name:'AI'}]);assert.ok(!source.includes('cms_publications'));}
+    if(mode==='missing'){assert.deepEqual(uploaded.bindings,[{type:'durable_object_namespace',name:'LIMITS',class_name:'PublicChatLimits'},{type:'ai',name:'AI'}]);assert.deepEqual(uploaded.migrations,{new_tag:'public-chat-v1',new_sqlite_classes:['PublicChatLimits']});assert.ok(!source.includes('cms_publications'));}
     else{assert.ok(uploaded.keep_bindings.includes('secret_text'));assert.equal(uploaded.bindings,undefined);assert.equal(uploaded.keep_assets,true);}
    }
    return Response.json({success:true,result:u.pathname.endsWith('/workers/subdomain')?{subdomain:'fixture'}:{}});
   };
   const run=()=>import('../scripts/deploy-public-assistant.mjs?fixture='+mode);
   if(mode==='denied'){await assert.rejects(run(),/HTTP 403/);assert.equal(writes.length,0);}
-  else{await run();assert.equal(writes.filter(x=>x.method==='PUT').length,1);assert.equal(writes.some(x=>x.path.includes('/d1/database')),mode==='missing');}
+  else{await run();assert.equal(writes.filter(x=>x.method==='PUT').length,1);assert.equal(writes.some(x=>x.path.includes('/d1/database')),false);}
  }
  console.log('PASS public assistant deployment: denied reads never create resources, absent service uses isolated counters, existing bindings/secrets retained, health and inference checked. Provider calls mocked.');
 }finally{globalThis.fetch=originalFetch;if(originalAccount===undefined)delete process.env.CLOUDFLARE_ACCOUNT_ID;else process.env.CLOUDFLARE_ACCOUNT_ID=originalAccount;if(originalToken===undefined)delete process.env.CLOUDFLARE_API_TOKEN;else process.env.CLOUDFLARE_API_TOKEN=originalToken;}
