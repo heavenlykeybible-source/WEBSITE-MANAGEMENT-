@@ -122,6 +122,7 @@ $('inv').onclick=async()=>{$('invrow').hidden=true;local=await getMedia(false);i
 
 async function onSig(d){try{
  if(d.sdp){if(pc)pc.close();pc=new RTCPeerConnection({iceServers:ice});
+  const current=pc;pc.onconnectionstatechange=()=>{if(pc!==current||over)return;const state=current.connectionState;if(state==='failed')note('Media could not connect on this network. Rejoin or ask the host to configure a TURN relay.');else if(state==='disconnected')note('Media connection interrupted. Attempting recovery.');else if(state==='connected')note('Audio and video connected.')};
   pc.onicecandidate=e=>{if(e.candidate)send({t:'sig',data:{c:e.candidate}})};
   pc.ontrack=e=>{$('rv').srcObject=e.streams[0]||new MediaStream([e.track]);$('rv').play().catch(()=>{})};
   await pc.setRemoteDescription(d.sdp);if(local)local.getTracks().forEach(t=>pc.addTrack(t,local));
