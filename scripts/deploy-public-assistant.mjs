@@ -24,7 +24,7 @@ const after=await api(base+'/settings');
 for(const b of settings?.bindings||addedBindings){const found=after.bindings?.find(x=>x.name===b.name&&x.type===b.type);if(!found||Object.entries(b).some(([k,v])=>JSON.stringify(found[k])!==JSON.stringify(v)))throw Error('Binding verification differs after upload. Inspect before retrying.');}
 await api(base+'/subdomain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:true})});
 const subdomain=await api(root+'/workers/subdomain'),origin='https://'+worker+'.'+subdomain.subdomain+'.workers.dev';
-const health=await fetch(origin+'/health',{signal:AbortSignal.timeout(20000)});if(!health.ok)throw Error('Public assistant uploaded but health verification failed: '+health.status);
+let health;for(let attempt=0;attempt<6;attempt++){health=await fetch(origin+'/health',{cache:'no-store',signal:AbortSignal.timeout(20000)});if(health.ok)break;if(health.body)await health.body.cancel();if(attempt<5)await new Promise(resolve=>setTimeout(resolve,5000));}if(!health.ok)throw Error('Public assistant uploaded but health verification failed: '+health.status);
 const probe=await fetch(origin+'/v1/assistant',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://apps.heavenlykey.org'},body:JSON.stringify({message:'What is the official Heavenly Key website?'}),signal:AbortSignal.timeout(30000)});
 const result=await probe.json();if(!probe.ok||result.ok!==true||!result.response)throw Error('Public assistant uploaded but real inference failed: HTTP '+probe.status+' '+(result.code||result.error||'no response'));
 console.log('SUCCESS: public assistant deployed at '+origin+'; preserved bindings, health and real AI response verified.');
