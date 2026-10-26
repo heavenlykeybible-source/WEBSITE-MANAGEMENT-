@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn, spawnSync, execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { mkdtemp, readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -116,6 +116,11 @@ try{
  await verifyVideo(timelinePath);
  const audioCodec=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=noprint_wrappers=1:nokey=1',timelinePath],{encoding:'utf8'}).trim();
  assert.ok(audioCodec.length>0,'Timeline soundtrack export must include a decodable audio stream');
+ const volumeProbe=spawnSync('ffmpeg',['-hide_banner','-nostats','-i',timelinePath,'-map','0:a:0','-af','volumedetect','-f','null','-'],{encoding:'utf8',timeout:20000});
+ assert.equal(volumeProbe.status,0,'Exported soundtrack must be decodable through its full stream');
+ const meanMatch=volumeProbe.stderr.match(/mean_volume:\s*(-?[0-9.]+) dB/);
+ assert.ok(meanMatch&&Number(meanMatch[1])>-65,'Exported soundtrack must contain audible samples, not merely an empty audio track');
+
  // Enable looping and verify that changing the soundtrack option invalidates a stale download.
  await page.locator('#clipAudioOffset').fill('601');
  await page.locator('#clipExport').click();
