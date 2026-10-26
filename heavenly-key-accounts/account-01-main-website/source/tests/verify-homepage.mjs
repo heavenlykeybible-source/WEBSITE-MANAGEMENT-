@@ -48,4 +48,17 @@ for(const page of publicPages){
  assert.doesNotMatch(pageHtml,/href=["'](?:\.\/)?[a-z0-9-]+\.html(?:[?#][^"']*)?["']/i,'Relative .html navigation must not recur on '+page);
 }
 
+
+const menuCss=readFileSync(resolve(dir,'css/premium-menus-shared.css'),'utf8');
+assert.ok(menuCss.includes('nav#main-nav[data-open="false"]'), 'Closed mobile navigation must be hidden');
+assert.ok(menuCss.includes('prefers-reduced-motion'), 'Menu motion accessibility must be preserved');
+for(const [name,pageHtml] of [['homepage',html],...publicPages.map(page=>[page,readFileSync(resolve(dir,'pages',page+'.html'),'utf8')])]){
+ assert.ok(pageHtml.includes('premium-menus-shared.css'), 'Missing common navigation design on '+name);
+ assert.ok(!pageHtml.includes('class="main-nav" style="display:block!important"'), 'Inline style prevents mobile navigation closing on '+name);
+ if(pageHtml.includes('class="main-nav"')){
+   assert.match(pageHtml, /aria-controls="main-nav"/, 'Mobile menu control is missing on '+name);
+   assert.match(pageHtml, /id="main-nav" data-open="false"/, 'Mobile menu initial state missing on '+name);
+ }
+}
+
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
