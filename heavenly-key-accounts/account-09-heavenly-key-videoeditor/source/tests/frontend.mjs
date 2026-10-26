@@ -70,6 +70,7 @@ execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
 assert.ok(html.includes('id="fitmode"')&&html.includes("state.fit==='cover'")===false,'Framing selector stays in editor with cloud handling in module');
 assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'"),'Local/cloud project framing must restore');
 const timelineScript=readFileSync('timeline.js','utf8');
+assert.ok(timeline.includes("scale=Math.min((w*sz)/pip.videoWidth,(h-2*margin)/pip.videoHeight)"),'Picture-in-picture must fit tall videos within canvas height');
 for(const feature of ['id="clipPipOpacity"',"ctx.globalAlpha=opacity","pipOpacity:Number($('clipPipOpacity').value)","data.pipOpacity>=0&&data.pipOpacity<=100"]) assert.ok(timeline.includes(feature),'Picture-in-picture opacity missing '+feature);
 for(const feature of ['id="clipPipFile"','id="clipPipSize"','id="clipPipPosition"','id="clipPipOffset"',"drawOverlay:ctx=>","syncPip(progress)"]) assert.ok(timeline.includes(feature),'Picture-in-picture missing '+feature);
 assert.ok(html.includes("window.hkTimeline?.drawOverlay?.(cx)"),'Secondary video must reach canvas preview and export');
