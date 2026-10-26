@@ -166,3 +166,10 @@ test('Joining guards repeated clicks and handles failed websocket creation', () 
  assert.match(source,/if\(over\|\|ws!==currentSocket\)return/);
  assert.match(source,/catch\(e\)\{connecting=false;end\('The meeting link could not open/);
 });
+
+test('Screen sharing restores the actual camera and stops captures after setup failures', () => {
+ const source=readFileSync(resolve(root,'site/join.html'),'utf8');
+ assert.match(source,/const originalTrack=s\.track;await s\.replaceTrack\(t\);camTrack=originalTrack/);
+ assert.match(source,/if\(capture\)capture\.getTracks\(\)\.forEach\(t=>t\.stop\(\)\)/);
+ assert.match(source,/if\(s&&camTrack\)await s\.replaceTrack\(camTrack\)/);
+});
