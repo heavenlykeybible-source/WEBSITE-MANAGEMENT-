@@ -95,7 +95,7 @@ export class MeetingRooms {
    else{
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;const gd=this.data(g);
     if(m.t==='admit'&&!gd.ok&&!gd.aud){
-     if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});
+     if(this.stage().length+this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});
      gd.ok=true;gd.stage=true;if(gd.pass&&!h.admitted.includes(gd.pass))h.admitted=h.admitted.concat(gd.pass).slice(-20);
      this.save(host,h);this.save(g,gd);this.send(g,{t:'admitted'});this.send(host,{t:'joined',gid:gd.id,name:gd.name,ao:gd.ao});
     }else if(m.t==='deny')this.close(g,{t:'denied'});
