@@ -92,4 +92,15 @@ assert.ok(sw.includes('"/404.html"')&&sw.includes('"/500.html"'), 'Branded recov
 assert.ok(sw.includes('status: res.status'), 'Public error recovery must preserve correct HTTP error status');
 assert.ok(sw.includes('res.status === 404 || res.status >= 500'), 'HTML navigation errors must be handled explicitly');
 
+
+const appDock=readFileSync(resolve(dir,'js/president-app-dock.js'),'utf8');
+const appDockCss=readFileSync(resolve(dir,'css/president-app-dock.css'),'utf8');
+assert.ok(html.includes('president-app-dock.js')&&html.includes('president-app-dock.css'),'Homepage must load approved president app dock');
+for(const id of ['radio','assistant','bible','social','walk','study','eternity'])assert.ok(appDock.includes("id:'"+id+"'"),'Missing ministry app: '+id);
+assert.ok(appDock.includes("url:'/eternity-in-view/'"),'Eternity in View must use its actual site route');
+assert.ok(appDock.includes('target="_blank"')&&appDock.includes('noopener noreferrer'),'App page must open safely in new tab');
+assert.ok(appDock.includes("function minimize()")&&appDock.includes("function close()"),'Popup minimize/close behavior missing');
+assert.ok(appDockCss.includes('.hk-dock-pole')&&appDockCss.includes('right:'),'Red pole must be anchored to right');
+assert.ok(appDock.includes('app.native'),'Unverified integrations must not masquerade as working apps');
+
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
