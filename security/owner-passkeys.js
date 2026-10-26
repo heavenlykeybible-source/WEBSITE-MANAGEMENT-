@@ -1,7 +1,7 @@
 import {generateRegistrationOptions,verifyRegistrationResponse,generateAuthenticationOptions,verifyAuthenticationResponse} from '@simplewebauthn/server';
 
 // Public keys only. Device biometrics never leave the authenticator.
-export function createOwnerPasskeyRoutes({json,fail,body,reauthenticate,audit,withOperationLock}) {
+export function createOwnerPasskeyRoutes({json,fail,body,reauthenticate,audit,withOperationLock,createLoginSession}) {
  const prefix=user=>'owner-passkey:'+user.id+':';
  const bytes=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
  const base64=a=>btoa(String.fromCharCode(...a));
@@ -39,7 +39,7 @@ export function createOwnerPasskeyRoutes({json,fail,body,reauthenticate,audit,wi
     try{result=await verifyRegistrationResponse({response:b.credential,expectedChallenge:c.challenge,expectedOrigin:origin,expectedRPID:rpID,requireUserVerification:true,supportedAlgorithmIDs:[-7,-257]});}catch{fail('Device registration could not be verified. Try again.',403);}
     if(!result.verified||!result.registrationInfo)fail('Device registration not verified',403);
     const credential=result.registrationInfo.credential;
-    await save(env,prefix(user)+await digest(credential.id),{id:credential.id,publicKey:base64(credential.publicKey),counter:credential.counter,transports:credential.transports||[],label:String(b.label||'Owner device').slice(0,80),created_at:new Date().toISOString()});
+    await save(env,prefix(user)+await digest(credential.id),{id:credential.id,publicKey:base64(credential.publicKey),counter:credential.counter,rpId:rpID,transports:credential.transports||[],label:String(b.label||'Owner device').slice(0,80),created_at:new Date().toISOString()});
     await audit(env,user.username,'passkey-registered','Owner device');return json({verified:true});
    }
    if(sub==='passkeys/authenticate/options'){
@@ -62,5 +62,38 @@ export function createOwnerPasskeyRoutes({json,fail,body,reauthenticate,audit,wi
    fail('Unknown passkey endpoint',404);
   });
  }
- return {routes,consumeProof};
+ async function loginRoutes(req,env){
+  const url=new URL(req.url),origin=url.origin,rpID=url.hostname;
+  if(req.method!=='POST'||!['/api/passkey-login/options','/api/passkey-login/verify'].includes(url.pathname))return null;
+  if(url.protocol!=='https:'||req.headers.get('origin')!==origin||req.headers.get('sec-fetch-site')==='cross-site')fail('Use the secure Control Room sign-in page.',403);
+  const ip='passkey-login:'+(req.headers.get('cf-connecting-ip')||'unknown'),now=Date.now();
+  const attempts=await env.DB.prepare('SELECT COUNT(*) n FROM login_attempts WHERE ip=? AND ts>?').bind(ip,now-600000).first();if(attempts.n>=20)fail('Too many sign-in requests. Wait ten minutes.',429);
+  await env.DB.prepare('INSERT INTO login_attempts(ip,ts) VALUES(?,?)').bind(ip,now).run();
+  await env.DB.prepare("DELETE FROM settings WHERE key LIKE 'passkey-login:%' AND json_extract(value_json,'$.expires')<?").bind(now).run();
+  const b=await body(req);if(!/^[a-f0-9-]{36}$/.test(String(b.request_id||'')))fail('Invalid sign-in request');
+  const clear='cr_passkey_login=; Path=/api/passkey-login; HttpOnly; Secure; SameSite=Strict; Max-Age=0';
+  if(url.pathname.endsWith('/options')){
+   const identifier=String(b.user||'').trim().toLowerCase();if(!identifier||identifier.length>200)fail('Enter your username or email first');
+   const user=await env.DB.prepare("SELECT * FROM users WHERE (lower(username)=? OR lower(email)=?) AND role='owner' AND kind='staff' AND status='active'").bind(identifier,identifier).first();
+   const credentials=user?(await list(env,user)).filter(c=>!c.rpId||c.rpId===rpID):[];
+   if(!user||!credentials.length)fail('Use your password first, then register this device under AI permissions.',409);
+   const options=await generateAuthenticationOptions({rpID,userVerification:'required',allowCredentials:credentials.map(c=>({id:c.id,transports:c.transports}))});
+   const nonce=crypto.randomUUID()+crypto.randomUUID();await save(env,'passkey-login:'+await digest(nonce),{user:user.id,pass_ver:user.pass_ver,origin,requestId:b.request_id,challenge:options.challenge,expires:now+300000});
+   const response=json(options);response.headers.set('set-cookie','cr_passkey_login='+nonce+'; Path=/api/passkey-login; HttpOnly; Secure; SameSite=Strict; Max-Age=300');return response;
+  }
+  const nonce=(req.headers.get('cookie')||'').match(/(?:^|;\s*)cr_passkey_login=([a-f0-9-]{72})(?:;|$)/)?.[1];if(!nonce)fail('Sign-in expired. Try again.',403);
+  const row=await env.DB.prepare('DELETE FROM settings WHERE key=? RETURNING value_json').bind('passkey-login:'+await digest(nonce)).first();if(!row)fail('Sign-in expired or already used.',403);
+  const pending=JSON.parse(row.value_json);if(pending.origin!==origin||pending.requestId!==b.request_id||pending.expires<now)fail('Sign-in request does not match or expired.',403);
+  return withOperationLock(env,'owner-passkeys:'+pending.user,async()=>{
+   const user=await env.DB.prepare("SELECT * FROM users WHERE id=? AND role='owner' AND kind='staff' AND status='active'").bind(pending.user).first();if(!user||user.pass_ver!==pending.pass_ver)fail('Account changed. Sign in again.',403);
+   const credential=(await list(env,user)).find(c=>c.id===b.credential?.id&&(!c.rpId||c.rpId===rpID));if(!credential)fail('Unregistered sign-in device',403);
+   const handle=b.credential?.response?.userHandle,expected=btoa('owner:'+user.id).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');if(handle&&handle!==expected)fail('Device belongs to a different account',403);
+   let verified;try{verified=await verifyAuthenticationResponse({response:b.credential,expectedChallenge:pending.challenge,expectedOrigin:origin,expectedRPID:rpID,credential:{id:credential.id,publicKey:bytes(credential.publicKey),counter:credential.counter,transports:credential.transports},requireUserVerification:true});}catch{fail('Device sign-in could not be verified. Try your password.',403);}
+   if(!verified.verified)fail('Device sign-in failed',403);
+   const {key,...stored}=credential;stored.counter=verified.authenticationInfo.newCounter;await save(env,key,stored);
+   await env.DB.prepare("UPDATE users SET last_login=datetime('now') WHERE id=?").bind(user.id).run();await audit(env,user.username,'passkey-login',rpID);
+   const response=await createLoginSession(env,user);response.headers.append('set-cookie',clear);return response;
+  });
+ }
+ return {routes,consumeProof,loginRoutes};
 }

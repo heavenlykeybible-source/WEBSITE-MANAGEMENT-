@@ -53,6 +53,11 @@ button('Approve this version').onclick();await flush();assert.equal(publications
 find(body,n=>n.tag==='input'&&n.type==='checkbox').checked=true;
 find(body,n=>n.attributes.placeholder==='Your current password to approve').value='confirm-password';
 button('Approve this version').onclick();await flush();assert.equal(publications,1);
+const beforeInlineApp=app.children.slice(),inline=new Node('section');body.appendChild(inline);await context.openP(1,inline);
+assert.equal(find(inline,n=>n.tag==='h3'&&n.textContent==='Update')?.textContent,'Update','Proposal review renders inside the supplied chat card');
+assert.ok(find(inline,n=>n.tag==='button'&&n.textContent==='Approve this version'));
+assert.equal(find(body,n=>n.tag==='dialog'),null,'Chat review must not open a separate dialog');
+assert.deepEqual(app.children,beforeInlineApp,'Chat review must preserve the active workspace');inline.remove();
 await context.releaseHistory();button('Prepare recovery proposal').onclick();await flush();
 const dialog=find(body,n=>n.tag==='dialog');assert.equal(dialog.open,true);assert.equal(find(dialog,n=>n.tag==='input').type,'password');find(dialog,n=>n.tag==='input').value='confirm-password';find(dialog,n=>n.tag==='button'&&n.textContent==='Confirm with password').onclick();await flush();assert.equal(restores,1);assert.equal(find(body,n=>n.tag==='h3'&&n.textContent==='Recovery')?.textContent,'Recovery');
 console.log('PASS dashboard interaction flow: staged review, acknowledgement, masked password, approval, release history and recovery proposal (mock DOM)');
