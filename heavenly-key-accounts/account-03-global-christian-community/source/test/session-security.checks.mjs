@@ -71,6 +71,13 @@ test('unexpected API errors never expose internal database or stack details',()=
 test('rate limits retain a fixed window expiry',()=>{
  const worker=readFileSync(new URL('src/index.ts',base),'utf8');
  assert.match(worker,/previous\.until>now/);
- assert.match(worker,/until=previous\?\.until&&previous\.until>now\?previous\.until:now\+seconds\*1000/);
+ assert.match(worker,/until=previous&&previous\.until>now\?previous\.until:now\+seconds\*1000/);
  assert.match(worker,/JSON\.stringify\(\{n:count\+1,until\}\)/);
+});
+
+test('malformed rate-limit records are rejected without crashing',()=>{
+ const worker=readFileSync(new URL('src/index.ts',base),'utf8');
+ assert.match(worker,/if\(raw\)\{try\{/);
+ assert.match(worker,/Number\.isSafeInteger\(parsed\?\.n\)/);
+ assert.match(worker,/catch\{ \/\* Ignore malformed or obsolete rate-limit state\. \*\/ \}/);
 });
