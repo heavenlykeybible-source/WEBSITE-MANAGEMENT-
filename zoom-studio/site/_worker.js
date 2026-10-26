@@ -408,6 +408,7 @@ export default {
       if (path === '/api/signup' ? !(await rate(env, 'su:' + ipa, 5, 3600)) : !((await rate(env, 'li:' + ipa, 30, 900)) && (await rate(env, 'le:' + email, 8, 900)))) return json({ error: 'Too many attempts. Please wait a few minutes and try again.' }, 429);
       let u = await getUser(env, email);
       if (path === '/api/signup') {
+        return json({ error: 'Private preview: registration is closed. Contact the Heavenly Key administrator for an approved account.' }, 403);
         if (reserved(env, email) || email.endsWith('@studio.local')) return json({ error: 'Ask the owner or an admin to create this account.' }, 403);
         if (b.agree !== true) return json({ error: 'Please confirm you are 18 or older and agree to the Terms and Privacy Policy.' }, 400);
         if (!stretched(password)) return json({ error: 'Please refresh the page and try again.' }, 400);
@@ -419,6 +420,7 @@ export default {
         if (mailOn(env)) await sendVerify(env, url, email);
       } else if (!u || (await pw(env, password, u.salt)) !== u.hash) return json({ error: 'Wrong email or password.' }, 401);
       if (u.banned) return json({ error: 'This account is suspended.' }, 403);
+      if (path === '/api/login' && accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'This private preview requires administrator approval.' }, 403);
       if (path === '/api/login') { u.seen = Date.now(); u.warned = 0; await putUser(env, email, u); }
       return json({ token: await sign(env.AUTH_SECRET, { e: email, t: u.tv || 0, exp: Date.now() + 30 * 864e5 }) });
     }
@@ -460,6 +462,7 @@ export default {
     if (!email) return json({ error: 'Please sign in.' }, 401);
     const u = await getUser(env, email); if (!u || (u.tv || 0) !== (tk.t || 0)) return json({ error: 'Please sign in.' }, 401);
     if (u.banned) return json({ error: 'This account is suspended.' }, 403);
+    if (accountRole(env,email,u)==='user' && u.terms!=='private-approved') return json({ error: 'Account awaiting administrator approval.' }, 403);
     const role = accountRole(env, email, u);
     const active = role !== 'user' || (u.paidUntil || 0) > Date.now();
     const verified = u.verified !== false;
@@ -553,7 +556,7 @@ export default {
           if (reserved(env, t) && !(role === 'owner' && t === 'admin@studio.local' && nextRole === 'admin')) return json({ error: 'This login is reserved. Choose another username.' }, 403);
           const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
           // INSERT (not upsert): concurrent creates must never replace an existing password.
-          const result = await env.TEAMDB.prepare('INSERT OR IGNORE INTO users(email,salt,hash,paid,verified,banned,tv,created,seen,role) VALUES(?,?,?,0,1,0,0,?,?,?)').bind(t, salt, await pw(env, b.password, salt), now, now, nextRole).run();
+          const result = await env.TEAMDB.prepare('INSERT OR IGNORE INTO users(email,salt,hash,paid,verified,banned,tv,created,seen,role,terms) VALUES(?,?,?,0,1,0,0,?,?,?,?)').bind(t, salt, await pw(env, b.password, salt), now, now, nextRole, 'private-approved').run();
           return result.meta.changes ? json({ ok: true, email: t, role: nextRole }, 201) : json({ error: 'That account already exists.' }, 409);
         }
         if (!tu) return json({ error: 'User not found.' }, 404);
@@ -567,6 +570,7 @@ export default {
           if (role !== 'owner' || !['user', 'admin'].includes(b.role) || reserved(env, t)) return json({ error: 'Only the owner can change admin roles.' }, 403);
           tu.role = b.role; tu.tv = (tu.tv || 0) + 1;
         }
+        else if (path === '/api/admin/approve') { tu.terms = b.approved === true ? 'private-approved' : 'private-revoked'; tu.tv = (tu.tv || 0) + 1; }
         else if (path === '/api/admin/grant') { const d = Math.max(-30, Math.min(365, +b.days || 0)); tu.paidUntil = Math.max(now, tu.paidUntil || 0) + d * 864e5; if (d < 0 && tu.paidUntil < now) tu.paidUntil = 0; }
         else if (path === '/api/admin/ban') { tu.banned = !!b.banned; tu.tv = (tu.tv || 0) + 1; }
         else return json({ error: 'Not found' }, 404);
