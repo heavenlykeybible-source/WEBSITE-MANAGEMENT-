@@ -102,7 +102,7 @@ export class MeetingRooms {
     else if(m.t==='kick'){h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.close(g,{t:'kick'});}
     else if(m.t==='mute')this.send(g,{t:'mute',on:!!m.on});
     else if(m.t==='sig'&&gd.stage&&signalPayloadOk(m.data))this.send(g,{t:'sig',data:m.data});
-    else if(m.t==='promote'&&gd.aud&&gd.ok){if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});gd.invited=true;this.save(g,gd);this.send(g,{t:'promoted'});}
+    else if(m.t==='promote'&&gd.aud&&gd.ok){if(this.stage().length+this.guests().filter(w=>this.data(w).invited).length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});gd.invited=true;this.save(g,gd);this.send(g,{t:'promoted'});}
     else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.count();}
    }
   }else if(d.ok){
