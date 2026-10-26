@@ -87,9 +87,14 @@ test('meeting room rejects excess peers before allocating WebSockets',async()=>{
 function roomToken(extra={}){const p=Buffer.from(JSON.stringify({k:'meeting',u:'owner@test.local',r:'11111111-1111-4111-8111-111111111111',exp:Date.now()+60000,pe:Date.now()+86400000,...extra})).toString('base64url');return p+'.'+createHmac('sha256',secret).update(p).digest('hex');}
 const message=(room,w,m)=>room.webSocketMessage(w,JSON.stringify(m));
 async function openRoom(){const s=meeting(),host=s.add();await message(s.room,host,{t:'host',token:roomToken()});return {...s,host,key:host.messages.at(-1).key};}
+test('short TURN secrets never generate unusable relay credentials',async()=>{
+ const s=meeting();s.room.env.TURN_URLS='turn:relay.example:3478';s.room.env.TURN_SHARED_SECRET='short';
+ const host=s.add();await message(s.room,host,{t:'host',token:roomToken()});
+ const config=host.messages.at(-1);assert.equal(config.t,'created');assert.equal(config.ice.length,1);
+});
 test('TURN relay credentials are time-limited and never expose the shared secret',async()=>{
  const s=meeting();s.room.env.TURN_URLS='turn:relay.example:3478,turns:relay.example:5349';
- s.room.env.TURN_SHARED_SECRET='test-only-turn-secret';
+ s.room.env.TURN_SHARED_SECRET='test-only-turn-secret-with-32-chars';
  const host=s.add();await message(s.room,host,{t:'host',token:roomToken()});
  const config=host.messages.at(-1);
  assert.equal(config.t,'created');
