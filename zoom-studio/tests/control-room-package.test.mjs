@@ -235,6 +235,12 @@ test('meeting signaling ignores malformed SDP/ICE payloads',async()=>{
  const n=g.messages.length;await message(s.room,s.host,{t:'sig',to:g.d.id,data:null});
  await message(s.room,s.host,{t:'sig',to:g.d.id,data:['malformed']});assert.equal(g.messages.length,n);
  const count=s.host.messages.length;await message(s.room,g,{t:'sig',data:'invalid'});assert.equal(s.host.messages.length,count);
+ await message(s.room,s.host,{t:'sig',to:g.d.id,data:{sdp:{type:'offer',sdp:42}}});
+ await message(s.room,s.host,{t:'sig',to:g.d.id,data:{c:{candidate:42}}});
+ await message(s.room,s.host,{t:'sig',to:g.d.id,data:{unknown:'payload'}});
+ assert.equal(g.messages.length,n);
+ await message(s.room,s.host,{t:'sig',to:g.d.id,data:{sdp:{type:'offer',sdp:'v=0'}}});
+ assert.equal(g.messages.at(-1).data.sdp.sdp,'v=0');
 });
 test('audience moderation, promotion, expiry and host disconnect work across hibernation',async()=>{
  const s=await openRoom(),aud=s.add();await message(s.room,aud,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});assert.equal(aud.d.ok,true);assert.equal(aud.d.stage,false);
