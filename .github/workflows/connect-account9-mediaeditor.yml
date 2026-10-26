@@ -1,0 +1,47 @@
+name: Connect Account 9 mediaeditor custom domain
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/connect-account9-mediaeditor.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: account9-mediaeditor-domain
+  cancel-in-progress: false
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: account9-staging
+    steps:
+      - name: Verify and attach mediaeditor to existing Worker
+        env:
+          CF_TOKEN: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          const token=process.env.CF_TOKEN;
+          if(!token)throw Error('Missing Account 9 API token. No change was made.');
+          const base='https://api.cloudflare.com/client/v4/accounts/ceb3b48449319950191a4f6bae9b8b82/workers/domains';
+          const headers={Authorization:'Bearer '+token,'Content-Type':'application/json'};
+          async function api(path,method='GET',body){
+            const response=await fetch(base+path,{method,headers,body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(20000),redirect:'error'});
+            const data=await response.json().catch(()=>({success:false,errors:[]}));
+            if(!response.ok||!data.success)throw Error('Cloudflare '+method+' domain failed (HTTP '+response.status+', codes '+JSON.stringify((data.errors||[]).map(e=>e.code))+').');
+            return data.result;
+          }
+          const worker='heavenlykey-studio', hostname='mediaeditor.heavenlykey.org';
+          const domains=await api('');
+          const current=domains.find(d=>d.hostname===hostname);
+          if(current&&current.service!==worker)throw Error('Domain belongs to another Worker. Refusing to override existing route.');
+          if(current?.enabled){
+            console.log('PASS '+hostname+' already connected to '+worker);
+          }else{
+            const attached=await api('','PUT',{hostname,service:worker,zone_name:'heavenlykey.org',enabled:true,previews_enabled:false});
+            if(attached.hostname!==hostname||attached.service!==worker)throw Error('Unexpected Cloudflare custom domain response.');
+            console.log('PASS attached '+hostname+' to '+worker);
+          }
+          const verified=(await api('')).find(d=>d.hostname===hostname);
+          if(!verified||verified.service!==worker||!verified.enabled)throw Error('Final domain-to-Worker verification failed.');
+          console.log('PASS canonical Account 9 domain route verified');
+          JS
