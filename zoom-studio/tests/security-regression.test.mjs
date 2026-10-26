@@ -92,3 +92,30 @@ test('Account 8 Cloudflare D1 identity verification is read-only and fail-closed
   await assert.rejects(verifyAccount8({...env,CLOUDFLARE_ACCOUNT_ID:'ffffffffffffffffffffffffffffffff'},good),/Conflicting/);
   await assert.rejects(verifyAccount8({...env,STUDIO_D1_DATABASE_ID:'9549fc74-f6a8-4cf8-a066-7cb965c59b91'},good),/cannot reuse an existing shared production database/);
 });
+
+test('Account 8 generated Worker config keeps registration closed by default', () => {
+  const conf=resolve(root,'scripts/configure.mjs');
+  const base={
+    ...process.env,
+    MEETINGSPACE_TARGET_ACCOUNT:'8',
+    MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'6401a8f41a41f5325ba5bd4d006b4ff5',
+    CLOUDFLARE_ACCOUNT_ID:'6401a8f41a41f5325ba5bd4d006b4ff5',
+    STUDIO_D1_DATABASE_ID:'f47b2e3f-f937-4d6e-8891-f08d8bc4f6b8',
+    MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1',
+    MEETINGSPACE_SHARED_CLOUDFLARE_ACCOUNT:'1'
+  };
+  const check=(preview)=>{
+    const env={...base};delete env.MEETINGSPACE_PRIVATE_PREVIEW;
+    if(preview!==undefined)env.MEETINGSPACE_PRIVATE_PREVIEW=preview;
+    const result=spawnSync(process.execPath,[conf],{cwd:root,env,encoding:'utf8'});
+    assert.equal(result.status,0,result.stderr);
+    return JSON.parse(readFileSync(resolve(root,'wrangler.generated.json'),'utf8'));
+  };
+  for(const value of [undefined,'1','unexpected']) {
+    const config=check(value);
+    assert.equal(config.vars.MEETINGSPACE_PRIVATE_PREVIEW,'1');
+    assert.equal(config.d1_databases[0].database_id,base.STUDIO_D1_DATABASE_ID);
+    assert.equal(config.name,'heavenly-key-meetingspace');
+  }
+  assert.equal(check('0').vars.MEETINGSPACE_PRIVATE_PREVIEW,'0');
+});
