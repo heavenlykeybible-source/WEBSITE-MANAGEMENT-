@@ -32,7 +32,7 @@ async function verifyVideo(path){
  // Browser MediaRecorder WebM may omit Duration metadata even when the video is playable.
  // Verify an actual decoded video frame and valid video dimensions instead.
  const dimensions=execFileSync('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=width,height','-of','csv=p=0',path],{encoding:'utf8'}).trim();
- assert.match(dimensions,/^\\d+,\\d+$/,'Export must include a valid video stream');
+ assert.match(dimensions,/^[0-9]+,[0-9]+$/,'Export must include a valid video stream');
  execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-i',path,'-frames:v','1','-f','null','-'],{timeout:15000});
 }
 try{
@@ -63,6 +63,28 @@ try{
  const videoPath=join(work,'single.'+videoDownload.suggestedFilename().split('.').pop());
  await videoDownload.saveAs(videoPath);
  await verifyVideo(videoPath);
+ const audioInput=join(work,'sample.wav');
+ execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-f','lavfi','-i','sine=frequency=500:sample_rate=44100','-t','2.1',audioInput],{timeout:30000});
+ await page.locator('nav button[data-p="audio"]').click();
+ await page.locator('#af').setInputFiles(audioInput);
+ await page.waitForFunction(()=>!document.getElementById('aexp').disabled,{timeout:15000});
+ await page.locator('#as').fill('0.2');
+ await page.locator('#ae').fill('1.7');
+ const audioEvent=page.waitForEvent('download');
+ await page.locator('#aexp').click();
+ const audioDownload=await audioEvent;
+ const audioPath=join(work,'edited-audio.wav');
+ await audioDownload.saveAs(audioPath);
+ const audioInfo=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=sample_rate','-of','default=noprint_wrappers=1:nokey=1',audioPath],{encoding:'utf8'}).trim();
+ assert.ok(Number(audioInfo)>=8000,'WAV export must contain decodable audio');
+ await page.locator('nav button[data-p="projects"]').click();
+ await page.locator('#pn').fill('Account 9 media E2E');
+ await page.locator('#psave').click();
+ assert.match(await page.locator('#pm').textContent(),/Saved on this device/);
+ await page.locator('#pn').fill('Changed project');
+ await page.locator('#pload').click();
+ assert.equal(await page.locator('#pn').inputValue(),'Account 9 media E2E');
+ console.log('PASS audio file import, WAV trimming/export/decode and local project save/reopen');
  assert.deepEqual(errors,[],'Browser page must not raise uncaught errors');
  console.log('PASS real video import, metadata, timeline clip/preview, timeline export/replay and single export/replay');
 }finally{
