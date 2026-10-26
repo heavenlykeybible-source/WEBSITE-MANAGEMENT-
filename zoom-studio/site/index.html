@@ -533,8 +533,12 @@ function gTrack(g,e){const st=e.streams[0]||new MediaStream([e.track]);
   for(const o of guests.values())if(o!==g&&o.mm)node.connect(o.mm)}
  ui()}
 async function gsig(g,d){try{if(!g.pc||g.pc.signalingState==='closed')return;
- if(d.sdp){await g.pc.setRemoteDescription(d.sdp);
-  for(const candidate of g.pendingIce.splice(0))await g.pc.addIceCandidate(candidate).catch(()=>{});
+ if(d.sdp){
+  // Hosts only initiate offers; ignore stale answers and unsolicited remote offers.
+  if(d.sdp.type!=='answer'||g.pc.signalingState!=='have-local-offer')return;
+  const activePc=g.pc;await activePc.setRemoteDescription(d.sdp);
+  if(g.pc!==activePc||activePc.signalingState==='closed')return;
+  for(const candidate of g.pendingIce.splice(0))await activePc.addIceCandidate(candidate).catch(()=>{});
   try{const snd=g.pc.getSenders().find(s=>s.track&&s.track.kind==='video');if(snd){const p=snd.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:700000}];await snd.setParameters(p)}}catch(e){}}
  else if(d.c){if(g.pc.remoteDescription)await g.pc.addIceCandidate(d.c).catch(()=>{});else if(g.pendingIce.length<100)g.pendingIce.push(d.c)}}catch(e){gSt('A guest media connection needs attention. Check their camera or network.')}}
 
