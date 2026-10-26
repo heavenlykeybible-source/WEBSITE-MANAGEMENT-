@@ -24,7 +24,7 @@ function init(){
   if(active?.id===app.id&&win.dataset.open==='true'){minimize();return;}
   if(app.id==='assistant'){
    const launcher=document.querySelector('#hkem-assistant .hkem-launcher');
-   if(launcher){if(active)minimize();launcher.click();return;}
+   if(launcher){if(active)close();launcher.click();return;}
   }
   active=app;title.textContent=app.name;pageLink.href=new URL(app.url,location.href).href;mini.textContent='Restore '+app.name;
   // Keep only Revival Radio alive while another app is selected; unload other inactive apps.
@@ -34,7 +34,7 @@ function init(){
    win.insertBefore(frame,win.querySelector('.hk-app-window-actions'));frames.set(app.id,frame);
   }else if(frames.has(app.id))frames.get(app.id).hidden=false;
   list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.app===app.id)));
-  win.style.removeProperty('left');win.style.removeProperty('top');win.style.removeProperty('right');win.style.removeProperty('position');win.dataset.open='true';mini.hidden=true;
+  win.style.removeProperty('left');win.style.removeProperty('top');win.style.removeProperty('right');win.style.removeProperty('position');win.dataset.open='true';mini.hidden=true;win.querySelector('[data-action="minimize"]').focus({preventScroll:true});
  }
  function minimize(){if(!active)return;win.dataset.open='false';mini.hidden=false;list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed','false'));}
  function close(){if(active){const frame=frames.get(active.id);if(frame){frame.remove();frames.delete(active.id)}}active=null;win.dataset.open='false';mini.hidden=true;list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed','false'));}
