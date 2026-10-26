@@ -60,12 +60,12 @@ const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),r
 const pass=(()=>{try{let p=sessionStorage.getItem('gp');if(!p){p=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');sessionStorage.setItem('gp',p)}return p}catch(e){return String(Math.random()).slice(2)}})();
 const NSPATH='https://cdn.jsdelivr.net/npm/@shiguredo/noise-suppression@2022.4.2/dist';let proc=null;
 function loadNS(){return window.Shiguredo?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src=NSPATH+'/noise_suppression.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
-let ws=null,pc=null,ice=[],local=null,camTrack=null,over=false,tries=0,pend=[],hand=false,sharing=false,onStage=false,joined=false;
+let ws=null,pc=null,ice=[],local=null,camTrack=null,shareTrack=null,over=false,tries=0,pend=[],hand=false,sharing=false,onStage=false,joined=false;
 const show=id=>['pre','wait','live','done'].forEach(s=>$(s).hidden=s!==id);
 const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
 const note=t=>{$('nt').textContent=t};
 function stopLocal(){try{proc&&proc.stopProcessing()}catch(e){}proc=null;if(local)local.getTracks().forEach(t=>t.stop());local=null}
-function end(msg){over=true;try{ws&&ws.close()}catch(e){}try{pc&&pc.close()}catch(e){}pc=null;stopLocal();show('done');$('dm').textContent=msg}
+function end(msg){over=true;try{ws&&ws.close()}catch(e){}try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();show('done');$('dm').textContent=msg}
 function mode(stage){onStage=stage;$('stg').hidden=!stage;$('audv').hidden=stage;$('aorow').hidden=true;if(!stage)$('invrow').hidden=$('invrow').hidden}
 if(AUD){$('nrrow').hidden=true;$('ti').textContent='Join the audience';$('intro').textContent='You are joining as a viewer. You can chat, raise your hand and react. The host may invite you to the stage. You do not need an account.';$('aorow').hidden=true;
  $('oktx').textContent='I understand my name and chat messages will be visible to the host and everyone in the room, and may appear on the broadcast. I agree to the Privacy Policy.'}
@@ -137,10 +137,10 @@ $('cam').onclick=()=>{const v=local?local.getVideoTracks():[];if(!v.length){note
 $('hand').onclick=()=>{hand=!hand;send({t:'hand',on:hand});$('hand').textContent=hand?'Lower hand':'Raise hand'};
 document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>send({t:'react',emoji:b.dataset.e}));
 const vsender=()=>pc&&pc.getSenders().find(s=>s.track&&s.track.kind==='video');
-async function stopShare(){const s=vsender();if(s&&camTrack)await s.replaceTrack(camTrack);sharing=false;$('shr').textContent='Share screen'}
+async function stopShare(){const t=shareTrack;shareTrack=null;const s=vsender();if(s&&camTrack)await s.replaceTrack(camTrack).catch(()=>{});camTrack=null;sharing=false;$('shr').textContent='Share screen';if(t&&t.readyState==='live')t.stop()}
 $('shr').onclick=async()=>{if(!navigator.mediaDevices.getDisplayMedia){note('Screen sharing is not available on this device.');return}
  if(sharing){stopShare();return}const s=vsender();if(!s){note('Join with a camera first to share your screen.');return}
- try{const st=await navigator.mediaDevices.getDisplayMedia({video:true}),t=st.getVideoTracks()[0];camTrack=s.track;await s.replaceTrack(t);sharing=true;$('shr').textContent='Stop sharing';t.onended=stopShare}catch(e){}};
+ try{const st=await navigator.mediaDevices.getDisplayMedia({video:true}),t=st.getVideoTracks()[0];camTrack=s.track;await s.replaceTrack(t);shareTrack=t;sharing=true;$('shr').textContent='Stop sharing';t.onended=stopShare}catch(e){}};
 function addChat(n,t){const d=document.createElement('div'),b=document.createElement('b');b.textContent=n+': ';d.append(b,document.createTextNode(t));$('cl').appendChild(d);while($('cl').children.length>80)$('cl').firstChild.remove();$('cl').scrollTop=1e9}
 $('cs').onclick=()=>{const t=$('ct').value.trim();if(t){send({t:'chat',text:t});$('ct').value=''}};
 $('ct').onkeydown=e=>{if(e.key==='Enter')$('cs').click()};
