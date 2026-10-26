@@ -71,3 +71,24 @@ test('production preflight rejects templates but accepts finalized notices', () 
     assert.match(result.stdout,/preflight passed/);
   } finally { rmSync(rootTmp,{recursive:true,force:true}); }
 });
+
+test('Account 8 Cloudflare D1 identity verification is read-only and fail-closed', async () => {
+  const { verifyAccount8 }=await import('../scripts/verify-deployment-identity.mjs');
+  const env={
+    MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef',
+    STUDIO_D1_DATABASE_ID:'f47b2e3f-f937-4d6e-8891-f08d8bc4f6b8',
+    CLOUDFLARE_API_TOKEN:'fixture-only'
+  };
+  let called=0;
+  const good=async (url, options)=>{
+    called++;
+    assert.match(url,/\/d1\/database\/f47b2e3f-f937-4d6e-8891-f08d8bc4f6b8$/);
+    assert.equal(options.method,undefined);
+    return {ok:true,json:async()=>({success:true,result:{uuid:env.STUDIO_D1_DATABASE_ID,name:'heavenly-key-meetingspace-db'}})};
+  };
+  assert.equal(await verifyAccount8(env,good),true);
+  assert.equal(called,1);
+  await assert.rejects(verifyAccount8(env,async()=>({ok:true,json:async()=>({success:true,result:{uuid:env.STUDIO_D1_DATABASE_ID,name:'wrong-db'}})})),/identity mismatch/);
+  await assert.rejects(verifyAccount8({...env,CLOUDFLARE_ACCOUNT_ID:'ffffffffffffffffffffffffffffffff'},good),/Conflicting/);
+  await assert.rejects(verifyAccount8({...env,STUDIO_D1_DATABASE_ID:'9549fc74-f6a8-4cf8-a066-7cb965c59b91'},good),/identity mismatch/);
+});
