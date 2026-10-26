@@ -33,7 +33,7 @@ function init(){
    win.insertBefore(frame,win.querySelector('.hk-app-window-actions'));frames.set(app.id,frame);
   }else if(frames.has(app.id))frames.get(app.id).hidden=false;
   list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.app===app.id)));
-  win.style.removeProperty('left');win.style.removeProperty('top');win.style.removeProperty('right');win.dataset.open='true';mini.hidden=true;
+  win.style.removeProperty('left');win.style.removeProperty('top');win.style.removeProperty('right');win.style.removeProperty('position');win.dataset.open='true';mini.hidden=true;
  }
  function minimize(){if(!active)return;win.dataset.open='false';mini.hidden=false;list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed','false'));}
  function close(){if(active){const frame=frames.get(active.id);if(frame){frame.remove();frames.delete(active.id)}}active=null;win.dataset.open='false';mini.hidden=true;list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed','false'));}
@@ -44,7 +44,7 @@ function init(){
  else if(action==='share'&&active){const data={title:'Heavenly Key — '+active.name,text:'Share this ministry resource to bless others',url:active.url};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(data.url);e.target.textContent='Link Copied';setTimeout(()=>{e.target.textContent='Share This to Bless Others'},1800)}else window.open('https://wa.me/?text='+encodeURIComponent(data.text+' '+data.url),'_blank','noopener,noreferrer')}catch(err){if(err.name!=='AbortError')console.warn('Share was not completed');}}
  });
  mini.addEventListener('click',()=>{if(active)select(active)});
- bar.addEventListener('pointerdown',e=>{if(e.target.closest('button')||matchMedia('(max-width:720px)').matches)return;drag={x:e.clientX,y:e.clientY,left:win.getBoundingClientRect().left,top:win.getBoundingClientRect().top};bar.setPointerCapture(e.pointerId)});
+ bar.addEventListener('pointerdown',e=>{if(e.target.closest('button')||matchMedia('(max-width:720px)').matches||e.button!==0)return;const box=win.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,left:box.left,top:box.top};win.style.position='fixed';win.style.left=box.left+'px';win.style.top=box.top+'px';win.style.right='auto';bar.setPointerCapture(e.pointerId)});
  bar.addEventListener('pointermove',e=>{if(!drag)return;const rect=win.getBoundingClientRect();win.style.left=Math.max(8,Math.min(window.innerWidth-rect.width-8,drag.left+e.clientX-drag.x))+'px';win.style.top=Math.max(8,Math.min(window.innerHeight-80,drag.top+e.clientY-drag.y))+'px';win.style.right='auto';});
  bar.addEventListener('pointerup',()=>drag=null);bar.addEventListener('pointercancel',()=>drag=null);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&win.dataset.open==='true')minimize()});
