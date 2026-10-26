@@ -91,7 +91,11 @@ export async function onRequest({ request: req, env, params }) {
           await env.DB.prepare('SELECT id FROM audit LIMIT 1').all();
           dbReady = true;
         }
-      } catch { dbReady = false; }
+      } catch (error) {
+        dbReady = false;
+        // Cloudflare logs identify the failing schema probe; public API remains redacted.
+        console.error('Account9 health: D1 readiness probe failed', String(error?.message || error).slice(0,200));
+      }
       const storageReady = Boolean(env.MEDIA && typeof env.MEDIA.get === 'function' && typeof env.MEDIA.put === 'function');
       const aiReady = Boolean(env.AI && typeof env.AI.run === 'function');
       const ready = dbReady && storageReady && aiReady;
