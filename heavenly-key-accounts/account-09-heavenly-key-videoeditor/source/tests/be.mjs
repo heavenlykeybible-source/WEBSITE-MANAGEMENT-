@@ -10,6 +10,7 @@ db.exec(readFileSync(new URL('../migrations/0003_audit_event_index.sql',import.m
 
 const objects = new Map();
 const env = {
+  ALLOW_PUBLIC_REGISTRATION: 'true', // Test fixture only; never set for production.
   DB: { prepare(sql) {
     const stmt = db.prepare(sql);
     let params = [];
@@ -54,6 +55,14 @@ async function request(path, { method = 'GET', body, cookie, headers = {} } = {}
   return { response, status: response.status, data: type.includes('json') ? await response.json() : null,
     cookie: (response.headers.get('set-cookie') || '').split(';')[0] };
 }
+const invalidProject=await request('projects',{method:'POST',body:{name:{bad:true},data:{}}});
+check('Unauthenticated project mutation remains blocked',invalidProject.status===401);
+const malformedRegistration=await request('register',{method:'POST',body:{email:{toString:'not-an-email'},password:{value:'invalid'}}});
+check('Registration rejects non-string credentials',malformedRegistration.status===400);
+const oversizedLogin=await request('login',{method:'POST',body:{email:'user@example.com',password:'x'.repeat(1025)}});
+check('Oversized login password rejected before password hashing',oversizedLogin.status===400);
+const malformedLogin=await request('login',{method:'POST',body:{email:{value:'user@example.com'},password:'123456789012'}});
+check('Malformed login email rejected before database lookup',malformedLogin.status===400);
 const healthy = await request('health');
 check('Health reports D1, media and AI bindings ready', healthy.status === 200 && healthy.data?.status === 'ready' && Object.keys(healthy.data).length === 1);
 const missingAI = await onRequest({
@@ -75,6 +84,8 @@ const uninitializedSchema = await onRequest({
 });
 check('Health detects uninitialized or missing D1 schema without leaking errors',uninitializedSchema.status===503&&(await uninitializedSchema.json()).status==='degraded');
 
+const closedRegistration = await onRequest({request:new Request('https://studio.example/api/register',{method:'POST',headers:{'x-requested-with':'hk','content-type':'application/json'},body:JSON.stringify({email:'blocked@example.com',password:'correct horse battery'})}),env:{...env,ALLOW_PUBLIC_REGISTRATION:undefined},params:{path:['register']}});
+check('Public registration disabled by default',closedRegistration.status===403);
 const invalid = await request('register', { method: 'POST', body: { email: 'invalid', password: 'long enough password' } });
 check('Invalid registration rejected', invalid.status === 400);
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
@@ -85,8 +96,24 @@ const me = await request('me', { cookie: login.cookie });
 check('Authenticated identity returned', me.status === 200 && me.data?.email === 'smoke@example.com');
 const unauthorized = await request('me');
 check('Anonymous identity request rejected', unauthorized.status === 401);
+const badName=await request('projects',{method:'POST',cookie:login.cookie,body:{name:{bad:true},data:{}}});
+check('Authenticated project creation rejects object names',badName.status===400);
+const tooLongName=await request('projects',{method:'POST',cookie:login.cookie,body:{name:'x'.repeat(101),data:{}}});
+check('Authenticated project creation rejects oversized names',tooLongName.status===400);
+const invalidData=await request('projects',{method:'POST',cookie:login.cookie,body:{name:'Invalid',data:['unexpected']}});
+check('Cloud project creation rejects array data',invalidData.status===400);
 const project = await request('projects', { method: 'POST', cookie: login.cookie, body: { name: 'Smoke test', data: { layers: [] } } });
 check('Project creation succeeds', project.status === 200 && !!project.data?.id);
+const badUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:{bad:true},data:{}}});
+check('Authenticated project update rejects object names',badUpdate.status===400);
+const oversizedUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'x'.repeat(101),data:{}}});
+check('Authenticated project update rejects oversized names',oversizedUpdate.status===400);
+const missingProjectData=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'Should not erase'}});
+check('Incomplete cloud project update cannot erase saved edits',missingProjectData.status===400);
+const invalidProjectUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'Invalid',data:['unexpected']}});
+check('Cloud project update rejects array data',invalidProjectUpdate.status===400);
+const projectAfterRejection=await request('projects/'+project.data.id,{cookie:login.cookie});
+check('Rejected project update preserves saved content',projectAfterRejection.status===200&&projectAfterRejection.data?.name==='Smoke test'&&Array.isArray(projectAfterRejection.data?.data?.layers));
 const projects = await request('projects', { cookie: login.cookie });
 check('Project listing succeeds', projects.status === 200 && Array.isArray(projects.data));
 const secondRegistered = await request('register',{method:'POST',body:{email:'other-user@example.com',password:'separate long passphrase'}});
