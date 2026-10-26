@@ -67,6 +67,8 @@ assert.ok(enhancement.includes('enhanceDownload'),'Enhanced audio download contr
 assert.ok(headers.includes('Content-Security-Policy'),'Missing CSP');
 execFileSync(process.execPath,['--check','public/integrations.js'],{stdio:'inherit'});
 execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
+assert.ok(html.includes('id="fitmode"')&&html.includes("state.fit==='cover'")===false,'Framing selector stays in editor with cloud handling in module');
+assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'"),'Local/cloud project framing must restore');
 const timelineScript=readFileSync('timeline.js','utf8');
 assert.ok(timeline.includes('clipFade')&&timeline.includes('fadeOpacity:')&&html.includes('window.hkTimeline?.fadeOpacity?.()'),'Clip edge fade must reach canvas export and preview renderer');
 assert.ok(timelineScript.includes("'video/mp4'")&&timelineScript.includes("mime.startsWith('video/mp4')?'mp4':'webm'"),'Timeline export must select correct browser-supported format and extension');
