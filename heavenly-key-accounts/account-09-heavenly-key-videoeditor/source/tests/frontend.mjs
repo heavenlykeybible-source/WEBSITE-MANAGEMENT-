@@ -72,6 +72,7 @@ assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'
 const timelineScript=readFileSync('timeline.js','utf8');
 assert.ok(timeline.includes("scale=Math.min((w*sz)/pip.videoWidth,(h-2*margin)/pip.videoHeight)"),'Picture-in-picture must fit tall videos within canvas height');
 for(const feature of ['id="clipPipOpacity"',"ctx.globalAlpha=opacity","pipOpacity:Number($('clipPipOpacity').value)","data.pipOpacity>=0&&data.pipOpacity<=100"]) assert.ok(timeline.includes(feature),'Picture-in-picture opacity missing '+feature);
+assert.ok(timeline.includes("pipLane.addEventListener('drop'") && timeline.includes("$('clipPipFile').files=transfer.files"),'Overlay lane must accept dropped video files');
 assert.ok(timeline.includes('id="clipPipTrack"') && timeline.includes('function paintPip()') && timeline.includes('paintSoundtrack();paintPip();'),'Secondary video timeline lane must render and restore');
 assert.ok(timeline.includes('timelineProgress=progress'),'Overlay renderer must receive live timeline progress');
 assert.ok(timeline.includes('progress=timelineProgress-offset'),'Overlay renderer must not refer to runTimeline local elapsed');
