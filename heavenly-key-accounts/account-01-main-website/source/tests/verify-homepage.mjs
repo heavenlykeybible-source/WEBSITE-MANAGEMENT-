@@ -114,6 +114,7 @@ assert.ok(appDock.includes("if(app.id==='assistant'&&!restoring)"),'Assistant la
 assert.ok(appDock.includes('iframe')&&appDock.includes("referrerPolicy='strict-origin-when-cross-origin'"),'External app frames must keep the privacy policy');
 assert.ok(appDockCss.includes('.hk-app-minimized[hidden]'),'Minimized app restore control must honor hidden state');
 assert.ok(appDock.includes("select(active,true)"),'Restore must reopen the selected app rather than toggle it closed');
+assert.ok(appDock.includes('new URL(app.url,location.href).origin===location.origin'),'Cross-origin apps sharing the current path must not be treated as local placeholders');
 assert.ok(appDock.includes('for(const frame of frames.values())frame.remove();frames.clear()'),'Closing an app must release retained radio frames');
 assert.ok(appDock.includes('/assets/ministry/approved-ai-transparent-original.png'),'Official assistant portrait must be used');
 assert.ok(existsSync(resolve(dir,'assets/ministry/approved-ai-transparent-original.png')),'Official assistant portrait asset must exist in the deployable website source');
