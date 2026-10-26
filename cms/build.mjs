@@ -8,7 +8,7 @@ else worker=mcpReview+'\n'+worker;
 const operations='// BEGIN CONTROL OPERATIONS\n'+fs.readFileSync(new URL('../workspace/operations.js',import.meta.url),'utf8')+'\n// END CONTROL OPERATIONS';
 if(worker.includes('// BEGIN CONTROL OPERATIONS'))worker=worker.replace(/\/\/ BEGIN CONTROL OPERATIONS[\s\S]*?\/\/ END CONTROL OPERATIONS/,()=>operations);
 else worker=operations+'\n'+worker;
-const screens='// BEGIN CONTROL SCREENS\n'+fs.readFileSync(new URL('../workspace/screens.js',import.meta.url),'utf8').replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END CONTROL SCREENS';
+const screens='// BEGIN CONTROL SCREENS\n'+(fs.readFileSync(new URL('../workspace/screens.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/apps-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END CONTROL SCREENS';
 if(worker.includes('// BEGIN CONTROL SCREENS'))worker=worker.replace(/\/\/ BEGIN CONTROL SCREENS[\s\S]*?\/\/ END CONTROL SCREENS/,()=>screens);
 else worker=worker.replace('var CURRENT_NAV=',screens+'\nvar CURRENT_NAV=');
 const passkeys=await build({entryPoints:[new URL('../security/owner-passkeys.js',import.meta.url).pathname],bundle:true,write:false,format:'iife',globalName:'OwnerPasskeys',platform:'browser',target:'es2022',minify:true});
