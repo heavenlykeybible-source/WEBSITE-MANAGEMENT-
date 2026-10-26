@@ -256,6 +256,23 @@ const oldDb = new DatabaseSync(':memory:');
 oldDb.exec(schema.replace(", role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('owner','admin','user'))", ''));
 oldDb.exec(fs.readFileSync(here + '../server/migrations/2026-10-roles.sql', 'utf8'));
 ok(oldDb.prepare('PRAGMA table_info(users)').all().some(c => c.name === 'role'), 'upgrade migration adds role to original schema');
+// Private access is enforced on both new login and already-issued session tokens.
+const privateUser='private-preview-user@test.com';
+const privateToken=await signup(privateUser);
+ok(!!privateToken,'legacy account setup fixture created');
+env.MEETINGSPACE_PRIVATE_PREVIEW='1';
+ok((await call('/api/signup',{body:{email:'blocked-private@test.com',password:st_('blocked-private@test.com','password123'),agree:true}})).s===403,'private preview refuses new public registrations');
+ok((await call('/api/me',{token:privateToken})).s===403,'existing unapproved session is refused');
+ok((await call('/api/login',{body:{email:privateUser,password:st_(privateUser,'password123')}})).s===403,'unapproved account cannot log in');
+const allowed=await call('/api/admin/approve',{token:changed.j.token,body:{email:privateUser,approved:true}});
+ok(allowed.s===200,'owner can approve a pre-existing account');
+const approvedLogin=await call('/api/login',{body:{email:privateUser,password:st_(privateUser,'password123')}});
+ok(approvedLogin.s===200&&!!approvedLogin.j.token,'approved account can sign in');
+ok((await call('/api/admin/approve',{token:approvedLogin.j.token,body:{email:privateUser,approved:true}})).s===403,'regular user cannot approve any account');
+const revoked=await call('/api/admin/approve',{token:changed.j.token,body:{email:privateUser,approved:false}});
+ok(revoked.s===200,'owner can revoke approved account');
+ok((await call('/api/me',{token:approvedLogin.j.token})).s===401,'revocation invalidates existing session');
+env.MEETINGSPACE_PRIVATE_PREVIEW='0';
 fs.unlinkSync(here + '_worker_under_test.mjs');
 
 // AI uses a currently supported model and never treats empty output as success.
