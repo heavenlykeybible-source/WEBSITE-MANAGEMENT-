@@ -67,3 +67,10 @@ test('unexpected API errors never expose internal database or stack details',()=
  assert.match(worker,/expected\?e\.message:"The request could not be completed\. Please try again\."/);
  assert.doesNotMatch(worker,/internal\?"The request could not be completed/);
 });
+
+test('rate limits retain a fixed window expiry',()=>{
+ const worker=readFileSync(new URL('src/index.ts',base),'utf8');
+ assert.match(worker,/previous\.until>now/);
+ assert.match(worker,/until=previous\?\.until&&previous\.until>now\?previous\.until:now\+seconds\*1000/);
+ assert.match(worker,/JSON\.stringify\(\{n:count\+1,until\}\)/);
+});
