@@ -94,8 +94,8 @@ function connect(){
  if(over)return;
  try{ws=new WebSocket(relay.replace(/\/+$/,'')+'/room')}catch(e){connecting=false;end('The meeting link could not open. Ask the host for a new invitation.');return}
  const currentSocket=ws;
- ws.onopen=()=>{send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked});if(!joined)show('wait')};
- ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}onMsg(m)};
+ ws.onopen=()=>{if(over||ws!==currentSocket)return;send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked});if(!joined)show('wait')};
+ ws.onmessage=e=>{if(over||ws!==currentSocket)return;let m;try{m=JSON.parse(e.data)}catch{return}onMsg(m)};
  ws.onclose=()=>{if(over||ws!==currentSocket)return;joined=false;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
  ws.onerror=()=>{}}
 
@@ -133,7 +133,7 @@ async function onSig(d){try{
   const a=await pc.createAnswer();await pc.setLocalDescription(a);send({t:'sig',data:{sdp:pc.localDescription}});
   try{const s=vsender();if(s){const p=s.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:600000}];await s.setParameters(p)}}catch(e){}
   for(const c of pend)await pc.addIceCandidate(c).catch(()=>{});pend=[]}
- else if(d.c){if(pc&&pc.remoteDescription)await pc.addIceCandidate(d.c);else pend.push(d.c)}
+ else if(d.c){if(pc&&pc.remoteDescription)await pc.addIceCandidate(d.c);else if(pend.length<100)pend.push(d.c)}
 }catch(e){note('Connection problem. Please leave and rejoin.')}}
 
 function setMic(on){if(!local)return;local.getAudioTracks().forEach(t=>t.enabled=on);$('mic').textContent=on?'Mute':'Unmute'}
