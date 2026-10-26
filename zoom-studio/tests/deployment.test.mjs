@@ -67,14 +67,29 @@ test('Account 8 requires explicit confirmation of its D1 database',()=>{
  assert.notEqual(r.status,0);assert.equal(r.config,null);
  assert.match(r.stderr,/Confirm the Account 8 D1 database/);
 });
-test('Account 8 cannot reuse the Account 7 Cloudflare identity',()=>{
+test('Account 8 requires deliberate approval to share its Cloudflare tenant',()=>{
  const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:target,MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'});
  assert.notEqual(r.status,0);assert.equal(r.config,null);
- assert.match(r.stderr,/cannot reuse the legacy Account 7/);
+ assert.match(r.stderr,/Shared Cloudflare account detected/);
 });
 test('malformed D1 IDs are rejected before configuration is generated',()=>{
  for(const id of ['11111111-1111-1111-1111-11111111111Z','------------------------------------']) {
   const r=configure({STUDIO_D1_DATABASE_ID:id});
   assert.notEqual(r.status,0);assert.equal(r.config,null);
+ }
+});
+
+test('same Cloudflare tenant supports isolated Account 8 only with explicit authorization',()=>{
+ const r=configure({MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:target,MEETINGSPACE_SHARED_CLOUDFLARE_ACCOUNT:'1',MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'});
+ assert.equal(r.status,0);
+ assert.equal(r.config.account_id,target);
+ assert.equal(r.config.name,'heavenly-key-meetingspace');
+ assert.equal(r.config.d1_databases[0].database_id,database);
+});
+test('same tenant cannot reuse legacy shared database IDs',()=>{
+ for(const legacyDb of ['9549fc74-f6a8-4cf8-a066-7cb965c59b91','c0fe5ca1-cb39-4fbb-bad0-e6b2fa8c825a']){
+ const r=configure({MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:target,MEETINGSPACE_SHARED_CLOUDFLARE_ACCOUNT:'1',STUDIO_D1_DATABASE_ID:legacyDb,MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'});
+ assert.notEqual(r.status,0);
+ assert.match(r.stderr,/requires a dedicated D1 database/);
  }
 });
