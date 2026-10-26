@@ -235,3 +235,10 @@ test('Host ignores rejected late ICE candidates without breaking further signali
  assert.match(host,/g\.pc\.addIceCandidate\(d\.c\)\.catch\(\(\)=>\{\}\)/);
  assert.match(host,/else if\(g\.pendingIce\.length<100\)g\.pendingIce\.push\(d\.c\)/);
 });
+
+test('Host accepts SDP answers only when an outgoing offer is pending', () => {
+ const host=readFileSync(resolve(root,'site/index.html'),'utf8');
+ assert.match(host,/if\(d\.sdp\.type!=='answer'\|\|g\.pc\.signalingState!=='have-local-offer'\)return/);
+ assert.match(host,/const activePc=g\.pc;await activePc\.setRemoteDescription\(d\.sdp\)/);
+ assert.match(host,/if\(g\.pc!==activePc\|\|activePc\.signalingState==='closed'\)return/);
+});
