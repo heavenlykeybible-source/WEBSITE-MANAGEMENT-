@@ -157,3 +157,12 @@ test('Host retries failed peer media using bounded ICE restarts', () => {
  assert.match(host,/g\.restartAttempts>=2/);
  assert.match(host,/if\(pc\.connectionState==='connected'\)g\.restartAttempts=0/);
 });
+
+test('Joining guards repeated clicks and handles failed websocket creation', () => {
+ const source=readFileSync(resolve(root,'site/join.html'),'utf8');
+ assert.match(source,/if\(connecting\|\|over\)return/);
+ assert.match(source,/connecting=true;\$\('go'\)\.disabled=true/);
+ assert.match(source,/connecting=false;\$\('go'\)\.disabled=false/);
+ assert.match(source,/if\(over\|\|ws!==currentSocket\)return/);
+ assert.match(source,/catch\(e\)\{connecting=false;end\('The meeting link could not open/);
+});
