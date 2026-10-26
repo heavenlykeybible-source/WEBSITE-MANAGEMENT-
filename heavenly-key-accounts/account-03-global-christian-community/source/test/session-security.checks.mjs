@@ -60,3 +60,10 @@ test('revoking one device preserves another device and legacy TTL sessions',asyn
 test('missing revocation migration denies authentication',async()=>{
  const f=fixture();try{const id=await auth.createSession(f.env,f.user);f.db.exec('DROP TABLE revoked_sessions');assert.equal(await auth.getSession(f.request(id),f.env),null);await assert.rejects(auth.destroySession(f.request(id),f.env));}finally{f.db.close();}
 });
+
+test('unexpected API errors never expose internal database or stack details',()=>{
+ const worker=readFileSync(new URL('src/index.ts',base),'utf8');
+ assert.match(worker,/const expected=e instanceof Error&&Number\.isInteger\(status\)&&status>=400&&status<500/);
+ assert.match(worker,/expected\?e\.message:"The request could not be completed\. Please try again\."/);
+ assert.doesNotMatch(worker,/internal\?"The request could not be completed/);
+});
