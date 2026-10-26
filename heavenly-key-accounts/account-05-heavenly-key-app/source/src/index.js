@@ -1,5 +1,6 @@
 // Independent Account 5 public app shell. Never import production D1/KV/R2,
 // administrator passwords or secrets from Cloudflare Accounts 1-4.
+import {routeIndependentApp} from './independent-apps.js';
 import {memberGateway} from './member-gateway.js';
 import {handleSiteSync} from './site-sync.js';
 const JSON_HEADERS={
@@ -42,6 +43,7 @@ export function createWorker(upstreamFetch=fetch) {
 
   async fetch(request, env) {
     const url = new URL(request.url);
+    const independent=await routeIndependentApp(request,env);if(independent)return independent;
     if(url.pathname==='/api/site-sync')return handleSiteSync(request,env,upstreamFetch);
     if(url.pathname.startsWith('/api/member/'))return memberGateway(request,env,upstreamFetch);
     if (url.pathname === "/api/health" && (request.method === "GET" || request.method === "HEAD")) {

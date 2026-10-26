@@ -41,21 +41,31 @@
       "account": 5,
       "worker": "heavenlykey-walk-with-god",
       "origin": "https://apps.heavenlykey.org/walk-offline.html",
-      "state": "planned-separation"
+      "state": "routing-release-pending",
+      "accountSubdomain": "heavenlykeyapp",
+      "workerOrigin": "https://heavenlykey-walk-with-god.heavenlykeyapp.workers.dev",
+      "verified": "Independent Worker and every original asset passed deployment 40367840849"
     },
     {
       "id": "eternity-in-view",
       "account": 5,
       "worker": "heavenlykey-eternity-in-view",
-      "state": "planned-separation"
+      "state": "routing-release-pending",
+      "accountSubdomain": "heavenlykeyapp",
+      "workerOrigin": "https://heavenlykey-eternity-in-view.heavenlykeyapp.workers.dev",
+      "verified": "Independent Worker and every original asset passed deployment 40367840849",
+      "origin": "https://apps.heavenlykey.org/eternity-in-view/"
     },
     {
       "id": "bible-study-portal",
       "account": 5,
       "worker": "heavenlykey-bible-study",
       "origin": "https://apps.heavenlykey.org/creation-to-eternity.html",
-      "state": "planned-separation",
-      "label": "From Creation to Eternity Bible study"
+      "state": "routing-release-pending",
+      "label": "From Creation to Eternity Bible study",
+      "accountSubdomain": "heavenlykeyapp",
+      "workerOrigin": "https://heavenlykey-bible-study.heavenlykeyapp.workers.dev",
+      "verified": "Independent Worker and every original asset passed deployment 40367840849"
     },
     {
       "id": "community",

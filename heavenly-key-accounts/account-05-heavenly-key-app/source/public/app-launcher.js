@@ -10,6 +10,7 @@
     ['🎵','Hymn Library','/hymns.html','Hymn texts'],
     ['🎧','Audio Hymnal','/audio-hymns.html','Approved hymn recordings'],
     ['🧮','My Walk With God','/walk-offline.html','Private offline notebook'],
+    ['⌛','Eternity in View','/eternity-in-view/','Salvation and eternity portal'],
     ['🎓','From Creation to Eternity','/creation-to-eternity.html','35 Bible lessons'],
     ['📻','Heavenly Key Radio','https://radio.heavenlykey.org/','Dedicated radio website'],
     ['🌍','Global Christian Community','https://global.heavenlykey.org/','Dedicated social network'],

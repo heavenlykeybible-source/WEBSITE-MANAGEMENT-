@@ -2,7 +2,20 @@ name: Deploy independent Account 5 small apps
 on:
   push:
     branches: [main]
-    paths: ['config/small-app-bundles.json', 'scripts/build-small-app-worker.mjs', 'scripts/deploy-account5-small-app.mjs', '.github/workflows/deploy-account5-small-apps.yml']
+    paths:
+      - 'config/small-app-bundles.json'
+      - 'scripts/build-small-app-worker.mjs'
+      - 'scripts/deploy-account5-small-app.mjs'
+      - 'scripts/select-small-app-deployment.mjs'
+      - '.github/workflows/deploy-account5-small-apps.yml'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/walk-offline*'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/offline-vault.js'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/offline-status.js'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/offline-noscript.css'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/creation-to-eternity*'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/hk-standard-footer*'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/cms-runtime*'
+      - 'heavenly-key-accounts/account-01-main-website/source/eternity-in-view/**'
   workflow_dispatch:
     inputs:
       app:
@@ -26,12 +39,21 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Select only apps affected by this change
+        id: changed
+        run: node scripts/select-small-app-deployment.mjs
+        env:
+          SMALL_APP_ID: ${{ matrix.app }}
+          BEFORE_SHA: ${{ github.event.before }}
+          REQUESTED_APP: ${{ inputs.app }}
       - run: node --test tests/small-app-isolation.test.mjs
       - run: node scripts/deploy-account5-small-app.mjs
-        if: github.event_name == 'push' || inputs.app == 'all' || inputs.app == matrix.app
+        if: steps.changed.outputs.deploy == 'true'
         env:
           SMALL_APP_ID: ${{ matrix.app }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT5_CLOUDFLARE_API_TOKEN }}

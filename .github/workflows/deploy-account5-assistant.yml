@@ -2,7 +2,7 @@ name: Deploy independent Account 5 Online Assistant
 on:
   push:
     branches: [main]
-    paths: ['public-assistant/**', 'config/platform-services.json', 'scripts/deploy-account5-assistant.mjs', 'tests/account5-assistant.test.mjs', '.github/workflows/deploy-account5-assistant.yml']
+    paths: ['public-assistant/**', 'scripts/deploy-account5-assistant.mjs', 'tests/account5-assistant.test.mjs', '.github/workflows/deploy-account5-assistant.yml']
   workflow_dispatch:
 permissions:
   contents: read
