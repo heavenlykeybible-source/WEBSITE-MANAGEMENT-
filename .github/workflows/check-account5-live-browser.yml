@@ -2,7 +2,7 @@ name: Verify Account 5 live app journeys
 on:
   push:
     branches: [main]
-    paths: ['tests/account5-live-browser.mjs', '.github/workflows/check-account5-live-browser.yml']
+    paths: ['tests/app-qr-live.py', 'tests/account5-live-browser.mjs', '.github/workflows/check-account5-live-browser.yml']
   workflow_dispatch:
   workflow_run:
     workflows: ['Deploy Account 5 Heavenly Key App']
