@@ -8,19 +8,24 @@ import { runInNewContext } from 'node:vm';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = readFileSync(resolve(root, 'site/sw.js'), 'utf8');
 
-test('offline worker never intercepts authenticated API, non-GET or private pages', () => {
+test('offline worker never intercepts authenticated API, non-GET or private pages', async () => {
+  const pending = [];
   const handlers = {};
   const self = {
     location: { origin: 'https://meeting.example' },
     addEventListener: (kind, fn) => { handlers[kind] = fn; },
   };
-  runInNewContext(source, { self, URL, caches: {}, fetch: async () => {} });
+  runInNewContext(source, {
+    self, URL,
+    caches: { open: async () => ({ match: async () => null, put: async () => {} }) },
+    fetch: async () => ({ ok: false, type: 'opaque' }),
+  });
   assert.equal(typeof handlers.fetch, 'function');
   const intercepts = (path, { method='GET', authorization=false, credentials='same-origin', mode='same-origin' }={}) => {
     let handled = false;
     const headers = new Headers(authorization ? { authorization: 'Bearer secret' } : {});
     const request = { url: 'https://meeting.example' + path, method, headers, credentials, mode };
-    handlers.fetch({ request, respondWith() { handled = true; } });
+    handlers.fetch({ request, respondWith(promise) { handled = true; pending.push(promise); } });
     return handled;
   };
   assert.equal(intercepts('/api/me'), false);
@@ -36,4 +41,5 @@ test('offline worker never intercepts authenticated API, non-GET or private page
   assert.equal(intercepts('/join.html?r=publicroom&k=privatekey'), false);
   assert.equal(intercepts('/?ticket=single-use'), false);
   assert.equal(intercepts('/icons/icon-192.png', { credentials: 'include' }), false);
+  await Promise.all(pending);
 });
