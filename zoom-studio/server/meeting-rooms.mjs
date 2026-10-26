@@ -5,7 +5,7 @@ const roomClean=(s,n)=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').trim().sli
 // Credentials are minted per room and expire automatically; never publish the shared secret.
 async function meetingICE(env, room) {
  const ice=[{urls:'stun:stun.cloudflare.com:3478'}];
- const urls=String(env.TURN_URLS||'').split(',').map(u=>u.trim()).filter(u=>/^turns?:[^\s,]+$/.test(u)).slice(0,4);
+ const urls=String(env.TURN_URLS||'').split(',').map(u=>u.trim()).filter(u=>/^turns?:[a-z0-9.-]+(?::[0-9]{1,5})?(?:\?transport=(?:udp|tcp))?$/i.test(u)&&!u.includes('..')&&(!u.match(/:(\d{1,5})(?:\?|$)/)||Number(u.match(/:(\d{1,5})(?:\?|$)/)[1])<=65535)).slice(0,4);
  if(!urls.length||String(env.TURN_SHARED_SECRET||'').length<32)return ice;
  const username=Math.floor(Date.now()/1000)+3600+':'+room;
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.TURN_SHARED_SECRET),{name:'HMAC',hash:'SHA-1'},false,['sign']);
