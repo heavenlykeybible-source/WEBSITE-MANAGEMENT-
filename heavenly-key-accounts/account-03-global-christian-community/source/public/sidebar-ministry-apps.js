@@ -21,12 +21,12 @@ const restore=make('button','hk-community-app-restore','Restore App');restore.ty
 const allButtons=new Set();
 function minimize(){panel.dataset.open='false';restore.hidden=!active;allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
 function closeApp(){const current=active;active=null;panel.dataset.open='false';restore.hidden=true;if(current&&frames.has(current.id)){frames.get(current.id).remove();frames.delete(current.id)}allButtons.forEach(b=>b.setAttribute('aria-pressed','false'))}
-function open(app){
- if(app.id==='assistant'){
+function open(app, restoring=false){
+ if(app.id==='assistant'&&!restoring){
   const official=document.querySelector('.hk-ai-small-icon');
   if(official){closeApp();official.click();return;}
  }
- if(active?.id===app.id&&panel.dataset.open==='true'){minimize();return}
+ if(!restoring&&active?.id===app.id&&panel.dataset.open==='true'){minimize();return}
  active=app;name.textContent=app.name;visit.href=app.url;restore.textContent='Restore '+app.name;
  for(const [id,el] of frames){if(id!==app.id&&id!=='radio'){el.remove();frames.delete(id)}else el.hidden=id!==app.id}
  if(!frames.has(app.id)){
@@ -47,7 +47,7 @@ function build(aside){
  const action=make('div','hk-community-app-actions'),trigger=make('button',null,'Explore Ministry Apps');trigger.type='button';trigger.addEventListener('click',()=>open(apps[0]));action.append(trigger);section.append(action);
  aside.append(section);
 }
-min.addEventListener('click',minimize);close.addEventListener('click',closeApp);restore.addEventListener('click',()=>{if(active)open(active)});
+min.addEventListener('click',minimize);close.addEventListener('click',closeApp);restore.addEventListener('click',()=>{if(active)open(active,true)});
 share.addEventListener('click',async()=>{if(!active)return;const data={title:'Heavenly Key — '+active.name,text:'Share this ministry resource to bless others',url:active.url};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(data.url);share.textContent='Link Copied';setTimeout(()=>share.textContent='Share to Bless Others',1800)}else window.open('https://wa.me/?text='+encodeURIComponent(data.text+' '+data.url),'_blank','noopener,noreferrer')}catch(err){if(err.name!=='AbortError')console.warn('App sharing unavailable')}});
 head.addEventListener('pointerdown',e=>{if(e.target.closest('button')||e.button!==0||matchMedia('(max-width:750px)').matches)return;const box=panel.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,left:box.left,top:box.top};panel.style.position='fixed';panel.style.left=box.left+'px';panel.style.top=box.top+'px';panel.style.right='auto';head.setPointerCapture(e.pointerId)});
 head.addEventListener('pointermove',e=>{if(!drag)return;const b=panel.getBoundingClientRect();panel.style.left=Math.max(8,Math.min(Math.max(8,window.innerWidth-b.width-8),drag.left+e.clientX-drag.x))+'px';panel.style.top=Math.max(8,Math.min(Math.max(8,window.innerHeight-65),drag.top+e.clientY-drag.y))+'px'});
