@@ -72,6 +72,7 @@ assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'
 const timelineScript=readFileSync('timeline.js','utf8');
 assert.ok(timeline.includes("scale=Math.min((w*sz)/pip.videoWidth,(h-2*margin)/pip.videoHeight)"),'Picture-in-picture must fit tall videos within canvas height');
 for(const feature of ['id="clipPipOpacity"',"ctx.globalAlpha=opacity","pipOpacity:Number($('clipPipOpacity').value)","data.pipOpacity>=0&&data.pipOpacity<=100"]) assert.ok(timeline.includes(feature),'Picture-in-picture opacity missing '+feature);
+for(const feature of ['id="clipPipFadeIn"','id="clipPipFadeOut"','ctx.globalAlpha=opacity*envelope',"pipFadeIn:Number($('clipPipFadeIn').value)","pipFadeOut:Number($('clipPipFadeOut').value)"]) assert.ok(timeline.includes(feature),'PiP fades missing '+feature);
 for(const feature of ['id="clipPipLoop"', "loop&&remaining>0?position%remaining:position", "pipLoop:$('clipPipLoop').checked", "typeof data.pipLoop==='boolean'"]) assert.ok(timeline.includes(feature),'Overlay loop control missing '+feature);
 for(const feature of ['id="clipPipIn"','id="clipPipLength"','position>=length','pipIn>=pip.duration',"pipIn:Number($('clipPipIn').value)","pipLength:Number($('clipPipLength').value)"]) assert.ok(timeline.includes(feature),'PiP independent trim missing '+feature);
 for(const feature of ['id="clipPipFile"','id="clipPipSize"','id="clipPipPosition"','id="clipPipOffset"',"drawOverlay:ctx=>","syncPip(progress)"]) assert.ok(timeline.includes(feature),'Picture-in-picture missing '+feature);
