@@ -22,9 +22,9 @@ function init(){
  const pageLink=win.querySelector('#hk-dock-app-page');
  const mini=document.createElement('button');mini.className='hk-app-minimized';mini.type='button';mini.hidden=true;mini.textContent='Restore App';mini.setAttribute('aria-label','Restore minimized app');mini.setAttribute('aria-controls','hk-app-window');
  let active=null,drag=null;const frames=new Map();
- function select(app){
-  if(active?.id===app.id&&win.dataset.open==='true'){minimize();return;}
-  if(app.id==='assistant'){
+ function select(app, restoring=false){
+  if(!restoring&&active?.id===app.id&&win.dataset.open==='true'){minimize();return;}
+  if(app.id==='assistant'&&!restoring){
    const launcher=document.querySelector('#hkem-assistant .hkem-launcher');
    if(launcher){if(active)close();launcher.click();return;}
   }
@@ -46,7 +46,7 @@ function init(){
  if(action==='minimize')minimize();else if(action==='close')close();
  else if(action==='share'&&active){const data={title:'Heavenly Key — '+active.name,text:'Share this ministry resource to bless others',url:new URL(active.url,location.href).href};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(data.url);e.target.textContent='Link Copied';setTimeout(()=>{e.target.textContent='Share This to Bless Others'},1800)}else window.open('https://wa.me/?text='+encodeURIComponent(data.text+' '+data.url),'_blank','noopener,noreferrer')}catch(err){if(err.name!=='AbortError')console.warn('Share was not completed');}}
  });
- mini.addEventListener('click',()=>{if(active)select(active)});
+ mini.addEventListener('click',()=>{if(active)select(active,true)});
  bar.addEventListener('pointerdown',e=>{if(e.target.closest('button')||matchMedia('(max-width:720px)').matches||e.button!==0)return;const box=win.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,left:box.left,top:box.top};win.style.position='fixed';win.style.left=box.left+'px';win.style.top=box.top+'px';win.style.right='auto';bar.setPointerCapture(e.pointerId)});
  bar.addEventListener('pointermove',e=>{if(!drag)return;const rect=win.getBoundingClientRect();win.style.left=Math.max(8,Math.min(Math.max(8,window.innerWidth-rect.width-8),drag.left+e.clientX-drag.x))+'px';win.style.top=Math.max(8,Math.min(Math.max(8,window.innerHeight-80),drag.top+e.clientY-drag.y))+'px';win.style.right='auto';});
  bar.addEventListener('pointerup',()=>drag=null);bar.addEventListener('pointercancel',()=>drag=null);
