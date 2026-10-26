@@ -1,0 +1,37 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { resolve, dirname } from 'node:path';
+import { runInNewContext } from 'node:vm';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const source = readFileSync(resolve(root, 'site/sw.js'), 'utf8');
+
+test('offline worker never intercepts authenticated API, non-GET or private pages', () => {
+  const handlers = {};
+  const self = {
+    location: { origin: 'https://meeting.example' },
+    addEventListener: (kind, fn) => { handlers[kind] = fn; },
+  };
+  runInNewContext(source, { self, URL, caches: {}, fetch: async () => {} });
+  assert.equal(typeof handlers.fetch, 'function');
+  const intercepts = (path, { method='GET', authorization=false, credentials='same-origin', mode='same-origin' }={}) => {
+    let handled = false;
+    const headers = new Headers(authorization ? { authorization: 'Bearer secret' } : {});
+    const request = { url: 'https://meeting.example' + path, method, headers, credentials, mode };
+    handlers.fetch({ request, respondWith() { handled = true; } });
+    return handled;
+  };
+  assert.equal(intercepts('/api/me'), false);
+  assert.equal(intercepts('/api/health'), false);
+  assert.equal(intercepts('/api/meeting-token'), false);
+  assert.equal(intercepts('/join.html?token=private', { authorization: true }), false);
+  assert.equal(intercepts('/users/private'), false);
+  assert.equal(intercepts('/join.html', { method: 'POST' }), false);
+  assert.equal(intercepts('/join.html', { mode: 'navigate' }), true);
+  assert.equal(intercepts('/icons/icon-192.png'), true);
+  assert.equal(intercepts('/bg/globe-doves.jpg'), true);
+  assert.equal(intercepts('/join.html', { credentials: 'include' }), true);
+  assert.equal(intercepts('/icons/icon-192.png', { credentials: 'include' }), false);
+});
