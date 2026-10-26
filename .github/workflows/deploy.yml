@@ -9,6 +9,8 @@ on:
       - 'ai/**'
       - 'security/**'
       - 'workspace/**'
+      - 'browser-agent/**'
+      - 'tests/browser-agent*.mjs'
       - 'cms/build.mjs'
       - '.github/workflows/deploy.yml'
 
@@ -71,6 +73,8 @@ jobs:
           node tests/owner-passkeys.mjs
           node tests/ai-workspace.mjs
           node tests/native-imports.mjs
+          node tests/browser-agent.mjs
+          node tests/domains.mjs
 
       - name: Verify Account 4 owner approval interface
         run: node tests/account4-permission-ui.mjs
@@ -87,6 +91,7 @@ jobs:
           npm run test:cms-browser
           node tests/account4-permissions-browser.mjs
           node tests/native-imports-browser.mjs
+          node tests/browser-agent-chromium.mjs
 
       - name: Deploy existing Worker without changing its resources
         run: node scripts/deploy-account4-existing.mjs

@@ -13,7 +13,7 @@ async function aiWorkspaceRoutes(req,env,user,sub,m){
  if(!['ai/access-requests','ai/access-requests/decide','ai/history'].includes(sub))return null;
  if(sub==='ai/history'&&m==='GET'){
   const rows=await env.DB.prepare("SELECT key,value_json FROM settings WHERE key LIKE ? ORDER BY updated_at DESC LIMIT 40").bind('ai:context:'+user.id+':%').all();
-  return json({conversations:rows.results.map(r=>{const c=JSON.parse(r.value_json),parts=r.key.split(':');return {account:parts[3],id:parts[4],title:c.title||c.task,messages:c.messages||[],updated_at:c.updated_at};})});
+  return json({conversations:rows.results.map(r=>{const c=JSON.parse(r.value_json),parts=r.key.split(':');return {account:parts[3],id:parts[4],title:c.title||c.task,messages:c.messages||[],proposals:c.proposals||[],updated_at:c.updated_at};})});
  }
  if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);
  if(sub==='ai/access-requests'&&m==='GET'){
