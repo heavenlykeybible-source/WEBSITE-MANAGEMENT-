@@ -60,8 +60,8 @@ test('production preflight rejects templates but accepts finalized notices', () 
     writeFileSync(resolve(rootTmp,'site/terms.html'),'<p>Terms for [ADDRESS], [LAWYER TO CONFIRM]</p>');
     let result=check();
     assert.equal(result.status,1);
-    assert.match(result.stderr,/privacy\\.html/);
-    assert.match(result.stderr,/terms\\.html/);
+    assert.ok(result.stderr.includes('privacy.html'));
+    assert.ok(result.stderr.includes('terms.html'));
     writeFileSync(resolve(rootTmp,'site/privacy.html'),'<h1>Privacy Policy</h1><p>Example finalized policy content.</p>');
     writeFileSync(resolve(rootTmp,'site/terms.html'),'<h1>Terms of Service</h1><p>Example finalized terms content.</p>');
     result=check();
