@@ -117,6 +117,10 @@ try{
  const audioCodec=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=noprint_wrappers=1:nokey=1',timelinePath],{encoding:'utf8'}).trim();
  assert.ok(audioCodec.length>0,'Timeline soundtrack export must include a decodable audio stream');
  // Enable looping and verify that changing the soundtrack option invalidates a stale download.
+ await page.locator('#clipAudioOffset').fill('601');
+ await page.locator('#clipExport').click();
+ await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('Soundtrack placement must be between'),{timeout:10000});
+ assert.equal(await page.locator('#clipDownload').isHidden(),true,'Invalid soundtrack placement must not produce export');
  await page.locator('#clipAudioOffset').fill('0.3');
  await page.locator('#clipAudioOffset').dispatchEvent('change');
  assert.match(await page.locator('#clipAudioTrack').textContent(),/timeline 0.30s/,'Soundtrack lane must display placement offset');
