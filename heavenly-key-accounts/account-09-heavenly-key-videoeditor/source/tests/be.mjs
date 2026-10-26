@@ -108,6 +108,8 @@ const badUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:l
 check('Authenticated project update rejects object names',badUpdate.status===400);
 const oversizedUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'x'.repeat(101),data:{}}});
 check('Authenticated project update rejects oversized names',oversizedUpdate.status===400);
+const missingProjectData=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'Should not erase'}});
+check('Incomplete cloud project update cannot erase saved edits',missingProjectData.status===400);
 const invalidProjectUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'Invalid',data:['unexpected']}});
 check('Cloud project update rejects array data',invalidProjectUpdate.status===400);
 const projectAfterRejection=await request('projects/'+project.data.id,{cookie:login.cookie});
