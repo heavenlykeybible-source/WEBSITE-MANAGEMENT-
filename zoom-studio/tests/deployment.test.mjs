@@ -93,3 +93,9 @@ test('same tenant cannot reuse legacy shared database IDs',()=>{
  assert.match(r.stderr,/requires a dedicated D1 database/);
  }
 });
+
+test('Account 8 deploy verifies MeetingSpace health endpoint rather than just a homepage',()=>{
+ const deploy=readFileSync(resolve(root,'scripts/deploy.mjs'),'utf8');
+ assert.match(deploy,/RELEASE_HEALTH_PATH:'\/api\/health'/);
+ assert.match(deploy,/RELEASE_HEALTH_EXPECT:JSON\.stringify\(\{ok:true,meetingConfigured:true\}\)/);
+});
