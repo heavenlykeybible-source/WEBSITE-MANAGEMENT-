@@ -1,3 +1,21 @@
+function proposalDecisionMessage(kind,result){
+ if(result.status==='rejected')return 'Proposal declined. Nothing was published.';
+ if(result.status==='changes_requested')return 'Changes requested. Nothing was published.';
+ if(result.status!=='approved')return 'The result needs verification. Check release status before trying again.';
+ if(result.release_status!=='succeeded')return 'Congratulations, your proposal has been approved. Deployment is not yet confirmed.';
+ if(kind==='worker')return 'Congratulations, your proposal has been approved and the Worker has been deployed. Live functionality still needs verification.';
+ if(kind==='github')return 'Congratulations, your proposal has been approved and the code has been saved to GitHub. Website deployment is not yet confirmed.';
+ if(kind==='cloudflare_resource')return 'Congratulations, your proposal has been approved and the resource has been created.';
+ return 'Congratulations, your proposal has been approved and publication has completed.';
+}
+function proposalDecisionNotice(message,isError,id){
+ var old=document.getElementById('proposal-decision-notice');if(old)old.remove();
+ var box=h('section',{id:'proposal-decision-notice',role:isError?'alert':'status','aria-live':isError?'assertive':'polite',style:'position:fixed;bottom:20px;right:20px;z-index:2147483647;width:min(460px,calc(100vw - 40px));max-height:60vh;overflow:auto;padding:20px;border:2px solid '+(isError?'#a20b2d':'#176039')+';border-radius:14px;background:#fff;color:#16233e;box-shadow:0 8px 32px #0003'},h('strong',{},isError?'Action needs attention':'Proposal update'),h('p',{},message));
+ if(isError)box.appendChild(h('button',{class:'sm',onclick:async function(){this.disabled=true;try{var current=await api('proposals/'+id);proposalDecisionNotice('Current proposal status: '+current.proposal.status+'. Review Releases before retrying a deployment.',false,id);}catch(e){proposalDecisionNotice('Could not check the result: '+e.message,true,id);}}},'Check result'));
+ box.appendChild(h('button',{class:'sm',onclick:releaseHistory},'View release details'));
+ box.appendChild(h('button',{class:'sm',onclick:function(){box.remove();}},'Dismiss'));
+ document.body.appendChild(box);
+}
 // BEGIN NATIVE WORKSPACE SERVER
 // Native GitHub -> private immutable scan -> reviewed destination. No browser service.
 async function importSource(env,user,id){return ghById(env,id,scopeOf({kind:'owner',user,ow:null}));}
@@ -1905,7 +1923,7 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
     }
     if (P.kind === 'remote' || P.kind === 'github') { try { await createWork(env, P, user.username, user.id); } catch (e) { await audit(env, 'system', 'work-record-failed', 'proposal ' + id); } }
     await audit(env, who, 'approved', 'proposal ' + id + ' release ' + releaseId);
-    return json({ ok: true, status: 'approved', release_id: releaseId });
+    return json({ ok: true, status: 'approved', release_id: releaseId, release_status: 'succeeded', kind: P.kind });
   }
   if (m === 'POST' && (x = sub.match(/^proposals\/(\d+)\/undo$/))) {
     const id = +x[1];
@@ -3446,7 +3464,7 @@ async function openP(id,inChat){try{var d=await api('proposals/'+id);var P=d.pro
   var staged=null,stageError='';var password=h('input',{type:'password',autocomplete:'current-password',placeholder:'Your current password to approve'}),reviewed=h('input',{type:'checkbox',style:'width:auto;margin-right:8px'});
   if(P.status==='waiting'&&own()){try{staged=await api('proposals/'+id+'/stage','POST',{});if(P.kind==='page')d.before=JSON.parse(staged.before.content_json);if(P.kind==='design')d.before=staged.before;if(P.kind==='remote'&&staged.before)d.remote.before=staged.before;}catch(e){stageError=e.message;}}
 
-  var deciding=false;function decide(x){return async function(){if(deciding)return;if(x==='approve'&&(!staged||!reviewed.checked||!password.value))return alert('Review this exact version and verify with your password or passkey.');deciding=true;try{await api('proposals/'+id+'/decide','POST',{decision:x,comment:c.value,password:x==='approve'?password.value:undefined,reviewed:reviewed.checked,review_token:staged?staged.review_token:''});if(inChat){inChat.textContent=x==='approve'?'Approved. Deployment or publication completed.':x==='reject'?'Declined. Nothing published.':'Changes requested. Nothing published.';if(popup){popup.close();popup.remove();}}else waiting();}catch(e){oops(e);}finally{deciding=false;}};}
+  var deciding=false;function decide(x){return async function(){if(deciding)return;if(x==='approve'&&(!staged||!reviewed.checked||!password.value))return alert('Review this exact version and verify with your password or passkey.');deciding=true;proposalDecisionNotice(x==='approve'?'Approval received. Publishing your reviewed changes. Please wait…':'Saving your decision. Please wait…',false,id);try{var result=await api('proposals/'+id+'/decide','POST',{decision:x,comment:c.value,password:x==='approve'?password.value:undefined,reviewed:reviewed.checked,review_token:staged?staged.review_token:''});var message=proposalDecisionMessage(P.kind,result);password.value='';proposalDecisionNotice(message,false,id);if(inChat){inChat.textContent=message;if(popup){popup.close();popup.remove();}}else waiting();}catch(e){proposalDecisionNotice('The action did not return a confirmed success. '+e.message+' Check the result before retrying; a connection failure does not mean deployment failed.',true,id);}finally{deciding=false;}};}
   var kids=[nav(),h('h3',{},P.title),h('div',{class:'tag'},P.kind+' \\u2022 '+P.agent+' \\u2022 '+(P.site||P.slug||'')),h('p',{},P.note||''),h('p',{class:'tag'},'Version '+(P.version||'P-'+P.id)+' · Submitted '+lagosTime(P.created_at)+' · Africa/Lagos')];
   if(P.owner_comment)kids.push(h('p',{class:'tag'},'Comment: '+P.owner_comment));
   if(P.kind==='page'){if(d.page_metadata&&d.page_metadata.page_title!==undefined)kids.push(h('p',{},'Proposed page title: '+d.page_metadata.page_title+' · Status after approval: '+d.page_metadata.page_status));kids.push(h('b',{},'Before'),view(d.before),h('b',{},'After (proposed)'),view(d.after));}
