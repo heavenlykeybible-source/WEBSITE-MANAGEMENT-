@@ -103,11 +103,11 @@ export class MeetingRooms {
     else if(m.t==='mute')this.send(g,{t:'mute',on:!!m.on});
     else if(m.t==='sig'&&gd.stage&&signalPayloadOk(m.data))this.send(g,{t:'sig',data:m.data});
     else if(m.t==='promote'&&gd.aud&&gd.ok){if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});gd.invited=true;this.save(g,gd);this.send(g,{t:'promoted'});}
-    else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.count();}
+    else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.count();}
    }
   }else if(d.ok){
    if(m.t==='sig'&&d.stage&&signalPayloadOk(m.data))this.send(host,{t:'sig',from:d.id,data:m.data});
-   else if(m.t==='ready'&&d.invited&&this.stage().length<6){d.invited=false;d.aud=false;d.stage=true;d.ao=!!m.ao;this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
+   else if(m.t==='ready'&&d.invited&&this.stage().length<6){d.invited=false;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.includes(d.pass)){h.admitted=h.admitted.concat(d.pass).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
