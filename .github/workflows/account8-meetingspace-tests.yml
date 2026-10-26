@@ -2,6 +2,7 @@ name: Account 8 MeetingSpace tests
 on:
   push:
     branches:
+      - main
       - feature/account8-meetingspace-hardening-20261025
     paths:
       - 'zoom-studio/**'
