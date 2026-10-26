@@ -162,7 +162,7 @@ test('waiting guests cannot chat or signal until host admission; hibernation kee
  assert.equal(s.host.messages.at(-2)?.t==='waiting'||s.host.messages.some(m=>m.t==='waiting'),true);
  await message(s.room,guest,{t:'chat',text:'blocked'});await message(s.room,guest,{t:'sig',data:{offer:'blocked'}});assert.ok(!s.host.messages.some(m=>m.text==='blocked'||m.data?.offer==='blocked'));
  const restored=new MeetingRooms(s.state,{AUTH_SECRET:secret});await message(restored,s.host,{t:'admit',gid:guest.d.id});assert.equal(guest.d.stage,true);
- await message(restored,guest,{t:'sig',data:{offer:'allowed'}});assert.equal(s.host.messages.at(-1).data.offer,'allowed');
+ await message(restored,guest,{t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}});assert.equal(s.host.messages.at(-1).data.sdp.sdp,'v=0');
  await message(restored,s.host,{t:'lock',on:true});const denied=s.add();await message(restored,denied,{t:'join',room:s.host.d.room,key:s.key});assert.equal(denied.readyState,3);
  await message(restored,s.host,{t:'sig',to:'wrong-room',data:{secret:'private'}});assert.ok(!guest.messages.some(m=>m.data?.secret));
 });
