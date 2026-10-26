@@ -112,8 +112,9 @@
       "accountSubdomain": "heavenlykeyapp",
       "origin": "https://apps.heavenlykey.org/bible.html",
       "workerOrigin": "https://heavenlykey-bible-reader.heavenlykeyapp.workers.dev",
-      "state": "worker-deployment-pending",
-      "source": "config/small-app-bundles.json"
+      "state": "active",
+      "source": "config/small-app-bundles.json",
+      "verified": "Independent Worker and all original bundled assets verified by deployment 40386700397."
     },
     {
       "id": "audio-bible",
@@ -122,8 +123,9 @@
       "accountSubdomain": "heavenlykeyapp",
       "origin": "https://apps.heavenlykey.org/audio-bible.html",
       "workerOrigin": "https://heavenlykey-audio-bible.heavenlykeyapp.workers.dev",
-      "state": "worker-deployment-pending",
-      "source": "config/small-app-bundles.json"
+      "state": "active",
+      "source": "config/small-app-bundles.json",
+      "verified": "Independent Worker and all original bundled assets verified by deployment 40386700397."
     },
     {
       "id": "hymns",
@@ -132,8 +134,9 @@
       "accountSubdomain": "heavenlykeyapp",
       "origin": "https://apps.heavenlykey.org/hymns.html",
       "workerOrigin": "https://heavenlykey-hymns.heavenlykeyapp.workers.dev",
-      "state": "worker-deployment-pending",
-      "source": "config/small-app-bundles.json"
+      "state": "active",
+      "source": "config/small-app-bundles.json",
+      "verified": "Independent Worker and all original bundled assets verified by deployment 40386700397."
     },
     {
       "id": "audio-hymns",
@@ -142,8 +145,9 @@
       "accountSubdomain": "heavenlykeyapp",
       "origin": "https://apps.heavenlykey.org/audio-hymns.html",
       "workerOrigin": "https://heavenlykey-audio-hymns.heavenlykeyapp.workers.dev",
-      "state": "worker-deployment-pending",
-      "source": "config/small-app-bundles.json"
+      "state": "active",
+      "source": "config/small-app-bundles.json",
+      "verified": "Independent Worker and all original bundled assets verified by deployment 40386700397."
     },
     {
       "id": "daily-reading",
@@ -152,8 +156,9 @@
       "accountSubdomain": "heavenlykeyapp",
       "origin": "https://apps.heavenlykey.org/devotional.html",
       "workerOrigin": "https://heavenlykey-daily-reading.heavenlykeyapp.workers.dev",
-      "state": "worker-deployment-pending",
-      "source": "config/small-app-bundles.json"
+      "state": "active",
+      "source": "config/small-app-bundles.json",
+      "verified": "Independent Worker and all original bundled assets verified by deployment 40386700397."
     }
   ]
 }

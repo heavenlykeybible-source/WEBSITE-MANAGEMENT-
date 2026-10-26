@@ -1,5 +1,13 @@
 // Exact public static routes only. Member APIs, directory assets and credentials never cross this boundary.
 const ROUTES={
+ "/bible.html":["BIBLE_READER_APP","bible-reader"],
+ "/audio-bible.html":["AUDIO_BIBLE_APP","audio-bible"],
+ "/audio-bible.js":["AUDIO_BIBLE_APP","audio-bible"],
+ "/hymns.html":["HYMNS_APP","hymns"],
+ "/featured-main-hymn.js":["HYMNS_APP","hymns"],
+ "/audio-hymns.html":["AUDIO_HYMNS_APP","audio-hymns"],
+ "/audio-hymns.js":["AUDIO_HYMNS_APP","audio-hymns"],
+ "/devotional.html":["DAILY_READING_APP","daily-reading"],
  '/walk-offline.html':['WALK_APP','walk-with-god'], '/walk-offline.js':['WALK_APP','walk-with-god'], '/walk-offline.css':['WALK_APP','walk-with-god'], '/walk-offline-content.js':['WALK_APP','walk-with-god'], '/offline-vault.js':['WALK_APP','walk-with-god'],
  '/creation-to-eternity.html':['BIBLE_STUDY_APP','bible-study-portal'], '/creation-to-eternity.js':['BIBLE_STUDY_APP','bible-study-portal'], '/creation-to-eternity.css':['BIBLE_STUDY_APP','bible-study-portal'],
  '/eternity-in-view':['ETERNITY_APP','eternity-in-view'], '/eternity-in-view/':['ETERNITY_APP','eternity-in-view'], '/eternity-in-view/index.html':['ETERNITY_APP','eternity-in-view']

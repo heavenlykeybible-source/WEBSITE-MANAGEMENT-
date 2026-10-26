@@ -10,7 +10,7 @@ workers_dev = true
 not_found_handling = "404-page"
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/api/*", "/walk-offline.html", "/walk-offline.js", "/walk-offline.css", "/walk-offline-content.js", "/offline-vault.js", "/creation-to-eternity.html", "/creation-to-eternity.js", "/creation-to-eternity.css", "/eternity-in-view", "/eternity-in-view/*"]
+run_worker_first = ["/bible.html", "/audio-bible.html", "/audio-bible.js", "/hymns.html", "/featured-main-hymn.js", "/audio-hymns.html", "/audio-hymns.js", "/devotional.html", "/api/*", "/walk-offline.html", "/walk-offline.js", "/walk-offline.css", "/walk-offline-content.js", "/offline-vault.js", "/creation-to-eternity.html", "/creation-to-eternity.js", "/creation-to-eternity.css", "/eternity-in-view", "/eternity-in-view/*"]
 
 
 # Enable only after Account 3 production public APIs and policy are verified.
@@ -32,3 +32,23 @@ service = "heavenlykey-bible-study"
 [[services]]
 binding = "ETERNITY_APP"
 service = "heavenlykey-eternity-in-view"
+
+[[services]]
+binding = "BIBLE_READER_APP"
+service = "heavenlykey-bible-reader"
+
+[[services]]
+binding = "AUDIO_BIBLE_APP"
+service = "heavenlykey-audio-bible"
+
+[[services]]
+binding = "HYMNS_APP"
+service = "heavenlykey-hymns"
+
+[[services]]
+binding = "AUDIO_HYMNS_APP"
+service = "heavenlykey-audio-hymns"
+
+[[services]]
+binding = "DAILY_READING_APP"
+service = "heavenlykey-daily-reading"
