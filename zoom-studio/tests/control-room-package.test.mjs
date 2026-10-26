@@ -242,6 +242,15 @@ test('meeting signaling ignores malformed SDP/ICE payloads',async()=>{
  await message(s.room,s.host,{t:'sig',to:g.d.id,data:{sdp:{type:'offer',sdp:'v=0'}}});
  assert.equal(g.messages.at(-1).data.sdp.sdp,'v=0');
 });
+test('WebRTC relay rejects unknown, malformed and oversized signaling data',async()=>{
+ const s=await openRoom(),g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:false});
+ await message(s.room,s.host,{t:'admit',gid:g.d.id});
+ const bad=[{}, {other:'unexpected'}, {sdp:{type:'pranswer',sdp:'v=0'}}, {sdp:{type:'offer',sdp:''}}, {sdp:{type:'offer',sdp:'x'.repeat(18001)}}, {c:{candidate:12}}, {c:{candidate:'x'.repeat(12001)}}];
+ for(const data of bad){const n=g.messages.length;await message(s.room,s.host,{t:'sig',to:g.d.id,data});assert.equal(g.messages.length,n);}
+ for(const data of [{sdp:{type:'offer',sdp:'v=0'}},{sdp:{type:'answer',sdp:'v=0'}},{c:{candidate:'candidate:1 1 udp 1 127.0.0.1 1234 typ host'}}]){
+  const n=g.messages.length;await message(s.room,s.host,{t:'sig',to:g.d.id,data});assert.equal(g.messages.length,n+1);
+ }
+});
 test('audience moderation, promotion, expiry and host disconnect work across hibernation',async()=>{
  const s=await openRoom(),aud=s.add();await message(s.room,aud,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});assert.equal(aud.d.ok,true);assert.equal(aud.d.stage,false);
  await message(s.room,s.host,{t:'audchat',on:false});await message(s.room,aud,{t:'chat',text:'not allowed'});assert.equal(aud.messages.at(-1).t,'note');
