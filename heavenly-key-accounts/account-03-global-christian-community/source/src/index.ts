@@ -31,6 +31,10 @@ async function sourceKey(request:Request){const address=request.headers.get("CF-
 const cleanEmail=(v:any)=>String(v||"").trim().toLowerCase().slice(0,160);
 const validEmail=(v:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
+async function rateKey(value:string):Promise<string>{
+  const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
+}
 async function rate(env:Env,key:string,max:number,seconds:number){
   const k="rate:"+key,now=Date.now(),raw=await env.SESSIONS.get(k);
   let previous:{n:number;until:number}|null=null;
@@ -74,7 +78,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
     if(fullName.length<2||fullName.length>100)return error("Enter your name using 2 to 100 characters.");
     const passwordIssue=passwordError(password);if(passwordIssue)return error(passwordIssue);
     if(!await rate(env,"register-source:"+await sourceKey(request),10,3600))return error("Please wait before registering another account.",429);
-    if(!await rate(env,"register:"+email,5,3600))return error("Please wait before trying to register again.",429);
+    if(!await rate(env,"register:"+await rateKey(email),5,3600))return error("Please wait before trying to register again.",429);
     if(await env.DB.prepare("SELECT 1 FROM users WHERE email=?").bind(email).first())return error("An account already exists for this email.",409);
     const pass=await hashPassword(password,env.PASSWORD_PEPPER);
     let created;
@@ -91,7 +95,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
     const b=await body(request),email=cleanEmail(b.email),password=String(b.password||"");
     if(password.length>128||!validEmail(email))return error("Email or password is incorrect.",401);
     if(!await rate(env,"login-source:"+await sourceKey(request),40,900))return error("Too many attempts. Please wait.",429);
-    if(!await rate(env,"login:"+email,12,900))return error("Too many attempts. Please wait before trying again.",429);
+    if(!await rate(env,"login:"+await rateKey(email),12,900))return error("Too many attempts. Please wait before trying again.",429);
     const row=await env.DB.prepare("SELECT user_id,password_hash,password_salt,role,status FROM users WHERE email=?").bind(email).first<any>();
     if(!row||!["active","restricted"].includes(row.status)||!await verifyPassword(password,row.password_salt,row.password_hash,env.PASSWORD_PEPPER))return error("Email or password is incorrect.",401);
     const id=await createSession(env,{userId:Number(row.user_id),role:row.role,status:row.status});
