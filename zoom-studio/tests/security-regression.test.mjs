@@ -148,3 +148,12 @@ test('Audio processing releases the original microphone and screen share on stag
  assert.match(source,/rawMedia\.getTracks\(\)\.forEach\(t=>t\.stop\(\)\)/);
  assert.match(source,/case 'demoted':try\{shareTrack&&shareTrack\.stop\(\)\}/);
 });
+
+test('Host retries failed peer media using bounded ICE restarts', () => {
+ const host=readFileSync(resolve(root,'site/index.html'),'utf8');
+ assert.match(host,/restartAttempts:0/);
+ assert.match(host,/gRestart\(g\)/);
+ assert.match(host,/createOffer\(\{iceRestart:true\}\)/);
+ assert.match(host,/g\.restartAttempts>=2/);
+ assert.match(host,/if\(pc\.connectionState==='connected'\)g\.restartAttempts=0/);
+});
