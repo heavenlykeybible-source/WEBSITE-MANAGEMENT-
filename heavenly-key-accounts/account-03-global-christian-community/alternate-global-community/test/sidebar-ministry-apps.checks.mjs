@@ -12,6 +12,8 @@ assert.equal((js.match(/\{id:'(?:study|assistant|eternity|community|radio|editor
 assert.ok(js.includes('approved-ai-transparent-original.png'),'Official approved assistant portrait must be used');
 assert.ok(js.includes("document.querySelector('.social-sidebar')"),'Launcher must appear inside the community right sidebar');
 assert.ok(js.includes('aside.append(section)'),'Launcher must appear at the bottom of the right sidebar');
+assert.ok(js.includes('aside.lastElementChild')&&js.includes('aside.append(existing)'),'Launcher must stay at right sidebar bottom as feed loads');
+assert.ok(js.includes('Math.max(8,window.innerWidth-b.width-8)'),'Dragging must be clamped for narrow screens');
 assert.ok(js.includes("official.click()"),'AI entry must use approved existing community assistant');
 assert.ok(js.includes("if(id!==app.id&&id!=='radio')"),'Radio must persist through app switching');
 assert.ok(js.includes('navigator.share')&&js.includes('navigator.clipboard'),'Sharing fallback must be available');
