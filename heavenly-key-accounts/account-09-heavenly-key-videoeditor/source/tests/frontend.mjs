@@ -78,6 +78,7 @@ for(const feature of ['id="clipAudioLoop"',"soundtrack.loop=$('clipAudioLoop').c
 for(const feature of ['id="clipAudioStart"', "const audioStart=Number($('clipAudioStart').value)", 'audioStart>=soundtrack.duration']) assert.ok(timelineScript.includes(feature),'Soundtrack in-point missing '+feature);
 for(const feature of ['id="clipVideoGain"', "originalGain.gain.value=Number($('clipVideoGain').value)/100", "originalGain.connect(soundtrackNode)"]) assert.ok(timelineScript.includes(feature),'Original sound mixing control missing '+feature);
 for(const safeguard of ['Soundtrack metadata timed out', 'Cannot decode the selected soundtrack', 'Selected soundtrack has an invalid duration']) assert.ok(timelineScript.includes(safeguard),'Missing soundtrack metadata guard: '+safeguard);
+for(const feature of ['id="clipExportFps"','id="clipExportBitrate"',"stream=canvas.captureStream(fps)","videoBitsPerSecond","['clipExportFps','clipExportBitrate']"]) assert.ok(timelineScript.includes(feature),'Export quality control missing '+feature);
 assert.ok(timelineScript.includes("'video/mp4'")&&timelineScript.includes("mime.startsWith('video/mp4')?'mp4':'webm'"),'Timeline export must select correct browser-supported format and extension');
 assert.ok(timelineScript.includes('window.hkTimeline='),'Timeline state bridge must exist');
 assert.ok(timelineScript.includes("['vf','vexp','clipExport'")&&timelineScript.includes("if($('vexp').disabled)return info"),'Timeline must lock source changes and prevent concurrent exports');
