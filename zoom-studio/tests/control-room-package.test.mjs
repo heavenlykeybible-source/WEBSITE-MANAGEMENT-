@@ -320,6 +320,14 @@ test('audience moderation, promotion, expiry and host disconnect work across hib
  s.host.d.until=Date.now()-1;await new MeetingRooms(s.state,{AUTH_SECRET:secret}).alarm();assert.equal(aud.readyState,3);assert.equal(s.host.readyState,3);
  const another=await openRoom(),g=another.add();await message(another.room,g,{t:'join',room:another.host.d.room,key:another.key,aud:true});another.host.readyState=3;another.room.webSocketClose(another.host);assert.equal(g.readyState,3);
 });
+test('meeting signaling rejects malformed room paths before allocating sockets',async()=>{
+ const s=meeting();
+ for(const suffix of ['/meeting/invalid/room','/meeting/11111111-1111-4111-8111-111111111111/other','/meeting/11111111-1111-4111-8111-111111111111/room?debug=1']){
+  const response=await s.room.fetch(new Request('https://meeting'+suffix,{headers:{upgrade:'websocket',origin:'https://meeting'}}));
+  assert.equal(response.status,404);
+ }
+ assert.equal(s.all.length,0);
+});
 test('meeting transport rejects wrong origins and non-WebSocket requests; unauthenticated sockets expire',async()=>{
  const s=meeting();assert.equal((await s.room.fetch(new Request('https://meeting/meeting/r/room'))).status,426);
  assert.equal((await s.room.fetch(new Request('https://meeting/meeting/r/room',{headers:{upgrade:'websocket',origin:'https://elsewhere'}}))).status,403);
