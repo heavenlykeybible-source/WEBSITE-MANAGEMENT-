@@ -2,7 +2,7 @@
 (()=>{'use strict';
 const apps=[
 {id:'radio',name:'Revival Radio',icon:'📻',url:'https://radio.heavenlykey.org/'},
-{id:'assistant',name:'Online Assistant',icon:'🤖',url:'/',native:true},
+{id:'assistant',name:'Online Assistant',icon:'',url:'/',native:true},
 {id:'bible',name:'Online Bible',icon:'📖',url:'https://bible.heavenlykey.org/'},
 {id:'social',name:'Social Network',icon:'👥',url:'https://global.heavenlykey.org/'},
 {id:'walk',name:'My Walk with God Calculator',icon:'▦',url:'https://app.heavenlykey.org/'},
@@ -40,7 +40,7 @@ function init(){
  }
  function minimize(){if(!active)return;win.dataset.open='false';mini.hidden=false;list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed','false'));}
  function close(){if(active){const frame=frames.get(active.id);if(frame){frame.remove();frames.delete(active.id)}}active=null;win.dataset.open='false';mini.hidden=true;list.querySelectorAll('.hk-dock-tab').forEach(b=>b.setAttribute('aria-pressed','false'));}
- for(const app of apps){const btn=document.createElement('button');btn.type='button';btn.className='hk-dock-tab';btn.dataset.app=app.id;btn.setAttribute('aria-pressed','false');btn.setAttribute('aria-controls','hk-app-window');const icon=document.createElement('span');icon.className='hk-dock-icon';icon.setAttribute('aria-hidden','true');icon.textContent=app.icon;const name=document.createElement('span');name.textContent=app.name;btn.append(icon,name);btn.addEventListener('click',()=>select(app));list.appendChild(btn);}
+ for(const app of apps){const btn=document.createElement('button');btn.type='button';btn.className='hk-dock-tab';btn.dataset.app=app.id;btn.setAttribute('aria-pressed','false');btn.setAttribute('aria-controls','hk-app-window');const icon=document.createElement('span');icon.className='hk-dock-icon';icon.setAttribute('aria-hidden','true');if(app.id==='assistant'){const portrait=document.createElement('img');portrait.src='/assets/ministry/approved-ai-transparent-original.png';portrait.alt='';portrait.loading='lazy';icon.appendChild(portrait);}else icon.textContent=app.icon;const name=document.createElement('span');name.textContent=app.name;btn.append(icon,name);btn.addEventListener('click',()=>select(app));list.appendChild(btn);}
  win.addEventListener('click',async e=>{
  const action=e.target.closest('[data-action]')?.dataset.action;if(!action)return;
  if(action==='minimize')minimize();else if(action==='close')close();
