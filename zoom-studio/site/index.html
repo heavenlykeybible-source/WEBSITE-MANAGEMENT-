@@ -482,7 +482,7 @@ const gc=document.createElement('canvas');gc.width=640;gc.height=360;const gx=gc
 const gsend=o=>{if(gws&&gws.readyState===1)gws.send(JSON.stringify(o))},gSt=t=>{$('gst').textContent=t};
 async function gStart(){if(gws)return gStop('Room closed.');
  if(!(await relink(true))){if(!acct.on)gSt('Sign in to start a guest room, or enter your relay address under Go live.');return}
- gSt('Starting the room...');const roomURL=gRoomURL.replace(/\/+$/,'');gRoomURL=roomURL;const w=gws=new WebSocket(roomURL+'/room');
+ gSt('Starting the room...');const roomURL=gRoomURL.replace(/\/+$/,'');gRoomURL=roomURL;let w;try{w=gws=new WebSocket(roomURL+'/room')}catch(e){gws=null;gSt('The meeting connection could not start. Check the meeting service and try again.');return}
  w.onopen=()=>gsend({t:'host',token:gRoomToken});w.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}gmsg(m)};
  w.onclose=()=>{if(gws===w)gStop('The room closed.')};w.onerror=()=>{}}
 function gStop(msg){const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);wait.clear();
