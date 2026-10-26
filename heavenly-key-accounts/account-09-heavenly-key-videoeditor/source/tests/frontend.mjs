@@ -70,6 +70,8 @@ execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
 assert.ok(html.includes('id="fitmode"')&&html.includes("state.fit==='cover'")===false,'Framing selector stays in editor with cloud handling in module');
 assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'"),'Local/cloud project framing must restore');
 const timelineScript=readFileSync('timeline.js','utf8');
+for(const expected of ['id="clipDropZone"', "dropZone.addEventListener('drop'", "dropZone.addEventListener('dragover'", "new CustomEvent('change',{detail:{file}})"]) assert.ok(timeline.includes(expected),'Video drop zone missing '+expected);
+
 assert.ok(timeline.includes('clipFade')&&timeline.includes('fadeOpacity:')&&html.includes('window.hkTimeline?.fadeOpacity?.()'),'Clip edge fade must reach canvas export and preview renderer');
 for(const speed of ['.25','.5','1','1.5','2','3','4']) assert.ok(timelineScript.includes('<option value="'+speed+'">'),'Timeline speed selector missing '+speed+'×');
 for(const feature of ["id=\"clipTrack\"", "track.addEventListener('dragstart'", "track.addEventListener('drop'", "clips.splice(to,0,moved)", "total.toFixed(2)"]) assert.ok(timelineScript.includes(feature),'Visual draggable timeline missing '+feature);
