@@ -126,7 +126,8 @@ test('Guest WebRTC signaling buffers candidates and reconnects through admission
   assert.match(host,/pendingIce:\[\]/);
   assert.match(host,/if\(g\.pc\.remoteDescription\)/);
   assert.match(host,/g\.pendingIce\.splice\(0\)/);
-  assert.match(guest,/joined=false;try\{pc&&pc\.close\(\)\}/);
+  assert.match(guest,/joined=false;try\{shareTrack&&shareTrack\.stop\(\)\}/);
+  assert.match(guest,/shareTrack=null;camTrack=null;sharing=false/);
   assert.match(guest,/show\('wait'\)/);
   assert.match(guest,/if\(pc&&pc\.remoteDescription\)/);
   assert.match(guest,/if\(!local\)\{\$\('invrow'\)\.hidden=false/);
