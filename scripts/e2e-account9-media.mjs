@@ -43,7 +43,9 @@ try{
  assert.ok(duration>2,'Imported source must have metadata');
  await page.locator('#clipStart').fill('0.2');
  await page.locator('#clipEnd').fill('1.5');
+ await page.locator('#clipFade').selectOption('.5');
  await page.locator('#clipAdd').click();
+ assert.equal((await page.evaluate(()=>window.hkTimeline.getClips()))[0].fade,.5,'Fade selection must be saved on the clip');
  assert.equal(await page.locator('#clipList option').count(),1);
  await page.locator('#clipDuplicate').click();
  assert.equal(await page.locator('#clipList option').count(),2,'Duplicating a clip should add a second clip');
@@ -58,6 +60,7 @@ try{
  await page.locator('#clipRedo').click();
  assert.equal(await page.locator('#clipList option').count(),2,'Undo/redo must preserve timeline');
  await page.locator('#clipPlay').click();
+ assert.equal(typeof await page.evaluate(()=>window.hkTimeline.fadeOpacity),'function','Fade renderer must be available');
  await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('preview complete'),{timeout:20000});
  await page.locator('#clipExport').click();
  await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
