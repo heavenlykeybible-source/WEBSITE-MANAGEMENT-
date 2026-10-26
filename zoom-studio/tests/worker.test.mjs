@@ -268,12 +268,15 @@ const allowed=await call('/api/admin/approve',{token:changed.j.token,body:{email
 ok(allowed.s===200,'owner can approve a pre-existing account');
 const approvedLogin=await call('/api/login',{body:{email:privateUser,password:st_(privateUser,'password123')}});
 ok(approvedLogin.s===200&&!!approvedLogin.j.token,'approved account can sign in');
+const approvedRoom=await call('/api/meeting-token',{token:approvedLogin.j.token});
+ok(approvedRoom.s===200 && /^wss:\/\//.test(approvedRoom.j.url||'') && !!approvedRoom.j.token,'administrator-approved user can create a private-preview meeting without payment');
 const previewMeeting=await call('/api/meeting-token',{token:approvedLogin.j.token});
 ok(previewMeeting.s===200&&/^wss:\/\//.test(previewMeeting.j.url||''),'approved private-preview user can create meeting without payment');
 ok((await call('/api/admin/approve',{token:approvedLogin.j.token,body:{email:privateUser,approved:true}})).s===403,'regular user cannot approve any account');
 const revoked=await call('/api/admin/approve',{token:changed.j.token,body:{email:privateUser,approved:false}});
 ok(revoked.s===200,'owner can revoke approved account');
 ok((await call('/api/me',{token:approvedLogin.j.token})).s===401,'revocation invalidates existing session');
+ok((await call('/api/meeting-token',{token:approvedLogin.j.token})).s===401,'revoked user cannot create meetings');
 env.MEETINGSPACE_PRIVATE_PREVIEW='0';
 fs.unlinkSync(here + '_worker_under_test.mjs');
 
