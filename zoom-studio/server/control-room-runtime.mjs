@@ -28,7 +28,8 @@ async function meetingAsset(request) {
     'permissions-policy':'camera=(self), microphone=(self), display-capture=(self), geolocation=()',
     'content-security-policy':"frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'"
   };
-  if(request.headers.get('if-none-match')===headers.etag)return new Response(null,{status:304,headers});
+  // Private HTML must never resolve through an intermediary cache, even on conditional requests.
+  if(headers['cache-control']!=='no-store' && request.headers.get('if-none-match')===headers.etag)return new Response(null,{status:304,headers});
   const compressed=Uint8Array.from(atob(file.data),c=>c.charCodeAt(0));
   const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'));
   return new Response(request.method==='HEAD'?null:stream,{headers});
