@@ -514,6 +514,7 @@ async function gAdd(gid,name,ao){if(guests.has(gid))return;const g={id:gid,name,
  ann.connect(g.mm);for(const s of S)if(s.g&&s.type!=='guest')s.g.connect(g.mm);for(const o of guests.values())if(o!==g&&o.src&&o.src.raw)o.src.raw.connect(g.mm);
  const pc=g.pc=new RTCPeerConnection({iceServers:gice});
  pc.onconnectionstatechange=()=>{if(g.pc!==pc)return;g.connection=pc.connectionState;if(pc.connectionState==='connected')g.restartAttempts=0;if(pc.connectionState==='failed'){gSt('Media connection interrupted for '+name+'. Attempting to reconnect.');gRestart(g)}renderG()};
+ pc.onsignalingstatechange=()=>{if(g.pc===pc&&pc.signalingState==='stable'&&pc.connectionState==='failed')gRestart(g)};
  g.mm.stream.getAudioTracks().forEach(t=>pc.addTrack(t,g.mm.stream));if(!ao&&!$('lite').checked){gcs=gcs||gc.captureStream(15);gcs.getVideoTracks().forEach(t=>pc.addTrack(t,gcs))}
  pc.onicecandidate=e=>{if(e.candidate)gsend({t:'sig',to:gid,data:{c:e.candidate}})};pc.ontrack=e=>gTrack(g,e);
  try{await pc.setLocalDescription(await pc.createOffer());gsend({t:'sig',to:gid,data:{sdp:pc.localDescription}})}catch(e){gSt('Could not connect '+name+'.')}
