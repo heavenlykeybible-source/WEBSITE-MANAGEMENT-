@@ -95,3 +95,12 @@ test('Community API enforces HTTPS transport and same-origin resource policy',()
  assert.match(worker,/headers\.set\("Strict-Transport-Security","max-age=31536000"\)/);
  assert.match(worker,/headers\.set\("Cross-Origin-Resource-Policy","same-origin"\)/);
 });
+
+test('Community health and readiness routes are bounded and avoid leaking dependency errors',()=>{
+ const worker=readFileSync(new URL('src/index.ts',base),'utf8');
+ assert.match(worker,/p==="\/api\/health"&&m==="GET"/);
+ assert.match(worker,/p==="\/api\/ready"&&m==="GET"/);
+ assert.match(worker,/env\.DB\.prepare\("SELECT 1"\)\.first\(\)/);
+ assert.match(worker,/env\.SESSIONS\.get\("health:readiness"\)/);
+ assert.match(worker,/catch\{return json\(\{ready:false\},503\);\}/);
+});
