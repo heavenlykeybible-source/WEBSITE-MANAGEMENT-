@@ -72,7 +72,7 @@ if(AUD){$('nrrow').hidden=true;$('ti').textContent='Join the audience';$('intro'
 else $('oktx').textContent='I understand the host may broadcast and record this session, including my video, voice, name and chat messages. The host can see my network address. I agree to the Privacy Policy.';
 $('oklab').insertAdjacentHTML('beforeend',' <a href="/privacy.html" target="_blank" rel="noopener">Read it</a>');
 $('pm').textContent=AUD?'':'Use headphones to avoid echo. Your browser will ask to use your camera and microphone.';
-if(!/^wss:\/\//.test(relay)||!/^[A-Za-z0-9_-]{1,64}$/.test(room)||!/^\w+$/.test(key)){$('pm').textContent='This invite link is incomplete. Ask the host for a new one.';$('go').disabled=true}
+if(!/^wss:\/\//.test(relay)||!/^[A-Za-z0-9_-]{1,64}$/.test(room)||!/^\w+$/.test(key)||!relay.startsWith('wss://'+location.host+'/meeting/'+room)){$('pm').textContent='This invite link is incomplete. Ask the host for a new one.';$('go').disabled=true}
 
 async function getMedia(ao){const m=await getMedia0(ao);if(!m||!$('nr').checked||!m.getAudioTracks().length)return m;
  try{await loadNS();proc=new Shiguredo.NoiseSuppressionProcessor(NSPATH);const pt=await proc.startProcessing(m.getAudioTracks()[0]);return new MediaStream([...m.getVideoTracks(),pt])}catch(e){proc=null;note('Strong noise removal is not available on this device. Standard noise removal is on.');return m}}
