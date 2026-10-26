@@ -242,3 +242,9 @@ test('Host accepts SDP answers only when an outgoing offer is pending', () => {
  assert.match(host,/const activePc=g\.pc;await activePc\.setRemoteDescription\(d\.sdp\)/);
  assert.match(host,/if\(g\.pc!==activePc\|\|activePc\.signalingState==='closed'\)return/);
 });
+
+test('Failed host media recovery retries after signaling stabilizes', () => {
+ const host=readFileSync(resolve(root,'site/index.html'),'utf8');
+ assert.match(host,/pc\.onsignalingstatechange=\(\)=>\{if\(g\.pc===pc&&pc\.signalingState==='stable'&&pc\.connectionState==='failed'\)gRestart\(g\)\}/);
+ assert.match(host,/if\(!pc\|\|pc\.signalingState!=='stable'\|\|!guests\.has\(g\.id\)\|\|g\.restartAttempts>=2\)return/);
+});
