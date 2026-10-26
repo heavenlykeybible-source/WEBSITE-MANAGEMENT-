@@ -2,6 +2,7 @@
 // this service carries admission, chat and WebRTC signalling only.
 const roomClean=(s,n)=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n);
 const roomICE=[{urls:'stun:stun.cloudflare.com:3478'}];
+const capacityForRoom=env=>Math.max(2,Math.min(100,Number(env.MEETING_ROOM_CAP)||25));
 export class MeetingRooms {
  constructor(state,env){this.state=state;this.env=env;}
  sockets(){return this.state.getWebSockets().filter(w=>w.readyState===1);}
@@ -20,7 +21,7 @@ export class MeetingRooms {
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
-  const capacity=Math.max(2,Math.min(12,Number(this.env.MEETING_ROOM_CAP)||8));
+  const capacity=Math.max(2,Math.min(100,Number(this.env.MEETING_ROOM_CAP)||25));
   if(this.sockets().length>=capacity)return new Response('Room is full',{status:429});
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
@@ -57,7 +58,7 @@ export class MeetingRooms {
     if(!h||h.until<=now||m.room!==h.room||m.key!==h.key)return this.close(ws,{t:'error',msg:'This invite is not valid or the room has ended.'});
     const aud=m.aud===true,guests=this.guests();
     if(!aud&&h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
-    if(guests.filter(w=>this.data(w).aud===aud).length>=(aud?100:18))return this.close(ws,{t:'error',msg:'This room is full.'});
+    if(guests.filter(w=>this.data(w).aud===aud).length>=(aud?Math.max(1,capacityForRoom(this.env)-1):Math.min(18,capacityForRoom(this.env)-1)))return this.close(ws,{t:'error',msg:'This room is full.'});
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),ok:aud,aud,stage:false,invited:false,ao:!!m.ao,last:0});
     if(!aud&&d.pass&&h.admitted.includes(d.pass)&&this.stage().length<6){d.ok=true;d.stage=true;}
     this.save(ws,d);this.send(ws,{t:'welcome',ice:roomICE,watch:h.watch,chat:h.audChat,slow:h.slow});
