@@ -30,3 +30,11 @@
 .hk-community-app-restore{position:fixed;bottom:16px;right:16px;z-index:2001;background:#780a43;color:#fff;border:2px solid #edc16a;border-radius:25px;padding:11px 16px;cursor:pointer}
 .hk-community-app-restore[hidden]{display:none}
 @media(max-width:750px){.hk-community-apps{margin-top:16px}.hk-community-app-panel{right:8px!important;left:8px!important;top:8vh!important;bottom:auto!important;width:auto!important;height:76dvh;resize:none}.hk-community-app-head{touch-action:auto}}
+
+/* Device safety: compact displays, accessible tap targets and safe areas. */
+.hk-community-app-head button{min-width:44px;min-height:44px}
+.hk-community-app-bottom :is(button,a){min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.hk-community-app-panel{max-height:calc(100dvh - 16px)}
+@media(max-width:750px){.hk-community-app-panel{top:max(8px,env(safe-area-inset-top))!important;height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));max-height:none!important;min-width:0!important;min-height:0!important}.hk-community-app-restore{bottom:max(12px,env(safe-area-inset-bottom))}}
+@media(max-width:360px){.hk-community-app-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hk-community-app-btn{min-height:96px}}
+@media(prefers-reduced-motion:reduce){.hk-community-app-orb{transition:none!important}}
