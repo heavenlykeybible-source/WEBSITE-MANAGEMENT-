@@ -113,6 +113,20 @@ async function runTimeline(record){
  const before=v.currentTime,rate=v.playbackRate,volume=v.volume;let rec=null,stream=null,audioContext=null,soundtrackNode=null,soundtrackGain=null;let elapsed=0;const audioStart=Number($('clipAudioStart').value),audioOffset=Number($('clipAudioOffset').value);
  try{
   const fragments=[];let finished;
+  if(pipUrl){
+   if(pip.readyState<1){
+    await new Promise((resolve,reject)=>{
+     let timer;
+     const cleanup=()=>{clearTimeout(timer);pip.removeEventListener('loadedmetadata',loaded);pip.removeEventListener('error',failed)};
+     const loaded=()=>{cleanup();resolve()};
+     const failed=()=>{cleanup();reject(Error('Cannot decode the picture-in-picture video.'))};
+     timer=setTimeout(()=>{cleanup();reject(Error('Picture-in-picture video metadata timed out.'))},10000);
+     pip.addEventListener('loadedmetadata',loaded);pip.addEventListener('error',failed);pip.load();
+    });
+   }
+   if(!Number.isFinite(pip.duration)||pip.duration<=0||!pip.videoWidth)throw Error('The overlay video is not playable.');
+  }
+
   if(soundtrackUrl){
    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
    if(!AudioContextClass)throw Error('Soundtrack mixing requires Web Audio support.');
