@@ -133,7 +133,12 @@ check('Anonymous voice configuration forbidden', anonymousVoice.status === 401);
 const noLengthUpload = await onRequest({
   request: new Request('https://studio.example/api/media?name=sample.png',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
-    body:new Uint8Array([1,2,3,4,5])
+    body:(()=>{
+      const wav=new ArrayBuffer(46),view=new DataView(wav),bytes=new Uint8Array(wav);
+      const put=(i,word)=>{for(let n=0;n<word.length;n++)bytes[i+n]=word.charCodeAt(n)};
+      put(0,'RIFF');view.setUint32(4,38,true);put(8,'WAVEfmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,16000,true);view.setUint32(28,32000,true);view.setUint16(32,2,true);view.setUint16(34,16,true);put(36,'data');view.setUint32(40,2,true);
+      return bytes;
+    })()
   }),env,params:{path:['media']}
 });
 check('Media supports absent content length',noLengthUpload.status===200);
@@ -157,6 +162,13 @@ const noLengthWav = await onRequest({
   }),env,params:{path:['transcribe']}
 });
 check('Transcription supports absent content length',noLengthWav.status===200);
+const brokenWav=await onRequest({
+  request:new Request('https://studio.example/api/transcribe',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},body:new Uint8Array([1,2,3,4,5])
+  }),env,params:{path:['transcribe']}
+});
+check('Malformed audio is rejected before AI usage',brokenWav.status===415);
+
 const logout = await request('logout', { method: 'POST', cookie: login.cookie });
 check('Logout succeeds', logout.status === 200);
 const expired = await request('me', { cookie: login.cookie });
