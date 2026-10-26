@@ -186,7 +186,7 @@ test('Guest signaling bounds early ICE candidates and ignores stale WebSocket me
  const source=readFileSync(resolve(root,'site/join.html'),'utf8');
  assert.match(source,/if\(pend\.length<100\)pend\.push\(d\.c\)/);
  assert.match(source,/ws\.onmessage=e=>\{if\(over\|\|ws!==currentSocket\)return/);
- assert.match(source,/ws\.onopen=\(\)=>\{if\(over\|\|ws!==currentSocket\)return/);
+ assert.match(source,/ws\.onopen=\(\)=>\{clearTimeout\(openTimer\);openTimer=null;if\(over\|\|ws!==currentSocket\)return/);
 });
 
 test('Host room creation has a bounded handshake and safe cleanup', () => {
