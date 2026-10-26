@@ -1,0 +1,19 @@
+name: Audit public footers and unofficial widgets
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/cleanup/audit-public.mjs', '.github/workflows/audit-public-cleanup.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node scripts/cleanup/audit-public.mjs
