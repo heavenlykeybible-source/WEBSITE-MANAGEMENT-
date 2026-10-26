@@ -125,5 +125,13 @@ assert.ok(appDock.includes("frame.allow='autoplay; clipboard-write'"),'Radio emb
 assert.ok(appDock.includes("bar.setPointerCapture"),'Popup drag must support pointer input');
 assert.ok(!/googlesyndication|doubleclick\\.net|adsbygoogle|adservice\\.google/.test(appDock+appDockCss),'The dock must not contain ad integrations');
 assert.ok(appDockCss.includes('@media(max-width:720px)'),'Dock must support mobile viewports');
+const publicMaster=readFileSync(resolve(dir,'js/public-site-master.js'),'utf8');
+assert.ok(appDock.includes("className='hk-page-app-section'"),'Subpages must receive reserved seven-app section');
+assert.ok(appDock.includes('footer.before(section)'),'Shared app section must be placed directly above footer');
+assert.ok(appDock.includes('mount.appendChild(dock)'),'Shared seven-app pole must mount on homepage and subpages');
+assert.ok(publicMaster.includes("'/js/president-app-dock.js?v=20261026e'"),'Public subpages must load one shared app feature implementation');
+assert.ok(publicMaster.includes("'/css/president-app-dock.css?v=20261026e'"),'Public subpages must load its matching CSS');
+assert.ok(appDockCss.includes('.hk-page-app-section .hk-app-dock'),'Right-side reserved subpage position must be styled');
+
 
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
