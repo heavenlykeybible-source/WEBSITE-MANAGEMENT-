@@ -1,0 +1,30 @@
+{
+  "name": "From Creation to Eternity",
+  "short_name": "From Creation to Eternit",
+  "description": "From Creation to Eternity \u2014 Heavenly Key Evangelistic Movement",
+  "id": "/installed/bible-study-portal",
+  "start_url": "/creation-to-eternity.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#64152f",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "education",
+    "social"
+  ],
+  "lang": "en"
+}
