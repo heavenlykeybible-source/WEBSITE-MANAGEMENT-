@@ -11,6 +11,7 @@ on:
       - 'scripts/account9-release-policy.mjs'
       - 'scripts/test-account9-release-policy.mjs'
       - 'scripts/smoke-account9-live.mjs'
+      - 'scripts/test-account9-worker-health.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   pull_request:
     paths:
@@ -22,6 +23,7 @@ on:
       - 'scripts/account9-release-policy.mjs'
       - 'scripts/test-account9-release-policy.mjs'
       - 'scripts/smoke-account9-live.mjs'
+      - 'scripts/test-account9-worker-health.mjs'
       - '.github/workflows/quality-account9-videoeditor.yml'
   workflow_dispatch:
 
@@ -54,6 +56,8 @@ jobs:
         run: node scripts/verify-account9-release.mjs
       - name: Validate packaged Worker JavaScript
         run: node --check /tmp/account9-quality-worker.mjs
+      - name: Exercise packaged Worker health and auth boundaries
+        run: node scripts/test-account9-worker-health.mjs /tmp/account9-quality-worker.mjs
       - name: Smoke-test packaged Worker static routes
         run: |
           node --input-type=module <<'JS'
