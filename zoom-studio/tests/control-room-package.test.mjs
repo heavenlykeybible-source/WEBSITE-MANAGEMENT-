@@ -78,6 +78,15 @@ test('missing database yields a clear setup failure while public template still 
 const {MeetingRooms}=await import(pathToFileURL(path.join(root,'build/meeting-worker.mjs')));
 function socket(data){return {readyState:1,messages:[],serializeAttachment(d){assert.ok(Buffer.byteLength(JSON.stringify(d))<=2048,'hibernation attachment fits platform limit');this.d=structuredClone(d)},deserializeAttachment(){return structuredClone(this.d)},send(m){this.messages.push(JSON.parse(m))},close(){this.readyState=3},d:structuredClone(data)};}
 function meeting(){const all=[],state={getWebSockets(){return all},storage:{async setAlarm(){}}};return {all,state,room:new MeetingRooms(state,{AUTH_SECRET:secret}),add(data={}){const w=socket({role:'',room:'11111111-1111-4111-8111-111111111111',until:Date.now()+15000,...data});all.push(w);return w}};}
+test('invalid meeting room capacity uses a safe finite default',async()=>{
+ const s=await openRoom();
+ for(const bad of ['Infinity','NaN','-9','']){
+  s.room.env.MEETING_ROOM_CAP=bad;
+  for(let i=0;i<24;i++)if(s.room.guests().length<24){const g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true});}
+  const overflow=s.add();await message(s.room,overflow,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+  assert.equal(overflow.readyState,3,'invalid cap '+bad+' must not allow unlimited guests');
+ }
+});
 test('meeting room counts audience and speaker guests together against capacity',async()=>{
  const s=await openRoom();s.room.env.MEETING_ROOM_CAP='4';
  const first=s.add(),second=s.add(),third=s.add();
