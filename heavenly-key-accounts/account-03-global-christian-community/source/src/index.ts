@@ -32,7 +32,13 @@ const cleanEmail=(v:any)=>String(v||"").trim().toLowerCase().slice(0,160);
 const validEmail=(v:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 async function rate(env:Env,key:string,max:number,seconds:number){
-  const k="rate:"+key,raw=await env.SESSIONS.get(k),state=raw?JSON.parse(raw):{n:0};if(state.n>=max)return false;state.n++;await env.SESSIONS.put(k,JSON.stringify(state),{expirationTtl:seconds});return true;
+  const k="rate:"+key,now=Date.now(),raw=await env.SESSIONS.get(k);
+  const previous=raw?JSON.parse(raw) as {n:number;until?:number}:null;
+  const until=previous?.until&&previous.until>now?previous.until:now+seconds*1000;
+  const count=previous?.until&&previous.until>now?previous.n:0;
+  if(count>=max)return false;
+  await env.SESSIONS.put(k,JSON.stringify({n:count+1,until}),{expirationTtl:Math.max(60,Math.ceil((until-now)/1000))});
+  return true;
 }
 async function me(request:Request,env:Env){const u=await getSession(request,env);if(!u)throw Object.assign(new Error("Please sign in."),{status:401});return u;}
 
