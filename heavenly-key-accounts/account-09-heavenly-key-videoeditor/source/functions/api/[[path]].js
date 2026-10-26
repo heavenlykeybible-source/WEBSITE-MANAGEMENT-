@@ -78,6 +78,14 @@ export async function onRequest({ request: req, env, params }) {
   }
   if (m !== 'GET' && m !== 'HEAD' && req.headers.get('x-requested-with') !== 'hk') return J({ error: 'Blocked request' }, 403);
   try {
+    // Minimal, read-only readiness probe for verifying real Cloudflare resource
+    // bindings after deployment. Never disclose account details or secrets.
+    if (a === 'health' && m === 'GET') {
+      const dbReady = Boolean(env.DB && await env.DB.prepare('SELECT 1 AS ready').first());
+      const storageReady = Boolean(env.MEDIA && typeof env.MEDIA.get === 'function' && typeof env.MEDIA.put === 'function');
+      const aiReady = Boolean(env.AI && typeof env.AI.run === 'function');
+      return J({ status: dbReady && storageReady && aiReady ? 'ready' : 'degraded' }, dbReady && storageReady && aiReady ? 200 : 503);
+    }
     if (a === 'register' && m === 'POST') {
       const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid registration data.' }, 400);
       const email = String(b.email || '').trim().toLowerCase(), pw = String(b.password || '');
