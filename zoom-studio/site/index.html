@@ -620,8 +620,8 @@ Object.assign(act,{
  tmrem:async(i,b)=>{if(!confirm('Remove this person from the group?'))return;const r=await api('/api/team/remove',{team:tm.cur,email:b.dataset.m});if(!r.ok)msg(r.error||'Could not remove.');tmMembers()}});
 async function pendingJoin(){let c='';try{c=sessionStorage.getItem('ls_join')||''}catch(e){}if(!c)return;
  if(!acct.me){$('acm').textContent='Sign in or create an account to join the group.';act.tab(8);return}
- try{sessionStorage.removeItem('ls_join')}catch(e){}
- const r=await api('/api/team/join',{code:c});act.tab(11);if(r.ok){tm.cur=r.team.id;await tmLoad();msg('You joined '+r.team.name+'.')}else{tmShow();msg(r.error||'Could not join the group.')}}
+ const preview=await api('/api/team/invite-preview?code='+encodeURIComponent(c),null,'GET');if(!preview.ok){msg(preview.error||'Invitation unavailable.');return}if(preview.joined){try{sessionStorage.removeItem('ls_join')}catch(e){}tm.cur=preview.group.id;act.tab(11);await tmLoad();return}if(!confirm('Join the group '+preview.group.name+'?')){try{sessionStorage.removeItem('ls_join')}catch(e){}return}
+ const r=await api('/api/team/join',{code:c});act.tab(11);if(r.ok){try{sessionStorage.removeItem('ls_join')}catch(e){}tm.cur=r.team.id;await tmLoad();msg('You joined '+r.team.name+'.')}else{tmShow();msg(r.error||'Could not join the group.')}}
 
 let prList=[],prEdit='',prSel=null;
 async function prLoad(){if(!acct.on||!acct.me){$('pms').textContent=acct.on?'Sign in under Account to create programs.':'Programs need accounts.';$('ppl').innerHTML='';return}
