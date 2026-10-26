@@ -36,3 +36,12 @@
 
 /* Keep the source portrait uncropped by the launcher and clarify external embeds. */
 .hk-app-window-help a{color:#145b43;text-decoration:underline;font-weight:700}.hk-app-window-frame{min-height:0}.hk-app-dock{isolation:isolate}
+
+/* Shared reserved launcher location on Account 1 subpages: immediately before footer. */
+.hk-page-app-section{position:relative;isolation:isolate;display:block;padding:34px max(18px,calc((100vw - 1240px)/2)) 38px;background:linear-gradient(108deg,#052d25 0%,#123d49 54%,#560d2e 100%);border-top:3px solid #d6ab51;border-bottom:3px solid #d6ab51;color:#fff;overflow:visible}
+.hk-page-app-inner{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,290px);gap:28px;align-items:center;min-height:555px;max-width:1240px;margin:0 auto}
+.hk-page-app-heading{align-self:center;max-width:720px;padding:20px 0}.hk-page-app-heading p{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#efd075;font-weight:800;margin:0 0 15px}.hk-page-app-heading h2{font:700 clamp(30px,3vw,46px)/1.14 Georgia,serif;color:#fff;margin:0 0 18px}.hk-page-app-heading span{font-size:clamp(16px,1.6vw,20px);color:#f2eee9;line-height:1.6}
+.hk-page-app-section .hk-app-dock{position:relative!important;right:auto!important;top:auto!important;justify-self:end;align-self:center;grid-column:2;grid-row:1;z-index:110}
+.hk-page-app-section .hk-dock-tab{width:clamp(175px,18vw,230px)}
+.hk-page-app-section .hk-app-window{right:calc(100% + 15px);top:16px}
+@media(max-width:720px){.hk-page-app-section{padding:26px 16px 34px}.hk-page-app-inner{display:flex;flex-direction:column;align-items:stretch;min-height:0;gap:6px}.hk-page-app-heading{padding:12px 0;text-align:center}.hk-page-app-section .hk-app-dock{align-self:flex-end;right:0!important}.hk-page-app-section .hk-dock-tab{width:min(240px,69vw)}}
