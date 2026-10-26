@@ -11,7 +11,9 @@
       "hk-standard-footer.js",
       "hk-standard-footer.css",
       "cms-runtime-20261015.js",
-      "cms-runtime-20261015.css"
+      "cms-runtime-20261015.css",
+      "hk-approved-footer.js",
+      "hk-approved-footer.css"
     ]
   },
   "bible-study-portal": {
@@ -25,12 +27,17 @@
       "hk-standard-footer.js",
       "hk-standard-footer.css",
       "cms-runtime-20261015.js",
-      "cms-runtime-20261015.css"
+      "cms-runtime-20261015.css",
+      "hk-approved-footer.js",
+      "hk-approved-footer.css"
     ]
   },
   "eternity-in-view": {
     "page": "/eternity-in-view/",
-    "files": [],
+    "files": [
+      "hk-approved-footer.js",
+      "hk-approved-footer.css"
+    ],
     "websiteFile": "eternity-in-view/index.html"
   },
   "bible-reader": {
@@ -52,7 +59,9 @@
       "lock-screen-media.js",
       "audio-playlist.js",
       "audio-background-catalog.js",
-      "bible-mobile-controls.js"
+      "bible-mobile-controls.js",
+      "hk-approved-footer.js",
+      "hk-approved-footer.css"
     ]
   },
   "audio-bible": {
@@ -75,7 +84,9 @@
       "audio-playlist.js",
       "audio-background-catalog.js",
       "bible-mobile-controls.js",
-      "audio-bible.js"
+      "audio-bible.js",
+      "hk-approved-footer.js",
+      "hk-approved-footer.css"
     ]
   },
   "hymns": {
@@ -98,7 +109,9 @@
       "audio-playlist.js",
       "audio-background-catalog.js",
       "bible-mobile-controls.js",
-      "featured-main-hymn.js"
+      "featured-main-hymn.js",
+      "hk-approved-footer.js",
+      "hk-approved-footer.css"
     ]
   },
   "audio-hymns": {
@@ -121,7 +134,9 @@
       "audio-playlist.js",
       "audio-background-catalog.js",
       "bible-mobile-controls.js",
-      "audio-hymns.js"
+      "audio-hymns.js",
+      "hk-approved-footer.js",
+      "hk-approved-footer.css"
     ]
   },
   "daily-reading": {
@@ -143,7 +158,9 @@
       "lock-screen-media.js",
       "audio-playlist.js",
       "audio-background-catalog.js",
-      "bible-mobile-controls.js"
+      "bible-mobile-controls.js",
+      "hk-approved-footer.js",
+      "hk-approved-footer.css"
     ]
   }
 }

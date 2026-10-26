@@ -1,0 +1,3 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';
+const origin=process.argv[2],prefix=process.argv[3]||'';assert.ok(/^https:\/\/[a-z0-9.-]+\/?$/.test(origin||''));const release=JSON.parse(fs.readFileSync('config/approved-footer-release.json','utf8'));
+for(const file of ['hk-approved-footer.js','hk-approved-footer.css']){const r=await fetch(origin.replace(/\/$/,'')+'/'+prefix+file,{cache:'no-store',signal:AbortSignal.timeout(20000)});assert.equal(r.status,200,'Footer asset unavailable: '+file);const text=await r.text();assert.ok(text.includes(file.endsWith('.js')?release.revision:':host'),'Wrong footer release: '+file);}console.log('PASS canonical homepage footer assets published at '+origin+' version '+release.revision.slice(0,12));

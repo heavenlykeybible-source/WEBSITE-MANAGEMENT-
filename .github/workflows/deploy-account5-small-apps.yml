@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'config/approved-homepage-footer.json'
+      - 'scripts/cleanup/sync-footer.mjs'
       - 'config/small-app-bundles.json'
       - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/**'
       - 'scripts/build-small-app-worker.mjs'
@@ -42,6 +44,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      - name: Build the single approved homepage footer
+        working-directory: ${{ github.workspace }}
+        run: node scripts/cleanup/sync-footer.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

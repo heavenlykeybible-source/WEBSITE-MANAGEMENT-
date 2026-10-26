@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'config/approved-homepage-footer.json'
+      - 'scripts/cleanup/sync-footer.mjs'
       - 'apps/heavenly-key-bible/**'
       - '.github/workflows/deploy-bible.yml'
 permissions:
@@ -24,6 +26,9 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.BIBLE_CLOUDFLARE_ACCOUNT_ID || secrets.ACCOUNT6_CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
+      - name: Build the single approved homepage footer
+        working-directory: ${{ github.workspace }}
+        run: node scripts/cleanup/sync-footer.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

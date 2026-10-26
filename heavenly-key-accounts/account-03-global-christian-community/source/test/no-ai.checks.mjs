@@ -59,7 +59,7 @@ test('visual editor retains authenticated handoff and draft/publish controls aft
 
 test('every page uses the cleaned local footer and external connections allow content but not assistant inference',()=>{
  const pages=files('public').filter(p=>p.endsWith('.html'));let footers=0;
- for(const path of pages){const html=read(path);if(html.includes('hk-standard-footer.js')){footers++;assert(html.includes('hk-standard-footer.js?v=20261021-noai1'),path);}
+ for(const path of pages){const html=read(path);if(html.includes('hk-approved-footer.js')){footers++;assert(!html.includes('hk-standard-footer.js'),path+' loads competing footer');}
   for(const [,src]of html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)/gi))assert(!/^https?:/i.test(src),path+' executes unpinned external code');
  }
  assert(footers>=10);assert(!read('public/index.html').includes('hk-footer-app-promo-20261015.js'),'Community home does not load ministry advertisements');

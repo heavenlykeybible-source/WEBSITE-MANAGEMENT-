@@ -2,7 +2,7 @@ name: Audit public footers and unofficial widgets
 on:
   push:
     branches: [main]
-    paths: ['scripts/cleanup/audit-public.mjs', '.github/workflows/audit-public-cleanup.yml']
+    paths: ['config/approved-homepage-footer.json', 'scripts/cleanup/**', 'tests/approved-footer.mjs', '.github/workflows/audit-public-cleanup.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,4 +16,5 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node scripts/cleanup/sync-footer.mjs && node tests/approved-footer.mjs
       - run: node scripts/cleanup/audit-public.mjs

@@ -173,7 +173,7 @@ a{color:var(--ac)}
 <div id="psh" hidden><h2>Share this program</h2><p class="mu" id="psu"></p>
 <div class="row"><button data-a="pshare" data-m="wa">WhatsApp</button><button data-a="pshare" data-m="fb">Facebook</button><button data-a="pshare" data-m="x">X</button><button data-a="pshare" data-m="tg">Telegram</button><button data-a="pshare" data-m="li">LinkedIn</button><button data-a="pshare" data-m="em">Email</button><button data-a="pshare" data-m="cp">Copy link</button><button data-a="pshare" data-m="nat">More...</button><button data-a="pshare" data-m="img">Picture for Instagram or TikTok</button></div></div>
 </section>
-</main><footer class="ministry-footer"><div><span class="footer-name">HEAVENLY KEY<br>EVANGELISTIC MOVEMENT</span><p>End-time, Non-denominational,<br>Apostolic &amp; Evangelistic Movement.</p></div><div><p class="footer-label">TOGETHER, WE TAKE CHRIST TO THE NATIONS.</p><p>Revival • Holiness • Power</p><a href="https://heavenlykey.org/">Visit the main website ↗</a></div><div><p class="footer-label">SUBSCRIBE / FOLLOW US</p><p>HEAVENLY KEY EVANGELISTIC MOVEMENT</p><a href="https://www.facebook.com/heavenlykey">Facebook ↗</a><div class="footer-legal"><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a></div></div></footer>
+</main>
 <script>
 const helpText=['Choose a broadcast layout, set your title, then open Go live when you are ready.','Prepare scenes privately, then take the selected scene to your program.','Add cameras, microphone, screen sharing, pictures or media from your device.','Balance each sound source and adjust your listening volume.','Connect a channel or enter a stream key, then start your broadcast.','Connect public Twitch chat and add it to your broadcast.','Capture moments from your program and download them before closing the studio.','Write announcements and broadcast text, or prepare a spoken announcement.','Sign in, manage your access and change your password.','Create users, set passwords and manage account access.','Open a room, share the invitation and admit people when you are ready.','Bring your team together with group messages, meetings and attendance follow-up.','Create a program page, add its watch link and share it with your audience.'];
 document.querySelectorAll('.tabs button').forEach((b,i)=>b.addEventListener('click',()=>{$('featureHelp').textContent=helpText[i]}));
@@ -711,4 +711,4 @@ $('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'
  if(!outs.length){$('info').textContent='Add a channel or a destination with a stream key first.';return}
  if(!(await relink())){if(!acct.on)$('info').textContent='Enter your relay address.';return}
  AC.resume();sent=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect()};
-</script></body></html>
+</script><script defer src="hk-approved-footer.js"></script></body></html>
