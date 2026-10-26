@@ -1,0 +1,58 @@
+{
+  "public-assistant": {
+    "name": "Online Assistant",
+    "url": "https://apps.heavenlykey.org/assistant.html"
+  },
+  "walk-with-god": {
+    "name": "My Walk With God",
+    "url": "https://apps.heavenlykey.org/walk-offline.html"
+  },
+  "eternity-in-view": {
+    "name": "Eternity in View",
+    "url": "https://apps.heavenlykey.org/eternity-in-view/"
+  },
+  "bible-study-portal": {
+    "name": "From Creation to Eternity",
+    "url": "https://apps.heavenlykey.org/creation-to-eternity.html"
+  },
+  "community": {
+    "name": "Global Christian Social Network",
+    "url": "https://global.heavenlykey.org"
+  },
+  "bible": {
+    "name": "Heavenly Key Bible Platform",
+    "url": "https://onlinebible.heavenlykey.org"
+  },
+  "radio": {
+    "name": "Revival Radio",
+    "url": "https://radio.heavenlykey.org"
+  },
+  "meeting": {
+    "name": "Meeting Space",
+    "url": "https://meeting.heavenlykey.org"
+  },
+  "bible-reader": {
+    "name": "KJV Bible Reader",
+    "url": "https://apps.heavenlykey.org/bible.html"
+  },
+  "audio-bible": {
+    "name": "Audio Bible",
+    "url": "https://apps.heavenlykey.org/audio-bible.html"
+  },
+  "hymns": {
+    "name": "Hymn Library",
+    "url": "https://apps.heavenlykey.org/hymns.html"
+  },
+  "audio-hymns": {
+    "name": "Audio Hymnal",
+    "url": "https://apps.heavenlykey.org/audio-hymns.html"
+  },
+  "daily-reading": {
+    "name": "Daily Reading Plan",
+    "url": "https://apps.heavenlykey.org/devotional.html"
+  },
+  "all-in-one": {
+    "name": "Heavenly Key All-in-One",
+    "url": "https://apps.heavenlykey.org/experience.html"
+  }
+}
