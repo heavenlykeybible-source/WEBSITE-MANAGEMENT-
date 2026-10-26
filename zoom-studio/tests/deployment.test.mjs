@@ -95,7 +95,7 @@ test('same tenant cannot reuse legacy shared database IDs',()=>{
 });
 
 test('Account 8 deploy verifies MeetingSpace health endpoint rather than just a homepage',()=>{
- const deploy=readFileSync(resolve(root,'scripts/deploy.mjs'),'utf8');
+ const deploy=fs.readFileSync(new URL('../scripts/deploy.mjs',import.meta.url),'utf8');
  assert.match(deploy,/RELEASE_HEALTH_PATH:'\/api\/health'/);
  assert.match(deploy,/RELEASE_HEALTH_EXPECT:JSON\.stringify\(\{ok:true,meetingConfigured:true\}\)/);
 });
