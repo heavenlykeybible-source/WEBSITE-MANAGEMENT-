@@ -40,7 +40,7 @@ function open(app){
  panel.dataset.open='true';restore.hidden=true;min.focus({preventScroll:true})
 }
 function build(aside){
- if(aside.querySelector('.hk-community-apps'))return;
+ const existing=aside.querySelector('.hk-community-apps');if(existing){if(existing!==aside.lastElementChild)aside.append(existing);return;}
  const section=make('section','hk-community-apps');section.setAttribute('aria-label','Heavenly Key ministry application launcher');
  const title=make('h2',null,'✦ Heavenly Key Apps');const grid=make('div','hk-community-app-grid');section.append(title,grid);
  for(const app of apps){const button=make('button','hk-community-app-btn');button.type='button';button.dataset.app=app.id;button.setAttribute('aria-pressed','false');button.setAttribute('aria-controls',panel.id);button.setAttribute('aria-label','Open '+app.name);const orb=make('span','hk-community-app-orb');if(app.id==='assistant'){const img=document.createElement('img');img.src=officialPortrait;img.alt='Official Heavenly Key Online Assistant portrait';img.loading='lazy';orb.append(img)}else orb.textContent=app.icon;const label=make('span',null,app.name);button.append(orb,label);button.addEventListener('click',()=>open(app));allButtons.add(button);grid.append(button)}
@@ -50,10 +50,10 @@ function build(aside){
 min.addEventListener('click',minimize);close.addEventListener('click',closeApp);restore.addEventListener('click',()=>{if(active)open(active)});
 share.addEventListener('click',async()=>{if(!active)return;const data={title:'Heavenly Key — '+active.name,text:'Share this ministry resource to bless others',url:active.url};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(data.url);share.textContent='Link Copied';setTimeout(()=>share.textContent='Share to Bless Others',1800)}else window.open('https://wa.me/?text='+encodeURIComponent(data.text+' '+data.url),'_blank','noopener,noreferrer')}catch(err){if(err.name!=='AbortError')console.warn('App sharing unavailable')}});
 head.addEventListener('pointerdown',e=>{if(e.target.closest('button')||e.button!==0||matchMedia('(max-width:750px)').matches)return;const box=panel.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,left:box.left,top:box.top};panel.style.position='fixed';panel.style.left=box.left+'px';panel.style.top=box.top+'px';panel.style.right='auto';head.setPointerCapture(e.pointerId)});
-head.addEventListener('pointermove',e=>{if(!drag)return;const b=panel.getBoundingClientRect();panel.style.left=Math.max(8,Math.min(window.innerWidth-b.width-8,drag.left+e.clientX-drag.x))+'px';panel.style.top=Math.max(8,Math.min(window.innerHeight-65,drag.top+e.clientY-drag.y))+'px'});
+head.addEventListener('pointermove',e=>{if(!drag)return;const b=panel.getBoundingClientRect();panel.style.left=Math.max(8,Math.min(Math.max(8,window.innerWidth-b.width-8),drag.left+e.clientX-drag.x))+'px';panel.style.top=Math.max(8,Math.min(Math.max(8,window.innerHeight-65),drag.top+e.clientY-drag.y))+'px'});
 head.addEventListener('pointerup',()=>drag=null);head.addEventListener('pointercancel',()=>drag=null);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panel.dataset.open==='true')minimize()});
-function boot(){document.body.append(panel,restore);let last=null;function scan(){const aside=document.querySelector('.social-sidebar');if(!aside||aside===last&&aside.querySelector('.hk-community-apps'))return;last=aside;allButtons.clear();build(aside)}
+function boot(){document.body.append(panel,restore);let last=null;function scan(){const aside=document.querySelector('.social-sidebar');if(!aside)return;if(aside!==last){last=aside;allButtons.clear()}build(aside)}
  scan();const observer=new MutationObserver(()=>scan());observer.observe(document.querySelector('#page-root')||document.body,{childList:true,subtree:true});window.addEventListener('pagehide',()=>observer.disconnect(),{once:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
