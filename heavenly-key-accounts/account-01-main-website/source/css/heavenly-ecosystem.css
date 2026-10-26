@@ -17,3 +17,37 @@
 .hk-eco-globe{inset:5%;width:90%;height:90%;border-radius:50%;font-size:0;background-image:url("../assets/ministry/rotating-world-land.svg");background-size:auto 100%;background-position:0 center;background-repeat:repeat-x;box-shadow:inset -28px -5px 35px #001c5cbf,inset 18px 8px 19px #ffffff3d;animation:hk-land-drift 34s linear infinite;filter:none}
 @keyframes hk-land-drift{to{background-position:-720px center}}
 @media (prefers-reduced-motion:reduce){.hk-eco-globe{animation:none}}
+
+
+/* Photo-led infographic layout matching the approved bright multi-colour concept */
+.hk-ecosystem{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(180deg,#e0f2ffec,#edf8ffef 52%,#e2f5ffe9),url("../assets/ministry/outreach-1.jpg") center /cover no-repeat;padding:clamp(28px,3.5vw,48px) 16px 34px}
+.hk-ecosystem:before{content:"";pointer-events:none;position:absolute;inset:0;background:radial-gradient(ellipse at 48% 48%,#ffffffa0,transparent 48%);z-index:-1}
+.hk-eco-head{margin-bottom:18px}.hk-eco-head h2{font-family:Georgia,serif;font-size:clamp(2rem,4.1vw,4rem);color:#063e95;letter-spacing:-.035em;text-shadow:0 2px #fff,0 4px 12px #08286b27}
+.hk-eco-head h2 span{color:#c48404}.hk-eco-tag{background:linear-gradient(100deg,#0759bc,#003577);box-shadow:0 8px 18px #14459b44}.hk-eco-mission{font-family:Georgia,serif;font-weight:700}
+.hk-eco-layout{max-width:1660px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-areas:"network network network network bible bible bible bible radio radio radio radio" "apps apps apps apps center center center center blog blog blog blog" "studio studio studio control control control editor editor editor meeting meeting meeting";gap:clamp(12px,1.35vw,22px);align-items:stretch;position:relative;isolation:isolate}
+.hk-eco-cards{display:contents}
+.hk-eco-network{grid-area:network}.hk-eco-bible{grid-area:bible}.hk-eco-radio{grid-area:radio}.hk-eco-apps{grid-area:apps}.hk-eco-blog{grid-area:blog}.hk-eco-studio{grid-area:studio}.hk-eco-control{grid-area:control}.hk-eco-editor{grid-area:editor}.hk-eco-meeting{grid-area:meeting}
+.hk-eco-card{grid-column:auto!important;min-width:0;margin:0!important;border-radius:21px;position:relative;z-index:2;border-width:3px;box-shadow:0 7px 28px #00387932,0 0 0 1px #ffffffb8;min-height:0!important}
+.hk-eco-card .hk-eco-visual{min-height:clamp(110px,10vw,175px);font-size:clamp(2rem,3vw,3.4rem);background-size:cover;background-position:center;display:flex;justify-content:flex-start;align-items:flex-start;padding:12px 14px;text-shadow:0 2px 10px #000;isolation:isolate}
+.hk-eco-card .hk-eco-visual:before{z-index:-1;background:linear-gradient(105deg,var(--deep),transparent 80%);opacity:.55}
+.hk-eco-content{flex:1;padding:13px 16px 16px;background:linear-gradient(125deg,#fff,#f4f8ff)}
+.hk-eco-card h3{font-size:clamp(.96rem,1.18vw,1.28rem);line-height:1.2}
+.hk-eco-summary{color:#1c3553}.hk-eco-details{line-height:1.43}.hk-eco-button{background:linear-gradient(105deg,var(--deep),var(--tone));border:1px solid #ffffffb0;box-shadow:0 3px 9px #0002}
+.hk-eco-core{grid-area:center;position:relative!important;top:auto!important;left:auto!important;transform:none!important;width:min(100%,300px)!important;max-width:100%;align-self:center;justify-self:center;margin:15px auto!important;z-index:4;pointer-events:none;box-shadow:0 0 0 6px #ffcf63,0 0 30px #3089e8aa,inset -17px -6px 25px #001846}
+.hk-eco-core:after{content:"";position:absolute;inset:6%;border-radius:50%;border:2px solid #ffffff55;box-shadow:inset 12px 10px 26px #fff3,inset -20px -10px 25px #00194e8a;pointer-events:none}
+.hk-eco-globe{opacity:1;background-repeat:repeat-x;background-size:auto 100%;animation:hk-land-drift 32s linear infinite;transform:none!important}
+.hk-eco-flags{max-width:240px;line-height:1.8;background:#0334717a;border-radius:50px;padding:3px 5px}
+.hk-eco-core strong{font-family:Georgia,serif;font-size:clamp(1.15rem,2vw,1.7rem);font-weight:900}
+.hk-eco-core small{font-family:Georgia,serif;max-width:220px;color:#fff1b7}
+.hk-eco-connections{position:absolute;z-index:1;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;filter:drop-shadow(0 0 3px #fff)}
+.hk-eco-card:hover{transform:translateY(-4px) scale(1.005);box-shadow:0 15px 30px #052f694a}
+.hk-eco-radio .hk-eco-visual{background-image:linear-gradient(105deg,#ac121d88,transparent),url("../assets/ministry/approved-radio-display-20261017.webp")}
+.hk-eco-network .hk-eco-visual{background-image:linear-gradient(105deg,#063e8b66,transparent),url("../assets/ministry/global-community-network.svg")}
+.hk-eco-bible .hk-eco-visual{background-image:linear-gradient(105deg,#086c2c77,transparent),url("../assets/ministry/sermons-header.jpg")}
+.hk-eco-blog .hk-eco-visual{background-image:linear-gradient(105deg,#ab530188,transparent),url("../assets/ministry/ministries-header.jpg")}
+.hk-eco-studio .hk-eco-visual{background-image:linear-gradient(105deg,#11519a88,transparent),url("../assets/ministry/feature-backgrounds.webp")}
+.hk-eco-control .hk-eco-visual{background-image:linear-gradient(105deg,#066b7488,transparent),url("../assets/ministry/feature-backgrounds.webp");background-position:55% center}
+.hk-eco-editor .hk-eco-visual{background-image:linear-gradient(105deg,#53248d88,transparent),url("../assets/ministry/feature-backgrounds.webp");background-position:75% center}
+@media(max-width:1050px){.hk-eco-layout{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"center center" "network bible" "radio apps" "blog meeting" "studio control" "editor editor";gap:15px}.hk-eco-card{grid-column:auto!important}.hk-eco-connections{display:none}.hk-eco-core{max-width:265px}.hk-eco-visual{min-height:110px}}
+@media(max-width:580px){.hk-ecosystem{padding:26px 10px}.hk-eco-layout{grid-template-columns:1fr;grid-template-areas:"center" "network" "bible" "radio" "apps" "blog" "meeting" "studio" "control" "editor"}.hk-eco-card .hk-eco-visual{min-height:122px}.hk-eco-core{max-width:250px}.hk-eco-content{padding:13px 14px}.hk-eco-tag{font-size:.86rem}}
+@media(prefers-reduced-motion:reduce){.hk-eco-globe{animation:none}.hk-eco-card{transition:none}}
