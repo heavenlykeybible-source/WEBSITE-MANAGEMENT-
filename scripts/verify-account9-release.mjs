@@ -3,7 +3,8 @@ import {readFileSync,readdirSync} from 'node:fs';
 import {resolve,join,relative,sep} from 'node:path';
 
 const root=resolve('heavenly-key-accounts/account-09-heavenly-key-videoeditor/source');
-const release=readFileSync('release-packages/account9-control-room-full.mjs','utf8');
+const releaseFile=process.argv[2]||'release-packages/account9-control-room-full.mjs';
+const release=readFileSync(releaseFile,'utf8');
 const token='const STATIC_ASSETS=';
 const start=release.indexOf(token);
 const finish=release.indexOf(';\nconst SECURITY_HEADERS=',start);

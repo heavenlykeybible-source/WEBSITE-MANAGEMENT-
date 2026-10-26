@@ -10,6 +10,7 @@ db.exec(readFileSync(new URL('../migrations/0003_audit_event_index.sql',import.m
 
 const objects = new Map();
 const env = {
+  ALLOW_PUBLIC_REGISTRATION: 'true', // Test fixture only; never set for production.
   DB: { prepare(sql) {
     const stmt = db.prepare(sql);
     let params = [];
@@ -75,6 +76,8 @@ const uninitializedSchema = await onRequest({
 });
 check('Health detects uninitialized or missing D1 schema without leaking errors',uninitializedSchema.status===503&&(await uninitializedSchema.json()).status==='degraded');
 
+const closedRegistration = await onRequest({request:new Request('https://studio.example/api/register',{method:'POST',headers:{'x-requested-with':'hk','content-type':'application/json'},body:JSON.stringify({email:'blocked@example.com',password:'correct horse battery'})}),env:{...env,ALLOW_PUBLIC_REGISTRATION:undefined},params:{path:['register']}});
+check('Public registration disabled by default',closedRegistration.status===403);
 const invalid = await request('register', { method: 'POST', body: { email: 'invalid', password: 'long enough password' } });
 check('Invalid registration rejected', invalid.status === 400);
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
