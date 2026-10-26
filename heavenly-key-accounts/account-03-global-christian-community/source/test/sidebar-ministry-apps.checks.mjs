@@ -31,3 +31,7 @@ console.log('Active Global Christian Community sidebar and footer contracts veri
 assert(source.includes("feedback.setAttribute('aria-live','polite')"),'App status must be accessible to screen readers');
 assert(source.includes("feedback.textContent='Application closed.'"),'Closing an app must provide confirmation');
 assert(css.includes('env(safe-area-inset-bottom)'),'App window must support phone safe areas');
+
+assert(source.includes("button.dataset.hkBound='true'"),'Sidebar controls must mark attached handlers');
+assert(source.includes("if(button.dataset.hkBound==='true')continue"),'Reused sidebar controls must not receive duplicate click handlers');
+assert(source.includes("apps.find(item=>item.id===button.dataset.app)"),'Cloned sidebar controls must reconnect to their matching apps');
