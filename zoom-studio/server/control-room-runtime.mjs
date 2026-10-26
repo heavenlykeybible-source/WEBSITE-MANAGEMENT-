@@ -17,8 +17,19 @@ async function meetingAsset(request) {
   if(path==='/')path='/index.html';
   const file=MEETING_ASSETS[path];
   if(!file)return new Response('Not found',{status:404});
-  const headers={'content-type':file.type,'etag':'"'+file.hash+'"','cache-control':path.startsWith('/bg/')||path.startsWith('/icons/')?'public,max-age=3600':'no-cache'};
-  if(request.headers.get('if-none-match')===headers.etag)return new Response(null,{status:304,headers});
+  // The bundled Worker serves its own assets; Pages' site/_headers is not applied here.
+  const headers={
+    'content-type':file.type,
+    'etag':'"'+file.hash+'"',
+    'cache-control':path==='/join.html'||path==='/index.html'?'no-store':path.startsWith('/bg/')||path.startsWith('/icons/')?'public,max-age=3600':'no-cache',
+    'x-content-type-options':'nosniff',
+    'referrer-policy':'no-referrer',
+    'x-frame-options':'DENY',
+    'permissions-policy':'camera=(self), microphone=(self), display-capture=(self), geolocation=()',
+    'content-security-policy':"frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'"
+  };
+  // Private HTML must never resolve through an intermediary cache, even on conditional requests.
+  if(headers['cache-control']!=='no-store' && request.headers.get('if-none-match')===headers.etag)return new Response(null,{status:304,headers});
   const compressed=Uint8Array.from(atob(file.data),c=>c.charCodeAt(0));
   const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'));
   return new Response(request.method==='HEAD'?null:stream,{headers});
