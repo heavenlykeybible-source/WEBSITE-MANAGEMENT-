@@ -1,9 +1,9 @@
 name: Zoom Studio checks and deployment
 on:
   push:
-    paths: ['zoom-studio/**', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
+    paths: ['zoom-studio/**', 'scripts/existing-worker-release.mjs', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
   pull_request:
-    paths: ['zoom-studio/**', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
+    paths: ['zoom-studio/**', 'scripts/existing-worker-release.mjs', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
   workflow_dispatch:
     inputs:
       deploy:
