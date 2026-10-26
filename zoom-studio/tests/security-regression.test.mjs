@@ -20,7 +20,7 @@ test('offline worker never intercepts authenticated API, non-GET or private page
   runInNewContext(source, {
     self, URL,
     caches: { open: async () => ({ match: async () => null, put: async () => {} }) },
-    fetch: async () => ({ ok: false, type: 'opaque' }),
+    Request, fetch: async () => ({ ok: false, type: 'opaque' }),
   });
   assert.equal(typeof handlers.fetch, 'function');
   const intercepts = (path, { method='GET', authorization=false, credentials='same-origin', mode='same-origin' }={}) => {
@@ -36,7 +36,10 @@ test('offline worker never intercepts authenticated API, non-GET or private page
   assert.equal(intercepts('/join.html?token=private', { authorization: true }), false);
   assert.equal(intercepts('/users/private'), false);
   assert.equal(intercepts('/join.html', { method: 'POST' }), false);
-  assert.equal(intercepts('/join.html', { mode: 'navigate' }), true);
+  assert.equal(intercepts('/join.html', { mode: 'navigate' }), false);
+  assert.equal(intercepts('/'), false);
+  assert.equal(intercepts('/studio-theme.css'), true);
+  assert.equal(intercepts('/manifest.webmanifest'), true);
   assert.equal(intercepts('/icons/icon-192.png'), true);
   assert.equal(intercepts('/bg/globe-doves.jpg'), true);
   assert.equal(intercepts('/join.html', { credentials: 'include' }), false);
