@@ -8,13 +8,15 @@ if(!origin || !/^https:\/\/[a-z0-9.-]+\/?$/i.test(origin)) throw Error('Set MEET
 const privatePreview=process.env.MEETINGSPACE_PRIVATE_PREVIEW==='1';
 const expectedHealth={ok:true,meetingConfigured:true,...(privatePreview?{}:{turnConfigured:true})};
 const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:origin,RELEASE_HEALTH_PATH:'/api/health',RELEASE_HEALTH_EXPECT:JSON.stringify(expectedHealth)};
+// The currently deployed private preview may not yet have TURN; only the *new* public release must.
+const snapshotEnv={...releaseEnv,RELEASE_HEALTH_EXPECT:JSON.stringify({ok:true,meetingConfigured:true})};
 function run(args,env=process.env){const r=spawnSync(args[0],args.slice(1),{stdio:'inherit',shell:false,env});if(r.error)throw r.error;if(r.status!==0)throw Error('Existing MeetingSpace release stopped at '+args[1]+' (exit '+r.status+')');}
 if(process.env.MEETINGSPACE_PRIVATE_PREVIEW!=='1') run([process.execPath,'scripts/legal-preflight.mjs']);
 else console.log('Private preview only: legal publication gate deferred; public signup disabled in Worker');
 run([process.execPath,'scripts/bundle-control-room.mjs']);
 run([process.execPath,'scripts/configure.mjs']);
 run([process.execPath,'scripts/verify-deployment-identity.mjs']);
-run([process.execPath,'../scripts/existing-worker-release.mjs','snapshot'],releaseEnv);
+run([process.execPath,'../scripts/existing-worker-release.mjs','snapshot'],snapshotEnv);
 let deployError;
 try { run(['npx','--yes','wrangler@4','deploy','--config','wrangler.generated.json','--keep-vars']); }
 catch(error) { deployError=error; }
