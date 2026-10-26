@@ -110,9 +110,10 @@ assert.ok(appDock.includes("aria-pressed','false'"),'Launcher buttons must expos
 assert.ok(appDock.includes("url:'https://bible.heavenlykey.org/study-extensions.html'"),'Bible Study must route to the dedicated study extension, not the general Bible homepage');
 assert.ok(appDock.includes("new URL(active.url,location.href).href"),'Share URL must be absolute for international visitors');
 assert.ok(appDock.includes('navigator.share')&&appDock.includes('navigator.clipboard'),'Share and copy fallback must remain supported');
-assert.ok(appDock.includes("if(app.id==='assistant')"),'Assistant launch must prefer the approved first-party widget');
+assert.ok(appDock.includes("if(app.id==='assistant'&&!restoring)"),'Assistant launch must prefer the approved first-party widget');
 assert.ok(appDock.includes('iframe')&&appDock.includes("referrerPolicy='strict-origin-when-cross-origin'"),'External app frames must keep the privacy policy');
 assert.ok(appDockCss.includes('.hk-app-minimized[hidden]'),'Minimized app restore control must honor hidden state');
+assert.ok(appDock.includes("select(active,true)"),'Restore must reopen the selected app rather than toggle it closed');
 
 
 
