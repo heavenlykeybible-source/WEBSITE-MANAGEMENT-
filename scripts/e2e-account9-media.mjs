@@ -117,6 +117,9 @@ try{
  const audioCodec=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=noprint_wrappers=1:nokey=1',timelinePath],{encoding:'utf8'}).trim();
  assert.ok(audioCodec.length>0,'Timeline soundtrack export must include a decodable audio stream');
  // Enable looping and verify that changing the soundtrack option invalidates a stale download.
+ await page.locator('#clipAudioOffset').fill('0.3');
+ await page.locator('#clipAudioOffset').dispatchEvent('change');
+ assert.match(await page.locator('#clipAudioTrack').textContent(),/timeline 0.30s/,'Soundtrack lane must display placement offset');
  await page.locator('#clipAudioStart').fill('0.25');
  await page.locator('#clipAudioStart').dispatchEvent('change');
  await page.locator('#clipAudioLoop').check();
