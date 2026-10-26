@@ -74,6 +74,16 @@ async function runTimeline(record){
   if(soundtrackUrl){
    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
    if(!AudioContextClass)throw Error('Soundtrack mixing requires Web Audio support.');
+   if(soundtrack.readyState<1){
+    await new Promise((resolve,reject)=>{
+     let timer;const cleanup=()=>{clearTimeout(timer);soundtrack.removeEventListener('loadedmetadata',loaded);soundtrack.removeEventListener('error',failed)};
+     const loaded=()=>{cleanup();resolve()};const failed=()=>{cleanup();reject(Error('Cannot decode the selected soundtrack.'))};
+     timer=setTimeout(()=>{cleanup();reject(Error('Soundtrack metadata timed out. Try another audio format.'))},10000);
+     soundtrack.addEventListener('loadedmetadata',loaded);soundtrack.addEventListener('error',failed);
+     soundtrack.load();
+    });
+   }
+   if(!Number.isFinite(soundtrack.duration)||soundtrack.duration<=0)throw Error('Selected soundtrack has an invalid duration.');
    audioContext=new AudioContextClass();await audioContext.resume();
    const destination=audioContext.createMediaStreamDestination();
    soundtrack.loop=$('clipAudioLoop').checked;
