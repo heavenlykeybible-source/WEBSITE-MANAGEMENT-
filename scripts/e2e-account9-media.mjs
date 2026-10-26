@@ -121,6 +121,14 @@ try{
  await page.locator('#clipAudioStart').dispatchEvent('change');
  await page.locator('#clipPipFile').setInputFiles(sample);
  await page.waitForFunction(()=>document.querySelector('#clipPipStatus').textContent.includes('Overlay loaded'),{timeout:10000});
+ // Exercise the independent overlay lane with a real browser drag event.
+ await page.evaluate(()=>{
+  const file=document.getElementById('clipPipFile').files[0],dt=new DataTransfer();
+  dt.items.add(file);
+  document.getElementById('clipPipTrack').dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:dt}));
+ });
+ await page.waitForFunction(()=>document.getElementById('clipPipStatus').textContent.includes('Overlay loaded'),{timeout:10000});
+ assert.match(await page.locator('#clipPipTrack').textContent(),/Video overlay/,'Dropped secondary video must populate overlay lane');
  await page.locator('#clipPipSize').selectOption('.25');
  await page.locator('#clipPipPosition').selectOption('br');
  await page.locator('#clipPipOpacity').evaluate(el=>{el.value='55';el.dispatchEvent(new Event('change',{bubbles:true}))});
