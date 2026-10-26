@@ -9,7 +9,7 @@ async function preserved(saved){const after=await manifest(await api('/settings'
 async function healthy(){
  const healthPath=process.env.RELEASE_HEALTH_PATH;
  if(healthPath){
-  if(!/^\\/api\\/[a-z0-9/-]+$/i.test(healthPath))throw Error('Release health path must be a same-origin API path');
+  if(!/^\/api\/[a-z0-9/-]+$/i.test(healthPath))throw Error('Release health path must be a same-origin API path');
   const u=new URL(healthPath,origin);
   const r=await fetch(u,{redirect:'manual',cache:'no-store',signal:AbortSignal.timeout(20000)});
   if(!r.ok)throw Error('Worker API health check HTTP '+r.status);
