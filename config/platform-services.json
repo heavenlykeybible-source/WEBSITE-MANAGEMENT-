@@ -41,31 +41,34 @@
       "account": 5,
       "worker": "heavenlykey-walk-with-god",
       "origin": "https://apps.heavenlykey.org/walk-offline.html",
-      "state": "routing-release-pending",
+      "state": "active",
       "accountSubdomain": "heavenlykeyapp",
       "workerOrigin": "https://heavenlykey-walk-with-god.heavenlykeyapp.workers.dev",
-      "verified": "Independent Worker and every original asset passed deployment 40367840849"
+      "verified": "Independent Worker and every original asset passed deployment 40367840849",
+      "routingVerified": "Original app URL reached the correct independent Worker in release 40368512571; device origin and data keys preserved."
     },
     {
       "id": "eternity-in-view",
       "account": 5,
       "worker": "heavenlykey-eternity-in-view",
-      "state": "routing-release-pending",
+      "state": "active",
       "accountSubdomain": "heavenlykeyapp",
       "workerOrigin": "https://heavenlykey-eternity-in-view.heavenlykeyapp.workers.dev",
       "verified": "Independent Worker and every original asset passed deployment 40367840849",
-      "origin": "https://apps.heavenlykey.org/eternity-in-view/"
+      "origin": "https://apps.heavenlykey.org/eternity-in-view/",
+      "routingVerified": "Original app URL reached the correct independent Worker in release 40368512571; device origin and data keys preserved."
     },
     {
       "id": "bible-study-portal",
       "account": 5,
       "worker": "heavenlykey-bible-study",
       "origin": "https://apps.heavenlykey.org/creation-to-eternity.html",
-      "state": "routing-release-pending",
+      "state": "active",
       "label": "From Creation to Eternity Bible study",
       "accountSubdomain": "heavenlykeyapp",
       "workerOrigin": "https://heavenlykey-bible-study.heavenlykeyapp.workers.dev",
-      "verified": "Independent Worker and every original asset passed deployment 40367840849"
+      "verified": "Independent Worker and every original asset passed deployment 40367840849",
+      "routingVerified": "Original app URL reached the correct independent Worker in release 40368512571; device origin and data keys preserved."
     },
     {
       "id": "community",
