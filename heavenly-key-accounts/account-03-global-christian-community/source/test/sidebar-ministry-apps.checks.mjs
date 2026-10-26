@@ -21,4 +21,8 @@ assert(source.includes("visit.rel='noopener noreferrer'"),'App page must open se
 assert(css.includes('@media(max-width:750px)'),'Mobile design required');
 const csp=readFileSync(resolve(dir,'public/_headers'),'utf8');
 assert(csp.includes('https://heavenlykey.org'),'Official portrait host must be permitted');
-console.log('Active Global Christian Community sidebar contract verified');
+const footerSource=readFileSync(resolve(dir,'public/hk-standard-footer.js'),'utf8');
+assert(footerSource.includes("document.querySelector('footer.community-footer')"),'Community footer must replace only its own existing footer');
+assert(!footerSource.includes("document.querySelectorAll('footer'))old.remove()"),'Community footer must not remove unrelated page footers');
+assert(!footerSource.includes('footer.append(invitation)'),'Eternity invitation must stay in its original location');
+console.log('Active Global Christian Community sidebar and footer contracts verified');
