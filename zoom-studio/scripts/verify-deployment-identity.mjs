@@ -13,6 +13,8 @@ export async function verifyAccount8(env=process.env, fetcher=fetch) {
   if(!/^[0-9a-f]{32}$/i.test(account||'') ||
      !/^[0-9a-f-]{36}$/i.test(id||'') || !token)
     throw Error('Account 8 preflight needs its Cloudflare ID, D1 ID and API token');
+  if(['9549fc74-f6a8-4cf8-a066-7cb965c59b91','c0fe5ca1-cb39-4fbb-bad0-e6b2fa8c825a'].includes(id.toLowerCase()))
+    throw Error('Account 8 cannot reuse an existing shared production database');
   if(env.CLOUDFLARE_ACCOUNT_ID && env.CLOUDFLARE_ACCOUNT_ID!==account)
     throw Error('Conflicting Cloudflare account identities');
   const url='https://api.cloudflare.com/client/v4/accounts/'+account+'/d1/database/'+id;
