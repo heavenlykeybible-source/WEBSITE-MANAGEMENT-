@@ -1,0 +1,44 @@
+name: Deploy independent Account 5 small apps
+on:
+  push:
+    branches: [main]
+    paths: ['config/small-app-bundles.json', 'scripts/build-small-app-worker.mjs', 'scripts/deploy-account5-small-app.mjs', '.github/workflows/deploy-account5-small-apps.yml']
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Independent application to deploy
+        type: choice
+        options: [all, walk-with-god, bible-study-portal, eternity-in-view]
+        default: all
+permissions:
+  contents: read
+jobs:
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [walk-with-god, bible-study-portal, eternity-in-view]
+    concurrency:
+      group: account5-small-${{ matrix.app }}
+      cancel-in-progress: false
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/small-app-isolation.test.mjs
+      - run: node scripts/deploy-account5-small-app.mjs
+        if: github.event_name == 'push' || inputs.app == 'all' || inputs.app == matrix.app
+        env:
+          SMALL_APP_ID: ${{ matrix.app }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT5_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT5_CLOUDFLARE_ACCOUNT_ID }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: previous-${{ matrix.app }}-deployment
+          path: .release-state/
+          include-hidden-files: true
