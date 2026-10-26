@@ -145,7 +145,7 @@ const vsender=()=>pc&&pc.getSenders().find(s=>s.track&&s.track.kind==='video');
 async function stopShare(){const t=shareTrack;shareTrack=null;const s=vsender();if(s&&camTrack)await s.replaceTrack(camTrack).catch(()=>{});camTrack=null;sharing=false;$('shr').textContent='Share screen';if(t&&t.readyState==='live')t.stop()}
 $('shr').onclick=async()=>{if(!navigator.mediaDevices.getDisplayMedia){note('Screen sharing is not available on this device.');return}
  if(sharing){stopShare();return}const s=vsender();if(!s){note('Join with a camera first to share your screen.');return}
- try{const st=await navigator.mediaDevices.getDisplayMedia({video:true}),t=st.getVideoTracks()[0];camTrack=s.track;await s.replaceTrack(t);shareTrack=t;sharing=true;$('shr').textContent='Stop sharing';t.onended=stopShare}catch(e){}};
+ let capture=null;try{capture=await navigator.mediaDevices.getDisplayMedia({video:true});const t=capture.getVideoTracks()[0];if(!t)throw Error('No display video track');await s.replaceTrack(t);camTrack=s.track;shareTrack=t;sharing=true;$('shr').textContent='Stop sharing';t.onended=stopShare}catch(e){if(capture)capture.getTracks().forEach(t=>t.stop());note('Screen sharing could not start on this device.')}};
 function addChat(n,t){const d=document.createElement('div'),b=document.createElement('b');b.textContent=n+': ';d.append(b,document.createTextNode(t));$('cl').appendChild(d);while($('cl').children.length>80)$('cl').firstChild.remove();$('cl').scrollTop=1e9}
 $('cs').onclick=()=>{const t=$('ct').value.trim();if(t){send({t:'chat',text:t});$('ct').value=''}};
 $('ct').onkeydown=e=>{if(e.key==='Enter')$('cs').click()};
