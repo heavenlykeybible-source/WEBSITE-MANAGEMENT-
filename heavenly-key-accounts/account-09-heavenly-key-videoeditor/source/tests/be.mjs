@@ -108,6 +108,10 @@ const badUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:l
 check('Authenticated project update rejects object names',badUpdate.status===400);
 const oversizedUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'x'.repeat(101),data:{}}});
 check('Authenticated project update rejects oversized names',oversizedUpdate.status===400);
+const invalidProjectUpdate=await request('projects/'+project.data.id,{method:'PUT',cookie:login.cookie,body:{name:'Invalid',data:['unexpected']}});
+check('Cloud project update rejects array data',invalidProjectUpdate.status===400);
+const projectAfterRejection=await request('projects/'+project.data.id,{cookie:login.cookie});
+check('Rejected project update preserves saved content',projectAfterRejection.status===200&&projectAfterRejection.data?.name==='Smoke test'&&Array.isArray(projectAfterRejection.data?.data?.layers));
 const projects = await request('projects', { cookie: login.cookie });
 check('Project listing succeeds', projects.status === 200 && Array.isArray(projects.data));
 const secondRegistered = await request('register',{method:'POST',body:{email:'other-user@example.com',password:'separate long passphrase'}});
