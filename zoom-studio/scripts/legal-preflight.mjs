@@ -5,7 +5,9 @@ const pages=['privacy.html','terms.html'];
 let issues=[];
 for(const page of pages){
   const text=fs.readFileSync(new URL('../site/'+page,import.meta.url),'utf8');
-  if(/DRAFT TEMPLATE|\[DATE\]|\[BUSINESS NAME\]|\[PRIVACY EMAIL\]|\[SUPPORT EMAIL\]|\[LAWYER|\[ADDRESS\]/i.test(text))
+  // Detect every remaining editorial placeholder, including currency, refund, retention,
+  // contact and jurisdiction fields that a narrow list could miss.
+  if(/DRAFT TEMPLATE|NOT LEGAL ADVICE|\[[A-Z][A-Z0-9 /&.,'-]{1,90}\]/i.test(text))
     issues.push(page+' contains draft text or unresolved legal placeholders');
 }
 if(issues.length) {
