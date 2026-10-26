@@ -5,9 +5,9 @@ const apps=[
 {id:'assistant',name:'Online Assistant',icon:'🤖',url:'/',native:true},
 {id:'bible',name:'Online Bible',icon:'📖',url:'https://bible.heavenlykey.org/'},
 {id:'social',name:'Social Network',icon:'👥',url:'https://global.heavenlykey.org/'},
-{id:'walk',name:'My Walk with God Calculator',icon:'▦',url:'https://app.heavenlykey.org/',native:true},
-{id:'study',name:'Bible Study Portal',icon:'📚',url:'https://bible.heavenlykey.org/',native:true},
-{id:'eternity',name:'Eternity in View',icon:'✦',url:'/eternity-in-view/',native:true}
+{id:'walk',name:'My Walk with God Calculator',icon:'▦',url:'https://app.heavenlykey.org/'},
+{id:'study',name:'Bible Study Portal',icon:'📚',url:'https://bible.heavenlykey.org/'},
+{id:'eternity',name:'Eternity in View',icon:'✦',url:'/eternity-in-view/'}
 ];
 function init(){
  const grid=document.querySelector('.president-section .president-grid');if(!grid||document.querySelector('.hk-app-dock'))return;
