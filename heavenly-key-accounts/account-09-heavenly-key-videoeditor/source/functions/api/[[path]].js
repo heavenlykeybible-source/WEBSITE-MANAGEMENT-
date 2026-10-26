@@ -98,6 +98,8 @@ export async function onRequest({ request: req, env, params }) {
       return J({ status: ready ? 'ready' : 'degraded' }, ready ? 200 : 503);
     }
     if (a === 'register' && m === 'POST') {
+      // Public signups are intentionally closed until explicitly approved by the owner.
+      return J({ error: 'Registration is currently closed. Contact an administrator.' }, 403);
       const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid registration data.' }, 400);
       const email = String(b.email || '').trim().toLowerCase(), pw = String(b.password || '');
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return J({ error: 'Enter a valid email address.' }, 400);
