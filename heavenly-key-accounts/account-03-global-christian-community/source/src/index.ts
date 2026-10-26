@@ -33,9 +33,13 @@ const validEmail=(v:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 async function rate(env:Env,key:string,max:number,seconds:number){
   const k="rate:"+key,now=Date.now(),raw=await env.SESSIONS.get(k);
-  const previous=raw?JSON.parse(raw) as {n:number;until?:number}:null;
-  const until=previous?.until&&previous.until>now?previous.until:now+seconds*1000;
-  const count=previous?.until&&previous.until>now?previous.n:0;
+  let previous:{n:number;until:number}|null=null;
+  if(raw){try{
+    const parsed=JSON.parse(raw) as {n?:unknown;until?:unknown};
+    if(Number.isSafeInteger(parsed?.n)&&Number(parsed.n)>=0&&typeof parsed.until==="number"&&Number.isFinite(parsed.until))previous={n:Number(parsed.n),until:parsed.until};
+  }catch{ /* Ignore malformed or obsolete rate-limit state. */ }}
+  const until=previous&&previous.until>now?previous.until:now+seconds*1000;
+  const count=previous&&previous.until>now?previous.n:0;
   if(count>=max)return false;
   await env.SESSIONS.put(k,JSON.stringify({n:count+1,until}),{expirationTtl:Math.max(60,Math.ceil((until-now)/1000))});
   return true;
