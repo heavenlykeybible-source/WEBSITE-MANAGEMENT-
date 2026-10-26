@@ -57,6 +57,14 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   const radioResponse=await communityRadio(request);if(radioResponse)return radioResponse;
   if(m==="OPTIONS")return new Response(null,{status:204,headers:security(new Headers({"Allow":"GET,POST,PATCH,DELETE,OPTIONS"}))});
   if(!p.startsWith("/api/"))return error("Not found.",404);
+  if(p==="/api/health"&&m==="GET")return json({ok:true});
+  if(p==="/api/ready"&&m==="GET"){
+    try{
+      await Promise.all([env.DB.prepare("SELECT 1").first(),env.SESSIONS.get("health:readiness")]);
+      return json({ready:true});
+    }catch{return json({ready:false},503);}
+  }
+
   if(!["GET","HEAD","OPTIONS"].includes(m)){if(request.headers.get("Sec-Fetch-Site")==="cross-site")return error("Cross-site action denied.",403);const origin=request.headers.get("Origin");if(origin&&origin!==url.origin)return error("Use global.heavenlykey.org to perform this action.",403);}
 
   if(!['GET','HEAD','OPTIONS'].includes(m)&&!p.startsWith('/api/auth/')&&!p.startsWith('/api/calls')){const writer=await getSession(request,env);if(writer&&!await rate(env,'write:'+writer.userId,180,600))return error('Please slow down and try again shortly.',429);}
