@@ -127,7 +127,7 @@ $('inv').onclick=async()=>{$('invrow').hidden=true;local=await getMedia(false);i
 
 async function onSig(d){try{
  if(d.sdp){
-  if(pc&&pc.signalingState==='stable'&&d.sdp.type==='offer'){
+  if(pc&&pc.signalingState==='stable'&&d.sdp.type==='offer'&&pc.connectionState!=='closed'){
    await pc.setRemoteDescription(d.sdp);
    const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
    send({t:'sig',data:{sdp:pc.localDescription}});
@@ -142,7 +142,7 @@ async function onSig(d){try{
   const a=await pc.createAnswer();await pc.setLocalDescription(a);send({t:'sig',data:{sdp:pc.localDescription}});
   try{const s=vsender();if(s){const p=s.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:600000}];await s.setParameters(p)}}catch(e){}
   for(const c of pend)await pc.addIceCandidate(c).catch(()=>{});pend=[]}
- else if(d.c){if(pc&&pc.remoteDescription)await pc.addIceCandidate(d.c);else if(pend.length<100)pend.push(d.c)}
+ else if(d.c){if(pc&&pc.signalingState!=='closed'&&pc.remoteDescription)await pc.addIceCandidate(d.c).catch(()=>{});else if(pend.length<100)pend.push(d.c)}
 }catch(e){note('Connection problem. Please leave and rejoin.')}}
 
 function setMic(on){if(!local)return;local.getAudioTracks().forEach(t=>t.enabled=on);$('mic').textContent=on?'Mute':'Unmute'}
