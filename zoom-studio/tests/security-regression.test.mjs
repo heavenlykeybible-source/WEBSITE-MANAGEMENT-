@@ -32,6 +32,8 @@ test('offline worker never intercepts authenticated API, non-GET or private page
   assert.equal(intercepts('/join.html', { mode: 'navigate' }), true);
   assert.equal(intercepts('/icons/icon-192.png'), true);
   assert.equal(intercepts('/bg/globe-doves.jpg'), true);
-  assert.equal(intercepts('/join.html', { credentials: 'include' }), true);
+  assert.equal(intercepts('/join.html', { credentials: 'include' }), false);
+  assert.equal(intercepts('/join.html?r=publicroom&k=privatekey'), false);
+  assert.equal(intercepts('/?ticket=single-use'), false);
   assert.equal(intercepts('/icons/icon-192.png', { credentials: 'include' }), false);
 });
