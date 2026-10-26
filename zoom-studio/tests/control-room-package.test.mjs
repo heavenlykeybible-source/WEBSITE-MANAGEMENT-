@@ -21,6 +21,17 @@ test('complete Control Room bundle serves exact public assets and excludes priva
  assert.equal((await app.fetch(new Request('https://meeting/',{headers:{'if-none-match':etag}}),{},{})).status,304);
  assert.equal((await app.fetch(new Request('https://meeting/',{method:'HEAD'}),{},{})).status,200);
  assert.equal((await app.fetch(new Request('https://meeting/',{method:'POST'}),{},{})).status,405);
+ for (const pathname of ['/', '/index.html', '/join.html']) {
+   const response=await app.fetch(new Request('https://meeting'+pathname),{},{});
+   assert.equal(response.headers.get('cache-control'),'no-store');
+   assert.equal(response.headers.get('x-content-type-options'),'nosniff');
+   assert.equal(response.headers.get('x-frame-options'),'DENY');
+   assert.equal(response.headers.get('referrer-policy'),'no-referrer');
+   assert.match(response.headers.get('content-security-policy')||'',/frame-ancestors 'none'/);
+ }
+ const staticAsset=await app.fetch(new Request('https://meeting/studio-theme.css'),{},{});
+ assert.equal(staticAsset.headers.get('x-content-type-options'),'nosniff');
+
 });
 function database(){
  const raw=new DatabaseSync(':memory:');let migrations=0;
