@@ -73,7 +73,7 @@ export class MeetingRooms {
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     if(guests.length>=capacityForRoom(this.env)-1||guests.filter(w=>this.data(w).aud===aud).length>=(aud?Math.max(1,capacityForRoom(this.env)-1):Math.min(18,capacityForRoom(this.env)-1)))return this.close(ws,{t:'error',msg:'This room is full.'});
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),ok:aud,aud,stage:false,invited:false,ao:!!m.ao,last:0});
-    if(!aud&&d.pass&&h.admitted.includes(d.pass)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<6){d.ok=true;d.stage=true;}
+    if(!aud&&d.pass&&!guests.some(w=>{const x=this.data(w);return x.pass===d.pass&&x.stage;})&&h.admitted.includes(d.pass)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<6){d.ok=true;d.stage=true;}
     this.save(ws,d);this.send(ws,{t:'welcome',ice:await meetingICE(this.env,d.room),watch:h.watch,chat:h.audChat,slow:h.slow});
     if(d.ok)this.send(ws,{t:'admitted'});
     if(d.stage)this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});
