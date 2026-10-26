@@ -519,10 +519,9 @@ async function gAdd(gid,name,ao){if(guests.has(gid))return;const g={id:gid,name,
  try{await pc.setLocalDescription(await pc.createOffer());gsend({t:'sig',to:gid,data:{sdp:pc.localDescription}})}catch(e){gSt('Could not connect '+name+'.')}
  renderG()}
 async function gRestart(g){
- const pc=g.pc;if(!pc||pc.signalingState==='closed'||!guests.has(g.id)||g.restartAttempts>=2)return;
+ const pc=g.pc;if(!pc||pc.signalingState!=='stable'||!guests.has(g.id)||g.restartAttempts>=2)return;
  g.restartAttempts++;g.connection='reconnecting';renderG();
  try{
-  if(pc.signalingState!=='stable')return;
   await pc.setLocalDescription(await pc.createOffer({iceRestart:true}));
   if(g.pc===pc)gsend({t:'sig',to:g.id,data:{sdp:pc.localDescription}});
  }catch(e){g.connection='failed';gSt('Unable to restore media for '+g.name+'. Ask the guest to rejoin.');renderG()}
