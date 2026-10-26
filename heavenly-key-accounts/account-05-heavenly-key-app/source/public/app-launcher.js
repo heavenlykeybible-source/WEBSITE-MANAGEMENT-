@@ -2,6 +2,7 @@
 (() => {
   'use strict';
   const apps = [
+    ['✦','Online Assistant','/assistant.html','Scripture and ministry assistance'],
     ['📱','Heavenly Key All-in-One','/experience.html','Account 5'],
     ['📖','Full KJV Bible','/bible.html','Read and search Scripture'],
     ['🔊','Audio Bible','/audio-bible.html','Listen when approved audio is available'],
