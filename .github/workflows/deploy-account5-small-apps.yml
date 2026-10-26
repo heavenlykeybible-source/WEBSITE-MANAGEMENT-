@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'config/small-app-bundles.json'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/**'
       - 'scripts/build-small-app-worker.mjs'
       - 'scripts/deploy-account5-small-app.mjs'
       - 'scripts/select-small-app-deployment.mjs'
@@ -21,7 +22,7 @@ on:
       app:
         description: Independent application to deploy
         type: choice
-        options: [all, walk-with-god, bible-study-portal, eternity-in-view]
+        options: [all, walk-with-god, bible-study-portal, eternity-in-view, bible-reader, audio-bible, hymns, audio-hymns, daily-reading]
         default: all
 permissions:
   contents: read
@@ -30,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [walk-with-god, bible-study-portal, eternity-in-view]
+        app: [walk-with-god, bible-study-portal, eternity-in-view, bible-reader, audio-bible, hymns, audio-hymns, daily-reading]
     concurrency:
       group: account5-small-${{ matrix.app }}
       cancel-in-progress: false

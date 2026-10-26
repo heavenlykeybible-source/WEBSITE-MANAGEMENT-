@@ -1,5 +1,149 @@
 {
-  "walk-with-god": {"page":"/walk-offline.html","files":["walk-offline.html","walk-offline.css","walk-offline.js","walk-offline-content.js","offline-vault.js","offline-status.js","hk-standard-footer.js","hk-standard-footer.css","cms-runtime-20261015.js","cms-runtime-20261015.css"]},
-  "bible-study-portal": {"page":"/creation-to-eternity.html","files":["creation-to-eternity.html","creation-to-eternity.css","creation-to-eternity.js","offline-noscript.css","offline-status.js","hk-standard-footer.js","hk-standard-footer.css","cms-runtime-20261015.js","cms-runtime-20261015.css"]},
-  "eternity-in-view": {"page":"/eternity-in-view/","files":[],"websiteFile":"eternity-in-view/index.html"}
+  "walk-with-god": {
+    "page": "/walk-offline.html",
+    "files": [
+      "walk-offline.html",
+      "walk-offline.css",
+      "walk-offline.js",
+      "walk-offline-content.js",
+      "offline-vault.js",
+      "offline-status.js",
+      "hk-standard-footer.js",
+      "hk-standard-footer.css",
+      "cms-runtime-20261015.js",
+      "cms-runtime-20261015.css"
+    ]
+  },
+  "bible-study-portal": {
+    "page": "/creation-to-eternity.html",
+    "files": [
+      "creation-to-eternity.html",
+      "creation-to-eternity.css",
+      "creation-to-eternity.js",
+      "offline-noscript.css",
+      "offline-status.js",
+      "hk-standard-footer.js",
+      "hk-standard-footer.css",
+      "cms-runtime-20261015.js",
+      "cms-runtime-20261015.css"
+    ]
+  },
+  "eternity-in-view": {
+    "page": "/eternity-in-view/",
+    "files": [],
+    "websiteFile": "eternity-in-view/index.html"
+  },
+  "bible-reader": {
+    "page": "/bible.html",
+    "files": [
+      "bible.html",
+      "styles.css",
+      "study-library.css",
+      "study-library.js",
+      "platform.js",
+      "hk-standard-footer.js",
+      "hk-standard-footer.css",
+      "bible-catalog.js",
+      "faith-content.js",
+      "daily-reading-excerpts.json",
+      "audio-bible-catalog.js",
+      "audio-hymn-catalog.js",
+      "audio-hymns.css",
+      "lock-screen-media.js",
+      "audio-playlist.js",
+      "audio-background-catalog.js",
+      "bible-mobile-controls.js"
+    ]
+  },
+  "audio-bible": {
+    "page": "/audio-bible.html",
+    "files": [
+      "audio-bible.html",
+      "styles.css",
+      "study-library.css",
+      "study-library.js",
+      "platform.js",
+      "hk-standard-footer.js",
+      "hk-standard-footer.css",
+      "bible-catalog.js",
+      "faith-content.js",
+      "daily-reading-excerpts.json",
+      "audio-bible-catalog.js",
+      "audio-hymn-catalog.js",
+      "audio-hymns.css",
+      "lock-screen-media.js",
+      "audio-playlist.js",
+      "audio-background-catalog.js",
+      "bible-mobile-controls.js",
+      "audio-bible.js"
+    ]
+  },
+  "hymns": {
+    "page": "/hymns.html",
+    "files": [
+      "hymns.html",
+      "styles.css",
+      "study-library.css",
+      "study-library.js",
+      "platform.js",
+      "hk-standard-footer.js",
+      "hk-standard-footer.css",
+      "bible-catalog.js",
+      "faith-content.js",
+      "daily-reading-excerpts.json",
+      "audio-bible-catalog.js",
+      "audio-hymn-catalog.js",
+      "audio-hymns.css",
+      "lock-screen-media.js",
+      "audio-playlist.js",
+      "audio-background-catalog.js",
+      "bible-mobile-controls.js",
+      "featured-main-hymn.js"
+    ]
+  },
+  "audio-hymns": {
+    "page": "/audio-hymns.html",
+    "files": [
+      "audio-hymns.html",
+      "styles.css",
+      "study-library.css",
+      "study-library.js",
+      "platform.js",
+      "hk-standard-footer.js",
+      "hk-standard-footer.css",
+      "bible-catalog.js",
+      "faith-content.js",
+      "daily-reading-excerpts.json",
+      "audio-bible-catalog.js",
+      "audio-hymn-catalog.js",
+      "audio-hymns.css",
+      "lock-screen-media.js",
+      "audio-playlist.js",
+      "audio-background-catalog.js",
+      "bible-mobile-controls.js",
+      "audio-hymns.js"
+    ]
+  },
+  "daily-reading": {
+    "page": "/devotional.html",
+    "files": [
+      "devotional.html",
+      "styles.css",
+      "study-library.css",
+      "study-library.js",
+      "platform.js",
+      "hk-standard-footer.js",
+      "hk-standard-footer.css",
+      "bible-catalog.js",
+      "faith-content.js",
+      "daily-reading-excerpts.json",
+      "audio-bible-catalog.js",
+      "audio-hymn-catalog.js",
+      "audio-hymns.css",
+      "lock-screen-media.js",
+      "audio-playlist.js",
+      "audio-background-catalog.js",
+      "bible-mobile-controls.js"
+    ]
+  }
 }

@@ -104,6 +104,56 @@
       "worker": "heavenlykey-studio",
       "origin": "https://mediaeditor.heavenlykey.org",
       "state": "domain-repair-required"
+    },
+    {
+      "id": "bible-reader",
+      "account": 5,
+      "worker": "heavenlykey-bible-reader",
+      "accountSubdomain": "heavenlykeyapp",
+      "origin": "https://apps.heavenlykey.org/bible.html",
+      "workerOrigin": "https://heavenlykey-bible-reader.heavenlykeyapp.workers.dev",
+      "state": "worker-deployment-pending",
+      "source": "config/small-app-bundles.json"
+    },
+    {
+      "id": "audio-bible",
+      "account": 5,
+      "worker": "heavenlykey-audio-bible",
+      "accountSubdomain": "heavenlykeyapp",
+      "origin": "https://apps.heavenlykey.org/audio-bible.html",
+      "workerOrigin": "https://heavenlykey-audio-bible.heavenlykeyapp.workers.dev",
+      "state": "worker-deployment-pending",
+      "source": "config/small-app-bundles.json"
+    },
+    {
+      "id": "hymns",
+      "account": 5,
+      "worker": "heavenlykey-hymns",
+      "accountSubdomain": "heavenlykeyapp",
+      "origin": "https://apps.heavenlykey.org/hymns.html",
+      "workerOrigin": "https://heavenlykey-hymns.heavenlykeyapp.workers.dev",
+      "state": "worker-deployment-pending",
+      "source": "config/small-app-bundles.json"
+    },
+    {
+      "id": "audio-hymns",
+      "account": 5,
+      "worker": "heavenlykey-audio-hymns",
+      "accountSubdomain": "heavenlykeyapp",
+      "origin": "https://apps.heavenlykey.org/audio-hymns.html",
+      "workerOrigin": "https://heavenlykey-audio-hymns.heavenlykeyapp.workers.dev",
+      "state": "worker-deployment-pending",
+      "source": "config/small-app-bundles.json"
+    },
+    {
+      "id": "daily-reading",
+      "account": 5,
+      "worker": "heavenlykey-daily-reading",
+      "accountSubdomain": "heavenlykeyapp",
+      "origin": "https://apps.heavenlykey.org/devotional.html",
+      "workerOrigin": "https://heavenlykey-daily-reading.heavenlykeyapp.workers.dev",
+      "state": "worker-deployment-pending",
+      "source": "config/small-app-bundles.json"
     }
   ]
 }
