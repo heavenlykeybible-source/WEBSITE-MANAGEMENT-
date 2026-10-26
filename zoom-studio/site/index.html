@@ -500,9 +500,10 @@ function gmsg(m){
  else if(m.t==='hand'){const g=guests.get(m.from);if(g){g.hand=m.on;renderG();if(m.on)gchat('Room',g.name+' raised a hand')}else{m.on?hands.set(m.from,m.name):hands.delete(m.from);if(m.on)gchat('Room',m.name+' raised a hand');renderG()}}
  else if(m.t==='react'){const g=guests.get(m.from);gchat(g?g.name:'Guest',m.emoji)}
  else if(m.t==='error'||m.t==='closed')gStop(m.msg||m.why||'The room closed.')}
-async function gAdd(gid,name,ao){if(guests.has(gid))return;const g={id:gid,name,ao,pc:null,src:null,mm:AC.createMediaStreamDestination(),hand:false,pendingIce:[]};guests.set(gid,g);
+async function gAdd(gid,name,ao){if(guests.has(gid))return;const g={id:gid,name,ao,pc:null,src:null,mm:AC.createMediaStreamDestination(),hand:false,pendingIce:[],connection:'connecting'};guests.set(gid,g);
  ann.connect(g.mm);for(const s of S)if(s.g&&s.type!=='guest')s.g.connect(g.mm);for(const o of guests.values())if(o!==g&&o.src&&o.src.raw)o.src.raw.connect(g.mm);
  const pc=g.pc=new RTCPeerConnection({iceServers:gice});
+ pc.onconnectionstatechange=()=>{if(g.pc!==pc)return;g.connection=pc.connectionState;if(pc.connectionState==='failed')gSt('Media connection failed for '+name+'. A TURN relay may be needed on this network.');renderG()};
  g.mm.stream.getAudioTracks().forEach(t=>pc.addTrack(t,g.mm.stream));if(!ao&&!$('lite').checked){gcs=gcs||gc.captureStream(15);gcs.getVideoTracks().forEach(t=>pc.addTrack(t,gcs))}
  pc.onicecandidate=e=>{if(e.candidate)gsend({t:'sig',to:gid,data:{c:e.candidate}})};pc.ontrack=e=>gTrack(g,e);
  try{await pc.setLocalDescription(await pc.createOffer());gsend({t:'sig',to:gid,data:{sdp:pc.localDescription}})}catch(e){gSt('Could not connect '+name+'.')}
@@ -526,7 +527,7 @@ function renderG(){const it=SC[ed()]?SC[ed()].items:[];
  $('ghl').innerHTML=[...hands].map(([id,n])=>`<li><span style="cursor:default">${esc(n)} &#9995;</span><button data-a="gprom" data-m="${id}">Invite to stage</button></li>`).join('')||'<li class="mu">No raised hands.</li>';
  $('gwl').innerHTML=[...wait].map(([id,n])=>`<li><span style="cursor:default">${esc(n)}</span><button data-a="gad" data-m="${id}">Admit</button><button data-a="gdn" data-m="${id}">Deny</button></li>`).join('')||'<li class="mu">Nobody is waiting.</li>';
  $('gli').innerHTML=[...guests.values()].map(g=>{const on=g.src&&it.some(x=>x.id===g.src.id);
-  return `<li><span style="cursor:default">${esc(g.name)}${g.hand?' &#9995;':''}<br><small>${g.src?(on?'On stream':'Backstage'):'Connecting...'}${g.src&&g.src.mute?', muted':''}</small></span><button data-a="gstage" data-m="${g.id}">${on?'Take off stream':'Put on stream'}</button><button data-a="gmute" data-m="${g.id}">${g.src&&g.src.mute?'Unmute':'Mute'}</button><button data-a="gdem" data-m="${g.id}">To audience</button><button data-a="gkick" data-m="${g.id}">Remove</button></li>`}).join('')||'<li class="mu">No guests yet.</li>'}
+  return `<li><span style="cursor:default">${esc(g.name)}${g.hand?' &#9995;':''}<br><small>${g.connection==='failed'?'Connection failed':g.connection==='disconnected'?'Reconnecting media':g.src?(on?'On stream':'Backstage'):'Connecting...'}${g.src&&g.src.mute?', muted':''}</small></span><button data-a="gstage" data-m="${g.id}">${on?'Take off stream':'Put on stream'}</button><button data-a="gmute" data-m="${g.id}">${g.src&&g.src.mute?'Unmute':'Mute'}</button><button data-a="gdem" data-m="${g.id}">To audience</button><button data-a="gkick" data-m="${g.id}">Remove</button></li>`}).join('')||'<li class="mu">No guests yet.</li>'}
 Object.assign(act,{
  gad:(i,b)=>{gsend({t:'admit',gid:b.dataset.m});wait.delete(b.dataset.m);renderG()},
  gdn:(i,b)=>{gsend({t:'deny',gid:b.dataset.m});wait.delete(b.dataset.m);renderG()},
