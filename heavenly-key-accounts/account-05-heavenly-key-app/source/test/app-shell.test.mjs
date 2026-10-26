@@ -60,58 +60,9 @@ test('Account 5 public shell rejects all third-party framing after website uses 
 });
 
 
-test('premium homepage features laptop hero and app family while app remains accessible',()=>{
- const html=get('public/downloads.html');
- assert.match(html,/class="laptop"/);
- assert.match(html,/id="all-in-one"/);
- assert.match(html,/class="family-grid"/);
- assert.match(html,/href="\/experience\.html"/);
- assert.match(get('public/experience.html'),/id="bible"/);
-});
-
-test('premium page assets, CSP, navigation and app preservation',()=>{
- const html=get('public/downloads.html');
- const sw=get('public/sw.js');
- const css=get('public/premium-home.css');
- for(const path of ['premium-home.css','premium-family-nav.js','premium-download-options.js','experience.html','assets/ministry/logo.png','assets/ministry/hero-people-laptop.jpg','assets/ministry/global-community-network.svg','assets/ministry/rotating-world-land.svg']){
-  assert.ok(sw.includes('/'+path),'Offline asset missing: '+path);
- }
- assert.match(html,/href="\/premium-home\.css"/);
- assert.doesNotMatch(html,/<style\b|\sstyle=/i);
- assert.match(html,/class="laptop"/);
- assert.match(css,/\.foot \.social-links/);
- assert.match(html,/aria-label="Main navigation"/);
- assert.match(html,/aria-label="Follow Heavenly Key"/);
- assert.match(html,/href="\/experience\.html"/);
- assert.match(get('public/premium-download-options.js'),/apps\.heavenlykey\.org/);
- assert.doesNotMatch(get('public/premium-download-options.js'),/api\.qrserver\.com/);
-});
-
-test('premium page references only existing bundled local assets',()=>{
- const html=get('public/downloads.html');
- const css=get('public/premium-home.css');
- const source=[...html.matchAll(/(?:src|href)="(\/[^"#?]+)"/g)].map(m=>m[1])
-  .concat([...css.matchAll(/url\(["']?(\/[^)"']+)["']?\)/g)].map(m=>m[1]));
- for(const path of new Set(source)){
-  if(path==='/')continue;
-  assert.ok(existsSync(new URL('../public'+path,import.meta.url)),'Missing premium local asset: '+path);
- }
- assert.ok(source.includes('/assets/ministry/hero-people-laptop.jpg'));
- assert.ok(source.includes('/premium-home.css'));
-});
-
-test('mission message and five app sharing controls are present and safe',()=>{
- const html=get('public/downloads.html');
- assert.match(html,/<\/div><p class="hero-mission-line">Together we take Christ to the nations of the world<\/p>/);
- assert.equal((html.match(/class="share-to-bless family-share"/g)||[]).length,5);
- assert.match(html,/src="\/premium-share\.js"/);
- assert.match(get('public/sw.js'),/\/premium-share\.js/);
- const script=get('public/premium-share.js');
- assert.match(script,/navigator\.share/);
- assert.match(script,/navigator\.clipboard/);
- assert.doesNotMatch(script,/innerHTML\s*=/);
-});
-
+test('Public Apps pages use only the clean theme and preserve direct app access',()=>{for(const name of ['index.html','downloads.html']){const html=get('public/'+name);assert.match(html,/data-theme="clean-apps"/);assert.match(html,/href="\/app-pages.css"/);assert.match(html,/src="\/app-pages.js"/);assert.match(html,/href="\/experience.html"/);assert.match(html,/id="individual-apps"/);assert.doesNotMatch(html,/premium-home.css|hk-approved-page-style-public-index|class="laptop"|src="\/app.js"|<style\b|\sstyle=/i);assert.equal((html.match(/class="hk-directory-card"/g)||[]).length,13);}});
+test('Clean public theme is offline-cached without removing protected app resources',()=>{const sw=get('public/sw.js');for(const path of ['app-pages.css','app-pages.js','experience.html','walk-offline.html','creation-to-eternity.html'])assert.ok(sw.includes('/'+path));});
+test('Clean theme has responsive layouts and reduced-motion support',()=>{const css=get('public/app-pages.css');assert.match(css,/@media\(max-width:620px\)/);assert.match(css,/prefers-reduced-motion/);assert.match(css,/focus-visible/);});
 test('all five device QR assets are local, included in offline shell, and linked to installation pages',()=>{const sw=get('public/sw.js'),code=get('public/premium-download-options.js');for(const device of ['android','iphone','ipad','windows','mac']){const qr=get('public/qr/'+device+'.svg');assert.match(qr,/<svg /);assert.match(qr,/<path fill="#111"/);assert.match(sw,new RegExp('/qr/'+device+'\\.svg'));assert.ok(code.includes("'/download/'")||code.includes("'download/'"));assert.ok(get('public/download/'+device+'/index.html').length>100);}assert.match(code,/qrLink\.append\(img\)/);});
 
-test('main app URL launches functional app and preserves download landing page',()=>{const html=get('public/index.html');for(const asset of ['/app.js','/member.js','/site-sync.js','/platform.js'])assert.ok(html.includes(asset));for(const target of ['/bible.html','/walk-offline.html','/creation-to-eternity.html','/downloads.html'])assert.ok(html.includes(target));assert.match(html,/data-screen="community"/);assert.match(html,/data-screen="live"/);assert.doesNotMatch(html,/https:\/\/(?:app|bible)\.heavenlykey\.org/);});
+test('App directory and downloads remain distinct from the preserved all-in-one application',()=>{const home=get('public/index.html'),experience=get('public/experience.html');assert.match(home,/href="\/experience.html"/);assert.match(experience,/data-screen="community"/);assert.match(experience,/data-screen="live"/);assert.match(experience,/\/app.js/);});
