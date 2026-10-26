@@ -67,3 +67,33 @@ body[data-hk-page] .hk-page-journey a:hover{background:var(--page-main);color:#f
  body[data-hk-page] :is(.inner-main,.content-section>.container){border-radius:14px}
 }
 @media(prefers-reduced-motion:reduce){body[data-hk-page] .hk-page-journey a{transition:none}}
+
+/* Specialist layouts: prayer programme and social connections. */
+body[data-hk-page="grdpc"] main#main{position:relative;isolation:isolate}
+body[data-hk-page="grdpc"] main#main>h1{
+  font-family:Georgia,serif;letter-spacing:-.03em;line-height:1.15;text-wrap:balance;
+}
+body[data-hk-page="grdpc"] main#main>.eyebrow{letter-spacing:.13em;font-weight:800}
+body[data-hk-page="grdpc"] main#main>section{
+  border-radius:clamp(14px,2vw,22px);
+  box-shadow:0 11px 35px #132b5320;border:1px solid #203c8220;
+}
+body[data-hk-page="grdpc"] main#main>section.schedule{border-top:5px solid #ecc66f}
+body[data-hk-page="social-handles"] .salvation-hero{
+  position:relative;isolation:isolate;overflow:hidden;
+  background:linear-gradient(115deg,#34265b,#7a3d80)!important;
+  border-bottom:5px solid #ebc885!important;
+}
+body[data-hk-page="social-handles"] .salvation-hero::before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(95deg,#38275be0,#673a8b99),var(--page-image) right center/cover no-repeat;
+}
+body[data-hk-page="social-handles"] .social-handles-grid>a{
+  background:linear-gradient(150deg,#fff,#faf6ff);border:1px solid #65388526;
+  border-top:4px solid #ddba77;border-radius:19px;
+  box-shadow:0 11px 26px #3c265720;transition:transform .2s,box-shadow .2s;
+}
+body[data-hk-page="social-handles"] .social-handles-grid>a:hover{
+  transform:translateY(-4px);box-shadow:0 19px 33px #3c26573a;
+}
+@media(prefers-reduced-motion:reduce){body[data-hk-page="social-handles"] .social-handles-grid>a{transition:none;transform:none}}
