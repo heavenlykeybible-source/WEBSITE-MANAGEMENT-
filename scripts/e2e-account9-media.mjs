@@ -91,6 +91,8 @@ try{
  execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-f','lavfi','-i','sine=frequency=500:sample_rate=44100','-t','2.1',audioInput],{timeout:30000});
  await page.locator('#clipAudio').setInputFiles(audioInput);
  assert.match(await page.locator('#clipAudioStatus').textContent(),/sample.wav/,'Separate soundtrack must be loaded');
+ await page.waitForFunction(()=>document.getElementById('clipAudioTrack').textContent.includes('2.10s'),{timeout:10000});
+ assert.match(await page.locator('#clipAudioTrack').textContent(),/70% volume/,'Audio lane must display soundtrack volume');
  await page.locator('#clipExport').click();
  await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
  const first=page.waitForEvent('download');
