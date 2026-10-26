@@ -70,6 +70,9 @@ execFileSync(process.execPath,['--check','integrations.js'],{stdio:'inherit'});
 assert.ok(html.includes('id="fitmode"')&&html.includes("state.fit==='cover'")===false,'Framing selector stays in editor with cloud handling in module');
 assert.ok(module.includes("state.fit==='cover'")&&html.includes("d.fit==='cover'"),'Local/cloud project framing must restore');
 const timelineScript=readFileSync('timeline.js','utf8');
+for(const feature of ['id="clipPipFile"','id="clipPipSize"','id="clipPipPosition"','id="clipPipOffset"',"drawOverlay:ctx=>","syncPip(progress)"]) assert.ok(timeline.includes(feature),'Picture-in-picture missing '+feature);
+assert.ok(html.includes("window.hkTimeline?.drawOverlay?.(cx)"),'Secondary video must reach canvas preview and export');
+
 for(const expected of ['function loadSoundtrack(file)', 'audioLane.addEventListener("dragover"', 'audioLane.addEventListener("drop"', 'loadSoundtrack(file)']) assert.ok(timeline.includes(expected),'Soundtrack drop zone missing '+expected);
 for(const expected of ['id="clipDropZone"', "dropZone.addEventListener('drop'", "dropZone.addEventListener('dragover'", "new CustomEvent('change',{detail:{file}})"]) assert.ok(timeline.includes(expected),'Video drop zone missing '+expected);
 
