@@ -155,10 +155,19 @@ check('Repeated media deletion reports not found',repeatedMediaDelete.status===4
 const storageAfterDelete = await request('media',{cookie:login.cookie});
 check('Media deletion returns storage quota',storageAfterDelete.status===200&&storageAfterDelete.data.used===0);
 
+const validWav=(()=>{
+  const bytes=new Uint8Array(46),dv=new DataView(bytes.buffer);
+  const put=(index,str)=>{for(let j=0;j<str.length;j++)bytes[index+j]=str.charCodeAt(j)};
+  put(0,'RIFF');dv.setUint32(4,38,true);put(8,'WAVEfmt ');dv.setUint32(16,16,true);
+  dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,16000,true);
+  dv.setUint32(28,32000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);
+  put(36,'data');dv.setUint32(40,2,true);
+  return bytes;
+})();
 const noLengthWav = await onRequest({
   request: new Request('https://studio.example/api/transcribe',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},
-    body:new Uint8Array([1,2,3,4,5])
+    body:validWav
   }),env,params:{path:['transcribe']}
 });
 check('Transcription supports absent content length',noLengthWav.status===200);
