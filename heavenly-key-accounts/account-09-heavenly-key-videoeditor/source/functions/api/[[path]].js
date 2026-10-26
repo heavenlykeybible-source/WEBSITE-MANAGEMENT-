@@ -235,7 +235,8 @@ export async function onRequest({ request: req, env, params }) {
       if (!p[1] && m === 'GET') return J((await env.DB.prepare('SELECT id,name,updated_at FROM projects WHERE user_id=? ORDER BY updated_at DESC LIMIT 200').bind(u.id).all()).results);
       if (!p[1] && m === 'POST') {
         const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid project data.' }, 400);
-        const d = JSON.stringify(b?.data ?? {}), name = String(b?.name || 'Untitled').slice(0, 100);
+        if(b.name!==undefined&&(typeof b.name!=='string'||b.name.length>100))return J({error:'Project name must be text under 100 characters.'},400);
+        const d = JSON.stringify(b?.data ?? {}), name = (b.name||'Untitled').trim()||'Untitled';
         if (!d || d.length > 1e6) return J({ error: 'Project is too large.' }, 413);
         const id = rnd(12);
         const saved = await env.DB.prepare('INSERT INTO projects(id,user_id,name,data,updated_at) SELECT ?,?,?,?,? WHERE (SELECT COUNT(*) FROM projects WHERE user_id=?) < 200').bind(id,u.id,name,d,Date.now(),u.id).run();
@@ -248,9 +249,10 @@ export async function onRequest({ request: req, env, params }) {
       }
       if (p[1] && m === 'PUT') {
         const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid project data.' }, 400);
+        if(b.name!==undefined&&(typeof b.name!=='string'||b.name.length>100))return J({error:'Project name must be text under 100 characters.'},400);
         const d = JSON.stringify(b?.data ?? {});
         if (!d || d.length > 1e6) return J({ error: 'Project is too large.' }, 413);
-        const r = await env.DB.prepare('UPDATE projects SET name=?,data=?,updated_at=? WHERE id=? AND user_id=?').bind(String(b?.name || 'Untitled').slice(0, 100), d, Date.now(), p[1], u.id).run();
+        const r = await env.DB.prepare('UPDATE projects SET name=?,data=?,updated_at=? WHERE id=? AND user_id=?').bind((b.name||'Untitled').trim()||'Untitled', d, Date.now(), p[1], u.id).run();
         return r.meta.changes ? J({ ok: true }) : J({ error: 'Not found' }, 404);
       }
       if (p[1] && m === 'DELETE') {
