@@ -10,6 +10,7 @@ function run(args,env=process.env){const r=spawnSync(args[0],args.slice(1),{stdi
 run([process.execPath,'scripts/legal-preflight.mjs']);
 run([process.execPath,'scripts/bundle-control-room.mjs']);
 run([process.execPath,'scripts/configure.mjs']);
+run([process.execPath,'scripts/verify-deployment-identity.mjs']);
 run([process.execPath,'../scripts/existing-worker-release.mjs','snapshot'],releaseEnv);
 let deployError;
 try { run(['npx','--yes','wrangler@4','deploy','--config','wrangler.generated.json','--keep-vars']); }
