@@ -2,7 +2,7 @@
 (()=>{'use strict';
 const apps=[
 {id:'radio',name:'Revival Radio',icon:'📻',url:'https://radio.heavenlykey.org/'},
-{id:'assistant',name:'Online Assistant',icon:'🤖',url:'/pages/contact',native:true},
+{id:'assistant',name:'Online Assistant',icon:'🤖',url:'/',native:true},
 {id:'bible',name:'Online Bible',icon:'📖',url:'https://bible.heavenlykey.org/'},
 {id:'social',name:'Social Network',icon:'👥',url:'https://global.heavenlykey.org/'},
 {id:'walk',name:'My Walk with God Calculator',icon:'▦',url:'https://app.heavenlykey.org/',native:true},
@@ -22,9 +22,13 @@ function init(){
  let active=null,drag=null;const frames=new Map();
  function select(app){
   if(active?.id===app.id&&win.dataset.open==='true'){minimize();return;}
+  if(app.id==='assistant'){
+   const launcher=document.querySelector('#hkem-assistant .hkem-launcher');
+   if(launcher){minimize();launcher.click();return;}
+  }
   active=app;title.textContent=app.name;pageLink.href=app.url;mini.textContent='Restore '+app.name;
   for(const [id,frame] of frames){frame.hidden=id!==app.id;}
-  if(app.native&&!frames.has(app.id)){const placeholder=document.createElement('div');placeholder.className='hk-app-window-native';placeholder.setAttribute('role','status');placeholder.textContent=app.name+' is available through its dedicated app page. Open it in a new tab using Visit App Page while integrated in-page access is being completed.';win.insertBefore(placeholder,win.querySelector('.hk-app-window-actions'));frames.set(app.id,placeholder);} else if(!frames.has(app.id)){
+  if(app.native&&!frames.has(app.id)){const placeholder=document.createElement('div');placeholder.className='hk-app-window-native';placeholder.setAttribute('role','status');placeholder.textContent=app.name+' is available through its dedicated app page. Open it in a new tab using Visit App Page while integrated in-page access is being completed.';win.insertBefore(placeholder,win.querySelector('.hk-app-window-actions'));frames.set(app.id,placeholder);} else if(!app.native&&!frames.has(app.id)){
    const frame=document.createElement('iframe');frame.className='hk-app-window-frame';frame.title=app.name;frame.loading='lazy';frame.referrerPolicy='strict-origin-when-cross-origin';frame.allow='autoplay; clipboard-write';frame.src=app.url;frame.hidden=false;
    win.insertBefore(frame,win.querySelector('.hk-app-window-actions'));frames.set(app.id,frame);
   }else frames.get(app.id).hidden=false;
