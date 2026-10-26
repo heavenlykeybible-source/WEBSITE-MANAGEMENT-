@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const raw=process.env.ACCOUNT9_LIVE_URL;
 if(!raw)throw Error('Set ACCOUNT9_LIVE_URL to the exact approved Account 9 deployment origin.');
 const origin=new URL(raw);
-if(origin.protocol!=='https:'||origin.username||origin.password||origin.search||origin.hash||origin.pathname!=='/')throw Error('ACCOUNT9_LIVE_URL must be an HTTPS origin ending in /');
+if(origin.protocol!=='https:'||!['editor.heavenlykey.org','mediaeditor.heavenlykey.org','videoeditor.heavenlykey.org'].includes(origin.hostname)||origin.port||origin.username||origin.password||origin.search||origin.hash||origin.pathname!=='/')throw Error('ACCOUNT9_LIVE_URL must be an HTTPS origin ending in /');
 const controller=new AbortController();
 const timer=setTimeout(()=>controller.abort(),12000);
 try{
