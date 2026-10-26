@@ -211,6 +211,16 @@ test('host admission respects speaker slots reserved for promoted audience',asyn
  await message(s.room,s.host,{t:'admit',gid:waiting.d.id});
  assert.equal(waiting.d.stage,false);
 });
+test('host admission respects stage reservations for invited audience',async()=>{
+ const s=await openRoom(),audience=[];
+ for(let i=0;i<6;i++){const g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true});audience.push(g);}
+ for(const g of audience)await message(s.room,s.host,{t:'promote',gid:g.d.id});
+ const waiting=s.add();await message(s.room,waiting,{t:'join',room:s.host.d.room,key:s.key,aud:false});
+ await message(s.room,s.host,{t:'admit',gid:waiting.d.id});
+ assert.equal(waiting.d.stage,false);
+ assert.equal(waiting.d.ok,false);
+ assert.match(s.host.messages.at(-1).text,/stage is full/i);
+});
 test('pending audience promotions reserve stage capacity',async()=>{
  const s=await openRoom(),audience=[];
  for(let i=0;i<7;i++){
