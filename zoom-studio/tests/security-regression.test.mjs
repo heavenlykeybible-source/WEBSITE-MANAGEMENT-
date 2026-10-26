@@ -216,3 +216,11 @@ test('Guest ignores stale ICE candidates after peer connection closure', () => {
  assert.match(source,/pc\.signalingState!=='closed'&&pc\.remoteDescription/);
  assert.match(source,/pc\.addIceCandidate\(d\.c\)\.catch\(\(\)=>\{\}\)/);
 });
+
+test('Guest join acknowledgement timeout closes stalled sockets and cleans up timers', () => {
+ const guest=readFileSync(resolve(root,'site/join.html'),'utf8');
+ assert.match(guest,/joinAckTimer=setTimeout\(\(\)=>\{/);
+ assert.match(guest,/currentSocket\.readyState===WebSocket\.OPEN/);
+ assert.match(guest,/case 'welcome':clearTimeout\(joinAckTimer\);joinAckTimer=null/);
+ assert.match(guest,/ws\.onclose=\(\)=>\{if\(over\|\|ws!==currentSocket\)return;clearTimeout\(openTimer\);openTimer=null;clearTimeout\(joinAckTimer\)/);
+});
