@@ -29,8 +29,11 @@ const errors=[];
 page.on('pageerror',e=>errors.push(e.message));
 async function verifyVideo(path){
  const data=await stat(path); assert.ok(data.size>1500,'Video export must contain encoded frames');
- const seconds=Number(execFileSync('ffprobe',['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',path],{encoding:'utf8'}).trim());
- assert.ok(seconds>.2 && seconds<5,'Exported file must decode with reasonable length, got '+seconds);
+ // Browser MediaRecorder WebM may omit Duration metadata even when the video is playable.
+ // Verify an actual decoded video frame and valid video dimensions instead.
+ const dimensions=execFileSync('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=width,height','-of','csv=p=0',path],{encoding:'utf8'}).trim();
+ assert.match(dimensions,/^\\d+,\\d+$/,'Export must include a valid video stream');
+ execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-i',path,'-frames:v','1','-f','null','-'],{timeout:15000});
 }
 try{
  await page.goto('http://127.0.0.1:'+port+'/',{waitUntil:'load'});
