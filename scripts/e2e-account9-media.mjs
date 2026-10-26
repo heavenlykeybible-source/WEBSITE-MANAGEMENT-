@@ -79,6 +79,11 @@ try{
  assert.deepEqual(await page.evaluate(()=>window.hkTimeline.getClips().map(c=>c.speed)),[1,1.5],'Undo must restore order after drag');
  await page.locator('#clipRedo').click();
  assert.deepEqual(await page.evaluate(()=>window.hkTimeline.getClips().map(c=>c.speed)),[1.5,1],'Redo must restore dragged order');
+ await page.locator('#clipTrack button').nth(0).focus();
+ await page.keyboard.press('Alt+ArrowRight');
+ assert.deepEqual(await page.evaluate(()=>window.hkTimeline.getClips().map(c=>c.speed)),[1,1.5],'Keyboard Alt+Right must move the selected clip right');
+ await page.keyboard.press('Alt+ArrowLeft');
+ assert.deepEqual(await page.evaluate(()=>window.hkTimeline.getClips().map(c=>c.speed)),[1.5,1],'Keyboard Alt+Left must move the selected clip left');
  await page.locator('#clipPlay').click();
  assert.equal(await page.evaluate(()=>typeof window.hkTimeline.fadeOpacity),'function','Fade renderer must be available');
  await page.waitForFunction(()=>document.getElementById('clipStatus').textContent.includes('preview complete'),{timeout:20000});
