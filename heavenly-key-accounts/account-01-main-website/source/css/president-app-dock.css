@@ -21,3 +21,5 @@
 @media(max-width:1050px){.hk-app-dock{right:0;top:10px}.hk-dock-tab{width:145px;min-height:56px;font-size:12px;padding:7px}.hk-dock-tab .hk-dock-icon{width:32px;height:32px;font-size:17px}.hk-dock-pole{min-height:500px}.hk-app-window{width:min(380px,calc(100vw - 220px));right:calc(100% + 5px)}}
 @media(max-width:720px){.hk-app-dock{position:relative;right:auto;top:auto;margin:15px auto;max-width:100%;justify-content:flex-end}.hk-dock-list{gap:7px}.hk-dock-tab{width:min(235px,65vw)}.hk-dock-pole{min-height:510px}.hk-app-window{position:fixed;right:10px!important;left:10px!important;top:12vh!important;width:auto!important;height:65vh;max-height:76vh;z-index:1300}.president-section .president-grid{display:flex;flex-direction:column}.hk-app-dock{order:3}.hk-app-window-bar{touch-action:auto}}
 @media(prefers-reduced-motion:reduce){.hk-dock-tab{transition:none!important}}
+
+.hk-app-window-native{flex:1;display:grid;place-items:center;text-align:center;padding:32px 25px;background:linear-gradient(140deg,#f9fff9,#f9f1ff);font:700 16px/1.7 system-ui,sans-serif;color:#28533f}.hk-app-window-native[hidden]{display:none}
