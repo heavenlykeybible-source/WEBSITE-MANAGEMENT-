@@ -124,14 +124,14 @@ async function onSig(d){try{
  if(d.sdp){if(pc)pc.close();pc=new RTCPeerConnection({iceServers:ice});
   pc.onicecandidate=e=>{if(e.candidate)send({t:'sig',data:{c:e.candidate}})};
   pc.ontrack=e=>{$('rv').srcObject=e.streams[0]||new MediaStream([e.track]);$('rv').play().catch(()=>{})};
-  await pc.setRemoteDescription(d.sdp);local.getTracks().forEach(t=>pc.addTrack(t,local));
+  await pc.setRemoteDescription(d.sdp);if(local)local.getTracks().forEach(t=>pc.addTrack(t,local));
   const a=await pc.createAnswer();await pc.setLocalDescription(a);send({t:'sig',data:{sdp:pc.localDescription}});
   try{const s=vsender();if(s){const p=s.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:600000}];await s.setParameters(p)}}catch(e){}
   for(const c of pend)await pc.addIceCandidate(c).catch(()=>{});pend=[]}
  else if(d.c){if(pc&&pc.remoteDescription)await pc.addIceCandidate(d.c);else pend.push(d.c)}
 }catch(e){note('Connection problem. Please leave and rejoin.')}}
 
-function setMic(on){local.getAudioTracks().forEach(t=>t.enabled=on);$('mic').textContent=on?'Mute':'Unmute'}
+function setMic(on){if(!local)return;local.getAudioTracks().forEach(t=>t.enabled=on);$('mic').textContent=on?'Mute':'Unmute'}
 $('mic').onclick=()=>local&&setMic(!local.getAudioTracks().some(t=>t.enabled));
 $('cam').onclick=()=>{const v=local?local.getVideoTracks():[];if(!v.length){note('No camera is connected.');return}const on=!v[0].enabled;v.forEach(t=>t.enabled=on);$('cam').textContent=on?'Camera off':'Camera on'};
 $('hand').onclick=()=>{hand=!hand;send({t:'hand',on:hand});$('hand').textContent=hand?'Lower hand':'Raise hand'};
