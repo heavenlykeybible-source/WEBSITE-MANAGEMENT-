@@ -86,6 +86,10 @@ assert.ok(timelineScript.includes('window.hkTimeline='),'Timeline state bridge m
 assert.ok(timelineScript.includes("['vf','vexp','clipExport'")&&timelineScript.includes("if($('vexp').disabled)return info"),'Timeline must lock source changes and prevent concurrent exports');
 assert.ok(timelineScript.includes('id="clipUpdate"')&&timelineScript.includes("$('clipUpdate').onclick=()=>")&&timelineScript.includes('clips[i]={start,end:Math.min(end,v.duration),speed,fade}'),'Timeline selected clip edits must update trim and speed');
 assert.ok(timelineScript.includes("'clipSplit','clipUpdate','clipDuplicate','clipRemove'"),'Editing clips must lock during timeline export');
+assert.ok(timelineScript.includes('getSettings:()=>')&&timelineScript.includes('restoreSettings:(data)=>'),'Timeline settings must support save and restore');
+assert.ok(html.includes('timelineSettings:window.hkTimeline?.getSettings()||{}'),'Project save must retain timeline settings');
+assert.ok(html.includes('restoreSettings(d.timelineSettings)'),'Local project must restore timeline settings');
+assert.ok(module.includes('restoreSettings(state.timelineSettings)'),'Cloud project must restore timeline settings');
 assert.ok(html.includes('timeline:window.hkTimeline?.getClips()'),'Project snapshots must contain timeline');
 assert.ok(html.includes('restoreClips(d.timeline||[])'),'Local projects must restore timeline');
 assert.ok(module.includes('restoreClips(state.timeline||[])'),'Cloud projects must restore timeline');
