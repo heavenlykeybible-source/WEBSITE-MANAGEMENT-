@@ -17,4 +17,10 @@ jobs:
           node-version: '22'
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node scripts/cleanup/sync-footer.mjs && node tests/approved-footer.mjs
+      - name: Verify published shared footer assets
+        run: |
+          node scripts/cleanup/verify-footer-live.mjs https://apps.heavenlykey.org
+          node scripts/cleanup/verify-footer-live.mjs https://global.heavenlykey.org
+          node scripts/cleanup/verify-footer-live.mjs https://onlinebible.heavenlykey.org shared/
+          node scripts/cleanup/verify-footer-live.mjs https://heavenlykey-public-assistant.heavenlykeyapp.workers.dev
       - run: node scripts/cleanup/audit-public.mjs

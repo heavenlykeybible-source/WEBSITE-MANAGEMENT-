@@ -16,5 +16,6 @@ for(const [root,assetPrefix,isMain]of roots){if(!fs.existsSync(root))continue;co
   const relative=path.relative(path.dirname(file),path.join(assetDir,'hk-approved-footer.js')).replaceAll('\\','/');source=source.replace('</body>','<script defer src="'+relative+'"></script></body>');fs.writeFileSync(file,source.replace(/[ \t]+$/gm,''));pages++;
  }
 }
+const editorRoot='heavenly-key-accounts/account-09-heavenly-key-videoeditor/source';if(fs.existsSync(editorRoot+'/public/index.html')&&fs.existsSync(editorRoot+'/index.html'))fs.copyFileSync(editorRoot+'/public/index.html',editorRoot+'/index.html');
 fs.writeFileSync('public-assistant/footer-assets.mjs','export const FOOTER_JS='+JSON.stringify(code)+';\nexport const FOOTER_CSS='+JSON.stringify(css)+';\n');
 fs.writeFileSync('config/approved-footer-release.json',JSON.stringify({revision,pages,roots:roots.map(x=>x[0]),source:approved.source},null,2)+'\n');console.log('Prepared single homepage footer for '+pages+' public pages; version '+revision.slice(0,12));
