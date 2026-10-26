@@ -28,6 +28,10 @@ async function call(path, { body, token, method, headers } = {}) {
 }
 const signup = async (e) => { const r = await call('/api/signup', { body: { email: e, password: st_(e, 'password123'), agree: true } }); return r.j && r.j.token; };
 
+// Restricted preview: public signup is closed, and unapproved accounts cannot log in.
+env.MEETINGSPACE_PRIVATE_PREVIEW = '1';
+ok((await call('/api/signup', { body: { email: 'blocked@test.com', password: st_('blocked@test.com', 'password123'), agree: true } })).s === 403, 'private preview blocks public signup');
+env.MEETINGSPACE_PRIVATE_PREVIEW = '0';
 // accounts
 ok((await call('/api/plans')).j.plans.length === 3, 'plans listed');
 ok((await call('/api/signup', { body: { email: 'x@test.com', password: st_('x@test.com', 'password123') } })).s === 400, 'sign-up needs consent');
