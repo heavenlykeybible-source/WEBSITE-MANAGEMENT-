@@ -270,6 +270,8 @@ const approvedLogin=await call('/api/login',{body:{email:privateUser,password:st
 ok(approvedLogin.s===200&&!!approvedLogin.j.token,'approved account can sign in');
 const approvedRoom=await call('/api/meeting-token',{token:approvedLogin.j.token});
 ok(approvedRoom.s===200 && /^wss:\/\//.test(approvedRoom.j.url||'') && !!approvedRoom.j.token,'administrator-approved user can create a private-preview meeting without payment');
+const roomClaims=approvedRoom.j?.token&&JSON.parse(Buffer.from(approvedRoom.j.token.split('.')[0],'base64url').toString('utf8'));
+ok(!!roomClaims && roomClaims.k==='meeting' && roomClaims.pe>Date.now() && roomClaims.r===approvedRoom.j.url.split('/').pop(),'approved host meeting token has valid room identity and future eligibility');
 const previewMeeting=await call('/api/meeting-token',{token:approvedLogin.j.token});
 ok(previewMeeting.s===200&&/^wss:\/\//.test(previewMeeting.j.url||''),'approved private-preview user can create meeting without payment');
 ok((await call('/api/admin/approve',{token:approvedLogin.j.token,body:{email:privateUser,approved:true}})).s===403,'regular user cannot approve any account');
