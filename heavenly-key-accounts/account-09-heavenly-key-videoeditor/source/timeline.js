@@ -68,7 +68,7 @@ async function runTimeline(record){
  const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
  if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
  const state={cancelled:false};session=state;setBusy(true);
- const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null,audioContext=null,soundtrackNode=null;let elapsed=0;
+ const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null,audioContext=null,soundtrackNode=null;let elapsed=0;const audioStart=Number($('clipAudioStart').value);
  try{
   const fragments=[];let finished;
   if(soundtrackUrl){
@@ -86,7 +86,6 @@ async function runTimeline(record){
    if(!Number.isFinite(soundtrack.duration)||soundtrack.duration<=0)throw Error('Selected soundtrack has an invalid duration.');
    audioContext=new AudioContextClass();await audioContext.resume();
    const destination=audioContext.createMediaStreamDestination();
-   const audioStart=Number($('clipAudioStart').value);
    if(!Number.isFinite(audioStart)||audioStart<0||audioStart>600||audioStart>=soundtrack.duration)throw Error('Soundtrack start must be within the audio duration (up to 600 seconds).');
    soundtrack.loop=$('clipAudioLoop').checked;
    const soundtrackSource=audioContext.createMediaElementSource(soundtrack);
