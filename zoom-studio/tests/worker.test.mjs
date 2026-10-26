@@ -268,6 +268,8 @@ const allowed=await call('/api/admin/approve',{token:changed.j.token,body:{email
 ok(allowed.s===200,'owner can approve a pre-existing account');
 const approvedLogin=await call('/api/login',{body:{email:privateUser,password:st_(privateUser,'password123')}});
 ok(approvedLogin.s===200&&!!approvedLogin.j.token,'approved account can sign in');
+const previewMeeting=await call('/api/meeting-token',{token:approvedLogin.j.token});
+ok(previewMeeting.s===200&&/^wss:\/\//.test(previewMeeting.j.url||''),'approved private-preview user can create meeting without payment');
 ok((await call('/api/admin/approve',{token:approvedLogin.j.token,body:{email:privateUser,approved:true}})).s===403,'regular user cannot approve any account');
 const revoked=await call('/api/admin/approve',{token:changed.j.token,body:{email:privateUser,approved:false}});
 ok(revoked.s===200,'owner can revoke approved account');
