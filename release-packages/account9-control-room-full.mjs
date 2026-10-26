@@ -217,6 +217,9 @@ export async function onRequest({ request: req, env, params }) {
       if (n >= 120) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' }, 429);
       const audio = await req.arrayBuffer();
       if (!audio.byteLength || audio.byteLength > 3 * 1024 * 1024 || (announced !== null && Number(announced) !== audio.byteLength)) return J({ error: 'Audio size mismatch or chunk too large.' }, 413);
+      const wave = new Uint8Array(audio);
+      const waveText = (offset,text) => [...text].every((char,i)=>wave[offset+i]===char.charCodeAt(0));
+      if (wave.length < 44 || !waveText(0,'RIFF') || !waveText(8,'WAVE') || !waveText(12,'fmt ') || !waveText(36,'data')) return J({error:'Invalid WAV audio.'},415);
       const r = await env.AI.run('@cf/openai/whisper', { audio: [...new Uint8Array(audio)] });
       await log(env, u.id, 'transcribe');
       return J({ text: r.text || '', words: (r.words || []).map(w => ({ word: String(w.word), start: +w.start, end: +w.end })) });
