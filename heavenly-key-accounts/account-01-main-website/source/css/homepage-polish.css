@@ -1,0 +1,46 @@
+/* Heavenly Key Account 1 — premium global-standard finishing layer.
+   Non-destructive: respects the existing CMS, typography, homepage modules, and photo sources. */
+:root{--hk-polish-ink:#102c52;--hk-polish-blue:#0757ad;--hk-polish-gold:#e4b85a}
+html{scroll-behavior:smooth;scroll-padding-top:82px}
+body{overflow-x:clip;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+:where(main section){scroll-margin-top:90px}
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid #f3b72f!important;outline-offset:3px!important}
+:where(a,button){-webkit-tap-highlight-color:transparent}
+:where(img,video,canvas,svg){max-width:100%}
+:where(img){height:auto}
+:where(p){overflow-wrap:break-word}
+:where(.wrap){max-width:min(100% - 36px,1320px);margin-inline:auto}
+:where(.button,button,a.button){min-height:42px;transition:background-color .2s ease,box-shadow .2s ease,transform .2s ease}
+:where(.button,a.button):hover{box-shadow:0 7px 19px #0b3a7633}
+:where(.welcome,.assignment,.resources-section,.president-section,.hk-recent-blog,.spiritual-caution-section){isolation:isolate}
+:where(.welcome h1,.assignment h2,.president-section h2,.hk-recent-blog h2,.spiritual-caution-section h2){text-wrap:balance}
+:where(.welcome p,.assignment p,.president-section p,.hk-recent-blog p,.spiritual-caution-section p){line-height:1.6}
+:where(.ministry-tile,.resources-section article,.hk-recent-blog article){transition:transform .22s ease,box-shadow .22s ease}
+:where(.ministry-tile,.resources-section article,.hk-recent-blog article):hover{transform:translateY(-3px);box-shadow:0 12px 29px #122f5330}
+.hk-ecosystem .hk-eco-card{box-shadow:0 9px 26px #032b5433,0 0 0 1px #ffffffd6}
+.hk-ecosystem .hk-eco-visual{position:relative}
+.hk-ecosystem .hk-eco-card h3{letter-spacing:.01em}
+.hk-ecosystem .hk-eco-content{min-width:0}
+.hk-ecosystem .hk-eco-details{overflow-wrap:anywhere}
+.hk-ecosystem .hk-eco-button{min-height:42px;display:flex;align-items:center;justify-content:center;line-height:1.2}
+.hk-ecosystem .hk-eco-private{min-height:42px;display:flex;align-items:center;justify-content:center}
+.hk-ecosystem .hk-eco-core{contain:paint}
+.hk-ecosystem .hk-eco-core strong{font-kerning:normal}
+@media(max-width:880px){
+  .hero-actions{flex-wrap:wrap!important;gap:9px!important}
+  .hero-actions>a.button{flex:1 1 150px!important;width:auto!important;min-width:130px!important;padding:12px 10px!important;white-space:normal!important}
+}
+@media(max-width:560px){
+  :where(.wrap){max-width:calc(100% - 24px)}
+  :where(.welcome,.assignment,.resources-section,.president-section,.hk-recent-blog,.spiritual-caution-section){padding-inline:12px}
+  .hero-actions{flex-direction:column!important;align-items:stretch!important}
+  .hero-actions>a.button{flex:1 1 auto!important;width:100%!important;min-width:0!important}
+  .hk-ecosystem .hk-eco-head h2{letter-spacing:-.025em}
+  .hk-ecosystem .hk-eco-card{max-width:100%}
+  .hk-ecosystem .hk-eco-card .hk-eco-visual{background-position:center}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  :where(.button,button,a.button,.ministry-tile,.resources-section article,.hk-recent-blog article){transition:none!important}
+  :where(.ministry-tile,.resources-section article,.hk-recent-blog article):hover{transform:none}
+}
