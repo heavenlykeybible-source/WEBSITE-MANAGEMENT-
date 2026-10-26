@@ -146,3 +146,7 @@ assert.ok(publicMaster.includes("if(path!=='/'&&path!=='/index'){await load"),'A
 
 
 console.log('Homepage QA passed: internal links, unique IDs, image alt, safe tabs, section order, globe and finishing CSS.');
+
+assert.ok(appDock.includes("feedback.setAttribute('aria-live','polite')"),'App guidance must announce changes accessibly');
+assert.ok(appDock.includes("feedback.textContent='Application closed.'"),'Closing an app must confirm the action');
+assert.ok(appDockCss.includes('env(safe-area-inset-bottom)'),'App dock must accommodate phone safe areas');
