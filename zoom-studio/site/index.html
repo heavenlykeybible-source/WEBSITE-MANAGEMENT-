@@ -477,7 +477,7 @@ $('adel').onclick=async()=>{if(!$('dpw').value){$('acm').textContent='Enter your
  if(r.ok){saveTok('');acct.me=null;$('dpw').value='';acRender();conn.list=[];renderConns();$('acm').textContent='Your account has been deleted.'}else $('acm').textContent=r.error||'Could not delete the account.'};
 function tag(c,t,x,y,w,h){c.save();c.font='600 '+Math.max(14,Math.round(h*.045))+'px system-ui,sans-serif';c.textBaseline='middle';const tw=c.measureText(t).width+24,th=Math.max(26,Math.round(h*.07));
  c.fillStyle='rgba(8,16,36,.8)';c.fillRect(x+10,y+h-th-10,tw,th);c.fillStyle='#f2c14e';c.fillRect(x+10,y+h-th-10,4,th);c.fillStyle='#fff';c.fillText(t,x+22,y+h-th/2-10);c.restore()}
-const guests=new Map(),wait=new Map(),hands=new Map();let gws=null,gStarting=false,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
+const guests=new Map(),wait=new Map(),hands=new Map();let gws=null,gStarting=false,gHandshakeTimer=null,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
 const gc=document.createElement('canvas');gc.width=640;gc.height=360;const gx=gc.getContext('2d');
 const gsend=o=>{if(gws&&gws.readyState===1)gws.send(JSON.stringify(o))},gSt=t=>{$('gst').textContent=t};
 async function gStart(){
@@ -488,16 +488,17 @@ async function gStart(){
   if(!(await relink(true))){gSt('Sign in and confirm meeting access to start a room.');return}
   const roomURL=gRoomURL.replace(/\/+$/,'');gRoomURL=roomURL;gSt('Starting the room...');
   const w=gws=new WebSocket(roomURL+'/room');
+  clearTimeout(gHandshakeTimer);gHandshakeTimer=setTimeout(()=>{if(gws===w&&$('gin').hidden)gStop('The meeting service did not confirm the room. Please try again.')},15000);
   w.onopen=()=>{if(gws===w)gsend({t:'host',token:gRoomToken})};
   w.onmessage=e=>{if(gws!==w)return;let m;try{m=JSON.parse(e.data)}catch{return}gmsg(m)};
   w.onclose=()=>{if(gws===w)gStop('The room closed.')};w.onerror=()=>{};
- }catch(e){gws=null;gSt('The meeting connection could not start. Check the meeting service and try again.')}
+ }catch(e){gStop('The meeting connection could not start. Check the meeting service and try again.')}
  finally{gStarting=false;$('grs').disabled=false}
 }
-function gStop(msg){const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);wait.clear();
+function gStop(msg){clearTimeout(gHandshakeTimer);gHandshakeTimer=null;const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);wait.clear();
  $('grs').textContent='Start guest room';$('gin').hidden=true;hands.clear();gSt(msg||'Room closed.');renderG()}
 function gmsg(m){
- if(m.t==='created'){gice=m.ice||[];glink=location.origin+'/join.html?relay='+encodeURIComponent(gRoomURL)+'&r='+m.room+'&k='+m.key;alink=glink+'&a=1';if(tm.pend)tmPublish();
+ if(m.t==='created'){clearTimeout(gHandshakeTimer);gHandshakeTimer=null;gice=m.ice||[];glink=location.origin+'/join.html?relay='+encodeURIComponent(gRoomURL)+'&r='+m.room+'&k='+m.key;alink=glink+'&a=1';if(tm.pend)tmPublish();
   $('grs').textContent='End guest room';$('gin').hidden=false;gSt('The room is open. Copy the invite link and send it to your guests. You admit each guest from the waiting room.')}
  else if(m.t==='waiting'){wait.set(m.gid,m.name+(m.ao?' (audio only)':''));renderG()}
  else if(m.t==='joined'){wait.delete(m.gid);hands.delete(m.gid);gAdd(m.gid,m.name,m.ao)}
