@@ -125,3 +125,13 @@ test('Rollback validation uses saved previous health instead of requiring new re
  assert.match(release,/await healthy\(saved\.rollbackHealth\)/);
  assert.match(release,/async function healthy\(expectedOverride\)/);
 });
+
+test('Account 8 release smoke-tests real homepage and guest page without caching',()=>{
+ const deploy=fs.readFileSync(new URL('../scripts/deploy.mjs',import.meta.url),'utf8');
+ const verifier=fs.readFileSync(new URL('../../scripts/existing-worker-release.mjs',import.meta.url),'utf8');
+ assert.match(deploy,/RELEASE_SMOKE_PATHS:'\/index\.html,\/join\.html'/);
+ assert.match(verifier,/await smokePages\(\)/);
+ assert.match(verifier,/if\(!r\.ok\)throw Error\('Release page '/);
+ assert.match(verifier,/content-type/);
+ assert.match(verifier,/cache-control/);
+});
