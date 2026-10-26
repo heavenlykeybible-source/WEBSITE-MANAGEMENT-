@@ -101,6 +101,17 @@ try{
  await verifyVideo(timelinePath);
  const audioCodec=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=noprint_wrappers=1:nokey=1',timelinePath],{encoding:'utf8'}).trim();
  assert.ok(audioCodec.length>0,'Timeline soundtrack export must include a decodable audio stream');
+ // Export again without reselecting the soundtrack: Web Audio must not reuse a closed source node.
+ await page.locator('#clipExport').click();
+ await page.waitForFunction(()=>!document.getElementById('clipDownload').hidden,{timeout:25000});
+ const repeatEvent=page.waitForEvent('download');
+ await page.locator('#clipDownload').click();
+ const repeated=await repeatEvent;
+ const repeatPath=join(work,'repeat-timeline.'+repeated.suggestedFilename().split('.').pop());
+ await repeated.saveAs(repeatPath);
+ await verifyVideo(repeatPath);
+ const repeatAudio=execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=noprint_wrappers=1:nokey=1',repeatPath],{encoding:'utf8'}).trim();
+ assert.ok(repeatAudio,'Repeated timeline exports must retain the soundtrack');
  await page.locator('#vexp').click();
  await page.waitForFunction(()=>!document.getElementById('vdl').hidden,{timeout:30000});
  const second=page.waitForEvent('download');
