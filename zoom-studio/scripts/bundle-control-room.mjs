@@ -26,5 +26,6 @@ const runtime=fs.readFileSync(path.join(root,'server/control-room-runtime.mjs'),
 const code=backend+'\nconst MEETING_ASSETS='+JSON.stringify(assets)+';\nconst MEETING_SCHEMA='+JSON.stringify(schema)+';\n'+fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8')+'\n'+runtime;
 if(Buffer.byteLength(code)>1400000)throw Error('Meeting package exceeds the Control Room deployment limit.');
 fs.mkdirSync(path.join(root,'build'),{recursive:true});
-fs.writeFileSync(path.join(root,'build/meeting-worker.mjs'),code);
+const releaseId=createHash('sha256').update(code).digest('hex').slice(0,20);
+fs.writeFileSync(path.join(root,'build/meeting-worker.mjs'),'const MEETING_RELEASE_ID='+JSON.stringify(releaseId)+';\n'+code);
 console.log(JSON.stringify({worker:'heavenly-key-meetingspace',files:Object.keys(assets).length,bytes:Buffer.byteLength(code),output:'build/meeting-worker.mjs'}));
