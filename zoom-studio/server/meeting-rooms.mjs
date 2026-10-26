@@ -36,6 +36,8 @@ export class MeetingRooms {
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
   const capacity=capacityForRoom(this.env);
   if(this.sockets().length>=capacity)return new Response('Room is full',{status:429});
+  // Limit unauthenticated upgrades so idle sockets cannot consume every room slot.
+  if(this.sockets().filter(w=>!this.data(w).role).length>=Math.min(4,Math.max(1,capacity-1)))return new Response('Too many pending connections',{status:429});
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
   this.save(server,{role:'',room:url.pathname.split('/')[2],until:Date.now()+15000});
