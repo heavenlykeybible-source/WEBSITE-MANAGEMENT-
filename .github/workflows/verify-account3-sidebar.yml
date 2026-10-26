@@ -1,0 +1,31 @@
+name: Verify Account 3 Premium Sidebar
+on:
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-03-global-christian-community/source/**'
+      - '.github/workflows/verify-account3-sidebar.yml'
+  push:
+    branches:
+      - 'feature/**'
+    paths:
+      - 'heavenly-key-accounts/account-03-global-christian-community/source/**'
+      - '.github/workflows/verify-account3-sidebar.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-sidebar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-03-global-christian-community/source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check community app launcher syntax
+        run: node --check public/sidebar-ministry-apps.js
+      - name: Verify all active pages and approved portrait
+        run: node --test test/sidebar-ministry-apps.checks.mjs
