@@ -125,6 +125,21 @@ test('waiting guests cannot chat or signal until host admission; hibernation kee
  await message(restored,s.host,{t:'lock',on:true});const denied=s.add();await message(restored,denied,{t:'join',room:s.host.d.room,key:s.key});assert.equal(denied.readyState,3);
  await message(restored,s.host,{t:'sig',to:'wrong-room',data:{secret:'private'}});assert.ok(!guest.messages.some(m=>m.data?.secret));
 });
+test('locked meeting rejects both audience and speaker newcomers while existing viewers remain',async()=>{
+ const s=await openRoom(),existing=s.add();
+ await message(s.room,existing,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Already here'});
+ assert.equal(existing.d.ok,true);
+ await message(s.room,s.host,{t:'lock',on:true});
+ for(const aud of [true,false]){
+  const guest=s.add();await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,aud,name:'Late guest'});
+  assert.equal(guest.readyState,3);
+  assert.equal(guest.messages.at(-1)?.t,'error');
+ }
+ assert.equal(existing.readyState,1);
+ await message(s.room,s.host,{t:'lock',on:false});
+ const reopened=s.add();await message(s.room,reopened,{t:'join',room:s.host.d.room,key:s.key,aud:true});
+ assert.equal(reopened.d.ok,true);
+});
 test('audience moderation, promotion, expiry and host disconnect work across hibernation',async()=>{
  const s=await openRoom(),aud=s.add();await message(s.room,aud,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});assert.equal(aud.d.ok,true);assert.equal(aud.d.stage,false);
  await message(s.room,s.host,{t:'audchat',on:false});await message(s.room,aud,{t:'chat',text:'not allowed'});assert.equal(aud.messages.at(-1).t,'note');
