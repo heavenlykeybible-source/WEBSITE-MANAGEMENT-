@@ -8,11 +8,11 @@ test('Account 5 has its own Cloudflare Worker identity, without account 1–4 st
  assert.match(config,/name\s*=\s*"heavenly-key-app"/);
  assert.match(config,/main\s*=\s*"src\/index.js"/);
  assert.match(config,/directory\s*=\s*"\.\/public"/);
- assert.match(config,/database_name\\s*=\\s*"heavenly-key-download-counts"/);
- assert.match(config,/bucket_name\\s*=\\s*"heavenly-key-native-releases"/);
- assert.doesNotMatch(config,/\\[\\[kv_namespaces\\]\\]/);
- assert.equal((config.match(/\\[\\[d1_databases\\]\\]/g)||[]).length,1);
- assert.equal((config.match(/\\[\\[r2_buckets\\]\\]/g)||[]).length,1);
+ assert.match(config,/database_name\s*=\s*"heavenly-key-download-counts"/);
+ assert.match(config,/bucket_name\s*=\s*"heavenly-key-native-releases"/);
+ assert.doesNotMatch(config,/\[\[kv_namespaces\]\]/);
+ assert.equal((config.match(/\[\[d1_databases\]\]/g)||[]).length,1);
+ assert.equal((config.match(/\[\[r2_buckets\]\]/g)||[]).length,1);
 });
 test('mobile app has installable PWA shell and all navigable sections',()=>{
  const html=get('public/experience.html'),js=get('public/app.js');
