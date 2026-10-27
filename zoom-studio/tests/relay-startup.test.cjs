@@ -5,15 +5,15 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 
-function harness() {
-  let server, resolveDns, spawnCount = 0;
+function harness(overrides = {}) {
+  let server, resolveDns, spawnCount = 0;const children=[];
   class Server extends EventEmitter { constructor() { super(); server = this; } }
   class Socket extends EventEmitter {
     constructor() { super(); this.readyState = 1; this.sent = []; }
     send(m) { this.sent.push(m); }
     close() { this.readyState = 3; this.emit('close'); }
   }
-  const fakeProcess = { env: { TOKEN: 'test-password-123' }, on() {}, exit() {} };
+  const fakeProcess = { env: { TOKEN: 'test-password-123', ...overrides }, on() {}, exit() {} };
   const source = fs.readFileSync(require('node:path').join(__dirname, '../server/relay.js'), 'utf8');
   const context = {
     require(name) {
@@ -28,6 +28,7 @@ function harness() {
         child.stdout = new EventEmitter();
         child.stderr = new EventEmitter();
         child.kill = () => {};
+        children.push(child);
         return child;
       }};
       if (name === 'dns') return { promises: { lookup: () => new Promise(r => { resolveDns = r; }) } };
@@ -39,7 +40,7 @@ function harness() {
   vm.runInNewContext(source, context);
   const open = () => {const socket=new Socket();server.emit('connection',socket,{url:'/',headers:{}});return socket;};
   const socket = open();
-  return { socket, open, resolve: (addresses=['8.8.8.8']) => resolveDns(addresses.map(address=>({address}))), spawns: () => spawnCount };
+  return { socket, open, children, verifyToken:context.auth, resolve: (addresses=['8.8.8.8']) => resolveDns(addresses.map(address=>({address}))), spawns: () => spawnCount };
 }
 const start = JSON.stringify({ type: 'start', token: 'test-password-123', dests: ['rtmps://example.com/live/key'] });
 const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -220,5 +221,35 @@ test('relay rejects malformed hosts and invalid destination ports before DNS loo
  for(const url of ['rtmps://example.com:0/key','rtmps://example.com:65536/key','rtmps://bad..example/key','rtmps://-bad.example/key']){
   const h=harness();h.socket.emit('message',Buffer.from(JSON.stringify({type:'start',token:'test-password-123',dests:[url]})),false);await flush();
   assert.equal(h.socket.readyState,3,url);assert.equal(h.spawns(),0,url);
+ }
+});
+test('relay token parser safely rejects malformed and non-ASCII signatures',()=>{
+ const secret='test-relay-secret-with-32-characters';
+ const h=harness({RELAY_SECRET:secret,TOKEN:''});
+ const p=Buffer.from(JSON.stringify({u:'owner',exp:Date.now()+60000})).toString('base64url');
+ const sig=crypto.createHmac('sha256',secret).update(p).digest('hex');
+ assert.equal(h.verifyToken(p+'.'+sig).id,'owner');
+ for(const token of [p+'.'+'é'.repeat(64),p+'.'+'g'.repeat(64),p+'.'+sig+'.extra',p+'.'+sig.slice(1)]){
+  assert.doesNotThrow(()=>h.verifyToken(token));
+  assert.ok(!h.verifyToken(token));
+ }
+});
+test('encoder and input startup errors close failed sessions and notify the host', async()=>{
+ for(const index of [0,2]){
+  const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();
+  h.children[index].emit('error',new Error('missing encoder'));
+  assert.equal(h.socket.readyState,3);
+  const failure=h.socket.sent.map(s=>{try{return JSON.parse(s)}catch{return {}}}).find(m=>m.type==='error');
+  assert.match(failure.message,/could not start/i);
+  const next=h.open();next.emit('message',Buffer.from(start),false);h.resolve();await flush();
+  assert.equal(h.spawns(),6);
+ }
+});
+test('unexpected media process exit ends the session with a useful error', async()=>{
+ for(const index of [0,2]){
+  const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();
+  h.children[index].emit('exit',1);
+  const failure=h.socket.sent.map(s=>{try{return JSON.parse(s)}catch{return {}}}).find(m=>m.type==='error');
+  assert.match(failure.message,/stopped/i);assert.equal(h.socket.readyState,3);
  }
 });
