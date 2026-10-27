@@ -16,5 +16,11 @@ const knownSharedDbIds=new Set(['9549fc74-f6a8-4cf8-a066-7cb965c59b91','c0fe5ca1
 if(accountId.toLowerCase()===legacyId && knownSharedDbIds.has(databaseId.toLowerCase())) throw Error('MeetingSpace requires a dedicated D1 database; refusing legacy shared Studio and Control Room databases');
 const worker='heavenly-key-meetingspace';
 const config={vars:{MEETINGSPACE_PRIVATE_PREVIEW:process.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'?'0':'1'},account_id:accountId,name:worker,main:'build/meeting-worker.mjs',compatibility_date:'2026-10-19',workers_dev:true,durable_objects:{bindings:[{name:'MEETING_ROOMS',class_name:'MeetingRooms'}]},migrations:[{tag:'account8-meetingrooms-v1',new_sqlite_classes:['MeetingRooms']}],d1_databases:[{binding:'TEAMDB',database_name:'heavenly-key-meetingspace-db',database_id:databaseId,migrations_dir:'migrations'}],ai:{binding:'AI'}};
+for(const [key,min,max] of [['MEETING_STAGE_CAP',1,20],['MEETING_ROOM_CAP',2,100]]){
+ const value=process.env[key];if(value===undefined||value==='')continue;
+ if(!/^[0-9]+$/.test(value)||Number(value)<min||Number(value)>max)throw Error(key+' must be an integer between '+min+' and '+max);
+ config.vars[key]=String(Number(value));
+}
+if(config.vars.MEETING_STAGE_CAP&&config.vars.MEETING_ROOM_CAP&&Number(config.vars.MEETING_STAGE_CAP)>=Number(config.vars.MEETING_ROOM_CAP))throw Error('MEETING_STAGE_CAP must be less than MEETING_ROOM_CAP to leave a host slot');
 fs.writeFileSync(new URL('../wrangler.generated.json',import.meta.url),JSON.stringify(config,null,2)+'\n');
 console.log('MeetingSpace configuration prepared for Account '+target+'; no deployment performed.');
