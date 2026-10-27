@@ -20,7 +20,7 @@ try{
   assert.deepEqual(data,{status:'ready'},'Health must be the minimal healthy response');
   console.log('PASS live Cloudflare D1 schema, R2 and AI binding readiness');
   // Verify public asset routing, security headers and private endpoint isolation.
-  for(const [route,mime] of [['/timeline.js','javascript'],['/integrations.js','javascript'],['/sw.js','javascript'],['/manifest.json','json']]){
+  for(const [route,mime] of [['/timeline.js','javascript'],['/integrations.js','javascript'],['/ai-tools.js','javascript'],['/gateway-ui.js','javascript'],['/voice-enhance.js','javascript'],['/voice-studio.js','javascript'],['/offline-status.js','javascript'],['/sw.js','javascript'],['/manifest.json','json']]){
     const response=await get(route);
     assert.equal(response.status,200,'Missing deployed editor asset '+route);
     assert.ok((response.headers.get('content-type')||'').includes(mime),'Incorrect MIME for '+route);
