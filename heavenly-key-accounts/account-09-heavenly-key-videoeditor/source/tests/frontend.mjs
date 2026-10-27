@@ -18,6 +18,7 @@ assert.ok(html.includes("typeof MediaRecorder.isTypeSupported!=='function')retur
 assert.ok(html.includes('audioCaptured=false')&&html.includes('audioCaptured=true')&&html.includes('the export is silent'),'Video export must explicitly report unavailable source audio capture');
 assert.ok(html.includes('Canvas capture did not produce a video track')&&html.includes('!stream.getVideoTracks().length'),'Canvas export must reject missing video tracks');
 assert.ok(html.includes('v.captureStream||v.mozCaptureStream')&&html.includes('captureVideoStream.call(v)'),'Export must support standard and prefixed browser media capture');
+assert.ok(html.includes('Video capture track ended unexpectedly during export')&&html.includes("track.readyState==='live'"),'Export must reject unexpectedly terminated video capture tracks');
 const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
 assert.ok(srtParser,'Missing SRT time parser');
 const toSeconds=runInNewContext(srtParser+'; parseTime');
