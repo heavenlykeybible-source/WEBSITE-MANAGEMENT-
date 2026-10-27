@@ -22,7 +22,7 @@ jobs:
           from pathlib import Path
           db = sqlite3.connect(':memory:')
           db.execute('PRAGMA foreign_keys = ON')
-          for file in ('schema.sql', 'migrations/0002_webhook_events.sql', 'migrations/0003_conversation_lookup.sql', 'migrations/0004_whatsapp_delivery.sql', 'migrations/0005_whatsapp_receipts.sql'):
+          for file in ('schema.sql', 'migrations/0002_webhook_events.sql', 'migrations/0003_conversation_lookup.sql', 'migrations/0004_whatsapp_delivery.sql', 'migrations/0005_whatsapp_receipts.sql', 'migrations/0006_whatsapp_receipt_inbox.sql'):
               db.executescript(Path(file).read_text())
           db.execute("INSERT INTO conversations(id,channel,sender_id) VALUES('test','whatsapp_business','123')")
           db.execute("INSERT INTO messages(id,conversation_id,direction,body) VALUES('msg','test','inbound','hello')")
@@ -87,5 +87,10 @@ jobs:
           db.execute("INSERT INTO messages(id,conversation_id,direction,body,created_at) VALUES('wa_msg_recent','test','inbound','recent',datetime('now','-1 hour'))")
           allowed = db.execute("SELECT id FROM messages WHERE conversation_id='test' AND direction='inbound' AND id GLOB 'wa_msg_*' AND datetime(created_at)>=datetime('now','-24 hours')").fetchall()
           assert allowed == [('wa_msg_recent',)], 'WhatsApp service window accepted stale or unverified inbound data'
+          db.execute("INSERT INTO whatsapp_receipt_inbox(provider_message_id,phone_number_id,delivery_status) VALUES('wamid.early','123456','delivered')")
+          db.execute("INSERT INTO messages(id,conversation_id,direction,body) VALUES('approved_early','test','outbound','reply')")
+          db.execute("INSERT INTO whatsapp_delivery_attempts(draft_id,phone_number_id,state,provider_message_id) VALUES('approved_early','123456','sent','wamid.early')")
+          db.execute("UPDATE whatsapp_delivery_attempts SET delivery_status=(SELECT delivery_status FROM whatsapp_receipt_inbox WHERE provider_message_id='wamid.early' AND phone_number_id='123456') WHERE draft_id='approved_early'")
+          assert db.execute("SELECT delivery_status FROM whatsapp_delivery_attempts WHERE draft_id='approved_early'").fetchone()[0] == 'delivered'
           print('Schema, migrations and basic D1 records validated')
           PY
