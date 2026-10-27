@@ -17,6 +17,8 @@
     if (pushHistory && window.location.hash.slice(1) !== screen)
       history.pushState(null,"","#"+screen);
     if(pushHistory){const heading=document.getElementById(screen)?.querySelector('h1');if(heading){heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});}}
+    // The desktop app scrolls inside its window; mobile scrolls the page.
+    document.querySelector?.(".shell")?.scrollTo?.({top:0,behavior:"auto"});
     window.scrollTo({top:0,behavior:"auto"});
   }
   document.querySelectorAll("[data-screen]").forEach(el =>

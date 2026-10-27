@@ -21,19 +21,21 @@
   <link rel="stylesheet" href="/styles.css">
   <title>Heavenly Key App | Bible, Prayer & Christian Community</title>
   <script defer src="/app.js"></script>
+  <script defer src="/window-controls.js"></script>
   <script defer src="/member.js"></script>
   <script defer src="/site-sync.js"></script>
   <script type="module" src="/platform.js"></script>
-<link rel="stylesheet" href="./hk-approved-page-style-public-index.css"></head>
-<body><nav class="hk-family-nav" aria-label="Heavenly Key connected applications"><div class="hk-family-head"><strong>HEAVENLY KEY</strong><span>One ministry · Connected apps</span><button type="button" class="hk-family-toggle" aria-expanded="false" aria-controls="hk-family-links">Explore Apps ▾</button></div><div class="hk-family-links" id="hk-family-links" hidden><a href="https://www.heavenlykey.org/">Main Website</a><a href="https://onlinebible.heavenlykey.org/">Holy Bible · KJV</a><a href="https://apps.heavenlykey.org/">All-in-One App</a><a href="https://radio.heavenlykey.org/">Revival Radio</a><a href="https://apps.heavenlykey.org/walk-offline.html">Walk With God</a><a href="https://apps.heavenlykey.org/creation-to-eternity.html">Bible Study</a><a href="https://global.heavenlykey.org/">Christian Community</a></div></nav><script id="hk-family-script" src="./hk-page-script-index-1.js"></script>
+<link rel="stylesheet" href="./hk-approved-page-style-public-index.css"><link rel="stylesheet" href="/app-switcher.css"></head>
+<body class="hk-app-window"><script id="hk-family-script" src="./hk-page-script-index-1.js"></script>
   <a class="skip" href="#main">Skip to content</a>
-  <div class="shell">
+  <div class="shell"><nav class="hk-app-switcher" aria-label="Switch Heavenly Key apps"><details><summary>Explore apps <span aria-hidden="true">⌄</span></summary><div class="hk-app-switcher-list"><a href="https://apps.heavenlykey.org/">All apps</a><a href="https://apps.heavenlykey.org/experience.html" aria-current="page">All-in-one</a><a href="https://apps.heavenlykey.org/bible.html">Bible reader</a><a href="https://onlinebible.heavenlykey.org/">Bible platform</a><a href="https://apps.heavenlykey.org/devotional.html">Daily reading</a><a href="https://apps.heavenlykey.org/hymns.html">Hymn library</a><a href="https://apps.heavenlykey.org/audio-hymns.html">Audio hymnal</a><a href="https://apps.heavenlykey.org/walk-offline.html">My Walk with God</a><a href="https://apps.heavenlykey.org/creation-to-eternity.html">Bible study</a><a href="https://apps.heavenlykey.org/eternity-in-view/">Eternity in View</a><a href="https://apps.heavenlykey.org/assistant.html">Online Assistant</a><a href="https://radio.heavenlykey.org/">Radio</a><a href="https://global.heavenlykey.org/">Community</a><a href="https://meeting.heavenlykey.org/">Meeting Space</a></div></details></nav>
     <header class="topbar">
       <img class="brand-icon" src="/icon.svg" alt="" width="42" height="42">
       <div class="identity"><div class="brand">HEAVENLY KEY</div><div class="subbrand">EVANGELISTIC MOVEMENT</div></div>
       <span class="version">APP PREVIEW</span>
     </header>
-    <main id="main"><aside class="hk-family-promo" aria-label="Explore Heavenly Key apps"><strong>One Ministry · Five Specialised Experiences</strong><p>Explore the Bible, Online Revival Radio, Bible Study Portal, My Walk With God Calculator and Global Christian Community individually, or enjoy them together here.</p><nav><a href="/downloads.html#download">Get the All-in-One App</a><a href="/downloads.html#choose-your-app">Explore Individual Apps</a><a href="https://www.heavenlykey.org/">Official Ministry Website</a></nav></aside>
+    <div class="app-window-controls" role="toolbar" aria-label="App window controls"><button type="button" data-window="smaller" aria-label="Make app window smaller">−</button><button type="button" data-window="larger" aria-label="Make app window larger">+</button><button type="button" data-window="expand" aria-pressed="false">Expand</button><button type="button" data-window="minimize">Minimize</button></div>
+    <main id="main">
       <section id="home" class="view active" aria-labelledby="welcome-title">
         <div class="hero">
           <div class="eyebrow">JESUS IS THE ANSWER</div>
@@ -62,8 +64,8 @@
       </section>
       <section id="grow" class="view" hidden aria-labelledby="grow-title">
         <div class="section-head"><span class="eyebrow">GROW IN THE WORD</span><h1 id="grow-title">Discipleship &amp; growth</h1><p>Build your life on Christ, grow in Scripture and walk in obedience.</p></div>
-        <div class="tiles"><button class="tile" type="button" data-screen="bible"><span class="tile-symbol" aria-hidden="true">✝</span><strong>Read the Bible</strong><small>Full 66-book KJV and listening library</small></button><button class="tile" type="button" data-screen="prayer"><span class="tile-symbol" aria-hidden="true">♡</span><strong>Prayer &amp; fellowship</strong><small>Join the ministry in prayer</small></button></div>
-        <div class="tiles learning"><a class="tile" href="/bible.html"><span class="tile-symbol" aria-hidden="true">▤</span><strong>Full KJV Bible</strong><small>66 books · search · bookmarks · offline books</small></a><a class="tile" href="/audio-bible.html"><span class="tile-symbol" aria-hidden="true">♫</span><strong>Audio Bible</strong><small>Chapter player and narration catalogue</small></a><a class="tile" href="/devotional.html"><strong>365-Day Reading Plan</strong><small>Morning and evening readings</small></a><a class="tile" href="/hymns.html"><strong>Hymn texts</strong><small>Reviewed historic hymn excerpts</small></a><a class="tile" href="/audio-hymns.html"><strong>Audio Hymnal</strong><small>Recording catalogue and listening controls</small></a></div>
+        <div class="tiles"><button class="tile" type="button" data-screen="bible"><span class="tile-symbol" aria-hidden="true">✝</span><strong>Read the Bible</strong><small>Full 66-book KJV and reading tools</small></button><button class="tile" type="button" data-screen="prayer"><span class="tile-symbol" aria-hidden="true">♡</span><strong>Prayer &amp; fellowship</strong><small>Join the ministry in prayer</small></button></div>
+        <div class="tiles learning"><a class="tile" href="/bible.html"><span class="tile-symbol" aria-hidden="true">▤</span><strong>Full KJV Bible</strong><small>66 books · search · bookmarks · offline books</small></a><a class="tile" href="/devotional.html"><strong>365-Day Reading Plan</strong><small>Morning and evening readings</small></a><a class="tile" href="/hymns.html"><strong>Hymn texts</strong><small>Reviewed historic hymn excerpts</small></a><a class="tile" href="/audio-hymns.html"><strong>Audio Hymnal</strong><small>Recording catalogue and listening controls</small></a></div>
         <article class="info-card learning"><h2>Discipleship tracks</h2><p>Explore published lessons from the Community. Your progress will use your existing member account when secure sign-in is connected.</p><button class="action" id="load-tracks" type="button">Load published tracks</button><p id="tracks-status" class="note" role="status" aria-live="polite">Lessons load only when you choose.</p><div id="tracks-list"></div></article>
         <article id="member-learning" class="info-card learning" hidden><h2>Your discipleship journey</h2><p>Read lessons and save completion to your existing Community account.</p><button type="button" id="load-member-tracks" class="action">Read my lessons</button><p id="member-tracks-status" role="status" aria-live="polite" class="note"></p><div id="member-tracks-list"></div></article>
       <article class="info-card"><h2>Available without internet</h2><div class="service-links"><a class="offline-link" href="/walk-offline.html">My Walk with God Calculator · offline notebook →</a><a class="offline-link" href="/creation-to-eternity.html">From Creation to Eternity · 35 illustrated lessons →</a></div><p class="note">Open once online to save these tools. Saved Bible books and downloaded audio remain in their existing libraries.</p></article></section>
@@ -82,14 +84,14 @@
       <section id="prayer" class="view" hidden aria-labelledby="prayer-title"><div class="section-head"><h1 id="prayer-title">Prayer &amp; fellowship</h1><p>Pray for yourself, your family, the Church and the nations.</p></div><article class="info-card"><h2>Join us in prayer</h2><p>Open the ministry prayer page for GRDPC information. Personal prayer requests remain on the existing ministry service.</p><a class="action" href="https://heavenlykey.alldaywow247.workers.dev/pages/grdpc.html" target="_blank" rel="noopener noreferrer">Open GRDPC ↗</a></article></section>
       <section id="messages" class="view" hidden aria-labelledby="messages-title"><div class="section-head"><h1 id="messages-title">Messages</h1><p>Private conversations stay with your existing Community account.</p></div><article class="info-card"><h2>Continue on the Community website</h2><p>In-app messaging will become available after secure member sign-in is integrated and tested.</p><a class="action" href="https://global.heavenlykey.org/" target="_blank" rel="noopener noreferrer">Open existing Community website ↗</a></article></section>
       <section id="bible" class="view" hidden aria-labelledby="bible-title">
-        <div class="section-head"><span class="eyebrow">GROW IN THE WORD</span><h1 id="bible-title">Bible reading</h1><p>Begin with a passage below, or open the full KJV Bible and Audio Bible.</p></div>
+        <div class="section-head"><span class="eyebrow">GROW IN THE WORD</span><h1 id="bible-title">Bible reading</h1><p>Begin with a passage below, or open the full KJV Bible.</p></div>
         <div class="reading-card">
           <label for="passage">Choose a Scripture</label>
           <select id="passage"><option value="john">John 3:16 — KJV</option><option value="psalm">Psalm 27:14 — KJV</option><option value="proverbs">Proverbs 3:5 — KJV</option></select>
           <h2 id="verse-ref">John 3:16</h2>
           <p id="verse-text" class="verse">For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.</p>
         </div>
-        <div class="service-links"><a class="action" href="/bible.html?book=john&amp;chapter=3">Open full KJV Bible</a><a class="action" href="/audio-bible.html">Open Audio Bible</a></div><p class="note">Recorded narration and background music play when approved files are available. Playback starts only when you choose.</p>
+        <div class="service-links"><a class="action" href="/bible.html?book=john&amp;chapter=3">Open full KJV Bible</a></div>
       </section>
       <section id="community" class="view" hidden aria-labelledby="community-title">
         <div class="section-head"><span class="eyebrow">UNITING THE BODY OF CHRIST</span><h1 id="community-title">Christian community</h1></div>
@@ -111,9 +113,9 @@
       <button type="button" data-screen="profile"><span aria-hidden="true">◎</span>Profile</button>
     </nav>
   </div>
+  <button type="button" class="app-window-restore" hidden>Open Heavenly Key App</button>
 
-<script defer src="https://heavenlykey.org/js/hk-footer-app-promo-20261015.js"></script>
-<script defer src="hk-approved-footer.js"></script></body>
+</body>
 </html>
 
 

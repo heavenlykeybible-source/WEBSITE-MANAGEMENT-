@@ -1,7 +1,7 @@
 {
   "name": "Eternity in View",
   "short_name": "Eternity in View",
-  "description": "Eternity in View \u2014 Heavenly Key Evangelistic Movement",
+  "description": "Eternity in View — Heavenly Key Evangelistic Movement",
   "id": "/installed/eternity-in-view",
   "start_url": "/eternity-in-view/",
   "scope": "/",
@@ -10,15 +10,15 @@
   "theme_color": "#64152f",
   "icons": [
     {
-      "src": "/icons/icon-192.svg",
+      "src": "/icons/eternity-in-view-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.svg",
+      "src": "/icons/eternity-in-view-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],

@@ -13,7 +13,8 @@
       "cms-runtime-20261015.js",
       "cms-runtime-20261015.css",
       "hk-approved-footer.js",
-      "hk-approved-footer.css"
+      "hk-approved-footer.css",
+      "app-switcher.css"
     ]
   },
   "bible-study-portal": {
@@ -29,7 +30,8 @@
       "cms-runtime-20261015.js",
       "cms-runtime-20261015.css",
       "hk-approved-footer.js",
-      "hk-approved-footer.css"
+      "hk-approved-footer.css",
+      "app-switcher.css"
     ]
   },
   "eternity-in-view": {
@@ -61,7 +63,8 @@
       "audio-background-catalog.js",
       "bible-mobile-controls.js",
       "hk-approved-footer.js",
-      "hk-approved-footer.css"
+      "hk-approved-footer.css",
+      "app-switcher.css"
     ]
   },
   "audio-bible": {
@@ -111,7 +114,8 @@
       "bible-mobile-controls.js",
       "featured-main-hymn.js",
       "hk-approved-footer.js",
-      "hk-approved-footer.css"
+      "hk-approved-footer.css",
+      "app-switcher.css"
     ]
   },
   "audio-hymns": {
@@ -136,7 +140,8 @@
       "bible-mobile-controls.js",
       "audio-hymns.js",
       "hk-approved-footer.js",
-      "hk-approved-footer.css"
+      "hk-approved-footer.css",
+      "app-switcher.css"
     ]
   },
   "daily-reading": {
@@ -160,7 +165,8 @@
       "audio-background-catalog.js",
       "bible-mobile-controls.js",
       "hk-approved-footer.js",
-      "hk-approved-footer.css"
+      "hk-approved-footer.css",
+      "app-switcher.css"
     ]
   }
 }
