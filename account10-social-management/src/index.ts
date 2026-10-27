@@ -337,6 +337,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   if(!draft.body.trim()||draft.body.length>4096)return reply({error:'WhatsApp text must contain 1 to 4096 characters',sent:false},422);
   const recent=await env.DB.prepare("SELECT id FROM messages WHERE conversation_id=(SELECT conversation_id FROM messages WHERE id=?) AND direction='inbound' AND id GLOB 'wa_msg_*' AND datetime(created_at)>=datetime('now','-24 hours') ORDER BY created_at DESC LIMIT 1").bind(draft.id).first();
   if(!recent)return reply({error:'WhatsApp 24-hour customer service window is not confirmed; free-form message blocked',sent:false},409);
+  try{await env.DB.prepare('SELECT provider_message_id FROM whatsapp_receipt_inbox LIMIT 1').first()}catch{return reply({error:'Receipt reconciliation schema unavailable; apply migration 0006 before sending',sent:false},503)}
   let reservation;
   try{
    reservation=await env.DB.prepare("INSERT OR IGNORE INTO whatsapp_delivery_attempts(draft_id,phone_number_id,state) VALUES(?,?,'reserved')").bind(draft.id,phoneNumberId).run();
@@ -361,7 +362,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   }catch{/* A lost response may still mean Meta accepted the message; do not retry automatically. */}
   finally{clearTimeout(timeout)}
   try{
-   await env.DB.prepare("UPDATE whatsapp_delivery_attempts SET state=?,provider_message_id=?,provider_status=?,updated_at=CURRENT_TIMESTAMP WHERE draft_id=? AND state='reserved'").bind(state,providerMessageId,providerStatus,draft.id).run();
+   const updates=[env.DB.prepare("UPDATE whatsapp_delivery_attempts SET state=?,provider_message_id=?,provider_status=?,updated_at=CURRENT_TIMESTAMP WHERE draft_id=? AND state='reserved'").bind(state,providerMessageId,providerStatus,draft.id)];
+   if(providerMessageId)updates.push(env.DB.prepare("UPDATE whatsapp_delivery_attempts SET delivery_status=(SELECT delivery_status FROM whatsapp_receipt_inbox WHERE provider_message_id=? AND phone_number_id=?),receipt_at=(SELECT received_at FROM whatsapp_receipt_inbox WHERE provider_message_id=? AND phone_number_id=?),updated_at=CURRENT_TIMESTAMP WHERE draft_id=? AND EXISTS(SELECT 1 FROM whatsapp_receipt_inbox WHERE provider_message_id=? AND phone_number_id=?)").bind(providerMessageId,phoneNumberId,providerMessageId,phoneNumberId,draft.id,providerMessageId,phoneNumberId));
+   await env.DB.batch(updates);
   }catch{return reply({error:'Provider call completed but delivery ledger update failed; reconcile manually before any further action',sent:false,deliveryUncertain:true},503)}
   if(state==='sent')return reply({sent:true,providerAccepted:true,deliveryConfirmed:false,draftId:draft.id,providerMessageId},200);
   if(state==='rejected')return reply({sent:false,providerRejected:true,providerStatus,automaticRetry:false},502);
