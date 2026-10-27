@@ -57,6 +57,11 @@ jobs:
         run: npm run build
 
       - name: Verify release gate
+        env:
+          ACCOUNT3_SECRETS_VERIFIED: ${{ vars.ACCOUNT3_SECRETS_VERIFIED }}
+          ACCOUNT3_RESET_MAIL_VERIFIED: ${{ vars.ACCOUNT3_RESET_MAIL_VERIFIED }}
+          ACCOUNT3_MIGRATIONS_VERIFIED: ${{ vars.ACCOUNT3_MIGRATIONS_VERIFIED }}
+          ACCOUNT3_LIVE_TESTS_VERIFIED: ${{ vars.ACCOUNT3_LIVE_TESTS_VERIFIED }}
         run: node scripts/preflight.mjs --release
 
       - name: Confirm Cloudflare API credentials
