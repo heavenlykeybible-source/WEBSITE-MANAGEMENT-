@@ -176,7 +176,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
     statements.push(env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
    }
    for(const item of receipts){
-    statements.push(env.DB.prepare("UPDATE whatsapp_delivery_attempts SET delivery_status=CASE WHEN delivery_status='read' AND ? IN ('sent','delivered') THEN delivery_status WHEN delivery_status='delivered' AND ?='sent' THEN delivery_status ELSE ? END,receipt_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE provider_message_id=? AND phone_number_id=?").bind(item.status,item.status,item.status,item.messageId,item.account));
+    statements.push(env.DB.prepare("INSERT OR IGNORE INTO whatsapp_receipt_inbox(provider_message_id,phone_number_id,delivery_status) VALUES(?,?,?)").bind(item.messageId,item.account,item.status));
+    statements.push(env.DB.prepare("UPDATE whatsapp_receipt_inbox SET delivery_status=CASE WHEN delivery_status='read' OR ?='read' THEN 'read' WHEN delivery_status='delivered' OR ?='delivered' THEN 'delivered' WHEN delivery_status='failed' THEN 'failed' ELSE ? END,received_at=CURRENT_TIMESTAMP WHERE provider_message_id=? AND phone_number_id=?").bind(item.status,item.status,item.status,item.messageId,item.account));
+    statements.push(env.DB.prepare("UPDATE whatsapp_delivery_attempts SET delivery_status=(SELECT delivery_status FROM whatsapp_receipt_inbox WHERE provider_message_id=? AND phone_number_id=?),receipt_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE provider_message_id=? AND phone_number_id=?").bind(item.messageId,item.account,item.messageId,item.account));
    }
    statements.push(env.DB.prepare("UPDATE webhook_events SET processing_status='processed' WHERE id=? AND processing_status='pending'").bind(event.id));
    const results=await env.DB.batch(statements);
