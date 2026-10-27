@@ -4,6 +4,19 @@ const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistan
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
 const app={async fetch(req:Request,env:Env):Promise<Response>{
  const u=new URL(req.url);
+ // Account 2 Studio social route compatibility; preserves the standalone Account 10 API.
+ const legacy:Record<string,string>={
+ '/api/social/welcome-menu':'/api/welcome-menu',
+ '/api/social/assistant/handover-policy':'/api/handover-policy',
+ '/api/social/assistant/conversation':'/api/conversation',
+ '/api/social/assistant/conversations':'/api/conversations',
+ '/api/social/assistant/takeover':'/api/takeover',
+ '/api/social/whatsapp/rules':'/api/automation/rules',
+ '/api/social/whatsapp/rules/preview':'/api/automation/preview',
+ '/api/social/accounts':'/api/accounts',
+ '/api/social/automation/readiness':'/api/automation/readiness'
+ };
+ u.pathname=legacy[u.pathname]??u.pathname;
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
  if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
