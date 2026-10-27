@@ -118,7 +118,8 @@ function connect(){
  ws.onerror=()=>{}}
 
 function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
- const m=u.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([\w-]{6,15})/);
+ let parsed;try{parsed=new URL(u)}catch(e){return}if(!['https:','http:'].includes(parsed.protocol)){note('The broadcast link was blocked because it is unsafe.');return}
+ const m=(parsed.hostname==='youtube.com'||parsed.hostname==='www.youtube.com'||parsed.hostname==='m.youtube.com'||parsed.hostname==='youtu.be')?parsed.href.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([\w-]{6,15})/):null;
  if(m){const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+m[1]+'?playsinline=1';f.allow='autoplay; encrypted-media; picture-in-picture';f.title='Live broadcast';f.referrerPolicy='strict-origin-when-cross-origin';w.appendChild(f)}
  else{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Watch the live broadcast';w.appendChild(a)}}
 
