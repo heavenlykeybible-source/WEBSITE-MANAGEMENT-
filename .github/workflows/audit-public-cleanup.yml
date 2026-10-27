@@ -23,4 +23,7 @@ jobs:
           node scripts/cleanup/verify-footer-live.mjs https://global.heavenlykey.org
           node scripts/cleanup/verify-footer-live.mjs https://onlinebible.heavenlykey.org shared/
           node scripts/cleanup/verify-footer-live.mjs https://heavenlykey-public-assistant.heavenlykeyapp.workers.dev
+          node scripts/cleanup/verify-footer-live.mjs https://radio.heavenlykey.org js/
       - run: node scripts/cleanup/audit-public.mjs
+      - name: Audit approved footer links
+        run: node scripts/cleanup/audit-footer-links.mjs
