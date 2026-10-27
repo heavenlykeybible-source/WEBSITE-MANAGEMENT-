@@ -2,7 +2,7 @@ interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; ME
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
-const app={async fetch(req:Request,env:Env):Promise<Response>{
+const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const u=new URL(req.url);
  // Account 2 Studio social route compatibility; preserves the standalone Account 10 API.
  const legacy:Record<string,string>={
@@ -55,7 +55,18 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   const eventId='meta_'+Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw))).map(x=>x.toString(16).padStart(2,'0')).join('');
   let saved;
   try{saved=await env.DB.prepare("INSERT OR IGNORE INTO webhook_events(id,provider,event_type,payload) VALUES(?,?,?,?)").bind(eventId,'meta',payload.object,rawText).run()}catch{return reply({error:'Webhook inbox unavailable; apply migration 0002'},503)}
-  return reply({received:true,signatureVerified:true,stored:true,duplicate:!(saved.meta.changes||0),processed:false,eventEntries:count,eventCategories:[...new Set(types)],sent:false});
+  const newlyStored=!!(saved.meta.changes||0);
+  const autoProcess=payload.object==='whatsapp_business_account'&&newlyStored&&!!env.ADMIN_TOKEN;
+  if(autoProcess){
+   const internal=new Request(new URL('/api/webhooks/events/process',req.url),{
+    method:'POST',headers:{authorization:'Bearer '+env.ADMIN_TOKEN,'content-type':'application/json'},
+    body:JSON.stringify({eventId})
+   });
+   ctx.waitUntil(app.fetch(internal,env,ctx).then(async result=>{
+    if(!result.ok)console.error('Inbound webhook import requires review',result.status);
+   }).catch(()=>console.error('Inbound webhook import failed')));
+  }
+  return reply({received:true,signatureVerified:true,stored:true,duplicate:!newlyStored,processed:false,importQueued:autoProcess,eventEntries:count,eventCategories:[...new Set(types)],sent:false});
  }
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
  if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
