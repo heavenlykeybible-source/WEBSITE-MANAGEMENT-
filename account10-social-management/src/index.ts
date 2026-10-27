@@ -333,7 +333,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const account=await env.DB.prepare("SELECT id FROM social_accounts WHERE channel='whatsapp_business' AND status='verified' AND provider_account_ref=? LIMIT 1").bind(phoneNumberId).first();
   if(!account)return reply({error:'WhatsApp account not verified; run connection check before sending',sent:false},409);
   if(!draft.body.trim()||draft.body.length>4096)return reply({error:'WhatsApp text must contain 1 to 4096 characters',sent:false},422);
-  const recent=await env.DB.prepare("SELECT id FROM messages WHERE conversation_id=(SELECT conversation_id FROM messages WHERE id=?) AND direction='inbound' AND datetime(created_at)>=datetime('now','-24 hours') ORDER BY created_at DESC LIMIT 1").bind(draft.id).first();
+  const recent=await env.DB.prepare("SELECT id FROM messages WHERE conversation_id=(SELECT conversation_id FROM messages WHERE id=?) AND direction='inbound' AND id LIKE 'wa_msg_%' AND datetime(created_at)>=datetime('now','-24 hours') ORDER BY created_at DESC LIMIT 1").bind(draft.id).first();
   if(!recent)return reply({error:'WhatsApp 24-hour customer service window is not confirmed; free-form message blocked',sent:false},409);
   let reservation;
   try{
