@@ -21,6 +21,7 @@ assert.ok(html.includes('v.captureStream||v.mozCaptureStream')&&html.includes('c
 assert.ok(html.includes('Video capture track ended unexpectedly during export')&&html.includes("track.readyState==='live'"),'Export must reject unexpectedly terminated video capture tracks');
 assert.ok(html.includes('Video encoder stopped before export finished')&&html.includes("recorderFailed||rec.state==='inactive'"),'Video export must reject prematurely stopped media encoders');
 assert.ok(html.includes('Source video could not start playback for export')&&html.includes('if(v.paused||v.ended)throw Error'),'Video export must verify playback starts before recording frames');
+assert.ok(html.includes('finally{if(ctx)try{await ctx.close()}catch{}}'),'Audio decoding context must close even after decode errors');
 const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
 assert.ok(srtParser,'Missing SRT time parser');
 const toSeconds=runInNewContext(srtParser+'; parseTime');
