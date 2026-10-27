@@ -61,7 +61,14 @@ function startBackup(s) {
     return ff([...card, '-re', '-stream_loop', '-1', '-i', FALLBACK, '-map', '0:v', '-map', '1:a', '-vf', vf(s.w, s.h), ...TS]);
   return ff(['-re', '-stream_loop', '-1', '-i', FALLBACK, '-vf', vf(s.w, s.h), ...TS]);
 }
-function pipeOut(s, p) { p.stdout.on('data', d => { if (s.src === p && s.enc.stdin.writable) s.enc.stdin.write(d); }); }
+function pipeOut(s, p) { p.stdout.on('data', d => {
+  if (s.src !== p || !s.enc.stdin.writable) return;
+  if ((s.enc.stdin.writableLength || 0) + d.length > 8 * 1024 * 1024) {
+    if (s.ws && s.ws.readyState === 1) s.ws.send(JSON.stringify({type:'error',message:'Broadcast output is overloaded. Reduce quality and try again.'}));
+    return endSession(s);
+  }
+  s.enc.stdin.write(d);
+}); }
 function useBackup(s) {
   const old=s.ing; s.ing=null; kill(old);
   if (!s.fb) { const b = s.fb = startBackup(s); pipeOut(s, b); b.on('exit', () => { if (s.fb === b) s.fb = null; }); }
