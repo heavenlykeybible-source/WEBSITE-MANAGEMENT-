@@ -359,7 +359,7 @@ const engine = {
   if(url.pathname==='/api/playout'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM playout_items WHERE status IN (\'scheduled\',\'playing\') ORDER BY starts_at LIMIT 50').all(); return json({items:r.results});}
 
   if(url.pathname==='/api/social/accounts'&&request.method==='POST'){
-    const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const ch=String(b.channel_name??''); const ref=String(b.provider_account_ref??''); if(!ch||!ref)return json({error:'Missing account fields'},400); const r=await env.DB.prepare('INSERT INTO social_accounts(channel_name,provider_account_ref,automatable,created_by) VALUES(?,?,?,?)').bind(ch,ref,b.automatable===false?0:1,cap.sub).run(); return json({account_id:Number(r.meta.last_row_id)},201);
+    const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const ch=String(b.channel_name??'').trim(); const ref=String(b.provider_account_ref??'').trim(); if(!ch||!ref||ch.length>100||ref.length>255)return json({error:'Enter valid social account details'},400); if(b.automatable===true)return json({error:'Connect and verify the provider authorization before enabling automatic publishing. A manually entered account reference is not authorization.'},409); const r=await env.DB.prepare('INSERT INTO social_accounts(channel_name,provider_account_ref,automatable,created_by) VALUES(?,?,?,?)').bind(ch,ref,0,cap.sub).run(); return json({account_id:Number(r.meta.last_row_id)},201);
   }
   if(url.pathname==='/api/social/accounts'&&request.method==='GET'){const r=await env.DB.prepare('SELECT account_id,channel_name,status,automatable,created_at FROM social_accounts ORDER BY account_id DESC LIMIT 100').all();return json({items:r.results});}
 
