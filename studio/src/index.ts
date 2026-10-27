@@ -386,6 +386,30 @@ const engine = {
       handover:{pauseAutomationForConversation:true,notifyOwnerOnWhatsApp:true,notificationContains:'request summary and secure dashboard link',conversationHistory:'restricted to authorized staff',resume:'manual'},
       status:'design_only',missing:['verified provider connections','inbound webhooks','conversation storage','owner notification delivery','human takeover enforcement']});
   }
+  // Secure operator-only conversation intake for approved messaging adapters.
+  // Provider verification must occur before an adapter calls this endpoint.
+  if(url.pathname==='/api/social/assistant/conversations'&&request.method==='GET'){
+    const prefix='assistant-conversation:'+cap.sub+':';
+    const listing=await env.LIVE_STATUS_KV.list({prefix,limit:100});
+    const items=[] as unknown[];
+    for(const key of listing.keys){const raw=await env.LIVE_STATUS_KV.get(key.name);if(raw){try{const entry=JSON.parse(raw);items.push({id:entry.id,channel:entry.channel,updatedAt:entry.updatedAt,handoverRequested:entry.handoverRequested,messageCount:Array.isArray(entry.messages)?entry.messages.length:0});}catch{}}}
+    return json({items,hasMore:!listing.list_complete,note:'Only locally recorded conversations are shown. Provider inbox synchronization is not yet connected.'});
+  }
+  if(url.pathname==='/api/social/assistant/conversations'&&request.method==='POST'){
+    const b=await requireJson(request);
+    if(!b||typeof b.id!=='string'||!(/^[a-zA-Z0-9:_-]{1,120}$/).test(b.id)||!['whatsapp_business','facebook_messenger','online_assistant'].includes(b.channel)||typeof b.message!=='string'||!b.message.trim()||b.message.length>4096)
+      return json({error:'Invalid conversation id, channel or message.'},400);
+    const key='assistant-conversation:'+cap.sub+':'+b.id;
+    const previous=await env.LIVE_STATUS_KV.get(key);
+    let old:{messages:{text:string;at:string}[];handoverRequested?:boolean}={messages:[]};
+    try{if(previous){const parsed=JSON.parse(previous);if(Array.isArray(parsed.messages))old=parsed;}}catch{}
+    const messages=[...old.messages.slice(-49),{text:b.message.trim(),at:new Date().toISOString()}];
+    const handoverRequested=old.handoverRequested||(/speak to evangelist|human (help|assistance|agent)|real person/i).test(b.message);
+    const record={id:b.id,channel:b.channel,updatedAt:new Date().toISOString(),handoverRequested,messages};
+    await env.LIVE_STATUS_KV.put(key,JSON.stringify(record));
+    if(handoverRequested)await env.LIVE_STATUS_KV.put('assistant-takeover:'+cap.sub+':'+b.id,JSON.stringify({paused:true,updatedAt:record.updatedAt}));
+    return json({saved:true,handoverRequested,automationPaused:!!handoverRequested,notificationSent:false,providerConnected:false});
+  }
   // Operator-controlled per-conversation human takeover. Stored separately
   // for each operator; no unverified claim of provider-side synchronization.
   if(url.pathname==='/api/social/assistant/takeover'&&request.method==='POST'){
