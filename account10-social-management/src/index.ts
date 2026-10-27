@@ -65,6 +65,17 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   const items=[...(conversations.results||[]).map((v:any)=>({type:'conversation',id:v.id,channel:v.channel,needsHuman:!!v.requested_human,paused:!!v.human_paused,at:v.updated_at})),...(posts.results||[]).map((v:any)=>({type:'post',id:v.id,channel:v.platform,status:v.status,at:v.created_at}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,50);
   return reply({items,liveProviderEvents:false});
  }
+ if(u.pathname==='/api/operations/data-integrity'&&req.method==='GET'){
+  const [orphanMessages,invalidDirections,duplicateAccounts,unverifiedAccounts,waitingDrafts]=await Promise.all([
+   env.DB.prepare('SELECT COUNT(*) AS total FROM messages m LEFT JOIN conversations c ON c.id=m.conversation_id WHERE c.id IS NULL').first<{total:number}>(),
+   env.DB.prepare("SELECT COUNT(*) AS total FROM messages WHERE direction NOT IN ('inbound','outbound','ai','draft')").first<{total:number}>(),
+   env.DB.prepare('SELECT COUNT(*) AS total FROM (SELECT channel,provider_account_ref FROM social_accounts GROUP BY channel,provider_account_ref HAVING COUNT(*)>1)').first<{total:number}>(),
+   env.DB.prepare("SELECT COUNT(*) AS total FROM social_accounts WHERE status!='verified'").first<{total:number}>(),
+   env.DB.prepare("SELECT COUNT(*) AS total FROM messages WHERE direction='draft'").first<{total:number}>()
+  ]);
+  const checks=[{name:'orphan_messages',count:orphanMessages?.total??0,passed:!(orphanMessages?.total)},{name:'invalid_message_directions',count:invalidDirections?.total??0,passed:!(invalidDirections?.total)},{name:'duplicate_social_accounts',count:duplicateAccounts?.total??0,passed:!(duplicateAccounts?.total)}];
+  return reply({integrityPassed:checks.every(x=>x.passed),checks,unverifiedAccounts:unverifiedAccounts?.total??0,waitingDrafts:waitingDrafts?.total??0,readOnly:true});
+ }
  if(u.pathname==='/api/operations/diagnostics'&&req.method==='GET'){
   const checks:{name:string;ok:boolean;detail:string}[]=[{name:'admin_token',ok:!!env.ADMIN_TOKEN,detail:'Administrative authentication configured'},{name:'database_binding',ok:!!env.DB,detail:'Cloudflare D1 binding configured'},{name:'official_provider_oauth',ok:false,detail:'Official provider authorization not implemented'},{name:'external_message_delivery',ok:false,detail:'External messaging adapters not implemented'},{name:'scheduled_publishing',ok:false,detail:'Scheduled publishing worker not implemented'},{name:'gemini_automation',ok:false,detail:'AI processing not enabled'}];
   for(const [name,sql] of [['conversations','SELECT COUNT(*) AS total FROM conversations'],['messages','SELECT COUNT(*) AS total FROM messages'],['social_accounts','SELECT COUNT(*) AS total FROM social_accounts'],['automation_rules','SELECT COUNT(*) AS total FROM automation_rules'],['social_posts','SELECT COUNT(*) AS total FROM social_posts']] as const){try{const row=await env.DB.prepare(sql).first<{total:number}>();checks.push({name:'table_'+name,ok:true,detail:String(row?.total??0)+' records'})}catch{checks.push({name:'table_'+name,ok:false,detail:'Table unavailable or schema not migrated'})}}
