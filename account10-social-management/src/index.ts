@@ -79,6 +79,14 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  const provided=req.headers.get('authorization')||'';
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
+ if(req.method==='POST'){
+  const contentType=req.headers.get('content-type')||'';
+  if(!/^application\/json(?:\s*;|\s*$)/i.test(contentType))return reply({error:'Content-Type must be application/json'},415);
+  const declared=req.headers.get('content-length');
+  if(declared!==null&&(!/^[0-9]+$/.test(declared)||!Number.isSafeInteger(Number(declared))))return reply({error:'Invalid Content-Length'},400);
+  if(declared!==null&&Number(declared)>1048576)return reply({error:'Request payload too large'},413);
+ }
+
  if(u.pathname==='/api/accounts/import'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!Array.isArray(data?.items)||data.items.length<1||data.items.length>100)return reply({error:'Provide 1 to 100 accounts'},400);
