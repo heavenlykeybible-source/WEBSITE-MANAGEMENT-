@@ -23,6 +23,22 @@ input[type=text]{flex:1;min-width:150px}
 #cl{height:170px;overflow:auto;background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:8px}
 #wb iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:8px}
 [hidden]{display:none!important}
+
+/* Mobile live-room presentation: preserve the meeting and consent controls. */
+@media (max-width: 600px){
+ body{padding:12px;max-width:100%}
+ #live{display:flex;flex-direction:column;gap:8px}
+ #live[hidden]{display:none!important}
+ #stg .vw{overflow:hidden;border-radius:18px;background:#080d17;box-shadow:0 12px 32px #0005}
+ #rv{aspect-ratio:3/4;max-height:64dvh;object-fit:contain;border-radius:18px}
+ #lv{width:30%;max-width:112px;aspect-ratio:3/4;bottom:12px;right:12px;border-radius:12px}
+ #live .row{gap:8px;margin:2px 0}
+ #live button{min-height:44px;border-radius:999px;padding:10px 15px}
+ #stg>.row{justify-content:center}
+ #cl{height:120px;border-radius:14px}
+ #ct{min-width:0;border-radius:999px;min-height:44px}
+ #audv #wb iframe{border-radius:16px}
+}
 </style></head><body>
 <h1 id="ti">Join the broadcast</h1>
 
