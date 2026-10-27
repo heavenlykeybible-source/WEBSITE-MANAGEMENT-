@@ -52,5 +52,19 @@ jobs:
               pass
           else:
               raise AssertionError('Duplicate provider account was accepted')
+          db.execute("UPDATE conversations SET human_paused=1, requested_human=1 WHERE id='test'")
+          blocked = db.execute(
+              "INSERT INTO messages(id,conversation_id,direction,body) "
+              "SELECT 'automated','test','draft','auto reply' "
+              "WHERE EXISTS(SELECT 1 FROM conversations WHERE id='test' AND human_paused=0 AND requested_human=0)"
+          )
+          assert blocked.rowcount == 0, 'Automation bypassed human takeover'
+          db.execute("UPDATE conversations SET human_paused=0, requested_human=0 WHERE id='test'")
+          resumed = db.execute(
+              "INSERT INTO messages(id,conversation_id,direction,body) "
+              "SELECT 'automated','test','draft','auto reply' "
+              "WHERE EXISTS(SELECT 1 FROM conversations WHERE id='test' AND human_paused=0 AND requested_human=0)"
+          )
+          assert resumed.rowcount == 1, 'Automation did not resume'
           print('Schema, migrations and basic D1 records validated')
           PY
