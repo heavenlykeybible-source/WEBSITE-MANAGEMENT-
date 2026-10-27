@@ -24,3 +24,6 @@ button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}button:fo
 
 /* The installed app keeps its navigation inside the app window even if the shared site footer is injected during the build. */
 body.hk-app-window > hk-ministry-footer{display:none}
+
+/* Keep tab labels legible and inside the screen at narrow widths. */
+.tabbar button{min-width:0;line-height:1.2;overflow-wrap:anywhere;text-align:center}.tabbar button span{line-height:1.1}@media(max-width:360px){.tabbar{gap:2px;padding-inline:4px}.tabbar button{padding-inline:1px}}
