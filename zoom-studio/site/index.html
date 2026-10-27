@@ -701,17 +701,18 @@ function rd(){const ul=$('dl');ul.innerHTML='';ds.forEach((d,i)=>{const li=docum
  const[c,u,k,x]=li.children;c.checked=d.on;u.value=d.url;k.value=d.key;c.onchange=()=>d.on=c.checked;u.oninput=()=>d.url=u.value;k.oninput=()=>d.key=k.value;x.onclick=()=>{ds.splice(i,1);rd()};ul.appendChild(li)})}
 function setSt(t,on){$('st').textContent=t;$('st').classList.toggle('on',!!on)}
 let want=false,retry=0,outs=[];
-function connect(){try{ws=new WebSocket(RU)}catch(e){want=false;$('gl').textContent='Go live';setSt('Offline');$('info').textContent='Invalid relay address.';return}
- ws.onopen=()=>{retry=0;const lowd=$('low').checked;
+function finishBroadcast(reason){want=false;try{ws&&ws.close()}catch(e){}if(liveEnds.length){const ends=liveEnds;liveEnds=[];api('/api/golive/end',{ends})}$('gl').textContent='Go live';setSt('Offline');if(reason)$('info').textContent=reason}
+function connect(){try{ws=new WebSocket(RU)}catch(e){finishBroadcast('Invalid relay address.');return}
+ ws.onopen=()=>{try{retry=0;const lowd=$('low').checked;
   ws.send(JSON.stringify({type:'start',token:RT,dests:outs,size:W<H?'portrait':W==H?'square':'landscape'}));
   const tr=lowd?2:qTier;rec=new MediaRecorder(mkStream(),{mimeType:mime(),videoBitsPerSecond:QV[tr],audioBitsPerSecond:QA[tr]});
   rec.ondataavailable=e=>{if(!e.data.size||ws.readyState!==1)return;if(ws.bufferedAmount>3e6){qTier=Math.min(2,qTier+1);dmeter();msg('Slow network. Lowering the stream quality to keep you live.');ws.close();return}ws.send(e.data);sent+=e.data.size;$('info').textContent=(sent/1048576).toFixed(1)+' MB sent'};
-  rec.start(1000);setSt('Connecting to relay')};
- ws.onmessage=e=>{let message;try{message=JSON.parse(e.data)}catch(e){}if(message&&message.type==='feed-active'){setSt('Feed sent to relay',true);$('info').textContent='Feed is reaching the relay. Check each destination to confirm it is live.';return}$('info').textContent=String(e.data).slice(0,120)};
+  rec.start(1000);setSt('Connecting to relay')}catch(e){try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}finishBroadcast('Could not start media recording on this device. Check browser support and try again.')}};
+ ws.onmessage=e=>{let message;try{message=JSON.parse(e.data)}catch(e){}if(message&&message.type==='error'){finishBroadcast(String(message.message||'The relay rejected the broadcast.').slice(0,160));return}if(message&&message.type==='feed-active'){setSt('Feed sent to relay',true);$('info').textContent='Feed is reaching the relay. Check each destination to confirm it is live.';return}$('info').textContent=String(e.data).slice(0,120)};
  ws.onclose=()=>{try{rec&&rec.state!=='inactive'&&rec.stop()}catch(e){}
-  if(want){setSt('Reconnecting to relay');$('info').textContent='Connection lost. Retrying...';setTimeout(()=>want&&relink().then(ok=>ok&&want&&connect()),Math.min(15000,2000*++retry))}else setSt('Offline')};
+  if(want){setSt('Reconnecting to relay');$('info').textContent='Connection lost. Retrying...';setTimeout(()=>{if(want)relink().then(ok=>{if(ok&&want)connect();else if(want)finishBroadcast($('info').textContent||'Could not reconnect to the relay.')})},Math.min(15000,2000*++retry))}else setSt('Offline')};
  ws.onerror=()=>{}}
-$('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}try{ws.close()}catch(e){}if(liveEnds.length){api('/api/golive/end',{ends:liveEnds});liveEnds=[]}$('gl').textContent='Go live';return}
+$('gl').onclick=async()=>{if(want){try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}finishBroadcast();return}
  $('gl').disabled=true;try{
  if(ds.some(d=>d.on&&(!d.url.trim()||!d.key.trim()))){$('info').textContent='Complete the server URL and stream key for every enabled destination, or turn it off.';return}
  if(ds.filter(d=>d.on).length+(acct.on?conn.sel.size:0)>10){$('info').textContent='Select at most 10 destinations for one broadcast.';return}
