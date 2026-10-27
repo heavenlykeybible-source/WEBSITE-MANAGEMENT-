@@ -47,6 +47,11 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   for(const item of body.items){await env.DB.prepare('INSERT OR IGNORE INTO conversations(id,channel,sender_id,human_paused,requested_human) VALUES(?,?,?,?,?)').bind(item.id,item.channel,item.senderId,item.humanPaused?1:0,item.requestedHuman?1:0).run();conversations++;for(const m of item.messages){const r=await env.DB.prepare('INSERT OR IGNORE INTO messages(id,conversation_id,direction,body) VALUES(?,?,?,?)').bind(m.id,item.id,m.direction,m.body).run();messages+=r.meta.changes||0}}
   return reply({importedConversations:conversations,newMessages:messages,providerDelivery:false,note:'Account 2 records are not deleted. Verify counts before cutover.'});
  }
+ if(u.pathname==='/api/takeover'&&req.method==='GET'){
+  const id=u.searchParams.get('conversationId');if(!idOk(id))return reply({error:'Valid conversationId required'},400);
+  const row=await env.DB.prepare('SELECT human_paused FROM conversations WHERE id=?').bind(id).first<{human_paused:number}>();if(!row)return reply({error:'Conversation not found'},404);
+  return reply({conversationId:id,automationPaused:!!row.human_paused,providerEnforced:false});
+ }
  if(u.pathname==='/api/dashboard'&&req.method==='GET'){
   const counts=await Promise.all(['conversations','messages','automation_rules','social_accounts','social_posts'].map(async table=>{const row=await env.DB.prepare('SELECT COUNT(*) AS n FROM '+table).first<{n:number}>();return [table,row?.n??0]}));
   const human=await env.DB.prepare('SELECT COUNT(*) AS n FROM conversations WHERE requested_human=1').first<{n:number}>();const paused=await env.DB.prepare('SELECT COUNT(*) AS n FROM conversations WHERE human_paused=1').first<{n:number}>();const drafts=await env.DB.prepare("SELECT COUNT(*) AS n FROM social_posts WHERE status='draft'").first<{n:number}>();return reply({account:10,counts:Object.fromEntries(counts),humanRequests:human?.n??0,pausedConversations:paused?.n??0,postDrafts:drafts?.n??0,liveMessaging:false,livePublishing:false,providerAuthorizationsVerified:false});
