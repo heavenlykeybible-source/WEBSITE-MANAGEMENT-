@@ -39,7 +39,7 @@ function harness() {
   vm.runInNewContext(source, context);
   const open = () => {const socket=new Socket();server.emit('connection',socket,{url:'/',headers:{}});return socket;};
   const socket = open();
-  return { socket, open, resolve: () => resolveDns([{ address: '8.8.8.8' }]), spawns: () => spawnCount };
+  return { socket, open, resolve: (addresses=['8.8.8.8']) => resolveDns(addresses.map(address=>({address}))), spawns: () => spawnCount };
 }
 const start = JSON.stringify({ type: 'start', token: 'test-password-123', dests: ['rtmps://example.com/live/key'] });
 const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -203,4 +203,22 @@ test('stopping while disconnected uses captured relay credentials for cleanup',(
  assert.equal(sockets[0].url,'wss://old.test');
  assert.equal(sockets[0].sent[0].token,'old-token');
  assert.equal(sockets[0].sent[0].type,'stop');
+});
+test('relay rejects nonpublic DNS answers including mapped and link-local IPv6', async()=>{
+ for(const address of ['127.0.0.1','10.0.0.1','169.254.169.254','198.18.0.1','192.0.2.1','::1','::ffff:7f00:1','fe90::1','fd00::1','2001:0db8::1']){
+  const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve([address]);await flush();
+  assert.equal(h.socket.readyState,3,address);assert.equal(h.spawns(),0,address);
+ }
+ const mixed=harness();mixed.socket.emit('message',Buffer.from(start),false);mixed.resolve(['8.8.8.8','::ffff:127.0.0.1']);await flush();
+ assert.equal(mixed.socket.readyState,3);
+});
+test('relay accepts globally routable IPv6 destinations', async()=>{
+ const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve(['2606:4700:4700::1111']);await flush();
+ assert.equal(h.spawns(),3);
+});
+test('relay rejects malformed hosts and invalid destination ports before DNS lookup', async()=>{
+ for(const url of ['rtmps://example.com:0/key','rtmps://example.com:65536/key','rtmps://bad..example/key','rtmps://-bad.example/key']){
+  const h=harness();h.socket.emit('message',Buffer.from(JSON.stringify({type:'start',token:'test-password-123',dests:[url]})),false);await flush();
+  assert.equal(h.socket.readyState,3,url);assert.equal(h.spawns(),0,url);
+ }
 });
