@@ -93,7 +93,7 @@ a{color:var(--ac)}
 <h2>Other destinations (TikTok, Instagram, any RTMP)</h2>
 <div class="row"><select id="pre"><option value="rtmp://a.rtmp.youtube.com/live2">YouTube</option>
 <option value="rtmps://live-api-s.facebook.com:443/rtmp/">Facebook</option>
-<option value="rtmp://live.twitch.tv/app">Twitch</option><option value="">TikTok (paste URL and key)</option><option value="">Instagram (paste URL and key)</option><option value="">Custom RTMP</option></select>
+<option value="rtmp://live.twitch.tv/app">Twitch</option><option value="">TikTok (paste URL and key)</option><option value="">Instagram (paste URL and key)</option><option value="">X / Twitter (paste URL and key)</option><option value="">LinkedIn (paste URL and key)</option><option value="">Custom RTMP</option></select>
 <button class="pri" data-a="dadd">Add destination</button></div>
 <ul id="dl"></ul>
 <div id="manual"><h2>Your own server</h2>
@@ -698,7 +698,7 @@ $('rc').onclick=()=>{if(rr){rr.stop();return}ch=[];AC.resume();
 let ds=[],ws=null,rec=null,live=false,sent=0;
 function rd(){const ul=$('dl');ul.innerHTML='';ds.forEach((d,i)=>{const li=document.createElement('li');
  li.innerHTML='<input type="checkbox" checked aria-label="Enabled"><input type="text" placeholder="Server URL"><input type="password" placeholder="Stream key"><button aria-label="Remove">x</button>';
- const[c,u,k,x]=li.children;u.value=d.url;c.onchange=()=>d.on=c.checked;u.oninput=()=>d.url=u.value;k.oninput=()=>d.key=k.value;x.onclick=()=>{ds.splice(i,1);rd()};ul.appendChild(li)})}
+ const[c,u,k,x]=li.children;c.checked=d.on;u.value=d.url;k.value=d.key;c.onchange=()=>d.on=c.checked;u.oninput=()=>d.url=u.value;k.oninput=()=>d.key=k.value;x.onclick=()=>{ds.splice(i,1);rd()};ul.appendChild(li)})}
 function setSt(t,on){$('st').textContent=t;$('st').classList.toggle('on',!!on)}
 let want=false,retry=0,outs=[];
 function connect(){try{ws=new WebSocket(RU)}catch(e){want=false;$('gl').textContent='Go live';setSt('Offline');$('info').textContent='Invalid relay address.';return}
@@ -712,6 +712,8 @@ function connect(){try{ws=new WebSocket(RU)}catch(e){want=false;$('gl').textCont
   if(want){setSt('Reconnecting. Backup is playing.',true);$('info').textContent='Connection lost. Retrying...';setTimeout(()=>want&&relink().then(ok=>ok&&want&&connect()),Math.min(15000,2000*++retry))}else setSt('Offline')};
  ws.onerror=()=>{}}
 $('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}try{ws.close()}catch(e){}if(liveEnds.length){api('/api/golive/end',{ends:liveEnds});liveEnds=[]}$('gl').textContent='Go live';return}
+ if(ds.some(d=>d.on&&(!d.url.trim()||!d.key.trim()))){$('info').textContent='Complete the server URL and stream key for every enabled destination, or turn it off.';return}
+ if(ds.filter(d=>d.on).length+(acct.on?conn.sel.size:0)>10){$('info').textContent='Select at most 10 destinations for one broadcast.';return}
  outs=ds.filter(d=>d.on&&d.url&&d.key).map(d=>d.url.replace(/\/+$/,'')+'/'+d.key);
  if(acct.on&&conn.sel.size){$('info').textContent='Creating your broadcasts...';
   const r=await api('/api/golive/start',{ids:[...conn.sel],title:$('btl').value.trim()||'Live broadcast',privacy:$('bpr').value});
