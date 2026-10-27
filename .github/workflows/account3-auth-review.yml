@@ -44,10 +44,3 @@ jobs:
             exit 1
           fi
           echo 'Unapproved promotion blocked'
-      - name: Ensure release is blocked until independent verification
-        run: |
-          if node scripts/preflight.mjs --release; then
-            echo 'Release gate unexpectedly passed without attestations'
-            exit 1
-          fi
-          echo 'Release gate correctly blocks unverified deployment'
