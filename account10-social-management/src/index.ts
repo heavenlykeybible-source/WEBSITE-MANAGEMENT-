@@ -115,12 +115,12 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
    if(event.event_type!=='whatsapp_business_account')return reply({error:'Only WhatsApp text messages are supported by this processor'},422);
    const parsed=JSON.parse(event.payload);if(!Array.isArray(parsed.entry))return reply({error:'Invalid stored webhook entries'},422);
    const inbound:{sender:string;messageId:string;body:string;account:string}[]=[];
-   for(const entry of parsed.entry||[])for(const change of entry.changes||[])for(const message of change.value?.messages||[]){
+   for(const entry of parsed.entry){if(!entry||!Array.isArray(entry.changes))continue;for(const change of entry.changes){if(!change||!Array.isArray(change.value?.messages))continue;for(const message of change.value.messages){if(!message||typeof message!=='object')continue;
     if(message.type!=='text'||typeof message.text?.body!=='string'||typeof message.from!=='string'||typeof message.id!=='string')continue;
     if(!message.text.body.trim()||message.text.body.length>10000||!idOk(message.id.replace(/[^a-zA-Z0-9:_-]/g,'_').slice(0,120)))continue;
     if(typeof change.value?.metadata?.phone_number_id!=='string'||!change.value.metadata.phone_number_id.trim())continue;
     inbound.push({sender:message.from,messageId:message.id,body:message.text.body,account:change.value.metadata.phone_number_id});
-   }
+   }}}
    if(inbound.length===0||inbound.length>100)return reply({error:'No supported text messages or too many messages'},422);
    if(inbound.some(item=>item.account.length>100||item.sender.length>100||item.messageId.length>255))return reply({error:'Invalid WhatsApp identifier length'},422);
    if(inbound.some(item=>!/^[0-9]{1,30}$/.test(item.account)||!/^[0-9]{1,30}$/.test(item.sender)))return reply({error:'Invalid WhatsApp phone identifier format'},422);
