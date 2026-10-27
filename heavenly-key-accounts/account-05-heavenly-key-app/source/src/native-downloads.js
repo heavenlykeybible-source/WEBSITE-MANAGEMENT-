@@ -40,7 +40,8 @@ export async function handleNativeDownloads(request,env) {
     const catalogue=await catalogResponse.json();
     if(!Object.prototype.hasOwnProperty.call(catalogue,appId)) return reply({error:'Unknown app'},404);
   } catch { return reply({error:'Download catalogue unavailable'},503); }
-  if(!env.NATIVE_RELEASES || !env.DOWNLOAD_DB) return reply({error:'Native downloads are not yet published'},503);
+  if(!env.NATIVE_RELEASES) return reply({error:'Native downloads are not yet published'},503);
+  if(request.method==='GET' && !env.DOWNLOAD_DB) return reply({error:'Download statistics database not configured'},503);
   const meta=platforms[platform];
   const key=appId+'/'+platform+'/release.'+meta.extension;
   try {
