@@ -97,6 +97,14 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   const items=[...(conversations.results||[]).map((v:any)=>({type:'conversation',id:v.id,channel:v.channel,needsHuman:!!v.requested_human,paused:!!v.human_paused,at:v.updated_at})),...(posts.results||[]).map((v:any)=>({type:'post',id:v.id,channel:v.platform,status:v.status,at:v.created_at}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,50);
   return reply({items,liveProviderEvents:false});
  }
+ if(u.pathname==='/api/webhooks/events'&&req.method==='GET'){
+  const limit=Math.min(100,Math.max(1,Number(u.searchParams.get('limit')||25)||25));
+  try{
+   const result=await env.DB.prepare('SELECT id,provider,event_type,processing_status,received_at FROM webhook_events ORDER BY received_at DESC,id DESC LIMIT ?').bind(limit).all();
+   const counts=await env.DB.prepare('SELECT processing_status,COUNT(*) AS total FROM webhook_events GROUP BY processing_status').all();
+   return reply({items:result.results,counts:counts.results,payloadsExcluded:true,deliveryEnabled:false});
+  }catch{return reply({error:'Webhook inbox unavailable; apply migration 0002'},503)}
+ }
  if(u.pathname==='/api/operations/data-integrity'&&req.method==='GET'){
   const [orphanMessages,invalidDirections,duplicateAccounts,unverifiedAccounts,waitingDrafts]=await Promise.all([
    env.DB.prepare('SELECT COUNT(*) AS total FROM messages m LEFT JOIN conversations c ON c.id=m.conversation_id WHERE c.id IS NULL').first<{total:number}>(),
