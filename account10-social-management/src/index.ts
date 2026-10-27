@@ -238,7 +238,7 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(!idOk(data?.draftId))return reply({error:'Valid draftId required'},400);
   const draft=await env.DB.prepare("SELECT m.id,m.conversation_id,c.human_paused,c.requested_human FROM messages m JOIN conversations c ON c.id=m.conversation_id WHERE m.id=? AND m.direction='draft'").bind(data.draftId).first<{id:string;conversation_id:string;human_paused:number;requested_human:number}>();
   if(!draft)return reply({error:'Draft not found'},404);
-  if(draft.human_paused||draft.requested_human)return reply({error:'Human takeover active; approval blocked'},409);
+  if(draft.human_paused||draft.requested_human)return reply({error:'Operator approval during takeover requires a dedicated operator action'},409);
   const result=await env.DB.prepare("UPDATE messages SET direction='outbound' WHERE id=? AND direction='draft' AND EXISTS(SELECT 1 FROM conversations WHERE id=? AND human_paused=0 AND requested_human=0)").bind(data.draftId,draft.conversation_id).run();
   if(!result.meta.changes)return reply({error:'Draft changed or human takeover activated'},409);
   return reply({approved:true,internalOnly:true,sent:false,providerConnected:false});
