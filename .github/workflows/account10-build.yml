@@ -29,5 +29,11 @@ jobs:
           db.execute("INSERT INTO webhook_events(id,provider,event_type,payload) VALUES('event','meta','whatsapp_business_account','{}')")
           assert db.execute("SELECT COUNT(*) FROM messages").fetchone()[0] == 1
           assert db.execute("PRAGMA foreign_key_check").fetchall() == []
+          try:
+              db.execute("INSERT INTO messages(id,conversation_id,direction,body) VALUES('orphan','missing','inbound','invalid')")
+          except sqlite3.IntegrityError:
+              pass
+          else:
+              raise AssertionError('Foreign-key enforcement is not active')
           print('Schema, migrations and basic D1 records validated')
           PY
