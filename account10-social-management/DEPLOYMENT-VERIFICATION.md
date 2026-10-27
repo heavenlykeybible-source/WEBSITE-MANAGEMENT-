@@ -4,7 +4,7 @@ This checklist distinguishes repository code from an operational Cloudflare depl
 
 ## Database
 - [ ] Apply `schema.sql` to the Account 10 D1 database.
-- [ ] Apply `migrations/0002_webhook_events.sql`, `0003_conversation_lookup.sql`, and `0004_whatsapp_delivery.sql` in order after the base schema.
+- [ ] Apply `migrations/0002_webhook_events.sql`, `0003_conversation_lookup.sql`, and `0004_whatsapp_delivery.sql`, and `0005_whatsapp_receipts.sql` in order after the base schema.
 - [ ] Confirm `webhook_events` exists with a unique primary key.
 - [ ] Confirm repeated signed events are stored only once.
 - [ ] Confirm pending event records survive Worker restarts.
@@ -25,7 +25,8 @@ This checklist distinguishes repository code from an operational Cloudflare depl
 - [ ] Implement and verify incoming event-to-conversation processing.
 - [ ] Verify operator-approved WhatsApp Cloud API text delivery against a real opted-in test recipient within the 24-hour service window.
 - [ ] Verify `whatsapp_delivery_attempts` blocks duplicate send requests and uncertain responses are never retried automatically.
-- [ ] Implement provider delivery receipts, reconciliation, and remaining platform delivery adapters.
+- [ ] Verify signed WhatsApp delivery/read receipts update the ledger and the dashboard.
+- [ ] Implement reconciliation of delayed/out-of-order receipts and remaining platform delivery adapters.
 - [ ] Verify human takeover prevents automated replies.
 - [ ] Test draft review and outbound approval separately from provider delivery.
 - [ ] Test publishing, scheduling, retries and idempotency.
