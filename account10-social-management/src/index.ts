@@ -1,10 +1,11 @@
-interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string }
+interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
 const app={async fetch(req:Request,env:Env):Promise<Response>{
  const u=new URL(req.url);
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
+ if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
  const provided=req.headers.get('authorization')||'';
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
