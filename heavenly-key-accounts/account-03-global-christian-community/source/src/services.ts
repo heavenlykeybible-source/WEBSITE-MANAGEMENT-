@@ -131,12 +131,12 @@ export async function createGroup(env:Env,userId:number,input:any){
   if(mod.decision!=="allow")await recordModeration(env,userId,"group",row.group_id,mod);
   return {groupId:Number(row.group_id),slug};
 }
-export async function listGroups(env:Env,userId:number|null){
+export async function listGroups(env:Env,userId:number|null,before?:number){
   const r=await env.DB.prepare(`SELECT g.*,gm.join_status membership_status,gm.role member_role,
     CASE WHEN gm.join_status='approved' THEN 1 ELSE 0 END joined,
     (SELECT COUNT(*) FROM group_members WHERE group_id=g.group_id AND join_status='approved') member_count
     FROM groups g LEFT JOIN group_members gm ON gm.group_id=g.group_id AND gm.user_id=?
-    WHERE g.status='active' AND (g.visibility IN ('public','private') OR gm.join_status='approved') ORDER BY g.created_at DESC LIMIT 100`).bind(userId).all<any>();return r.results;
+    WHERE g.status='active' AND (g.visibility IN ('public','private') OR gm.join_status='approved') AND (? IS NULL OR g.group_id<?) ORDER BY g.group_id DESC LIMIT 100`).bind(userId,before??null,before??null).all<any>();return r.results;
 }
 export async function joinGroup(env:Env,userId:number,groupId:number){
   const g=await env.DB.prepare("SELECT visibility,status,join_approval FROM groups WHERE group_id=?").bind(groupId).first<any>();if(!g||g.status!=="active"||g.visibility==='hidden')throw new Error("Group not found.");
@@ -257,7 +257,9 @@ export async function toggleReaction(env:Env,userId:number,postId:number,type:st
   const post=(await feed(env,userId,1,{postId}))[0];if(!post)throw new Error("Post is unavailable.");
   const ex=await env.DB.prepare("SELECT reaction_id FROM reactions WHERE user_id=? AND post_id=? AND reaction_type=?").bind(userId,postId,type).first<any>();
   if(ex){await env.DB.prepare("DELETE FROM reactions WHERE reaction_id=?").bind(ex.reaction_id).run();return {active:false};}
-  await env.DB.prepare("INSERT INTO reactions(user_id,post_id,reaction_type) VALUES(?,?,?)").bind(userId,postId,type).run();return {active:true};
+  // Overlapping requests may both observe no reaction. Keep the unique row and
+  // report the resulting active state instead of surfacing a database error.
+  await env.DB.prepare("INSERT INTO reactions(user_id,post_id,reaction_type) VALUES(?,?,?) ON CONFLICT(user_id,post_id,reaction_type) DO NOTHING").bind(userId,postId,type).run();return {active:true};
 }
 
 async function areConnected(env:Env,a:number,b:number){return !!await env.DB.prepare("SELECT 1 FROM global_connections WHERE user_id=? AND target_type='profile' AND target_id=?").bind(a,b).first();}
@@ -306,10 +308,10 @@ export async function sendMessage(env:Env,userId:number,id:number,bodyRaw:string
   if(status==="delivered"){const to=c.requester_user_id===userId?c.recipient_user_id:c.requester_user_id;await notify(env,to,"message","New fellowship message","You have a new message.","/messages.html?conversation="+id);}
   return {messageId:Number(row?.message_id),status};
 }
-export async function inbox(env:Env,userId:number){
+export async function inbox(env:Env,userId:number,before?:{time:string,id:number},specific=0){
   const r=await env.DB.prepare(`SELECT c.*,p1.display_name requester_name,p2.display_name recipient_name,p1.profile_photo_key requester_photo,p2.profile_photo_key recipient_photo,
  (SELECT substr(body,1,160) FROM messages WHERE conversation_id=c.conversation_id AND status='delivered' ORDER BY message_id DESC LIMIT 1) last_message,
- (SELECT created_at FROM messages WHERE conversation_id=c.conversation_id AND status='delivered' ORDER BY message_id DESC LIMIT 1) last_message_at FROM conversations c JOIN profiles p1 ON p1.user_id=c.requester_user_id JOIN profiles p2 ON p2.user_id=c.recipient_user_id JOIN users u1 ON u1.user_id=c.requester_user_id JOIN users u2 ON u2.user_id=c.recipient_user_id WHERE (c.requester_user_id=? OR c.recipient_user_id=?) AND c.status!='blocked' AND u1.status='active' AND u2.status='active' AND NOT EXISTS(SELECT 1 FROM user_blocks WHERE (blocker_user_id=c.requester_user_id AND blocked_user_id=c.recipient_user_id) OR (blocker_user_id=c.recipient_user_id AND blocked_user_id=c.requester_user_id)) ORDER BY c.updated_at DESC LIMIT 100`).bind(userId,userId).all<any>();return r.results;
+ (SELECT created_at FROM messages WHERE conversation_id=c.conversation_id AND status='delivered' ORDER BY message_id DESC LIMIT 1) last_message_at FROM conversations c JOIN profiles p1 ON p1.user_id=c.requester_user_id JOIN profiles p2 ON p2.user_id=c.recipient_user_id JOIN users u1 ON u1.user_id=c.requester_user_id JOIN users u2 ON u2.user_id=c.recipient_user_id WHERE (c.requester_user_id=? OR c.recipient_user_id=?) AND c.status!='blocked' AND u1.status='active' AND u2.status='active' AND NOT EXISTS(SELECT 1 FROM user_blocks WHERE (blocker_user_id=c.requester_user_id AND blocked_user_id=c.recipient_user_id) OR (blocker_user_id=c.recipient_user_id AND blocked_user_id=c.requester_user_id)) AND (?=0 OR c.conversation_id=?) AND (? IS NULL OR c.updated_at<? OR (c.updated_at=? AND c.conversation_id<?)) ORDER BY c.updated_at DESC,c.conversation_id DESC LIMIT 100`).bind(userId,userId,specific,specific,before?.time||null,before?.time||null,before?.time||null,before?.id||0).all<any>();return r.results;
 }
 export async function messages(env:Env,userId:number,id:number,before?:number){
   await conversationAccess(env,userId,id);
