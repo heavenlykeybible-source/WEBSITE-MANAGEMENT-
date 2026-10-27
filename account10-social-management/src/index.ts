@@ -85,6 +85,8 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const declared=req.headers.get('content-length');
   if(declared!==null&&(!/^[0-9]+$/.test(declared)||!Number.isSafeInteger(Number(declared))))return reply({error:'Invalid Content-Length'},400);
   if(declared!==null&&Number(declared)>1048576)return reply({error:'Request payload too large'},413);
+  const reader=req.clone().body?.getReader();
+  if(reader){let received=0;try{while(true){const {done,value}=await reader.read();if(done)break;received+=value.byteLength;if(received>1048576){await reader.cancel();return reply({error:'Request payload too large'},413)}}}catch{return reply({error:'Unable to read request payload'},400)}}
  }
 
  if(u.pathname==='/api/accounts/import'&&req.method==='POST'){
