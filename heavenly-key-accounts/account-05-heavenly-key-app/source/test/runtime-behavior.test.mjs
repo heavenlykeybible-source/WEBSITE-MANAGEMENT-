@@ -82,7 +82,8 @@ test('User reading view: tab navigation and Scripture selection work on mobile D
  const window={location:{get hash(){return hash},set hash(value){hash=String(value)}},scrollTo(){},
    addEventListener(name,fn){handlers[name]=fn}};
  const history={pushState(_a,_b,newHash){hash=newHash;window.location.hash=newHash}};
- const doc={querySelectorAll(selector){
+ let shellScrolls=0;
+ const doc={querySelector(selector){return selector==='.shell'?{scrollTo(){shellScrolls++}}:null},querySelectorAll(selector){
   return selector==='.tabbar button[data-screen]'?tabs:selector==='.view'?views:
     selector==='[data-screen]'?[...tabs,extra]:[];
  },getElementById(id){return all.get(id)}};
@@ -90,6 +91,7 @@ test('User reading view: tab navigation and Scripture selection work on mobile D
  vm.runInNewContext(content('public/app.js'),context);
  assert.equal(views[0].hidden,false);
  extra.fire('click');
+ assert.equal(shellScrolls,2,'initial screen and navigation reset the app window scroll');
  assert.equal(views[1].hidden,false);
  assert.equal(views[0].hidden,true);
  assert.equal(tabs[1].getAttribute('aria-current'),'page');
