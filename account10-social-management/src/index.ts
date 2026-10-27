@@ -279,7 +279,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const [phoneNumberId,recipient]=ids;
   const account=await env.DB.prepare("SELECT id FROM social_accounts WHERE channel='whatsapp_business' AND provider_account_ref=? LIMIT 1").bind(phoneNumberId).first();
   if(!account)return reply({error:'WhatsApp account not registered',sent:false},409);
-  return reply({error:'Live delivery is disabled until a durable delivery log, retry safeguards, and Meta messaging-window verification are implemented',sent:false,recipient,phoneNumberId},503);
+  return reply({error:'Live delivery is disabled until a durable delivery log, retry safeguards, and Meta messaging-window verification are implemented',sent:false},503);
  }
  if(u.pathname==='/api/whatsapp/connection-check'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
