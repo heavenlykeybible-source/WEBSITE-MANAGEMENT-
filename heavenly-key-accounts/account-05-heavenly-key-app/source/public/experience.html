@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="/styles.css">
   <title>Heavenly Key App | Bible, Prayer & Christian Community</title>
   <script defer src="/app.js"></script>
+  <script defer src="/window-controls.js"></script>
   <script defer src="/member.js"></script>
   <script defer src="/site-sync.js"></script>
   <script type="module" src="/platform.js"></script>
@@ -33,6 +34,7 @@
       <div class="identity"><div class="brand">HEAVENLY KEY</div><div class="subbrand">EVANGELISTIC MOVEMENT</div></div>
       <span class="version">APP PREVIEW</span>
     </header>
+    <div class="app-window-controls" role="toolbar" aria-label="App window controls"><button type="button" data-window="smaller" aria-label="Make app window smaller">−</button><button type="button" data-window="larger" aria-label="Make app window larger">+</button><button type="button" data-window="expand" aria-pressed="false">Expand</button><button type="button" data-window="minimize">Minimize</button></div>
     <main id="main">
       <section id="home" class="view active" aria-labelledby="welcome-title">
         <div class="hero">
@@ -111,7 +113,7 @@
       <button type="button" data-screen="profile"><span aria-hidden="true">◎</span>Profile</button>
     </nav>
   </div>
-
+  <button type="button" class="app-window-restore" hidden>Open Heavenly Key App</button>
 
 </body>
 </html>
