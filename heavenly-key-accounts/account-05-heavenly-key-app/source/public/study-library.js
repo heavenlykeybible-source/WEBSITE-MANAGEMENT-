@@ -96,8 +96,7 @@ async function bible(){
  const offline=action('Save this book offline',()=>setOffline(true));
  const remove=action('Remove offline copy',()=>setOffline(false));
  const fontStyle=action('Use classic font',toggleTypeface);
- const audio=link('Listen to this chapter →','audio-bible.html','btn secondary');
- optionBar.append(bookmark,copy,offline,remove,fontStyle,audio);
+ optionBar.append(bookmark,copy,offline,remove,fontStyle);
  extras.append(searchLabel,search,results,savedLabel,savedChapters,optionBar);
  const nav=make('nav',null,'mobile-kjv-nav');
  nav.setAttribute('aria-label','Previous and next Bible chapters');
@@ -196,7 +195,6 @@ async function bible(){
   status.textContent='Opening chapter…';
   chapter.value=String(selectedChapter);
   verses.replaceChildren();search.value='';results.replaceChildren();
-  audio.href='audio-bible.html?book='+encodeURIComponent(selectedBook.id)+'&chapter='+selectedChapter;
   prev.disabled=!moveBibleRef(books,selectedBook.id,selectedChapter,-1);
   next.disabled=!moveBibleRef(books,selectedBook.id,selectedChapter,1);
   const url=new URL(location.href);
