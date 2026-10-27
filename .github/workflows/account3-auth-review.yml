@@ -38,6 +38,11 @@ jobs:
         run: |
           npx wrangler d1 migrations apply heavenly-key-global-community-db --local --config wrangler.toml --yes
       - name: Verify release preflight rejects unapproved promotion
+        env:
+          ACCOUNT3_SECRETS_VERIFIED: 'no'
+          ACCOUNT3_RESET_MAIL_VERIFIED: 'no'
+          ACCOUNT3_MIGRATIONS_VERIFIED: 'no'
+          ACCOUNT3_LIVE_TESTS_VERIFIED: 'no'
         run: |
           if node scripts/preflight.mjs --release; then
             echo 'Unexpected unapproved release gate pass'
