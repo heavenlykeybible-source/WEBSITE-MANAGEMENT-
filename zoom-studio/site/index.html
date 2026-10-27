@@ -706,10 +706,10 @@ function connect(){try{ws=new WebSocket(RU)}catch(e){want=false;$('gl').textCont
   ws.send(JSON.stringify({type:'start',token:RT,dests:outs,size:W<H?'portrait':W==H?'square':'landscape'}));
   const tr=lowd?2:qTier;rec=new MediaRecorder(mkStream(),{mimeType:mime(),videoBitsPerSecond:QV[tr],audioBitsPerSecond:QA[tr]});
   rec.ondataavailable=e=>{if(!e.data.size||ws.readyState!==1)return;if(ws.bufferedAmount>3e6){qTier=Math.min(2,qTier+1);dmeter();msg('Slow network. Lowering the stream quality to keep you live.');ws.close();return}ws.send(e.data);sent+=e.data.size;$('info').textContent=(sent/1048576).toFixed(1)+' MB sent'};
-  rec.start(1000);setSt('On air',true)};
- ws.onmessage=e=>{$('info').textContent=String(e.data).slice(0,120)};
+  rec.start(1000);setSt('Connecting to relay')};
+ ws.onmessage=e=>{let message;try{message=JSON.parse(e.data)}catch(e){}if(message&&message.type==='feed-active'){setSt('Feed sent to relay',true);$('info').textContent='Feed is reaching the relay. Check each destination to confirm it is live.';return}$('info').textContent=String(e.data).slice(0,120)};
  ws.onclose=()=>{try{rec&&rec.state!=='inactive'&&rec.stop()}catch(e){}
-  if(want){setSt('Reconnecting. Backup is playing.',true);$('info').textContent='Connection lost. Retrying...';setTimeout(()=>want&&relink().then(ok=>ok&&want&&connect()),Math.min(15000,2000*++retry))}else setSt('Offline')};
+  if(want){setSt('Reconnecting to relay');$('info').textContent='Connection lost. Retrying...';setTimeout(()=>want&&relink().then(ok=>ok&&want&&connect()),Math.min(15000,2000*++retry))}else setSt('Offline')};
  ws.onerror=()=>{}}
 $('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}try{ws.close()}catch(e){}if(liveEnds.length){api('/api/golive/end',{ends:liveEnds});liveEnds=[]}$('gl').textContent='Go live';return}
  if(ds.some(d=>d.on&&(!d.url.trim()||!d.key.trim()))){$('info').textContent='Complete the server URL and stream key for every enabled destination, or turn it off.';return}
