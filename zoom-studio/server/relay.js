@@ -220,7 +220,7 @@ wss.on('connection', (ws, req) => {
       ws.sid = a.id; s.ws = ws; s.pe = a.pe; s.last = Date.now();
       kill(s.ing);
       const ing = s.ing = startIngest(s);
-      ing.stdout.once('data', () => { if (s.ing === ing && sessions.get(s.id) === s) { s.src = ing; s.fbSince = 0; kill(s.fb); s.fb = null; console.log(s.id, 'live feed is on'); } });
+      ing.stdout.once('data', () => { if (s.ing === ing && sessions.get(s.id) === s) { s.src = ing; s.fbSince = 0; kill(s.fb); s.fb = null; if (s.ws === ws && ws.readyState === 1) ws.send(JSON.stringify({type:'feed-active'})); console.log(s.id, 'live feed is on'); } });
       pipeOut(s, ing);
       ws.send('Connected. Backup is ready.');
       ws.starting = false; clearTimeout(idle);
