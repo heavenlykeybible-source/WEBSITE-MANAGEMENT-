@@ -107,6 +107,9 @@ async function reconcileActive(env:any){
   const listed=await callLiveKit(env,'ListEgress',{egress_id:active.egressId});
   const item=(listed?.items||[]).find((x:any)=>String(x.egress_id||x.egressId||'')===String(active.egressId));
   if(item&&egressStillActive(item.status))return {active:{...active,providerStatus:item.status,providerUpdatedAt:item.updated_at||item.updatedAt||null},last:null};
+  // An empty or incomplete provider listing is not proof that the stream ended.
+  // Preserve the active record so another StartEgress cannot create a duplicate broadcast.
+  if(!item)return {active:{...active,providerStatus:'UNKNOWN'},last:null};
   await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);
   return {active:null,last:item?{egressId:active.egressId,status:item.status,error:item.error||item.details?'Streaming ended at the provider. Inspect its egress logs for the delivery error.':null}:null};
  }catch{
