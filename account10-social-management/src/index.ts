@@ -118,6 +118,17 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
  if(u.pathname==='/api/welcome-menu'&&req.method==='GET')return reply({disclosure:'This is an automated AI assistant. A real person will respond as soon as possible.',options:[{id:'human',label:'I want to speak to Evangelist Emmanuel Ogheneochuko Adiohwo'},{id:'prayer',label:'Prayer request'},{id:'bible',label:'Bible questions'},{id:'radio',url:'https://radio.heavenlykey.org/'},{id:'community',url:'https://global.heavenlykey.org/'}],providerConnected:false});
  if(u.pathname==='/api/automation/rules'&&req.method==='GET'){const r=await env.DB.prepare('SELECT id,keyword,reply FROM automation_rules LIMIT 100').all();return reply({items:r.results,providerConnected:false})}
  if(u.pathname==='/api/automation/rules'&&req.method==='POST'){let b:any;try{b=await req.json()}catch{return reply({error:'Invalid JSON'},400)}if(typeof b?.keyword!=='string'||!b.keyword.trim()||b.keyword.length>80||typeof b?.reply!=='string'||!b.reply.trim()||b.reply.length>4096)return reply({error:'Invalid rule'},400);const id=crypto.randomUUID();await env.DB.prepare('INSERT INTO automation_rules(id,keyword,reply) VALUES(?,?,?)').bind(id,b.keyword.trim().toLowerCase(),b.reply.trim()).run();return reply({id,saved:true,enabled:false},201)}
+ if(u.pathname==='/api/drafts'&&req.method==='GET'){
+  const result=await env.DB.prepare("SELECT m.id,m.conversation_id,m.body,m.created_at,c.channel,c.human_paused,c.requested_human FROM messages m JOIN conversations c ON c.id=m.conversation_id WHERE m.direction='draft' ORDER BY m.created_at DESC LIMIT 100").all();
+  return reply({items:result.results,externalDeliveryEnabled:false});
+ }
+ if(u.pathname==='/api/drafts/discard'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!idOk(data?.draftId))return reply({error:'Valid draftId required'},400);
+  const result=await env.DB.prepare("DELETE FROM messages WHERE id=? AND direction='draft'").bind(data.draftId).run();
+  if(!result.meta.changes)return reply({error:'Draft not found'},404);
+  return reply({discarded:true,sent:false});
+ }
  if(u.pathname==='/api/automation/evaluate-and-draft'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.message!=='string'||!data.message.trim()||data.message.length>4096)return reply({error:'Valid conversationId and message required'},400);
