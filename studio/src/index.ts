@@ -386,7 +386,9 @@ const engine = {
     const b=await requireJson(request);if(!b)return json({error:'Invalid JSON'},400);const when=new Date(String(b.scheduled_for));if(!Number.isFinite(when.getTime())||when.getTime()<=Date.now())return json({error:'Choose a future planning time'},400);
     const title=String(b.title??'').trim();if(!title||title.length>200)return json({error:'Enter a title up to 200 characters'},400);
     if(b.media_id!=null){const id=Number(b.media_id);if(!Number.isSafeInteger(id))return json({error:'Invalid media'},400);const file=await env.DB.prepare("SELECT object_key FROM media_objects WHERE media_id=? AND status IN ('approved','published') AND (keep_media=1 OR julianday(retention_until)>julianday('now'))").bind(id).first<{object_key:string}>();if(!file||!await env.MEDIA_R2.head(file.object_key))return json({error:'Choose an available uploaded file'},400);}
-    const r=await env.DB.prepare('INSERT INTO campaigns(title,scheduled_for,media_id,created_by) VALUES(?,?,?,?)').bind(title,when.toISOString(),b.media_id!=null?Number(b.media_id):null,cap.sub).run();return json({campaign_id:Number(r.meta.last_row_id)},201);
+    // Campaigns are drafts until an authorized provider delivery worker is installed.
+    // Never imply that a scheduled database row will automatically publish.
+    return json({error:'Automatic campaign publishing is not configured. Connect and verify a supported provider before scheduling a live campaign; no post was queued.'},409);
   }
   {const match=url.pathname.match(/^\/api\/campaigns\/(\d+)\/cancel$/);if(match&&request.method==='POST'){const r=await env.DB.prepare("UPDATE campaigns SET status='cancelled' WHERE campaign_id=? AND status='scheduled'").bind(Number(match[1])).run();if(!r.meta.changes)return json({error:'Active plan not found'},404);await audit(env,cap,'campaign.cancel','campaign',match[1]);return json({ok:true});}}
   if(url.pathname==='/api/campaigns'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM campaigns ORDER BY scheduled_for LIMIT 100').all();return json({items:r.results});}
