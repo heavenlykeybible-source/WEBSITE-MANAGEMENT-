@@ -28,7 +28,7 @@ export async function handleNativeDownloads(request,env) {
   }
   const match=/^\/api\/native-download\/([a-z0-9-]+)\/(android|windows|mac)$/.exec(url.pathname);
   if(!match) return null;
-  if(request.method!=='GET') return reply({error:'Method not allowed'},405);
+  if(request.method!=='GET' && request.method!=='HEAD') return reply({error:'Method not allowed'},405);
   if(url.search) return reply({error:'Query parameters not accepted'},400);
   const [,appId,platform]=match;
   if(!idPattern.test(appId)) return reply({error:'Invalid app'},400);
@@ -36,8 +36,9 @@ export async function handleNativeDownloads(request,env) {
   const meta=platforms[platform];
   const key=appId+'/'+platform+'/release.'+meta.extension;
   try {
-    const object=await env.NATIVE_RELEASES.get(key);
+    const object=request.method==='HEAD' ? await env.NATIVE_RELEASES.head(key) : await env.NATIVE_RELEASES.get(key);
     if(!object || !object.size) return reply({error:'Native installation package not available for this app and device'},404);
+    if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size)}});
     // Record only a successful package response; never count app-page opens.
     await env.DOWNLOAD_DB.prepare('INSERT INTO native_download_events (app_id, platform, downloaded_at) VALUES (?, ?, ?)').bind(appId,platform,new Date().toISOString()).run();
     return new Response(object.body,{status:200,headers:{...headers,'content-type':meta.type,'content-disposition':'attachment; filename="heavenly-key-'+appId+'.'+meta.extension+'"','content-length':String(object.size)}});
