@@ -4,10 +4,10 @@ compatibility_date = "2026-10-01"
 
 # Account 10: create these resources in Cloudflare, then uncomment
 # and replace placeholder IDs with the real values from Account 10.
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "heavenlykey-social-management-db"
-# database_id = "REPLACE_WITH_REAL_ACCOUNT10_D1_ID"
+[[d1_databases]]
+binding = "DB"
+database_name = "heavenlykey-social-management-db"
+database_id = "96001ae8-d057-40d1-ba8a-167d8eab63cc"
 
 # [[r2_buckets]]
 # binding = "MEDIA_BUCKET"
