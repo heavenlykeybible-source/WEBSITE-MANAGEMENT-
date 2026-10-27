@@ -18,3 +18,6 @@
 /pages/grdpc /pages/grdpc.html 200
 /radio /pages/radio.html 200
 /grdpc /pages/grdpc.html 200
+
+/partner /pages/partner.html 200
+/pages/partner /pages/partner.html 200
