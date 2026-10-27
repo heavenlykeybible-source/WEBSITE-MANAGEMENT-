@@ -118,6 +118,20 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
  if(u.pathname==='/api/welcome-menu'&&req.method==='GET')return reply({disclosure:'This is an automated AI assistant. A real person will respond as soon as possible.',options:[{id:'human',label:'I want to speak to Evangelist Emmanuel Ogheneochuko Adiohwo'},{id:'prayer',label:'Prayer request'},{id:'bible',label:'Bible questions'},{id:'radio',url:'https://radio.heavenlykey.org/'},{id:'community',url:'https://global.heavenlykey.org/'}],providerConnected:false});
  if(u.pathname==='/api/automation/rules'&&req.method==='GET'){const r=await env.DB.prepare('SELECT id,keyword,reply FROM automation_rules LIMIT 100').all();return reply({items:r.results,providerConnected:false})}
  if(u.pathname==='/api/automation/rules'&&req.method==='POST'){let b:any;try{b=await req.json()}catch{return reply({error:'Invalid JSON'},400)}if(typeof b?.keyword!=='string'||!b.keyword.trim()||b.keyword.length>80||typeof b?.reply!=='string'||!b.reply.trim()||b.reply.length>4096)return reply({error:'Invalid rule'},400);const id=crypto.randomUUID();await env.DB.prepare('INSERT INTO automation_rules(id,keyword,reply) VALUES(?,?,?)').bind(id,b.keyword.trim().toLowerCase(),b.reply.trim()).run();return reply({id,saved:true,enabled:false},201)}
+ if(u.pathname==='/api/automation/evaluate-and-draft'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!idOk(data?.conversationId)||typeof data?.message!=='string'||!data.message.trim()||data.message.length>4096)return reply({error:'Valid conversationId and message required'},400);
+  const conversation=await env.DB.prepare('SELECT id,human_paused,requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{id:string;human_paused:number;requested_human:number}>();
+  if(!conversation)return reply({error:'Conversation not found'},404);
+  if(conversation.human_paused||conversation.requested_human)return reply({action:'human_review',draftCreated:false,sent:false});
+  const rules=await env.DB.prepare('SELECT id,keyword,reply FROM automation_rules ORDER BY length(keyword) DESC,keyword ASC LIMIT 100').all<{id:string;keyword:string;reply:string}>();
+  const message=data.message.toLocaleLowerCase();
+  const match=rules.results.find(r=>r.keyword.trim()&&message.includes(r.keyword.trim().toLocaleLowerCase()));
+  if(!match)return reply({action:'no_match',draftCreated:false,sent:false});
+  const draftId=crypto.randomUUID();
+  await env.DB.prepare("INSERT INTO messages(id,conversation_id,direction,body) VALUES(?,?,'draft',?)").bind(draftId,conversation.id,match.reply).run();
+  return reply({action:'draft_created',draftId,ruleId:match.id,draftCreated:true,sent:false,requiresOperatorApproval:true},201);
+ }
  if(u.pathname==='/api/automation/evaluate'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.message!=='string'||!data.message.trim()||data.message.length>4096)return reply({error:'Valid conversationId and message required'},400);
