@@ -261,3 +261,11 @@ test('overloaded broadcast input is stopped instead of buffering without limit',
  const error=h.socket.sent.map(s=>{try{return JSON.parse(s)}catch{return {}}}).find(m=>m.type==='error');
  assert.match(error.message,/overloaded/i);
 });
+test('overloaded broadcast output stops the session instead of accumulating data', async()=>{
+ const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ h.children[0].stdin.writableLength=8*1024*1024;
+ h.children[1].stdout.emit('data',Buffer.from('media'));
+ assert.equal(h.socket.readyState,3);
+ const error=h.socket.sent.map(s=>{try{return JSON.parse(s)}catch{return {}}}).find(m=>m.type==='error');
+ assert.match(error.message,/output is overloaded/i);
+});
