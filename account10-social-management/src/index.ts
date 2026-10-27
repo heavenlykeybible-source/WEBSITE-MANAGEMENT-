@@ -254,6 +254,28 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(!result.meta.changes)return reply({error:'Draft not found'},404);
   return reply({discarded:true,sent:false});
  }
+
+ if(u.pathname==='/api/ai/suggest-reply'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!idOk(data?.conversationId)||typeof data?.message!=='string'||!data.message.trim()||data.message.length>4000)return reply({error:'Valid conversation and message required'},400);
+  if(!env.GEMINI_API_KEY)return reply({error:'Gemini API key is not configured'},503);
+  const conversation=await env.DB.prepare('SELECT id,human_paused,requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{id:string;human_paused:number;requested_human:number}>();
+  if(!conversation)return reply({error:'Conversation not found'},404);
+  if(conversation.human_paused||conversation.requested_human)return reply({action:'human_review',suggestion:null,sent:false,reason:'Human takeover active'});
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
+  try{
+   const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
+    method:'POST',signal:controller.signal,
+    headers:{'content-type':'application/json','x-goog-api-key':env.GEMINI_API_KEY},
+    body:JSON.stringify({systemInstruction:{parts:[{text:'Draft a concise, respectful suggested customer-service reply. Do not claim to have sent any message or completed any action. Avoid requesting sensitive personal information. A human operator must review this draft.'}]},contents:[{role:'user',parts:[{text:data.message}]}],generationConfig:{maxOutputTokens:400,temperature:0.5}})
+   });
+   if(!response.ok)return reply({error:'AI provider request failed',providerStatus:response.status,sent:false},502);
+   const result:any=await response.json();const suggestion=(result?.candidates?.[0]?.content?.parts||[]).map((p:any)=>typeof p?.text==='string'?p.text:'').join('').trim().slice(0,3000);
+   if(!suggestion)return reply({error:'AI provider returned no usable text',sent:false},502);
+   return reply({action:'suggest_reply',suggestion,provider:'gemini',sent:false,saved:false,requiresOperatorApproval:true});
+  }catch{return reply({error:'AI provider timeout or network failure',sent:false},502)}
+  finally{clearTimeout(timeout)}
+ }
  if(u.pathname==='/api/automation/evaluate-and-draft'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.message!=='string'||!data.message.trim()||data.message.length>4096)return reply({error:'Valid conversationId and message required'},400);
