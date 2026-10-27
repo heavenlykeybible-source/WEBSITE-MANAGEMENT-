@@ -1,0 +1,25 @@
+name: Account 10 TypeScript and Worker build
+on:
+  push:
+    branches: [codex/heavenly-key-studio-refinement]
+    paths:
+      - 'account10-social-management/**'
+      - '.github/workflows/account10-check.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: account10-social-management
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript check
+        run: npm run check
+      - name: Cloudflare Worker build
+        run: npx wrangler deploy --dry-run --outdir ./dist-check
