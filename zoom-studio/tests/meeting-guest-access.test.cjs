@@ -84,3 +84,27 @@ test('revoked login cannot accept an existing stage invitation', async()=>{
   assert.equal(h.guest.attachment.stage,false);
   assert.equal(h.guest.messages.at(-1).t,'invitation-expired');
 });
+test('anonymous audience can exchange only bounded viewing signals with host', async()=>{
+  const h=setup(); await h.join('');
+  assert.ok(h.host.messages.some(m=>m.t==='viewer-join'&&m.gid===h.guest.attachment.id));
+  const offer={sdp:{type:'offer',sdp:'v=0'}}, answer={sdp:{type:'answer',sdp:'v=0'}};
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'view-sig',to:h.guest.attachment.id,data:offer}));
+  assert.equal(h.guest.messages.at(-1).t,'view-sig');
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'view-sig',data:answer}));
+  assert.equal(h.host.messages.at(-1).t,'view-sig');
+  const before=h.host.messages.length;
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'sig',data:answer}));
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'view-sig',data:{sdp:{type:'offer',sdp:'x'.repeat(18001)}}}));
+  assert.equal(h.host.messages.length,before);
+});
+test('promotion ends viewer peer and demotion starts a new viewer peer', async()=>{
+  const h=setup(),room=h.guest.attachment.room;
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'join',room,key:'invite',aud:true,accountToken:'valid'}));
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'promote',gid:h.guest.attachment.id}));
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'ready'}));
+  assert.ok(h.guest.messages.some(m=>m.t==='viewer-end'));
+  assert.ok(h.host.messages.some(m=>m.t==='viewer-left'));
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'demote',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.aud,true);
+  assert.equal(h.host.messages.at(-2).t,'viewer-join');
+});
