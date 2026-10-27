@@ -197,7 +197,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   return reply({integrityPassed:checks.every(x=>x.passed),checks,unverifiedAccounts:unverifiedAccounts?.total??0,waitingDrafts:waitingDrafts?.total??0,readOnly:true});
  }
  if(u.pathname==='/api/operations/diagnostics'&&req.method==='GET'){
-  const checks:{name:string;ok:boolean;detail:string}[]=[{name:'admin_token',ok:!!env.ADMIN_TOKEN,detail:'Administrative authentication configured'},{name:'database_binding',ok:!!env.DB,detail:'Cloudflare D1 binding configured'},{name:'official_provider_oauth',ok:false,detail:'Official provider authorization not implemented'},{name:'external_message_delivery',ok:false,detail:'External messaging adapters not implemented'},{name:'scheduled_publishing',ok:false,detail:'Scheduled publishing worker not implemented'},{name:'gemini_reply_suggestions',ok:!!env.GEMINI_API_KEY,detail:env.GEMINI_API_KEY?'AI operator suggestions configured; live request remains unverified':'Gemini API key not configured'}];
+  const checks:{name:string;ok:boolean;detail:string}[]=[{name:'admin_token',ok:!!env.ADMIN_TOKEN,detail:'Administrative authentication configured'},{name:'database_binding',ok:!!env.DB,detail:'Cloudflare D1 binding configured'},{name:'official_provider_oauth',ok:false,detail:'Official provider authorization not implemented'},{name:'external_message_delivery',ok:false,detail:'Guarded WhatsApp sender implemented; live provider delivery unverified, other providers not implemented'},{name:'scheduled_publishing',ok:false,detail:'Scheduled publishing worker not implemented'},{name:'gemini_reply_suggestions',ok:!!env.GEMINI_API_KEY,detail:env.GEMINI_API_KEY?'AI operator suggestions configured; live request remains unverified':'Gemini API key not configured'}];
   for(const [name,sql] of [['conversations','SELECT COUNT(*) AS total FROM conversations'],['messages','SELECT COUNT(*) AS total FROM messages'],['social_accounts','SELECT COUNT(*) AS total FROM social_accounts'],['automation_rules','SELECT COUNT(*) AS total FROM automation_rules'],['social_posts','SELECT COUNT(*) AS total FROM social_posts']] as const){try{const row=await env.DB.prepare(sql).first<{total:number}>();checks.push({name:'table_'+name,ok:true,detail:String(row?.total??0)+' records'})}catch{checks.push({name:'table_'+name,ok:false,detail:'Table unavailable or schema not migrated'})}}
   return reply({launchReady:checks.every(x=>x.ok),checks,checkedAt:new Date().toISOString()});
  }
@@ -286,7 +286,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    inboundWebhookVerificationImplemented:true,
    automaticInboundTextImportImplemented:true,
    providerConnectionCheckImplemented:true,
-   outboundDeliveryEnabled:false,
+   outboundDeliveryImplemented:true,
+   outboundDeliveryEnabled:!!env.META_WHATSAPP_ACCESS_TOKEN,
+   outboundDeliveryVerified:false,
    nextStep:'Verify Meta app subscriptions, provider permissions, and live messaging tests before enabling delivery'
   });
  }
