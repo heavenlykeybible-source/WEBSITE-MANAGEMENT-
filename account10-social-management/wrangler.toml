@@ -1,0 +1,12 @@
+name = "heavenly-key-social-management"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+# Provision these resources in Account 10 before deployment.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "hksm-messages"
+# database_id = "REPLACE_WITH_ACCOUNT10_D1_ID"
+# [[queues.producers]]
+# binding = "MESSAGE_QUEUE"
+# queue = "hksm-incoming"
