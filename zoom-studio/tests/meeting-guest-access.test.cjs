@@ -32,7 +32,7 @@ function setup(userOverrides = {}) {
   const sockets=[host,guest];
   const r=new Room({getWebSockets:()=>sockets}, {AUTH_SECRET:'secret',MEETINGSPACE_PRIVATE_PREVIEW:'0'});
   const join = token => r.webSocketMessage(guest,JSON.stringify({t:'join',room,key:'invite',name:'Guest',pass:'pass',aud:false,accountToken:token}));
-  return {r,host,guest,join,users};
+  return {r,host,guest,join,users,add(){const w=new Socket({role:'',room,until:Date.now()+15000});sockets.push(w);return w;}};
 }
 test('anonymous guest joins as audience and cannot be promoted on screen', async()=>{
   const h=setup(); await h.join('');
@@ -107,4 +107,30 @@ test('promotion ends viewer peer and demotion starts a new viewer peer', async()
   await h.r.webSocketMessage(h.host,JSON.stringify({t:'demote',gid:h.guest.attachment.id}));
   assert.equal(h.guest.attachment.aud,true);
   assert.equal(h.host.messages.at(-2).t,'viewer-join');
+});
+test('20-person stage is opt-in and never admits a 21st speaker', async()=>{
+  const h=setup(); h.r.env.MEETING_STAGE_CAP='20';
+  await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  for(let i=1;i<20;i++){
+    const g=h.add();
+    await h.r.webSocketMessage(g,JSON.stringify({t:'join',room:g.attachment.room,key:'invite',aud:false,accountToken:'valid',name:'Guest '+i}));
+    await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:g.attachment.id}));
+    assert.equal(g.attachment.stage,true);
+  }
+  assert.equal(h.r.stage().length,20);
+  const extra=h.add();
+  await h.r.webSocketMessage(extra,JSON.stringify({t:'join',room:extra.attachment.room,key:'invite',aud:false,accountToken:'valid'}));
+  assert.equal(extra.readyState,3);
+  assert.equal(h.r.stage().length,20);
+});
+test('invalid stage setting retains the default of six', async()=>{
+  const h=setup();h.r.env.MEETING_STAGE_CAP='NaN';
+  await h.join('valid');await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  for(let i=1;i<7;i++){
+    const g=h.add();await h.r.webSocketMessage(g,JSON.stringify({t:'join',room:g.attachment.room,key:'invite',aud:false,accountToken:'valid'}));
+    await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:g.attachment.id}));
+    assert.equal(g.attachment.stage,i<6);
+  }
+  assert.equal(h.r.stage().length,6);
 });
