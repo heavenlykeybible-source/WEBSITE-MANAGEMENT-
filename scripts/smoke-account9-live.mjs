@@ -39,6 +39,13 @@ try{
     assert.ok((await response.arrayBuffer()).byteLength>0,'Empty branding asset '+route);
   }
   console.log('PASS live editor assets, branding and PWA');
+  const manifestResponse=await get('/manifest.json');
+  assert.equal(manifestResponse.status,200,'Missing installable editor manifest');
+  const manifest=await manifestResponse.json();
+  assert.equal(manifest.start_url,'/','Installed editor must start at the public editor');
+  assert.equal(manifest.display,'standalone','Installed editor must support standalone display');
+  assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length>=2,'Editor needs installable app icons');
+  console.log('PASS installable app manifest');
   for(const path of ['/api/me','/api/projects','/api/media']){
     const result=await get(path);
     assert.equal(result.status,401,'Unauthenticated private API exposed: '+path);
