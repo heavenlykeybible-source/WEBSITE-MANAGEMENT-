@@ -15,6 +15,7 @@ assert.ok(html.includes("Video playback stopped before export finished")&&!html.
 assert.ok(html.includes("finished.then(()=>{clearTimeout(timeout);resolve()}"),'Video encoder watchdog must be released on success');
 assert.ok(html.includes("chunks.some(chunk=>chunk.size>0)")&&html.includes("Screen recording stopped without saved video"),'Screen recorder must reject empty output');
 assert.ok(html.includes("typeof MediaRecorder.isTypeSupported!=='function')return $('vm').textContent='Video export")&&html.includes("typeof MediaRecorder.isTypeSupported!=='function')return $('vm').textContent='Screen recording"),'Both recorders must verify codec detection support');
+assert.ok(html.includes('audioCaptured=false')&&html.includes('audioCaptured=true')&&html.includes('the export is silent'),'Video export must explicitly report unavailable source audio capture');
 const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
 assert.ok(srtParser,'Missing SRT time parser');
 const toSeconds=runInNewContext(srtParser+'; parseTime');
