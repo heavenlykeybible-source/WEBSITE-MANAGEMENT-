@@ -358,6 +358,27 @@ const engine = {
   }
   if(url.pathname==='/api/playout'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM playout_items WHERE status IN (\'scheduled\',\'playing\') ORDER BY starts_at LIMIT 50').all(); return json({items:r.results});}
 
+  // Per-account auto-reply configuration. Rules are disabled until the official
+  // WhatsApp Business webhook and per-user authorization are installed.
+  if(url.pathname==='/api/social/whatsapp/rules'&&request.method==='GET'){
+    const saved=await env.LIVE_STATUS_KV.get('whatsapp-rules:'+cap.sub);
+    let rules:unknown[]=[];try{const parsed=saved?JSON.parse(saved):[];if(Array.isArray(parsed))rules=parsed;}catch{}
+    return json({rules,enabled:false,connection:'not_configured',message:'Rules are drafts; no messages are sent until a verified WhatsApp Business connection and webhook are active.'});
+  }
+  if(url.pathname==='/api/social/whatsapp/rules'&&request.method==='POST'){
+    const b=await requireJson(request);if(!b||!Array.isArray(b.rules)||b.rules.length>25)return json({error:'Supply up to 25 automatic reply rules.'},400);
+    const rules=[] as {keyword:string;reply:string}[];
+    for(const entry of b.rules){if(!entry||typeof entry!=='object')return json({error:'Invalid rule'},400);
+      const rule=entry as Record<string,unknown>;
+      if(typeof rule.keyword!=='string'||typeof rule.reply!=='string')return json({error:'Rule keyword and reply must be text.'},400);
+      const keyword=rule.keyword.trim().toLowerCase(),reply=rule.reply.trim();
+      if(!keyword||keyword.length>80||!reply||reply.length>4096)return json({error:'Keyword must be 1–80 characters and reply 1–4096 characters.'},400);
+      rules.push({keyword,reply});
+    }
+    await env.LIVE_STATUS_KV.put('whatsapp-rules:'+cap.sub,JSON.stringify(rules));
+    await audit(env,cap,'whatsapp.rules.save','automation');
+    return json({saved:true,enabled:false,rules:rules.length,message:'Rules saved as drafts. Provider connection and inbound webhook are required to activate.'});
+  }
   if(url.pathname==='/api/social/accounts'&&request.method==='POST'){
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const ch=String(b.channel_name??'').trim(); const ref=String(b.provider_account_ref??'').trim(); if(!ch||!ref||ch.length>100||ref.length>255)return json({error:'Enter valid social account details'},400); if(b.automatable===true)return json({error:'Connect and verify the provider authorization before enabling automatic publishing. A manually entered account reference is not authorization.'},409); const r=await env.DB.prepare('INSERT INTO social_accounts(channel_name,provider_account_ref,automatable,created_by) VALUES(?,?,?,?)').bind(ch,ref,0,cap.sub).run(); return json({account_id:Number(r.meta.last_row_id)},201);
   }
