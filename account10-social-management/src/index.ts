@@ -38,7 +38,7 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.body!=='string'||!data.body.trim()||data.body.length>10000)return reply({error:'Invalid message'},400);
   const conversation=await env.DB.prepare('SELECT id FROM conversations WHERE id=?').bind(data.conversationId).first();if(!conversation)return reply({error:'Conversation not found'},404);
-  const id=crypto.randomUUID();await env.DB.prepare('INSERT INTO messages(id,conversation_id,direction,body) VALUES(?,?,?,?)').bind(id,data.conversationId,'outbound',data.body.trim()).run();await env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(data.conversationId).run();return reply({id,saved:true,sent:false,providerConnected:false,note:'Saved as an operator draft. Not delivered externally.'},201)
+  const id=crypto.randomUUID();await env.DB.prepare('INSERT INTO messages(id,conversation_id,direction,body) VALUES(?,?,?,?)').bind(id,data.conversationId,'draft',data.body.trim()).run();await env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(data.conversationId).run();return reply({id,saved:true,sent:false,providerConnected:false,note:'Saved as an operator draft. Not delivered externally.'},201)
  }
  if(u.pathname==='/api/human-requests/resolve'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
