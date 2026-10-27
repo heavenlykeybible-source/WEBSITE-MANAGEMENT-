@@ -18,8 +18,9 @@ try{
   for(const id of ['id="vf"','id="af"','id="vexp"','id="aexp"'])assert.ok(html.includes(id),'Missing live editor control: '+id);
   console.log('PASS live editor route and core controls');
   const health=await get('/api/health');
-  const data=await health.json();
   assert.equal(health.status,200,'Cloudflare DB, R2, and AI bindings or D1 schema are not ready');
+  assert.ok((health.headers.get('content-type')||'').includes('application/json'),'Health endpoint must return JSON');
+  const data=await health.json();
   assert.deepEqual(data,{status:'ready'},'Health must be the minimal healthy response');
   console.log('PASS live Cloudflare D1 schema, R2 and AI binding readiness');
   // Verify public asset routing, security headers and private endpoint isolation.
