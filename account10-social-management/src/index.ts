@@ -266,6 +266,20 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   return reply({discarded:true,sent:false});
  }
 
+ if(u.pathname==='/api/whatsapp/readiness'&&req.method==='GET'){
+  const rows=await env.DB.prepare("SELECT provider_account_ref,status FROM social_accounts WHERE channel='whatsapp_business' ORDER BY created_at DESC LIMIT 20").all<{provider_account_ref:string;status:string}>();
+  return reply({
+   provider:'whatsapp_cloud_api',
+   configured:{appSecret:!!env.META_APP_SECRET,verifyToken:!!env.META_WEBHOOK_VERIFY_TOKEN,accessToken:!!env.META_WHATSAPP_ACCESS_TOKEN},
+   registeredAccounts:rows.results.length,
+   accounts:rows.results.map(x=>({idSuffix:x.provider_account_ref.slice(-4),status:x.status})),
+   inboundWebhookVerificationImplemented:true,
+   automaticInboundTextImportImplemented:true,
+   providerConnectionCheckImplemented:true,
+   outboundDeliveryEnabled:false,
+   nextStep:'Verify Meta app subscriptions, provider permissions, and live messaging tests before enabling delivery'
+  });
+ }
  if(u.pathname==='/api/whatsapp/send-approved'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.draftId)||data?.confirmSend!==true)return reply({error:'Valid draftId and explicit confirmSend=true required'},400);
