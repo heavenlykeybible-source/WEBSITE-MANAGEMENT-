@@ -480,7 +480,7 @@ $('adel').onclick=async()=>{if(!$('dpw').value){$('acm').textContent='Enter your
  if(r.ok){saveTok('');acct.me=null;$('dpw').value='';acRender();conn.list=[];renderConns();$('acm').textContent='Your account has been deleted.'}else $('acm').textContent=r.error||'Could not delete the account.'};
 function tag(c,t,x,y,w,h){c.save();c.font='600 '+Math.max(14,Math.round(h*.045))+'px system-ui,sans-serif';c.textBaseline='middle';const tw=c.measureText(t).width+24,th=Math.max(26,Math.round(h*.07));
  c.fillStyle='rgba(8,16,36,.8)';c.fillRect(x+10,y+h-th-10,tw,th);c.fillStyle='#f2c14e';c.fillRect(x+10,y+h-th-10,4,th);c.fillStyle='#fff';c.fillText(t,x+22,y+h-th/2-10);c.restore()}
-const guests=new Map(),wait=new Map(),hands=new Map();let gws=null,gStarting=false,gHandshakeTimer=null,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
+const guests=new Map(),wait=new Map(),hands=new Map(),viewers=new Map();let viewStream=null,gws=null,gStarting=false,gHandshakeTimer=null,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
 const gc=document.createElement('canvas');gc.width=640;gc.height=360;const gx=gc.getContext('2d');
 const gsend=o=>{if(gws&&gws.readyState===1)gws.send(JSON.stringify(o))},gSt=t=>{$('gst').textContent=t};
 async function gStart(){
@@ -498,7 +498,7 @@ async function gStart(){
  }catch(e){gStop('The meeting connection could not start. Check the meeting service and try again.')}
  finally{gStarting=false;$('grs').disabled=false}
 }
-function gStop(msg){clearTimeout(gHandshakeTimer);gHandshakeTimer=null;const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);wait.clear();
+function gStop(msg){clearTimeout(gHandshakeTimer);gHandshakeTimer=null;const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);for(const id of [...viewers.keys()])viewRemove(id);if(viewStream){viewStream.getVideoTracks().forEach(t=>t.stop());viewStream=null}wait.clear();
  $('grs').textContent='Start guest room';$('gin').hidden=true;hands.clear();gSt(msg||'Room closed.');renderG()}
 function gmsg(m){
  if(m.t==='created'){clearTimeout(gHandshakeTimer);gHandshakeTimer=null;gice=m.ice||[];glink=location.origin+'/join.html?relay='+encodeURIComponent(gRoomURL)+'&r='+m.room+'&k='+m.key;alink=glink+'&a=1';if(tm.pend)tmPublish();
@@ -507,12 +507,25 @@ function gmsg(m){
  else if(m.t==='joined'){wait.delete(m.gid);hands.delete(m.gid);gAdd(m.gid,m.name,m.ao)}
  else if(m.t==='count')$('gac').textContent=m.n
  else if(m.t==='note')gSt(m.text)
- else if(m.t==='left'){wait.delete(m.gid);gRemove(m.gid)}
+ else if(m.t==='left'){wait.delete(m.gid);gRemove(m.gid);viewRemove(m.gid)}
+ else if(m.t==='viewer-join')viewAdd(m.gid)
+ else if(m.t==='viewer-left')viewRemove(m.gid)
+ else if(m.t==='view-sig'){const v=viewers.get(m.from);if(v)viewSignal(v,m.data)}
  else if(m.t==='sig'){const g=guests.get(m.from);if(g)gsig(g,m.data)}
  else if(m.t==='chat')gchat(m.name,m.text)
  else if(m.t==='hand'){const g=guests.get(m.from);if(g){g.hand=m.on;renderG();if(m.on)gchat('Room',g.name+' raised a hand')}else{m.on?hands.set(m.from,m.name):hands.delete(m.from);if(m.on)gchat('Room',m.name+' raised a hand');renderG()}}
  else if(m.t==='react'){const g=guests.get(m.from);gchat(g?g.name:'Guest',m.emoji)}
  else if(m.t==='error'||m.t==='closed')gStop(m.msg||m.why||'The room closed.')}
+function viewRemove(id){const v=viewers.get(id);if(!v)return;viewers.delete(id);try{v.pc.close()}catch(e){}}
+async function viewAdd(id){if(viewers.has(id))return;try{
+ if(!viewStream){viewStream=$('cv').captureStream(15);dest.stream.getAudioTracks().forEach(t=>viewStream.addTrack(t))}
+ const v={id,pc:new RTCPeerConnection({iceServers:gice}),pending:[]};viewers.set(id,v);const pc=v.pc;
+ viewStream.getTracks().forEach(t=>pc.addTrack(t,viewStream));
+ pc.onicecandidate=e=>{if(e.candidate&&viewers.get(id)===v)gsend({t:'view-sig',to:id,data:{c:e.candidate}})};
+ pc.onconnectionstatechange=()=>{if(viewers.get(id)===v&&pc.connectionState==='failed')gSt('A viewer could not connect. Check your network and TURN service.')};
+ await pc.setLocalDescription(await pc.createOffer());if(viewers.get(id)===v)gsend({t:'view-sig',to:id,data:{sdp:pc.localDescription}});
+ }catch(e){viewRemove(id);gSt('Could not send video to a viewer on this device.') }}
+async function viewSignal(v,d){try{const pc=v.pc;if(d.sdp&&d.sdp.type==='answer'&&pc.signalingState==='have-local-offer'){await pc.setRemoteDescription(d.sdp);for(const c of v.pending.splice(0))await pc.addIceCandidate(c).catch(()=>{});const snd=pc.getSenders().find(s=>s.track&&s.track.kind==='video');if(snd){const p=snd.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:500000}];await snd.setParameters(p).catch(()=>{})}}else if(d.c){if(pc.remoteDescription)await pc.addIceCandidate(d.c).catch(()=>{});else if(v.pending.length<100)v.pending.push(d.c)}}catch(e){gSt('A viewer connection needs attention.')}}
 async function gAdd(gid,name,ao){if(guests.has(gid))return;const g={id:gid,name,ao,pc:null,src:null,mm:AC.createMediaStreamDestination(),hand:false,pendingIce:[],connection:'connecting',restartAttempts:0};guests.set(gid,g);
  ann.connect(g.mm);for(const s of S)if(s.g&&s.type!=='guest')s.g.connect(g.mm);for(const o of guests.values())if(o!==g&&o.src&&o.src.raw)o.src.raw.connect(g.mm);
  const pc=g.pc=new RTCPeerConnection({iceServers:gice});
