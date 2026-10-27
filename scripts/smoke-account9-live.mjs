@@ -7,10 +7,12 @@ if(origin.protocol!=='https:'||!['mediaeditor.heavenlykey.org'].includes(origin.
 const controller=new AbortController();
 const timer=setTimeout(()=>controller.abort(),12000);
 try{
-  const get=path=>fetch(new URL(path,origin),{method:'GET',redirect:'error',cache:'no-store',signal:controller.signal,headers:{accept:path==='/api/health'?'application/json':'text/html'}});
+  const get=path=>fetch(new URL(path,origin),{method:'GET',redirect:'error',cache:'no-store',signal:controller.signal,headers:{accept:path.startsWith('/api/')?'application/json':path.endsWith('.js')?'text/javascript':path.endsWith('.json')?'application/json':'text/html'}});
   const home=await get('/');
   assert.equal(home.status,200,'Editor must load successfully');
   assert.ok((home.headers.get('content-type')||'').includes('text/html'),'Editor must serve HTML');
+  assert.ok(home.headers.get('content-security-policy'),'Live editor must enforce a Content Security Policy');
+  assert.equal(home.headers.get('x-content-type-options'),'nosniff','Live editor must prevent MIME sniffing');
   const html=await home.text();
   for(const id of ['id="vf"','id="af"','id="vexp"','id="aexp"'])assert.ok(html.includes(id),'Missing live editor control: '+id);
   console.log('PASS live editor route and core controls');
