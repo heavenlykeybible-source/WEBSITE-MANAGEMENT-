@@ -378,6 +378,16 @@ const engine = {
     let rules:unknown[]=[];try{const parsed=saved?JSON.parse(saved):[];if(Array.isArray(parsed))rules=parsed;}catch{}
     return json({rules,enabled:false,connection:'not_configured',message:'Rules are drafts; no messages are sent until a verified WhatsApp Business connection and webhook are active.'});
   }
+  if(url.pathname==='/api/social/whatsapp/rules/preview'&&request.method==='POST'){
+    const b=await requireJson(request);
+    if(!b||typeof b.message!=='string'||b.message.length>4096)return json({error:'Provide a message up to 4096 characters.'},400);
+    const saved=await env.LIVE_STATUS_KV.get('whatsapp-rules:'+cap.sub);
+    let rules:{keyword:string;reply:string}[]=[];
+    try{const parsed=saved?JSON.parse(saved):[];if(Array.isArray(parsed))rules=parsed.filter((r:unknown)=>!!r&&typeof r==='object'&&typeof (r as any).keyword==='string'&&typeof (r as any).reply==='string');}catch{}
+    const message=b.message.trim().toLowerCase();
+    const matched=rules.find(r=>message.includes(r.keyword));
+    return json({matched:!!matched,keyword:matched?.keyword??null,previewReply:matched?.reply??null,sent:false,providerConnected:false,note:'This is a local preview only; no WhatsApp message was sent.'});
+  }
   if(url.pathname==='/api/social/whatsapp/rules'&&request.method==='POST'){
     const b=await requireJson(request);if(!b||!Array.isArray(b.rules)||b.rules.length>25)return json({error:'Supply up to 25 automatic reply rules.'},400);
     const rules=[] as {keyword:string;reply:string}[];
