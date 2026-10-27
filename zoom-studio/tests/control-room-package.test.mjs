@@ -77,7 +77,9 @@ test('missing database yields a clear setup failure while public template still 
 
 const {MeetingRooms}=await import(pathToFileURL(path.join(root,'build/meeting-worker.mjs')));
 function socket(data){return {readyState:1,messages:[],serializeAttachment(d){assert.ok(Buffer.byteLength(JSON.stringify(d))<=2048,'hibernation attachment fits platform limit');this.d=structuredClone(d)},deserializeAttachment(){return structuredClone(this.d)},send(m){this.messages.push(JSON.parse(m))},close(){this.readyState=3},d:structuredClone(data)};}
-function meeting(){const all=[],state={getWebSockets(){return all},storage:{async setAlarm(){}}};return {all,state,room:new MeetingRooms(state,{AUTH_SECRET:secret}),add(data={}){const w=socket({role:'',room:'11111111-1111-4111-8111-111111111111',until:Date.now()+15000,...data});all.push(w);return w}};}
+const guestDB={prepare(){return {bind(){return this},async first(){return {tv:0,banned:0,role:'user'}}}}};
+const guestEnv=()=>({AUTH_SECRET:secret,TEAMDB:guestDB,MEETINGSPACE_PRIVATE_PREVIEW:'0'});
+function meeting(){const all=[],state={getWebSockets(){return all},storage:{async setAlarm(){}}};return {all,state,room:new MeetingRooms(state,guestEnv()),add(data={}){const w=socket({role:'',room:'11111111-1111-4111-8111-111111111111',until:Date.now()+15000,...data});all.push(w);return w}};}
 test('invalid meeting room capacity uses a safe finite default',async()=>{
  const s=await openRoom();
  for(const bad of ['Infinity','NaN','-9','']){
@@ -125,7 +127,8 @@ test('meeting room rejects excess peers before allocating WebSockets',async()=>{
  assert.equal(response.status,429);
 });
 function roomToken(extra={}){const p=Buffer.from(JSON.stringify({k:'meeting',u:'owner@test.local',r:'11111111-1111-4111-8111-111111111111',exp:Date.now()+60000,pe:Date.now()+86400000,...extra})).toString('base64url');return p+'.'+createHmac('sha256',secret).update(p).digest('hex');}
-const message=(room,w,m)=>room.webSocketMessage(w,JSON.stringify(m));
+function guestToken(){const p=Buffer.from(JSON.stringify({e:'guest@test.local',t:0,exp:Date.now()+60000})).toString('base64url');return p+'.'+createHmac('sha256',secret).update(p).digest('hex');}
+const message=(room,w,m)=>room.webSocketMessage(w,JSON.stringify(m.t==='join'?{accountToken:guestToken(),...m}:m));
 async function openRoom(){const s=meeting(),host=s.add();await message(s.room,host,{t:'host',token:roomToken()});return {...s,host,key:host.messages.at(-1).key};}
 test('short TURN secrets never generate unusable relay credentials',async()=>{
  const s=meeting();s.room.env.TURN_URLS='turn:relay.example:3478';s.room.env.TURN_SHARED_SECRET='short';
@@ -168,7 +171,7 @@ test('waiting guests cannot chat or signal until host admission; hibernation kee
  const s=await openRoom(),guest=s.add();await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,name:'Visitor',pass:'test-pass'});
  assert.equal(s.host.messages.at(-2)?.t==='waiting'||s.host.messages.some(m=>m.t==='waiting'),true);
  await message(s.room,guest,{t:'chat',text:'blocked'});await message(s.room,guest,{t:'sig',data:{offer:'blocked'}});assert.ok(!s.host.messages.some(m=>m.text==='blocked'||m.data?.offer==='blocked'));
- const restored=new MeetingRooms(s.state,{AUTH_SECRET:secret});await message(restored,s.host,{t:'admit',gid:guest.d.id});assert.equal(guest.d.stage,true);
+ const restored=new MeetingRooms(s.state,guestEnv());await message(restored,s.host,{t:'admit',gid:guest.d.id});assert.equal(guest.d.stage,true);
  await message(restored,guest,{t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}});assert.equal(s.host.messages.at(-1).data.sdp.sdp,'v=0');
  await message(restored,s.host,{t:'lock',on:true});const denied=s.add();await message(restored,denied,{t:'join',room:s.host.d.room,key:s.key});assert.equal(denied.readyState,3);
  await message(restored,s.host,{t:'sig',to:'wrong-room',data:{secret:'private'}});assert.ok(!guest.messages.some(m=>m.data?.secret));

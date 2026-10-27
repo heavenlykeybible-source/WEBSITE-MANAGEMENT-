@@ -22,6 +22,7 @@ input[type=text]{flex:1;min-width:150px}
 #lv{position:absolute;right:8px;bottom:8px;width:28%;max-width:180px;aspect-ratio:16/9;object-fit:cover;background:#000;border:2px solid #f2c14e;border-radius:8px;transform:scaleX(-1)}
 #cl{height:170px;overflow:auto;background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:8px}
 #wb iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:8px}
+#audvideo{width:100%;aspect-ratio:16/9;background:#000;border-radius:8px}
 [hidden]{display:none!important}
 
 /* Mobile live-room presentation: preserve the meeting and consent controls. */
@@ -43,7 +44,8 @@ input[type=text]{flex:1;min-width:150px}
 <h1 id="ti">Join the broadcast</h1>
 
 <section id="pre" class="box">
-<p id="intro">You have been invited to join a live broadcast as a guest. You do not need an account.</p>
+<p id="intro">Join the meeting without an account. Sign in if you want the host to bring you on screen.</p>
+<p class="mu"><a href="/" target="_blank" rel="noopener noreferrer">Sign in or create an account</a>, then return here and rejoin to appear on screen.</p>
 <div class="row"><input type="text" id="nm" maxlength="30" placeholder="Your name" autocomplete="name" aria-label="Your name"></div>
 <div class="row" id="nrrow"><label class="mu"><input type="checkbox" id="nr" checked> Strong noise removal for my voice</label></div>
 <div class="row" id="aorow"><label class="mu"><input type="checkbox" id="ao"> Audio only (uses much less data)</label></div>
@@ -59,7 +61,7 @@ input[type=text]{flex:1;min-width:150px}
  <div class="vw"><video id="rv" autoplay playsinline></video><video id="lv" autoplay playsinline muted></video></div>
  <div class="row"><button id="mic">Mute</button><button id="cam">Camera off</button><button id="shr">Share screen</button></div>
 </div>
-<div id="audv" hidden><div id="wb"></div></div>
+<div id="audv" hidden><video id="audvideo" autoplay playsinline controls aria-label="Meeting video"></video><p class="mu">If video does not play automatically, tap play.</p><div id="wb"></div></div>
 <div class="row" id="invrow" hidden><span>The host invited you to the stage.</span><button class="pri" id="inv">Join the stage</button></div>
 <div class="row"><button id="hand">Raise hand</button>
 <button data-e="&#128079;" aria-label="Clap">&#128079;</button><button data-e="&#128591;" aria-label="Thank you">&#128591;</button><button data-e="&#10084;&#65039;" aria-label="Heart">&#10084;&#65039;</button>
@@ -72,18 +74,19 @@ input[type=text]{flex:1;min-width:150px}
 <section id="done" class="box" hidden><p id="dm"></p></section>
 
 <script>
-const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),relay=q.get('relay')||'',room=q.get('r')||'',key=q.get('k')||'',AUD=q.get('a')==='1';
+const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),relay=q.get('relay')||'',room=q.get('r')||'',key=q.get('k')||'';let AUD=q.get('a')==='1',accountToken='';
 const pass=(()=>{try{let p=sessionStorage.getItem('gp');if(!p){p=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');sessionStorage.setItem('gp',p)}return p}catch(e){return String(Math.random()).slice(2)}})();
 const NSPATH='https://cdn.jsdelivr.net/npm/@shiguredo/noise-suppression@2022.4.2/dist';let proc=null,rawMedia=null;
 function loadNS(){return window.Shiguredo?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src=NSPATH+'/noise_suppression.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
-let ws=null,pc=null,ice=[],local=null,camTrack=null,shareTrack=null,over=false,tries=0,pend=[],hand=false,sharing=false,onStage=false,joined=false,connecting=false,openTimer=null,joinAckTimer=null;
+let ws=null,pc=null,viewPc=null,viewPend=[],ice=[],local=null,camTrack=null,shareTrack=null,over=false,tries=0,pend=[],hand=false,sharing=false,onStage=false,joined=false,connecting=false,openTimer=null,joinAckTimer=null;
 const show=id=>['pre','wait','live','done'].forEach(s=>$(s).hidden=s!==id);
 const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
 const note=t=>{$('nt').textContent=t};
 function stopLocal(){try{proc&&proc.stopProcessing()}catch(e){}proc=null;if(local)local.getTracks().forEach(t=>t.stop());if(rawMedia&&rawMedia!==local)rawMedia.getTracks().forEach(t=>t.stop());local=null;rawMedia=null}
-function end(msg){over=true;connecting=false;clearTimeout(openTimer);openTimer=null;clearTimeout(joinAckTimer);joinAckTimer=null;try{ws&&ws.close()}catch(e){}try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();show('done');$('dm').textContent=msg}
+function closeView(){try{viewPc&&viewPc.close()}catch(e){}viewPc=null;viewPend=[];$('audvideo').srcObject=null}
+function end(msg){over=true;connecting=false;clearTimeout(openTimer);openTimer=null;clearTimeout(joinAckTimer);joinAckTimer=null;try{ws&&ws.close()}catch(e){}try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;try{pc&&pc.close()}catch(e){}pc=null;closeView();stopLocal();show('done');$('dm').textContent=msg}
 function mode(stage){onStage=stage;$('stg').hidden=!stage;$('audv').hidden=stage;$('aorow').hidden=true;if(!stage)$('invrow').hidden=$('invrow').hidden}
-if(AUD){$('nrrow').hidden=true;$('ti').textContent='Join the audience';$('intro').textContent='You are joining as a viewer. You can chat, raise your hand and react. The host may invite you to the stage. You do not need an account.';$('aorow').hidden=true;
+if(AUD){$('nrrow').hidden=true;$('ti').textContent='Join the audience';$('intro').textContent='Join without an account to chat, raise your hand and react. Sign in and rejoin if you want the host to bring you on screen.';$('aorow').hidden=true;
  $('oktx').textContent='I understand my name and chat messages will be visible to the host and everyone in the room, and may appear on the broadcast. I agree to the Privacy Policy.'}
 else $('oktx').textContent='I understand the host may broadcast and record this session, including my video, voice, name and chat messages. The host can see my network address. I agree to the Privacy Policy.';
 $('oklab').insertAdjacentHTML('beforeend',' <a href="/privacy.html" target="_blank" rel="noopener">Read it</a>');
@@ -101,6 +104,8 @@ $('go').onclick=async()=>{
  if(!$('nm').value.trim()){$('pm').textContent='Please type your name.';return}
  if(!$('ok').checked){$('pm').textContent='Please tick the box to continue.';return}
  connecting=true;$('go').disabled=true;
+ try{accountToken=localStorage.getItem('ls_tok')||'';if(accountToken){const r=await fetch('/api/me',{headers:{authorization:'Bearer '+accountToken},cache:'no-store'});if(!r.ok)accountToken=''}}catch(e){accountToken=''}
+ if(!accountToken)AUD=true;
  if(!AUD){$('pm').textContent='Please allow your camera and microphone...';local=await getMedia($('ao').checked);
   if(!local){connecting=false;$('go').disabled=false;$('pm').textContent='Please allow your microphone, and your camera if you have one, then tap Join again.';return}
   $('lv').srcObject=local;onStage=true}
@@ -111,9 +116,9 @@ function connect(){
  try{ws=new WebSocket(relay.replace(/\/+$/,'')+'/room')}catch(e){connecting=false;end('The meeting link could not open. Ask the host for a new invitation.');return}
  const currentSocket=ws;
  clearTimeout(openTimer);openTimer=setTimeout(()=>{if(!over&&ws===currentSocket&&currentSocket.readyState===WebSocket.CONNECTING)currentSocket.close()},12000);
- ws.onopen=()=>{clearTimeout(openTimer);openTimer=null;if(over||ws!==currentSocket)return;send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked});clearTimeout(joinAckTimer);joinAckTimer=setTimeout(()=>{if(!over&&ws===currentSocket&&currentSocket.readyState===WebSocket.OPEN)currentSocket.close()},20000);if(!joined)show('wait')};
+ ws.onopen=()=>{clearTimeout(openTimer);openTimer=null;if(over||ws!==currentSocket)return;send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked,accountToken});clearTimeout(joinAckTimer);joinAckTimer=setTimeout(()=>{if(!over&&ws===currentSocket&&currentSocket.readyState===WebSocket.OPEN)currentSocket.close()},20000);if(!joined)show('wait')};
  ws.onmessage=e=>{if(over||ws!==currentSocket)return;let m;try{m=JSON.parse(e.data)}catch{return}onMsg(m)};
- ws.onclose=()=>{if(over||ws!==currentSocket)return;clearTimeout(openTimer);openTimer=null;clearTimeout(joinAckTimer);joinAckTimer=null;joined=false;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
+ ws.onclose=()=>{if(over||ws!==currentSocket)return;clearTimeout(openTimer);openTimer=null;clearTimeout(joinAckTimer);joinAckTimer=null;joined=false;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;closeView();pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
  ws.onerror=()=>{}}
 
 function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
@@ -122,8 +127,8 @@ function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
  else{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Watch the live broadcast';w.appendChild(a)}}
 
 function onMsg(m){switch(m.t){
- case 'welcome':clearTimeout(joinAckTimer);joinAckTimer=null;ice=m.ice||[];setWatch(m.watch);break;
- case 'admitted':tries=0;connecting=false;joined=true;show('live');mode(!AUD||onStage);if(AUD&&!onStage)note('');break;
+ case 'welcome':clearTimeout(joinAckTimer);joinAckTimer=null;ice=m.ice||[];if(m.audience&&!m.stageEligible){AUD=true;onStage=false;stopLocal()}setWatch(m.watch);break;
+ case 'admitted':tries=0;connecting=false;joined=true;show('live');mode(!AUD||onStage);if(AUD&&!onStage)note(accountToken?'You joined the audience.':'You joined without signing in. Sign in and rejoin to appear on screen.');break;
  case 'denied':end('The host did not admit you.');break;
  case 'kick':end('You were removed from the room.');break;
  case 'closed':end(m.why||'The room has ended.');break;
@@ -137,7 +142,18 @@ function onMsg(m){switch(m.t){
  case 'promoted':$('invrow').hidden=false;break;
  case 'invitation-expired':$('invrow').hidden=true;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();local=null;onStage=false;mode(false);note('Speaker invitation expired. Please ask the host to invite you again.');break;
  case 'demoted':try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;stopLocal();onStage=false;mode(false);note('You are back in the audience.');break;
+ case 'viewer-end':closeView();break;
+ case 'view-sig':onViewSig(m.data);break;
  case 'sig':onSig(m.data);break}}
+
+async function onViewSig(d){try{
+ if(d.sdp&&d.sdp.type==='offer'){const pending=viewPend;closeView();viewPend=pending;const v=viewPc=new RTCPeerConnection({iceServers:ice});
+  v.onicecandidate=e=>{if(e.candidate&&viewPc===v)send({t:'view-sig',data:{c:e.candidate}})};
+  v.ontrack=e=>{if(viewPc===v){$('audvideo').srcObject=e.streams[0]||new MediaStream([e.track]);$('audvideo').play().catch(()=>note('Tap play to watch the meeting.'))}};
+  v.onconnectionstatechange=()=>{if(viewPc===v&&v.connectionState==='failed')note('Video could not connect. Rejoin or ask the host to check the TURN service.')};
+  await v.setRemoteDescription(d.sdp);const answer=await v.createAnswer();await v.setLocalDescription(answer);if(viewPc===v)send({t:'view-sig',data:{sdp:v.localDescription}});for(const c of viewPend.splice(0))await v.addIceCandidate(c).catch(()=>{});
+ }else if(d.c){if(viewPc&&viewPc.remoteDescription)await viewPc.addIceCandidate(d.c).catch(()=>{});else if(viewPend.length<100)viewPend.push(d.c)}
+ }catch(e){note('Could not connect meeting video. Please rejoin.')}}
 
 $('inv').onclick=async()=>{$('invrow').hidden=true;local=await getMedia(false);if(!local){$('invrow').hidden=false;note('Could not use your microphone or camera.');return}
  $('lv').srcObject=local;onStage=true;mode(true);send({t:'ready',ao:!local.getVideoTracks().length})};

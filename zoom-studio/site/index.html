@@ -480,12 +480,14 @@ $('adel').onclick=async()=>{if(!$('dpw').value){$('acm').textContent='Enter your
  if(r.ok){saveTok('');acct.me=null;$('dpw').value='';acRender();conn.list=[];renderConns();$('acm').textContent='Your account has been deleted.'}else $('acm').textContent=r.error||'Could not delete the account.'};
 function tag(c,t,x,y,w,h){c.save();c.font='600 '+Math.max(14,Math.round(h*.045))+'px system-ui,sans-serif';c.textBaseline='middle';const tw=c.measureText(t).width+24,th=Math.max(26,Math.round(h*.07));
  c.fillStyle='rgba(8,16,36,.8)';c.fillRect(x+10,y+h-th-10,tw,th);c.fillStyle='#f2c14e';c.fillRect(x+10,y+h-th-10,4,th);c.fillStyle='#fff';c.fillText(t,x+22,y+h-th/2-10);c.restore()}
-const guests=new Map(),wait=new Map(),hands=new Map();let gws=null,gStarting=false,gHandshakeTimer=null,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
+const guests=new Map(),wait=new Map(),hands=new Map(),viewers=new Map();let viewStream=null,gws=null,gStarting=false,gHandshakeTimer=null,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
 const gc=document.createElement('canvas');gc.width=640;gc.height=360;const gx=gc.getContext('2d');
 const gsend=o=>{if(gws&&gws.readyState===1)gws.send(JSON.stringify(o))},gSt=t=>{$('gst').textContent=t};
 async function gStart(){
  if(gStarting)return;
  if(gws)return gStop('Room closed.');
+ // Resume audio directly in the host's click gesture so viewers can hear the program.
+ AC.resume().catch(()=>gSt('Tap the page to enable meeting audio.'));
  gStarting=true;$('grs').disabled=true;gSt('Preparing your meeting...');
  try{
   if(!(await relink(true))){gSt('Sign in and confirm meeting access to start a room.');return}
@@ -498,7 +500,7 @@ async function gStart(){
  }catch(e){gStop('The meeting connection could not start. Check the meeting service and try again.')}
  finally{gStarting=false;$('grs').disabled=false}
 }
-function gStop(msg){clearTimeout(gHandshakeTimer);gHandshakeTimer=null;const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);wait.clear();
+function gStop(msg){clearTimeout(gHandshakeTimer);gHandshakeTimer=null;const w=gws;gws=null;try{w&&w.close()}catch(e){}for(const id of [...guests.keys()])gRemove(id);for(const id of [...viewers.keys()])viewRemove(id);if(viewStream){viewStream.getVideoTracks().forEach(t=>t.stop());viewStream=null}wait.clear();
  $('grs').textContent='Start guest room';$('gin').hidden=true;hands.clear();gSt(msg||'Room closed.');renderG()}
 function gmsg(m){
  if(m.t==='created'){clearTimeout(gHandshakeTimer);gHandshakeTimer=null;gice=m.ice||[];glink=location.origin+'/join.html?relay='+encodeURIComponent(gRoomURL)+'&r='+m.room+'&k='+m.key;alink=glink+'&a=1';if(tm.pend)tmPublish();
@@ -507,12 +509,28 @@ function gmsg(m){
  else if(m.t==='joined'){wait.delete(m.gid);hands.delete(m.gid);gAdd(m.gid,m.name,m.ao)}
  else if(m.t==='count')$('gac').textContent=m.n
  else if(m.t==='note')gSt(m.text)
- else if(m.t==='left'){wait.delete(m.gid);gRemove(m.gid)}
+ else if(m.t==='left'){wait.delete(m.gid);gRemove(m.gid);viewRemove(m.gid)}
+ else if(m.t==='viewer-join')viewAdd(m.gid)
+ else if(m.t==='viewer-left')viewRemove(m.gid)
+ else if(m.t==='view-sig'){const v=viewers.get(m.from);if(v)viewSignal(v,m.data)}
  else if(m.t==='sig'){const g=guests.get(m.from);if(g)gsig(g,m.data)}
  else if(m.t==='chat')gchat(m.name,m.text)
  else if(m.t==='hand'){const g=guests.get(m.from);if(g){g.hand=m.on;renderG();if(m.on)gchat('Room',g.name+' raised a hand')}else{m.on?hands.set(m.from,m.name):hands.delete(m.from);if(m.on)gchat('Room',m.name+' raised a hand');renderG()}}
  else if(m.t==='react'){const g=guests.get(m.from);gchat(g?g.name:'Guest',m.emoji)}
  else if(m.t==='error'||m.t==='closed')gStop(m.msg||m.why||'The room closed.')}
+function viewRemove(id){const v=viewers.get(id);if(!v)return;viewers.delete(id);clearTimeout(v.timer);try{v.pc.close()}catch(e){}}
+async function viewAdd(id,attempt=0){if(viewers.has(id))return;try{
+ if(!viewStream){viewStream=$('cv').captureStream(15);dest.stream.getAudioTracks().forEach(t=>viewStream.addTrack(t))}
+ const v={id,pc:new RTCPeerConnection({iceServers:gice}),pending:[],attempt,timer:null};viewers.set(id,v);const pc=v.pc;
+ viewStream.getTracks().forEach(t=>pc.addTrack(t,viewStream));
+ pc.onicecandidate=e=>{if(e.candidate&&viewers.get(id)===v)gsend({t:'view-sig',to:id,data:{c:e.candidate}})};
+ pc.onconnectionstatechange=()=>{if(viewers.get(id)!==v)return;if(pc.connectionState==='connected'){v.attempt=0;return}if(pc.connectionState==='failed'){
+  if(v.attempt>=2){gSt('A viewer could not connect. Check your network and TURN service.');return}
+  const next=v.attempt+1;gSt('Reconnecting a viewer...');v.timer=setTimeout(()=>{if(viewers.get(id)===v&&gws){viewRemove(id);viewAdd(id,next)}},1000*next)
+ }};
+ await pc.setLocalDescription(await pc.createOffer());if(viewers.get(id)===v)gsend({t:'view-sig',to:id,data:{sdp:pc.localDescription}});
+ }catch(e){viewRemove(id);gSt('Could not send video to a viewer on this device.') }}
+async function viewSignal(v,d){try{const pc=v.pc;if(d.sdp&&d.sdp.type==='answer'&&pc.signalingState==='have-local-offer'){await pc.setRemoteDescription(d.sdp);for(const c of v.pending.splice(0))await pc.addIceCandidate(c).catch(()=>{});const snd=pc.getSenders().find(s=>s.track&&s.track.kind==='video');if(snd){const p=snd.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:500000}];await snd.setParameters(p).catch(()=>{})}}else if(d.c){if(pc.remoteDescription)await pc.addIceCandidate(d.c).catch(()=>{});else if(v.pending.length<100)v.pending.push(d.c)}}catch(e){gSt('A viewer connection needs attention.')}}
 async function gAdd(gid,name,ao){if(guests.has(gid))return;const g={id:gid,name,ao,pc:null,src:null,mm:AC.createMediaStreamDestination(),hand:false,pendingIce:[],connection:'connecting',restartAttempts:0};guests.set(gid,g);
  ann.connect(g.mm);for(const s of S)if(s.g&&s.type!=='guest')s.g.connect(g.mm);for(const o of guests.values())if(o!==g&&o.src&&o.src.raw)o.src.raw.connect(g.mm);
  const pc=g.pc=new RTCPeerConnection({iceServers:gice});
@@ -701,25 +719,33 @@ function rd(){const ul=$('dl');ul.innerHTML='';ds.forEach((d,i)=>{const li=docum
  const[c,u,k,x]=li.children;c.checked=d.on;u.value=d.url;k.value=d.key;c.onchange=()=>d.on=c.checked;u.oninput=()=>d.url=u.value;k.oninput=()=>d.key=k.value;x.onclick=()=>{ds.splice(i,1);rd()};ul.appendChild(li)})}
 function setSt(t,on){$('st').textContent=t;$('st').classList.toggle('on',!!on)}
 let want=false,retry=0,outs=[];
-function connect(){try{ws=new WebSocket(RU)}catch(e){want=false;$('gl').textContent='Go live';setSt('Offline');$('info').textContent='Invalid relay address.';return}
- ws.onopen=()=>{retry=0;const lowd=$('low').checked;
+function stopRelay(){
+ if(ws&&ws.readyState===1){try{ws.send(JSON.stringify({type:'stop',token:RT}));return}catch(e){}}
+ // Stop the detached fallback session after the previous socket has closed.
+ if(!RU||!RT)return;const relay=RU,token=RT;setTimeout(()=>{try{const cleanup=new WebSocket(relay),timer=setTimeout(()=>cleanup.close(),5000);cleanup.onopen=()=>{cleanup.send(JSON.stringify({type:'stop',token}));cleanup.close()};cleanup.onclose=()=>clearTimeout(timer);cleanup.onerror=()=>{}}catch(e){}},500)
+}
+function finishBroadcast(reason){const wasActive=want;want=false;if(wasActive)stopRelay();try{ws&&ws.close()}catch(e){}if(liveEnds.length){const ends=liveEnds;liveEnds=[];api('/api/golive/end',{ends})}$('gl').textContent='Go live';setSt('Offline');if(reason)$('info').textContent=reason}
+function connect(){try{ws=new WebSocket(RU)}catch(e){finishBroadcast('Invalid relay address.');return}
+ ws.onopen=()=>{try{retry=0;const lowd=$('low').checked;
   ws.send(JSON.stringify({type:'start',token:RT,dests:outs,size:W<H?'portrait':W==H?'square':'landscape'}));
   const tr=lowd?2:qTier;rec=new MediaRecorder(mkStream(),{mimeType:mime(),videoBitsPerSecond:QV[tr],audioBitsPerSecond:QA[tr]});
   rec.ondataavailable=e=>{if(!e.data.size||ws.readyState!==1)return;if(ws.bufferedAmount>3e6){qTier=Math.min(2,qTier+1);dmeter();msg('Slow network. Lowering the stream quality to keep you live.');ws.close();return}ws.send(e.data);sent+=e.data.size;$('info').textContent=(sent/1048576).toFixed(1)+' MB sent'};
-  rec.start(1000);setSt('On air',true)};
- ws.onmessage=e=>{$('info').textContent=String(e.data).slice(0,120)};
+  rec.start(1000);setSt('Connecting to relay')}catch(e){finishBroadcast('Could not start media recording on this device. Check browser support and try again.')}};
+ ws.onmessage=e=>{let message;try{message=JSON.parse(e.data)}catch(e){}if(message&&message.type==='error'){finishBroadcast(String(message.message||'The relay rejected the broadcast.').slice(0,160));return}if(message&&message.type==='feed-active'){setSt('Feed sent to relay',true);$('info').textContent='Feed is reaching the relay. Check each destination to confirm it is live.';return}$('info').textContent=String(e.data).slice(0,120)};
  ws.onclose=()=>{try{rec&&rec.state!=='inactive'&&rec.stop()}catch(e){}
-  if(want){setSt('Reconnecting. Backup is playing.',true);$('info').textContent='Connection lost. Retrying...';setTimeout(()=>want&&relink().then(ok=>ok&&want&&connect()),Math.min(15000,2000*++retry))}else setSt('Offline')};
+  if(want){setSt('Reconnecting to relay');$('info').textContent='Connection lost. Retrying...';setTimeout(()=>{if(want)relink().then(ok=>{if(ok&&want)connect();else if(want)finishBroadcast($('info').textContent||'Could not reconnect to the relay.')})},Math.min(15000,2000*++retry))}else setSt('Offline')};
  ws.onerror=()=>{}}
-$('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}try{ws.close()}catch(e){}if(liveEnds.length){api('/api/golive/end',{ends:liveEnds});liveEnds=[]}$('gl').textContent='Go live';return}
+$('gl').onclick=async()=>{if(want){finishBroadcast();return}
+ $('gl').disabled=true;try{
  if(ds.some(d=>d.on&&(!d.url.trim()||!d.key.trim()))){$('info').textContent='Complete the server URL and stream key for every enabled destination, or turn it off.';return}
  if(ds.filter(d=>d.on).length+(acct.on?conn.sel.size:0)>10){$('info').textContent='Select at most 10 destinations for one broadcast.';return}
- if(!(await relink())){if(!acct.on)$('info').textContent='Enter your relay address.';return}
+ if(!(await relink()))return;
  outs=ds.filter(d=>d.on&&d.url&&d.key).map(d=>d.url.replace(/\/+$/,'')+'/'+d.key);
  if(acct.on&&conn.sel.size){$('info').textContent='Creating your broadcasts...';
   const r=await api('/api/golive/start',{ids:[...conn.sel],title:$('btl').value.trim()||'Live broadcast',privacy:$('bpr').value});
   if(!r.ok){$('info').textContent=r.error||'Could not create the broadcasts.';if(r.status===401||r.status===402)act.tab(8);return}
   outs.push(...r.dests.map(d=>d.url));liveEnds=r.dests.map(d=>d.end);if(r.errors&&r.errors.length)msg(r.errors.join(' | '))}
  if(!outs.length){$('info').textContent='Add a channel or a destination with a stream key first.';return}
- AC.resume();sent=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect()};
+ AC.resume();sent=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect()
+ }finally{$('gl').disabled=false}};
 </script><script defer src="hk-approved-footer.js"></script></body></html>
