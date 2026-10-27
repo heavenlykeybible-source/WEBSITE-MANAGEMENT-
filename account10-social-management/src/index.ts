@@ -56,7 +56,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   let saved;
   try{saved=await env.DB.prepare("INSERT OR IGNORE INTO webhook_events(id,provider,event_type,payload) VALUES(?,?,?,?)").bind(eventId,'meta',payload.object,rawText).run()}catch{return reply({error:'Webhook inbox unavailable; apply migration 0002'},503)}
   const newlyStored=!!(saved.meta.changes||0);
-  const autoProcess=payload.object==='whatsapp_business_account'&&newlyStored&&!!env.ADMIN_TOKEN;
+  const autoProcess=payload.object==='whatsapp_business_account'&&newlyStored&&!!env.ADMIN_TOKEN&&!!env.DB;
   if(autoProcess){
    const internal=new Request(new URL('/api/webhooks/events/process',req.url),{
     method:'POST',headers:{authorization:'Bearer '+env.ADMIN_TOKEN,'content-type':'application/json'},
