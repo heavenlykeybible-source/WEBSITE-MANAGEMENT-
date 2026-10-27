@@ -61,4 +61,5 @@ $('screenstart').onclick=async()=>{
  }catch(e){if(screenStream)screenStream.getTracks().forEach(t=>t.stop());screenStream=null;start.disabled=false;stop.disabled=true;$('vm').textContent=e.name==='NotAllowedError'?'Screen sharing permission was declined.':'Screen recording unavailable: '+e.message}
 };
 $('screenstop').onclick=()=>{if(screenRecorder?.state==='recording')screenRecorder.stop()};
+window.addEventListener('pagehide',()=>{if(screenRecorder?.state==='recording')try{screenRecorder.stop()}catch{};if(screenStream)screenStream.getTracks().forEach(t=>t.stop());if(screenURL)URL.revokeObjectURL(screenURL)});
 </script></body></html>
