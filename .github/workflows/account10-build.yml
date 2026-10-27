@@ -22,7 +22,7 @@ jobs:
           from pathlib import Path
           db = sqlite3.connect(':memory:')
           db.execute('PRAGMA foreign_keys = ON')
-          for file in ('schema.sql', 'migrations/0002_webhook_events.sql', 'migrations/0003_conversation_lookup.sql', 'migrations/0004_whatsapp_delivery.sql'):
+          for file in ('schema.sql', 'migrations/0002_webhook_events.sql', 'migrations/0003_conversation_lookup.sql', 'migrations/0004_whatsapp_delivery.sql', 'migrations/0005_whatsapp_receipts.sql'):
               db.executescript(Path(file).read_text())
           db.execute("INSERT INTO conversations(id,channel,sender_id) VALUES('test','whatsapp_business','123')")
           db.execute("INSERT INTO messages(id,conversation_id,direction,body) VALUES('msg','test','inbound','hello')")
@@ -80,5 +80,8 @@ jobs:
               pass
           else:
               raise AssertionError('Orphan delivery attempt accepted')
+          db.execute("UPDATE whatsapp_delivery_attempts SET provider_message_id='wamid.1',state='sent' WHERE draft_id='approved'")
+          db.execute("UPDATE whatsapp_delivery_attempts SET delivery_status='delivered',receipt_at=CURRENT_TIMESTAMP WHERE provider_message_id='wamid.1'")
+          assert db.execute("SELECT delivery_status FROM whatsapp_delivery_attempts WHERE draft_id='approved'").fetchone()[0] == 'delivered'
           print('Schema, migrations and basic D1 records validated')
           PY
