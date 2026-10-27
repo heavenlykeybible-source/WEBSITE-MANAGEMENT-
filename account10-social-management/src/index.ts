@@ -125,7 +125,7 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
    for(const item of inbound){
     const senderKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.account+':'+item.sender)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
     const conversationId='wa_'+senderKey;
-    const messageKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.messageId)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
+    const messageKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.account+':'+item.messageId)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
     statements.push(env.DB.prepare("INSERT OR IGNORE INTO conversations(id,channel,sender_id) VALUES(?,'whatsapp_business',?)").bind(conversationId,item.account+':'+item.sender));
     statements.push(env.DB.prepare("INSERT OR IGNORE INTO messages(id,conversation_id,direction,body) VALUES(?,?,'inbound',?)").bind('wa_msg_'+messageKey,conversationId,item.body));
     statements.push(env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
