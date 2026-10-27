@@ -29,8 +29,13 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(!env.META_APP_SECRET)return reply({error:'Meta signature verification is not configured'},503);
   const signature=req.headers.get('x-hub-signature-256')||'';
   if(!/^sha256=[a-f0-9]{64}$/i.test(signature))return reply({error:'Missing or invalid Meta signature'},401);
-  const raw=await req.arrayBuffer();
-  if(raw.byteLength>1048576)return reply({error:'Webhook payload too large'},413);
+  const declaredLength=Number(req.headers.get('content-length')||0);
+  if(declaredLength>1048576)return reply({error:'Webhook payload too large'},413);
+  if(!req.body)return reply({error:'Empty webhook body'},400);
+  const reader=req.body.getReader();const chunks:Uint8Array[]=[];let total=0;
+  try{while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>1048576){await reader.cancel();return reply({error:'Webhook payload too large'},413)}chunks.push(value)}}catch{return reply({error:'Unable to read webhook body'},400)}
+  const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength}
+  const raw=bytes.buffer;
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.META_APP_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);
   const digest=await crypto.subtle.sign('HMAC',key,raw);
   const expected=new Uint8Array(digest),provided=new Uint8Array(signature.slice(7).match(/../g)!.map(x=>parseInt(x,16)));
