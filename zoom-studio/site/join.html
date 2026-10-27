@@ -140,7 +140,7 @@ function onMsg(m){switch(m.t){
  case 'demoted':try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;stopLocal();onStage=false;mode(false);note('You are back in the audience.');break;
  case 'sig':onSig(m.data);break}}
 
-$('inv').onclick=async()=>{$('invrow').hidden=true;local=await getMedia(false);if(over||!joined){stopLocal();return}if(!local){$('invrow').hidden=false;note('Could not use your microphone or camera.');return}
+$('inv').onclick=async()=>{if(over||!joined||onStage||$('invrow').hidden)return;$('invrow').hidden=true;local=await getMedia(false);if(over||!joined){stopLocal();return}if(!local){$('invrow').hidden=false;note('Could not use your microphone or camera.');return}
  $('lv').srcObject=local;onStage=true;mode(true);send({t:'ready',ao:!local.getVideoTracks().length})};
 
 async function onSig(d){try{
