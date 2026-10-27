@@ -23,6 +23,11 @@ if (release && placeholders.length) {
   throw new Error('Release blocked: unresolved Cloudflare resource placeholders: ' + [...new Set(placeholders)].join(', '));
 }
 if (release) {
+  // Never print or store credentials. Require the deploy operator to attest that
+  // Cloudflare secrets and the verified reset-mail sender have been configured.
+  const attestations = ['ACCOUNT3_SECRETS_VERIFIED', 'ACCOUNT3_RESET_MAIL_VERIFIED', 'ACCOUNT3_MIGRATIONS_VERIFIED', 'ACCOUNT3_LIVE_TESTS_VERIFIED'];
+  const missing = attestations.filter(name => process.env[name] !== 'yes');
+  if (missing.length) throw new Error('Release blocked: verification attestations missing: ' + missing.join(', '));
   console.log('RELEASE CONFIGURATION CHECK PASSED — confirm secrets, migrations, security and live tests separately.');
 } else {
   console.log('GLOBAL COMMUNITY DEVELOPMENT PREFLIGHT PASSED — ' + [...new Set(placeholders)].length + ' resource placeholders; deployment readiness NOT certified.');
