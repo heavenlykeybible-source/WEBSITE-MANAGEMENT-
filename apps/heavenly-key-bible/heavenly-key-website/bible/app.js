@@ -239,7 +239,9 @@ async function loadChapter() {
  stop("chapter-audio"); el("verses").replaceChildren(); el("share").disabled = true;
  selectedVerse=null;el("study-editor").hidden=true;
  shareText = ""; message("chapter-title",name+" "+num); message("reader-status","Loading chapter…"); message("audio-status","");
- el("previous").disabled = num === 1; el("next").disabled = num === chapter.options.length;
+ const bookIndex=books.findIndex(item=>item[0]===name);
+ el("previous").disabled = bookIndex===0 && num===1;
+ el("next").disabled = bookIndex===books.length-1 && num===chapter.options.length;
  save("hk-bible-reader-location",[name,num]);
  try {
  const scripture = await getBook(name);
@@ -283,16 +285,7 @@ async function loadChapter() {
  shareText = name+" "+num+" (KJV)\n\n"+valid.map(v=>v.number+" "+v.text).join("\n")+"\n\nHEAVENLY KEY BIBLE";
  el("share").disabled = false;
  }
- {
- message("audio-status","Checking chapter recording…");
- try { const metadata=await api("/api/bible/"+encodeURIComponent(name)+"/"+num+"?metadata=1");if(token!==chapterRequest)return;
- if(!metadata.chapterId){if(!speaking)message("audio-status","No approved recording is available for this chapter yet.");return;}
- const audio = await api("/api/bible/audio?chapterId="+encodeURIComponent(metadata.chapterId)); if(token !== chapterRequest)return;
- const recording = (audio.items||[]).find(x=>approvedPath(x.playbackUrl)&&studyTools.isKjvRecording(x));
- if(recording) { el("chapter-audio").src = recording.playbackUrl; el("chapter-audio").hidden = false; if(!speaking)message("audio-status",recording.sourceLabel || "Bible chapter recording"); }
- else if(!speaking)message("audio-status","No approved recording is available for this chapter yet.");
- } catch { if(token===chapterRequest&&!speaking)message("audio-status","A ministry recording is not available for this chapter. You can still read the complete text."); }
- }
+
  } catch { if(token===chapterRequest)message("reader-status","This chapter could not be loaded. Check your connection and try again."); }
 }
 function renderTracks() {
@@ -349,9 +342,27 @@ window.addEventListener("hk-read-reference",event=>{
  });
 });
 book.addEventListener("change",()=>{chapters();loadChapter();}); chapter.addEventListener("change",loadChapter);
-el("previous").addEventListener("click",()=>{if(Number(chapter.value)>1){chapter.value=String(Number(chapter.value)-1);loadChapter();}});
-el("next").addEventListener("click",()=>{if(Number(chapter.value)<chapter.options.length){chapter.value=String(Number(chapter.value)+1);loadChapter();}});
-el("text-size").addEventListener("input",()=>{el("verses").style.fontSize=el("text-size").value+"px";});
+function turnChapter(direction){
+ const index=books.findIndex(item=>item[0]===book.value), number=Number(chapter.value);
+ if(index<0)return;
+ if(direction<0 && number>1)chapter.value=String(number-1);
+ else if(direction>0 && number<books[index][1])chapter.value=String(number+1);
+ else {const adjacent=books[index+direction];if(!adjacent)return;book.value=adjacent[0];chapters(direction<0?adjacent[1]:1);}
+ loadChapter();
+}
+el("previous").addEventListener("click",()=>turnChapter(-1));
+el("next").addEventListener("click",()=>turnChapter(1));
+// Keep the reader preference on this device without touching saved study data.
+const textSize = el("text-size");
+const textSizeOutput = el("text-size-value");
+function applyTextSize(value) {
+ const size = Math.max(Number(textSize.min), Math.min(Number(textSize.max), Number(value) || 20));
+ textSize.value = String(size);
+ el("verses").style.fontSize = size + "px";
+ textSizeOutput.textContent = size + " px";
+}
+applyTextSize(read("hk-bible-reader-text-size") ?? textSize.value);
+textSize.addEventListener("input",()=>{applyTextSize(textSize.value); save("hk-bible-reader-text-size", Number(textSize.value));});
 el("collection").addEventListener("change",loadPortal); el("search").addEventListener("input",renderTracks); el("refresh").addEventListener("click",loadPortal);
 el("saved-tracks-only").addEventListener("change",renderTracks);
 el("save-track").addEventListener("click",()=>{
