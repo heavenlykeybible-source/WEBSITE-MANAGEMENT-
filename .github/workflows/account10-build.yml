@@ -35,5 +35,22 @@ jobs:
               pass
           else:
               raise AssertionError('Foreign-key enforcement is not active')
+          for label, statement in (
+              ('invalid direction', "INSERT INTO messages(id,conversation_id,direction,body) VALUES('bad','test','unknown','invalid')"),
+              ('invalid destination', "INSERT INTO social_posts(id,body,platform) VALUES('bad','hello','unsupported')"),
+          ):
+              try:
+                  db.execute(statement)
+              except sqlite3.IntegrityError:
+                  pass
+              else:
+                  raise AssertionError(f'{label} was accepted')
+          db.execute("INSERT INTO social_accounts(id,channel,provider_account_ref) VALUES('a','whatsapp_business','provider_1')")
+          try:
+              db.execute("INSERT INTO social_accounts(id,channel,provider_account_ref) VALUES('b','whatsapp_business','provider_1')")
+          except sqlite3.IntegrityError:
+              pass
+          else:
+              raise AssertionError('Duplicate provider account was accepted')
           print('Schema, migrations and basic D1 records validated')
           PY
