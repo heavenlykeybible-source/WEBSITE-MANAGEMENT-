@@ -113,7 +113,8 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
    if(!event)return reply({error:'Event not found'},404);
    if(event.processing_status!=='pending')return reply({error:'Event is not pending'},409);
    if(event.event_type!=='whatsapp_business_account')return reply({error:'Only WhatsApp text messages are supported by this processor'},422);
-   const parsed=JSON.parse(event.payload);const inbound:{sender:string;messageId:string;body:string;account:string}[]=[];
+   const parsed=JSON.parse(event.payload);if(!Array.isArray(parsed.entry))return reply({error:'Invalid stored webhook entries'},422);
+   const inbound:{sender:string;messageId:string;body:string;account:string}[]=[];
    for(const entry of parsed.entry||[])for(const change of entry.changes||[])for(const message of change.value?.messages||[]){
     if(message.type!=='text'||typeof message.text?.body!=='string'||typeof message.from!=='string'||typeof message.id!=='string')continue;
     if(!message.text.body.trim()||message.text.body.length>10000||!idOk(message.id.replace(/[^a-zA-Z0-9:_-]/g,'_').slice(0,120)))continue;
