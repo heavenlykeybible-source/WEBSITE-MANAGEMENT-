@@ -712,14 +712,16 @@ function connect(){try{ws=new WebSocket(RU)}catch(e){want=false;$('gl').textCont
   if(want){setSt('Reconnecting to relay');$('info').textContent='Connection lost. Retrying...';setTimeout(()=>want&&relink().then(ok=>ok&&want&&connect()),Math.min(15000,2000*++retry))}else setSt('Offline')};
  ws.onerror=()=>{}}
 $('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}try{ws.close()}catch(e){}if(liveEnds.length){api('/api/golive/end',{ends:liveEnds});liveEnds=[]}$('gl').textContent='Go live';return}
+ $('gl').disabled=true;try{
  if(ds.some(d=>d.on&&(!d.url.trim()||!d.key.trim()))){$('info').textContent='Complete the server URL and stream key for every enabled destination, or turn it off.';return}
  if(ds.filter(d=>d.on).length+(acct.on?conn.sel.size:0)>10){$('info').textContent='Select at most 10 destinations for one broadcast.';return}
- if(!(await relink())){if(!acct.on)$('info').textContent='Enter your relay address.';return}
+ if(!(await relink()))return;
  outs=ds.filter(d=>d.on&&d.url&&d.key).map(d=>d.url.replace(/\/+$/,'')+'/'+d.key);
  if(acct.on&&conn.sel.size){$('info').textContent='Creating your broadcasts...';
   const r=await api('/api/golive/start',{ids:[...conn.sel],title:$('btl').value.trim()||'Live broadcast',privacy:$('bpr').value});
   if(!r.ok){$('info').textContent=r.error||'Could not create the broadcasts.';if(r.status===401||r.status===402)act.tab(8);return}
   outs.push(...r.dests.map(d=>d.url));liveEnds=r.dests.map(d=>d.end);if(r.errors&&r.errors.length)msg(r.errors.join(' | '))}
  if(!outs.length){$('info').textContent='Add a channel or a destination with a stream key first.';return}
- AC.resume();sent=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect()};
+ AC.resume();sent=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect()
+ }finally{$('gl').disabled=false}};
 </script><script defer src="hk-approved-footer.js"></script></body></html>
