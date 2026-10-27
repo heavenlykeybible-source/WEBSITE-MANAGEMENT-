@@ -4,6 +4,12 @@ on:
     branches:
       - account3-auth-recovery-review-20261027
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'heavenly-key-accounts/account-03-global-christian-community/source/**'
+      - '.github/workflows/account3-auth-review.yml'
 
 permissions:
   contents: read
