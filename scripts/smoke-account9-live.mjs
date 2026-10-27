@@ -27,6 +27,8 @@ try{
     const response=await get(route);
     assert.equal(response.status,200,'Missing deployed editor asset '+route);
     assert.ok((response.headers.get('content-type')||'').includes(mime),'Incorrect MIME for '+route);
+    assert.equal(response.headers.get('x-content-type-options'),'nosniff','Missing MIME protection on '+route);
+    assert.ok(response.headers.get('content-security-policy'),'Missing security policy on '+route);
     assert.ok((await response.arrayBuffer()).byteLength>0,'Empty asset '+route);
   }
   console.log('PASS live editor assets and PWA');
