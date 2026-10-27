@@ -22,6 +22,7 @@ assert.ok(html.includes('Video capture track ended unexpectedly during export')&
 assert.ok(html.includes('Video encoder stopped before export finished')&&html.includes("recorderFailed||rec.state==='inactive'"),'Video export must reject prematurely stopped media encoders');
 assert.ok(html.includes('Source video could not start playback for export')&&html.includes('if(v.paused||v.ended)throw Error'),'Video export must verify playback starts before recording frames');
 assert.ok(html.includes('finally{if(ctx)try{await ctx.close()}catch{}}'),'Audio decoding context must close even after decode errors');
+assert.ok(html.includes('Audio file is too large for browser decoding')&&html.includes("!f.type.startsWith('audio/')"),'Audio input must validate file size and MIME type before browser decoding');
 const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
 assert.ok(srtParser,'Missing SRT time parser');
 const toSeconds=runInNewContext(srtParser+'; parseTime');
