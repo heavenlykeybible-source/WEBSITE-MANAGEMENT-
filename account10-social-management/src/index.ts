@@ -52,6 +52,14 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   const row=await env.DB.prepare('SELECT human_paused FROM conversations WHERE id=?').bind(id).first<{human_paused:number}>();if(!row)return reply({error:'Conversation not found'},404);
   return reply({conversationId:id,automationPaused:!!row.human_paused,providerEnforced:false});
  }
+ if(u.pathname==='/api/activity'&&req.method==='GET'){
+  const [conversations,posts]=await Promise.all([
+    env.DB.prepare('SELECT id,channel,human_paused,requested_human,updated_at FROM conversations ORDER BY updated_at DESC LIMIT 30').all(),
+    env.DB.prepare('SELECT id,platform,status,created_at FROM social_posts ORDER BY created_at DESC LIMIT 30').all()
+  ]);
+  const items=[...(conversations.results||[]).map((v:any)=>({type:'conversation',id:v.id,channel:v.channel,needsHuman:!!v.requested_human,paused:!!v.human_paused,at:v.updated_at})),...(posts.results||[]).map((v:any)=>({type:'post',id:v.id,channel:v.platform,status:v.status,at:v.created_at}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,50);
+  return reply({items,liveProviderEvents:false});
+ }
  if(u.pathname==='/api/dashboard'&&req.method==='GET'){
   const counts=await Promise.all(['conversations','messages','automation_rules','social_accounts','social_posts'].map(async table=>{const row=await env.DB.prepare('SELECT COUNT(*) AS n FROM '+table).first<{n:number}>();return [table,row?.n??0]}));
   const human=await env.DB.prepare('SELECT COUNT(*) AS n FROM conversations WHERE requested_human=1').first<{n:number}>();const paused=await env.DB.prepare('SELECT COUNT(*) AS n FROM conversations WHERE human_paused=1').first<{n:number}>();const drafts=await env.DB.prepare("SELECT COUNT(*) AS n FROM social_posts WHERE status='draft'").first<{n:number}>();return reply({account:10,counts:Object.fromEntries(counts),humanRequests:human?.n??0,pausedConversations:paused?.n??0,postDrafts:drafts?.n??0,liveMessaging:false,livePublishing:false,providerAuthorizationsVerified:false});
