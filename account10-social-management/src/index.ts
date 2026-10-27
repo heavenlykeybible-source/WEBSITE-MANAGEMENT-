@@ -17,6 +17,19 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   const conversation=await env.DB.prepare('SELECT * FROM conversations WHERE id=?').bind(id).first();if(!conversation)return reply({error:'Not found'},404);
   const messages=await env.DB.prepare('SELECT id,direction,body,created_at FROM messages WHERE conversation_id=? ORDER BY created_at DESC LIMIT 100').bind(id).all();return reply({conversation,messages:messages.results});
  }
+ if(u.pathname==='/api/posts'&&req.method==='GET'){
+  const result=await env.DB.prepare('SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts ORDER BY created_at DESC LIMIT 100').all();
+  return reply({items:result.results,publishingConnected:false});
+ }
+ if(u.pathname==='/api/posts'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  const platforms=['facebook_page','instagram_professional','youtube','tiktok'];
+  if(typeof data?.body!=='string'||!data.body.trim()||data.body.length>5000||!platforms.includes(data.platform))return reply({error:'Provide post text and a supported destination'},400);
+  if(data.scheduledAt!==undefined&&(typeof data.scheduledAt!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}/.test(data.scheduledAt)||!Number.isFinite(Date.parse(data.scheduledAt))))return reply({error:'Invalid scheduledAt timestamp'},400);
+  const id=crypto.randomUUID();
+  await env.DB.prepare('INSERT INTO social_posts(id,body,platform,status,scheduled_at) VALUES(?,?,?,?,?)').bind(id,data.body.trim(),data.platform,'draft',data.scheduledAt||null).run();
+  return reply({id,status:'draft',published:false,note:'Saved for review. Publishing is disabled until verified platform authorization and delivery adapters are installed.'},201);
+ }
  if(u.pathname==='/api/takeover'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.paused!=='boolean')return reply({error:'Invalid takeover request'},400);
