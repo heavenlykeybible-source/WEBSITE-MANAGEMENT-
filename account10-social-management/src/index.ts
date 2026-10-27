@@ -136,13 +136,26 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    if(event.event_type!=='whatsapp_business_account')return reply({error:'Only WhatsApp text messages are supported by this processor'},422);
    const parsed=JSON.parse(event.payload);if(!Array.isArray(parsed.entry))return reply({error:'Invalid stored webhook entries'},422);
    const inbound:{sender:string;messageId:string;body:string;account:string}[]=[];
-   for(const entry of parsed.entry){if(!entry||!Array.isArray(entry.changes))continue;for(const change of entry.changes){if(!change||!Array.isArray(change.value?.messages))continue;for(const message of change.value.messages){if(!message||typeof message!=='object')continue;
+   const receipts:{account:string;messageId:string;status:'sent'|'delivered'|'read'|'failed'}[]=[];
+   for(const entry of parsed.entry){if(!entry||!Array.isArray(entry.changes))continue;for(const change of entry.changes){
+    if(!change)continue;
+    const accountId=change.value?.metadata?.phone_number_id;
+    if(Array.isArray(change.value?.statuses)&&typeof accountId==='string'){
+     for(const receipt of change.value.statuses){
+      if(receipt&&typeof receipt.id==='string'&&receipt.id.length<=255&&['sent','delivered','read','failed'].includes(receipt.status)){
+       receipts.push({account:accountId,messageId:receipt.id,status:receipt.status});
+      }
+     }
+    }
+    if(!Array.isArray(change.value?.messages))continue;
+    for(const message of change.value.messages){if(!message||typeof message!=='object')continue;
     if(message.type!=='text'||typeof message.text?.body!=='string'||typeof message.from!=='string'||typeof message.id!=='string')continue;
     if(!message.text.body.trim()||message.text.body.length>10000||!idOk(message.id.replace(/[^a-zA-Z0-9:_-]/g,'_').slice(0,120)))continue;
     if(typeof change.value?.metadata?.phone_number_id!=='string'||!change.value.metadata.phone_number_id.trim())continue;
     inbound.push({sender:message.from,messageId:message.id,body:message.text.body,account:change.value.metadata.phone_number_id});
    }}}
-   if(inbound.length===0||inbound.length>100)return reply({error:'No supported text messages or too many messages'},422);
+   if((inbound.length===0&&receipts.length===0)||inbound.length>100||receipts.length>100)return reply({error:'No supported messages or receipts, or too many records'},422);
+   if(receipts.some(item=>!/^[0-9]{1,30}$/.test(item.account)||!/^[A-Za-z0-9._:-]{1,255}$/.test(item.messageId)))return reply({error:'Invalid WhatsApp receipt identifier'},422);
    if(inbound.some(item=>!item.body.trim()))return reply({error:'Empty inbound message'},422);
    if(inbound.some(item=>item.body.includes('\u0000')))return reply({error:'Invalid message control character'},422);
    if(inbound.some(item=>!/^[A-Za-z0-9._:-]{1,255}$/.test(item.messageId)))return reply({error:'Invalid WhatsApp message ID format'},422);
@@ -159,11 +172,14 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
     statements.push(env.DB.prepare("INSERT OR IGNORE INTO messages(id,conversation_id,direction,body) VALUES(?,?,'inbound',?)").bind('wa_msg_'+messageKey,conversationId,item.body));
     statements.push(env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
    }
+   for(const item of receipts){
+    statements.push(env.DB.prepare("UPDATE whatsapp_delivery_attempts SET delivery_status=CASE WHEN delivery_status='read' AND ? IN ('sent','delivered') THEN delivery_status WHEN delivery_status='delivered' AND ?='sent' THEN delivery_status ELSE ? END,receipt_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE provider_message_id=? AND phone_number_id=?").bind(item.status,item.status,item.status,item.messageId,item.account));
+   }
    statements.push(env.DB.prepare("UPDATE webhook_events SET processing_status='processed' WHERE id=? AND processing_status='pending'").bind(event.id));
    const results=await env.DB.batch(statements);
    if(!(results[results.length-1].meta.changes||0))return reply({error:'Concurrent review; retry'},409);
-   const importedMessages=results.filter((result,index)=>index%3===1&&index<results.length-1).reduce((sum,result)=>sum+(result.meta.changes||0),0);
-   return reply({processed:true,acceptedMessages:inbound.length,importedMessages,duplicateMessages:inbound.length-importedMessages,externalDelivery:false,automationTriggered:false});
+   const importedMessages=results.filter((result,index)=>index%3===1&&index<inbound.length*3).reduce((sum,result)=>sum+(result.meta.changes||0),0);
+   return reply({processed:true,acceptedMessages:inbound.length,importedMessages,duplicateMessages:inbound.length-importedMessages,receiptRecords:receipts.length,externalDelivery:false,automationTriggered:false});
   }catch{return reply({error:'Webhook processing failed; event remains pending if transaction rolled back'},503)}
  }
  if(u.pathname==='/api/webhooks/events/review'&&req.method==='POST'){
