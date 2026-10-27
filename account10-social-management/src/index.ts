@@ -19,6 +19,11 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
  u.pathname=legacy[u.pathname]??u.pathname;
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
  if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
+ if(req.method==='OPTIONS')return reply({error:'Cross-origin API access is disabled'},403);
+ const type=req.headers.get('content-type')||'';
+ if(['POST','PUT','PATCH'].includes(req.method)&&!type.toLowerCase().startsWith('application/json'))return reply({error:'JSON content type required'},415);
+ const size=Number(req.headers.get('content-length')||0);
+ if(size>1048576)return reply({error:'Request exceeds 1 MiB limit'},413);
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
  const provided=req.headers.get('authorization')||'';
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
@@ -42,7 +47,7 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   let body:any;try{body=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!Array.isArray(body?.items)||body.items.length<1||body.items.length>50)return reply({error:'Provide 1 to 50 conversations'},400);
   const validChannels=['whatsapp_business','facebook_messenger','online_assistant'];
-  for(const item of body.items){if(!idOk(item?.id)||!validChannels.includes(item?.channel)||typeof item?.senderId!=='string'||!item.senderId.trim()||item.senderId.length>255||!Array.isArray(item.messages)||item.messages.length>100)return reply({error:'Invalid conversation import'},400);for(const m of item.messages){if(!idOk(m?.id)||!['inbound','outbound','ai'].includes(m?.direction)||typeof m?.body!=='string'||m.body.length>10000)return reply({error:'Invalid message import'},400)}}
+  for(const item of body.items){if(!idOk(item?.id)||!validChannels.includes(item?.channel)||typeof item?.senderId!=='string'||!item.senderId.trim()||item.senderId.length>255||!Array.isArray(item.messages)||item.messages.length>100)return reply({error:'Invalid conversation import'},400);for(const m of item.messages){if(!idOk(m?.id)||!['inbound','outbound','ai','draft'].includes(m?.direction)||typeof m?.body!=='string'||m.body.length>10000)return reply({error:'Invalid message import'},400)}}
   let conversations=0,messages=0;
   for(const item of body.items){await env.DB.prepare('INSERT OR IGNORE INTO conversations(id,channel,sender_id,human_paused,requested_human) VALUES(?,?,?,?,?)').bind(item.id,item.channel,item.senderId,item.humanPaused?1:0,item.requestedHuman?1:0).run();conversations++;for(const m of item.messages){const r=await env.DB.prepare('INSERT OR IGNORE INTO messages(id,conversation_id,direction,body) VALUES(?,?,?,?)').bind(m.id,item.id,m.direction,m.body).run();messages+=r.meta.changes||0}}
   return reply({importedConversations:conversations,newMessages:messages,providerDelivery:false,note:'Account 2 records are not deleted. Verify counts before cutover.'});
