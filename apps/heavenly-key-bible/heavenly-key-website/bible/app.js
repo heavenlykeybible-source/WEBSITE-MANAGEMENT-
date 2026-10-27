@@ -239,7 +239,9 @@ async function loadChapter() {
  stop("chapter-audio"); el("verses").replaceChildren(); el("share").disabled = true;
  selectedVerse=null;el("study-editor").hidden=true;
  shareText = ""; message("chapter-title",name+" "+num); message("reader-status","Loading chapter…"); message("audio-status","");
- el("previous").disabled = num === 1; el("next").disabled = num === chapter.options.length;
+ const bookIndex=books.findIndex(item=>item[0]===name);
+ el("previous").disabled = bookIndex===0 && num===1;
+ el("next").disabled = bookIndex===books.length-1 && num===chapter.options.length;
  save("hk-bible-reader-location",[name,num]);
  try {
  const scripture = await getBook(name);
@@ -340,8 +342,16 @@ window.addEventListener("hk-read-reference",event=>{
  });
 });
 book.addEventListener("change",()=>{chapters();loadChapter();}); chapter.addEventListener("change",loadChapter);
-el("previous").addEventListener("click",()=>{if(Number(chapter.value)>1){chapter.value=String(Number(chapter.value)-1);loadChapter();}});
-el("next").addEventListener("click",()=>{if(Number(chapter.value)<chapter.options.length){chapter.value=String(Number(chapter.value)+1);loadChapter();}});
+function turnChapter(direction){
+ const index=books.findIndex(item=>item[0]===book.value), number=Number(chapter.value);
+ if(index<0)return;
+ if(direction<0 && number>1)chapter.value=String(number-1);
+ else if(direction>0 && number<books[index][1])chapter.value=String(number+1);
+ else {const adjacent=books[index+direction];if(!adjacent)return;book.value=adjacent[0];chapters(direction<0?adjacent[1]:1);}
+ loadChapter();
+}
+el("previous").addEventListener("click",()=>turnChapter(-1));
+el("next").addEventListener("click",()=>turnChapter(1));
 // Keep the reader preference on this device without touching saved study data.
 const textSize = el("text-size");
 const textSizeOutput = el("text-size-value");
