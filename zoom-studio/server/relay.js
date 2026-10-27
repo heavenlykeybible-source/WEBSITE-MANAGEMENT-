@@ -231,7 +231,7 @@ wss.on('connection', (ws, req) => {
         if(s&&(s.ws===ws||(!ws.sid&&a&&!s.ws)))endSession(s);
         if(!ws.sid)ws.close();return;
       }
-      if (m.type !== 'start') return;
+      if (m.type !== 'start' || ws.sid) return;
       const a = auth(m.token); if (!a) return reject('Not allowed. Sign in again.');
       ws.starting = true;
       const dests = await safeDests(Array.isArray(m.dests) ? m.dests : []);
