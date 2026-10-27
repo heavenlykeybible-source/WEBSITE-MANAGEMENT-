@@ -40,4 +40,6 @@ crons = ["0 * * * *"]
 # SESSION_SECRET
 # PASSWORD_PEPPER
 # INTERSERVICE_SECRET
+# RESEND_API_KEY (sending-only key for password reset emails)
+# RESET_EMAIL_FROM (verified sender address)
 
