@@ -1,0 +1,30 @@
+name: Account 3 Recovery Review Checks
+on:
+  push:
+    branches:
+      - account3-auth-recovery-review-20261027
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-03-global-christian-community/source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: heavenly-key-accounts/account-03-global-christian-community/source/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build, static verification, and regression tests
+        run: npm run build
+      - name: Additional integration and care tests
+        run: npm run buildcheck
