@@ -13,7 +13,7 @@
     "db:init:remote": "wrangler d1 execute heavenlykey-social-management-db --remote --file=schema.sql"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20261001.0",
+    "@cloudflare/workers-types": "^4.20250901.0",
     "typescript": "^5.9.3",
     "wrangler": "^4.0.0"
   }
