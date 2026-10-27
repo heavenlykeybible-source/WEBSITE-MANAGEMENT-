@@ -351,7 +351,17 @@ window.addEventListener("hk-read-reference",event=>{
 book.addEventListener("change",()=>{chapters();loadChapter();}); chapter.addEventListener("change",loadChapter);
 el("previous").addEventListener("click",()=>{if(Number(chapter.value)>1){chapter.value=String(Number(chapter.value)-1);loadChapter();}});
 el("next").addEventListener("click",()=>{if(Number(chapter.value)<chapter.options.length){chapter.value=String(Number(chapter.value)+1);loadChapter();}});
-el("text-size").addEventListener("input",()=>{el("verses").style.fontSize=el("text-size").value+"px";});
+// Keep the reader preference on this device without touching saved study data.
+const textSize = el("text-size");
+const textSizeOutput = el("text-size-value");
+function applyTextSize(value) {
+ const size = Math.max(Number(textSize.min), Math.min(Number(textSize.max), Number(value) || 20));
+ textSize.value = String(size);
+ el("verses").style.fontSize = size + "px";
+ textSizeOutput.textContent = size + " px";
+}
+applyTextSize(read("hk-bible-reader-text-size") ?? textSize.value);
+textSize.addEventListener("input",()=>{applyTextSize(textSize.value); save("hk-bible-reader-text-size", Number(textSize.value));});
 el("collection").addEventListener("change",loadPortal); el("search").addEventListener("input",renderTracks); el("refresh").addEventListener("click",loadPortal);
 el("saved-tracks-only").addEventListener("change",renderTracks);
 el("save-track").addEventListener("click",()=>{
