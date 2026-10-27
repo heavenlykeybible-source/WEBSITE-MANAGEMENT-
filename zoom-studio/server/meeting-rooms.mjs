@@ -86,6 +86,7 @@ export class MeetingRooms {
     if(!aud&&d.pass&&!guests.some(w=>{const x=this.data(w);return x.pass===d.pass&&x.stage;})&&h.admitted.includes(d.pass)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<6){d.ok=true;d.stage=true;}
     this.save(ws,d);this.send(ws,{t:'welcome',ice:await meetingICE(this.env,d.room),watch:h.watch,chat:h.audChat,slow:h.slow,stageEligible:!!identity,audience:aud});
     if(d.ok)this.send(ws,{t:'admitted'});
+    if(aud)this.send(host,{t:'viewer-join',gid:d.id});
     if(d.stage)this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});
     else if(!aud)this.send(host,{t:'waiting',gid:d.id,name:d.name,ao:d.ao});
     this.count();return;
@@ -113,12 +114,14 @@ export class MeetingRooms {
     else if(m.t==='kick'){h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.close(g,{t:'kick'});}
     else if(m.t==='mute')this.send(g,{t:'mute',on:!!m.on});
     else if(m.t==='sig'&&gd.stage&&signalPayloadOk(m.data))this.send(g,{t:'sig',data:m.data});
+    else if(m.t==='view-sig'&&gd.aud&&gd.ok&&signalPayloadOk(m.data))this.send(g,{t:'view-sig',data:m.data});
     else if(m.t==='promote'&&gd.aud&&gd.ok){if(!await this.stageAllowed(gd,now))return this.send(host,{t:'note',text:'This participant needs to sign in and rejoin before appearing on stage.'});if(gd.invited&&gd.invitedAt&&now-gd.invitedAt<60000)return;const reserved=this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length;if(this.stage().length+reserved>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});gd.invited=true;gd.invitedAt=now;this.save(g,gd);this.send(g,{t:'promoted'});}
-    else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.count();}
+    else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.send(host,{t:'viewer-join',gid:gd.id});this.count();}
    }
   }else if(d.ok){
    if(m.t==='sig'&&d.stage&&signalPayloadOk(m.data))this.send(host,{t:'sig',from:d.id,data:m.data});
-   else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt>=60000){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});}else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt<60000&&this.stage().length<6){if(!await this.stageAllowed(d,now)){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});return}d.invited=false;d.invitedAt=0;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.includes(d.pass)){h.admitted=h.admitted.concat(d.pass).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
+   else if(m.t==='view-sig'&&d.aud&&signalPayloadOk(m.data))this.send(host,{t:'view-sig',from:d.id,data:m.data});
+   else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt>=60000){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});}else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt<60000&&this.stage().length<6){if(!await this.stageAllowed(d,now)){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});return}this.send(ws,{t:'viewer-end'});this.send(host,{t:'viewer-left',gid:d.id});d.invited=false;d.invitedAt=0;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.includes(d.pass)){h.admitted=h.admitted.concat(d.pass).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
