@@ -45,7 +45,16 @@ try{
   assert.equal(manifest.start_url,'/','Installed editor must start at the public editor');
   assert.equal(manifest.display,'standalone','Installed editor must support standalone display');
   assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length>=2,'Editor needs installable app icons');
-  console.log('PASS installable app manifest');
+  assert.equal(manifest.scope,'/','Installed editor must remain scoped to Account 9 origin');
+  assert.ok(manifest.name&&manifest.short_name,'Installable editor must expose accessible app names');
+  for(const icon of manifest.icons){
+    assert.ok(typeof icon.src==='string'&&icon.src.startsWith('/assets/'),'App icon must use a local asset');
+    assert.equal(icon.type,'image/png','App icons must declare PNG MIME');
+    const iconResponse=await get(icon.src);
+    assert.equal(iconResponse.status,200,'Manifest icon not deployed: '+icon.src);
+    assert.ok((iconResponse.headers.get('content-type')||'').includes('image/png'),'Manifest icon has incorrect MIME: '+icon.src);
+  }
+  console.log('PASS installable app manifest and linked icons');
   for(const path of ['/api/me','/api/projects','/api/media']){
     const result=await get(path);
     assert.equal(result.status,401,'Unauthenticated private API exposed: '+path);
