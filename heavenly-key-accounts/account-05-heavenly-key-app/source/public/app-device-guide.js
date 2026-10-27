@@ -66,6 +66,19 @@
         document.head.append(manifest);
         if (promptEvent && install && /^(android|windows|mac)$/.test(platform)) install.hidden = false;
       }
+      if (/^(android|windows|mac)$/.test(platform)) {
+        const nativeLink = document.createElement('a');
+        nativeLink.className = 'button';
+        nativeLink.textContent = 'Download native installation package';
+        nativeLink.href = '/api/native-download/' + encodeURIComponent(appId) + '/' + platform;
+        nativeLink.hidden = true;
+        nativeLink.setAttribute('download', '');
+        if (open) open.insertAdjacentElement('afterend', nativeLink);
+        try {
+          const available = await fetch(nativeLink.href, {method:'HEAD', cache:'no-store'});
+          nativeLink.hidden = !available.ok;
+        } catch { nativeLink.hidden = true; }
+      }
       if (platform === 'iphone' || platform === 'ipad') {
         status('Open this app in Safari, tap Share, then Add to Home Screen. Native App Store installation is not available here.');
       } else if (!sameOrigin) {
