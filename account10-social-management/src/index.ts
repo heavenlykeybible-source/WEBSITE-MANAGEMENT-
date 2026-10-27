@@ -42,7 +42,12 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(count>100)return reply({error:'Too many webhook entries'},413);
   const types:string[]=[];
   for(const entry of payload.entry||[]){if(!entry||typeof entry!=='object')return reply({error:'Invalid webhook entry'},400);if(Array.isArray(entry.messaging))types.push('messaging');if(Array.isArray(entry.changes))types.push('changes')}
-  return reply({received:true,signatureVerified:true,processed:false,eventEntries:count,eventCategories:[...new Set(types)],note:'Signature verified; event persistence and delivery are not yet enabled. No messages sent.'});
+  if(!env.DB)return reply({error:'Database unavailable'},503);
+  const rawText=new TextDecoder().decode(raw);
+  const eventId='meta_'+Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw))).map(x=>x.toString(16).padStart(2,'0')).join('');
+  let saved;
+  try{saved=await env.DB.prepare("INSERT OR IGNORE INTO webhook_events(id,provider,event_type,payload) VALUES(?,?,?,?)").bind(eventId,'meta',payload.object,rawText).run()}catch{return reply({error:'Webhook inbox unavailable; apply migration 0002'},503)}
+  return reply({received:true,signatureVerified:true,stored:true,duplicate:!(saved.meta.changes||0),processed:false,eventEntries:count,eventCategories:[...new Set(types)],sent:false});
  }
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
  if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
