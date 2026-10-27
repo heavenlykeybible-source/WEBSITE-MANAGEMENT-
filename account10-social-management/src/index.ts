@@ -1,4 +1,4 @@
-interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; ASSETS?: Fetcher }
+interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
@@ -24,6 +24,21 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(!env.META_WEBHOOK_VERIFY_TOKEN)return reply({error:'Webhook verification is not configured'},503);
   if(mode!=='subscribe'||!token||token!==env.META_WEBHOOK_VERIFY_TOKEN||!challenge||!/^[0-9]{1,64}$/.test(challenge))return reply({error:'Webhook verification failed'},403);
   return new Response(challenge,{status:200,headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
+ }
+ if(u.pathname==='/api/webhooks/meta'&&req.method==='POST'){
+  if(!env.META_APP_SECRET)return reply({error:'Meta signature verification is not configured'},503);
+  const signature=req.headers.get('x-hub-signature-256')||'';
+  if(!/^sha256=[a-f0-9]{64}$/i.test(signature))return reply({error:'Missing or invalid Meta signature'},401);
+  const raw=await req.arrayBuffer();
+  if(raw.byteLength>1048576)return reply({error:'Webhook payload too large'},413);
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.META_APP_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const digest=await crypto.subtle.sign('HMAC',key,raw);
+  const expected=new Uint8Array(digest),provided=new Uint8Array(signature.slice(7).match(/../g)!.map(x=>parseInt(x,16)));
+  let mismatch=0;for(let i=0;i<expected.length;i++)mismatch|=expected[i]^provided[i];
+  if(mismatch!==0)return reply({error:'Invalid Meta signature'},401);
+  let payload:any;try{payload=JSON.parse(new TextDecoder().decode(raw))}catch{return reply({error:'Invalid JSON payload'},400)}
+  if(payload?.object!=='page'&&payload?.object!=='instagram'&&payload?.object!=='whatsapp_business_account')return reply({error:'Unsupported Meta event type'},400);
+  return reply({received:true,signatureVerified:true,processed:false,note:'Signature accepted. Event ingestion is not enabled; no messages were sent.'});
  }
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
  if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
