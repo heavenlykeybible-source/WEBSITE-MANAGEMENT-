@@ -22,7 +22,7 @@ jobs:
           from pathlib import Path
           db = sqlite3.connect(':memory:')
           db.execute('PRAGMA foreign_keys = ON')
-          for file in ('schema.sql', 'migrations/0002_webhook_events.sql', 'migrations/0003_conversation_lookup.sql'):
+          for file in ('schema.sql', 'migrations/0002_webhook_events.sql', 'migrations/0003_conversation_lookup.sql', 'migrations/0004_whatsapp_delivery.sql'):
               db.executescript(Path(file).read_text())
           db.execute("INSERT INTO conversations(id,channel,sender_id) VALUES('test','whatsapp_business','123')")
           db.execute("INSERT INTO messages(id,conversation_id,direction,body) VALUES('msg','test','inbound','hello')")
@@ -66,5 +66,19 @@ jobs:
               "WHERE EXISTS(SELECT 1 FROM conversations WHERE id='test' AND human_paused=0 AND requested_human=0)"
           )
           assert resumed.rowcount == 1, 'Automation did not resume'
+          db.execute("INSERT INTO messages(id,conversation_id,direction,body) VALUES('approved','test','outbound','hello')")
+          db.execute("INSERT INTO whatsapp_delivery_attempts(draft_id,phone_number_id) VALUES('approved','123456')")
+          try:
+              db.execute("INSERT INTO whatsapp_delivery_attempts(draft_id,phone_number_id) VALUES('approved','123456')")
+          except sqlite3.IntegrityError:
+              pass
+          else:
+              raise AssertionError('Duplicate delivery attempt accepted')
+          try:
+              db.execute("INSERT INTO whatsapp_delivery_attempts(draft_id,phone_number_id,state) VALUES('bad','123456','sent')")
+          except sqlite3.IntegrityError:
+              pass
+          else:
+              raise AssertionError('Orphan delivery attempt accepted')
           print('Schema, migrations and basic D1 records validated')
           PY
