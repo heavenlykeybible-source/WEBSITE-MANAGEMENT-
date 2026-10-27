@@ -34,3 +34,10 @@ jobs:
         run: npm run build
       - name: Additional integration and care tests
         run: npm run buildcheck
+      - name: Ensure release is blocked until independent verification
+        run: |
+          if node scripts/preflight.mjs --release; then
+            echo 'Release gate unexpectedly passed without attestations'
+            exit 1
+          fi
+          echo 'Release gate correctly blocks unverified deployment'
