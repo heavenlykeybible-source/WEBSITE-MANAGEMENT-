@@ -102,6 +102,7 @@ $('go').onclick=async()=>{
  if(!$('ok').checked){$('pm').textContent='Please tick the box to continue.';return}
  connecting=true;$('go').disabled=true;
  if(!AUD){$('pm').textContent='Please allow your camera and microphone...';local=await getMedia($('ao').checked);
+  if(over){stopLocal();return}
   if(!local){connecting=false;$('go').disabled=false;$('pm').textContent='Please allow your microphone, and your camera if you have one, then tap Join again.';return}
   $('lv').srcObject=local;onStage=true}
  connect()};
