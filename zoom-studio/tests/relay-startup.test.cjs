@@ -253,3 +253,11 @@ test('unexpected media process exit ends the session with a useful error', async
   assert.match(failure.message,/stopped/i);assert.equal(h.socket.readyState,3);
  }
 });
+test('overloaded broadcast input is stopped instead of buffering without limit', async()=>{
+ const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ h.children[2].stdin.writableLength=8*1024*1024;
+ h.socket.emit('message',Buffer.from('media'),true);
+ assert.equal(h.socket.readyState,3);
+ const error=h.socket.sent.map(s=>{try{return JSON.parse(s)}catch{return {}}}).find(m=>m.type==='error');
+ assert.match(error.message,/overloaded/i);
+});
