@@ -240,6 +240,7 @@ wss.on('connection', (ws, req) => {
       let s = sessions.get(a.id);
       const fingerprint=crypto.createHash('sha256').update(JSON.stringify([dests,m.size])).digest('hex');
       if(s&&s.fingerprint!==fingerprint)return reject('A previous broadcast is still running with different destinations. Stop it before starting another.');
+      if(s&&s.ws&&s.ws!==ws&&s.ws.readyState===1)return reject('A broadcast is already connected for this account. Stop it before starting another.');
       if (!s) {
         if (sessions.size >= MAX) return reject('The server is full right now. Try again soon.');
         s = newSession(a.id, dests, m.size, a.pe); sessions.set(a.id, s);
