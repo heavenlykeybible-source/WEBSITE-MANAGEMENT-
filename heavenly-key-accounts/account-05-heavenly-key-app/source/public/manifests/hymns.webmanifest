@@ -1,7 +1,7 @@
 {
   "name": "Hymn Library",
   "short_name": "Hymn Library",
-  "description": "Hymn Library \u2014 Heavenly Key Evangelistic Movement",
+  "description": "Hymn Library — Heavenly Key Evangelistic Movement",
   "id": "/installed/hymns",
   "start_url": "/hymns.html",
   "scope": "/",
@@ -10,13 +10,13 @@
   "theme_color": "#64152f",
   "icons": [
     {
-      "src": "/icons/icon-192.svg",
+      "src": "/icons/hymns.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.svg",
+      "src": "/icons/hymns.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"

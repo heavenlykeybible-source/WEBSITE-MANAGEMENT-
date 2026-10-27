@@ -1,7 +1,7 @@
 {
   "name": "Daily Reading Plan",
   "short_name": "Daily Reading Plan",
-  "description": "Daily Reading Plan \u2014 Heavenly Key Evangelistic Movement",
+  "description": "Daily Reading Plan — Heavenly Key Evangelistic Movement",
   "id": "/installed/daily-reading",
   "start_url": "/devotional.html",
   "scope": "/",
@@ -10,13 +10,13 @@
   "theme_color": "#64152f",
   "icons": [
     {
-      "src": "/icons/icon-192.svg",
+      "src": "/icons/daily-reading.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.svg",
+      "src": "/icons/daily-reading.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"

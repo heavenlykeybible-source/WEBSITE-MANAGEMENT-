@@ -1,7 +1,7 @@
 {
   "name": "My Walk With God",
   "short_name": "My Walk With God",
-  "description": "My Walk With God \u2014 Heavenly Key Evangelistic Movement",
+  "description": "My Walk With God — Heavenly Key Evangelistic Movement",
   "id": "/installed/walk-with-god",
   "start_url": "/walk-offline.html",
   "scope": "/",
@@ -10,13 +10,13 @@
   "theme_color": "#64152f",
   "icons": [
     {
-      "src": "/icons/icon-192.svg",
+      "src": "/icons/walk-with-god.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.svg",
+      "src": "/icons/walk-with-god.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
