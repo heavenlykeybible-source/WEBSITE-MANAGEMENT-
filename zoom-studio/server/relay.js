@@ -10,6 +10,7 @@ const { spawn } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const dns = require('dns').promises;
+const { isIP } = require('net');
 
 const SECRET = process.env.RELAY_SECRET || '', TOKEN = process.env.TOKEN || '';
 if (!SECRET && !TOKEN) { console.error('Set RELAY_SECRET (accounts) or TOKEN (single password).'); process.exit(1); }
@@ -183,14 +184,19 @@ function roomConn(ws) {
   });
 }
 function isPrivate(ip) {
-  if (ip.includes(':')) { const v = ip.toLowerCase(); if (v === '::1' || v === '::' || v.startsWith('fe80') || v.startsWith('fc') || v.startsWith('fd')) return true; const m = v.match(/::ffff:(\d+\.\d+\.\d+\.\d+)$/); return m ? isPrivate(m[1]) : false; }
-  const [a, b] = ip.split('.').map(Number);
-  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
+  const family=isIP(ip);
+  // Only global unicast IPv6 is eligible; this also excludes IPv4-mapped and link-local forms.
+  if(family===6){const parts=ip.split(':'),first=parseInt(parts[0]||'0',16),second=parseInt(parts[1]||'0',16);return first<0x2000||first>0x3fff||(first===0x2001&&second===0xdb8);}
+  if(family!==4)return true;
+  const [a,b,c]=ip.split('.').map(Number);
+  return a===0||a===10||a===127||a>=224||(a===100&&b>=64&&b<=127)||(a===169&&b===254)||(a===172&&b>=16&&b<=31)||(a===192&&(b===168||b===0&&c===0||b===0&&c===2||b===88&&c===99))||(a===198&&(b===18||b===19||b===51&&c===100))||(a===203&&b===0&&c===113);
 }
 async function safeDests(list) {
+  // DNS validation is not a substitute for network egress controls: FFmpeg resolves
+  // the hostname again when connecting. Deny private/reserved egress at the relay host.
   const out = [];
   for (const d of list.slice(0, 10)) {
-    const m = String(d).match(/^rtmps?:\/\/([A-Za-z0-9.-]+)(?::(\d{1,5}))?(?:\/[A-Za-z0-9._~\/?&=%+-]*)?$/); if (!m) continue;
+    const m = String(d).match(/^rtmps?:\/\/([A-Za-z0-9.-]+)(?::(\d{1,5}))?(?:\/[A-Za-z0-9._~\/?&=%+-]*)?$/); if (!m||m[1].length>253||m[1].split('.').some(x=>!x||x.length>63||! /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(x))||(m[2]&&(Number(m[2])<1||Number(m[2])>65535))) continue;
     try { const addrs = await dns.lookup(m[1], { all: true }); if (addrs.length && !addrs.some(a => isPrivate(a.address))) out.push(d); } catch {}
   }
   // Never silently start a partial broadcast when a destination was rejected.
