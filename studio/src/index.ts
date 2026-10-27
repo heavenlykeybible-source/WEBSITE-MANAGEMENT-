@@ -386,6 +386,25 @@ const engine = {
       handover:{pauseAutomationForConversation:true,notifyOwnerOnWhatsApp:true,notificationContains:'request summary and secure dashboard link',conversationHistory:'restricted to authorized staff',resume:'manual'},
       status:'design_only',missing:['verified provider connections','inbound webhooks','conversation storage','owner notification delivery','human takeover enforcement']});
   }
+  // Operator-controlled per-conversation human takeover. Stored separately
+  // for each operator; no unverified claim of provider-side synchronization.
+  if(url.pathname==='/api/social/assistant/takeover'&&request.method==='POST'){
+    const b=await requireJson(request);
+    if(!b||typeof b.conversationId!=='string'||!(/^[a-zA-Z0-9:_-]{1,120}$/).test(b.conversationId)||typeof b.paused!=='boolean')
+      return json({error:'Provide a valid conversationId and paused boolean.'},400);
+    const key='assistant-takeover:'+cap.sub+':'+b.conversationId;
+    await env.LIVE_STATUS_KV.put(key,JSON.stringify({paused:b.paused,updatedAt:new Date().toISOString(),operator:cap.sub}));
+    await audit(env,cap,b.paused?'assistant.takeover':'assistant.resume',b.conversationId);
+    return json({conversationId:b.conversationId,automationPaused:b.paused,saved:true,providerEnforced:false,
+      note:'Local handover state saved; external messaging providers are not connected yet.'});
+  }
+  if(url.pathname==='/api/social/assistant/takeover'&&request.method==='GET'){
+    const id=url.searchParams.get('conversationId')||'';
+    if(!(/^[a-zA-Z0-9:_-]{1,120}$/).test(id))return json({error:'Valid conversationId required.'},400);
+    const raw=await env.LIVE_STATUS_KV.get('assistant-takeover:'+cap.sub+':'+id);
+    let paused=false;try{paused=!!(raw&&JSON.parse(raw).paused);}catch{}
+    return json({conversationId:id,automationPaused:paused,providerEnforced:false});
+  }
   // Per-account auto-reply configuration. Rules are disabled until the official
   // WhatsApp Business webhook and per-user authorization are installed.
   if(url.pathname==='/api/social/whatsapp/rules'&&request.method==='GET'){
