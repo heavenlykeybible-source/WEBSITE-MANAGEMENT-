@@ -287,3 +287,9 @@ test('relay ignores JSON values that are not command objects', async()=>{
  const h=harness();for(const value of ['null','true','42','[]','\"text\"'])h.socket.emit('message',Buffer.from(value),false);
  await flush();assert.equal(h.socket.readyState,1);assert.equal(h.spawns(),0);
 });
+test('oversized text commands are rejected before parsing or starting a session',()=>{
+ const h=harness();
+ h.socket.emit('message',Buffer.from('x'.repeat(20001)),false);
+ assert.equal(h.socket.readyState,3);
+ assert.equal(h.spawns(),0);
+});
