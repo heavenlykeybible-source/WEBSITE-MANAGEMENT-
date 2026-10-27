@@ -37,7 +37,9 @@ function auth(t) {
   }
   return TOKEN && tokOk(t) ? { id: 'owner', pe: 0 } : null;
 }
-const ff = (a) => { const p = spawn('ffmpeg', ['-loglevel', 'warning', ...a]); p.stdin.on('error', () => {}); p.stderr.on('data', d => process.stderr.write(d)); return p; };
+// FFmpeg diagnostics can contain complete destination URLs and private stream keys.
+// Drain stderr without logging it; report process failure without exposing credentials.
+const ff = (a) => { const p = spawn('ffmpeg', ['-loglevel', 'warning', ...a]); p.stdin.on('error', () => {}); p.stderr.on('data', () => {}); p.on('error', () => console.error('Broadcast media process failed to start.')); return p; };
 const dims = (size) => size === 'portrait' ? [720, 1280] : size === 'square' ? [720, 720] : [1280, 720];
 const vf = (w, h) => `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p`;
 const TS = ['-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-b:v', '3000k', '-maxrate', '3000k', '-bufsize', '3000k', '-g', '30',
