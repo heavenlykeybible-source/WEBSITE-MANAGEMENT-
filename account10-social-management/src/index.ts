@@ -127,6 +127,8 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
    if(inbound.some(item=>!/^[A-Za-z0-9._:-]{1,255}$/.test(item.messageId)))return reply({error:'Invalid WhatsApp message ID format'},422);
    if(inbound.some(item=>item.account.length>100||item.sender.length>100||item.messageId.length>255))return reply({error:'Invalid WhatsApp identifier length'},422);
    if(inbound.some(item=>!/^[0-9]{1,30}$/.test(item.account)||!/^[0-9]{1,30}$/.test(item.sender)))return reply({error:'Invalid WhatsApp phone identifier format'},422);
+   const uniqueIds=new Set(inbound.map(item=>item.account+':'+item.messageId));
+   if(uniqueIds.size!==inbound.length)return reply({error:'Duplicate WhatsApp message IDs within event'},422);
    const statements:D1PreparedStatement[]=[];
    for(const item of inbound){
     const senderKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.account+':'+item.sender)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
