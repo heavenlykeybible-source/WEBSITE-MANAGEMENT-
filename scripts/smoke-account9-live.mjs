@@ -4,10 +4,11 @@ const raw=process.env.ACCOUNT9_LIVE_URL;
 if(!raw)throw Error('Set ACCOUNT9_LIVE_URL to the exact approved Account 9 deployment origin.');
 const origin=new URL(raw);
 if(origin.protocol!=='https:'||!['mediaeditor.heavenlykey.org'].includes(origin.hostname)||origin.port||origin.username||origin.password||origin.search||origin.hash||origin.pathname!=='/')throw Error('ACCOUNT9_LIVE_URL must be an HTTPS origin ending in /');
-const controller=new AbortController();
-const timer=setTimeout(()=>controller.abort(),12000);
+// Apply a separate timeout to each request: one slow asset must not consume
+// the entire verification budget for subsequent routes.
+const REQUEST_TIMEOUT_MS=12000;
 try{
-  const get=path=>fetch(new URL(path,origin),{method:'GET',redirect:'error',cache:'no-store',signal:controller.signal,headers:{accept:path.startsWith('/api/')?'application/json':path.endsWith('.js')?'text/javascript':path.endsWith('.json')?'application/json':'text/html'}});
+  const get=path=>fetch(new URL(path,origin),{method:'GET',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(REQUEST_TIMEOUT_MS),headers:{accept:path.startsWith('/api/')?'application/json':path.endsWith('.js')?'text/javascript':path.endsWith('.json')?'application/json':'text/html'}});
   const home=await get('/');
   assert.equal(home.status,200,'Editor must load successfully');
   assert.ok((home.headers.get('content-type')||'').includes('text/html'),'Editor must serve HTML');
@@ -39,6 +40,4 @@ try{
 }catch(error){
   console.error('Account 9 live smoke failed:',error.message);
   process.exitCode=1;
-}finally{
-  clearTimeout(timer);
 }
