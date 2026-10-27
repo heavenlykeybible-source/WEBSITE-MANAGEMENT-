@@ -283,16 +283,7 @@ async function loadChapter() {
  shareText = name+" "+num+" (KJV)\n\n"+valid.map(v=>v.number+" "+v.text).join("\n")+"\n\nHEAVENLY KEY BIBLE";
  el("share").disabled = false;
  }
- {
- message("audio-status","Checking chapter recording…");
- try { const metadata=await api("/api/bible/"+encodeURIComponent(name)+"/"+num+"?metadata=1");if(token!==chapterRequest)return;
- if(!metadata.chapterId){if(!speaking)message("audio-status","No approved recording is available for this chapter yet.");return;}
- const audio = await api("/api/bible/audio?chapterId="+encodeURIComponent(metadata.chapterId)); if(token !== chapterRequest)return;
- const recording = (audio.items||[]).find(x=>approvedPath(x.playbackUrl)&&studyTools.isKjvRecording(x));
- if(recording) { el("chapter-audio").src = recording.playbackUrl; el("chapter-audio").hidden = false; if(!speaking)message("audio-status",recording.sourceLabel || "Bible chapter recording"); }
- else if(!speaking)message("audio-status","No approved recording is available for this chapter yet.");
- } catch { if(token===chapterRequest&&!speaking)message("audio-status","A ministry recording is not available for this chapter. You can still read the complete text."); }
- }
+
  } catch { if(token===chapterRequest)message("reader-status","This chapter could not be loaded. Check your connection and try again."); }
 }
 function renderTracks() {
