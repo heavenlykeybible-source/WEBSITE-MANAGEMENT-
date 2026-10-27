@@ -154,8 +154,11 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   const message=data.message.toLocaleLowerCase();
   const match=rules.results.find(r=>r.keyword.trim()&&message.includes(r.keyword.trim().toLocaleLowerCase()));
   if(!match)return reply({action:'no_match',draftCreated:false,sent:false});
-  const draftId=crypto.randomUUID();
-  await env.DB.prepare("INSERT INTO messages(id,conversation_id,direction,body) VALUES(?,?,'draft',?)").bind(draftId,conversation.id,match.reply).run();
+  if(data.eventId!==undefined&&!idOk(data.eventId))return reply({error:'eventId must be a valid identifier'},400);
+  let draftId=crypto.randomUUID();
+  if(data.eventId){const bytes=new TextEncoder().encode(conversation.id+'|'+data.eventId+'|'+match.id);const digest=await crypto.subtle.digest('SHA-256',bytes);draftId='auto_'+Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,48)}
+  const result=await env.DB.prepare("INSERT OR IGNORE INTO messages(id,conversation_id,direction,body) SELECT ?,id,'draft',? FROM conversations WHERE id=? AND human_paused=0 AND requested_human=0").bind(draftId,match.reply,conversation.id).run();
+  if(!result.meta.changes){const existing=await env.DB.prepare('SELECT id,direction FROM messages WHERE id=?').bind(draftId).first<{id:string;direction:string}>();if(existing)return reply({action:'already_processed',draftId,existingStatus:existing.direction,draftCreated:false,sent:false});return reply({action:'human_review',draftCreated:false,sent:false},409)}
   return reply({action:'draft_created',draftId,ruleId:match.id,draftCreated:true,sent:false,requiresOperatorApproval:true},201);
  }
  if(u.pathname==='/api/automation/evaluate'&&req.method==='POST'){
