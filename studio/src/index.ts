@@ -358,6 +358,19 @@ const engine = {
   }
   if(url.pathname==='/api/playout'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM playout_items WHERE status IN (\'scheduled\',\'playing\') ORDER BY starts_at LIMIT 50').all(); return json({items:r.results});}
 
+  // Public, shareable ministry discovery menu. Links are web URLs, not
+  // unverified app-store downloads; WhatsApp interactive delivery is separate.
+  if(url.pathname==='/api/social/welcome-menu'&&request.method==='GET'){
+    const origin='https://www.heavenlykey.org';
+    const items=[
+      {id:'home',title:'Heavenly Key',url:origin+'/'},
+      {id:'community',title:'Global Christian Community',url:'https://global.heavenlykey.org/'},
+      {id:'radio',title:'Revival Radio',url:'https://radio.heavenlykey.org/'},
+      {id:'bible',title:'Bible and study tools',url:origin+'/'},
+      {id:'apps',title:'Explore ministry apps',url:origin+'/'}
+    ];
+    return json({title:'Welcome to Heavenly Key',prompt:'Welcome! Explore our ministry apps, listen to Revival Radio, or share the Gospel with others.',items:items.map(item=>({...item,openLabel:'Open app',downloadAvailable:false,shareLabel:'Share this app to bless others',shareUrl:item.url})),note:'App download buttons remain unavailable until a verified installation URL exists. This menu is not yet delivered automatically into WhatsApp chats.'});
+  }
   // Per-account auto-reply configuration. Rules are disabled until the official
   // WhatsApp Business webhook and per-user authorization are installed.
   if(url.pathname==='/api/social/whatsapp/rules'&&request.method==='GET'){
