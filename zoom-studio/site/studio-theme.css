@@ -14,3 +14,18 @@ body{max-width:1680px;background:#eaf0fb;color:var(--tx);font-size:15px}
 .hero-copy h1{font-size:clamp(28px,3vw,40px)}.hero-primary,button.pri{background:#ffe799;border-color:#ffe799;color:#122b58}.hero-secondary{border-color:#ffe799}
 .workspace{border-radius:18px;padding:20px;background:#fff}.workspace-header h2{color:#12356c}.cvs{background:#07367b;border-color:#185dc2;border-radius:16px}.cvs canvas{max-height:none;border:2px solid #ffe28c;border-radius:12px}.lb{color:#fff;font-size:13px}.tabs{gap:4px;background:#08449d;border:0;border-radius:12px;padding:4px}.tabs button{color:#fff;font-size:14px;padding:11px}.tabs button.a{background:#fff1bc;color:#102b58;border-color:#fff1bc;border-radius:9px}.feature-help{font-size:14px;background:#fff7db;border-color:#a10f2f;color:#293e60}.workspace button{min-height:44px}.workspace button.go{background:#a10f2f;border-color:#a10f2f;color:white}.workspace section h2{color:#8f1230}.card{border-radius:14px}.card b,.card small,.row label,li,small,.mu{font-size:14px}.card small{line-height:1.45}.workspace :focus-visible{outline:3px solid #a10f2f;outline-offset:2px}
 @media(max-width:540px){.site-nav{padding:14px}.studio-hero{border-radius:14px}.hero-copy{padding:24px}.workspace{padding:12px}.tabs button{font-size:14px}.cards{grid-template-columns:1fr 1fr}}
+
+/* Meeting controls remain connected to the existing room and chat handlers. */
+@media (min-width:1050px){
+ .workspace:has(#t11.a){display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,360px);gap:12px;align-items:start}
+ .workspace:has(#t11.a)>*{grid-column:1 / -1;min-width:0}
+ .workspace:has(#t11.a)>#cvs{grid-column:1;grid-row:2 / span 3;align-self:start}
+ .workspace:has(#t11.a)>#t11{grid-column:2;grid-row:2 / span 3;display:block;max-height:75vh;overflow:auto;overscroll-behavior:contain}
+}
+#t11.a{background:#fff;border:1px solid #d6e0f0;border-radius:16px;padding:16px;box-shadow:0 6px 22px #05265b12}
+#t11 h2{color:#94152f;font-size:16px;border-bottom:1px solid #e8d6d9;padding-bottom:7px;margin:18px 0 8px}
+#t11 li{background:#f6f8fc;border-radius:10px}#t11 button{border-radius:10px;font-size:14px}
+#t11 #grs{background:#ffe492;color:#142c57;border-color:#f5d37b;font-weight:700}
+#t11 #gcs{background:#9d1732;color:#fff;border-color:#9d1732}
+#t11 #gcl{border:1px solid #e3e8f1;border-radius:10px;background:#f8faff;padding:10px;color:#263f64}
+@media(max-width:1049px){#t11.a{margin-top:10px}#t11 .row button{flex-grow:1}}
