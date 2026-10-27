@@ -1,0 +1,16 @@
+name: Account 10 build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+        working-directory: account10-social-management
+      - run: npm run check
+        working-directory: account10-social-management
+      - run: npm run build:check
+        working-directory: account10-social-management
