@@ -362,6 +362,11 @@ const engine = {
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const ch=String(b.channel_name??'').trim(); const ref=String(b.provider_account_ref??'').trim(); if(!ch||!ref||ch.length>100||ref.length>255)return json({error:'Enter valid social account details'},400); if(b.automatable===true)return json({error:'Connect and verify the provider authorization before enabling automatic publishing. A manually entered account reference is not authorization.'},409); const r=await env.DB.prepare('INSERT INTO social_accounts(channel_name,provider_account_ref,automatable,created_by) VALUES(?,?,?,?)').bind(ch,ref,0,cap.sub).run(); return json({account_id:Number(r.meta.last_row_id)},201);
   }
   if(url.pathname==='/api/social/accounts'&&request.method==='GET'){const r=await env.DB.prepare('SELECT account_id,channel_name,status,automatable,created_at FROM social_accounts ORDER BY account_id DESC LIMIT 100').all();return json({items:r.results});}
+  if(url.pathname==='/api/social/automation/readiness'&&request.method==='GET'){
+    const accounts=await env.DB.prepare("SELECT channel_name,status,automatable FROM social_accounts ORDER BY account_id DESC LIMIT 100").all<{channel_name:string,status:string,automatable:number}>();
+    const connected=accounts.results.filter(a=>a.status==='connected'&&a.automatable===1);
+    return json({ready:false,providerAuthorizationVerified:false,scheduledPublishingWorkerInstalled:false,whatsappBusinessMessagingInstalled:false,facebookPagePublishingInstalled:false,connectedAccountRecords:connected.length,message:'Account records and broadcast RTMP destinations are not proof of authorized messaging or automatic post delivery.'});
+  }
 
   if(url.pathname==='/api/distribution/jobs'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM distribution_jobs ORDER BY created_at DESC LIMIT 100').all();return json({items:r.results});}
   if(url.pathname==='/api/recordings'&&request.method==='POST'){
