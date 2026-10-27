@@ -142,7 +142,7 @@ a{color:var(--ac)}
 <p class="mu" id="gst">Guests join from a link in their browser. They need no account. Use headphones so guests do not hear an echo.</p>
 <h2>Waiting room</h2><ul id="gwl"></ul>
 <h2>In the room</h2><ul id="gli"></ul>
-<div class="row"><button id="gar">Arrange camera and guests in a grid</button></div>
+<div class="row"><button id="gar">Arrange camera and guests in a grid</button><button id="ghost20">Host and guest gallery</button></div>
 <h2>Room chat</h2><div id="gcl" class="mu" style="max-height:220px;overflow:auto"></div>
 <div class="row"><input type="text" id="gct" maxlength="300" placeholder="Message to everyone" aria-label="Chat message"><button id="gcs">Send</button></div>
 <label class="mu"><input type="checkbox" id="gcv" checked> Show room chat on the stream (needs a Chat overlay in the scene)</label></section>
@@ -181,6 +181,9 @@ const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({
 let W=1280,H=720;const cx=$('cv').getContext('2d'),px=$('cp').getContext('2d');
 const P={full:[0,0,1,1],left:[0,0,.5,1],right:[.5,0,.5,1],pip:[.703,.611,.273,.274],tl:[.023,.042,.273,.274],lower:[.023,.78,.953,.125],top:[.023,.042,.953,.125],ticker:[0,.92,1,.08],presL:[.03,.14,.62,.7],chatR:[.68,.14,.29,.7],q1:[0,0,.5,.5],q2:[.5,0,.5,.5],q3:[0,.5,.5,.5],q4:[.5,.5,.5,.5]};
 const PN={full:'Full',left:'Left half',right:'Right half',pip:'Corner (bottom right)',tl:'Corner (top left)',lower:'Lower strip',top:'Top strip',ticker:'Bottom ticker bar',presL:'Presenter window',chatR:'Chat panel',q1:'Grid: top left',q2:'Grid: top right',q3:'Grid: bottom left',q4:'Grid: bottom right'};
+
+// The host occupies the left half; guests share the right half in a responsive grid.
+for(let count=1;count<=20;count++){const cols=Math.ceil(Math.sqrt(count/2)),rows=Math.ceil(count/cols);for(let i=0;i<count;i++){const key='guestGallery'+count+'x'+i;P[key]=[.5+(i%cols)*.5/cols,Math.floor(i/cols)/rows,.5/cols,1/rows];PN[key]='Guest gallery '+(i+1)+' of '+count;}}
 const AC=new(window.AudioContext||window.webkitAudioContext)();
 const dest=AC.createMediaStreamDestination(),bus=AC.createGain(),mon=AC.createGain(),an=AC.createAnalyser();
 an.fftSize=128;bus.connect(dest);bus.connect(an);mon.connect(AC.destination);mon.gain.value=.8;
@@ -573,6 +576,7 @@ $('gach').onchange=e=>gsend({t:'audchat',on:e.target.checked});$('gsl').onchange
 $('gar').onclick=()=>{const m=S.filter(s=>s.type==='camera'||s.type==='guest').slice(0,4),it=SC[ed()].items;if(!m.length){msg('Add a camera or admit a guest first.');return}
  const P2=m.length===1?['full']:m.length===2?['left','right']:['q1','q2','q3','q4'];
  m.forEach((s,i)=>{let x=it.find(z=>z.id===s.id);if(!x){place(s,P2[i]);x=it.find(z=>z.id===s.id)}if(x){x.p=P2[i];x.on=true}});ui()};
+$('ghost20').onclick=()=>{const host=S.find(s=>s.type==='camera'),members=S.filter(s=>s.type==='guest').slice(0,20),scene=SC[ed()],it=scene&&scene.items;if(!it||!host){msg('Add the host camera first.');return}const active=[host,...members],ids=new Set(active.map(s=>s.id));for(const item of it){const source=src(item.id);if(source&&(source.type==='camera'||source.type==='guest')&&!ids.has(item.id))item.on=false}active.forEach((s,index)=>{const p=index?'guestGallery'+members.length+'x'+(index-1):members.length?'left':'full';let item=it.find(x=>x.id===s.id);if(!item){place(s,p);item=it.find(x=>x.id===s.id)}if(item){item.p=p;item.on=true}});ui()};
 $('lite').onchange=e=>{const on=e.target.checked;$('low').checked=on;$('anb').checked=!on;animBg=!on;dmeter();if(on)msg('Lite mode is on: lower frame rate, no background animation, smaller stream, and audio-only return for new guests.')};
 let ip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('inst').hidden=false});
 $('inst').onclick=async()=>{if(ip){ip.prompt();ip=null;$('inst').hidden=true}};
