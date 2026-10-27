@@ -121,6 +121,11 @@ test('Messaging and groups: privacy, retry safety, posting permissions and manag
  await assert.rejects(S.groupDetail(env,4,hidden),/unavailable/);
  assert.ok(!(await S.listGroups(env,4)).some(g=>g.group_id===hidden));
  await assert.rejects(S.joinGroup(env,4,hidden),/not found/);
+ for(let i=0;i<101;i++)await S.createGroup(env,1,{...input,name:'Fellowship '+i,visibility:'public'});
+ const firstPage=await S.listGroups(env,4),secondPage=await S.listGroups(env,4,firstPage[firstPage.length-1].group_id);
+ assert.equal(firstPage.length,100);assert.ok(secondPage.length>0);
+ assert.equal(new Set([...firstPage,...secondPage].map(g=>g.group_id)).size,firstPage.length+secondPage.length);
+ assert.ok(![...firstPage,...secondPage].some(g=>g.group_id===hidden));
  }finally{db.close();rmSync(dir,{recursive:true,force:true});}
 });
 
