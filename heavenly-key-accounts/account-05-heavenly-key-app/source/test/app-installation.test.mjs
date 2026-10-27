@@ -13,7 +13,7 @@ test('all published app download entries have valid secure URLs and a device-spe
     const url = new URL(app.url);
     assert.equal(url.protocol, 'https:');
     if (url.origin === 'https://apps.heavenlykey.org') {
-      const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
+      const pathname = url.pathname === '/' ? '/index.html' : url.pathname.endsWith('/') ? url.pathname + 'index.html' : url.pathname;
       assert.ok(existsSync(new URL('.' + pathname, publicDir)), 'missing local destination: ' + pathname);
     }
   }
