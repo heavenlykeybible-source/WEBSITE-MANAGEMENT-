@@ -24,3 +24,18 @@ test('mobile guest controls remain accessible and consent is not hidden', () => 
   assert.doesNotMatch(html, /#oklab\s*\{[^}]*display\s*:\s*none/);
   assert.match(html, /id="inv"/);
 });
+
+test('guest connection has bounded admission and websocket timeouts', () => {
+  assert.match(html, /openTimer=setTimeout\(/);
+  assert.match(html, /joinAckTimer=setTimeout\(/);
+  assert.match(html, /if\(\+\+tries<=4\)/);
+  assert.match(html, /clearTimeout\(joinAckTimer\)/);
+});
+
+test('guest meeting lifecycle closes media and signaling on departure', () => {
+  assert.match(html, /function end\(msg\)/);
+  assert.match(html, /ws&&ws\.close\(\)/);
+  assert.match(html, /pc&&pc\.close\(\)/);
+  assert.match(html, /function stopLocal\(\)/);
+  assert.match(html, /rawMedia\.getTracks\(\)\.forEach\(t=>t\.stop\(\)\)/);
+});
