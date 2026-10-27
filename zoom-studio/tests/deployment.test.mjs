@@ -16,11 +16,21 @@ function configure(extra={}) {
     delete env.MEETINGSPACE_TARGET_ACCOUNT; delete env.MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID;
     delete env.MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED;
     delete env.CLOUDFLARE_ACCOUNT_ID; delete env.CF_ACCOUNT_ID;
+    delete env.MEETING_STAGE_CAP; delete env.MEETING_ROOM_CAP;
     const result=spawnSync(process.execPath,[path.join(dir,'scripts/configure.mjs')],{env:{...env,...extra},encoding:'utf8'});
     const file=path.join(dir,'wrangler.generated.json');
     return {...result,config:fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):null};
   } finally {fs.rmSync(dir,{recursive:true,force:true});}
 }
+test('explicit meeting limits are validated and included in configuration',()=>{
+ const base={MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef',MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'};
+ const good=configure({...base,MEETING_STAGE_CAP:'20',MEETING_ROOM_CAP:'25'});
+ assert.equal(good.status,0);assert.equal(good.config.vars.MEETING_STAGE_CAP,'20');assert.equal(good.config.vars.MEETING_ROOM_CAP,'25');
+ for(const values of [{MEETING_STAGE_CAP:'21'},{MEETING_STAGE_CAP:'NaN'},{MEETING_ROOM_CAP:'101'},{MEETING_ROOM_CAP:'20',MEETING_STAGE_CAP:'20'}]){
+  const bad=configure({...base,...values});assert.notEqual(bad.status,0);assert.equal(bad.config,null);
+ }
+ const defaults=configure(base);assert.equal(defaults.status,0);assert.equal(defaults.config.vars.MEETING_STAGE_CAP,undefined);
+});
 test('Account 8 is the default target and requires explicit credentials',()=>{
  const r=configure();assert.notEqual(r.status,0);assert.equal(r.config,null);
  assert.match(r.stderr,/requires a valid Cloudflare account ID/);
