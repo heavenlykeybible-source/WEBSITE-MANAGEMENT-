@@ -10,6 +10,13 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
  const provided=req.headers.get('authorization')||'';
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
+ if(u.pathname==='/api/automation/rules/import'&&req.method==='POST'){
+  let b:any;try{b=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!Array.isArray(b?.items)||b.items.length<1||b.items.length>100)return reply({error:'Provide 1 to 100 rules'},400);
+  for(const item of b.items){if(typeof item?.keyword!=='string'||!item.keyword.trim()||item.keyword.length>80||typeof item?.reply!=='string'||!item.reply.trim()||item.reply.length>4096)return reply({error:'Invalid rule'},400)}
+  let inserted=0;for(const item of b.items){const keyword=item.keyword.trim().toLowerCase();const existing=await env.DB.prepare('SELECT id FROM automation_rules WHERE keyword=? AND reply=? LIMIT 1').bind(keyword,item.reply.trim()).first();if(existing)continue;await env.DB.prepare('INSERT INTO automation_rules(id,keyword,reply) VALUES(?,?,?)').bind(crypto.randomUUID(),keyword,item.reply.trim()).run();inserted++}
+  return reply({processed:b.items.length,inserted,enabled:false,sourceDataDeleted:false});
+ }
  if(u.pathname==='/api/conversations/import'&&req.method==='POST'){
   let body:any;try{body=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!Array.isArray(body?.items)||body.items.length<1||body.items.length>50)return reply({error:'Provide 1 to 50 conversations'},400);
