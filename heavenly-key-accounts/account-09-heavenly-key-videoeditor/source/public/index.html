@@ -46,7 +46,7 @@ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.ser
 let screenRecorder=null,screenStream=null,screenURL='';
 $('screenstart').onclick=async()=>{
  const start=$('screenstart'),stop=$('screenstop');
- if(!navigator.mediaDevices?.getDisplayMedia||!window.MediaRecorder)return $('vm').textContent='Screen recording is unavailable on this browser or device.';
+ if(!navigator.mediaDevices?.getDisplayMedia||!window.MediaRecorder||typeof MediaRecorder.isTypeSupported!=='function')return $('vm').textContent='Screen recording is unavailable on this browser or device.';
  start.disabled=true;
  try{
   const stream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});screenStream=stream;
