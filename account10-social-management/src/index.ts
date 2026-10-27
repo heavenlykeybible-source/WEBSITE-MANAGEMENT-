@@ -105,6 +105,36 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   const items=[...(conversations.results||[]).map((v:any)=>({type:'conversation',id:v.id,channel:v.channel,needsHuman:!!v.requested_human,paused:!!v.human_paused,at:v.updated_at})),...(posts.results||[]).map((v:any)=>({type:'post',id:v.id,channel:v.platform,status:v.status,at:v.created_at}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,50);
   return reply({items,liveProviderEvents:false});
  }
+ if(u.pathname==='/api/webhooks/events/process'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!idOk(data?.eventId))return reply({error:'Valid eventId required'},400);
+  try{
+   const event=await env.DB.prepare("SELECT id,event_type,payload,processing_status FROM webhook_events WHERE id=?").bind(data.eventId).first<{id:string,event_type:string,payload:string,processing_status:string}>();
+   if(!event)return reply({error:'Event not found'},404);
+   if(event.processing_status!=='pending')return reply({error:'Event is not pending'},409);
+   if(event.event_type!=='whatsapp_business_account')return reply({error:'Only WhatsApp text messages are supported by this processor'},422);
+   const parsed=JSON.parse(event.payload);const inbound:{sender:string;messageId:string;body:string}[]=[];
+   for(const entry of parsed.entry||[])for(const change of entry.changes||[])for(const message of change.value?.messages||[]){
+    if(message.type!=='text'||typeof message.text?.body!=='string'||typeof message.from!=='string'||typeof message.id!=='string')continue;
+    if(!message.text.body.trim()||message.text.body.length>10000||!idOk(message.id.replace(/[^a-zA-Z0-9:_-]/g,'_').slice(0,120)))continue;
+    inbound.push({sender:message.from,messageId:message.id,body:message.text.body});
+   }
+   if(inbound.length===0||inbound.length>100)return reply({error:'No supported text messages or too many messages'},422);
+   const statements:D1PreparedStatement[]=[];
+   for(const item of inbound){
+    const senderKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.sender)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
+    const conversationId='wa_'+senderKey;
+    const messageKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.messageId)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
+    statements.push(env.DB.prepare("INSERT OR IGNORE INTO conversations(id,channel,sender_id) VALUES(?,'whatsapp_business',?)").bind(conversationId,item.sender));
+    statements.push(env.DB.prepare("INSERT OR IGNORE INTO messages(id,conversation_id,direction,body) VALUES(?,?,'inbound',?)").bind('wa_msg_'+messageKey,conversationId,item.body));
+    statements.push(env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
+   }
+   statements.push(env.DB.prepare("UPDATE webhook_events SET processing_status='processed' WHERE id=? AND processing_status='pending'").bind(event.id));
+   const results=await env.DB.batch(statements);
+   if(!(results[results.length-1].meta.changes||0))return reply({error:'Concurrent review; retry'},409);
+   return reply({processed:true,acceptedMessages:inbound.length,externalDelivery:false,automationTriggered:false});
+  }catch{return reply({error:'Webhook processing failed; event remains pending if transaction rolled back'},503)}
+ }
  if(u.pathname==='/api/webhooks/events/review'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.eventId)||!['ignored','failed'].includes(data?.status))return reply({error:'Provide a valid eventId and ignored or failed status'},400);
