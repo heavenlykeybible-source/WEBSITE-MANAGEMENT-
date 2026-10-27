@@ -218,6 +218,7 @@ wss.on('connection', (ws, req) => {
   ws.buf = []; ws.bufBytes = 0;
   const reject = message => { ws.send(JSON.stringify({type:'error', message})); ws.close(); };
   ws.on('message', async (data, isBinary) => {
+    if (!isBinary && data.length > 20000) { ws.close(1009, 'Command too large'); return; }
     if (ws.starting) {
       if (isBinary) { ws.bufBytes += data.length; if (ws.bufBytes > 8 * 1024 * 1024) { ws.buf = []; return ws.close(1009, 'Startup buffer exceeded'); } ws.buf.push(data); }
       else { try { const m=JSON.parse(data.toString());if(m.type==='stop'){const a=auth(m.token),s=a&&sessions.get(a.id);if(s&&!s.ws)endSession(s);ws.cancelled=true;ws.buf=[];ws.close();} } catch {} }
