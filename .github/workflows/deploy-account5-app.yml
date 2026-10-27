@@ -49,6 +49,9 @@ jobs:
         run: |
           test -n "$CLOUDFLARE_API_TOKEN" || { echo '::error::Missing ACCOUNT5_CLOUDFLARE_API_TOKEN'; exit 1; }
           test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo '::error::Missing ACCOUNT5_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
+      - name: Apply private Account 5 download statistics migrations
+        run: npx --no-install wrangler d1 migrations apply heavenly-key-download-counts --remote --config wrangler.toml
+
       - name: Preserve previous healthy existing Worker
         id: release_snapshot
         working-directory: .
