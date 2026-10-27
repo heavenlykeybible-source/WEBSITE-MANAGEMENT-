@@ -35,9 +35,9 @@ test('Visitor homepage: static asset handler remains separate from private APIs'
 });
 test('Owner integrity: app assets cannot reuse Accounts 1-4 D1, KV, R2, auth credentials',()=>{
  const wrangler=content('wrangler.toml');
- assert.match(wrangler,/database_name\\s*=\\s*"heavenly-key-download-counts"/);
- assert.match(wrangler,/bucket_name\\s*=\\s*"heavenly-key-native-releases"/);
- assert.doesNotMatch(wrangler,/\\[\\[kv_namespaces\\]\\]/);
+ assert.match(wrangler,/database_name\s*=\s*"heavenly-key-download-counts"/);
+ assert.match(wrangler,/bucket_name\s*=\s*"heavenly-key-native-releases"/);
+ assert.doesNotMatch(wrangler,/\[\[kv_namespaces\]\]/);
  for(const path of ['src/index.js','public/sw.js','public/app.js']){
   assert.doesNotMatch(content(path),/ACCOUNT_4_TOKEN|HKEM_CONTROL_TOKEN|PASSWORD_PEPPER|D1Database|CONTROL_PASSWORD_HASH/);
  }
