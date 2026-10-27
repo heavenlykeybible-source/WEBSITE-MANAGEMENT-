@@ -15,7 +15,7 @@
   window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
     promptEvent = event;
-    if (install && /^(android|windows|mac)$/.test(platform)) install.hidden = false;
+    if (install && /^(android|windows|mac)$/.test(platform) && document.querySelector('link[rel="manifest"]')) install.hidden = false;
   });
   window.addEventListener('appinstalled', () => {
     promptEvent = null;
@@ -64,6 +64,7 @@
         manifest.rel = 'manifest';
         manifest.href = '/manifests/' + encodeURIComponent(appId) + '.webmanifest';
         document.head.append(manifest);
+        if (promptEvent && install && /^(android|windows|mac)$/.test(platform)) install.hidden = false;
       }
       if (platform === 'iphone' || platform === 'ipad') {
         status('Open this app in Safari, tap Share, then Add to Home Screen. Native App Store installation is not available here.');
