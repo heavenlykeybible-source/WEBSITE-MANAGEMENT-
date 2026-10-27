@@ -327,8 +327,8 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const ids=draft.sender_id.split(':');
   if(ids.length!==2||ids.some(x=>!/^[0-9]{1,30}$/.test(x)))return reply({error:'Invalid WhatsApp conversation identifiers',sent:false},422);
   const [phoneNumberId,recipient]=ids;
-  const account=await env.DB.prepare("SELECT id FROM social_accounts WHERE channel='whatsapp_business' AND provider_account_ref=? LIMIT 1").bind(phoneNumberId).first();
-  if(!account)return reply({error:'WhatsApp account not registered',sent:false},409);
+  const account=await env.DB.prepare("SELECT id FROM social_accounts WHERE channel='whatsapp_business' AND status='verified' AND provider_account_ref=? LIMIT 1").bind(phoneNumberId).first();
+  if(!account)return reply({error:'WhatsApp account not verified; run connection check before sending',sent:false},409);
   if(!draft.body.trim()||draft.body.length>4096)return reply({error:'WhatsApp text must contain 1 to 4096 characters',sent:false},422);
   const recent=await env.DB.prepare("SELECT id FROM messages WHERE conversation_id=(SELECT conversation_id FROM messages WHERE id=?) AND direction='inbound' AND datetime(created_at)>=datetime('now','-24 hours') ORDER BY created_at DESC LIMIT 1").bind(draft.id).first();
   if(!recent)return reply({error:'WhatsApp 24-hour customer service window is not confirmed; free-form message blocked',sent:false},409);
@@ -377,6 +377,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    if(!response.ok)return reply({connected:false,providerStatus:response.status,error:'Meta account authorization check failed',sendPermissionVerified:false},502);
    const result:any=await response.json();
    if(result?.id!==phoneNumberId)return reply({connected:false,error:'Unexpected provider account identifier'},502);
+   await env.DB.prepare("UPDATE social_accounts SET status='verified' WHERE id=? AND channel='whatsapp_business'").bind(account.id).run();
    return reply({connected:true,accountId:account.id,phoneNumberId,resultName:typeof result.verified_name==='string'?result.verified_name:null,sendPermissionVerified:false,webhookSubscriptionVerified:false,note:'Token can read the registered WhatsApp phone number. Sending and webhook delivery require separate verification.'});
   }catch{return reply({connected:false,error:'Meta connection timed out or failed'},502)}
   finally{clearTimeout(timeout)}
