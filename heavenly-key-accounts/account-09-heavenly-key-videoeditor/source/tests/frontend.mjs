@@ -54,6 +54,7 @@ for(const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhanc
   execFileSync(process.execPath,['--check',name],{stdio:'inherit'});
 }
 const timeline=readFileSync('timeline.js','utf8');
+assert.ok(timeline.includes("v.addEventListener('loadedmetadata',()=>{invalidateExport();clips=[];undo=[];redo=[];paint();"),'Loading a different video must clear stale timeline clips and undo history');
 for(const feature of ['clipAdd','clipSplit','clipUndo','clipRedo','clipExport','clipDownload'])
   assert.ok(timeline.includes(feature),'Timeline missing '+feature);
 const voice=readFileSync('voice-studio.js','utf8');
