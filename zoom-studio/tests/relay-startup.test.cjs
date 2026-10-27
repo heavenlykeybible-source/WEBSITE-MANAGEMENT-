@@ -276,3 +276,9 @@ test('a second connection cannot take over an active broadcast', async()=>{
  assert.match(JSON.parse(second.sent[0]).message,/already connected/i);
  assert.equal(h.spawns(),3);
 });
+test('an established relay connection cannot restart its input by sending start again', async()=>{
+ const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ h.socket.emit('message',Buffer.from(start),false);await flush();
+ assert.equal(h.spawns(),3);
+ assert.equal(h.socket.readyState,1);
+});
