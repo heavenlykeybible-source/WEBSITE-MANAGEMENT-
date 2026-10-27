@@ -10,6 +10,14 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
  const provided=req.headers.get('authorization')||'';
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
+ if(u.pathname==='/api/accounts/import'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!Array.isArray(data?.items)||data.items.length<1||data.items.length>100)return reply({error:'Provide 1 to 100 accounts'},400);
+  const channels=['whatsapp_business','facebook_messenger','facebook_page','instagram_professional','youtube','tiktok'];
+  for(const item of data.items){if(!channels.includes(item?.channel)||typeof item?.providerAccountRef!=='string'||!item.providerAccountRef.trim()||item.providerAccountRef.length>255)return reply({error:'Invalid social account'},400)}
+  let inserted=0;for(const item of data.items){const id=crypto.randomUUID();const r=await env.DB.prepare('INSERT OR IGNORE INTO social_accounts(id,channel,provider_account_ref,status) VALUES(?,?,?,?)').bind(id,item.channel,item.providerAccountRef.trim(),'unverified').run();inserted+=r.meta.changes||0}
+  return reply({processed:data.items.length,inserted,authorizationTransferred:false,accountsConnected:false,sourceDataDeleted:false});
+ }
  if(u.pathname==='/api/automation/rules/import'&&req.method==='POST'){
   let b:any;try{b=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!Array.isArray(b?.items)||b.items.length<1||b.items.length>100)return reply({error:'Provide 1 to 100 rules'},400);
