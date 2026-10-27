@@ -17,6 +17,7 @@ assert.ok(html.includes("chunks.some(chunk=>chunk.size>0)")&&html.includes("Scre
 assert.ok(html.includes("typeof MediaRecorder.isTypeSupported!=='function')return $('vm').textContent='Video export")&&html.includes("typeof MediaRecorder.isTypeSupported!=='function')return $('vm').textContent='Screen recording"),'Both recorders must verify codec detection support');
 assert.ok(html.includes('audioCaptured=false')&&html.includes('audioCaptured=true')&&html.includes('the export is silent'),'Video export must explicitly report unavailable source audio capture');
 assert.ok(html.includes('Canvas capture did not produce a video track')&&html.includes('!stream.getVideoTracks().length'),'Canvas export must reject missing video tracks');
+assert.ok(html.includes('v.captureStream||v.mozCaptureStream')&&html.includes('captureVideoStream.call(v)'),'Export must support standard and prefixed browser media capture');
 const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
 assert.ok(srtParser,'Missing SRT time parser');
 const toSeconds=runInNewContext(srtParser+'; parseTime');
