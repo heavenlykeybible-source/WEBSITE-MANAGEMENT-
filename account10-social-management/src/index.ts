@@ -10,6 +10,7 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
  const provided=req.headers.get('authorization')||'';
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
+ if(u.pathname==='/api/readiness'&&req.method==='GET')return reply({account:10,assetsConfigured:!!env.ASSETS,databaseConnected:!!env.DB,adminTokenConfigured:!!env.ADMIN_TOKEN,geminiConfigured:!!env.GEMINI_API_KEY,liveProviderMessaging:false,livePublishing:false,account2MigrationComplete:false});
  if(u.pathname==='/api/conversations'&&req.method==='GET'){
   const result=await env.DB.prepare('SELECT id,channel,human_paused,requested_human,updated_at FROM conversations ORDER BY updated_at DESC LIMIT 100').all();return reply({items:result.results});
  }
