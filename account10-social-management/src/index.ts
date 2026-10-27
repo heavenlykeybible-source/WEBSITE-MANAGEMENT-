@@ -122,6 +122,7 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
    }
    if(inbound.length===0||inbound.length>100)return reply({error:'No supported text messages or too many messages'},422);
    if(inbound.some(item=>item.account.length>100||item.sender.length>100||item.messageId.length>255))return reply({error:'Invalid WhatsApp identifier length'},422);
+   if(inbound.some(item=>!/^[0-9]{1,30}$/.test(item.account)||!/^[0-9]{1,30}$/.test(item.sender)))return reply({error:'Invalid WhatsApp phone identifier format'},422);
    const statements:D1PreparedStatement[]=[];
    for(const item of inbound){
     const senderKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.account+':'+item.sender)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
