@@ -21,6 +21,7 @@ jobs:
           import sqlite3
           from pathlib import Path
           db = sqlite3.connect(':memory:')
+          db.execute('PRAGMA foreign_keys = ON')
           for file in ('schema.sql', 'migrations/0002_webhook_events.sql', 'migrations/0003_conversation_lookup.sql'):
               db.executescript(Path(file).read_text())
           db.execute("INSERT INTO conversations(id,channel,sender_id) VALUES('test','whatsapp_business','123')")
