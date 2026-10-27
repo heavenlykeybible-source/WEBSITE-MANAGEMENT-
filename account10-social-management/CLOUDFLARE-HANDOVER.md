@@ -8,6 +8,7 @@ Last reported: 2026-10-27. This is a handover record, **not** evidence that Clou
 - Development branch: codex/heavenly-key-studio-refinement
 - App directory: account10-social-management/
 - Worker: heavenly-key-social-management
+- **Confirmed Account 10 Cloudflare email:** heavenlykeysocial@gmail.com
 - Cloudflare account label reported by operator: Heavenlykeysocial@gmail.com's Account
 - Plan reported by Cloudflare AI: Free, without additional capabilities
 
