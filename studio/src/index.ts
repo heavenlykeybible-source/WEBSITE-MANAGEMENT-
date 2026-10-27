@@ -386,6 +386,19 @@ const engine = {
       handover:{pauseAutomationForConversation:true,notifyOwnerOnWhatsApp:true,notificationContains:'request summary and secure dashboard link',conversationHistory:'restricted to authorized staff',resume:'manual'},
       status:'design_only',missing:['verified provider connections','inbound webhooks','conversation storage','owner notification delivery','human takeover enforcement']});
   }
+  // Operator-only conversation detail and manual handover controls.
+  if(url.pathname==='/api/social/assistant/conversation'&&request.method==='GET'){
+    const id=url.searchParams.get('id')||'';
+    if(!(/^[a-zA-Z0-9:_-]{1,120}$/).test(id))return json({error:'Valid conversation id required.'},400);
+    const raw=await env.LIVE_STATUS_KV.get('assistant-conversation:'+cap.sub+':'+id);
+    if(!raw)return json({error:'Conversation not found.'},404);
+    try{
+      const record=JSON.parse(raw);
+      const takeover=await env.LIVE_STATUS_KV.get('assistant-takeover:'+cap.sub+':'+id);
+      let automationPaused=false;try{automationPaused=!!(takeover&&JSON.parse(takeover).paused);}catch{}
+      return json({conversation:record,automationPaused,notificationSent:false,providerConnected:false});
+    }catch{return json({error:'Stored conversation is invalid.'},500);}
+  }
   // Secure operator-only conversation intake for approved messaging adapters.
   // Provider verification must occur before an adapter calls this endpoint.
   if(url.pathname==='/api/social/assistant/conversations'&&request.method==='GET'){
