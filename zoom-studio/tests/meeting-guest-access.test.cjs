@@ -32,7 +32,7 @@ function setup(userOverrides = {}) {
   const sockets=[host,guest];
   const r=new Room({getWebSockets:()=>sockets}, {AUTH_SECRET:'secret',MEETINGSPACE_PRIVATE_PREVIEW:'0'});
   const join = token => r.webSocketMessage(guest,JSON.stringify({t:'join',room,key:'invite',name:'Guest',pass:'pass',aud:false,accountToken:token}));
-  return {r,host,guest,join,users,add(){const w=new Socket({role:'',room,until:Date.now()+15000});sockets.push(w);return w;}};
+  return {r,host,guest,join,users,context,add(){const w=new Socket({role:'',room,until:Date.now()+15000});sockets.push(w);return w;}};
 }
 test('anonymous guest joins as audience and cannot be promoted on screen', async()=>{
   const h=setup(); await h.join('');
@@ -165,4 +165,26 @@ test('guest viewer answers a host offer and displays the received media', async(
   context.viewPc.ontrack({streams:[stream]});
   assert.equal(video.srcObject,stream);
   assert.equal(notes.length,0);
+});
+test('locking a room while guest login is being checked prevents entry', async()=>{
+  const h=setup();let resolve;
+  h.context.getUser=()=>new Promise(r=>{resolve=r});
+  const joining=h.join('valid');
+  await new Promise(r=>setImmediate(r));
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+  resolve(h.users['member@example.com']);
+  await joining;
+  assert.equal(h.guest.readyState,3);
+  assert.match(h.guest.messages.at(-1).msg,/locked/i);
+});
+test('simultaneous admissions for one guest do not create duplicate stage entries', async()=>{
+  const h=setup();await h.join('valid');const callbacks=[];
+  h.context.getUser=()=>new Promise(r=>callbacks.push(r));
+  const cmd=JSON.stringify({t:'admit',gid:h.guest.attachment.id});
+  const a=h.r.webSocketMessage(h.host,cmd),b=h.r.webSocketMessage(h.host,cmd);
+  await new Promise(r=>setImmediate(r));
+  callbacks.forEach(r=>r(h.users['member@example.com']));
+  await Promise.all([a,b]);
+  assert.equal(h.r.stage().length,1);
+  assert.equal(h.host.messages.filter(m=>m.t==='joined').length,1);
 });
