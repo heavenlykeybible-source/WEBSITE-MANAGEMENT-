@@ -9,6 +9,12 @@ assert.ok(html.includes("limit>600")&&html.includes("Browser export is limited t
 assert.ok(html.includes("'video/mp4'")&&html.includes("type.startsWith('video/mp4')?'mp4':'webm'"),'Single-video export must select a native MP4 or WebM extension matching its encoder');
 assert.ok(html.includes('function invalidateVideoDownload()')&&html.includes("$('ve').addEventListener('input',invalidateVideoDownload)"),'Video changes must invalidate stale downloads');
 assert.ok(html.includes('if(f.size>2*1024*1024)')&&html.includes('start<0||end<=start||layers.length>=500'),'Caption import and manual entry must reject oversized or invalid input');
+assert.ok(html.includes("if(file.type&&!file.type.startsWith('video/'))"),'Non-video uploads must be rejected before loading');
+assert.ok(html.includes("unknown duration; export unavailable")&&html.includes("!Number.isFinite(duration)||duration<=0"),'Unknown or invalid duration must disable export');
+assert.ok(html.includes("Video playback stopped before export finished")&&!html.includes("v.ended||v.paused){cleanup();resolve()"),'Interrupted source playback must never produce a successful export');
+assert.ok(html.includes("finished.then(()=>{clearTimeout(timeout);resolve()}"),'Video encoder watchdog must be released on success');
+assert.ok(html.includes("chunks.some(chunk=>chunk.size>0)")&&html.includes("Screen recording stopped without saved video"),'Screen recorder must reject empty output');
+assert.ok(html.includes("typeof MediaRecorder.isTypeSupported!=='function')return $('vm').textContent='Video export")&&html.includes("typeof MediaRecorder.isTypeSupported!=='function')return $('vm').textContent='Screen recording"),'Both recorders must verify codec detection support');
 const srtParser=html.match(/function parseTime\(s\)\{[^\n]+\}/)?.[0];
 assert.ok(srtParser,'Missing SRT time parser');
 const toSeconds=runInNewContext(srtParser+'; parseTime');
