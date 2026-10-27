@@ -14,3 +14,19 @@ jobs:
         working-directory: account10-social-management
       - run: npm run build:check
         working-directory: account10-social-management
+      - name: Validate D1 schema and migrations in SQLite
+        working-directory: account10-social-management
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          from pathlib import Path
+          db = sqlite3.connect(':memory:')
+          for file in ('schema.sql', 'migrations/0002_webhook_events.sql', 'migrations/0003_conversation_lookup.sql'):
+              db.executescript(Path(file).read_text())
+          db.execute("INSERT INTO conversations(id,channel,sender_id) VALUES('test','whatsapp_business','123')")
+          db.execute("INSERT INTO messages(id,conversation_id,direction,body) VALUES('msg','test','inbound','hello')")
+          db.execute("INSERT INTO webhook_events(id,provider,event_type,payload) VALUES('event','meta','whatsapp_business_account','{}')")
+          assert db.execute("SELECT COUNT(*) FROM messages").fetchone()[0] == 1
+          assert db.execute("PRAGMA foreign_key_check").fetchall() == []
+          print('Schema, migrations and basic D1 records validated')
+          PY
