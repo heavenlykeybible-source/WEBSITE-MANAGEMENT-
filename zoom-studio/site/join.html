@@ -114,7 +114,7 @@ function connect(){
  clearTimeout(openTimer);openTimer=setTimeout(()=>{if(!over&&ws===currentSocket&&currentSocket.readyState===WebSocket.CONNECTING)currentSocket.close()},12000);
  ws.onopen=()=>{clearTimeout(openTimer);openTimer=null;if(over||ws!==currentSocket)return;send({t:'join',room,key,name:$('nm').value.trim(),pass,aud:AUD&&!onStage,ao:$('ao').checked});clearTimeout(joinAckTimer);joinAckTimer=setTimeout(()=>{if(!over&&ws===currentSocket&&currentSocket.readyState===WebSocket.OPEN)currentSocket.close()},20000);if(!joined)show('wait')};
  ws.onmessage=e=>{if(over||ws!==currentSocket)return;let m;try{m=JSON.parse(e.data)}catch{return}onMsg(m)};
- ws.onclose=()=>{if(over||ws!==currentSocket)return;clearTimeout(openTimer);openTimer=null;clearTimeout(joinAckTimer);joinAckTimer=null;joined=false;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
+ ws.onclose=()=>{if(over||ws!==currentSocket)return;invitationEpoch++;clearTimeout(openTimer);openTimer=null;clearTimeout(joinAckTimer);joinAckTimer=null;joined=false;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;pend=[];show('wait');if(++tries<=4){$('ws').textContent='Connection lost. Reconnecting...';setTimeout(connect,Math.min(8000,1000*2**tries))}else end('The connection was lost. Open the invite link again to rejoin.')};
  ws.onerror=()=>{}}
 
 function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
@@ -135,7 +135,7 @@ function onMsg(m){switch(m.t){
  case 'watch':setWatch(m.url);break;
  case 'audchat':note(m.on?'Audience chat is on.':'The host turned audience chat off.');break;
  case 'slow':note(m.sec?'Slow mode: one message every '+m.sec+' seconds.':'Slow mode is off.');break;
- case 'promoted':if(!onStage)$('invrow').hidden=false;break;
+ case 'promoted':if(!onStage){invitationEpoch++;$('invrow').hidden=false}break;
  case 'invitation-expired':invitationEpoch++;$('invrow').hidden=true;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();local=null;onStage=false;mode(false);note('Speaker invitation expired. Please ask the host to invite you again.');break;
  case 'demoted':invitationEpoch++;try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;stopLocal();onStage=false;mode(false);note('You are back in the audience.');break;
  case 'sig':onSig(m.data);break}}
