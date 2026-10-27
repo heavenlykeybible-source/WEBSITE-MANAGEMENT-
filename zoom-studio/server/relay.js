@@ -192,7 +192,8 @@ async function safeDests(list) {
     const m = String(d).match(/^rtmps?:\/\/([A-Za-z0-9.-]+)(?::(\d{1,5}))?(?:\/[A-Za-z0-9._~\/?&=%+-]*)?$/); if (!m) continue;
     try { const addrs = await dns.lookup(m[1], { all: true }); if (addrs.length && !addrs.some(a => isPrivate(a.address))) out.push(d); } catch {}
   }
-  return out;
+  // Never silently start a partial broadcast when a destination was rejected.
+  return out.length === list.length ? out : [];
 }
 wss.on('connection', (ws, req) => {
   const allowed = process.env.ALLOWED_ORIGIN;
@@ -210,7 +211,7 @@ wss.on('connection', (ws, req) => {
       ws.starting = true;
       const dests = await safeDests(Array.isArray(m.dests) ? m.dests : []);
       if (ws.readyState !== 1) return;
-      if (!dests.length) { ws.send('No valid destinations'); return ws.close(); }
+      if (!dests.length) { ws.send('A destination is invalid or unavailable. Check all destination URLs and try again.'); return ws.close(); }
       let s = sessions.get(a.id);
       if (!s) {
         if (sessions.size >= MAX) { ws.send('The server is full right now. Try again soon.'); return ws.close(); }
