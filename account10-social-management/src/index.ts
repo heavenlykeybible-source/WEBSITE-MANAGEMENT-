@@ -113,7 +113,9 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   }catch{return reply({error:'Webhook inbox unavailable; apply migration 0002'},503)}
  }
  if(u.pathname==='/api/webhooks/events'&&req.method==='GET'){
-  const limit=Math.min(100,Math.max(1,Number(u.searchParams.get('limit')||25)||25));
+  const limitParam=u.searchParams.get('limit')||'25';
+  if(!/^[0-9]{1,3}$/.test(limitParam)||Number(limitParam)<1||Number(limitParam)>100)return reply({error:'limit must be an integer from 1 to 100'},400);
+  const limit=Number(limitParam);
   try{
    const result=await env.DB.prepare('SELECT id,provider,event_type,processing_status,received_at FROM webhook_events ORDER BY received_at DESC,id DESC LIMIT ?').bind(limit).all();
    const counts=await env.DB.prepare('SELECT processing_status,COUNT(*) AS total FROM webhook_events GROUP BY processing_status').all();
