@@ -18,3 +18,6 @@ body.gc-auth-page .account-panel,body.gc-auth-page #page-root>.card{max-width:48
 /* Keep the sign-in task clear; community content belongs after authentication. */
 /* Preserve the illustrated WhatsApp-style authentication background. */
 body.gc-auth-page .hero,body.gc-auth-page .social-sidebar,body.gc-auth-page .social-rail,body.gc-auth-page .hk-official-feed,body.gc-auth-page footer{display:none!important}body.gc-auth-page .account-panel{box-shadow:0 4px 20px #102b5010!important;border-radius:14px!important}body.gc-auth-page .account-form input:not([type=checkbox]){background:white!important}body.gc-auth-page .account-tabs{display:flex;gap:8px}body.gc-auth-page .account-tabs button{flex:1}body.gc-auth-page .gc-auth-motto{font-size:13px}
+
+/* Keep the existing illustrated background; improve registration guidance readability. */
+.gc-auth-page .account-form .password-hint{font-size:14px}
