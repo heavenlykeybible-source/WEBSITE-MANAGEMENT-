@@ -34,6 +34,18 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   for(const item of body.items){await env.DB.prepare('INSERT OR IGNORE INTO conversations(id,channel,sender_id,human_paused,requested_human) VALUES(?,?,?,?,?)').bind(item.id,item.channel,item.senderId,item.humanPaused?1:0,item.requestedHuman?1:0).run();conversations++;for(const m of item.messages){const r=await env.DB.prepare('INSERT OR IGNORE INTO messages(id,conversation_id,direction,body) VALUES(?,?,?,?)').bind(m.id,item.id,m.direction,m.body).run();messages+=r.meta.changes||0}}
   return reply({importedConversations:conversations,newMessages:messages,providerDelivery:false,note:'Account 2 records are not deleted. Verify counts before cutover.'});
  }
+ if(u.pathname==='/api/conversations'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!idOk(data?.id)||!allowed.has(data?.channel)||typeof data?.senderId!=='string'||!data.senderId.trim()||data.senderId.length>255)return reply({error:'Invalid conversation'},400);
+  const r=await env.DB.prepare('INSERT OR IGNORE INTO conversations(id,channel,sender_id) VALUES(?,?,?)').bind(data.id,data.channel,data.senderId.trim()).run();return reply({id:data.id,created:!!r.meta.changes,providerConnected:false},r.meta.changes?201:200)
+ }
+ if(u.pathname==='/api/messages/import'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!Array.isArray(data?.items)||data.items.length<1||data.items.length>100)return reply({error:'Provide 1–100 messages'},400);
+  for(const m of data.items){if(!idOk(m?.id)||!idOk(m?.conversationId)||!['inbound','outbound','ai','draft'].includes(m?.direction)||typeof m?.body!=='string'||m.body.length>10000)return reply({error:'Invalid imported message'},400)}
+  const ids=[...new Set(data.items.map((m:any)=>m.conversationId))];for(const id of ids){if(!await env.DB.prepare('SELECT id FROM conversations WHERE id=?').bind(id).first())return reply({error:'Unknown conversation: '+id},400)}
+  let inserted=0;for(const m of data.items){const r=await env.DB.prepare('INSERT OR IGNORE INTO messages(id,conversation_id,direction,body) VALUES(?,?,?,?)').bind(m.id,m.conversationId,m.direction,m.body).run();inserted+=r.meta.changes||0}return reply({processed:data.items.length,inserted,sourceDataDeleted:false,providerDelivery:false})
+ }
  if(u.pathname==='/api/messages'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.body!=='string'||!data.body.trim()||data.body.length>10000)return reply({error:'Invalid message'},400);
