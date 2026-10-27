@@ -56,6 +56,9 @@ jobs:
       - name: Type check and verify complete application
         run: npm run build
 
+      - name: Verify release gate
+        run: node scripts/preflight.mjs --release
+
       - name: Confirm Cloudflare API credentials
         shell: bash
         env:
