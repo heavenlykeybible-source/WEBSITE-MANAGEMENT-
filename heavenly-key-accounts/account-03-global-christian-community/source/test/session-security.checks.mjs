@@ -60,3 +60,12 @@ test('revoking one device preserves another device and legacy TTL sessions',asyn
 test('missing revocation migration denies authentication',async()=>{
  const f=fixture();try{const id=await auth.createSession(f.env,f.user);f.db.exec('DROP TABLE revoked_sessions');assert.equal(await auth.getSession(f.request(id),f.env),null);await assert.rejects(auth.destroySession(f.request(id),f.env));}finally{f.db.close();}
 });
+test('password version invalidates old, legacy and concurrently issued sessions',async()=>{
+ const f=fixture();try{const existing=await auth.createSession(f.env,f.user),oldVersion=0;
+ f.db.exec('UPDATE users SET session_version=session_version+1 WHERE user_id=1');
+ assert.equal(await auth.getSession(f.request(existing),f.env),null);
+ const stale=await auth.createSession(f.env,f.user,oldVersion);assert.equal(await auth.getSession(f.request(stale),f.env),null);
+ const fresh=await auth.createSession(f.env,f.user);assert.equal((await auth.getSession(f.request(fresh),f.env)).userId,1);
+ f.kv.set('session:'+fresh,JSON.stringify(f.user));assert.equal(await auth.getSession(f.request(fresh),f.env),null);
+ }finally{f.db.close();}
+});
