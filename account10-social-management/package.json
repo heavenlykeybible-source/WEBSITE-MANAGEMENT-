@@ -1,0 +1,18 @@
+{
+  "name": "heavenly-key-social-management",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "db:local": "wrangler d1 execute heavenlykey-social-management-db --local --file=schema.sql",
+    "db:migrate:local": "wrangler d1 execute heavenlykey-social-management-db --local --file=migrations/0002_webhook_events.sql && wrangler d1 execute heavenlykey-social-management-db --local --file=migrations/0003_conversation_lookup.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20261001.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.0.0"
+  }
+}
