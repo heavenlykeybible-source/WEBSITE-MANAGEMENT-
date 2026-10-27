@@ -52,3 +52,16 @@ service = "heavenlykey-audio-hymns"
 [[services]]
 binding = "DAILY_READING_APP"
 service = "heavenlykey-daily-reading"
+
+# Provision these resources in Cloudflare Account 5 before enabling native packages.
+# Replace the placeholder database ID with the real D1 database ID, then apply migrations.
+# [[d1_databases]]
+# binding = "DOWNLOAD_DB"
+# database_name = "heavenly-key-download-counts"
+# database_id = "REPLACE_WITH_ACCOUNT5_D1_DATABASE_ID"
+#
+# [[r2_buckets]]
+# binding = "NATIVE_RELEASES"
+# bucket_name = "heavenly-key-native-releases"
+#
+# Set DOWNLOAD_ADMIN_TOKEN with: wrangler secret put DOWNLOAD_ADMIN_TOKEN
