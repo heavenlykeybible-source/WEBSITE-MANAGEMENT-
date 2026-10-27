@@ -1,4 +1,4 @@
-interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; ASSETS?: Fetcher }
+interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
@@ -17,6 +17,14 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
  '/api/social/automation/readiness':'/api/automation/readiness'
  };
  u.pathname=legacy[u.pathname]??u.pathname;
+ if(u.pathname==='/api/webhooks/meta'&&req.method==='GET'){
+  const mode=u.searchParams.get('hub.mode');
+  const token=u.searchParams.get('hub.verify_token');
+  const challenge=u.searchParams.get('hub.challenge');
+  if(!env.META_WEBHOOK_VERIFY_TOKEN)return reply({error:'Webhook verification is not configured'},503);
+  if(mode!=='subscribe'||!token||token!==env.META_WEBHOOK_VERIFY_TOKEN||!challenge||!/^[0-9]{1,64}$/.test(challenge))return reply({error:'Webhook verification failed'},403);
+  return new Response(challenge,{status:200,headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
+ }
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
  if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
  if(req.method==='OPTIONS')return reply({error:'Cross-origin API access is disabled'},403);
