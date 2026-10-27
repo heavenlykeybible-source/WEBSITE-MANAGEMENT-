@@ -39,3 +39,18 @@ test('guest meeting lifecycle closes media and signaling on departure', () => {
   assert.match(html, /function stopLocal\(\)/);
   assert.match(html, /rawMedia\.getTracks\(\)\.forEach\(t=>t\.stop\(\)\)/);
 });
+
+
+test('broadcast links require HTTPS and trusted YouTube hostnames', () => {
+  assert.match(html, /parsed\.protocol!=='https:'/);
+  assert.match(html, /parsed\.username\|\|parsed\.password/);
+  assert.match(html, /parsed\.hostname==='youtube\.com'/);
+  assert.match(html, /parsed\.hostname==='youtu\.be'/);
+  assert.match(html, /youtube-nocookie\.com\/embed/);
+});
+
+test('expired stage invitations invalidate pending camera access', () => {
+  assert.match(html, /case 'invitation-expired':invitationEpoch\+\+/);
+  assert.match(html, /case 'demoted':invitationEpoch\+\+/);
+  assert.match(html, /epoch!==invitationEpoch/);
+});
