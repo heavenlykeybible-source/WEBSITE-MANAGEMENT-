@@ -49,7 +49,6 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(count>100)return reply({error:'Too many webhook entries'},413);
   const types:string[]=[];
   for(const entry of payload.entry||[]){if(!entry||typeof entry!=='object')return reply({error:'Invalid webhook entry'},400);if(Array.isArray(entry.messaging))types.push('messaging');if(Array.isArray(entry.changes))types.push('changes')}
-  if(!env.DB)return reply({error:'Database unavailable'},503);
   const rawText=new TextDecoder().decode(raw);
   const eventId='meta_'+Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw))).map(x=>x.toString(16).padStart(2,'0')).join('');
   let saved;
