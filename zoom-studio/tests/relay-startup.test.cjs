@@ -282,3 +282,8 @@ test('an established relay connection cannot restart its input by sending start 
  assert.equal(h.spawns(),3);
  assert.equal(h.socket.readyState,1);
 });
+
+test('relay ignores JSON values that are not command objects', async()=>{
+ const h=harness();for(const value of ['null','true','42','[]','\"text\"'])h.socket.emit('message',Buffer.from(value),false);
+ await flush();assert.equal(h.socket.readyState,1);assert.equal(h.spawns(),0);
+});
