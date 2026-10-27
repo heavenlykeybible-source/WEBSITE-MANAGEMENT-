@@ -141,7 +141,8 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
    statements.push(env.DB.prepare("UPDATE webhook_events SET processing_status='processed' WHERE id=? AND processing_status='pending'").bind(event.id));
    const results=await env.DB.batch(statements);
    if(!(results[results.length-1].meta.changes||0))return reply({error:'Concurrent review; retry'},409);
-   return reply({processed:true,acceptedMessages:inbound.length,importedMessages:results.filter((result,index)=>index%3===1&&index<results.length-1).reduce((sum,result)=>sum+(result.meta.changes||0),0),externalDelivery:false,automationTriggered:false});
+   const importedMessages=results.filter((result,index)=>index%3===1&&index<results.length-1).reduce((sum,result)=>sum+(result.meta.changes||0),0);
+   return reply({processed:true,acceptedMessages:inbound.length,importedMessages,duplicateMessages:inbound.length-importedMessages,externalDelivery:false,automationTriggered:false});
   }catch{return reply({error:'Webhook processing failed; event remains pending if transaction rolled back'},503)}
  }
  if(u.pathname==='/api/webhooks/events/review'&&req.method==='POST'){
