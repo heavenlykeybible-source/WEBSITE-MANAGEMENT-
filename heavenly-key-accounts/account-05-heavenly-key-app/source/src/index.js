@@ -3,6 +3,7 @@
 import {routeIndependentApp} from './independent-apps.js';
 import {memberGateway} from './member-gateway.js';
 import {handleSiteSync} from './site-sync.js';
+import {handleNativeDownloads} from './native-downloads.js';
 const JSON_HEADERS={
   "content-type":"application/json; charset=utf-8",
   "cache-control":"no-store",
@@ -43,6 +44,7 @@ export function createWorker(upstreamFetch=fetch) {
 
   async fetch(request, env) {
     const url = new URL(request.url);
+    const nativeDownload=await handleNativeDownloads(request,env);if(nativeDownload)return nativeDownload;
     const independent=await routeIndependentApp(request,env);if(independent)return independent;
     if(url.pathname==='/api/site-sync')return handleSiteSync(request,env,upstreamFetch);
     if(url.pathname.startsWith('/api/member/'))return memberGateway(request,env,upstreamFetch);
