@@ -188,3 +188,34 @@ test('simultaneous admissions for one guest do not create duplicate stage entrie
   assert.equal(h.r.stage().length,1);
   assert.equal(h.host.messages.filter(m=>m.t==='joined').length,1);
 });
+test('failed viewer connection is retried and stopping removes the peer', async()=>{
+ const html=fs.readFileSync(require('node:path').join(__dirname,'../site/index.html'),'utf8');
+ const start=html.indexOf('function viewRemove(id)'),end=html.indexOf('async function gAdd(',start);
+ assert.ok(start>=0&&end>start);
+ const peers=[],timers=[],signals=[],stream={getTracks:()=>[{kind:'video'}],addTrack(){}};
+ class PC {
+  constructor(){this.connectionState='new';this.signalingState='stable';peers.push(this);}
+  addTrack(){}
+  async createOffer(){return {type:'offer',sdp:'v=0'};}
+  async setLocalDescription(d){this.localDescription=d;}
+  close(){this.connectionState='closed';}
+ }
+ const context={
+  viewers:new Map(),viewStream:null,gice:[],gws:{},RTCPeerConnection:PC,
+  $:id=>({captureStream:()=>stream}),dest:{stream:{getAudioTracks:()=>[]}},
+  gsend:m=>signals.push(m),gSt:()=>{},
+  setTimeout:f=>{timers.push(f);return timers.length},clearTimeout:()=>{}
+ };
+ vm.runInNewContext(html.slice(start,end),context);
+ await context.viewAdd('guest');
+ assert.equal(peers.length,1);
+ peers[0].connectionState='failed';peers[0].onconnectionstatechange();
+ assert.equal(timers.length,1);timers.shift()();
+ await new Promise(r=>setImmediate(r));
+ assert.equal(peers.length,2);assert.equal(peers[0].connectionState,'closed');
+ assert.equal(context.viewers.size,1);
+ context.viewRemove('guest');
+ assert.equal(context.viewers.size,0);
+ assert.equal(peers[1].connectionState,'closed');
+ assert.equal(signals.filter(m=>m.t==='view-sig').length,2);
+});
