@@ -89,3 +89,71 @@ test('start button stays disabled while the relay settings are being checked', a
   await pending;
   assert.equal(buttons.gl.disabled, false);
 });
+
+test('relay rejects invalid credentials with a terminal error', () => {
+  const h = harness();
+  h.socket.emit('message', Buffer.from(JSON.stringify({type:'start', token:'wrong'})), false);
+  assert.equal(h.socket.readyState, 3);
+  assert.equal(JSON.parse(h.socket.sent[0]).type, 'error');
+  assert.equal(h.spawns(), 0);
+});
+
+test('relay rejects invalid destinations with a terminal error', async () => {
+  const h = harness();
+  h.socket.emit('message', Buffer.from(JSON.stringify({type:'start', token:'test-password-123', dests:['http://invalid']})), false);
+  await flush();
+  assert.equal(h.socket.readyState, 3);
+  assert.equal(JSON.parse(h.socket.sent[0]).type, 'error');
+  assert.equal(h.spawns(), 0);
+});
+
+test('terminal relay error stops retrying and closes created platform broadcasts', async () => {
+  const html = fs.readFileSync(require('node:path').join(__dirname, '../site/index.html'), 'utf8');
+  const start = html.indexOf('let want=false,retry=0,outs=[];');
+  const end = html.indexOf("$('gl').onclick=async", start);
+  assert.ok(start >= 0 && end > start);
+  const elements = { gl: {}, info: {}, low: { checked:false }, st: { classList:{toggle(){}} } };
+  const calls = [], sockets = [];
+  class Socket {
+    constructor() { this.readyState=1; sockets.push(this); }
+    close() { this.readyState=3; if (this.onclose) this.onclose(); }
+  }
+  const context = {
+    $: id => elements[id], WebSocket: Socket, RU:'wss://relay.test', RT:'token',
+    ws:null, rec:null, liveEnds:['platform-end'], api:(path,body)=>{calls.push({path,body});},
+    setSt:(text)=>{elements.st.textContent=text;}, setTimeout:()=>{throw new Error('must not retry');},
+    console
+  };
+  vm.runInNewContext(html.slice(start,end) + '; want=true; connect();', context);
+  sockets[0].onmessage({data:JSON.stringify({type:'error',message:'Invalid destination'})});
+  assert.equal(elements.info.textContent, 'Invalid destination');
+  assert.equal(elements.gl.textContent, 'Go live');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].path, '/api/golive/end');
+  assert.equal(calls[0].body.ends[0], 'platform-end');
+});
+
+test('media recorder startup failure stops the relay and cleans up destinations', () => {
+  const html = fs.readFileSync(require('node:path').join(__dirname, '../site/index.html'), 'utf8');
+  const start = html.indexOf('let want=false,retry=0,outs=[];');
+  const end = html.indexOf("$('gl').onclick=async", start);
+  const elements = { gl: {}, info: {}, low: {checked:false}, st: {} };
+  const calls = [], sockets = [];
+  class Socket {
+    constructor() { this.readyState=1; this.sent=[]; sockets.push(this); }
+    send(value) { this.sent.push(JSON.parse(value)); }
+    close() { this.readyState=3; if(this.onclose) this.onclose(); }
+  }
+  const context = {
+    $: id => elements[id], WebSocket: Socket, RU:'wss://relay.test', RT:'token',
+    ws:null, rec:null, liveEnds:['end'], api:(path,body)=>calls.push({path,body}),
+    setSt:()=>{}, W:1280,H:720,qTier:0,QV:[1,1,1],QA:[1,1,1],
+    mkStream:()=>({}), mime:()=>'', MediaRecorder:class { constructor(){throw Error('unsupported');} },
+    setTimeout:()=>{throw Error('must not retry');}
+  };
+  vm.runInNewContext(html.slice(start,end) + '; want=true; connect();', context);
+  sockets[0].onopen();
+  assert.deepEqual(sockets[0].sent.map(m=>m.type), ['start','stop']);
+  assert.match(elements.info.textContent, /Could not start media recording/);
+  assert.equal(calls.length,1);
+});
