@@ -1,4 +1,4 @@
-interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; ASSETS?: Fetcher }
+interface Env { DB: D1Database; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
@@ -266,6 +266,25 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   return reply({discarded:true,sent:false});
  }
 
+ if(u.pathname==='/api/whatsapp/connection-check'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  const phoneNumberId=data?.phoneNumberId;
+  if(typeof phoneNumberId!=='string'||!/^[0-9]{1,30}$/.test(phoneNumberId))return reply({error:'Valid WhatsApp phone number ID required'},400);
+  if(!env.META_WHATSAPP_ACCESS_TOKEN)return reply({error:'WhatsApp Cloud API access token is not configured',connected:false},503);
+  const account=await env.DB.prepare("SELECT id FROM social_accounts WHERE channel='whatsapp_business' AND provider_account_ref=? LIMIT 1").bind(phoneNumberId).first<{id:string}>();
+  if(!account)return reply({error:'Register WhatsApp business account metadata before checking access'},404);
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
+  try{
+   const response=await fetch('https://graph.facebook.com/v23.0/'+encodeURIComponent(phoneNumberId)+'?fields=id,display_phone_number,verified_name',{
+    headers:{authorization:'Bearer '+env.META_WHATSAPP_ACCESS_TOKEN},signal:controller.signal
+   });
+   if(!response.ok)return reply({connected:false,providerStatus:response.status,error:'Meta account authorization check failed',sendPermissionVerified:false},502);
+   const result:any=await response.json();
+   if(result?.id!==phoneNumberId)return reply({connected:false,error:'Unexpected provider account identifier'},502);
+   return reply({connected:true,accountId:account.id,phoneNumberId,resultName:typeof result.verified_name==='string'?result.verified_name:null,sendPermissionVerified:false,webhookSubscriptionVerified:false,note:'Token can read the registered WhatsApp phone number. Sending and webhook delivery require separate verification.'});
+  }catch{return reply({connected:false,error:'Meta connection timed out or failed'},502)}
+  finally{clearTimeout(timeout)}
+ }
  if(u.pathname==='/api/ai/suggest-reply'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.message!=='string'||!data.message.trim()||data.message.length>4000)return reply({error:'Valid conversation and message required'},400);
