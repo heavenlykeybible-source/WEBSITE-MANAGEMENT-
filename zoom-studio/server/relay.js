@@ -136,13 +136,17 @@ function roomConn(ws) {
       if (m.t === 'join') {
         const r = rooms.get(String(m.room));
         if (!r || r.key !== m.key) { sendj(ws, { t: 'error', msg: 'This invite is not valid or the room has ended.' }); return ws.close(); }
-        const aud = m.aud === true;
+        // Only cryptographically authenticated participants may be placed on stage.
+        // Unknown account-token formats fail closed and can still join as audience.
+        const stageCredential = typeof m.accountToken === 'string' ? m.accountToken : '';
+        const stageEligible = !!SECRET && !!auth(stageCredential) && !tokOk(stageCredential);
+        const aud = m.aud === true || !stageEligible;
         if (!aud && r.locked) { sendj(ws, { t: 'error', msg: 'The host has locked this room.' }); return ws.close(); }
         if (!aud && waitN(r) + stageN(r) >= MAX_GUESTS * 3) { sendj(ws, { t: 'error', msg: 'This room is full.' }); return ws.close(); }
         if (aud && audN(r) >= MAX_AUD) { sendj(ws, { t: 'error', msg: 'The audience is full right now.' }); return ws.close(); }
         role = 'guest'; room = r; clearTimeout(idle);
-        me = { id: rid(), name: clean(m.name, 30) || (aud ? 'Viewer' : 'Guest'), ws, pass: clean(m.pass, 40), ok: false, aud, stage: false, invited: false, ao: !!m.ao, last: 0 };
-        r.guests.set(me.id, me); sendj(ws, { t: 'welcome', ice: ICE, watch: r.watch, chat: r.audChat, slow: r.slow });
+        me = { id: rid(), name: clean(m.name, 30) || (aud ? 'Viewer' : 'Guest'), ws, pass: clean(m.pass, 40), ok: false, aud, stage: false, invited: false, stageCredential, ao: !!m.ao, last: 0 };
+        r.guests.set(me.id, me); sendj(ws, { t: 'welcome', ice: ICE, watch: r.watch, chat: r.audChat, slow: r.slow, audience: aud, stageEligible });
         if (aud) { me.ok = true; r.dirty = true; sendj(ws, { t: 'admitted' }); }
         else if (me.pass && r.admitted.has(me.pass) && stageN(r) < MAX_GUESTS) { me.ok = true; me.stage = true; sendj(ws, { t: 'admitted' }); sendj(r.host, { t: 'joined', gid: me.id, name: me.name, ao: me.ao }); }
         else sendj(r.host, { t: 'waiting', gid: me.id, name: me.name, ao: me.ao });
@@ -157,7 +161,7 @@ function roomConn(ws) {
       else if (m.t === 'slow') { room.slow = Math.max(0, Math.min(60, +m.sec || 0)); broadcast(room, { t: 'slow', sec: room.slow }); }
       else if (m.t === 'chat') { if (!flood()) broadcast(room, { t: 'chat', from: 'host', name: 'Host', text: clean(m.text, 300) }); }
       else if (g) {
-        if (m.t === 'admit' && !g.ok && !g.aud) {
+        if (m.t === 'admit' && !g.ok && !g.aud && SECRET && auth(g.stageCredential) && !tokOk(g.stageCredential)) {
           if (stageN(room) >= MAX_GUESTS) return sendj(room.host, { t: 'note', text: 'The stage is full (' + MAX_GUESTS + ').' });
           g.ok = true; g.stage = true; if (g.pass) room.admitted.add(g.pass); sendj(g.ws, { t: 'admitted' }); sendj(room.host, { t: 'joined', gid: g.id, name: g.name, ao: g.ao });
         }
@@ -166,6 +170,7 @@ function roomConn(ws) {
         else if (m.t === 'mute') sendj(g.ws, { t: 'mute', on: !!m.on });
         else if (m.t === 'sig' && g.stage) sendj(g.ws, { t: 'sig', data: m.data });
         else if (m.t === 'promote' && g.aud && g.ok) {
+          if (!SECRET || !auth(g.stageCredential) || tokOk(g.stageCredential)) return sendj(room.host, { t: 'note', text: 'This participant must sign in before joining the stage.' });
           if (stageN(room) >= MAX_GUESTS) return sendj(room.host, { t: 'note', text: 'The stage is full (' + MAX_GUESTS + ').' });
           g.invited = true; sendj(g.ws, { t: 'promoted' });
         }
@@ -173,7 +178,7 @@ function roomConn(ws) {
       }
     } else if (me.ok) {
       if (m.t === 'sig' && me.stage) sendj(room.host, { t: 'sig', from: me.id, data: m.data });
-      else if (m.t === 'ready' && me.invited && stageN(room) < MAX_GUESTS) { me.invited = false; me.aud = false; me.stage = true; me.ao = !!m.ao; if (me.pass) room.admitted.add(me.pass); room.dirty = true; sendj(room.host, { t: 'joined', gid: me.id, name: me.name, ao: me.ao }); }
+      else if (m.t === 'ready' && me.invited && SECRET && auth(me.stageCredential) && !tokOk(me.stageCredential) && stageN(room) < MAX_GUESTS) { me.invited = false; me.aud = false; me.stage = true; me.ao = !!m.ao; if (me.pass) room.admitted.add(me.pass); room.dirty = true; sendj(room.host, { t: 'joined', gid: me.id, name: me.name, ao: me.ao }); }
       else if (m.t === 'chat') {
         const n = Date.now();
         if (me.aud && !room.audChat) return sendj(ws, { t: 'note', text: 'The host turned audience chat off.' });
