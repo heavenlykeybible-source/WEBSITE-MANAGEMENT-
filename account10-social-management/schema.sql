@@ -7,3 +7,6 @@ CREATE TABLE IF NOT EXISTS social_posts (id TEXT PRIMARY KEY, body TEXT NOT NULL
 CREATE INDEX IF NOT EXISTS idx_social_posts_status ON social_posts(status,scheduled_at);
 
 CREATE TABLE IF NOT EXISTS automation_rules (id TEXT PRIMARY KEY, keyword TEXT NOT NULL, reply TEXT NOT NULL);
+
+CREATE TABLE IF NOT EXISTS social_accounts (id TEXT PRIMARY KEY, channel TEXT NOT NULL, provider_account_ref TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'unverified', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_social_accounts_unique ON social_accounts(channel,provider_account_ref);
