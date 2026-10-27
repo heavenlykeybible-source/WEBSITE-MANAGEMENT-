@@ -69,7 +69,8 @@ function useBackup(s) {
 }
 function newSession(id, dests, size, pe) {
   const [w, h] = dims(size);
-  const s = { id, enc: startEnc(dests), w, h, pe, src: null, fb: null, ing: null, ws: null, last: Date.now(), fbSince: 0 };
+  const fingerprint=crypto.createHash('sha256').update(JSON.stringify([dests,size])).digest('hex');
+  const s = { id, fingerprint, enc: startEnc(dests), w, h, pe, src: null, fb: null, ing: null, ws: null, last: Date.now(), fbSince: 0 };
   s.enc.stdin.on('error', () => {});
   s.enc.on('exit', () => { if (sessions.get(id) === s) endSession(s); });
   useBackup(s);
@@ -205,12 +206,17 @@ wss.on('connection', (ws, req) => {
   ws.on('message', async (data, isBinary) => {
     if (ws.starting) {
       if (isBinary) { ws.bufBytes += data.length; if (ws.bufBytes > 8 * 1024 * 1024) { ws.buf = []; return ws.close(1009, 'Startup buffer exceeded'); } ws.buf.push(data); }
-      else { try { if (JSON.parse(data.toString()).type === 'stop') { ws.cancelled = true; ws.buf = []; ws.close(); } } catch {} }
+      else { try { const m=JSON.parse(data.toString());if(m.type==='stop'){const a=auth(m.token),s=a&&sessions.get(a.id);if(s&&!s.ws)endSession(s);ws.cancelled=true;ws.buf=[];ws.close();} } catch {} }
       return;
     }
     if (!isBinary) {
       let m; try { m = JSON.parse(data.toString()); } catch { return; }
-      if (m.type === 'stop') { const s = sessions.get(ws.sid); if (s && s.ws === ws) endSession(s); return; }
+      if (m.type === 'stop') {
+        const a=ws.sid?null:auth(m.token), s=sessions.get(ws.sid||(a&&a.id));
+        // A reconnecting owner may end an abandoned session, never another active socket.
+        if(s&&(s.ws===ws||(!ws.sid&&a&&!s.ws)))endSession(s);
+        if(!ws.sid)ws.close();return;
+      }
       if (m.type !== 'start') return;
       const a = auth(m.token); if (!a) return reject('Not allowed. Sign in again.');
       ws.starting = true;
@@ -218,6 +224,8 @@ wss.on('connection', (ws, req) => {
       if (ws.cancelled || ws.readyState !== 1) return;
       if (!dests.length) return reject('A destination is invalid or unavailable. Check all destination URLs and try again.');
       let s = sessions.get(a.id);
+      const fingerprint=crypto.createHash('sha256').update(JSON.stringify([dests,m.size])).digest('hex');
+      if(s&&s.fingerprint!==fingerprint)return reject('A previous broadcast is still running with different destinations. Stop it before starting another.');
       if (!s) {
         if (sessions.size >= MAX) return reject('The server is full right now. Try again soon.');
         s = newSession(a.id, dests, m.size, a.pe); sessions.set(a.id, s);
