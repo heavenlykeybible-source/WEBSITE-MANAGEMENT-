@@ -371,6 +371,21 @@ const engine = {
   }
   if(url.pathname==='/api/playout'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM playout_items WHERE status IN (\'scheduled\',\'playing\') ORDER BY starts_at LIMIT 50').all(); return json({items:r.results});}
 
+  // Read-only cross-channel handover policy. Actual provider webhooks,
+  // encrypted transcript storage and WhatsApp notification delivery require
+  // explicit provider authorization and are not represented as active here.
+  if(url.pathname==='/api/social/assistant/handover-policy'&&request.method==='GET'){
+    return json({enabled:false,channels:['whatsapp_business','facebook_messenger','online_assistant'],
+      welcomeOptions:[
+        {id:'speak_to_evangelist',label:'I want to speak to Evangelist Emmanuel Ogheneochuko Adiohwo',action:'request_human_takeover'},
+        {id:'prayer',label:'Prayer request',action:'ai_or_human'},
+        {id:'bible',label:'Ask a Bible question',action:'ai'},
+        {id:'radio',label:'Listen to Revival Radio',action:'open_radio'},
+        {id:'apps',label:'Explore and share ministry apps',action:'open_app_menu'}],
+      automationDisclosure:'This is an automated AI assistant. A real person will get back to you as soon as possible.',
+      handover:{pauseAutomationForConversation:true,notifyOwnerOnWhatsApp:true,notificationContains:'request summary and secure dashboard link',conversationHistory:'restricted to authorized staff',resume:'manual'},
+      status:'design_only',missing:['verified provider connections','inbound webhooks','conversation storage','owner notification delivery','human takeover enforcement']});
+  }
   // Per-account auto-reply configuration. Rules are disabled until the official
   // WhatsApp Business webhook and per-user authorization are installed.
   if(url.pathname==='/api/social/whatsapp/rules'&&request.method==='GET'){
