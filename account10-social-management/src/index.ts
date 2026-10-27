@@ -38,7 +38,11 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(mismatch!==0)return reply({error:'Invalid Meta signature'},401);
   let payload:any;try{payload=JSON.parse(new TextDecoder().decode(raw))}catch{return reply({error:'Invalid JSON payload'},400)}
   if(payload?.object!=='page'&&payload?.object!=='instagram'&&payload?.object!=='whatsapp_business_account')return reply({error:'Unsupported Meta event type'},400);
-  return reply({received:true,signatureVerified:true,processed:false,note:'Signature accepted. Event ingestion is not enabled; no messages were sent.'});
+  const count=Array.isArray(payload.entry)?payload.entry.length:0;
+  if(count>100)return reply({error:'Too many webhook entries'},413);
+  const types:string[]=[];
+  for(const entry of payload.entry||[]){if(!entry||typeof entry!=='object')return reply({error:'Invalid webhook entry'},400);if(Array.isArray(entry.messaging))types.push('messaging');if(Array.isArray(entry.changes))types.push('changes')}
+  return reply({received:true,signatureVerified:true,processed:false,eventEntries:count,eventCategories:[...new Set(types)],note:'Signature verified; event persistence and delivery are not yet enabled. No messages sent.'});
  }
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
  if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
