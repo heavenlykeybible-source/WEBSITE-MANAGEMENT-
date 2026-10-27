@@ -266,6 +266,21 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   return reply({discarded:true,sent:false});
  }
 
+ if(u.pathname==='/api/whatsapp/send-approved'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!idOk(data?.draftId)||data?.confirmSend!==true)return reply({error:'Valid draftId and explicit confirmSend=true required'},400);
+  if(!env.META_WHATSAPP_ACCESS_TOKEN)return reply({error:'WhatsApp access token is not configured',sent:false},503);
+  const draft=await env.DB.prepare("SELECT m.id,m.body,m.direction,c.channel,c.sender_id FROM messages m JOIN conversations c ON c.id=m.conversation_id WHERE m.id=?").bind(data.draftId).first<{id:string;body:string;direction:string;channel:string;sender_id:string}>();
+  if(!draft)return reply({error:'Draft not found'},404);
+  if(draft.direction!=='outbound')return reply({error:'Draft requires internal approval before sending',sent:false},409);
+  if(draft.channel!=='whatsapp_business')return reply({error:'This endpoint only supports WhatsApp Business',sent:false},422);
+  const ids=draft.sender_id.split(':');
+  if(ids.length!==2||ids.some(x=>!/^[0-9]{1,30}$/.test(x)))return reply({error:'Invalid WhatsApp conversation identifiers',sent:false},422);
+  const [phoneNumberId,recipient]=ids;
+  const account=await env.DB.prepare("SELECT id FROM social_accounts WHERE channel='whatsapp_business' AND provider_account_ref=? LIMIT 1").bind(phoneNumberId).first();
+  if(!account)return reply({error:'WhatsApp account not registered',sent:false},409);
+  return reply({error:'Live delivery is disabled until a durable delivery log, retry safeguards, and Meta messaging-window verification are implemented',sent:false,recipient,phoneNumberId},503);
+ }
  if(u.pathname==='/api/whatsapp/connection-check'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   const phoneNumberId=data?.phoneNumberId;
