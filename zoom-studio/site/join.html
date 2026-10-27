@@ -134,7 +134,7 @@ function onMsg(m){switch(m.t){
  case 'watch':setWatch(m.url);break;
  case 'audchat':note(m.on?'Audience chat is on.':'The host turned audience chat off.');break;
  case 'slow':note(m.sec?'Slow mode: one message every '+m.sec+' seconds.':'Slow mode is off.');break;
- case 'promoted':$('invrow').hidden=false;break;
+ case 'promoted':if(!onStage)$('invrow').hidden=false;break;
  case 'invitation-expired':$('invrow').hidden=true;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();local=null;onStage=false;mode(false);note('Speaker invitation expired. Please ask the host to invite you again.');break;
  case 'demoted':try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;camTrack=null;sharing=false;$('shr').textContent='Share screen';try{pc&&pc.close()}catch(e){}pc=null;stopLocal();onStage=false;mode(false);note('You are back in the audience.');break;
  case 'sig':onSig(m.data);break}}
