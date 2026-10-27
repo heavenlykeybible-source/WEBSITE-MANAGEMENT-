@@ -486,6 +486,8 @@ const gsend=o=>{if(gws&&gws.readyState===1)gws.send(JSON.stringify(o))},gSt=t=>{
 async function gStart(){
  if(gStarting)return;
  if(gws)return gStop('Room closed.');
+ // Resume audio directly in the host's click gesture so viewers can hear the program.
+ AC.resume().catch(()=>gSt('Tap the page to enable meeting audio.'));
  gStarting=true;$('grs').disabled=true;gSt('Preparing your meeting...');
  try{
   if(!(await relink(true))){gSt('Sign in and confirm meeting access to start a room.');return}
@@ -516,13 +518,16 @@ function gmsg(m){
  else if(m.t==='hand'){const g=guests.get(m.from);if(g){g.hand=m.on;renderG();if(m.on)gchat('Room',g.name+' raised a hand')}else{m.on?hands.set(m.from,m.name):hands.delete(m.from);if(m.on)gchat('Room',m.name+' raised a hand');renderG()}}
  else if(m.t==='react'){const g=guests.get(m.from);gchat(g?g.name:'Guest',m.emoji)}
  else if(m.t==='error'||m.t==='closed')gStop(m.msg||m.why||'The room closed.')}
-function viewRemove(id){const v=viewers.get(id);if(!v)return;viewers.delete(id);try{v.pc.close()}catch(e){}}
-async function viewAdd(id){if(viewers.has(id))return;try{
+function viewRemove(id){const v=viewers.get(id);if(!v)return;viewers.delete(id);clearTimeout(v.timer);try{v.pc.close()}catch(e){}}
+async function viewAdd(id,attempt=0){if(viewers.has(id))return;try{
  if(!viewStream){viewStream=$('cv').captureStream(15);dest.stream.getAudioTracks().forEach(t=>viewStream.addTrack(t))}
- const v={id,pc:new RTCPeerConnection({iceServers:gice}),pending:[]};viewers.set(id,v);const pc=v.pc;
+ const v={id,pc:new RTCPeerConnection({iceServers:gice}),pending:[],attempt,timer:null};viewers.set(id,v);const pc=v.pc;
  viewStream.getTracks().forEach(t=>pc.addTrack(t,viewStream));
  pc.onicecandidate=e=>{if(e.candidate&&viewers.get(id)===v)gsend({t:'view-sig',to:id,data:{c:e.candidate}})};
- pc.onconnectionstatechange=()=>{if(viewers.get(id)===v&&pc.connectionState==='failed')gSt('A viewer could not connect. Check your network and TURN service.')};
+ pc.onconnectionstatechange=()=>{if(viewers.get(id)!==v)return;if(pc.connectionState==='connected'){v.attempt=0;return}if(pc.connectionState==='failed'){
+  if(v.attempt>=2){gSt('A viewer could not connect. Check your network and TURN service.');return}
+  const next=v.attempt+1;gSt('Reconnecting a viewer...');v.timer=setTimeout(()=>{if(viewers.get(id)===v&&gws){viewRemove(id);viewAdd(id,next)}},1000*next)
+ }};
  await pc.setLocalDescription(await pc.createOffer());if(viewers.get(id)===v)gsend({t:'view-sig',to:id,data:{sdp:pc.localDescription}});
  }catch(e){viewRemove(id);gSt('Could not send video to a viewer on this device.') }}
 async function viewSignal(v,d){try{const pc=v.pc;if(d.sdp&&d.sdp.type==='answer'&&pc.signalingState==='have-local-offer'){await pc.setRemoteDescription(d.sdp);for(const c of v.pending.splice(0))await pc.addIceCandidate(c).catch(()=>{});const snd=pc.getSenders().find(s=>s.track&&s.track.kind==='video');if(snd){const p=snd.getParameters();p.encodings=[{...(p.encodings&&p.encodings[0]),maxBitrate:500000}];await snd.setParameters(p).catch(()=>{})}}else if(d.c){if(pc.remoteDescription)await pc.addIceCandidate(d.c).catch(()=>{});else if(v.pending.length<100)v.pending.push(d.c)}}catch(e){gSt('A viewer connection needs attention.')}}
