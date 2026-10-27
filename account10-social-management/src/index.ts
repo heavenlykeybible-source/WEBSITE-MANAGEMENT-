@@ -43,7 +43,8 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(mismatch!==0)return reply({error:'Invalid Meta signature'},401);
   let payload:any;try{payload=JSON.parse(new TextDecoder().decode(raw))}catch{return reply({error:'Invalid JSON payload'},400)}
   if(payload?.object!=='page'&&payload?.object!=='instagram'&&payload?.object!=='whatsapp_business_account')return reply({error:'Unsupported Meta event type'},400);
-  const count=Array.isArray(payload.entry)?payload.entry.length:0;
+  if(!Array.isArray(payload.entry)||payload.entry.length===0)return reply({error:'Webhook entry array required'},400);
+  const count=payload.entry.length;
   if(count>100)return reply({error:'Too many webhook entries'},413);
   const types:string[]=[];
   for(const entry of payload.entry||[]){if(!entry||typeof entry!=='object')return reply({error:'Invalid webhook entry'},400);if(Array.isArray(entry.messaging))types.push('messaging');if(Array.isArray(entry.changes))types.push('changes')}
