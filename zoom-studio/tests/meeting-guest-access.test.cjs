@@ -134,3 +134,35 @@ test('invalid stage setting retains the default of six', async()=>{
   }
   assert.equal(h.r.stage().length,6);
 });
+test('guest viewer answers a host offer and displays the received media', async()=>{
+  const html=fs.readFileSync(require('node:path').join(__dirname,'../site/join.html'),'utf8');
+  const start=html.indexOf('async function onViewSig(d)');
+  const end=html.indexOf("$('inv').onclick=",start);
+  assert.ok(start>=0&&end>start);
+  const sent=[],added=[],video={srcObject:null,play:()=>Promise.resolve()},notes=[];
+  class PC {
+    constructor(){this.remoteDescription=null;}
+    async setRemoteDescription(d){this.remoteDescription=d;}
+    async createAnswer(){return {type:'answer',sdp:'v=0'};}
+    async setLocalDescription(d){this.localDescription=d;}
+    async addIceCandidate(c){added.push(c);}
+    close(){}
+  }
+  const context={
+    viewPc:null,viewPend:[],ice:[],RTCPeerConnection:PC,
+    $:id=>{assert.equal(id,'audvideo');return video;},
+    send:m=>sent.push(m),note:m=>notes.push(m),
+    closeView(){context.viewPc=null;context.viewPend=[];video.srcObject=null;}
+  };
+  vm.runInNewContext(html.slice(start,end),context);
+  const candidate={candidate:'candidate:1'};
+  await context.onViewSig({c:candidate});
+  await context.onViewSig({sdp:{type:'offer',sdp:'v=0'}});
+  assert.equal(sent[0].t,'view-sig');
+  assert.equal(sent[0].data.sdp.type,'answer');
+  assert.equal(added[0],candidate);
+  const stream={id:'remote'};
+  context.viewPc.ontrack({streams:[stream]});
+  assert.equal(video.srcObject,stream);
+  assert.equal(notes.length,0);
+});
