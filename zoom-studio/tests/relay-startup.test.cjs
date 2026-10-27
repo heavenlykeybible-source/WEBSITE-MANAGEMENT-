@@ -37,9 +37,9 @@ function harness() {
     setTimeout: () => 1, clearTimeout() {}, setInterval: () => 1, clearInterval() {}
   };
   vm.runInNewContext(source, context);
-  const socket = new Socket();
-  server.emit('connection', socket, { url: '/', headers: {} });
-  return { socket, resolve: () => resolveDns([{ address: '8.8.8.8' }]), spawns: () => spawnCount };
+  const open = () => {const socket=new Socket();server.emit('connection',socket,{url:'/',headers:{}});return socket;};
+  const socket = open();
+  return { socket, open, resolve: () => resolveDns([{ address: '8.8.8.8' }]), spawns: () => spawnCount };
 }
 const start = JSON.stringify({ type: 'start', token: 'test-password-123', dests: ['rtmps://example.com/live/key'] });
 const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -116,6 +116,7 @@ test('terminal relay error stops retrying and closes created platform broadcasts
   const calls = [], sockets = [];
   class Socket {
     constructor() { this.readyState=1; sockets.push(this); }
+    send() {}
     close() { this.readyState=3; if (this.onclose) this.onclose(); }
   }
   const context = {
@@ -156,4 +157,50 @@ test('media recorder startup failure stops the relay and cleans up destinations'
   assert.deepEqual(sockets[0].sent.map(m=>m.type), ['start','stop']);
   assert.match(elements.info.textContent, /Could not start media recording/);
   assert.equal(calls.length,1);
+});
+test('reconnection rejects changed destinations rather than silently using old ones', async()=>{
+ const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ h.socket.close();
+ const next=h.open();next.emit('message',Buffer.from(JSON.stringify({type:'start',token:'test-password-123',dests:['rtmps://example.com/other/key']})),false);
+ h.resolve();await flush();
+ assert.equal(JSON.parse(next.sent[0]).type,'error');
+ assert.match(JSON.parse(next.sent[0]).message,/different destinations/i);
+ assert.equal(h.spawns(),3);
+});
+test('authenticated stop ends detached fallback without stopping another active socket', async()=>{
+ const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ const activeStop=h.open();activeStop.emit('message',Buffer.from(JSON.stringify({type:'stop',token:'test-password-123'})),false);
+ assert.equal(h.socket.readyState,1);
+ h.socket.close();
+ const invalid=h.open();invalid.emit('message',Buffer.from(JSON.stringify({type:'stop',token:'wrong'})),false);
+ const cleanup=h.open();cleanup.emit('message',Buffer.from(JSON.stringify({type:'stop',token:'test-password-123'})),false);
+ const next=h.open();next.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ assert.equal(h.spawns(),6);
+ assert.ok(next.sent.includes('Connected. Backup is ready.'));
+});
+test('stop during reconnect validation cleans up a detached broadcast', async()=>{
+ const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();h.socket.close();
+ const reconnect=h.open();reconnect.emit('message',Buffer.from(start),false);
+ reconnect.emit('message',Buffer.from(JSON.stringify({type:'stop',token:'test-password-123'})),false);
+ h.resolve();await flush();
+ const next=h.open();next.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ assert.equal(h.spawns(),6);
+});
+test('stopping while disconnected uses captured relay credentials for cleanup',()=>{
+ const html=fs.readFileSync(require('node:path').join(__dirname,'../site/index.html'),'utf8');
+ const start=html.indexOf('let want=false,retry=0,outs=[];'),end=html.indexOf("$('gl').onclick=async",start);
+ const timers=[],sockets=[],elements={gl:{},info:{}};
+ class Socket {
+  constructor(url){this.url=url;this.readyState=1;this.sent=[];sockets.push(this);}
+  send(value){this.sent.push(JSON.parse(value));}
+  close(){this.readyState=3;if(this.onclose)this.onclose();}
+ }
+ const context={ws:{readyState:3,close(){}},RU:'wss://old.test',RT:'old-token',WebSocket:Socket,
+  $:id=>elements[id],liveEnds:[],setSt:()=>{},setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout:()=>{}};
+ vm.runInNewContext(html.slice(start,end)+'; want=true; finishBroadcast();',context);
+ context.RU='wss://new.test';context.RT='new-token';
+ timers.shift()();sockets[0].onopen();
+ assert.equal(sockets[0].url,'wss://old.test');
+ assert.equal(sockets[0].sent[0].token,'old-token');
+ assert.equal(sockets[0].sent[0].type,'stop');
 });
