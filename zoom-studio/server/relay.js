@@ -225,6 +225,7 @@ wss.on('connection', (ws, req) => {
     }
     if (!isBinary) {
       let m; try { m = JSON.parse(data.toString()); } catch { return; }
+      if (!m || typeof m !== 'object' || Array.isArray(m)) return;
       if (m.type === 'stop') {
         const a=ws.sid?null:auth(m.token), s=sessions.get(ws.sid||(a&&a.id));
         // A reconnecting owner may end an abandoned session, never another active socket.
