@@ -5,3 +5,5 @@ CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(updated_at
 
 CREATE TABLE IF NOT EXISTS social_posts (id TEXT PRIMARY KEY, body TEXT NOT NULL, platform TEXT NOT NULL CHECK(platform IN ('facebook_page','instagram_professional','youtube','tiktok')), status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','queued','published','failed')), scheduled_at TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE INDEX IF NOT EXISTS idx_social_posts_status ON social_posts(status,scheduled_at);
+
+CREATE TABLE IF NOT EXISTS automation_rules (id TEXT PRIMARY KEY, keyword TEXT NOT NULL, reply TEXT NOT NULL);
