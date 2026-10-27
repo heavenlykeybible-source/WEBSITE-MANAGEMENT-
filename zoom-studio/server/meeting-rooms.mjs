@@ -16,6 +16,8 @@ async function meetingICE(env, room) {
  return ice;
 }
 const capacityForRoom=env=>{const n=Number(env.MEETING_ROOM_CAP);return Number.isFinite(n)&&n>0?Math.max(2,Math.min(100,Math.floor(n))):25;};
+// Larger stages are opt-in until their media infrastructure has been load-tested.
+const capacityForStage=env=>{const n=Number(env.MEETING_STAGE_CAP);return Math.min(capacityForRoom(env)-1,Number.isFinite(n)&&n>=1?Math.min(20,Math.floor(n)):6);};
 export class MeetingRooms {
  constructor(state,env){this.state=state;this.env=env;}
  sockets(){return this.state.getWebSockets().filter(w=>w.readyState===1);}
@@ -81,9 +83,9 @@ export class MeetingRooms {
     }
     const aud=m.aud===true||!identity,guests=this.guests();
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
-    if(guests.length>=capacityForRoom(this.env)-1||guests.filter(w=>this.data(w).aud===aud).length>=(aud?Math.max(1,capacityForRoom(this.env)-1):Math.min(18,capacityForRoom(this.env)-1)))return this.close(ws,{t:'error',msg:'This room is full.'});
+    if(guests.length>=capacityForRoom(this.env)-1||guests.filter(w=>this.data(w).aud===aud).length>=(aud?Math.max(1,capacityForRoom(this.env)-1):Math.min(20,capacityForRoom(this.env)-1)))return this.close(ws,{t:'error',msg:'This room is full.'});
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),identity,ok:aud,aud,stage:false,invited:false,ao:!!m.ao,last:0});
-    if(!aud&&d.pass&&!guests.some(w=>{const x=this.data(w);return x.pass===d.pass&&x.stage;})&&h.admitted.includes(d.pass)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<6){d.ok=true;d.stage=true;}
+    if(!aud&&d.pass&&!guests.some(w=>{const x=this.data(w);return x.pass===d.pass&&x.stage;})&&h.admitted.includes(d.pass)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<capacityForStage(this.env)){d.ok=true;d.stage=true;}
     this.save(ws,d);this.send(ws,{t:'welcome',ice:await meetingICE(this.env,d.room),watch:h.watch,chat:h.audChat,slow:h.slow,stageEligible:!!identity,audience:aud});
     if(d.ok)this.send(ws,{t:'admitted'});
     if(aud)this.send(host,{t:'viewer-join',gid:d.id});
@@ -107,7 +109,7 @@ export class MeetingRooms {
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;const gd=this.data(g);
     if(m.t==='admit'&&!gd.ok&&!gd.aud){
      if(!await this.stageAllowed(gd,now))return this.send(host,{t:'note',text:'This participant needs to sign in and rejoin before appearing on stage.'});
-     if(this.stage().length+this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});
+     if(this.stage().length+this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length>=capacityForStage(this.env))return this.send(host,{t:'note',text:'The stage is full ('+capacityForStage(this.env)+').'});
      gd.ok=true;gd.stage=true;if(gd.pass&&!h.admitted.includes(gd.pass))h.admitted=h.admitted.concat(gd.pass).slice(-20);
      this.save(host,h);this.save(g,gd);this.send(g,{t:'admitted'});this.send(host,{t:'joined',gid:gd.id,name:gd.name,ao:gd.ao});
     }else if(m.t==='deny')this.close(g,{t:'denied'});
@@ -115,13 +117,13 @@ export class MeetingRooms {
     else if(m.t==='mute')this.send(g,{t:'mute',on:!!m.on});
     else if(m.t==='sig'&&gd.stage&&signalPayloadOk(m.data))this.send(g,{t:'sig',data:m.data});
     else if(m.t==='view-sig'&&gd.aud&&gd.ok&&signalPayloadOk(m.data))this.send(g,{t:'view-sig',data:m.data});
-    else if(m.t==='promote'&&gd.aud&&gd.ok){if(!await this.stageAllowed(gd,now))return this.send(host,{t:'note',text:'This participant needs to sign in and rejoin before appearing on stage.'});if(gd.invited&&gd.invitedAt&&now-gd.invitedAt<60000)return;const reserved=this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length;if(this.stage().length+reserved>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});gd.invited=true;gd.invitedAt=now;this.save(g,gd);this.send(g,{t:'promoted'});}
+    else if(m.t==='promote'&&gd.aud&&gd.ok){if(!await this.stageAllowed(gd,now))return this.send(host,{t:'note',text:'This participant needs to sign in and rejoin before appearing on stage.'});if(gd.invited&&gd.invitedAt&&now-gd.invitedAt<60000)return;const reserved=this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length;if(this.stage().length+reserved>=capacityForStage(this.env))return this.send(host,{t:'note',text:'The stage is full ('+capacityForStage(this.env)+').'});gd.invited=true;gd.invitedAt=now;this.save(g,gd);this.send(g,{t:'promoted'});}
     else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.send(host,{t:'viewer-join',gid:gd.id});this.count();}
    }
   }else if(d.ok){
    if(m.t==='sig'&&d.stage&&signalPayloadOk(m.data))this.send(host,{t:'sig',from:d.id,data:m.data});
    else if(m.t==='view-sig'&&d.aud&&signalPayloadOk(m.data))this.send(host,{t:'view-sig',from:d.id,data:m.data});
-   else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt>=60000){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});}else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt<60000&&this.stage().length<6){if(!await this.stageAllowed(d,now)){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});return}this.send(ws,{t:'viewer-end'});this.send(host,{t:'viewer-left',gid:d.id});d.invited=false;d.invitedAt=0;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.includes(d.pass)){h.admitted=h.admitted.concat(d.pass).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
+   else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt>=60000){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});}else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt<60000){if(!await this.stageAllowed(d,now)||this.stage().length>=capacityForStage(this.env)){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});return}this.send(ws,{t:'viewer-end'});this.send(host,{t:'viewer-left',gid:d.id});d.invited=false;d.invitedAt=0;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.includes(d.pass)){h.admitted=h.admitted.concat(d.pass).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
