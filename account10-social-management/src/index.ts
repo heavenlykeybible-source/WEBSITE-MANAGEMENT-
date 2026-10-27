@@ -308,6 +308,14 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    nextStep:'Verify Meta app subscriptions, provider permissions, and live messaging tests before enabling delivery'
   });
  }
+ if(u.pathname==='/api/whatsapp/deliveries'&&req.method==='GET'){
+  const conversationId=u.searchParams.get('conversationId');
+  if(!idOk(conversationId))return reply({error:'Valid conversationId required'},400);
+  try{
+   const result=await env.DB.prepare("SELECT a.draft_id,a.state,a.delivery_status,a.provider_status,a.created_at FROM whatsapp_delivery_attempts a JOIN messages m ON m.id=a.draft_id WHERE m.conversation_id=? ORDER BY a.created_at DESC LIMIT 100").bind(conversationId).all();
+   return reply({items:result.results,providerDeliveryVerified:false});
+  }catch{return reply({error:'Delivery ledger unavailable; apply migrations 0004 and 0005'},503)}
+ }
  if(u.pathname==='/api/whatsapp/send-approved'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.draftId)||data?.confirmSend!==true)return reply({error:'Valid draftId and explicit confirmSend=true required'},400);
