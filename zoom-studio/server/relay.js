@@ -28,10 +28,10 @@ const sessions = new Map();
 
 function auth(t) {
   if (SECRET) {
-    const [p, sig] = String(t || '').split('.');
-    if (p && sig) {
+    const parts = String(t || '').split('.'), [p, sig] = parts;
+    if (parts.length===2 && p && /^[0-9a-f]{64}$/.test(sig || '')) {
       const good = crypto.createHmac('sha256', SECRET).update(p).digest('hex');
-      if (sig.length === good.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(good))) {
+      if (crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(good))) {
         try { const o = JSON.parse(Buffer.from(p, 'base64url').toString()); if (o.u && o.exp > Date.now()) return { id: o.u, pe: o.pe || 0 }; } catch {}
       }
     }
@@ -63,7 +63,7 @@ function startBackup(s) {
 }
 function pipeOut(s, p) { p.stdout.on('data', d => { if (s.src === p && s.enc.stdin.writable) s.enc.stdin.write(d); }); }
 function useBackup(s) {
-  kill(s.ing); s.ing = null;
+  const old=s.ing; s.ing=null; kill(old);
   if (!s.fb) { const b = s.fb = startBackup(s); pipeOut(s, b); b.on('exit', () => { if (s.fb === b) s.fb = null; }); }
   s.src = s.fb; s.fbSince = s.fbSince || Date.now();
   console.log(s.id, 'backup is playing');
@@ -73,7 +73,8 @@ function newSession(id, dests, size, pe) {
   const fingerprint=crypto.createHash('sha256').update(JSON.stringify([dests,size])).digest('hex');
   const s = { id, fingerprint, enc: startEnc(dests), w, h, pe, src: null, fb: null, ing: null, ws: null, last: Date.now(), fbSince: 0 };
   s.enc.stdin.on('error', () => {});
-  s.enc.on('exit', () => { if (sessions.get(id) === s) endSession(s); });
+  s.enc.on('error', () => { if (sessions.get(id) === s) { if(s.ws&&s.ws.readyState===1)s.ws.send(JSON.stringify({type:'error',message:'Broadcast processing could not start. Contact the service operator.'})); endSession(s); } });
+  s.enc.on('exit', () => { if (sessions.get(id) === s) { if(s.ws&&s.ws.readyState===1)s.ws.send(JSON.stringify({type:'error',message:'Broadcast processing stopped. Check the relay service before retrying.'})); endSession(s); } });
   useBackup(s);
   s.timer = setInterval(() => {
     if (s.ing && Date.now() - s.last > STALL) useBackup(s);
@@ -237,8 +238,10 @@ wss.on('connection', (ws, req) => {
         s = newSession(a.id, dests, m.size, a.pe); sessions.set(a.id, s);
       }
       ws.sid = a.id; s.ws = ws; s.pe = a.pe; s.last = Date.now();
-      kill(s.ing);
+      const previous=s.ing; s.ing=null; kill(previous);
       const ing = s.ing = startIngest(s);
+      ing.on('error', () => { if (s.ing === ing && sessions.get(s.id) === s) { if(s.ws&&s.ws.readyState===1)s.ws.send(JSON.stringify({type:'error',message:'Broadcast input could not start. Contact the service operator.'})); endSession(s); } });
+      ing.on('exit', () => { if (s.ing === ing && sessions.get(s.id) === s) { if(s.ws&&s.ws.readyState===1)s.ws.send(JSON.stringify({type:'error',message:'Broadcast input stopped. Check the relay service before retrying.'})); endSession(s); } });
       ing.stdout.once('data', () => { if (s.ing === ing && sessions.get(s.id) === s) { s.src = ing; s.fbSince = 0; kill(s.fb); s.fb = null; if (s.ws === ws && ws.readyState === 1) ws.send(JSON.stringify({type:'feed-active'})); console.log(s.id, 'live feed is on'); } });
       pipeOut(s, ing);
       ws.send('Connected. Backup is ready.');
