@@ -29,7 +29,9 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   if(!env.META_APP_SECRET)return reply({error:'Meta signature verification is not configured'},503);
   const signature=req.headers.get('x-hub-signature-256')||'';
   if(!/^sha256=[a-f0-9]{64}$/i.test(signature))return reply({error:'Missing or invalid Meta signature'},401);
-  const declaredLength=Number(req.headers.get('content-length')||0);
+  const lengthHeader=req.headers.get('content-length');
+  if(lengthHeader!==null&&(!/^[0-9]+$/.test(lengthHeader)||!Number.isSafeInteger(Number(lengthHeader))))return reply({error:'Invalid Content-Length'},400);
+  const declaredLength=Number(lengthHeader||0);
   if(declaredLength>1048576)return reply({error:'Webhook payload too large'},413);
   if(!req.body)return reply({error:'Empty webhook body'},400);
   const reader=req.body.getReader();const chunks:Uint8Array[]=[];let total=0;
