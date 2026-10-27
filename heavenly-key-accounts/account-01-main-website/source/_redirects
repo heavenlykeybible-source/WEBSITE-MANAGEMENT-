@@ -1,0 +1,14 @@
+# Cloudflare Pages: clean public routes for Account 1.
+# Internal rewrites retain the original HTML files without exposing .html in navigation.
+/about /pages/about.html 200
+/contact /pages/contact.html 200
+/ministries /pages/ministries.html 200
+/what-we-believe /pages/what-we-believe.html 200
+/meet-the-pastor /pages/meet-the-pastor.html 200
+/live /live/index.html 200
+# Existing deep links retain their established paths.
+/pages/about /pages/about.html 200
+/pages/contact /pages/contact.html 200
+/pages/ministries /pages/ministries.html 200
+/pages/what-we-believe /pages/what-we-believe.html 200
+/pages/meet-the-pastor /pages/meet-the-pastor.html 200
