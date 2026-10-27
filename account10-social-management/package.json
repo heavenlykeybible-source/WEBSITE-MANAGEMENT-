@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "check": "tsc --noEmit",
+    "verify:local": "npm run check && npm run build:check",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "db:local": "wrangler d1 execute heavenlykey-social-management-db --local --file=schema.sql",
