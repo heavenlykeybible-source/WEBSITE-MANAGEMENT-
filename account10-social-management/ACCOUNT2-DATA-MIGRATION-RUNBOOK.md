@@ -1,3 +1,7 @@
+# GitHub-first migration scope
+
+The immediate task is to migrate **all Account 2 Studio social-management source code, UI and configuration** into Account 10 within GitHub, without requiring Cloudflare access. Historical runtime data in Cloudflare D1/KV is separate and is not represented by GitHub source files.
+
 # Account 2 → Account 10: safe migration procedure
 
 ## Confirmed resources (2026-10-27)
