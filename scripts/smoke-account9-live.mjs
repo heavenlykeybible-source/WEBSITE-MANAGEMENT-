@@ -31,7 +31,13 @@ try{
     assert.ok(response.headers.get('content-security-policy'),'Missing security policy on '+route);
     assert.ok((await response.arrayBuffer()).byteLength>0,'Empty asset '+route);
   }
-  console.log('PASS live editor assets and PWA');
+  for(const route of ['/assets/favicon.png','/assets/logo-256.png','/assets/logo-512.png']){
+    const response=await get(route);
+    assert.equal(response.status,200,'Missing deployed branding asset '+route);
+    assert.ok((response.headers.get('content-type')||'').includes('image/png'),'Incorrect image MIME for '+route);
+    assert.ok((await response.arrayBuffer()).byteLength>0,'Empty branding asset '+route);
+  }
+  console.log('PASS live editor assets, branding and PWA');
   for(const path of ['/api/me','/api/projects','/api/media']){
     const result=await get(path);
     assert.equal(result.status,401,'Unauthenticated private API exposed: '+path);
