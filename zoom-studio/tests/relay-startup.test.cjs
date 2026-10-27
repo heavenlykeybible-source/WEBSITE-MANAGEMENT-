@@ -269,3 +269,10 @@ test('overloaded broadcast output stops the session instead of accumulating data
  const error=h.socket.sent.map(s=>{try{return JSON.parse(s)}catch{return {}}}).find(m=>m.type==='error');
  assert.match(error.message,/output is overloaded/i);
 });
+test('a second connection cannot take over an active broadcast', async()=>{
+ const h=harness();h.socket.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ const second=h.open();second.emit('message',Buffer.from(start),false);h.resolve();await flush();
+ assert.equal(h.socket.readyState,1);assert.equal(second.readyState,3);
+ assert.match(JSON.parse(second.sent[0]).message,/already connected/i);
+ assert.equal(h.spawns(),3);
+});
