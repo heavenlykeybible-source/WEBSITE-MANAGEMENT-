@@ -303,7 +303,38 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const [phoneNumberId,recipient]=ids;
   const account=await env.DB.prepare("SELECT id FROM social_accounts WHERE channel='whatsapp_business' AND provider_account_ref=? LIMIT 1").bind(phoneNumberId).first();
   if(!account)return reply({error:'WhatsApp account not registered',sent:false},409);
-  return reply({error:'Live delivery is disabled until a durable delivery log, retry safeguards, and Meta messaging-window verification are implemented',sent:false},503);
+  if(!draft.body.trim()||draft.body.length>4096)return reply({error:'WhatsApp text must contain 1 to 4096 characters',sent:false},422);
+  const recent=await env.DB.prepare("SELECT id FROM messages WHERE conversation_id=(SELECT conversation_id FROM messages WHERE id=?) AND direction='inbound' AND datetime(created_at)>=datetime('now','-24 hours') ORDER BY created_at DESC LIMIT 1").bind(draft.id).first();
+  if(!recent)return reply({error:'WhatsApp 24-hour customer service window is not confirmed; free-form message blocked',sent:false},409);
+  let reservation;
+  try{
+   reservation=await env.DB.prepare("INSERT OR IGNORE INTO whatsapp_delivery_attempts(draft_id,phone_number_id,state) VALUES(?,?,'reserved')").bind(draft.id,phoneNumberId).run();
+  }catch{return reply({error:'Delivery ledger unavailable; apply migration 0004 before sending',sent:false},503)}
+  if(!reservation.meta.changes)return reply({error:'Delivery already attempted; review delivery status before further action',sent:false},409);
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),15000);
+  let state:'sent'|'rejected'|'unknown'='unknown';let providerStatus:number|null=null;let providerMessageId:string|null=null;
+  try{
+   const response=await fetch('https://graph.facebook.com/v23.0/'+encodeURIComponent(phoneNumberId)+'/messages',{
+    method:'POST',
+    headers:{authorization:'Bearer '+env.META_WHATSAPP_ACCESS_TOKEN,'content-type':'application/json'},
+    body:JSON.stringify({messaging_product:'whatsapp',recipient_type:'individual',to:recipient,type:'text',text:{preview_url:false,body:draft.body}}),
+    signal:controller.signal
+   });
+   providerStatus=response.status;
+   if(response.ok){
+    const result:any=await response.json();
+    if(typeof result?.messages?.[0]?.id==='string'&&result.messages[0].id.length<=255){
+     providerMessageId=result.messages[0].id;state='sent';
+    }
+   }else if(response.status>=400&&response.status<500&&response.status!==408&&response.status!==429){state='rejected'}
+  }catch{/* A lost response may still mean Meta accepted the message; do not retry automatically. */}
+  finally{clearTimeout(timeout)}
+  try{
+   await env.DB.prepare("UPDATE whatsapp_delivery_attempts SET state=?,provider_message_id=?,provider_status=?,updated_at=CURRENT_TIMESTAMP WHERE draft_id=? AND state='reserved'").bind(state,providerMessageId,providerStatus,draft.id).run();
+  }catch{return reply({error:'Provider call completed but delivery ledger update failed; reconcile manually before any further action',sent:false,deliveryUncertain:true},503)}
+  if(state==='sent')return reply({sent:true,providerAccepted:true,deliveryConfirmed:false,draftId:draft.id,providerMessageId},200);
+  if(state==='rejected')return reply({sent:false,providerRejected:true,providerStatus,automaticRetry:false},502);
+  return reply({sent:false,deliveryUncertain:true,providerStatus,automaticRetry:false,note:'Provider response was inconclusive. Reconcile the attempt; never resend automatically.'},502);
  }
  if(u.pathname==='/api/whatsapp/connection-check'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
