@@ -83,5 +83,9 @@ jobs:
           db.execute("UPDATE whatsapp_delivery_attempts SET provider_message_id='wamid.1',state='sent' WHERE draft_id='approved'")
           db.execute("UPDATE whatsapp_delivery_attempts SET delivery_status='delivered',receipt_at=CURRENT_TIMESTAMP WHERE provider_message_id='wamid.1'")
           assert db.execute("SELECT delivery_status FROM whatsapp_delivery_attempts WHERE draft_id='approved'").fetchone()[0] == 'delivered'
+          db.execute("INSERT INTO messages(id,conversation_id,direction,body,created_at) VALUES('wa_msg_old','test','inbound','old',datetime('now','-25 hours'))")
+          db.execute("INSERT INTO messages(id,conversation_id,direction,body,created_at) VALUES('wa_msg_recent','test','inbound','recent',datetime('now','-1 hour'))")
+          allowed = db.execute("SELECT id FROM messages WHERE conversation_id='test' AND direction='inbound' AND id GLOB 'wa_msg_*' AND datetime(created_at)>=datetime('now','-24 hours')").fetchall()
+          assert allowed == [('wa_msg_recent',)], 'WhatsApp service window accepted stale or unverified inbound data'
           print('Schema, migrations and basic D1 records validated')
           PY
