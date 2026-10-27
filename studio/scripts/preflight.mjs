@@ -9,6 +9,19 @@ const warn = [];
 const wrangler = await readFile(join(root, "wrangler.toml"), "utf8");
 const requiredBindings = ["DB", "MEDIA_R2", "LIVE_STATUS_KV"];
 
+// Guard against accidentally deploying Studio over another account's Worker.
+const requiredConfig = [
+  [/^name\\s*=\\s*"heavenlykey-media"\\s*$/m, "Account 2 Worker must remain heavenlykey-media"],
+  [/^keep_vars\\s*=\\s*true\\s*$/m, "Existing dashboard variables must be preserved"],
+  [/^database_name\\s*=\\s*"heavenlykey-media-db"\\s*$/m, "Account 2 D1 database name mismatch"],
+  [/^bucket_name\\s*=\\s*"heavenlykey-media-engine"\\s*$/m, "Account 2 media bucket mismatch"],
+  [/^run_worker_first\\s*=\\s*true\\s*$/m, "Studio auth/API must run before static assets"],
+];
+for (const [pattern, message] of requiredConfig) {
+  if (!pattern.test(wrangler)) fail.push(message);
+}
+
+
 for (const binding of requiredBindings) {
   if (!wrangler.includes(`binding = "${binding}"`)) {
     fail.push(`Missing Media Engine binding: ${binding}`);
