@@ -250,7 +250,13 @@ wss.on('connection', (ws, req) => {
       ws.buf = []; ws.bufBytes = 0;
     } else {
       const s = sessions.get(ws.sid);
-      if (s && s.ws === ws && s.ing && s.ing.stdin.writable) { s.last = Date.now(); s.ing.stdin.write(data); }
+      if (s && s.ws === ws && s.ing && s.ing.stdin.writable) {
+        if ((s.ing.stdin.writableLength || 0) + data.length > 8 * 1024 * 1024) {
+          ws.send(JSON.stringify({type:'error',message:'Broadcast input is overloaded. Reduce quality and try again.'}));
+          return endSession(s);
+        }
+        s.last = Date.now(); s.ing.stdin.write(data);
+      }
     }
   });
   ws.on('close', () => { clearTimeout(idle); const s = sessions.get(ws.sid); if (s && s.ws === ws) { s.ws = null; useBackup(s); } });
