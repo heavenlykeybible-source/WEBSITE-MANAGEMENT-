@@ -33,12 +33,12 @@ async function runTimeline(record){
  const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
  if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
  const state={cancelled:false};session=state;setBusy(true);
- const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null;
+ const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null,sourceStream=null;
  try{
   const fragments=[];let finished;
   if(record){
    stream=canvas.captureStream(30);
-   try{if(v.captureStream){const source=v.captureStream();for(const track of source.getAudioTracks())stream.addTrack(track)}}catch{}
+   try{if(v.captureStream){sourceStream=v.captureStream();for(const track of sourceStream.getAudioTracks())stream.addTrack(track)}}catch{}
    rec=new MediaRecorder(stream,{mimeType:mime});
    finished=new Promise((resolve,reject)=>{rec.onstop=resolve;rec.onerror=e=>reject(e.error||Error('Encoder failed'))});
    rec.ondataavailable=e=>{if(e.data.size)fragments.push(e.data)};
@@ -71,7 +71,7 @@ async function runTimeline(record){
    info('Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
   }else info('Timeline preview complete.');
  }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}info('Timeline failed: '+e.message)}
- finally{v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration);if(stream)stream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
+ finally{v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration);if(stream)stream.getTracks().forEach(t=>t.stop());if(sourceStream)sourceStream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
 }
 window.hkTimeline={
  getClips:()=>clips.map(c=>({...c})),
