@@ -22,7 +22,7 @@ export async function handleNativeDownloads(request,env) {
     if(!authorized(request,env)) return reply({error:'Unauthorized'},401);
     if(!env.DOWNLOAD_DB) return reply({error:'Download statistics database not configured'},503);
     try {
-      const result=await env.DOWNLOAD_DB.prepare('SELECT app_id, platform, COUNT(*) AS downloads FROM native_download_events GROUP BY app_id, platform ORDER BY app_id, platform').all();
+      const result=await env.DOWNLOAD_DB.prepare('SELECT app_id, platform, downloads FROM native_download_counts ORDER BY app_id, platform').all();
       return reply({counts:result.results||[]});
     } catch { return reply({error:'Statistics database not initialized'},503); }
   }
@@ -48,8 +48,9 @@ export async function handleNativeDownloads(request,env) {
     const object=request.method==='HEAD' ? await env.NATIVE_RELEASES.head(key) : await env.NATIVE_RELEASES.get(key);
     if(!object || !object.size) return reply({error:'Native installation package not available for this app and device'},404);
     if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size)}});
-    // Record only a successful package response; never count app-page opens.
-    await env.DOWNLOAD_DB.prepare('INSERT INTO native_download_events (app_id, platform, downloaded_at) VALUES (?, ?, ?)').bind(appId,platform,new Date().toISOString()).run();
+    // A download event means a package response was initiated, not that the device installed it.
+    // Use a single aggregate counter row rather than storing identifying visitor data.
+    await env.DOWNLOAD_DB.prepare('INSERT INTO native_download_counts (app_id, platform, downloads) VALUES (?, ?, 1) ON CONFLICT(app_id, platform) DO UPDATE SET downloads = downloads + 1').bind(appId,platform).run();
     return new Response(object.body,{status:200,headers:{...headers,'content-type':meta.type,'content-disposition':'attachment; filename="heavenly-key-'+appId+'.'+meta.extension+'"','content-length':String(object.size)}});
   } catch { return reply({error:'Download temporarily unavailable'},503); }
 }
