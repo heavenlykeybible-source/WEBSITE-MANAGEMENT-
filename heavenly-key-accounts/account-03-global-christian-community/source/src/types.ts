@@ -5,6 +5,8 @@ export interface Env {
   SESSIONS: KVNamespace;
   MEDIA: R2Bucket;
   PASSWORD_PEPPER: string;
+  RESEND_API_KEY?: string;
+  RESET_EMAIL_FROM?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   FACEBOOK_APP_ID?: string;
