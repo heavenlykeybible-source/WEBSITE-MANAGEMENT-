@@ -12,3 +12,9 @@
 /pages/ministries /pages/ministries.html 200
 /pages/what-we-believe /pages/what-we-believe.html 200
 /pages/meet-the-pastor /pages/meet-the-pastor.html 200
+
+# Additional verified ministry pages.
+/pages/radio /pages/radio.html 200
+/pages/grdpc /pages/grdpc.html 200
+/radio /pages/radio.html 200
+/grdpc /pages/grdpc.html 200
