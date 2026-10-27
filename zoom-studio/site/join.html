@@ -82,7 +82,7 @@ const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
 const note=t=>{$('nt').textContent=t};
 function stopLocal(){try{proc&&proc.stopProcessing()}catch(e){}proc=null;if(local)local.getTracks().forEach(t=>t.stop());if(rawMedia&&rawMedia!==local)rawMedia.getTracks().forEach(t=>t.stop());local=null;rawMedia=null}
 function end(msg){over=true;connecting=false;clearTimeout(openTimer);openTimer=null;clearTimeout(joinAckTimer);joinAckTimer=null;try{ws&&ws.close()}catch(e){}try{shareTrack&&shareTrack.stop()}catch(e){}shareTrack=null;try{pc&&pc.close()}catch(e){}pc=null;stopLocal();show('done');$('dm').textContent=msg}
-function mode(stage){onStage=stage;$('stg').hidden=!stage;$('audv').hidden=stage;$('aorow').hidden=true;if(!stage)$('invrow').hidden=$('invrow').hidden}
+function mode(stage){onStage=stage;$('stg').hidden=!stage;$('audv').hidden=stage;$('aorow').hidden=true;if(stage)$('invrow').hidden=true}
 if(AUD){$('nrrow').hidden=true;$('ti').textContent='Join the audience';$('intro').textContent='You are joining as a viewer. You can chat, raise your hand and react. The host may invite you to the stage. You do not need an account.';$('aorow').hidden=true;
  $('oktx').textContent='I understand my name and chat messages will be visible to the host and everyone in the room, and may appear on the broadcast. I agree to the Privacy Policy.'}
 else $('oktx').textContent='I understand the host may broadcast and record this session, including my video, voice, name and chat messages. The host can see my network address. I agree to the Privacy Policy.';
