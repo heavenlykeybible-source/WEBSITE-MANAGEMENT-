@@ -97,6 +97,15 @@ const app={async fetch(req:Request,env:Env):Promise<Response>{
   const items=[...(conversations.results||[]).map((v:any)=>({type:'conversation',id:v.id,channel:v.channel,needsHuman:!!v.requested_human,paused:!!v.human_paused,at:v.updated_at})),...(posts.results||[]).map((v:any)=>({type:'post',id:v.id,channel:v.platform,status:v.status,at:v.created_at}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,50);
   return reply({items,liveProviderEvents:false});
  }
+ if(u.pathname==='/api/webhooks/events/review'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!idOk(data?.eventId)||!['ignored','failed'].includes(data?.status))return reply({error:'Provide a valid eventId and ignored or failed status'},400);
+  try{
+   const result=await env.DB.prepare("UPDATE webhook_events SET processing_status=? WHERE id=? AND processing_status='pending'").bind(data.status,data.eventId).run();
+   if(!result.meta.changes)return reply({error:'Event not found or already reviewed'},409);
+   return reply({reviewed:true,status:data.status,externalDelivery:false});
+  }catch{return reply({error:'Webhook inbox unavailable; apply migration 0002'},503)}
+ }
  if(u.pathname==='/api/webhooks/events'&&req.method==='GET'){
   const limit=Math.min(100,Math.max(1,Number(u.searchParams.get('limit')||25)||25));
   try{
