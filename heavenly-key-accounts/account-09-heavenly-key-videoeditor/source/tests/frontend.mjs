@@ -81,7 +81,7 @@ assert.ok(module.includes('Math.min(end,Math.max(start'),'Caption word timings m
 assert.ok(module.includes('const selectedAudio=audioBuffer,selectedRevision=audioLoadRevision')&&module.includes('if(audioLoadRevision!==selectedRevision)'),'Audio transcription must reject stale selected files');
 assert.ok(module.includes('Math.max(0,500-layers.length)')&&module.includes('generated.filter(l=>l.text&&l.end>l.start).slice(0,remaining)')&&module.includes('invalidateVideoDownload();layers.push(...accepted)'), 'AI caption generation must respect 500-caption limit and invalidate exports');
 assert.ok(timelineScript.includes('rec.pause()') && timelineScript.includes('rec.resume()'),'Export recorder must skip clip seeking');
-for (const safeguard of ["invalidateExport();undo.push", "invalidateExport();clips=data.map", "if(session)return info('Stop preview or export", "if(clips.length>=200)", "'clipRemove','clipUp','clipDown','clipUndo','clipRedo'"]) {
+for (const safeguard of ["invalidateExport();undo.push", "invalidateExport();pendingProjectMedia=true;clips=data.map", "if(session)return info('Stop preview or export", "if(clips.length>=200)", "'clipRemove','clipUp','clipDown','clipUndo','clipRedo'"]) {
   assert.ok(timelineScript.includes(safeguard),'Missing timeline regression safeguard: '+safeguard);
 }
 assert.ok(timelineScript.includes("else list.value=''") ,'Empty timeline must clear selected clip');
