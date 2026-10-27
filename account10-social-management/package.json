@@ -10,7 +10,8 @@
     "db:local": "wrangler d1 execute heavenlykey-social-management-db --local --file=schema.sql",
     "db:migrate:local": "wrangler d1 execute heavenlykey-social-management-db --local --file=migrations/0002_webhook_events.sql && wrangler d1 execute heavenlykey-social-management-db --local --file=migrations/0003_conversation_lookup.sql",
     "db:migrate:remote": "wrangler d1 execute heavenlykey-social-management-db --remote --file=migrations/0002_webhook_events.sql && wrangler d1 execute heavenlykey-social-management-db --remote --file=migrations/0003_conversation_lookup.sql",
-    "db:init:remote": "wrangler d1 execute heavenlykey-social-management-db --remote --file=schema.sql"
+    "db:init:remote": "wrangler d1 execute heavenlykey-social-management-db --remote --file=schema.sql",
+    "build:check": "wrangler deploy --dry-run --outdir dist-check"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250901.0",
