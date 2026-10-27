@@ -202,7 +202,11 @@ wss.on('connection', (ws, req) => {
   const idle = setTimeout(() => { if (!ws.sid) ws.close(); }, 10000);
   ws.buf = []; ws.bufBytes = 0;
   ws.on('message', async (data, isBinary) => {
-    if (ws.starting) { if (isBinary) { ws.bufBytes += data.length; if (ws.bufBytes > 8 * 1024 * 1024) { ws.buf = []; return ws.close(1009, 'Startup buffer exceeded'); } ws.buf.push(data); } return; }
+    if (ws.starting) {
+      if (isBinary) { ws.bufBytes += data.length; if (ws.bufBytes > 8 * 1024 * 1024) { ws.buf = []; return ws.close(1009, 'Startup buffer exceeded'); } ws.buf.push(data); }
+      else { try { if (JSON.parse(data.toString()).type === 'stop') { ws.cancelled = true; ws.buf = []; ws.close(); } } catch {} }
+      return;
+    }
     if (!isBinary) {
       let m; try { m = JSON.parse(data.toString()); } catch { return; }
       if (m.type === 'stop') { const s = sessions.get(ws.sid); if (s && s.ws === ws) endSession(s); return; }
@@ -210,7 +214,7 @@ wss.on('connection', (ws, req) => {
       const a = auth(m.token); if (!a) { ws.send('Not allowed. Sign in again.'); return ws.close(); }
       ws.starting = true;
       const dests = await safeDests(Array.isArray(m.dests) ? m.dests : []);
-      if (ws.readyState !== 1) return;
+      if (ws.cancelled || ws.readyState !== 1) return;
       if (!dests.length) { ws.send('A destination is invalid or unavailable. Check all destination URLs and try again.'); return ws.close(); }
       let s = sessions.get(a.id);
       if (!s) {
