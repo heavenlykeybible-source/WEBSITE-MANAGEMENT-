@@ -39,7 +39,12 @@ test('Simple registration: long passphrases, sign-in, consent and atomic account
  assert.equal((await request('/api/auth/login',{email:input.email,password:'Wrong passphrase'})).status,401);
  assert.equal((await request('/api/auth/login',{email:input.email,password:input.password})).status,200);
  const oldSalt='cc'.repeat(16),oldDigest=pbkdf2Sync(input.password+env.PASSWORD_PEPPER,Buffer.from(oldSalt,'hex'),100000,32,'sha256').toString('hex');
- db.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE user_id=?').run('pbkdf2-sha256$100000 const secondSession=await request('/api/auth/login',{email:shortAccount.email,password:shortAccount.password});
+ db.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE user_id=?').run('pbkdf2-sha256$100000$'+oldDigest,oldSalt,account.user_id);
+ assert.equal((await request('/api/auth/login',{email:input.email,password:'invalid'})).status,401);
+ assert.ok(db.prepare('SELECT password_hash FROM users WHERE user_id=?').get(account.user_id).password_hash.startsWith('pbkdf2-sha256$100000$'));
+ assert.equal((await request('/api/auth/login',{email:input.email,password:input.password})).status,200);
+ assert.ok(db.prepare('SELECT password_hash FROM users WHERE user_id=?').get(account.user_id).password_hash.startsWith('pbkdf2-sha256$310000$'));
+ const secondSession=await request('/api/auth/login',{email:shortAccount.email,password:shortAccount.password});
  db.prepare("INSERT INTO member_passkeys(credential_id,user_id,public_key,counter,transports,label,created_at) VALUES('test-change',?,'test',0,'[]','Test',0)").run(shortCreated.data.userId);
  assert.equal((await request('/api/auth/change-password',{currentPassword:'wrong',newPassword:'NewPassword123'},secondSession.cookie)).status,401);
  assert.equal(db.prepare("SELECT COUNT(*) n FROM member_passkeys WHERE credential_id='test-change'").get().n,1);
