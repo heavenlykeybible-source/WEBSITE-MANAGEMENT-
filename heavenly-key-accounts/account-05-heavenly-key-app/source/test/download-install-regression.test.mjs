@@ -13,7 +13,7 @@ test('Android guide has only one install prompt controller', () => {
 test('device guide only advertises native download when the server confirms its availability', () => {
   const js = publicFile('app-device-guide.js');
   assert.match(js, /method:'HEAD'/);
-  assert.match(js, /nativeLink\.hidden = !available\.ok/);
+  assert.match(js, /nativeLink\.hidden = !nativeAvailable/);
   assert.match(js, /nativeLink\.hidden = true/);
   assert.match(js, /\/api\/native-download\//);
 });
@@ -59,4 +59,11 @@ test('offline shell caches device guides without failing when optional assets ar
   assert.match(sw, /for\(const path of SHELL\.filter/);
   assert.match(sw, /const cachePath=guide\?url\.pathname\+'index\.html':url\.pathname/);
   assert.match(sw, /getAll\('app'\)\.length===1/);
+});
+
+test('native download button requires a security digest and a positive package length', () => {
+ const js = publicFile('app-device-guide.js');
+ assert.match(js, /x-release-sha256/);
+ assert.match(js, /Number\.isSafeInteger\(size\) && size > 0/);
+ assert.match(js, /nativeAvailable = available\.ok/);
 });
