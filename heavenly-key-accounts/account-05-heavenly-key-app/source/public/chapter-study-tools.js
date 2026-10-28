@@ -20,13 +20,18 @@ tools?.addEventListener('click',async e=>{
  const heading=button.textContent+' · '+book.selectedOptions[0].text+' '+chapter.value;
  host.replaceChildren(el('p','Loading '+book.selectedOptions[0].text+' '+chapter.value+'…'));
  try{
-  const manifestResponse=await fetch('/kjv-manifest.json');if(!manifestResponse.ok)throw Error('Bible catalogue unavailable');
-  const manifest=await manifestResponse.json();
-  const entry=manifest.books.find(b=>b.id===key.split(':')[0]);if(!entry)throw Error('Book not found');
-  const bookResponse=await fetch('/'+entry.path);if(!bookResponse.ok)throw Error('Bible text unavailable');
-  const data=await bookResponse.json();
+  let entry={name:book.selectedOptions[0].text};
+  let verses=[];
+  if(kind==='definitions'||kind==='important'){
+   const manifestResponse=await fetch('/kjv-manifest.json');if(!manifestResponse.ok)throw Error('Bible catalogue unavailable');
+   const manifest=await manifestResponse.json();
+   entry=manifest.books.find(b=>b.id===key.split(':')[0]);if(!entry)throw Error('Book not found');
+   const bookResponse=await fetch('/'+entry.path);if(!bookResponse.ok)throw Error('Bible text unavailable');
+   const data=await bookResponse.json();
+   if(!data||data.book!==entry.name||!Array.isArray(data.chapters)||data.chapters.length!==entry.chapters)throw Error('Bible data integrity check failed');
+   verses=data.chapters[Number(key.split(':')[1])-1];if(!Array.isArray(verses)||!verses.length||!verses.every(v=>typeof v==='string'))throw Error('Chapter unavailable');
+  }
   if(request!==latestRequest||book.value+':'+chapter.value!==key)return;
-  const verses=data.chapters[Number(key.split(':')[1])-1];if(!Array.isArray(verses)||!verses.length)throw Error('Chapter unavailable');
   host.replaceChildren(el('h3',heading));
   if(kind==='definitions'){
    const words=Object.entries(dictionary).filter(([w])=>verses.some(v=>new RegExp('\\b'+w+'\\b','i').test(v)));
