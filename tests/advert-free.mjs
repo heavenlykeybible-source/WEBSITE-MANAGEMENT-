@@ -51,6 +51,9 @@ for (const base of communityVariants) {
   assert.ok(guard >= 0 && legacy > guard,'Advert endpoint protection must precede normal routes: '+base);
   assert.ok(!backend.includes('Adverts.'),'Unreachable advert backend calls remain: '+base);
   assert.ok(backend.includes('advertisingEnabled:false'),'Public advert endpoint must declare disabled: '+base);
+  assert.ok(backend.includes('if(p==="/api/adverts"&&m==="GET")'),'Public ad delivery must return an empty list: '+base);
+  assert.ok(backend.includes('return json({error:{message:"Advertising is disabled across Heavenly Key platforms."},advertisingEnabled:false},410);'),'Advertising management routes must be rejected: '+base);
+  assert.ok(!backend.includes('from "./adverts"'),'Advertising module must not be imported: '+base);
   for(const fragment of ['function renderAdvert(', 'function mountAdverts(', 'SPONSORED ·', 'api("/api/adverts")']) {
     assert.ok(!frontend.includes(fragment),'Advertising frontend survived in '+base+': '+fragment);
   }
