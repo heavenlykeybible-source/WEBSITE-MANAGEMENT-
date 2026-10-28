@@ -16,11 +16,12 @@ const caches = {
   async keys() { return ['hk-account9-offline-v5','hk-account9-offline-v6']; },
   async delete() { return true; }
 };
-let offline=true, networkCalls=0, privateNext=false;
+let offline=true, networkCalls=0, privateNext=false, failureNext=false;
 const fetch = async request => {
   networkCalls++;
   if (offline) throw Error('Offline');
   if(privateNext){privateNext=false;return new Response('private editor',{headers:{'cache-control':'private, no-store'}})}
+  if(failureNext){failureNext=false;return new Response('Service unavailable',{status:503});}
   return new Response('live '+keyOf(request));
 };
 const self = {
@@ -74,6 +75,9 @@ navigate = await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'nav
 assert.equal(await navigate.text(),'live /','Online navigation must fetch current editor');
 const refreshedScript=await fire('fetch',new Request('https://editor.test/timeline.js'));
 assert.equal(await refreshedScript.text(),'live /timeline.js','Online editor assets must update immediately instead of serving stale cached scripts');
+failureNext=true;
+const recoveredScript=await fire('fetch',new Request('https://editor.test/timeline.js'));
+assert.equal(await recoveredScript.text(),'live /timeline.js','Temporary server errors must preserve the last working editor asset');
 assert.equal(await (await cache.match('/index.html')).text(),'live /','Online launch must refresh offline editor');
 privateNext=true;
 navigate=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
