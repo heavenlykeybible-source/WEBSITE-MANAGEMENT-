@@ -1,3 +1,4 @@
+# Owner-authorized release retry after current AI permission fixture correction.
 name: Account 4 one-time owner-authorized upgrade
 
 on:
