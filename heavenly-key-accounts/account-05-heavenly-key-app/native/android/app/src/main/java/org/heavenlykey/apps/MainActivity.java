@@ -13,8 +13,7 @@ import android.webkit.CookieManager;
 import android.view.ViewGroup;
 import android.webkit.SslErrorHandler;
 import android.net.http.SslError;
-import android.webkit.WebView;
-import android.webkit.WebResourceError;
+
 
 public final class MainActivity extends Activity {
  private WebView browser;
