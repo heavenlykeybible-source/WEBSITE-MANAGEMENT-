@@ -5,7 +5,7 @@ import {handleNativeDownloads} from '../src/native-downloads.js';
 const origin='https://apps.heavenlykey.org';
 function environment({packageExists=true,db=true,token='a'.repeat(40)}={}) {
  const calls={writes:0,reads:0,objects:0};
- const verified={size:4,customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true'}};
+ const verified={size:4,customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true',scannedSha256:'b'.repeat(64)}};
  const env={
   DOWNLOAD_ADMIN_TOKEN:token,
   ASSETS:{fetch:async()=>new Response(JSON.stringify({'all-in-one':{name:'All-in-One',url:origin+'/experience.html'}}),{status:200})},
@@ -80,6 +80,15 @@ test('unverified native releases are rejected',async()=>{
  const {env}=environment();
  env.NATIVE_RELEASES.head=async()=>({size:4,customMetadata:{malwareScan:'pending'}});
  env.NATIVE_RELEASES.get=async()=>({size:4,body:new Uint8Array([1,2,3,4])});
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env)).status,403);
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
+});
+
+test('reject release whose scanned digest differs from published digest',async()=>{
+ const {env}=environment();
+ const invalid={size:4,customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true',scannedSha256:'c'.repeat(64)}};
+ env.NATIVE_RELEASES.head=async()=>invalid;
+ env.NATIVE_RELEASES.get=async()=>({...invalid,body:new Uint8Array([1,2,3,4])});
  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env)).status,403);
  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
 });
