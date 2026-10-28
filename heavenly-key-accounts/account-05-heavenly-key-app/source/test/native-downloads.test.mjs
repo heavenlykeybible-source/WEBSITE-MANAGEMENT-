@@ -63,6 +63,14 @@ test('private counts work with configured admin token only',async()=>{
 });
 test('missing storage and database fail closed',async()=>{
  const {env}=environment({db:false});
- assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,503);
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,200);
  assert.equal((await handleNativeDownloads(request('/api/admin/download-counts',{headers:{authorization:'Bearer '+'a'.repeat(40)}}),env)).status,503);
+});
+
+test('native downloads continue if aggregate statistics write fails',async()=>{
+ const {env}=environment();
+ env.DOWNLOAD_DB.prepare=()=>({bind(){return this},async run(){throw new Error('database offline')}});
+ const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env);
+ assert.equal(response.status,200);
+ assert.deepEqual([...new Uint8Array(await response.arrayBuffer())],[1,2,3,4]);
 });
