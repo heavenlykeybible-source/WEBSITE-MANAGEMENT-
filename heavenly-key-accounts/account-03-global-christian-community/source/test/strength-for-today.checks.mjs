@@ -21,3 +21,24 @@ test('premium Daily Manna studio includes four usable portrait themes and both i
 test('every Daily Manna topic has a unique automatic premium colour design',()=>{const page=read('strength-for-today.html'),studio=read('strength-share-studio.js');const m=page.match(/const DAILY_MANNA_THEMES=(\[[^;]+\]);window/);assert.ok(m,'topic themes');const themes=JSON.parse(m[1]);assert.equal(themes.length,12);assert.equal(new Set(themes.map(t=>t.middle)).size,12);assert.ok(page.includes('value="topic"'));assert.ok(page.includes("document.documentElement.style.setProperty"));assert.ok(studio.includes("window.DAILY_MANNA_THEMES?.[current]"));new vm.Script(studio,{filename:'strength-share-studio.js'});});
 
 test('every selection refreshes the premium card and stops active audio',()=>{const html=read('strength-for-today.html'),studio=read('strength-share-studio.js');assert.ok(html.includes("document.dispatchEvent(new CustomEvent('daily-manna-topic-changed'"));assert.ok(html.includes("document.addEventListener('daily-manna-topic-changed',()=>{stopStrengthAudio()"));assert.ok(studio.includes("document.addEventListener('daily-manna-topic-changed',()=>{refresh()"));});
+
+test('all 24 topic and portrait-size combinations generate branded PNGs',async()=>{
+ const html=read('strength-for-today.html'),src=read('strength-share-studio.js');
+ const items=JSON.parse(html.match(/const items=(\[[\s\S]*?\]);const DAILY_MANNA_THEMES=/)[1]);
+ const themes=JSON.parse(html.match(/const DAILY_MANNA_THEMES=(\[[^;]+\]);window/)[1]);
+ assert.equal(items.length,12);
+ for(let i=0;i<items.length;i++)for(const shape of ['vertical','facebook']){
+  const elements=new Map(),paint=[];
+  const element=id=>{if(!elements.has(id))elements.set(id,{value:id==='manna-image-size'?shape:id==='manna-theme'?'topic':'design_card',style:{},addEventListener(){},textContent:''});return elements.get(id)};
+  const context={font:'20px Arial',createLinearGradient:()=>({addColorStop(){}}),fillRect(){},beginPath(){},arc(){},stroke(){},fillText(value){paint.push(value)},measureText(value){const size=Number(this.font.match(/(\d+)px/)?.[1]||20);return {width:value.length*size*.48}}};
+  const document={getElementById:element,createElement(tag){return tag==='canvas'?{getContext:()=>context,toBlob:cb=>cb({type:'image/png'})}:{click(){},remove(){}}},body:{append(){}},addEventListener(){}};
+  const sandbox={document,window:{DAILY_MANNA_THEMES:themes,addEventListener(){}},items,current:i,navigator:{},URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},File:class{},confirm:()=>true,authenticated:async()=>true,request:async()=>({}),setTimeout};
+  const instrumented=src.replace(/\}\)\(\);\s*$/,'return {renderImage};})();');
+  const module=vm.runInNewContext(instrumented,sandbox,{timeout:2000});
+  const rendered=await module.renderImage();
+  assert.equal(rendered.w,1080,items[i][0]);
+  assert.equal(rendered.h,shape==='vertical'?1920:1440,items[i][0]);
+  assert.ok(paint.includes('www.global.heavenlykey.org'),items[i][0]);
+  assert.ok(paint.some(x=>x.includes(items[i][1])),items[i][0]);
+ }
+});
