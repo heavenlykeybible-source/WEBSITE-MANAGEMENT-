@@ -25,10 +25,11 @@ android {
    minifyEnabled false
    def requiredSigning = ['HKEM_ANDROID_KEYSTORE_FILE', 'HKEM_ANDROID_KEYSTORE_PASSWORD', 'HKEM_ANDROID_KEY_ALIAS', 'HKEM_ANDROID_KEY_PASSWORD']
    def missingSigning = requiredSigning.findAll { !System.getenv(it) }
-   if (!missingSigning.isEmpty()) {
+   def releaseRequested = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+   if (releaseRequested && !missingSigning.isEmpty()) {
     throw new GradleException('Production release signing is required; missing: ' + missingSigning.join(', '))
    }
-   signingConfig signingConfigs.release
+   if (missingSigning.isEmpty()) signingConfig signingConfigs.release
   }
  }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
