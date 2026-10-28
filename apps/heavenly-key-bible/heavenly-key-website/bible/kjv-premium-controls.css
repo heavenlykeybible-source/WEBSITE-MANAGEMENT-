@@ -1,0 +1,18 @@
+/* Premium, accessible KJV listening and sharing toolbar */
+#kjv-easy-tools{position:relative;overflow:hidden;margin:20px 0 24px!important;padding:clamp(18px,3vw,30px)!important;border:1px solid #ddc78a!important;border-radius:24px!important;background:linear-gradient(120deg,#fffdf7 0%,#f3f7ff 70%,#edf1ff 100%)!important;box-shadow:0 16px 44px #0e295b1e!important;color:#132e5b}
+#kjv-easy-tools:before{content:"";position:absolute;width:240px;height:240px;right:-110px;top:-140px;pointer-events:none;background:radial-gradient(circle,#e2b75270,transparent 70%)}
+#kjv-easy-tools .kjv-kicker{display:block;font-size:.7rem;font-weight:850;letter-spacing:.18em;color:#a06c14;text-transform:uppercase}
+#kjv-easy-tools .kjv-title{font-size:clamp(1.2rem,2.5vw,1.65rem);line-height:1.25;color:#102d71;margin:5px 0!important}
+#kjv-easy-tools .kjv-intro{max-width:560px;color:#425879;margin:4px 0 16px}
+#kjv-easy-tools .kjv-controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+#kjv-easy-tools button{border:1px solid #c2d0e8;border-radius:12px;background:white;color:#133d8e;padding:11px 15px;min-height:44px;font:700 .9rem system-ui;cursor:pointer;transition:transform .15s,box-shadow .15s}
+#kjv-easy-tools button:hover{transform:translateY(-2px);box-shadow:0 7px 16px #1e3f751b}
+#kjv-easy-tools button:focus-visible,#kjv-easy-tools select:focus-visible{outline:3px solid #d9a433;outline-offset:3px}
+#kjv-easy-tools #kjv-listen{background:linear-gradient(130deg,#1447ad,#082d7c);color:white;border-color:#1447ad}
+#kjv-easy-tools #kjv-share{background:linear-gradient(130deg,#f6cf62,#dfa727);color:#242514;border-color:#d2a32b}
+#kjv-easy-tools .kjv-select{display:flex;align-items:center;gap:7px;color:#29476e;font-size:.83rem;font-weight:700}
+#kjv-easy-tools select{max-width:190px;min-height:44px;border:1px solid #bccde6;border-radius:10px;background:#fff;color:#1d3865;padding:8px}
+#kjv-easy-tools #kjv-tool-status{min-height:1.4em;color:#25529a;font-size:.85rem}
+#kjv-easy-tools .kjv-motto{margin:10px 0 0;color:#805d17;font-weight:700;font-size:.79rem}
+@media(max-width:560px){#kjv-easy-tools .kjv-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#kjv-easy-tools .kjv-controls button{width:100%;padding:10px 7px}#kjv-easy-tools .kjv-select{grid-column:span 2}#kjv-easy-tools select{flex:1;max-width:none}}
+@media(prefers-reduced-motion:reduce){#kjv-easy-tools button{transition:none}}
