@@ -15,7 +15,7 @@ const paths=[];
 function traverse(folder){
   for(const ent of readdirSync(folder,{withFileTypes:true})){
     const path=join(folder,ent.name);
-    if(ent.isDirectory())traverse(path);
+    if(ent.isDirectory()&&!ent.name.startsWith('.')&&!ent.name.startsWith('_'))traverse(path);
     else if(ent.isFile()&&!ent.name.startsWith('_')&&!ent.name.startsWith('.'))paths.push(path);
   }
 }
