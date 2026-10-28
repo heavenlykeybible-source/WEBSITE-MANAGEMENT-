@@ -56,7 +56,7 @@ tools?.addEventListener('click',async e=>{
    if(!info?.important){host.append(el('p','Reviewed important-verse selections are not available for this chapter yet. Read the chapter above.'));return;}
    for(const n of info.important)if(verses[n-1])host.append(el('p',entry.name+' '+chapter.value+':'+n+' — '+verses[n-1]));
   }else{
-   const values=kind==='summary'?(info?[info.summary]:null):info?.[kind];
+   const values=kind==='summary'?(info?.summary?[info.summary]:null):info?.[kind];
    if(!values){host.append(el('p','Reviewed '+button.textContent.toLowerCase()+' are not available for this chapter yet. No AI-generated or unverified study notes are shown.'));return;}
    for(const value of values)host.append(el('p',value));
   }
