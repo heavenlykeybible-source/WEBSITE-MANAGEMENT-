@@ -6,6 +6,19 @@ import {ownerSession,ownerLogin,ownerLogout,setOwnerPassword,generatedPassword} 
 interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string}
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 const fail=(message:string,status=400)=>json({error:message},status);
+// Harden browser-delivered Control Room pages without changing authentication or cached media.
+async function secureAsset(request:Request,env:Env):Promise<Response>{
+ const upstream=await env.ASSETS.fetch(request);
+ const response=new Response(upstream.body,upstream);
+ response.headers.set('X-Content-Type-Options','nosniff');
+ response.headers.set('Referrer-Policy','strict-origin-when-cross-origin');
+ response.headers.set('X-Frame-Options','DENY');
+ response.headers.set('Content-Security-Policy',"frame-ancestors 'none'; object-src 'none'; base-uri 'self'");
+ response.headers.set('Permissions-Policy','camera=(), microphone=(), geolocation=()');
+ response.headers.set('Strict-Transport-Security','max-age=31536000; includeSubDomains');
+ if((response.headers.get('content-type')||'').includes('text/html'))response.headers.set('Cache-Control','no-store');
+ return response;
+}
 function b64url(s:string){const p=s.replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from(atob(p+"=".repeat((4-p.length%4)%4)),c=>c.charCodeAt(0))}
 async function authenticate(request:Request,env:Env):Promise<string|null>{
  const token=request.headers.get("Cf-Access-Jwt-Assertion");if(!token||!env.ACCESS_AUD||!env.ACCESS_TEAM_DOMAIN||env.ACCESS_AUD.startsWith("REPLACE_"))return null;
@@ -29,7 +42,7 @@ function imageType(b:Uint8Array){if(b.length>=8&&[137,80,78,71,13,10,26,10].ever
 export default {async fetch(request:Request,env:Env):Promise<Response>{
  const u=new URL(request.url);
  const ownerHost=u.hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
- if(!ownerHost&&!u.pathname.startsWith('/api/'))return env.ASSETS.fetch(request);
+ if(!ownerHost&&!u.pathname.startsWith('/api/'))return secureAsset(request,env);
  if(ownerHost&&u.pathname==='/api/owner/login'&&request.method==='POST'){
   if(request.headers.get('Origin')!==u.origin)return fail('Invalid sign-in origin.',403);
   try{const data=await body(request,4096);if(data.username!==undefined&&data.username!=='owner')return fail('Sign-in failed. Check your username and password.',401);const result=await ownerLogin(request,env.DB,data.password);return result.ok?new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','cache-control':'no-store','set-cookie':result.cookie!}}):fail(result.error!,result.status)}catch{return fail('Sign-in is temporarily unavailable.',503)}
@@ -37,7 +50,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
  const accessActor=ownerHost?null:await authenticate(request,env);
  const actor=accessActor||(ownerHost?await ownerSession(request,env.DB):null);
  if(!u.pathname.startsWith('/api/')){
-  return env.ASSETS.fetch(request);
+  return secureAsset(request,env);
  }
  if(!actor)return fail('Administrator sign-in required',401);
  if(!['GET','HEAD','OPTIONS'].includes(request.method)&&(request.headers.get('Origin')!==u.origin||request.headers.get('Sec-Fetch-Site')==='cross-site'))return fail('Use the Control Room to make this change.',403);
