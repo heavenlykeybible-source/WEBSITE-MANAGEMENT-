@@ -8,7 +8,7 @@ const b64=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes));
 const un64=(text:string)=>Uint8Array.from(atob(text),c=>c.charCodeAt(0));
 const fail=(message:string,status=400):never=>{throw Object.assign(new Error(message),{status});};
 const library=()=>import("@simplewebauthn/server");
-export function verifyOrigin(request:Request){if(new URL(request.url).origin!==origin||request.headers.get("Origin")!==origin||request.headers.get("Sec-Fetch-Site")==="cross-site")fail("Use the secure Global Christian Social Network website.",403);}
+export function verifyOrigin(request:Request){const fetchSite=request.headers.get("Sec-Fetch-Site");if(new URL(request.url).origin!==origin||request.headers.get("Origin")!==origin||(fetchSite!==null&&fetchSite!=="same-origin"))fail("Use the secure Global Christian Social Network website.",403);}
 export function challengeCookie(id:string){return "gc_passkey="+id+"; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age="+(id?300:0);}
 function challengeId(request:Request){return (request.headers.get("Cookie")||"").split(";").map(v=>v.trim()).find(v=>v.startsWith("gc_passkey="))?.slice(11)||"";}
 async function credentials(env:Env,userId:number){const r=await env.DB.prepare("SELECT credential_id,public_key,counter,transports,label,created_at FROM member_passkeys WHERE user_id=? ORDER BY created_at").bind(userId).all<any>();return r.results||[];}
