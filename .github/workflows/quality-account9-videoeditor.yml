@@ -64,7 +64,7 @@ jobs:
           import assert from 'node:assert/strict';
           import worker from '/tmp/account9-quality-worker.mjs';
           const get = path => worker.fetch(new Request('https://video.example'+path), {});
-          for (const [path,type] of [['/','text/html'],['/timeline.js','text/javascript'],['/sw.js','text/javascript'],['/offline-status.js','text/javascript'],['/manifest.json','application/json'],['/assets/logo-256.png','image/png']]) {
+          for (const [path,type] of [['/','text/html'],['/timeline.js','text/javascript'],['/sw.js','text/javascript'],['/offline-status.js','text/javascript'],['/hk-approved-footer.js','text/javascript'],['/hk-approved-footer.css','text/css'],['/manifest.json','application/json'],['/assets/logo-256.png','image/png']]) {
             const response=await get(path);
             assert.equal(response.status,200,path);
             assert.ok(response.headers.get('content-type')?.includes(type),path+' content type');
