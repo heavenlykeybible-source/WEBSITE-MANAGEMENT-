@@ -40,5 +40,5 @@ jobs:
       - name: Audit production dependencies
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/source
         run: |
-          npm ci --ignore-scripts --no-audit --no-fund
+          npm install --ignore-scripts --no-audit --no-fund
           npm audit --omit=dev --audit-level=high
