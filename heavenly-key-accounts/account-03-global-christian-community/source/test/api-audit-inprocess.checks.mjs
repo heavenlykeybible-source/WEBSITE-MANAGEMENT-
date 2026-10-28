@@ -29,7 +29,7 @@ function sql(command){db.exec(command)}
  await req('/api/me/profile',{bio:'Changed bio only'},a.cookie,'PATCH');
  assert.equal((await req('/api/me',null,a.cookie)).data.profile.churchVisibility,'private');
  assert.equal((await req('/api/me/profile',{locationVisibility:'invalid'},a.cookie,'PATCH')).status,400);
- const guest=(await req('/api/profiles/'+uid)).data.profile;assert.equal(guest.fullName,undefined);assert.equal(guest.city,null);assert.equal((await req('/api/discover?q=Unsearchable%20Legal%20Identity')).data.items.length,0);
+ const guest=(await req('/api/profiles/'+uid)).data.profile;assert.equal(guest.fullName,undefined);assert.equal(guest.city,null);assert.equal((await req('/api/discover?q=Unsearchable%20Legal%20Identity')).status,401);
  await req('/api/global-connect/profile/'+uid,{},b.cookie);
  assert.equal((await req('/api/profiles/'+uid,null,b.cookie)).data.profile.city,null);
  const post=await req('/api/posts',{postFormat:'design_card',body:'Connections teaching in Christ',visibility:'connections'},a.cookie);assert.equal(post.status,201,JSON.stringify(post));const pid=post.data.postId;
