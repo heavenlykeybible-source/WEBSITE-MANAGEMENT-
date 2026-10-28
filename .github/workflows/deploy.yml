@@ -97,6 +97,8 @@ jobs:
       - name: Deploy existing Worker without changing its resources
         run: node scripts/deploy-account4-existing.mjs
         env:
+          ACCOUNT4_PRODUCTION_APPROVED: '1'
+          ACCOUNT4_APPROVED_COMMIT: ${{ inputs.approved_commit }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
 
