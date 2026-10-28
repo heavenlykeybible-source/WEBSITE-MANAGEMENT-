@@ -7,6 +7,19 @@ const worker='heavenly-key-meetingspace';
 const origin=process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN;
 if(!origin || !/^https:\/\/[a-z0-9.-]+\/?$/i.test(origin)) throw Error('Set MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN to the confirmed HTTPS URL for Account 8');
 const privatePreview=process.env.MEETINGSPACE_PRIVATE_PREVIEW==='1';
+// Production is opt-in: require explicit approval and passing regression tests.
+// Preview deploys remain possible without changing the production release.
+if(!privatePreview){
+  if(process.env.MEETINGSPACE_PRODUCTION_APPROVED!=='1')
+    throw Error('Production deployment blocked: Control Room approval required (MEETINGSPACE_PRODUCTION_APPROVED=1)');
+  if(!/^[a-f0-9]{7,40}$/i.test(process.env.MEETINGSPACE_APPROVED_COMMIT||''))
+    throw Error('Production deployment blocked: approved Git commit SHA required');
+  const actual=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8',shell:false});
+  if(actual.status!==0||!actual.stdout.trim().startsWith(process.env.MEETINGSPACE_APPROVED_COMMIT))
+    throw Error('Production deployment blocked: checked-out commit differs from approved commit');
+  const checks=spawnSync(process.execPath,['--test','tests/*.test.mjs'],{stdio:'inherit',shell:true});
+  if(checks.error||checks.status!==0)throw Error('Production deployment blocked: regression tests failed');
+}
 const expectedHealth={ok:true,meetingConfigured:true,...(privatePreview?{}:{turnConfigured:true})};
 const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:origin,RELEASE_HEALTH_PATH:'/api/health',RELEASE_HEALTH_EXPECT:JSON.stringify(expectedHealth),RELEASE_SMOKE_PATHS:'/index.html,/join.html'};
 // The currently deployed private preview may not yet have TURN; only the *new* public release must.
