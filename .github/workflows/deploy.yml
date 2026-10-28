@@ -2,17 +2,11 @@ name: Deploy Website Management to Cloudflare
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main, fix/account4-permissions-passkeys-20261023]
-    paths:
-      - 'control-room-worker.js'
-      - 'ai/**'
-      - 'security/**'
-      - 'workspace/**'
-      - 'browser-agent/**'
-      - 'tests/browser-agent*.mjs'
-      - 'cms/build.mjs'
-      - '.github/workflows/deploy.yml'
+    inputs:
+      approved_commit:
+        description: 'Exact approved main-branch commit SHA to deploy'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -29,6 +23,13 @@ jobs:
     steps:
       - name: Check out the source
         uses: actions/checkout@v4
+
+      - name: Block stale branches and unapproved commits
+        env:
+          APPROVED_COMMIT: ${{ inputs.approved_commit }}
+        run: |
+          test "${{ github.ref }}" = 'refs/heads/main' || { echo '::error::Production releases must run from main'; exit 1; }
+          test "$APPROVED_COMMIT" = "$(git rev-parse HEAD)" || { echo '::error::Approval SHA does not match checkout; stale release blocked'; exit 1; }
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
