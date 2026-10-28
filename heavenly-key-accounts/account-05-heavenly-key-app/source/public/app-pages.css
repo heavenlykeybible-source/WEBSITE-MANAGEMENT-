@@ -4,3 +4,6 @@
 
 /* Keep directory actions readable and easy to tap on small screens. */
 .hk-directory-card .actions a,.hk-directory-card .actions button{min-height:48px;display:flex;align-items:center;justify-content:center;line-height:1.35;overflow-wrap:anywhere}.hk-directory-card summary{min-height:44px;display:flex;align-items:center}.hk-directory-card h3{overflow-wrap:anywhere}.downloadcard .cta{min-height:44px}.top-actions a{min-height:44px;display:flex;align-items:center;justify-content:center}@media(max-width:360px){.hk-directory-card .actions{grid-template-columns:minmax(0,1fr)}.hk-directory-card .share-to-bless{grid-column:auto}.site-header{padding-inline:12px}.top-actions a{max-width:none}.section{padding-inline:14px}}
+
+/* Keep unpublished native packages and unsupported install actions truly hidden. */
+[hidden]{display:none!important}
