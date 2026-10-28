@@ -1,4 +1,5 @@
 import {test} from 'node:test';
+import {pbkdf2Sync} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {stripTypeScriptTypes} from 'node:module';
@@ -78,4 +79,14 @@ test('password hashing uses stronger parameters and refuses malformed salts',asy
  assert.equal(await auth.verifyPassword(password+'wrong',fresh.salt,fresh.hash,pepper),false);
  for(const malformed of ['', 'ab', 'z'.repeat(32)])assert.equal(await auth.verifyPassword(password,malformed,fresh.hash,pepper),false);
  assert.equal(await auth.verifyPassword(password,fresh.salt,'pbkdf2-sha256$999999$'+'a'.repeat(64),pepper),false);
+});
+
+test('existing password formats remain valid while new passwords are strengthened',async()=>{
+ const password='Existing Member Passphrase',pepper='test-pepper',salt='ab'.repeat(16);
+ for(const rounds of [100000,210000]){
+  const digest=pbkdf2Sync(password+pepper,Buffer.from(salt,'hex'),rounds,32,'sha256').toString('hex');
+  const stored=rounds===100000?'pbkdf2-sha256$100000$'+digest:digest;
+  assert.equal(await auth.verifyPassword(password,salt,stored,pepper),true);
+  assert.equal(await auth.verifyPassword('wrong',salt,stored,pepper),false);
+ }
 });
