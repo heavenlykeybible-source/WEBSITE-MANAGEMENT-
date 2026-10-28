@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 const html=readFileSync('public/index.html','utf8');
 assert.ok(html.includes('<script defer src="hk-approved-footer.js"></script><script>'),'Screen recording handlers must execute in an inline script, not inside an external script tag');
 const module=readFileSync('public/integrations.js','utf8');
+assert.ok(html.includes("if(screenURL){URL.revokeObjectURL(screenURL);screenURL=''}$('screendl').removeAttribute('href')"),'New screen capture must invalidate the prior recording download');
 assert.ok(html.includes("const mime=['video/webm;codecs=vp8,opus','video/webm','video/mp4;")&&html.includes("$('screendl').download=mime.startsWith('video/mp4')"),'Screen recording codec and download extension must match');
 assert.ok(html.includes("$('vf').disabled=true")&&html.includes("exportStream.getTracks().forEach(t=>t.stop())")&&html.includes("exportRecorder.state!=='inactive'"),'Video exports must block source switching and clean up media tracks');
 assert.ok(html.includes("limit>600")&&html.includes("Browser export is limited to ten minutes"),'Single video export must respect browser resource limits');
