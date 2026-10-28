@@ -73,7 +73,7 @@ jobs:
           }
           const release=(await get('/')).headers.get('x-heavenly-key-release');
           assert.match(release||'',/^account9-[a-f0-9]{16}$/,'Worker must expose a content-addressed release ID');
-          const traversal=await get('/%2e%2e/%2e%2e/private');
+          const traversal=await get('/%2e%2e%2fprivate');
           assert.equal(traversal.status,400,'Encoded traversal must be rejected');
           const missing=await get('/missing-account9-resource');
           assert.equal(missing.status,404);
