@@ -16,16 +16,19 @@ if(release.android.status==='ready'){
   assert.match(release.android.sha256||'',/^[a-f0-9]{64}$/i);
   assert.match(release.android.package_name||'',/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/i);
   assert.ok(release.android.version);
+  assert.ok(release.android.artifact_url.toLowerCase().split('?')[0].endsWith('.apk'),'Android artifact must be an APK download');
 }
 if(release.ios.status==='ready'){
   assert.ok(release.ios.app_store_url,'Apple distribution listing is required');
   validHttps(release.ios.app_store_url);
   assert.ok(release.ios.bundle_id);
   assert.ok(release.ios.version);
+  assert.ok(/^(apps\.apple\.com|itunes\.apple\.com)$/i.test(new URL(release.ios.app_store_url).hostname),'iOS release must use an official Apple App Store listing');
 }
 if(release.pwa.status==='ready'){
   validHttps(release.pwa.manifest_url);
   validHttps(release.pwa.service_worker_url);
+  for(const u of [release.pwa.manifest_url,release.pwa.service_worker_url]) assert.equal(new URL(u).origin,new URL(release.domain).origin,'PWA assets must be hosted on the SocialPlus domain');
 }
 if(release.release_status==='ready'){
   assert.equal(release.source?.verified,true,'Original SocialPlus source must be verified');
@@ -35,13 +38,13 @@ if(release.release_status==='ready'){
   const sourceDir=path.resolve(root,release.source.path);
   assert.ok(sourceDir.startsWith(root+path.sep),'Source must remain within repository');
   assert.ok(fs.existsSync(sourceDir),'Source directory is missing');
+  assert.ok(release.requirements?.every(item=>typeof item==='string' && item.trim()),'Requirements must be documented');
   assert.equal(release.verification?.android_install_passed,true,'Android installation test must pass');
   assert.equal(release.verification?.ios_install_passed,true,'iOS installation test must pass');
   assert.equal(release.verification?.domain_https_passed,true,'HTTPS domain check must pass');
   assert.equal(release.verification?.pwa_offline_passed,true,'PWA offline test must pass');
   assert.match(release.verification?.checked_commit||'',/^[0-9a-f]{40}$/i,'Verification must identify a real commit SHA');
   if(process.env.GITHUB_SHA) assert.equal(release.verification.checked_commit,process.env.GITHUB_SHA,'Verification commit must match current build');
-  assert.ok(release.requirements.every(item=>typeof item==='string' && item.trim()),'Requirements must be documented');
   assert.equal(release.android.status,'ready');
   assert.equal(release.ios.status,'ready');
   assert.equal(release.pwa.status,'ready');
