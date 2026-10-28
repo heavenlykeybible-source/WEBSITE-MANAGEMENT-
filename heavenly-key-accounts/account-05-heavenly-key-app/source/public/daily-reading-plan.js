@@ -1,4 +1,4 @@
-/* Dedicated KJV reading schedule; no hymns or audio modules loaded. */
+/* Dedicated KJV reading schedule. */
 import {READING_YEAR,readingForDay,TODAY_REFLECTIONS} from './bible-catalog.js';
 const root=document.getElementById('study-root');
 const make=(tag,value,cls)=>{const e=document.createElement(tag);if(value!==undefined&&value!==null)e.textContent=value;if(cls)e.className=cls;return e;};
