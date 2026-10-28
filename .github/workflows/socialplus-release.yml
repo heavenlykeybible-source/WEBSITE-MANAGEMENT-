@@ -37,18 +37,18 @@ jobs:
         with:
           node-version: '24'
       - run: node tests/account-registry.mjs
-      - run: node tests/socialplus-mobile-release.mjs --require-ready
-      - run: node tests/socialplus-mobile-release.mjs --verify-live
-      - name: Package Control Room manual-release evidence
+      - run: node tests/socialplus-mobile-release.mjs
+      - name: Prepare truthful Control Room review package
         run: |
           mkdir -p handoff
           cp releases/socialplus/mobile-release.json handoff/mobile-release.json
           cp config/heavenly-key-accounts.json handoff/account-registry.json
-          printf '%s\\n' "SocialPlus Account 10 — manual approval required" "Commit: $GITHUB_SHA" "This package is evidence only, not a deployed application." > handoff/README.txt
+          node --input-type=module -e "import fs from 'node:fs'; const r=JSON.parse(fs.readFileSync('handoff/mobile-release.json')); fs.writeFileSync('handoff/STATUS.txt', 'Account 10 SocialPlus\\nRelease status: '+r.release_status+'\\nAndroid: '+r.android.status+'\\niOS: '+r.ios.status+'\\nPWA: '+r.pwa.status+'\\nMANUAL REVIEW ONLY — not deployed or approved\\n')"
+          printf '%s\\n' "Commit: $GITHUB_SHA" "Control Room owner must review and approve any deployment." "This is a review/evidence package, not an application bundle." > handoff/README.txt
           sha256sum handoff/* > handoff/SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: socialplus-account10-control-room-handoff
+          name: socialplus-account10-control-room-review
           path: handoff/
           retention-days: 30
   launch-gate:
