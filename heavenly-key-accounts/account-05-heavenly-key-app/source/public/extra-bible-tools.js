@@ -16,6 +16,7 @@ function line(title,description){const p=node('p');const strong=node('strong',ti
 extraPanel?.addEventListener('click',async event=>{
  const button=event.target.closest('button[data-extra-tool]');if(!button||!extraOutput)return;
  const type=button.dataset.extraTool,ref=current();
+ chapterOutput?.replaceChildren();
  extraOutput.replaceChildren(node('h3',button.textContent));
  if(dataSets[type]){
   const intro=type==='maps'?'Text-based geographical guide; no generated map images.':type==='timeline'?'Scripture sequence, not disputed calendar dates.':'Select a reference to open the KJV chapter.';
