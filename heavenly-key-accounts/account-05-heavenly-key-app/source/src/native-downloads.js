@@ -46,7 +46,13 @@ export async function handleNativeDownloads(request,env) {
   try {
     const object=request.method==='HEAD' ? await env.NATIVE_RELEASES.head(key) : await env.NATIVE_RELEASES.get(key);
     if(!object || !object.size) return reply({error:'Native installation package not available for this app and device'},404);
-    if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size)}});
+    // A release is publishable only after the trusted release pipeline records its SHA-256.
+    // This metadata is set by the publisher after malware scanning and signing checks.
+    const sha256=object.customMetadata?.sha256;
+    const scanned=object.customMetadata?.malwareScan;
+    const signed=object.customMetadata?.signatureVerified;
+    if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true') return reply({error:'Release has not passed security verification'},403);
+    if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size),'x-release-sha256':sha256}});
     // A download event means a package response was initiated, not that the device installed it.
     // Use a single aggregate counter row rather than storing identifying visitor data.
     // Anonymous analytics are best-effort: a statistics outage must not block downloads.
@@ -57,6 +63,6 @@ export async function handleNativeDownloads(request,env) {
         console.warn('Native download counter unavailable', String(error));
       }
     }
-    return new Response(object.body,{status:200,headers:{...headers,'content-type':meta.type,'content-disposition':'attachment; filename="heavenly-key-'+appId+'.'+meta.extension+'"','content-length':String(object.size)}});
+    return new Response(object.body,{status:200,headers:{...headers,'content-type':meta.type,'content-disposition':'attachment; filename="heavenly-key-'+appId+'.'+meta.extension+'"','content-length':String(object.size),'x-release-sha256':sha256}});
   } catch { return reply({error:'Download temporarily unavailable'},503); }
 }
