@@ -66,6 +66,7 @@
         document.head.append(manifest);
         if (promptEvent && install && /^(android|windows|mac)$/.test(platform)) install.hidden = false;
       }
+      let nativeAvailable = false;
       if (/^(android|windows|mac)$/.test(platform)) {
         const nativeLink = document.createElement('a');
         nativeLink.className = 'button';
@@ -77,14 +78,17 @@
         try {
           const available = await fetch(nativeLink.href, {method:'HEAD', cache:'no-store'});
           nativeLink.hidden = !available.ok;
+          nativeAvailable = available.ok;
           if (available.ok && platform === 'android') status('A native Android APK is available. Use the APK download button, or open the web app instead. Android may ask you to approve installation outside the Play Store.');
         } catch { nativeLink.hidden = true; }
       }
       if (platform === 'iphone' || platform === 'ipad') {
         status('Open this app in Safari, tap Share, then Add to Home Screen. Native App Store installation is not available here.');
+      } else if (nativeAvailable) {
+        status('A native installation package is available for this app and device. Choose Download above, or open the web app.');
       } else if (!sameOrigin) {
         status('This app is hosted on another Heavenly Key website. Open it above and use installation options offered on that website. This page cannot install it directly.');
-      } else {
+      } else if (!nativeAvailable) {
         status('This is an installable web app when supported by your browser. Open the app or use the Install button when offered; this is not an APK or native store download.');
       }
     } catch {
