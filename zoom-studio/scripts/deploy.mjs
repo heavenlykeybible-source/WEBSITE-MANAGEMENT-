@@ -14,6 +14,10 @@ if(!privatePreview){
     throw Error('Production deployment blocked: Control Room approval required (MEETINGSPACE_PRODUCTION_APPROVED=1)');
   if(!/^[a-f0-9]{40}$/i.test(process.env.MEETINGSPACE_APPROVED_COMMIT||''))
     throw Error('Production deployment blocked: approved Git commit SHA required');
+  const latest=spawnSync('git',['ls-remote','--heads','origin','main'],{encoding:'utf8',shell:false,timeout:20000});
+  const remoteSha=latest.stdout?.trim().split(/\s+/)[0];
+  if(latest.status!==0||!/^[a-f0-9]{40}$/i.test(remoteSha)||remoteSha!==process.env.MEETINGSPACE_APPROVED_COMMIT)
+    throw Error('Production deployment blocked: approved release is not latest main commit');
   const actual=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8',shell:false});
   if(actual.status!==0||actual.stdout.trim()!==process.env.MEETINGSPACE_APPROVED_COMMIT)
     throw Error('Production deployment blocked: checked-out commit differs from approved commit');
