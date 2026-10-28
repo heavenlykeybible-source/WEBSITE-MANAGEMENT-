@@ -3,6 +3,7 @@ import { Script, runInNewContext } from 'node:vm';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 const html=readFileSync('public/index.html','utf8');
+assert.ok(html.includes('<script defer src="hk-approved-footer.js"></script><script>'),'Screen recording handlers must execute in an inline script, not inside an external script tag');
 const module=readFileSync('public/integrations.js','utf8');
 assert.ok(html.includes("$('vf').disabled=true")&&html.includes("exportStream.getTracks().forEach(t=>t.stop())")&&html.includes("exportRecorder.state!=='inactive'"),'Video exports must block source switching and clean up media tracks');
 assert.ok(html.includes("limit>600")&&html.includes("Browser export is limited to ten minutes"),'Single video export must respect browser resource limits');
