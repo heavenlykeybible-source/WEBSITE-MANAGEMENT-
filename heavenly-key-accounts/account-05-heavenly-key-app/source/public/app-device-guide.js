@@ -74,11 +74,15 @@
         nativeLink.href = '/api/native-download/' + encodeURIComponent(appId) + '/' + platform;
         nativeLink.hidden = true;
         nativeLink.setAttribute('download', '');
+        nativeLink.setAttribute('rel', 'noopener noreferrer');
         if (open) open.insertAdjacentElement('afterend', nativeLink);
         try {
           const available = await fetch(nativeLink.href, {method:'HEAD', cache:'no-store'});
-          nativeLink.hidden = !available.ok;
-          nativeAvailable = available.ok;
+          const contentType = (available.headers.get('content-type') || '').toLowerCase();
+          const expectedTypes = {android:'application/vnd.android.package-archive',windows:'application/msix',mac:'application/x-apple-diskimage'};
+          const size = Number(available.headers.get('content-length'));
+          nativeAvailable = available.ok && contentType.includes(expectedTypes[platform]) && Number.isSafeInteger(size) && size > 0;
+          nativeLink.hidden = !nativeAvailable;
           if (available.ok && platform === 'android') status('A native Android APK is available. Use the APK download button, or open the web app instead. Android may ask you to approve installation outside the Play Store.');
         } catch { nativeLink.hidden = true; }
       }
