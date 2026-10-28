@@ -1,4 +1,5 @@
 import {test} from 'node:test';
+import {pbkdf2Sync} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {stripTypeScriptTypes} from 'node:module';
@@ -59,4 +60,33 @@ test('revoking one device preserves another device and legacy TTL sessions',asyn
 });
 test('missing revocation migration denies authentication',async()=>{
  const f=fixture();try{const id=await auth.createSession(f.env,f.user);f.db.exec('DROP TABLE revoked_sessions');assert.equal(await auth.getSession(f.request(id),f.env),null);await assert.rejects(auth.destroySession(f.request(id),f.env));}finally{f.db.close();}
+});
+test('password version invalidates old, legacy and concurrently issued sessions',async()=>{
+ const f=fixture();try{const existing=await auth.createSession(f.env,f.user),oldVersion=0;
+ f.db.exec('UPDATE users SET session_version=session_version+1 WHERE user_id=1');
+ assert.equal(await auth.getSession(f.request(existing),f.env),null);
+ const stale=await auth.createSession(f.env,f.user,oldVersion);assert.equal(await auth.getSession(f.request(stale),f.env),null);
+ const fresh=await auth.createSession(f.env,f.user);assert.equal((await auth.getSession(f.request(fresh),f.env)).userId,1);
+ f.kv.set('session:'+fresh,JSON.stringify(f.user));assert.equal(await auth.getSession(f.request(fresh),f.env),null);
+ }finally{f.db.close();}
+});
+
+test('password hashing uses stronger parameters and refuses malformed salts',async()=>{
+ const pepper='session-security-test-pepper',password='Long Example Password 2026!',fresh=await auth.hashPassword(password,pepper);
+ assert.match(fresh.hash,/^pbkdf2-sha256\$310000\$[a-f0-9]{64}$/);
+ assert.match(fresh.salt,/^[a-f0-9]{32}$/);
+ assert.equal(await auth.verifyPassword(password,fresh.salt,fresh.hash,pepper),true);
+ assert.equal(await auth.verifyPassword(password+'wrong',fresh.salt,fresh.hash,pepper),false);
+ for(const malformed of ['', 'ab', 'z'.repeat(32)])assert.equal(await auth.verifyPassword(password,malformed,fresh.hash,pepper),false);
+ assert.equal(await auth.verifyPassword(password,fresh.salt,'pbkdf2-sha256$999999$'+'a'.repeat(64),pepper),false);
+});
+
+test('existing password formats remain valid while new passwords are strengthened',async()=>{
+ const password='Existing Member Passphrase',pepper='test-pepper',salt='ab'.repeat(16);
+ for(const rounds of [100000,210000]){
+  const digest=pbkdf2Sync(password+pepper,Buffer.from(salt,'hex'),rounds,32,'sha256').toString('hex');
+  const stored=rounds===100000?'pbkdf2-sha256$100000$'+digest:digest;
+  assert.equal(await auth.verifyPassword(password,salt,stored,pepper),true);
+  assert.equal(await auth.verifyPassword('wrong',salt,stored,pepper),false);
+ }
 });

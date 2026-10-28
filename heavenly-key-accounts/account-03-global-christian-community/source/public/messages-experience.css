@@ -1,0 +1,15 @@
+/* The messaging page uses the online assistant's calm, dotted conversation background. */
+body[data-page="messages"] .conversation-panel{background:#e9e3d8!important}
+body[data-page="messages"] .chat-history{background-color:#e9e3d8!important;background-image:radial-gradient(#d4cbbd66 1px,transparent 1px)!important;background-size:21px 21px!important;gap:8px;overscroll-behavior:contain}
+body[data-page="messages"] .chat-header{background:#075638!important;color:#fff!important}
+body[data-page="messages"] .message-bubble{border:1px solid #d8ddd4!important;border-radius:15px!important;box-shadow:0 2px 6px #32452b12}
+body[data-page="messages"] .message-bubble.received{background:#fff!important;color:#17241b!important;border-top-left-radius:5px!important}
+body[data-page="messages"] .message-bubble.sent{background:#d4f2ce!important;color:#17241b!important;border-top-right-radius:5px!important}
+body[data-page="messages"] .message-bubble p{font-size:14px!important;line-height:1.5!important}
+body[data-page="messages"] .chat-form{background:#fff!important}
+body[data-page="messages"] .chat-form textarea{background:#f7f8f5!important;border-radius:18px!important;font-size:16px!important}
+body[data-page="messages"] .chat-form>.primary{background:#075638!important;border-color:#075638!important;color:#fff!important;border-radius:18px!important;min-width:64px}
+body[data-page="messages"] .inbox-row{min-height:64px}
+body[data-page="messages"] .chat-privacy,body[data-page="messages"] .chat-sync-status{font-size:14px!important;line-height:1.4}
+@media(max-width:760px){body[data-page="messages"] .chat-history{min-height:0;flex:1}body[data-page="messages"] .chat-form{padding-bottom:max(10px,env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){body[data-page="messages"] .chat-history{scroll-behavior:auto!important}}

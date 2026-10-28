@@ -52,6 +52,13 @@ function mount(e){
  const invitation=panel('A global family. United in Christ.','gc-world-invitation');
  invitation.append(make('p',null,'Together we take Christ to the nations of the world.'),link(e.detail.session?.user?.userId?'Discover believers':'Join the Community',e.detail.session?.user?.userId?'index.html#discover':'account.html#register','btn primary'));
  aside.append(invitation);
+ // Keep app shortcuts after the community panels, using existing destinations.
+ aside.querySelector('.gc-app-shortcuts')?.remove();
+ const apps=panel('Heavenly Key Apps','gc-app-shortcuts');
+ for(const [label,href,symbol] of [['All-in-One Apps','https://heavenlykey.org/pages/app.html','grid'],['Heavenly Key Bible','https://app.heavenlykey.org/bible.html','book'],['My Walk with God','https://app.heavenlykey.org/walk-offline.html','heart']]){
+  const a=link('',href,'gc-app-shortcut');a.append(icon(symbol),make('span',null,label));apps.append(a);
+ }
+ aside.append(apps);
  const broadcast=aside.querySelector('.gc-broadcast-feature');
  const presence=aside.querySelector('.gc-presence-panel p');if(presence)presence.textContent='Online status is unavailable. Browse your connections below.';
  if(broadcast){

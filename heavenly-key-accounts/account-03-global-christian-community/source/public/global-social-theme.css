@@ -1,0 +1,35 @@
+/* Approved global community home colour system. */
+body[data-page="home"].gc-composed-dashboard{background:#f5f2ed!important;color:#14254a}
+body[data-page="home"].gc-composed-dashboard .top{background:#0759dc!important}
+body[data-page="home"].gc-composed-dashboard .top .brand .brand-name{color:#fff!important;font-size:clamp(14px,1.3vw,20px)!important;line-height:1.2!important;letter-spacing:.01em!important}
+body[data-page="home"].gc-composed-dashboard .social-rail{background:#8b0714!important;border-color:#8b0714!important;color:#fff!important}
+body[data-page="home"].gc-composed-dashboard .social-rail .rail-link{color:#fff!important}
+body[data-page="home"].gc-composed-dashboard .social-rail .rail-link[aria-current="page"]{background:#ffd12b!important;color:#10295b!important;box-shadow:none!important}
+body[data-page="home"].gc-composed-dashboard .social-sidebar{background:#8b0714!important;padding:10px!important;border-radius:12px!important}
+body[data-page="home"].gc-composed-dashboard .social-sidebar .hk-ref-panel{background:#fff!important;color:#14254a!important}
+body[data-page="home"].gc-composed-dashboard .gc-rail-brand,body[data-page="home"].gc-composed-dashboard .social-sidebar .gc-broadcast-feature{display:none!important}
+body[data-page="home"].gc-composed-dashboard :is(.gc-composer-submit,.hk-ref-create){background:#ffd12b!important;color:#10295b!important;border:0!important}
+body[data-page="home"].gc-composed-dashboard :is(a,button,input,summary):focus-visible{outline:3px solid #ffd12b!important;outline-offset:3px}
+body[data-page="home"].gc-composed-dashboard .social-sidebar .gc-app-shortcuts{order:99!important;grid-column:1/-1!important;background:#fff!important;color:#10295b!important}
+body[data-page="home"].gc-composed-dashboard .gc-app-shortcut{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px;color:#10295b;text-decoration:none;font-size:14px;border-radius:8px}
+body[data-page="home"].gc-composed-dashboard .gc-app-shortcut:hover{background:#fff5d0}
+body[data-page="home"].gc-composed-dashboard .gc-app-shortcut svg{width:24px;height:24px;fill:currentColor;flex:0 0 24px}
+body[data-page="home"].gc-composed-dashboard .gc-group-browser{order:6;padding:12px;margin:12px 0;background:#fff9e9;border-radius:10px;color:#10295b}
+body[data-page="home"].gc-composed-dashboard .gc-group-browser h2{font-size:15px;margin:0 0 8px}
+body[data-page="home"].gc-composed-dashboard .gc-group-browser-link{display:block;padding:9px 0;color:#10295b;text-decoration:none;border-top:1px solid #ece4d4;overflow-wrap:anywhere;font-size:14px}
+body[data-page="home"].gc-composed-dashboard .gc-group-browser-status{font-size:14px;color:#435678}
+body[data-page="home"].gc-composed-dashboard .gc-group-browser-more{min-height:44px;color:#10295b;background:#ffd12b;border:0;border-radius:8px;padding:8px 12px;font-size:14px;font-weight:700}
+body[data-page="home"].gc-composed-dashboard .gc-local-timezone{order:98;grid-column:1/-1;color:#fff!important;font-size:14px!important;padding:6px}
+@media(min-width:1101px){body[data-page="home"].gc-composed-dashboard .social-sidebar{position:sticky!important;top:90px!important;max-height:calc(100dvh - 102px)!important;overflow-y:auto!important;overscroll-behavior:contain}}
+@media(max-width:900px){body[data-page="home"].gc-composed-dashboard .social-rail{background:#fff!important;border-color:#e2e6ed!important}body[data-page="home"].gc-composed-dashboard .social-rail>.rail-link{color:#17315d!important}body[data-page="home"].gc-composed-dashboard .social-rail>.rail-link[aria-current="page"]{color:#10295b!important}body[data-page="home"].gc-composed-dashboard .social-sidebar{padding:8px!important}body[data-page="home"].gc-composed-dashboard .top .brand .brand-name{font-size:14px!important}}
+
+/* Yellow controls use navy for both labels and monochrome icons. */
+body[data-page="home"].gc-composed-dashboard :is(.gc-composer-submit,.hk-ref-create,.social-rail .rail-link[aria-current="page"]) svg{color:#10295b!important;fill:currentColor!important}
+
+/* Friend presence appears only in the right sidebar, not the ACTIVE status strip. */
+.gc-online-members{padding:1rem;border:1px solid var(--border,#d9e1ed);border-radius:14px;background:var(--surface,#fff);margin-bottom:1rem}
+.gc-online-members h2{font-size:1rem;margin:0 0 .75rem}
+.gc-online-list{display:grid;gap:.5rem}
+.gc-online-friend{display:flex;align-items:center;gap:.45rem;padding:.35rem .25rem;text-decoration:none;border-radius:8px;color:inherit}
+.gc-online-friend:hover,.gc-online-friend:focus-visible{background:rgba(70,110,180,.08)}
+.gc-presence-dot{color:#16844e;font-size:1rem;line-height:1}

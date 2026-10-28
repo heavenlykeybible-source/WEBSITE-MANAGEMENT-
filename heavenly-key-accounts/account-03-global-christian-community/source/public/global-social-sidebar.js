@@ -1,0 +1,25 @@
+/* Browse real groups in the navigation rail. The server enforces group visibility. */
+(()=>{'use strict';let revision=0,controller,observer,presenceTimer;
+ const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text)n.textContent=text;return n;};
+ function clear(){revision++;clearInterval(presenceTimer);presenceTimer=null;controller?.abort();observer?.disconnect();document.querySelector('.gc-group-browser')?.remove();document.querySelector('.gc-local-timezone')?.remove();document.querySelectorAll('.gc-online-members').forEach(x=>x.remove());}
+ function mount(e){clear();if(e.detail?.page!=='home')return;const rail=document.querySelector('.social-rail'),aside=document.querySelector('.social-sidebar');if(!rail||!aside)return;
+  const turn=revision;controller=new AbortController();const section=node('section','gc-group-browser');section.append(node('h2','','Discover Groups'));const list=node('div','gc-group-browser-list'),message=node('p','gc-group-browser-status','Loading groups…'),more=node('button','gc-group-browser-more','Load more groups');more.type='button';more.hidden=true;message.setAttribute('role','status');section.append(list,message,more);rail.append(section);
+  if(e.detail?.session?.user?.userId){const box=node('section','gc-online-members'),title=node('h2',null,'Friends online'),members=node('div','gc-online-list'),note=node('p','muted','Checking availability…');box.append(title,members,note);aside.prepend(box);
+   let refreshing=false;const refresh=async()=>{if(document.hidden||turn!==revision||refreshing)return;refreshing=true;try{const heartbeat=await fetch('/api/presence',{method:'POST',credentials:'same-origin',headers:{Accept:'application/json'},signal:controller.signal});if(!heartbeat.ok)throw Error('Presence update unavailable');const r=await fetch('/api/presence',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:controller.signal});if(!r.ok)throw Error('Unable to check online friends');const d=await r.json();if(turn!==revision||!box.isConnected)return;members.replaceChildren();for(const member of d.items||[]){const a=node('a','gc-online-friend');a.href='profile.html?id='+encodeURIComponent(member.user_id);const dot=node('span','gc-presence-dot','●');dot.setAttribute('aria-label','Online');a.append(dot,document.createTextNode(' '+(member.display_name||'Friend')));members.append(a);}note.textContent=members.children.length?'':'No friends online right now.';}catch{if(turn===revision&&box.isConnected)note.textContent='Online friends unavailable.';}finally{refreshing=false;}};
+   void refresh();presenceTimer=setInterval(()=>void refresh(),30000);
+   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&turn===revision)void refresh();},{signal:controller.signal});
+  }
+  const timezone=node('p','gc-local-timezone');try{const zone=Intl.DateTimeFormat().resolvedOptions().timeZone;if(zone)timezone.textContent='Times shown in your local time · '+zone;}catch{}if(timezone.textContent)aside.append(timezone);
+  let cursor=null,busy=false;const seen=new Set();
+  async function load(){if(busy||turn!==revision)return;busy=true;more.disabled=true;message.textContent='Loading groups…';let ok=false;
+   try{const res=await fetch('/api/groups'+(cursor?'?before='+encodeURIComponent(cursor):''),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:controller.signal});if(!res.ok)throw Error();const data=await res.json();if(turn!==revision||!section.isConnected)return;
+    for(const g of Array.isArray(data.items)?data.items:[]){const id=Number(g.group_id);if(!Number.isSafeInteger(id)||id<1||seen.has(id)||typeof g.name!=='string')continue;seen.add(id);const a=node('a','gc-group-browser-link',g.name);a.href='groups.html?id='+id;list.append(a);}
+    cursor=data.nextBefore||null;more.hidden=!cursor;message.textContent=seen.size?(cursor?'Scroll for more groups.':'All available groups shown.'):'No groups available yet.';ok=true;
+   }catch{if(turn===revision&&section.isConnected){message.textContent='Could not load groups. Please try again.';more.hidden=false;}}
+   finally{busy=false;more.disabled=false;if(ok&&cursor&&observer)observer.observe(more);}
+  }
+  more.onclick=()=>void load();if('IntersectionObserver'in window){observer=new IntersectionObserver(entries=>{if(entries.some(x=>x.isIntersecting)){observer.unobserve(more);void load();}},{root:matchMedia('(min-width:901px)').matches?rail:null,rootMargin:'0px 0px 150px'});}
+  void load();
+ }
+ window.addEventListener('hk-community-view-ready',mount);window.addEventListener('hk-care-session',clear);
+})();

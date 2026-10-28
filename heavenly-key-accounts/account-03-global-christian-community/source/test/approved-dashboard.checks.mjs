@@ -67,8 +67,18 @@ test('failed and empty Space responses show honest states while retaining the di
 
 test('homepage loads final layout; only the authenticated ACTIVE module owns its rail and consent',()=>{
  const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8'),html=read('public/index.html');
- assert(html.includes('approved-dashboard.css?v=20261024-flow'));assert(html.includes('approved-dashboard.js?v=20261021-dashboard1'));
+ assert(html.includes('approved-dashboard.css?v=20261024-flow'));assert(html.includes('approved-dashboard.js?v=20261027-apps1'));
  const official=read('public/official-community-feed.js');assert(!official.includes('hk-active-auto-'));assert(!official.includes("section.className='hk-active-section'"));assert(!official.includes('createElement'));assert(read('public/app.js').includes("api('/api/ministry/posts'"));
  assert(read('public/active-strip.js').includes("api('/api/active')"));
  const css=read('public/approved-dashboard.css');assert(css.includes('@media(min-width:1400px)'));assert(css.includes('@media(max-width:900px)'));assert(css.includes('.brand-words'));assert(css.includes('button[aria-pressed=true]'));
+});
+
+test('app shortcuts appear once at the end of the sidebar and keep their destinations',()=>{
+ const f=fixture();f.emit('hk-community-view-ready',{page:'home',session:null});
+ const panel=f.aside.querySelector('.gc-app-shortcuts');assert(panel);
+ const links=panel.querySelectorAll('a');assert.equal(links.length,3);
+ assert.equal(links[0].href,'https://heavenlykey.org/pages/app.html');
+ assert.equal(links[1].href,'https://app.heavenlykey.org/bible.html');
+ assert.equal(links[2].href,'https://app.heavenlykey.org/walk-offline.html');
+ assert.equal(f.aside.children[f.aside.children.length-1],panel);
 });

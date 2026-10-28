@@ -53,6 +53,9 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
  db.prepare("UPDATE users SET status='restricted' WHERE user_id=1").run();
  const fbLogin=await req('/api/auth/social/facebook/start',{}),fbLoginState=new URL(fbLogin.data.url).searchParams.get('state'),restrictedLogin=await req('/api/auth/social/facebook/callback?state='+fbLoginState+'&code=valid',null,cookies(fbLogin));
  assert.equal(restrictedLogin.location,'https://community.example/safety.html');assert.equal((await req('/api/me',null,cookies(restrictedLogin))).data.user.status,'restricted');
+ db.prepare("INSERT INTO account_authenticators(user_id,sealed_secret,setup_id,active,last_step,expires_at) VALUES(1,'test','test',1,-1,0)").run();
+ const mfaStart=await req('/api/auth/social/facebook/start',{}),mfaState=new URL(mfaStart.data.url).searchParams.get('state'),mfaCallback=await req('/api/auth/social/facebook/callback?state='+mfaState+'&code=valid',null,cookies(mfaStart));
+ assert.match(mfaCallback.location,/socialError=authenticator/);assert(!mfaCallback.cookies.some(c=>c.startsWith('gc_session=')));db.prepare('DELETE FROM account_authenticators WHERE user_id=1').run();
  const expiredStart=await req('/api/auth/social/facebook/start',{}),expiredState=new URL(expiredStart.data.url).searchParams.get('state');db.prepare('UPDATE social_login_flows SET expires_at=0 WHERE state=?').run(expiredState);assert.match((await req('/api/auth/social/facebook/callback?state='+expiredState+'&code=valid',null,cookies(expiredStart))).location,/socialError=failed/);
  const input={title:'Faith conference',body:'Join believers for Scripture and prayer.',sponsor:'Test ministry',linkUrl:'https://example.org/program',buttonLabel:'View programme',placement:'feed',status:'draft',priority:5};
  assert.equal((await req('/api/admin/adverts',input,member)).status,403);assert.equal((await req('/api/admin/adverts',{...input,linkUrl:'javascript:alert(1)'},admin)).status,400);
@@ -73,6 +76,11 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
  assert.equal((await req(imageUrl)).status,404);const pictured=await req('/api/admin/adverts',{...input,imageUrl,status:'published'},admin);assert.equal(pictured.status,201);
  const imageResponse=await worker.fetch(new Request('https://community.example'+imageUrl),env);assert.equal(imageResponse.status,200);assert.equal(imageResponse.headers.get('Content-Type'),'image/png');assert.deepEqual(Buffer.from(await imageResponse.arrayBuffer()),png);
  await req('/api/admin/adverts/'+pictured.data.advertId,{...input,imageUrl,status:'paused'},admin,'PATCH');assert.equal((await req(imageUrl)).status,404);
+
+ for(let i=0;i<25;i++)assert.equal((await req('/api/admin/adverts',{...input,title:'Published '+i,status:'published',priority:i%3},admin)).status,201);
+ const ads1=(await req('/api/adverts')).data;assert.equal(ads1.items.length,2,'Only two adverts per placement are returned');
+ assert.equal(new Set(ads1.items.map(x=>x.advert_id)).size,2);
+ assert.equal((await req('/api/adverts?cursor=bad')).status,200,'Public adverts do not accept pagination cursors');
 
  db.prepare("UPDATE users SET status='restricted' WHERE user_id=2").run();assert.equal((await req('/api/admin/adverts',input,admin)).status,403);
  }finally{globalThis.fetch=realFetch;db.close();rmSync(dir,{recursive:true,force:true});}

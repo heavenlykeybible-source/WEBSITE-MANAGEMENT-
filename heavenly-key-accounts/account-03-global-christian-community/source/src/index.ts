@@ -11,6 +11,8 @@ import * as Adverts from "./adverts";
 import * as Editorial from "./ministry-editorial";
 import * as Active from "./active";
 import * as Care from "./community-care";
+import * as Authenticator from "./account-authenticator";
+import * as Passkeys from "./passkeys";
 
 const security=(headers=new Headers())=>{
   headers.set("X-Content-Type-Options","nosniff");headers.set("X-Frame-Options","DENY");headers.set("Referrer-Policy","strict-origin-when-cross-origin");
@@ -30,9 +32,13 @@ async function body(request:Request){
 async function sourceKey(request:Request){const address=request.headers.get("CF-Connecting-IP")||"local";const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(address));return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");}
 const cleanEmail=(v:any)=>String(v||"").trim().toLowerCase().slice(0,160);
 const validEmail=(v:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const hex=(bytes:Uint8Array)=>Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+async function resetDigest(token:string){return hex(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token))));}
 
 async function rate(env:Env,key:string,max:number,seconds:number){
-  const k="rate:"+key,raw=await env.SESSIONS.get(k),state=raw?JSON.parse(raw):{n:0};if(state.n>=max)return false;state.n++;await env.SESSIONS.put(k,JSON.stringify(state),{expirationTtl:seconds});return true;
+  const now=Date.now(),digest=await resetDigest("rate:"+key);
+  const row=await env.DB.prepare("INSERT INTO account_rate_limits(key_hash,attempts,expires_at) VALUES(?,1,?) ON CONFLICT(key_hash) DO UPDATE SET attempts=CASE WHEN expires_at<=? THEN 1 ELSE attempts+1 END,expires_at=CASE WHEN expires_at<=? THEN excluded.expires_at ELSE expires_at END WHERE expires_at<=? OR attempts<? RETURNING attempts").bind(digest,now+seconds*1000,now,now,now,max).first();
+  return !!row;
 }
 async function me(request:Request,env:Env){const u=await getSession(request,env);if(!u)throw Object.assign(new Error("Please sign in."),{status:401});return u;}
 
@@ -41,6 +47,9 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   const radioResponse=await communityRadio(request);if(radioResponse)return radioResponse;
   if(m==="OPTIONS")return new Response(null,{status:204,headers:security(new Headers({"Allow":"GET,POST,PATCH,DELETE,OPTIONS"}))});
   if(!p.startsWith("/api/"))return error("Not found.",404);
+  // Per-source throttling supplements Cloudflare WAF; edge-level rules must still be configured.
+  if(p==="/api/auth/register"&&m==="POST"&&!await rate(env,"register-edge:"+await sourceKey(request),15,3600))return error("Registration is temporarily limited. Please try later.",429);
+  if(p==="/api/auth/login"&&m==="POST"&&!await rate(env,"login-edge:"+await sourceKey(request),90,900))return error("Too many sign-in requests. Please try later.",429);
   if(!["GET","HEAD","OPTIONS"].includes(m)){if(request.headers.get("Sec-Fetch-Site")==="cross-site")return error("Cross-site action denied.",403);const origin=request.headers.get("Origin");if(origin&&origin!==url.origin)return error("Use global.heavenlykey.org to perform this action.",403);}
 
   if(!['GET','HEAD','OPTIONS'].includes(m)&&!p.startsWith('/api/auth/')&&!p.startsWith('/api/calls')){const writer=await getSession(request,env);if(writer&&!await rate(env,'write:'+writer.userId,180,600))return error('Please slow down and try again shortly.',429);}
@@ -63,7 +72,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
     if(!validEmail(email))return error("Enter a valid email address.");
     if(fullName.length<2||fullName.length>100)return error("Enter your name using 2 to 100 characters.");
     const passwordIssue=passwordError(password);if(passwordIssue)return error(passwordIssue);
-    if(!await rate(env,"register-source:"+await sourceKey(request),10,3600))return error("Please wait before registering another account.",429);
+    // Registration already has a source limiter before JSON parsing; do not count the same source twice.
     if(!await rate(env,"register:"+email,5,3600))return error("Please wait before trying to register again.",429);
     if(await env.DB.prepare("SELECT 1 FROM users WHERE email=?").bind(email).first())return error("An account already exists for this email.",409);
     const pass=await hashPassword(password,env.PASSWORD_PEPPER);
@@ -79,13 +88,87 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   }
   if(p==="/api/auth/login"&&m==="POST"){
     const b=await body(request),email=cleanEmail(b.email),password=String(b.password||"");
-    if(password.length>128||!validEmail(email))return error("Email or password is incorrect.",401);
-    if(!await rate(env,"login-source:"+await sourceKey(request),40,900))return error("Too many attempts. Please wait.",429);
+    if(password.length>256||Array.from(password).length>128||!validEmail(email))return error("Email or password is incorrect.",401);
+    // The early per-source limiter already protects shared network traffic; avoid charging each login twice.
     if(!await rate(env,"login:"+email,12,900))return error("Too many attempts. Please wait before trying again.",429);
-    const row=await env.DB.prepare("SELECT user_id,password_hash,password_salt,role,status FROM users WHERE email=?").bind(email).first<any>();
+    const row=await env.DB.prepare("SELECT user_id,password_hash,password_salt,role,status,session_version FROM users WHERE email=?").bind(email).first<any>();
     if(!row||!["active","restricted"].includes(row.status)||!await verifyPassword(password,row.password_salt,row.password_hash,env.PASSWORD_PEPPER))return error("Email or password is incorrect.",401);
-    const id=await createSession(env,{userId:Number(row.user_id),role:row.role,status:row.status});
+    if(await Authenticator.isEnabled(env,Number(row.user_id))&&!await Authenticator.verifySecondFactor(env,Number(row.user_id),String(b.authenticatorCode||"")))return error("Enter a valid authenticator or recovery code.",401);
+    if(!String(row.password_hash).startsWith("pbkdf2-sha256$310000$")){
+      const upgraded=await hashPassword(password,env.PASSWORD_PEPPER);
+      await env.DB.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE user_id=? AND password_hash=? AND password_salt=?").bind(upgraded.hash,upgraded.salt,row.user_id,row.password_hash,row.password_salt).run();
+    }
+    const id=await createSession(env,{userId:Number(row.user_id),role:row.role,status:row.status},Number(row.session_version));
     return json({ok:true,userId:Number(row.user_id),role:row.role},200,{"Set-Cookie":sessionCookie(id)});
+  }
+  if(p==="/api/auth/forgot-password"&&m==="POST"){
+    if(!env.RESEND_API_KEY||!env.RESET_EMAIL_FROM||env.PUBLIC_ORIGIN!=="https://global.heavenlykey.org")return error("Password recovery is temporarily unavailable. Please try again later.",503);
+    const b=await body(request),email=cleanEmail(b.email);if(!validEmail(email))return error("Enter a valid email address.");
+    if(!await rate(env,"reset-source:"+await sourceKey(request),20,3600)||!await rate(env,"reset-email:"+email,5,3600))return error("Please wait before trying again.",429);
+    const row=await env.DB.prepare("SELECT user_id,session_version FROM users WHERE email=? AND status IN ('active','restricted')").bind(email).first<any>();
+    if(row){const random=new Uint8Array(32);crypto.getRandomValues(random);const token=hex(random),digest=await resetDigest(token),expires=Date.now()+30*60*1000;
+      await env.DB.prepare("INSERT INTO password_reset_tokens(token_hash,user_id,session_version,expires_at) VALUES(?,?,?,?)").bind(digest,row.user_id,row.session_version,expires).run();
+      const link=env.PUBLIC_ORIGIN+"/account.html#reset="+token;
+      try{const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({from:env.RESET_EMAIL_FROM,to:[email],subject:"Reset your Global Christian Social Network password",text:"Use this link within 30 minutes to reset your password: "+link+"\n\nIf you did not request this, you can ignore this message."})});if(!response.ok)console.error("Password recovery email delivery failed",response.status);}catch{console.error("Password recovery email delivery failed");}
+    }
+    return json({ok:true,message:"If an account exists for that email, a reset link will be sent."});
+  }
+  if(p==="/api/auth/reset-password"&&m==="POST"){
+    if(!await rate(env,"reset-attempt:"+await sourceKey(request),20,900))return error("Please wait before trying again.",429);
+    const b=await body(request),token=String(b.token||""),password=String(b.password||""),issue=passwordError(password);if(issue)return error(issue);if(!/^[a-f0-9]{64}$/.test(token))return error("This reset link is invalid or expired.",400);
+    const digest=await resetDigest(token),next=await hashPassword(password,env.PASSWORD_PEPPER),now=Date.now();
+    const result=await env.DB.batch([env.DB.prepare("UPDATE users SET password_hash=?,password_salt=?,session_version=session_version+1 WHERE status IN ('active','restricted') AND EXISTS (SELECT 1 FROM password_reset_tokens t WHERE t.token_hash=? AND t.user_id=users.user_id AND t.expires_at>? AND t.session_version=users.session_version)").bind(next.hash,next.salt,digest,now),env.DB.prepare("DELETE FROM member_passkeys WHERE user_id=(SELECT user_id FROM password_reset_tokens WHERE token_hash=?) AND EXISTS (SELECT 1 FROM users WHERE user_id=member_passkeys.user_id AND password_hash=? AND password_salt=?)").bind(digest,next.hash,next.salt),env.DB.prepare("DELETE FROM password_reset_tokens WHERE token_hash=?").bind(digest)]);
+    if(Number(result[0].meta.changes)!==1)return error("This reset link is invalid or expired.",400);
+    return json({ok:true},200,{"Set-Cookie":clearSessionCookie()});
+  }
+  if(p==="/api/auth/change-password"&&m==="POST"){
+    const u=await me(request,env),b=await body(request),oldPassword=String(b.currentPassword||""),newPassword=String(b.newPassword||"");
+    if(!await rate(env,"password-change:"+u.userId,8,900))return error("Too many attempts. Please wait.",429);
+    const issue=passwordError(newPassword);if(issue)return error(issue);
+    const row=await env.DB.prepare("SELECT password_hash,password_salt FROM users WHERE user_id=?").bind(u.userId).first<any>();
+    if(!row||oldPassword.length>256||Array.from(oldPassword).length>128||!await verifyPassword(oldPassword,row.password_salt,row.password_hash,env.PASSWORD_PEPPER))return error("Current password is incorrect.",401);
+    const next=await hashPassword(newPassword,env.PASSWORD_PEPPER);
+    const result=await env.DB.batch([env.DB.prepare("UPDATE users SET password_hash=?,password_salt=?,session_version=session_version+1 WHERE user_id=? AND password_hash=? AND password_salt=?").bind(next.hash,next.salt,u.userId,row.password_hash,row.password_salt),env.DB.prepare("DELETE FROM member_passkeys WHERE user_id=? AND EXISTS (SELECT 1 FROM users WHERE user_id=? AND password_hash=? AND password_salt=?)").bind(u.userId,u.userId,next.hash,next.salt)]);
+    if(Number(result[0].meta.changes)!==1)return error("The password changed during this request. Please sign in and try again.",409);
+    return json({ok:true},200,{"Set-Cookie":clearSessionCookie()});
+  }
+  if(p==="/api/auth/authenticator/status"&&m==="GET"){const u=await me(request,env);return json({enabled:await Authenticator.isEnabled(env,u.userId)});}
+  if(p==="/api/auth/authenticator/setup"&&m==="POST"){
+    const u=await me(request,env);if(u.status!=="active")return error("Account access is unavailable.",403);if(!await rate(env,"authenticator-setup:"+u.userId,8,900))return error("Please wait before trying again.",429);
+    const b=await body(request),password=String(b.password||""),row=await env.DB.prepare("SELECT email,password_hash,password_salt FROM users WHERE user_id=?").bind(u.userId).first<any>();
+    if(!row||password.length>256||!await verifyPassword(password,row.password_salt,row.password_hash,env.PASSWORD_PEPPER))return error("Current password is incorrect.",401);
+    return json(await Authenticator.beginSetup(env,u.userId,row.email));
+  }
+  if(p==="/api/auth/authenticator/confirm"&&m==="POST"){
+    const u=await me(request,env);if(u.status!=="active")return error("Account access is unavailable.",403);if(!await rate(env,"authenticator-confirm:"+u.userId,8,900))return error("Please wait before trying again.",429);
+    const b=await body(request);await Authenticator.confirmSetup(env,u.userId,String(b.setupId||""),String(b.code||""));return json({ok:true},200,{"Set-Cookie":clearSessionCookie()});
+  }
+  if(p==="/api/auth/authenticator/disable"&&m==="POST"){
+    const u=await me(request,env);if(u.status!=="active")return error("Account access is unavailable.",403);if(!await rate(env,"authenticator-disable:"+u.userId,8,900))return error("Please wait before trying again.",429);
+    const b=await body(request),password=String(b.password||""),row=await env.DB.prepare("SELECT password_hash,password_salt FROM users WHERE user_id=?").bind(u.userId).first<any>();
+    if(!row||password.length>256||!await verifyPassword(password,row.password_salt,row.password_hash,env.PASSWORD_PEPPER)||!await Authenticator.verifySecondFactor(env,u.userId,String(b.code||"")))return error("Password or authenticator code is incorrect.",401);
+    const result=await env.DB.batch([env.DB.prepare("DELETE FROM account_authenticators WHERE user_id=? AND active=1").bind(u.userId),env.DB.prepare("DELETE FROM authenticator_recovery_codes WHERE user_id=?").bind(u.userId),env.DB.prepare("UPDATE users SET session_version=session_version+1 WHERE user_id=?").bind(u.userId)]);
+    if(Number(result[0].meta.changes)!==1)return error("Authenticator settings changed. Please try again.",409);return json({ok:true},200,{"Set-Cookie":clearSessionCookie()});
+  }
+  if(p==="/api/auth/passkeys"&&m==="GET"){const u=await me(request,env);return json({items:await Passkeys.list(env,u.userId)});}
+  if(p==="/api/auth/passkeys/register/options"&&m==="POST"){
+    Passkeys.verifyOrigin(request);const u=await me(request,env);if(u.status!=="active")return error("Account access is unavailable.",403);if(!await rate(env,"passkey-register:"+u.userId,8,900))return error("Please wait before trying again.",429);
+    const b=await body(request),password=String(b.password||""),row=await env.DB.prepare("SELECT email,password_hash,password_salt,session_version FROM users WHERE user_id=?").bind(u.userId).first<any>();
+    if(!row||password.length>256||!await verifyPassword(password,row.password_salt,row.password_hash,env.PASSWORD_PEPPER))return error("Current password is incorrect.",401);
+    if(await Authenticator.isEnabled(env,u.userId)&&!await Authenticator.verifySecondFactor(env,u.userId,String(b.code||"")))return error("Enter a valid authenticator or recovery code.",401);
+    const setup=await Passkeys.registerOptions(env,u.userId,row.email,Number(row.session_version));return json(setup.options,200,{"Set-Cookie":Passkeys.challengeCookie(setup.id)});
+  }
+  if(p==="/api/auth/passkeys/register/verify"&&m==="POST"){
+    Passkeys.verifyOrigin(request);const u=await me(request,env);if(u.status!=="active")return error("Account access is unavailable.",403);const b=await body(request);return json(await Passkeys.registerVerify(request,env,u.userId,b.credential,String(b.label||"")),200,{"Set-Cookie":Passkeys.challengeCookie("")});
+  }
+  if(p==="/api/auth/passkeys/login/options"&&m==="POST"){
+    Passkeys.verifyOrigin(request);if(!await rate(env,"passkey-login:"+await sourceKey(request),20,900))return error("Please wait before trying again.",429);const b=await body(request),email=cleanEmail(b.email);if(!validEmail(email))return error("Enter a valid email address.");if(!await rate(env,"passkey-email:"+email,12,900))return error("Please wait before trying again.",429);const setup=await Passkeys.loginOptions(env,email);return json(setup.options,200,{"Set-Cookie":Passkeys.challengeCookie(setup.id)});
+  }
+  if(p==="/api/auth/passkeys/login/verify"&&m==="POST"){
+    Passkeys.verifyOrigin(request);if(!await rate(env,"passkey-verify:"+await sourceKey(request),20,900))return error("Please wait before trying again.",429);const b=await body(request),verified=await Passkeys.loginVerify(request,env,b.credential);const id=await createSession(env,{userId:verified.userId,role:verified.role,status:verified.status},verified.version);const result=json({ok:true},200,{"Set-Cookie":sessionCookie(id)});result.headers.append("Set-Cookie",Passkeys.challengeCookie(""));return result;
+  }
+  if(p==="/api/auth/passkeys/remove"&&m==="POST"){
+    Passkeys.verifyOrigin(request);const u=await me(request,env);if(u.status!=="active")return error("Account access is unavailable.",403);if(!await rate(env,"passkey-remove:"+u.userId,8,900))return error("Please wait before trying again.",429);const b=await body(request),password=String(b.password||""),row=await env.DB.prepare("SELECT password_hash,password_salt FROM users WHERE user_id=?").bind(u.userId).first<any>();if(!row||password.length>256||!await verifyPassword(password,row.password_salt,row.password_hash,env.PASSWORD_PEPPER))return error("Current password is incorrect.",401);if(await Authenticator.isEnabled(env,u.userId)&&!await Authenticator.verifySecondFactor(env,u.userId,String(b.code||"")))return error("Enter a valid authenticator or recovery code.",401);return json(await Passkeys.remove(env,u.userId,String(b.id||"")));
   }
   const current=await getSession(request,env);
   if(current?.status==='restricted'&&!['/api/me','/api/me/safety','/api/me/requests','/api/auth/logout','/api/care/preferences'].includes(p))return error('Your account is locked pending administrator review. Open Safety & privacy to read the reason and request review.',403);
@@ -132,7 +215,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   if(p==="/api/spaces"&&m==="POST"){const u=await me(request,env);return json(await S.createSpace(env,u.userId,await body(request)),201);}
   {const x=p.match(/^\/api\/spaces\/([a-z0-9-]+)$/);if(x&&m==="GET"){const space=await S.getSpace(env,x[1]);if(!space)return error("Space not found.",404);const u=await getSession(request,env);let canManage=false;if(u)canManage=!!await env.DB.prepare("SELECT 1 FROM space_members WHERE space_id=? AND user_id=?").bind(space.space_id,u.userId).first();let canEdit=false,connected=false;if(u){canEdit=!!await env.DB.prepare("SELECT 1 FROM space_members WHERE space_id=? AND user_id=? AND role IN ('owner','administrator')").bind(space.space_id,u.userId).first();connected=!!await env.DB.prepare("SELECT 1 FROM global_connections WHERE user_id=? AND target_type='space' AND target_id=?").bind(u.userId,space.space_id).first();}return json({space:{...space,canManage,canEdit,connected}});}if(x&&m==="PATCH"){const u=await me(request,env),space=await S.getSpace(env,x[1]);if(!space)return error("Space not found.",404);return json(await S.updateSpace(env,u.userId,space.space_id,await body(request)));}}
 
-  if(p==="/api/groups"&&m==="GET"){const u=await getSession(request,env);return json({items:await S.listGroups(env,u?.userId||null)});}
+  if(p==="/api/groups"&&m==="GET"){const u=await getSession(request,env),raw=url.searchParams.get("before");const before=raw===null?undefined:Number(raw);if(raw!==null&&(!Number.isSafeInteger(before)||Number(before)<1))return error("Invalid group cursor.");const items=await S.listGroups(env,u?.userId||null,before);return json({items,nextBefore:items.length===100?items[items.length-1].group_id:null});}
   {const x=p.match(/^\/api\/groups\/(\d+)$/);if(x&&m==='GET'){const u=await getSession(request,env);return json({group:await S.groupDetail(env,u?.userId||null,Number(x[1]))});}if(x&&m==='PATCH'){const u=await me(request,env);return json(await S.updateGroup(env,u.userId,Number(x[1]),await body(request)));}}
   {const x=p.match(/^\/api\/groups\/(\d+)\/members$/);if(x&&m==='GET'){const u=await me(request,env);return json({items:await S.groupMembers(env,u.userId,Number(x[1]))});}}
   {const x=p.match(/^\/api\/groups\/(\d+)\/members\/(\d+)$/);if(x&&m==='POST'){const u=await me(request,env);return json(await S.manageGroupMember(env,u.userId,Number(x[1]),Number(x[2]),await body(request)));}}
@@ -153,9 +236,11 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   if(p==='/api/calls'&&m==='POST'){const u=await me(request,env);if(!await rate(env,'call:'+u.userId,10,3600))return error('Please wait before making another call.',429);return json(await Calls.start(env,u.userId,await body(request)),201);}
   {const x=p.match(/^\/api\/calls\/([a-f0-9-]{36})$/);if(x&&m==='GET'){const u=await me(request,env);return json(await Calls.read(env,u.userId,x[1]));}if(x&&m==='POST'){const u=await me(request,env);return json(await Calls.update(env,u.userId,x[1],await body(request)));}}
 
-  if(p==="/api/messages"&&m==="GET"){const u=await me(request,env);return json({items:await S.inbox(env,u.userId)});}
+  if(p==="/api/messages"&&m==="GET"){const u=await me(request,env),raw=url.searchParams.get('before');let before:{time:string,id:number}|undefined;if(raw!==null){const match=raw.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|([1-9]\d*)$/);if(!match||!Number.isSafeInteger(Number(match[2])))return error('Choose a valid chat cursor.');before={time:match[1],id:Number(match[2])};}const items=await S.inbox(env,u.userId,before),last=items[items.length-1];return json({items,nextBefore:items.length===100?last.updated_at+'|'+last.conversation_id:null});}
   if(p==="/api/messages/requests"&&m==="POST"){const u=await me(request,env),b=await body(request);return json(await S.requestConversation(env,u.userId,Number(b.recipientUserId)),201);}
+  {const x=p.match(/^\/api\/messages\/(\d+)\/summary$/);if(x&&m==="GET"){const u=await me(request,env),id=Number(x[1]);if(!Number.isSafeInteger(id)||id<1)return error("Conversation unavailable.",404);const item=(await S.inbox(env,u.userId,undefined,id))[0];return item?json({item}):error("Conversation unavailable.",404);}}
   {const x=p.match(/^\/api\/messages\/(\d+)\/decision$/);if(x&&m==="POST"){const u=await me(request,env),b=await body(request);if(!["accept","decline"].includes(b.decision))return error("Choose accept or decline.");return json(await S.decideConversation(env,u.userId,Number(x[1]),b.decision==="accept"));}}
+  {const x=p.match(/^\/api\/messages\/([1-9]\d*)\/updates$/);if(x&&m==="GET"){const u=await me(request,env),raw=url.searchParams.get("after");if(raw===null||!/^(0|[1-9]\d*)$/.test(raw)||!Number.isSafeInteger(Number(raw))||!Number.isSafeInteger(Number(x[1])))return error("Choose a valid message cursor.");return json(await S.newMessages(env,u.userId,Number(x[1]),Number(raw)),200,{"Cache-Control":"no-store"});}}
   {const x=p.match(/^\/api\/messages\/(\d+)$/);if(x&&m==="GET"){const u=await me(request,env);const cursor=url.searchParams.get("before"),items=await S.messages(env,u.userId,Number(x[1]),cursor===null?undefined:Number(cursor));return json({items,nextBefore:items.length===100?items[0].message_id:null});}}
   {const x=p.match(/^\/api\/messages\/(\d+)$/);if(x&&m==="POST"){const u=await me(request,env),b=await body(request);return json(await S.sendMessage(env,u.userId,Number(x[1]),String(b.body||""),b.clientRequestId),201);}}
 
@@ -170,9 +255,14 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   {const x=p.match(/^\/api\/discipleship\/lessons\/(\d+)\/complete$/);if(x&&m==="POST"){const u=await me(request,env),b=await body(request);return json(await S.completeLesson(env,u.userId,Number(x[1]),String(b.reflection||"")));}}
 
   if(p==="/api/salvation"&&m==="POST"){if(!await rate(env,"salvation-source:"+await sourceKey(request),10,3600))return error("Please wait before submitting again.",429);const u=await getSession(request,env);return json(await S.salvationDecision(env,u?.userId||null,await body(request)),201);}
+  if(p==="/api/friends/requests"&&m==="GET"){const u=await me(request,env);return json({items:await S.listFriendRequests(env,u.userId)});}
+  if(p==="/api/friends/requests"&&m==="POST"){const u=await me(request,env);if(!await rate(env,"friend-request:"+u.userId,30,3600))return error("Please wait before sending more friend requests.",429);const b=await body(request);return json(await S.sendFriendRequest(env,u.userId,Number(b.recipientUserId)),201);}
+  {const parts=p.split("/");if(parts.length===6&&parts[1]==="api"&&parts[2]==="friends"&&parts[3]==="requests"&&Number.isSafeInteger(Number(parts[4]))&&Number(parts[4])>0&&["accept","decline","cancel"].includes(parts[5])&&m==="POST"){const u=await me(request,env);return json(await S.respondFriendRequest(env,u.userId,Number(parts[4]),parts[5] as "accept"|"decline"|"cancel"));}}
+  if(p==="/api/presence"&&m==="GET"){const u=await me(request,env);return json({items:await S.onlineFriends(env,u.userId)});}
+  if(p==="/api/presence"&&(m==="POST"||m==="DELETE")){const u=await me(request,env);if(m==="POST"&&!await rate(env,"presence:"+u.userId,12,60))return error("Please wait before updating presence.",429);return json(await S.updatePresence(env,u.userId,m==="POST"));}
   if(p==="/api/notifications/read"&&m==="POST"){const u=await me(request,env),b=await body(request);return json(await S.readNotifications(env,u.userId,b.ids));}
   if(p==="/api/notifications"&&m==="GET"){const u=await me(request,env);return json({items:await S.notifications(env,u.userId),unreadCount:await S.unreadNotificationCount(env,u.userId)});}
-  if(p==="/api/discover"&&m==="GET"){const u=await getSession(request,env);return json({items:await S.discoverProfiles(env,u?.userId||null,url.searchParams.get("q")||"",url.searchParams.get("country")||"")});}
+  if(p==="/api/discover"&&m==="GET"){const u=await me(request,env);if(!await rate(env,"people-discovery:member:"+u.userId,240,600))return error("Too many searches. Please try again shortly.",429);return json({items:await S.discoverProfiles(env,u.userId,url.searchParams.get("q")||"",url.searchParams.get("country")||"")});}
   {const x=p.match(/^\/api\/posts\/(\d+)\/comments$/);if(x&&m==="GET"){const u=await getSession(request,env);return json({items:await S.listComments(env,Number(x[1]),u?.userId||null)});}}
   {const x=p.match(/^\/api\/posts\/(\d+)\/comments$/);if(x&&m==="POST"){const u=await me(request,env),b=await body(request);return json(await S.addComment(env,u.userId,Number(x[1]),String(b.body||""),b.parentCommentId?Number(b.parentCommentId):undefined),201);}}
   {const x=p.match(/^\/api\/members\/(\d+)\/block$/);if(x&&m==="POST"){const u=await me(request,env);return json(await S.blockMember(env,u.userId,Number(x[1])));}}
@@ -202,7 +292,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
 
 export default {
   async scheduled(_event:ScheduledController,env:Env):Promise<void>{
-    const jobs=[['call-cleanup',()=>Calls.cleanup(env)],['social-flow-cleanup',()=>env.DB.prepare("DELETE FROM social_login_flows WHERE expires_at<?").bind(Date.now()).run()],['session-revocation-cleanup',()=>env.DB.prepare("DELETE FROM revoked_sessions WHERE expires_at<=?").bind(Date.now()).run()],['community-care',()=>Care.deliverDue(env)]] as const;
+    const jobs=[['call-cleanup',()=>Calls.cleanup(env)],['social-flow-cleanup',()=>env.DB.prepare("DELETE FROM social_login_flows WHERE expires_at<?").bind(Date.now()).run()],['session-revocation-cleanup',()=>env.DB.prepare("DELETE FROM revoked_sessions WHERE expires_at<=?").bind(Date.now()).run()],['reset-token-cleanup',()=>env.DB.prepare("DELETE FROM password_reset_tokens WHERE expires_at<=?").bind(Date.now()).run()],['rate-limit-cleanup',()=>env.DB.prepare("DELETE FROM account_rate_limits WHERE expires_at<=?").bind(Date.now()).run()],['passkey-challenge-cleanup',()=>env.DB.prepare("DELETE FROM member_passkey_challenges WHERE expires_at<=?").bind(Date.now()).run()],['community-care',()=>Care.deliverDue(env)]] as const;
     const results=await Promise.allSettled(jobs.map(async([,run])=>run()));
     const failed=results.flatMap((r,i)=>r.status==='rejected'?[jobs[i][0]]:[]);
     if(failed.length)throw new Error('Scheduled tasks failed: '+failed.join(', '));

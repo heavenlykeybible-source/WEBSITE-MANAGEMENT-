@@ -61,16 +61,17 @@ export async function callback(request:Request,env:Env,p:string){
  const code=url.searchParams.get("code")||"";if(!code||code.length>4096)fail("Provider verification failed.");
  const c=await config(env,key);if(!c.enabled)fail("This sign-in option is paused.");
  const person=await identity(key,c,code,f);
- const linked=await env.DB.prepare("SELECT u.user_id,u.role,u.status FROM social_identities i JOIN users u ON u.user_id=i.user_id WHERE i.provider=? AND i.subject=?").bind(key,person.subject).first<any>();
+ const linked=await env.DB.prepare("SELECT u.user_id,u.role,u.status,u.session_version FROM social_identities i JOIN users u ON u.user_id=i.user_id WHERE i.provider=? AND i.subject=?").bind(key,person.subject).first<any>();
  if(f.linkUserId){const current=await getSession(request,env);if(!current||current.userId!==f.linkUserId||current.status!=="active")fail("Sign in again before connecting this provider.");
  if(linked&&Number(linked.user_id)!==current.userId)fail("That social account is already connected to another member.");
  const existing=await env.DB.prepare("SELECT subject FROM social_identities WHERE provider=? AND user_id=?").bind(key,current.userId).first<any>();if(existing&&existing.subject!==person.subject)fail("This member already has a different account connected for this provider.");
  if(!linked)await env.DB.prepare("INSERT INTO social_identities(provider,subject,user_id) VALUES(?,?,?)").bind(key,person.subject,current.userId).run();
  h.set("Location",origin+"/account.html?socialConnected="+key);
  }else if(linked){if(!["active","restricted"].includes(linked.status))fail("Account access is unavailable. Contact ministry support.");
- const id=await createSession(env,{userId:Number(linked.user_id),role:linked.role,status:linked.status});h.append("Set-Cookie",sessionCookie(id));h.set("Location",origin+(linked.status==="restricted"?"/safety.html":"/"));
+ if(await env.DB.prepare("SELECT 1 FROM account_authenticators WHERE user_id=? AND active=1").bind(linked.user_id).first())fail("Use your password and authenticator code to sign in.",403);
+ const id=await createSession(env,{userId:Number(linked.user_id),role:linked.role,status:linked.status},Number(linked.session_version));h.append("Set-Cookie",sessionCookie(id));h.set("Location",origin+(linked.status==="restricted"?"/safety.html":"/"));
  }else{const pending=random();await flow(env,pending,key,{...person,name:person.name.slice(0,100),email:person.email.slice(0,160),kind:"onboard"});h.append("Set-Cookie",flowCookie("gc_social_pending",pending));h.set("Location",origin+"/account.html?social=complete");}
- }catch(e:any){const safe=e?.message==="Sign-in cancelled."?"cancelled":"failed";h.set("Location",origin+"/account.html?socialError="+safe);}
+ }catch(e:any){const safe=e?.message==="Sign-in cancelled."?"cancelled":e?.message==="Use your password and authenticator code to sign in."?"authenticator":"failed";h.set("Location",origin+"/account.html?socialError="+safe);}
  return new Response(null,{status:303,headers:h});}
 export async function pending(request:Request,env:Env){const id=cookie(request,"gc_social_pending");if(!/^[a-f0-9]{64}$/.test(id))fail("Sign-in expired. Please start again.");const row=await env.DB.prepare("SELECT provider,payload FROM social_login_flows WHERE state=? AND expires_at>?").bind(id,Date.now()).first<any>();if(!row)fail("Sign-in expired. Please start again.");const p=JSON.parse(row.payload);if(p.kind!=="onboard")fail("Sign-in expired. Please start again.");return {id,provider:provider(row.provider),person:p};}
 export async function complete(request:Request,env:Env,b:any){if(b.ageConfirmed!==true||b.standardsAccepted!==true)fail("Confirm you are 18 or older and have read the community rules and privacy notice.");

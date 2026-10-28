@@ -2,6 +2,11 @@ name: Deploy Account 3 Global Community
 
 on:
   workflow_dispatch:
+    inputs:
+      approved_commit:
+        description: Exact approved main-branch commit SHA
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,6 +27,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify exact manually approved release
+        working-directory: ${{ github.workspace }}
+        env:
+          APPROVED_COMMIT: ${{ inputs.approved_commit }}
+        run: |
+          test "${{ github.ref }}" = 'refs/heads/main' || exit 1
+          test "$APPROVED_COMMIT" = "$(git rev-parse HEAD)" || exit 1
       - name: Build the single approved homepage footer
         working-directory: ${{ github.workspace }}
         run: node scripts/cleanup/sync-footer.mjs
@@ -48,6 +60,14 @@ jobs:
 
       - name: Type check and verify complete application
         run: npm run build
+
+      - name: Verify release gate
+        env:
+          ACCOUNT3_SECRETS_VERIFIED: ${{ vars.ACCOUNT3_SECRETS_VERIFIED }}
+          ACCOUNT3_RESET_MAIL_VERIFIED: ${{ vars.ACCOUNT3_RESET_MAIL_VERIFIED }}
+          ACCOUNT3_MIGRATIONS_VERIFIED: ${{ vars.ACCOUNT3_MIGRATIONS_VERIFIED }}
+          ACCOUNT3_LIVE_TESTS_VERIFIED: ${{ vars.ACCOUNT3_LIVE_TESTS_VERIFIED }}
+        run: node scripts/preflight.mjs --release
 
       - name: Confirm Cloudflare API credentials
         shell: bash

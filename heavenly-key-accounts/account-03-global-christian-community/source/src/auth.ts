@@ -19,27 +19,30 @@ async function derive(password:string,saltHex:string,pepper:string,iterations=10
   return hex(new Uint8Array(bits));
 }
 export async function hashPassword(password:string,pepper:string){
-  const salt=randomHex(16);return {salt,hash:"pbkdf2-sha256$100000$"+await derive(password,salt,pepper)};
+  const salt=randomHex(16);return {salt,hash:"pbkdf2-sha256$310000$"+await derive(password,salt,pepper,310000)};
 }
 export async function verifyPassword(password:string,salt:string,expected:string,pepper:string){
-  const version=expected.match(/^pbkdf2-sha256\$100000\$([a-f0-9]{64})$/),digest=version?version[1]:expected;
+  if(!/^[a-f0-9]{32}$/.test(salt))return false;
+  const version=expected.match(/^pbkdf2-sha256\$(100000|310000)\$([a-f0-9]{64})$/),digest=version?version[2]:expected;
   if(!/^[a-f0-9]{64}$/.test(digest))return false;
-  const got=await derive(password,salt,pepper,version?100000:210000);if(got.length!==digest.length)return false;let diff=0;for(let i=0;i<got.length;i++)diff|=got.charCodeAt(i)^digest.charCodeAt(i);return diff===0;
+  const got=await derive(password,salt,pepper,version?Number(version[1]):210000);if(got.length!==digest.length)return false;let diff=0;for(let i=0;i<got.length;i++)diff|=got.charCodeAt(i)^digest.charCodeAt(i);return diff===0;
 }
-export async function createSession(env:Env,user:SessionUser){
-  const id=randomHex(32);await env.SESSIONS.put("session:"+id,JSON.stringify({...user,expiresAt:Date.now()+sessionLifetime*1000}),{expirationTtl:sessionLifetime});return id;
+export async function createSession(env:Env,user:SessionUser,version?:number){
+  const row=version===undefined?await env.DB.prepare("SELECT session_version FROM users WHERE user_id=?").bind(user.userId).first<any>():null;
+  const sessionVersion=version??Number(row?.session_version);if(!Number.isSafeInteger(sessionVersion)||sessionVersion<0)throw new Error("Account session unavailable.");
+  const id=randomHex(32);await env.SESSIONS.put("session:"+id,JSON.stringify({...user,sessionVersion,expiresAt:Date.now()+sessionLifetime*1000}),{expirationTtl:sessionLifetime});return id;
 }
 export async function getSession(request:Request,env:Env):Promise<SessionUser|null>{
   const id=cookie(request,"gc_session");if(!/^[a-f0-9]{64}$/.test(id))return null;
   const raw=await env.SESSIONS.get("session:"+id);if(!raw)return null;
   try{
-    const s=JSON.parse(raw) as SessionUser & {expiresAt?:number};
+    const s=JSON.parse(raw) as SessionUser & {expiresAt?:number,sessionVersion?:number};
     if(!Number.isSafeInteger(s.userId)||s.userId<1)return null;
     // Older sessions retain their original KV TTL. Newly issued sessions also
     // expire in application code, including when an expired KV copy is returned.
     if(s.expiresAt!==undefined&&(!Number.isSafeInteger(s.expiresAt)||s.expiresAt<=Date.now()))return null;
-    const current=await env.DB.prepare("SELECT role,status FROM users WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM revoked_sessions WHERE token_hash=? AND expires_at>?)").bind(s.userId,await tokenHash(id),Date.now()).first<any>();
-    if(!current||!["active","restricted"].includes(current.status)||!Object.hasOwn(levels,current.role))return null;
+    const current=await env.DB.prepare("SELECT role,status,session_version FROM users WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM revoked_sessions WHERE token_hash=? AND expires_at>?)").bind(s.userId,await tokenHash(id),Date.now()).first<any>();
+    if(!current||!Number.isSafeInteger(s.sessionVersion??0)||(s.sessionVersion??0)!==Number(current.session_version)||!["active","restricted"].includes(current.status)||!Object.hasOwn(levels,current.role))return null;
     return {userId:s.userId,role:current.role as Role,status:current.status};
   }catch{return null;}
 }

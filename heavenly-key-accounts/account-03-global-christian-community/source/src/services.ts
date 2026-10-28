@@ -64,6 +64,35 @@ export async function toggleGlobalConnect(env:Env,userId:number,targetType:"prof
   return {connected:true};
 }
 
+export async function sendFriendRequest(env:Env,sender:number,recipient:number){
+ if(!Number.isSafeInteger(recipient)||recipient<1||sender===recipient)throw new Error("Choose another member.");
+ const valid=await env.DB.prepare("SELECT 1 FROM users WHERE user_id=? AND status='active'").bind(recipient).first();
+ if(!valid||await env.DB.prepare("SELECT 1 FROM user_blocks WHERE (blocker_user_id=? AND blocked_user_id=?) OR (blocker_user_id=? AND blocked_user_id=?)").bind(sender,recipient,recipient,sender).first())throw new Error("This member is unavailable.");
+ const reverse=await env.DB.prepare("SELECT status FROM friend_requests WHERE sender_user_id=? AND recipient_user_id=?").bind(recipient,sender).first<any>();
+ if(reverse?.status==="accepted")return {status:"accepted"};
+ if(reverse?.status==="pending")throw new Error("This member already sent you a request. Accept it instead.");
+ const existing=await env.DB.prepare("SELECT status FROM friend_requests WHERE sender_user_id=? AND recipient_user_id=?").bind(sender,recipient).first<any>();
+ if(existing?.status==="accepted"||existing?.status==="pending")return {status:existing.status};
+ await env.DB.prepare("INSERT INTO friend_requests(sender_user_id,recipient_user_id,status) VALUES(?,?,'pending') ON CONFLICT(sender_user_id,recipient_user_id) DO UPDATE SET status='pending',updated_at=datetime('now') WHERE status IN ('declined','cancelled')").bind(sender,recipient).run();
+ await notify(env,recipient,"friend_request","New friend request","A member has sent you a friend request.","/index.html#friends");
+ return {status:"pending"};
+}
+export async function listFriendRequests(env:Env,userId:number){
+ const rows=await env.DB.prepare("SELECT r.request_id,r.sender_user_id,r.recipient_user_id,r.status,r.created_at,p.display_name FROM friend_requests r LEFT JOIN profiles p ON p.user_id=CASE WHEN r.sender_user_id=? THEN r.recipient_user_id ELSE r.sender_user_id END WHERE (r.sender_user_id=? OR r.recipient_user_id=?) AND r.status IN ('pending','accepted') ORDER BY r.updated_at DESC LIMIT 200").bind(userId,userId,userId).all<any>();
+ return rows.results;
+}
+export async function respondFriendRequest(env:Env,userId:number,requestId:number,action:"accept"|"decline"|"cancel"){
+ if(!Number.isSafeInteger(requestId)||requestId<1||!["accept","decline","cancel"].includes(action))throw new Error("Invalid friend request action.");
+ const row=await env.DB.prepare("SELECT sender_user_id,recipient_user_id,status FROM friend_requests WHERE request_id=?").bind(requestId).first<any>();
+ if(!row||row.status!=="pending")throw new Error("Friend request is no longer pending.");
+ if(action==="cancel"?row.sender_user_id!==userId:row.recipient_user_id!==userId)throw new Error("You cannot change this request.");
+ const status=action==="accept"?"accepted":action==="decline"?"declined":"cancelled";
+ const result=await env.DB.prepare("UPDATE friend_requests SET status=?,updated_at=datetime('now') WHERE request_id=? AND status='pending'").bind(status,requestId).run();
+ if(!result.meta?.changes)throw new Error("Friend request was already handled.");
+ if(action==="accept")await notify(env,row.sender_user_id,"friend_accepted","Friend request accepted","Your friend request was accepted.","/index.html#friends");
+ return {status};
+}
+
 export async function listConnections(env:Env,userId:number){
   const rows=await env.DB.prepare(`SELECT c.target_type,c.target_id,c.created_at,
     CASE WHEN c.target_type='profile' THEN p.display_name ELSE s.name END display_name
@@ -131,12 +160,12 @@ export async function createGroup(env:Env,userId:number,input:any){
   if(mod.decision!=="allow")await recordModeration(env,userId,"group",row.group_id,mod);
   return {groupId:Number(row.group_id),slug};
 }
-export async function listGroups(env:Env,userId:number|null){
+export async function listGroups(env:Env,userId:number|null,before?:number){
   const r=await env.DB.prepare(`SELECT g.*,gm.join_status membership_status,gm.role member_role,
     CASE WHEN gm.join_status='approved' THEN 1 ELSE 0 END joined,
     (SELECT COUNT(*) FROM group_members WHERE group_id=g.group_id AND join_status='approved') member_count
     FROM groups g LEFT JOIN group_members gm ON gm.group_id=g.group_id AND gm.user_id=?
-    WHERE g.status='active' AND (g.visibility IN ('public','private') OR gm.join_status='approved') ORDER BY g.created_at DESC LIMIT 100`).bind(userId).all<any>();return r.results;
+    WHERE g.status='active' AND (g.visibility IN ('public','private') OR gm.join_status='approved') AND (? IS NULL OR g.group_id<?) ORDER BY g.group_id DESC LIMIT 100`).bind(userId,before??null,before??null).all<any>();return r.results;
 }
 export async function joinGroup(env:Env,userId:number,groupId:number){
   const g=await env.DB.prepare("SELECT visibility,status,join_approval FROM groups WHERE group_id=?").bind(groupId).first<any>();if(!g||g.status!=="active"||g.visibility==='hidden')throw new Error("Group not found.");
@@ -257,7 +286,9 @@ export async function toggleReaction(env:Env,userId:number,postId:number,type:st
   const post=(await feed(env,userId,1,{postId}))[0];if(!post)throw new Error("Post is unavailable.");
   const ex=await env.DB.prepare("SELECT reaction_id FROM reactions WHERE user_id=? AND post_id=? AND reaction_type=?").bind(userId,postId,type).first<any>();
   if(ex){await env.DB.prepare("DELETE FROM reactions WHERE reaction_id=?").bind(ex.reaction_id).run();return {active:false};}
-  await env.DB.prepare("INSERT INTO reactions(user_id,post_id,reaction_type) VALUES(?,?,?)").bind(userId,postId,type).run();return {active:true};
+  // Overlapping requests may both observe no reaction. Keep the unique row and
+  // report the resulting active state instead of surfacing a database error.
+  await env.DB.prepare("INSERT INTO reactions(user_id,post_id,reaction_type) VALUES(?,?,?) ON CONFLICT(user_id,post_id,reaction_type) DO NOTHING").bind(userId,postId,type).run();return {active:true};
 }
 
 async function areConnected(env:Env,a:number,b:number){return !!await env.DB.prepare("SELECT 1 FROM global_connections WHERE user_id=? AND target_type='profile' AND target_id=?").bind(a,b).first();}
@@ -306,15 +337,23 @@ export async function sendMessage(env:Env,userId:number,id:number,bodyRaw:string
   if(status==="delivered"){const to=c.requester_user_id===userId?c.recipient_user_id:c.requester_user_id;await notify(env,to,"message","New fellowship message","You have a new message.","/messages.html?conversation="+id);}
   return {messageId:Number(row?.message_id),status};
 }
-export async function inbox(env:Env,userId:number){
+export async function inbox(env:Env,userId:number,before?:{time:string,id:number},specific=0){
   const r=await env.DB.prepare(`SELECT c.*,p1.display_name requester_name,p2.display_name recipient_name,p1.profile_photo_key requester_photo,p2.profile_photo_key recipient_photo,
  (SELECT substr(body,1,160) FROM messages WHERE conversation_id=c.conversation_id AND status='delivered' ORDER BY message_id DESC LIMIT 1) last_message,
- (SELECT created_at FROM messages WHERE conversation_id=c.conversation_id AND status='delivered' ORDER BY message_id DESC LIMIT 1) last_message_at FROM conversations c JOIN profiles p1 ON p1.user_id=c.requester_user_id JOIN profiles p2 ON p2.user_id=c.recipient_user_id JOIN users u1 ON u1.user_id=c.requester_user_id JOIN users u2 ON u2.user_id=c.recipient_user_id WHERE (c.requester_user_id=? OR c.recipient_user_id=?) AND c.status!='blocked' AND u1.status='active' AND u2.status='active' AND NOT EXISTS(SELECT 1 FROM user_blocks WHERE (blocker_user_id=c.requester_user_id AND blocked_user_id=c.recipient_user_id) OR (blocker_user_id=c.recipient_user_id AND blocked_user_id=c.requester_user_id)) ORDER BY c.updated_at DESC LIMIT 100`).bind(userId,userId).all<any>();return r.results;
+ (SELECT created_at FROM messages WHERE conversation_id=c.conversation_id AND status='delivered' ORDER BY message_id DESC LIMIT 1) last_message_at FROM conversations c JOIN profiles p1 ON p1.user_id=c.requester_user_id JOIN profiles p2 ON p2.user_id=c.recipient_user_id JOIN users u1 ON u1.user_id=c.requester_user_id JOIN users u2 ON u2.user_id=c.recipient_user_id WHERE (c.requester_user_id=? OR c.recipient_user_id=?) AND c.status!='blocked' AND u1.status='active' AND u2.status='active' AND NOT EXISTS(SELECT 1 FROM user_blocks WHERE (blocker_user_id=c.requester_user_id AND blocked_user_id=c.recipient_user_id) OR (blocker_user_id=c.recipient_user_id AND blocked_user_id=c.requester_user_id)) AND (?=0 OR c.conversation_id=?) AND (? IS NULL OR c.updated_at<? OR (c.updated_at=? AND c.conversation_id<?)) ORDER BY c.updated_at DESC,c.conversation_id DESC LIMIT 100`).bind(userId,userId,specific,specific,before?.time||null,before?.time||null,before?.time||null,before?.id||0).all<any>();return r.results;
 }
 export async function messages(env:Env,userId:number,id:number,before?:number){
   await conversationAccess(env,userId,id);
   const cursor=before===undefined?Number.MAX_SAFE_INTEGER:before;if(!Number.isSafeInteger(cursor)||cursor<1)throw new Error("Choose a valid message history cursor.");
   const r=await env.DB.prepare("SELECT message_id,sender_user_id,body,created_at FROM messages WHERE conversation_id=? AND status='delivered' AND message_id<? ORDER BY message_id DESC LIMIT 100").bind(id,cursor).all<any>();return r.results.reverse();
+}
+
+export async function newMessages(env:Env,userId:number,id:number,after:number){
+  if(!Number.isSafeInteger(id)||id<1||!Number.isSafeInteger(after)||after<0)throw new Error("Choose a valid message cursor.");
+  await conversationAccess(env,userId,id);
+  const r=await env.DB.prepare("SELECT message_id,sender_user_id,body,created_at FROM messages WHERE conversation_id=? AND status='delivered' AND message_id>? ORDER BY message_id ASC LIMIT 100").bind(id,after).all<any>();
+  const items=r.results;
+  return {items,nextAfter:items.length?Number(items[items.length-1].message_id):after,hasMore:items.length===100};
 }
 
 export async function createPrayerCircle(env:Env,userId:number,input:any){
@@ -354,6 +393,21 @@ export async function salvationDecision(env:Env,userId:number|null,input:any){
 
 export async function notify(env:Env,userId:number,kind:string,title:string,body:string,href:string){
   await env.DB.prepare("INSERT INTO notifications(user_id,kind,title,body,href) VALUES(?,?,?,?,?)").bind(userId,kind,title,body,href).run();
+}
+export async function updatePresence(env:Env,userId:number,online:boolean){
+ if(online)await env.DB.prepare("INSERT INTO member_presence(user_id,last_seen_at) VALUES(?,datetime('now')) ON CONFLICT(user_id) DO UPDATE SET last_seen_at=datetime('now')").bind(userId).run();
+ else await env.DB.prepare("DELETE FROM member_presence WHERE user_id=?").bind(userId).run();
+ return {online};
+}
+export async function onlineFriends(env:Env,userId:number){
+ const r=await env.DB.prepare(`SELECT p.user_id,p.display_name FROM member_presence mp
+ JOIN users u ON u.user_id=mp.user_id AND u.status='active'
+ JOIN profiles p ON p.user_id=mp.user_id
+ JOIN friend_requests f ON f.status='accepted' AND ((f.sender_user_id=? AND f.recipient_user_id=mp.user_id) OR (f.recipient_user_id=? AND f.sender_user_id=mp.user_id))
+ WHERE mp.user_id<>? AND mp.last_seen_at>=datetime('now','-90 seconds')
+ AND NOT EXISTS(SELECT 1 FROM user_blocks b WHERE (b.blocker_user_id=? AND b.blocked_user_id=mp.user_id) OR (b.blocker_user_id=mp.user_id AND b.blocked_user_id=?))
+ ORDER BY mp.last_seen_at DESC LIMIT 60`).bind(userId,userId,userId,userId,userId).all<any>();
+ return r.results;
 }
 export async function notifications(env:Env,userId:number){
   const r=await env.DB.prepare("SELECT * FROM notifications WHERE user_id=? ORDER BY notification_id DESC LIMIT 100").bind(userId).all<any>();return r.results;
@@ -407,6 +461,7 @@ export async function blockMember(env:Env,userId:number,targetId:number){
   if(userId===targetId)throw new Error("You cannot block yourself.");
   await env.DB.prepare("INSERT OR IGNORE INTO user_blocks(blocker_user_id,blocked_user_id) VALUES(?,?)").bind(userId,targetId).run();
   await env.DB.prepare("DELETE FROM global_connections WHERE target_type='profile' AND ((user_id=? AND target_id=?) OR (user_id=? AND target_id=?))").bind(userId,targetId,targetId,userId).run();
+  await env.DB.prepare("UPDATE friend_requests SET status='cancelled',updated_at=datetime('now') WHERE status='pending' AND ((sender_user_id=? AND recipient_user_id=?) OR (sender_user_id=? AND recipient_user_id=?))").bind(userId,targetId,targetId,userId).run();
   await env.DB.prepare("UPDATE conversations SET status='blocked',updated_at=datetime('now') WHERE (requester_user_id=? AND recipient_user_id=?) OR (requester_user_id=? AND recipient_user_id=?)").bind(userId,targetId,targetId,userId).run();
   return {blocked:true};
 }
