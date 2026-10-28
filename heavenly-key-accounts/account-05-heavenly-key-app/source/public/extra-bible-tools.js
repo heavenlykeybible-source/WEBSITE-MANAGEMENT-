@@ -66,8 +66,5 @@ extraPanel?.addEventListener('click',async event=>{
   save.addEventListener('click',()=>{status.textContent=safeWrite(key,field.value)?'Notes saved on this device.':'Unable to save notes. Check browser storage settings.';});
   extraOutput.append(node('p',ref.name+' '+ref.chapter),field,save,status);return;
  }
-
-
-
 });
 document.getElementById('study-root')?.addEventListener('change',event=>{if(event.target.matches('#kjv-book-picker,#kjv-chapter-picker')){activeToolRequest++;extraOutput?.replaceChildren();}});
