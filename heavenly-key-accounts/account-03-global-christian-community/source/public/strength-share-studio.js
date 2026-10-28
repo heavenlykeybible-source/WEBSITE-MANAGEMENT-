@@ -52,7 +52,7 @@ $('feed').onclick=async()=>{
  const item=items[current];
  try{
   const body=item[2]+'\n\n'+item[3]+'\n\nPrayer: '+item[4]+'\n\nTogether we take Christ to the Nations of the World';
-  await request('/api/posts','POST',{postFormat:format,designCategory:'faith',title:item[0],body,scripture:item[1],postType:'post',visibility:'public',design:{templateId:'card-0',alignment:'center',fontSize:'medium',size:'medium',decoration:'none'}});
+  await request('/api/posts','POST',{postFormat:format,designCategory:'faith',title:item[0],body,scripture:item[1],postType:'post',visibility:'public',design:{templateId:'card-0',alignment:'center',fontSize:'standard',size:'portrait',decoration:'subtle'}});
   $('sharing-status').textContent='Daily Manna '+(format==='premium_text'?'premium text':'design card')+' submitted. Check the feed for its publishing or review status.';
  }catch(e){$('sharing-status').textContent='Unable to publish: '+e.message}
  finally{button.disabled=false}
