@@ -10,12 +10,12 @@ function fitLines(ctx,value,maxWidth,fontSize,minFont,maxLines){for(let px=fontS
 function draw(ctx,textValue,x,y,maxWidth,fontSize,minFont,maxLines,lineFactor=1.45){const result=fitLines(ctx,textValue,maxWidth,fontSize,minFont,maxLines);ctx.font='700 '+result.px+'px Georgia,serif';for(const line of result.lines){ctx.fillText(line,x,y);y+=Math.round(result.px*lineFactor)}return y}
 async function renderImage(){
  const item=items[current],vertical=size.value==='vertical',w=1080,h=vertical?1920:1440;
- const theme=THEMES[themeSelect?.value]||THEMES.royal;const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+ const theme=(themeSelect?.value==='topic' ? window.DAILY_MANNA_THEMES?.[current] : THEMES[themeSelect?.value])||window.DAILY_MANNA_THEMES?.[current]||THEMES.royal;const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Image creation is not supported on this device.');
  const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,theme.start);bg.addColorStop(.5,theme.middle);bg.addColorStop(1,theme.end);ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
  ctx.strokeStyle='#ffffff22';ctx.lineWidth=3;
  for(let r=180;r<=760;r+=155){ctx.beginPath();ctx.arc(1010,120,r,0,Math.PI*2);ctx.stroke()}
- ctx.fillStyle=theme.gold;ctx.fillRect(72,76,936,7);
+ ctx.fillStyle=theme.gold;ctx.fillRect(72,76,936,7);ctx.globalAlpha=.15;ctx.font='bold 300px Georgia,serif';ctx.textAlign='center';ctx.fillText(theme.symbol||'✦',920,Math.round(h*.43));ctx.textAlign='left';ctx.globalAlpha=1;
  ctx.textBaseline='top';ctx.fillStyle=theme.gold;ctx.font='700 32px system-ui,sans-serif';ctx.fillText('DAILY MANNA  •  KJV',77,128);
  ctx.fillStyle=theme.text;ctx.font='800 62px system-ui,sans-serif';ctx.fillText('STRENGTH FOR TODAY',77,205);
  const titleY=vertical?380:330;
