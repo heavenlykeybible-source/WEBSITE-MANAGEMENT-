@@ -64,7 +64,7 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
   assert.equal(response.data.advertisingEnabled,false);
  }
  for(const path of ['/api/adverts/images/12345678-1234-1234-1234-123456789abc','/api/admin/adverts/1','/api/admin/adverts/images']){
-  const response=await req(path,input,admin);
+  const response=await req(path,null,admin);
   assert.equal(response.status,410);
  }
  assert.equal(db.prepare('SELECT COUNT(*) n FROM community_adverts').get().n,0);
