@@ -74,7 +74,7 @@ export async function sendFriendRequest(env:Env,sender:number,recipient:number){
  const existing=await env.DB.prepare("SELECT status FROM friend_requests WHERE sender_user_id=? AND recipient_user_id=?").bind(sender,recipient).first<any>();
  if(existing?.status==="accepted"||existing?.status==="pending")return {status:existing.status};
  await env.DB.prepare("INSERT INTO friend_requests(sender_user_id,recipient_user_id,status) VALUES(?,?,'pending') ON CONFLICT(sender_user_id,recipient_user_id) DO UPDATE SET status='pending',updated_at=datetime('now') WHERE status IN ('declined','cancelled')").bind(sender,recipient).run();
- await notify(env,recipient,"friend_request","New friend request","A member has sent you a friend request.","/friends.html");
+ await notify(env,recipient,"friend_request","New friend request","A member has sent you a friend request.","/index.html#friends");
  return {status:"pending"};
 }
 export async function listFriendRequests(env:Env,userId:number){
@@ -89,7 +89,7 @@ export async function respondFriendRequest(env:Env,userId:number,requestId:numbe
  const status=action==="accept"?"accepted":action==="decline"?"declined":"cancelled";
  const result=await env.DB.prepare("UPDATE friend_requests SET status=?,updated_at=datetime('now') WHERE request_id=? AND status='pending'").bind(status,requestId).run();
  if(!result.meta?.changes)throw new Error("Friend request was already handled.");
- if(action==="accept")await notify(env,row.sender_user_id,"friend_accepted","Friend request accepted","Your friend request was accepted.","/friends.html");
+ if(action==="accept")await notify(env,row.sender_user_id,"friend_accepted","Friend request accepted","Your friend request was accepted.","/index.html#friends");
  return {status};
 }
 
