@@ -26,6 +26,31 @@ extraPanel?.addEventListener('click',async event=>{
   }
   return;
  }
+ if(type==='search'){
+  const field=node('input');field.type='search';field.placeholder='Search KJV words or phrases';field.setAttribute('aria-label','Search Bible text');field.style.width='100%';field.maxLength=120;
+  const scope=node('select');scope.setAttribute('aria-label','Search scope');for(const [value,label] of [['chapter','Current chapter'],['book','Current book'],['all','All 66 books']]){const o=node('option',label);o.value=value;scope.append(o);}
+  const go=node('button','Search KJV');go.type='button';go.className='btn secondary';const results=node('div');results.setAttribute('aria-live','polite');let serial=0;
+  const run=async()=>{
+   const token=++serial,term=field.value.trim().toLowerCase();results.replaceChildren();if(term.length<2){results.append(node('p','Enter at least two characters.'));return;}
+   const selected=current();if(!selected){results.append(node('p','Wait for the Bible reader to load.'));return;}
+   results.append(node('p','Searching Scripture…'));
+   try{
+    const response=await fetch('/kjv-manifest.json');if(!response.ok)throw Error('Bible catalogue unavailable');const manifest=await response.json();
+    const entries=scope.value==='all'?manifest.books:manifest.books.filter(b=>b.id===selected.id);
+    const found=[];let total=0;
+    for(const entry of entries){if(token!==serial)return;const r=await fetch('/'+entry.path);if(!r.ok)throw Error('Bible text unavailable');const data=await r.json();if(data.book!==entry.name||!Array.isArray(data.chapters))throw Error('Invalid Bible data');
+     for(let ci=0;ci<data.chapters.length;ci++){if(scope.value==='chapter'&&ci+1!==Number(selected.chapter))continue;
+      const verses=data.chapters[ci];if(!Array.isArray(verses))continue;
+      for(let vi=0;vi<verses.length;vi++){const verse=verses[vi];if(typeof verse!=='string'||!verse.toLowerCase().includes(term))continue;total++;if(found.length<100)found.push([entry,ci+1,vi+1,verse]);}
+     }
+    }
+    if(token!==serial)return;results.replaceChildren(node('p',total+' matching verses'+(total>100?' · first 100 shown':'')));
+    for(const [entry,chapter,verse,text] of found){const p=node('p');const link=node('a',entry.name+' '+chapter+':'+verse);link.href='/bible.html?book='+encodeURIComponent(entry.id)+'&chapter='+chapter+'#study-root';p.append(link,document.createTextNode(' — '+text));results.append(p);}
+   }catch{if(token===serial)results.replaceChildren(node('p','Search could not finish. Check your connection and try again.'));}
+  };
+  go.addEventListener('click',run);field.addEventListener('keydown',e=>{if(e.key==='Enter')run();});scope.addEventListener('change',()=>{serial++;results.replaceChildren();});
+  extraOutput.append(node('p','Search the Authorised King James Version by word or phrase.'),field,scope,go,results);return;
+ }
  if(!ref){extraOutput.append(node('p','Wait for the Bible reader to load, then choose a chapter.'));return;}
  const key='hk-bible-'+type+'-'+ref.id+'-'+ref.chapter;
  if(type==='notes'){
