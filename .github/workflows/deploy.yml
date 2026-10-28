@@ -72,6 +72,7 @@ jobs:
         run: |
           npm test
           node tests/account4-studio-menu.mjs
+          node tests/account4-unified-access.mjs
           node tests/owner-passkeys.mjs
           node tests/ai-workspace.mjs
           node tests/native-imports.mjs

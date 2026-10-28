@@ -1,0 +1,30 @@
+name = "heavenly-key-social-management"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+# Account 10: create these resources in Cloudflare, then uncomment
+# and replace placeholder IDs with the real values from Account 10.
+[[d1_databases]]
+binding = "DB"
+database_name = "heavenlykey-social-management-db"
+database_id = "96001ae8-d057-40d1-ba8a-167d8eab63cc"
+
+# [[r2_buckets]]
+# binding = "MEDIA_BUCKET"
+# bucket_name = "heavenlykey-social-management-storage"
+
+# [[kv_namespaces]]
+# binding = "APP_KV"
+# id = "REPLACE_WITH_REAL_ACCOUNT10_KV_NAMESPACE_ID"
+
+# [[queues.producers]]
+# binding = "MESSAGE_QUEUE"
+# queue = "heavenlykey-social-management-queue"
+
+# Set ADMIN_TOKEN and GEMINI_API_KEY as Worker secrets, never here.
+# Uncomment D1 binding after provisioning; API requires DB at runtime.
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true

@@ -1,3 +1,4 @@
+import '../scripts/apply-reviewed-account4-upgrade.mjs';
 import fs from 'node:fs';
 import {build} from 'esbuild';
 const target=new URL('../control-room-worker.js',import.meta.url);
