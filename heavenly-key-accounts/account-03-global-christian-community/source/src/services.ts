@@ -388,11 +388,11 @@ export async function discoverProfiles(env:Env,viewerId:number|null,q:string,cou
     (SELECT COUNT(*) FROM global_connections c WHERE c.target_type='profile' AND c.target_id=p.user_id) connection_count
     FROM profiles p JOIN users u ON u.user_id=p.user_id
     WHERE u.status='active'
-      AND (?='' OR p.display_name LIKE ? OR COALESCE(p.bio,'') LIKE ? OR COALESCE(p.ministry_calling,'') LIKE ?)
+      AND (?='' OR p.display_name LIKE ? OR p.full_name LIKE ? OR COALESCE(p.bio,'') LIKE ? OR COALESCE(p.ministry_calling,'') LIKE ?)
       AND (?='' OR (p.location_visibility='public' AND p.country=?))
       AND (? IS NULL OR NOT EXISTS(SELECT 1 FROM user_blocks b WHERE (b.blocker_user_id=? AND b.blocked_user_id=p.user_id) OR (b.blocker_user_id=p.user_id AND b.blocked_user_id=?)))
     ORDER BY p.display_name LIMIT 80`)
-    .bind(term,like,like,like,ctry,ctry,viewerId,viewerId,viewerId).all<any>();
+    .bind(term,like,like,like,like,ctry,ctry,viewerId,viewerId,viewerId).all<any>();
   return rows.results.map((r:any)=>({...r,connection_count:r.global_connections_visibility==="public"?Number(r.connection_count):null}));
 }
 
