@@ -1,5 +1,5 @@
 const host=document.getElementById('chapter-study-output');
-const book=document.getElementById('kjv-book-picker'),chapter=document.getElementById('kjv-chapter-picker');
+
 const tools=document.getElementById('chapter-study-tools');
 const notes={
  'genesis:1':{summary:'God creates the heavens and the earth, orders creation, and makes humanity in His image.',lessons:['God is the Creator.','Human life bears God-given dignity.'],characters:['God'],important:[1,3,27,31],cross:['John 1:1-3','Psalm 33:6','Hebrews 11:3']},
@@ -8,16 +8,24 @@ const notes={
 };
 const dictionary={grace:'God’s undeserved favour.',faith:'Trust or confidence in God.',redeem:'To buy back or deliver.',shepherd:'One who cares for and guides a flock.',covenant:'A solemn binding agreement.',righteousness:'What is right or just before God.',repent:'To turn away from sin and turn toward God.',holy:'Set apart as sacred.',salvation:'Deliverance or rescue.',spirit:'Breath, wind, or a nonphysical being; meaning depends on context.'};
 const el=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;};
+let latestRequest=0;
 tools?.addEventListener('click',async e=>{
- const button=e.target.closest('button[data-study-tool]');if(!button||!host||!book||!chapter)return;
+ const button=e.target.closest('button[data-study-tool]');if(!button||!host)return;
+ const book=document.getElementById('kjv-book-picker'),chapter=document.getElementById('kjv-chapter-picker');
+ if(!book||!chapter){host.replaceChildren(el('p','Bible reader is still loading. Please wait and try again.'));return;}
+ const request=++latestRequest;
  const key=book.value+':'+chapter.value,kind=button.dataset.studyTool,info=notes[key];
+ const heading=button.textContent+' · '+book.selectedOptions[0].text+' '+chapter.value;
  host.replaceChildren(el('p','Loading '+book.selectedOptions[0].text+' '+chapter.value+'…'));
  try{
-  const manifest=await(await fetch('/kjv-manifest.json')).json();
+  const manifestResponse=await fetch('/kjv-manifest.json');if(!manifestResponse.ok)throw Error('Bible catalogue unavailable');
+  const manifest=await manifestResponse.json();
   const entry=manifest.books.find(b=>b.id===book.value);if(!entry)throw Error('Book not found');
-  const data=await(await fetch('/'+entry.path)).json();
-  const verses=data.chapters[Number(chapter.value)-1];if(!Array.isArray(verses))throw Error('Chapter unavailable');
-  host.replaceChildren(el('h3',button.textContent+' · '+entry.name+' '+chapter.value));
+  const bookResponse=await fetch('/'+entry.path);if(!bookResponse.ok)throw Error('Bible text unavailable');
+  const data=await bookResponse.json();
+  if(request!==latestRequest)return;
+  const verses=data.chapters[Number(key.split(':')[1])-1];if(!Array.isArray(verses)||!verses.length)throw Error('Chapter unavailable');
+  host.replaceChildren(el('h3',heading));
   if(kind==='definitions'){
    const words=Object.entries(dictionary).filter(([w])=>verses.some(v=>new RegExp('\\b'+w+'\\b','i').test(v)));
    if(!words.length)host.append(el('p','No reviewed glossary terms found in this chapter.'));
@@ -30,5 +38,5 @@ tools?.addEventListener('click',async e=>{
    if(!values){host.append(el('p','Reviewed '+button.textContent.toLowerCase()+' are not available for this chapter yet. No AI-generated or unverified study notes are shown.'));return;}
    for(const value of values)host.append(el('p',value));
   }
- }catch(err){host.replaceChildren(el('p','Unable to load chapter study material. Please try again online.'));}
+ }catch(err){if(request===latestRequest)host.replaceChildren(el('p','Unable to load chapter study material. Please try again online.'));}
 });
