@@ -3,6 +3,7 @@ import { Script, runInNewContext } from 'node:vm';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 const html=readFileSync('public/index.html','utf8');
+assert.equal(readFileSync('index.html','utf8'),html,'Editor source and public HTML must match');
 assert.ok(html.includes('<script defer src="hk-approved-footer.js"></script><script>'),'Screen recording handlers must execute in an inline script, not inside an external script tag');
 const module=readFileSync('public/integrations.js','utf8');
 assert.ok(html.includes("if(screenURL){URL.revokeObjectURL(screenURL);screenURL=''}$('screendl').removeAttribute('href')"),'New screen capture must invalidate the prior recording download');
