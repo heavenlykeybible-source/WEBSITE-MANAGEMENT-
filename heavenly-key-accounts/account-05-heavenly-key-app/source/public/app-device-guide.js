@@ -96,5 +96,9 @@
       status('The requested app cannot be verified. Select an app from the directory.');
     }
   }
+  // The install guide is a standalone entry point; initialize offline support here too.
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
   initialize();
 })();
