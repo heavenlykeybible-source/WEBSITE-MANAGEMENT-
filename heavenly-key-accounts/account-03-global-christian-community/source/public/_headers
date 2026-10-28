@@ -4,3 +4,129 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev; connect-src 'self' https://heavenlykey-cms-public.emmanuel2026miracle.workers.dev/v1/content; frame-src https://heavenlykey.alldaywow247.workers.dev/api/broadcast/community-player https://www.youtube-nocookie.com https://www.youtube.com https://www.facebook.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   Permissions-Policy: camera=(self), microphone=(self), geolocation=()
+
+# Reviewed release: revalidate public code; never cache HTML navigation errors.
+/
+  Cache-Control: no-store
+/404.html
+  Cache-Control: no-store
+/account.css
+  Cache-Control: no-cache
+/account.html
+  Cache-Control: no-store
+/active-content.css
+  Cache-Control: no-cache
+/active-strip.js
+  Cache-Control: no-cache
+/app.js
+  Cache-Control: no-cache
+/approved-dashboard.css
+  Cache-Control: no-cache
+/approved-dashboard.js
+  Cache-Control: no-cache
+/approved-home-layout.css
+  Cache-Control: no-cache
+/approved-home-layout.js
+  Cache-Control: no-cache
+/calling.js
+  Cache-Control: no-cache
+/clean-community.css
+  Cache-Control: no-cache
+/cms-runtime-20261015.css
+  Cache-Control: no-cache
+/cms-runtime-20261015.js
+  Cache-Control: no-cache
+/community-admin.js
+  Cache-Control: no-cache
+/community-app-promo.css
+  Cache-Control: no-cache
+/community-app-promo.js
+  Cache-Control: no-cache
+/community-care-ui.js
+  Cache-Control: no-cache
+/community-care.css
+  Cache-Control: no-cache
+/community-dashboard-reference.css
+  Cache-Control: no-cache
+/community-dashboard-reference.js
+  Cache-Control: no-cache
+/community-live-chat.css
+  Cache-Control: no-cache
+/community-live-chat.js
+  Cache-Control: no-cache
+/community-maturity.css
+  Cache-Control: no-cache
+/community-reference-plus.css
+  Cache-Control: no-cache
+/community-reference.css
+  Cache-Control: no-cache
+/community-scroll.css
+  Cache-Control: no-cache
+/design-cards.js
+  Cache-Control: no-cache
+/endless-feed-smoke-test.js
+  Cache-Control: no-cache
+/fellowship.html
+  Cache-Control: no-store
+/global-community-premium.css
+  Cache-Control: no-cache
+/grdpc-reminder.html
+  Cache-Control: no-store
+/groups.html
+  Cache-Control: no-store
+/grow.html
+  Cache-Control: no-store
+/heavenly-key.html
+  Cache-Control: no-store
+/hk-approved-footer.css
+  Cache-Control: no-cache
+/hk-approved-footer.js
+  Cache-Control: no-cache
+/hk-footer-app-promo-20261015.js
+  Cache-Control: no-cache
+/hk-page-script-heavenly-key-1.js
+  Cache-Control: no-cache
+/hk-page-script-heavenly-key-2.js
+  Cache-Control: no-cache
+/hk-page-script-index-1.js
+  Cache-Control: no-cache
+/hk-standard-footer.css
+  Cache-Control: no-cache
+/hk-standard-footer.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-store
+/media-dock.js
+  Cache-Control: no-cache
+/messages.html
+  Cache-Control: no-store
+/ministry-care.css
+  Cache-Control: no-cache
+/ministry-care.js
+  Cache-Control: no-cache
+/missions.html
+  Cache-Control: no-store
+/official-community-feed.css
+  Cache-Control: no-cache
+/official-community-feed.js
+  Cache-Control: no-cache
+/password-policy.js
+  Cache-Control: no-cache
+/prayer.html
+  Cache-Control: no-store
+/profile.html
+  Cache-Control: no-store
+/reference-premium.css
+  Cache-Control: no-cache
+/royal-community.css
+  Cache-Control: no-cache
+/royal-community.js
+  Cache-Control: no-cache
+/safety.html
+  Cache-Control: no-store
+/salvation.html
+  Cache-Control: no-store
+/spaces.html
+  Cache-Control: no-store
+/styles.css
+  Cache-Control: no-cache
