@@ -81,6 +81,11 @@ const created = await request('register', { method: 'POST', body: { email: 'smok
 check('Account registration succeeds', created.status === 200);
 const login = await request('login', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Login creates session cookie', login.status === 200 && login.cookie.length > 5);
+const failedLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'incorrect password'}});
+check('Incorrect password is rejected without exposing a session',failedLogin.status===401&&!failedLogin.cookie);
+const recoveredLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
+check('Legitimate members can log in after an incorrect attempt',recoveredLogin.status===200&&recoveredLogin.cookie.length>5);
+
 const me = await request('me', { cookie: login.cookie });
 check('Authenticated identity returned', me.status === 200 && me.data?.email === 'smoke@example.com');
 const unauthorized = await request('me');
