@@ -6,7 +6,6 @@ let activeToolRequest=0;
 extraPanel?.addEventListener('click',event=>{if(event.target.closest('[data-study-tool]')){activeToolRequest++;extraOutput?.replaceChildren();}},true);
 const node=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n;};
 const dataSets={
- maps:[['Jerusalem','City central to the ministry, death and resurrection of Jesus.'],['Bethlehem','Town associated with the birth of Jesus.'],['Nazareth','Town where Jesus grew up.'],['Galilee','Region of much of Jesus’ public ministry.'],['Jericho','City near the Jordan Valley.'],['Mount Sinai','Traditional mountain associated with the giving of the Law; exact identification is debated.']],
  timeline:[['Creation','Genesis 1–2 · Biblical beginning; no historical date assigned.'],['Patriarchs','Genesis 12–50 · Abraham, Isaac, Jacob and Joseph.'],['Exodus','Exodus · Deliverance from Egypt and covenant at Sinai.'],['Kingdom','1–2 Samuel and 1–2 Kings · Israel’s monarchy.'],['Exile and return','2 Kings, Ezra and Nehemiah · Exile and restoration.'],['Life of Jesus','Matthew, Mark, Luke and John · Gospel accounts.'],['Early church','Acts · Spread of the gospel.']],
  topical:[['Faith','Hebrews 11:1'],['Love','1 Corinthians 13:4'],['Prayer','Philippians 4:6'],['Hope','Romans 15:13'],['Forgiveness','Ephesians 4:32'],['Salvation','John 3:16']],
  promises:[['God’s presence','Hebrews 13:5'],['Wisdom when asked','James 1:5'],['Peace in Christ','John 14:27'],['Rest for the weary','Matthew 11:28'],['Strength','Isaiah 40:31'],['Eternal life through Christ','John 3:16']]
@@ -23,7 +22,7 @@ extraPanel?.addEventListener('click',async event=>{
  chapterOutput?.replaceChildren();
  extraOutput.replaceChildren(node('h3',button.textContent));
  if(dataSets[type]){
-  const intro=type==='maps'?'Text-based geographical guide; no generated map images.':type==='timeline'?'Scripture sequence, not disputed calendar dates.':'Select a reference to open the KJV chapter.';
+  const intro=type==='timeline'?'Scripture sequence, not disputed calendar dates.':'Select a reference to open the KJV chapter.';
   extraOutput.append(node('p',intro));
   for(const [label,detail] of dataSets[type]){
    if(type==='topical'||type==='promises'){const p=node('p');p.append(node('strong',label+' — '),refLink(detail));extraOutput.append(p);}
@@ -74,23 +73,7 @@ extraPanel?.addEventListener('click',async event=>{
   check.addEventListener('change',()=>{status.textContent=safeWrite(key,check.checked)?(check.checked?'Marked for practice.':'Practice mark removed.'):'Could not save practice status.';});
   extraOutput.append(node('p',ref.name+' '+ref.chapter),check,label,status);return;
  }
- if(type==='verse-image'){
-  const manifest=await fetch('/kjv-manifest.json').then(r=>{if(!r.ok)throw Error();return r.json();}).catch(()=>null);
-  if(request!==activeToolRequest)return;
-  const entry=manifest?.books?.find(b=>b.id===ref.id);
-  if(!entry){extraOutput.append(node('p','Bible text unavailable. Try again online.'));return;}
-  const data=await fetch('/'+entry.path).then(r=>{if(!r.ok)throw Error();return r.json();}).catch(()=>null);
-  if(request!==activeToolRequest||current()?.id!==ref.id||current()?.chapter!==ref.chapter)return;
-  const verses=data?.book===entry.name?data?.chapters?.[Number(ref.chapter)-1]:null;
-  if(!Array.isArray(verses)||!verses.length||!verses.every(v=>typeof v==='string')){extraOutput.append(node('p','Chapter unavailable.'));return;}
-  const picker=node('select');picker.setAttribute('aria-label','Choose verse for share card');
-  verses.forEach((_,i)=>{const opt=node('option','Verse '+(i+1));opt.value=i;picker.append(opt);});
-  const card=node('blockquote');card.style.cssText='background:#fff8dc;color:#19345c;border:2px solid #1d4c8c;border-radius:14px;padding:22px;font-size:1.2rem;line-height:1.6;white-space:pre-wrap';
-  const refresh=()=>{card.textContent=verses[Number(picker.value)]+'\n— '+ref.name+' '+ref.chapter+':'+(Number(picker.value)+1)+' (KJV)';};picker.addEventListener('change',refresh);refresh();
-  const copy=node('button','Copy verse to share');copy.type='button';copy.className='btn secondary';
-  const status=node('p','Styled text card only. No AI images are generated.');
-  copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(card.textContent);status.textContent='Verse copied.';}catch{status.textContent='Copy unavailable in this browser.';}});
-  extraOutput.append(picker,card,copy,status);return;
- }
+
+
 });
 document.getElementById('study-root')?.addEventListener('change',event=>{if(event.target.matches('#kjv-book-picker,#kjv-chapter-picker')){activeToolRequest++;extraOutput?.replaceChildren();}});
