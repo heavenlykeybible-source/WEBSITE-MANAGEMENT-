@@ -548,9 +548,14 @@ async function openConversation(id){
  renderInbox();history.append(el('p','Loading messages…','muted'));try{await refreshThread();}catch(err){if(activeConversation===Number(id)&&history.isConnected){history.replaceChildren(el('p',err.message,'status'));const retry=el('button','Retry messages','btn secondary');retry.type='button';retry.onclick=()=>openConversation(id);history.append(retry);}}
 }
 async function refreshThread(){
- const id=activeConversation,version=chatVersion,member=session?.user?.userId,host=threadHost,revision=++chatReadRevision;if(!id)return;const d=await api('/api/messages/'+id);if(activeConversation!==id||version!==chatVersion||revision!==chatReadRevision||member!==session?.user?.userId||host!==threadHost||!host?.isConnected)return;const history=host.querySelector('.chat-history');if(!history)return;
- const latest=d.items||[],cached=chatBodies.get(id)||[],minimum=latest[0]?.message_id||0,items=[...cached.filter(m=>minimum&&m.message_id<minimum),...latest],signature=JSON.stringify(items.map(m=>[m.message_id,m.body]));
- if(!history.dataset.paginationReady){history.dataset.before=d.nextBefore||'';history.dataset.paginationReady='1';}const older=host.querySelector('.chat-older');older.hidden=!history.dataset.before;
+ const id=activeConversation,version=chatVersion,member=session?.user?.userId,host=threadHost,revision=++chatReadRevision;if(!id)return;
+ const cached=chatBodies.get(id)||[],after=cached.length?Math.max(...cached.map(m=>m.message_id)):0;
+ const d=after?await api('/api/messages/'+id+'/updates?after='+after):await api('/api/messages/'+id);
+ if(activeConversation!==id||version!==chatVersion||revision!==chatReadRevision||member!==session?.user?.userId||host!==threadHost||!host?.isConnected)return;
+ const history=host.querySelector('.chat-history');if(!history)return;
+ const latest=d.items||[],items=after?[...cached,...latest.filter(m=>m.message_id>after)]:latest,signature=JSON.stringify(items.map(m=>[m.message_id,m.body]));
+ if(!history.dataset.paginationReady){history.dataset.before=d.nextBefore||'';history.dataset.paginationReady='1';}
+ const older=host.querySelector('.chat-older');older.hidden=!history.dataset.before;
  if(history.dataset.signature===signature)return;history.dataset.signature=signature;chatBodies.set(id,items);renderThread(id);
 }
 async function loadOlderMessages(id){
