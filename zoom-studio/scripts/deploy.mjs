@@ -34,8 +34,9 @@ const releaseEnv={...process.env,RELEASE_WORKER:worker,RELEASE_ORIGIN:origin,REL
 // The currently deployed private preview may not yet have TURN; only the *new* public release must.
 const snapshotEnv={...releaseEnv,RELEASE_HEALTH_EXPECT:JSON.stringify({ok:true,meetingConfigured:true})};
 function run(args,env=process.env){const r=spawnSync(args[0],args.slice(1),{stdio:'inherit',shell:false,env});if(r.error)throw r.error;if(r.status!==0)throw Error('Existing MeetingSpace release stopped at '+args[1]+' (exit '+r.status+')');}
-if(process.env.MEETINGSPACE_PRIVATE_PREVIEW!=='1') run([process.execPath,'scripts/legal-preflight.mjs']);
-else console.log('Private preview only: legal publication gate deferred; public signup disabled in Worker');
+// This script always uploads the existing Worker, including for preview mode.
+// Never bypass mandatory public legal checks through a preview environment flag.
+run([process.execPath,'scripts/legal-preflight.mjs']);
 run([process.execPath,'scripts/bundle-control-room.mjs']);
 const built=readFileSync(new URL('../build/meeting-worker.mjs',import.meta.url),'utf8');
 const releaseMatch=built.match(/^const MEETING_RELEASE_ID=("[a-f0-9]{20}");/);
