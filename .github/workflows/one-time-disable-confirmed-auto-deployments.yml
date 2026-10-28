@@ -1,0 +1,37 @@
+name: One-time owner-authorized automatic deployment cleanup
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/one-time-disable-confirmed-auto-deployments.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  disable-account4-worker-builds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: account-4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/disable-confirmed-auto-deployments.mjs
+        env:
+          CLEANUP_TARGET: account4-worker
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+  disable-account3-pages-builds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/disable-confirmed-auto-deployments.mjs
+        env:
+          CLEANUP_TARGET: account3-pages
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -1,13 +1,6 @@
 name: Deploy Heavenly Key Bible (Account 6)
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'config/approved-homepage-footer.json'
-      - 'scripts/cleanup/sync-footer.mjs'
-      - 'apps/heavenly-key-bible/**'
-      - '.github/workflows/deploy-bible.yml'
 permissions:
   contents: read
 concurrency:

@@ -1,24 +1,5 @@
 name: Deploy independent Account 5 small apps
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'config/approved-homepage-footer.json'
-      - 'scripts/cleanup/sync-footer.mjs'
-      - 'config/small-app-bundles.json'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/**'
-      - 'scripts/build-small-app-worker.mjs'
-      - 'scripts/deploy-account5-small-app.mjs'
-      - 'scripts/select-small-app-deployment.mjs'
-      - '.github/workflows/deploy-account5-small-apps.yml'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/walk-offline*'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/offline-vault.js'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/offline-status.js'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/offline-noscript.css'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/creation-to-eternity*'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/hk-standard-footer*'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/cms-runtime*'
-      - 'heavenly-key-accounts/account-01-main-website/source/eternity-in-view/**'
   workflow_dispatch:
     inputs:
       app:

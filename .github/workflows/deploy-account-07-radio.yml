@@ -1,13 +1,6 @@
 name: Deploy Account 7 Heavenly Key Radio
 on:
   workflow_dispatch:
-  push:
-    branches: [prepare/account-07-radio-20261023]
-    paths:
-      - 'heavenly-key-accounts/account-07-unverified/**'
-      - '.github/workflows/deploy-account-07-radio.yml'
-      - 'tests/account7-radio.mjs'
-      - 'tests/account2-radio.mjs'
 permissions:
   contents: read
 concurrency:

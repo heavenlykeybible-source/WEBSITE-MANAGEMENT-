@@ -2,17 +2,6 @@ name: Deploy Account 5 Heavenly Key App
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'config/approved-homepage-footer.json'
-      - 'scripts/cleanup/sync-footer.mjs'
-      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/**'
-      - '.github/workflows/deploy-account5-app.yml'
-      - 'scripts/verify-account5-live.mjs'
-      - 'scripts/existing-worker-release.mjs'
-      - 'scripts/test-existing-worker-release.mjs'
-
 permissions:
   contents: read
 

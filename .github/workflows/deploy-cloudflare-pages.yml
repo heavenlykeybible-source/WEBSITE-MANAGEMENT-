@@ -1,11 +1,6 @@
 name: "[RETIRED] Deploy Heavenly Key Website to Cloudflare Pages"
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'heavenly-key-accounts/account-01-main-website/source/**'
-      - '.github/workflows/deploy-cloudflare-pages.yml'
   workflow_dispatch:
 
 permissions:
