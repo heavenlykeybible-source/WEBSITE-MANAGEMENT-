@@ -66,13 +66,7 @@ extraPanel?.addEventListener('click',async event=>{
   save.addEventListener('click',()=>{status.textContent=safeWrite(key,field.value)?'Notes saved on this device.':'Unable to save notes. Check browser storage settings.';});
   extraOutput.append(node('p',ref.name+' '+ref.chapter),field,save,status);return;
  }
- if(type==='memory'){
-  const check=node('input');check.type='checkbox';check.id='bible-memory-check';check.checked=safeRead(key)===true;
-  const label=node('label',' Mark this chapter for Scripture memory practice');label.htmlFor=check.id;
-  const status=node('p','Your memory practice is stored only on this device.');
-  check.addEventListener('change',()=>{status.textContent=safeWrite(key,check.checked)?(check.checked?'Marked for practice.':'Practice mark removed.'):'Could not save practice status.';});
-  extraOutput.append(node('p',ref.name+' '+ref.chapter),check,label,status);return;
- }
+
 
 
 });
