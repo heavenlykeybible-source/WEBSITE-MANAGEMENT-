@@ -38,6 +38,11 @@ async function me(request:Request,env:Env){const u=await getSession(request,env)
 
 async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Response>{
   const url=new URL(request.url),p=url.pathname,m=request.method;
+  // OWNER POLICY: Never deliver, upload, or publish advertising.
+  if(p==="/api/adverts"&&m==="GET")return json({items:[],advertisingEnabled:false});
+  if(/^\/api\/(?:admin\/adverts(?:\/|$)|adverts(?:\/|$))/.test(p))
+    return json({error:{message:"Advertising is disabled across Heavenly Key platforms."},advertisingEnabled:false},410);
+
   const radioResponse=await communityRadio(request);if(radioResponse)return radioResponse;
   if(m==="OPTIONS")return new Response(null,{status:204,headers:security(new Headers({"Allow":"GET,POST,PATCH,DELETE,OPTIONS"}))});
   if(!p.startsWith("/api/"))return error("Not found.",404);
