@@ -2,6 +2,8 @@
 const extraOutput=document.getElementById('extra-bible-output');
 const extraPanel=document.getElementById('chapter-study-tools');
 const chapterOutput=document.getElementById('chapter-study-output');
+let activeToolRequest=0;
+extraPanel?.addEventListener('click',event=>{if(event.target.closest('[data-study-tool]')){activeToolRequest++;extraOutput?.replaceChildren();}},true);
 const node=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n;};
 const dataSets={
  maps:[['Jerusalem','City central to the ministry, death and resurrection of Jesus.'],['Bethlehem','Town associated with the birth of Jesus.'],['Nazareth','Town where Jesus grew up.'],['Galilee','Region of much of Jesus’ public ministry.'],['Jericho','City near the Jordan Valley.'],['Mount Sinai','Traditional mountain associated with the giving of the Law; exact identification is debated.']],
@@ -16,6 +18,7 @@ function safeWrite(key,value){try{localStorage.setItem(key,JSON.stringify(value)
 function line(title,description){const p=node('p');const strong=node('strong',title+' — ');p.append(strong,document.createTextNode(description));return p;}
 extraPanel?.addEventListener('click',async event=>{
  const button=event.target.closest('button[data-extra-tool]');if(!button||!extraOutput)return;
+ const request=++activeToolRequest;
  const type=button.dataset.extraTool,ref=current();
  chapterOutput?.replaceChildren();
  extraOutput.replaceChildren(node('h3',button.textContent));
@@ -40,7 +43,7 @@ extraPanel?.addEventListener('click',async event=>{
     const response=await fetch('/kjv-manifest.json');if(!response.ok)throw Error('Bible catalogue unavailable');const manifest=await response.json();
     const entries=scope.value==='all'?manifest.books:manifest.books.filter(b=>b.id===selected.id);
     const found=[];let total=0;
-    for(const entry of entries){if(token!==serial)return;const r=await fetch('/'+entry.path);if(!r.ok)throw Error('Bible text unavailable');const data=await r.json();if(data.book!==entry.name||!Array.isArray(data.chapters))throw Error('Invalid Bible data');
+    for(const entry of entries){if(token!==serial||request!==activeToolRequest)return;const r=await fetch('/'+entry.path);if(!r.ok)throw Error('Bible text unavailable');const data=await r.json();if(data.book!==entry.name||!Array.isArray(data.chapters))throw Error('Invalid Bible data');
      for(let ci=0;ci<data.chapters.length;ci++){if(scope.value==='chapter'&&ci+1!==Number(selected.chapter))continue;
       const verses=data.chapters[ci];if(!Array.isArray(verses))continue;
       for(let vi=0;vi<verses.length;vi++){const verse=verses[vi];if(typeof verse!=='string'||!verse.toLowerCase().includes(term))continue;total++;if(found.length<100)found.push([entry,ci+1,vi+1,verse]);}
@@ -48,7 +51,7 @@ extraPanel?.addEventListener('click',async event=>{
     }
     if(token!==serial)return;results.replaceChildren(node('p',total+' matching verses'+(total>100?' · first 100 shown':'')));
     for(const [entry,chapter,verse,text] of found){const p=node('p');const link=node('a',entry.name+' '+chapter+':'+verse);link.href='/bible.html?book='+encodeURIComponent(entry.id)+'&chapter='+chapter+'#study-root';p.append(link,document.createTextNode(' — '+text));results.append(p);}
-   }catch{if(token===serial)results.replaceChildren(node('p','Search could not finish. Check your connection and try again.'));}
+   }catch{if(token===serial&&request===activeToolRequest)results.replaceChildren(node('p','Search could not finish. Check your connection and try again.'));}
   };
   go.addEventListener('click',run);field.addEventListener('keydown',e=>{if(e.key==='Enter')run();});scope.addEventListener('change',()=>{serial++;results.replaceChildren();});
   extraOutput.append(node('p','Search the Authorised King James Version by word or phrase.'),field,scope,go,results);return;
@@ -71,9 +74,11 @@ extraPanel?.addEventListener('click',async event=>{
  }
  if(type==='verse-image'){
   const manifest=await fetch('/kjv-manifest.json').then(r=>{if(!r.ok)throw Error();return r.json();}).catch(()=>null);
+  if(request!==activeToolRequest)return;
   const entry=manifest?.books?.find(b=>b.id===ref.id);
   if(!entry){extraOutput.append(node('p','Bible text unavailable. Try again online.'));return;}
   const data=await fetch('/'+entry.path).then(r=>{if(!r.ok)throw Error();return r.json();}).catch(()=>null);
+  if(request!==activeToolRequest||current()?.id!==ref.id||current()?.chapter!==ref.chapter)return;
   const verses=data?.chapters?.[Number(ref.chapter)-1];
   if(!Array.isArray(verses)||!verses.length){extraOutput.append(node('p','Chapter unavailable.'));return;}
   const picker=node('select');picker.setAttribute('aria-label','Choose verse for share card');
@@ -86,4 +91,4 @@ extraPanel?.addEventListener('click',async event=>{
   extraOutput.append(picker,card,copy,status);return;
  }
 });
-document.getElementById('study-root')?.addEventListener('change',event=>{if(event.target.matches('#kjv-book-picker,#kjv-chapter-picker'))extraOutput?.replaceChildren();});
+document.getElementById('study-root')?.addEventListener('change',event=>{if(event.target.matches('#kjv-book-picker,#kjv-chapter-picker')){activeToolRequest++;extraOutput?.replaceChildren();}});
