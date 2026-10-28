@@ -59,7 +59,7 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
  const noAds=await req('/api/adverts');
  assert.equal(noAds.status,200);assert.deepEqual(noAds.data.items,[]);assert.equal(noAds.data.advertisingEnabled,false);
  for(const method of ['GET','POST','PATCH','DELETE']){
-  const response=await req('/api/admin/adverts',input,admin,method);
+  const response=await req('/api/admin/adverts',method==='GET'?null:input,admin,method);
   assert.equal(response.status,410);
   assert.equal(response.data.advertisingEnabled,false);
  }
