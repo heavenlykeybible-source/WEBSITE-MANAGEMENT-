@@ -41,7 +41,7 @@ test('actual page lifecycle initializes layout and ACTIVE without waiting for re
  for(const session of [null,{user:{userId:4,status:'active'}}]){
   const f=fixture(session);await f.context.renderPage();
   assert.equal(f.requests[0].path,'/api/today-with-god');
-  assert.deepEqual(f.loads,['feed','discover']);
+  assert.deepEqual(f.loads,session?['feed','discover']:['feed']);
   assert.equal(f.events.length,1);assert.equal(f.events[0].type,'hk-community-view-ready');assert.equal(f.events[0].detail.session,session);
   assert(f.stream.querySelector('.composer-card'));assert(f.aside.querySelector('form'));
  }
