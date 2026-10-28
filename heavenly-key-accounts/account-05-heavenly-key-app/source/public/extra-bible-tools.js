@@ -35,8 +35,8 @@ extraPanel?.addEventListener('click',async event=>{
   const scope=node('select');scope.setAttribute('aria-label','Search scope');for(const [value,label] of [['chapter','Current chapter'],['book','Current book'],['all','All 66 books']]){const o=node('option',label);o.value=value;scope.append(o);}
   const go=node('button','Search KJV');go.type='button';go.className='btn secondary';const results=node('div');results.setAttribute('aria-live','polite');let serial=0;
   const run=async()=>{
-   const token=++serial,term=field.value.trim().toLowerCase(),chosenScope=scope.value;results.replaceChildren();if(term.length<2){results.append(node('p','Enter at least two characters.'));return;}
-   const selected=current();if(!selected){results.append(node('p','Wait for the Bible reader to load.'));return;}
+   const token=++serial,term=field.value.trim().toLocaleLowerCase(),chosenScope=scope.value;results.replaceChildren();if(term.length<2){results.append(node('p','Enter at least two characters.'));return;}
+   const selected=current();if(!selected||!selected.id||!selected.chapter){results.append(node('p','Wait for the Bible reader to load.'));return;}
    results.append(node('p','Searching Scripture…'));
    try{
     const response=await fetch('/kjv-manifest.json');if(!response.ok)throw Error('Bible catalogue unavailable');const manifest=await response.json();
@@ -44,10 +44,10 @@ extraPanel?.addEventListener('click',async event=>{
     const entries=chosenScope==='all'?manifest.books:manifest.books.filter(b=>b.id===selected.id);
     if(!entries.length)throw Error('Bible book unavailable');
     const found=[];let total=0;
-    for(const entry of entries){if(token!==serial||request!==activeToolRequest||scope.value!==chosenScope)return;const r=await fetch('/'+entry.path);if(!r.ok)throw Error('Bible text unavailable');const data=await r.json();if(data.book!==entry.name||!Array.isArray(data.chapters)||data.chapters.length!==entry.chapters)throw Error('Invalid Bible data');
+    for(const entry of entries){if(token!==serial||request!==activeToolRequest||scope.value!==chosenScope||current()?.id!==selected.id||(chosenScope==='chapter'&&current()?.chapter!==selected.chapter))return;const r=await fetch('/'+entry.path);if(!r.ok)throw Error('Bible text unavailable');const data=await r.json();if(data.book!==entry.name||!Array.isArray(data.chapters)||data.chapters.length!==entry.chapters)throw Error('Invalid Bible data');
      for(let ci=0;ci<data.chapters.length;ci++){if(chosenScope==='chapter'&&ci+1!==Number(selected.chapter))continue;
       const verses=data.chapters[ci];if(!Array.isArray(verses)||!verses.every(v=>typeof v==='string'))throw Error('Invalid chapter verses');
-      for(let vi=0;vi<verses.length;vi++){const verse=verses[vi];if(typeof verse!=='string'||!verse.toLowerCase().includes(term))continue;total++;if(found.length<100)found.push([entry,ci+1,vi+1,verse]);}
+      for(let vi=0;vi<verses.length;vi++){const verse=verses[vi];if(typeof verse!=='string'||!verse.toLocaleLowerCase().includes(term))continue;total++;if(found.length<100)found.push([entry,ci+1,vi+1,verse]);}
      }
     }
     if(token!==serial||request!==activeToolRequest||scope.value!==chosenScope||current()?.id!==selected.id||(chosenScope==='chapter'&&current()?.chapter!==selected.chapter))return;results.replaceChildren(node('p',total+' matching verses'+(total>100?' · first 100 shown':'')));
