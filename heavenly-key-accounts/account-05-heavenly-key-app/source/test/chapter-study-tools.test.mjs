@@ -42,15 +42,15 @@ test('only supported Quick Bible Tools are visible and uniquely wired',()=>{
  assert.ok(html.includes('src="/extra-bible-tools.js"'));
  assert.ok(html.includes('Quick Bible Tools'));
 });
-test('study links, async cancellations, and offline verse cards are guarded',()=>{
+test('study links and async cancellations are guarded',()=>{
  const core=read('chapter-study-tools.js'),extra=read('extra-bible-tools.js');
  assert.ok(core.includes('latestRequest++'));
  assert.ok(core.includes('referenceBooks[match[1]]'));
  assert.ok(extra.includes('activeToolRequest++'));
  assert.ok(extra.includes('request!==activeToolRequest'));
  assert.ok(extra.includes('type===\'search\''));
- assert.ok(extra.includes('type===\'verse-image\''));
- assert.ok(extra.includes('No AI images are generated.'));
+ assert.ok(!extra.includes("if(type==='verse-image')"));
+ assert.ok(!extra.includes("if(type==='memory')"));
 });
 
 test('chapter summary renders a complete paragraph instead of individual letters',()=>{
