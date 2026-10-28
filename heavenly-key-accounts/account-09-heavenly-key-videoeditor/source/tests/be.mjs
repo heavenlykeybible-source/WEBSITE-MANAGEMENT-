@@ -83,6 +83,11 @@ const login = await request('login', { method: 'POST', body: { email: 'smoke@exa
 check('Login creates session cookie', login.status === 200 && login.cookie.length > 5);
 const failedLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'incorrect password'}});
 check('Incorrect password is rejected without exposing a session',failedLogin.status===401&&!failedLogin.cookie);
+const oversizedPassword=await request('login',{method:'POST',body:{email:'smoke@example.com',password:'a'.repeat(10000)}});
+check('Oversized login passwords are rejected without creating sessions',oversizedPassword.status===401&&!oversizedPassword.cookie);
+const malformedPassword=await request('login',{method:'POST',body:{email:'smoke@example.com',password:{unexpected:'object'}}});
+check('Malformed login passwords are rejected safely',malformedPassword.status===401&&!malformedPassword.cookie);
+
 const recoveredLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
 check('Legitimate members can log in after an incorrect attempt',recoveredLogin.status===200&&recoveredLogin.cookie.length>5);
 
