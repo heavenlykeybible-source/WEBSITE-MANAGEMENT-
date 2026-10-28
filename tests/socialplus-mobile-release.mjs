@@ -46,7 +46,7 @@ if(release.release_status==='ready'){
   assert.equal(release.ios.status,'ready');
   assert.equal(release.pwa.status,'ready');
 }
-console.log('PASS SocialPlus mobile artifact release gates');
+console.log(release.release_status==='ready' ? 'PASS SocialPlus release metadata (ready; run --verify-live for live validation)' : 'PASS SocialPlus metadata format; release remains BLOCKED and is NOT launch-ready');
 
 if (process.argv.includes('--require-ready')) {
   assert.equal(release.release_status,'ready','SocialPlus is NOT cleared for global launch');
