@@ -6,7 +6,6 @@ import * as Calls from "./calls";
 import * as Safety from "./safety";
 import * as Stewardship from "./stewardship";
 import * as Social from "./social-auth";
-import * as Adverts from "./adverts";
 import * as Editorial from "./ministry-editorial";
 import * as Active from "./active";
 import * as Care from "./community-care";
@@ -99,14 +98,8 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   if(p==='/api/care/today'&&m==='GET'){const u=await me(request,env);Care.requireCare(env);return json(await Care.today(env,u.userId));}
   if(p==='/api/admin/care/readings'&&m==='GET'){const u=await requireRole(request,env,'administrator');if(!u)return error('Administrator access required.',403);Care.requireCare(env);return json(await Care.adminReadings(env));}
   {const x=p.match(/^\/api\/admin\/care\/readings\/(\d+)$/);if(x&&m==='PATCH'){const u=await requireRole(request,env,'administrator');if(!u)return error('Administrator access required.',403);Care.requireCare(env);return json(await Care.approveReading(env,u,Number(x[1]),await body(request)));}}
-  if(p==="/api/admin/adverts/images"&&m==="POST"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);return json(await Adverts.uploadImage(env,admin,request),201);}
-  {const match=p.match(/^\/api\/adverts\/images\/([a-f0-9-]{36})$/);if(match&&m==="GET"){const image=await Adverts.image(env,match[1]);if(!image)return error("Advert image unavailable.",404);return new Response(image.body,{headers:security(new Headers({"Content-Type":image.mime,"Cache-Control":"public, max-age=60","ETag":image.etag}))});}}
-  if(p==="/api/adverts"&&m==="GET")return json(await Adverts.publicAdverts(env));
   if(p==="/api/admin/social-signin"&&m==="GET"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);return json(await Social.settings(env,url.origin));}
   {const match=p.match(/^\/api\/admin\/social-signin\/(google|facebook)$/);if(match&&m==="POST"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);const result=await Social.saveSettings(env,match[1],await body(request));await env.DB.prepare("INSERT INTO safety_audit(actor_user_id,action,target_type,target_id,reason) VALUES(?,'social_signin_settings','provider',0,?)").bind(admin.userId,match[1]).run();return json(result);}}
-  if(p==="/api/admin/adverts"&&m==="GET"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);const before=Number(url.searchParams.get("before")||0);if(!Number.isSafeInteger(before)||before<0)return error("Invalid advert cursor.");return json(await Adverts.listAdverts(env,before));}
-  if(p==="/api/admin/adverts"&&m==="POST"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);return json(await Adverts.saveAdvert(env,admin,await body(request)),201);}
-  {const match=p.match(/^\/api\/admin\/adverts\/(\d+)$/);if(match&&m==="PATCH"){const admin=await requireRole(request,env,"administrator");if(!admin)return error("Administrator access required.",403);return json(await Adverts.saveAdvert(env,admin,await body(request),Number(match[1])));}}
   if(p==="/api/me/safety"&&m==="GET"){const u=await me(request,env);return json(await Safety.mySafety(env,u.userId));}
   if(p==="/api/me/requests"&&m==="POST"){const u=await me(request,env);if(!await rate(env,"requests:"+u.userId,10,3600))return error("Please wait before submitting another request.",429);return json(await Safety.submitRequest(env,u.userId,await body(request)),201);}
   if(p==="/api/moderation/requests"&&m==="GET"){const u=await requireRole(request,env,"administrator");if(!u)return error("Administrator access required.",403);return json({items:await Safety.requestQueue(env)});}
