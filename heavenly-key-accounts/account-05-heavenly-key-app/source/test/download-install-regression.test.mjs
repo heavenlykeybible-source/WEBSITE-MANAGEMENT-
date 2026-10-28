@@ -56,7 +56,7 @@ test('offline shell caches device guides without failing when optional assets ar
   for (const device of ['android', 'iphone', 'ipad', 'windows', 'mac']) {
     assert.ok(sw.includes('/download/' + device + '/index.html'), 'Guide missing from cache: ' + device);
   }
-  assert.match(sw, /Promise\.allSettled\(SHELL/);
+  assert.match(sw, /for\(const path of SHELL\.filter/);
   assert.match(sw, /const cachePath=guide\?url\.pathname\+'index\.html':url\.pathname/);
   assert.match(sw, /getAll\('app'\)\.length===1/);
 });
