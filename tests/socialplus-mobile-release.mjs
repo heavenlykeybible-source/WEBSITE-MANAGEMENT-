@@ -39,7 +39,8 @@ if(release.release_status==='ready'){
   assert.equal(release.verification?.ios_install_passed,true,'iOS installation test must pass');
   assert.equal(release.verification?.domain_https_passed,true,'HTTPS domain check must pass');
   assert.equal(release.verification?.pwa_offline_passed,true,'PWA offline test must pass');
-  assert.equal(release.verification?.checked_commit,process.env.GITHUB_SHA||release.verification?.checked_commit,'Verification must match checked commit');
+  assert.match(release.verification?.checked_commit||'',/^[0-9a-f]{40}$/i,'Verification must identify a real commit SHA');
+  if(process.env.GITHUB_SHA) assert.equal(release.verification.checked_commit,process.env.GITHUB_SHA,'Verification commit must match current build');
   assert.ok(release.requirements.every(item=>typeof item==='string' && item.trim()),'Requirements must be documented');
   assert.equal(release.android.status,'ready');
   assert.equal(release.ios.status,'ready');
