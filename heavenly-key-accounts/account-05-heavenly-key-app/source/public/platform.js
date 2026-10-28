@@ -10,10 +10,10 @@ connection();window.addEventListener('online',connection);window.addEventListene
 const host=document.getElementById('install-guide');if(host)mountInstallGuide(host,make);
 const clear=document.getElementById('clear-public-downloads');
 clear?.addEventListener('click',async()=>{
- const notice=document.getElementById('storage-status');if(!confirm('Remove downloaded Bible books and audio from this device?'))return;clear.disabled=true;
+ const notice=document.getElementById('storage-status');if(!confirm('Remove downloaded Bible books and hymn recordings from this device?'))return;clear.disabled=true;
  try{if(!('caches' in window))throw Error('Offline storage is unavailable.');
   const names=await caches.keys();await Promise.all(names.filter(name=>name==='hk-kjv-opt-in-books-v1'||name==='hk-approved-audio-bible-v1'||name==='hk-audio-hymnal-v1').map(name=>caches.delete(name)));
-  notice.textContent='Downloaded Bible books and audio removed. Bookmarks and account information were not changed.';
+  notice.textContent='Downloaded Bible books and hymn recordings removed. Bookmarks and account information were not changed.';
  }catch{notice.textContent='Downloads could not be removed. Please use your browser storage settings.';}finally{clear.disabled=false;}
 });
 if('serviceWorker' in navigator&&location.protocol==='https:'){
@@ -21,7 +21,7 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){
   let checked=0,checking=false;const minimumGap=30*60*1000;
   const offer=()=>{
    if(registration.waiting&&navigator.serviceWorker.controller){
-    update.hidden=false;message.textContent='A new app version is ready. Save private notes and finish active playback before updating.';
+    update.hidden=false;message.textContent='A new app version is ready. Save private notes and finish any hymn playback before updating.';
    }
   };
   offer();
