@@ -61,6 +61,8 @@ const tokenizedAsset=await fire('fetch',new Request('https://editor.test/timelin
 assert.equal(tokenizedAsset,undefined,'Query-bearing static requests must bypass offline caching');
 const footer = await fire('fetch',new Request('https://editor.test/hk-approved-footer.js'));
 assert.ok((await footer.text()).includes('offline'),'Approved footer must remain available offline');
+const style = await fire('fetch',new Request('https://editor.test/hk-approved-footer.css'));
+assert.ok((await style.text()).includes('offline'),'Approved footer styles must remain available offline');
 const script = await fire('fetch',new Request('https://editor.test/timeline.js'));
 assert.ok((await script.text()).includes('offline'),'Offline module must load from cache');
 offline=false;
