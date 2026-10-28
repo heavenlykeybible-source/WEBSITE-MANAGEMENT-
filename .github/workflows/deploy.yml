@@ -94,6 +94,12 @@ jobs:
           node tests/native-imports-browser.mjs
           node tests/browser-agent-chromium.mjs
 
+      - name: Verify approved source was not replaced during build
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ inputs.approved_commit }}" || { echo '::error::Checked-out release changed'; exit 1; }
+          test -f control-room-worker.js || { echo '::error::Missing Control Room Worker'; exit 1; }
+          node --check control-room-worker.js
+
       - name: Deploy existing Worker without changing its resources
         run: node scripts/deploy-account4-existing.mjs
         env:
