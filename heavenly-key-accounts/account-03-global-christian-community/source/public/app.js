@@ -565,6 +565,7 @@ async function refreshThread(){
  if(activeConversation!==id||version!==chatVersion||revision!==chatReadRevision||member!==session?.user?.userId||host!==threadHost||!host?.isConnected)return;
  const history=host.querySelector('.chat-history');if(!history)return;
  const items=after?[...cached,...latest.filter(m=>m.message_id>after)]:latest;
+ if(hasMore){const warning=host.querySelector('.chat-sync-warning');if(!warning){const notice=el('p','Many messages arrived. More will load on the next refresh.','chat-sync-warning status');host.append(notice);}}else host.querySelector('.chat-sync-warning')?.remove();
  const signature=JSON.stringify(items.map(m=>[m.message_id,m.body]));
  if(!history.dataset.paginationReady){history.dataset.before=nextBefore||'';history.dataset.paginationReady='1';}
  const older=host.querySelector('.chat-older');older.hidden=!history.dataset.before;
