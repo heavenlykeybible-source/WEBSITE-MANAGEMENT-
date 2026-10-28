@@ -52,6 +52,11 @@ if (process.argv.includes('--check')) {
   const form = new FormData();
   form.set('metadata', new Blob([JSON.stringify(metadata)], {type:'application/json'}));
   form.set('control-room-worker.js', new Blob([source], {type:'application/javascript+module'}), 'control-room-worker.js');
+  // Check again immediately before upload: builds and browser tests can take minutes.
+  const finalRemote = spawnSync('git', ['ls-remote', '--heads', 'origin', 'main'], {encoding:'utf8',shell:false,timeout:20000});
+  const finalSha = finalRemote.stdout?.trim().split(/\s+/)[0];
+  if (finalRemote.status !== 0 || finalSha !== approved)
+    throw new Error('Account 4 upload cancelled: newer source appeared during release preparation');
   await api(base, {method:'PUT', body:form});
   const after = await api(base + '/settings');
   if (signature(bindings) !== signature(after.bindings || [])) throw new Error('Upload completed but binding verification differs. Inspect existing Worker before retrying.');
