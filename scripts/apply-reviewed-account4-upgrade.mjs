@@ -7,7 +7,7 @@ const metadata=JSON.parse(fs.readFileSync(new URL('../patches/account4-reviewed-
 const digest=b=>createHash('sha256').update(b).digest('hex');
 const target=new URL('../control-room-worker.js',import.meta.url);
 const current=digest(fs.readFileSync(target));
-if(current!==metadata.after_sha256){
+if(current!==metadata.after_sha256 && current!==metadata.built_sha256){
  if(current!==metadata.before_sha256)throw Error('Refusing to overwrite changed Control Room source. Review and regenerate the upgrade patch.');
  const patch=new URL('../patches/account4-reviewed-upgrade.patch',import.meta.url);
  if(digest(fs.readFileSync(patch))!==metadata.patch_sha256)throw Error('Control Room upgrade patch integrity mismatch');
