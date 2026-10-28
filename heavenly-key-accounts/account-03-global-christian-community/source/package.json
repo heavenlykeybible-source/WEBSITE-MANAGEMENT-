@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run check && npm run frontend && npm run test:home && npm run test:security && npm run test:design && npm run test:feed && npm run test:groups && npm run test:registration && npm run test:totp && npm run test:passkeys && npm run test:stewardship && npm run test:social-adverts && npm run test:audit-inprocess && npm run test:active && npm run test:spaces && npm run test:care && npm run test:social-scale && npm run preflight && node scripts/verify-worker-bundle.mjs",
+    "build": "npm run check && npm run frontend && npm run test:home && npm run test:strength && npm run test:security && npm run test:design && npm run test:feed && npm run test:groups && npm run test:registration && npm run test:totp && npm run test:passkeys && npm run test:stewardship && npm run test:social-adverts && npm run test:audit-inprocess && npm run test:active && npm run test:spaces && npm run test:care && npm run test:social-scale && npm run preflight && node scripts/verify-worker-bundle.mjs",
     "deploy": "wrangler deploy --config wrangler.toml",
     "upload:version": "wrangler versions upload --config wrangler.toml",
     "migrations:production": "wrangler d1 migrations apply heavenly-key-global-community-db --remote --config wrangler.toml",
@@ -27,7 +27,8 @@
     "test:care": "node --test test/community-care.checks.mjs",
     "test:social-scale": "node --test test/social-read-scale.checks.mjs",
     "test:home": "node --test test/approved-home-layout.checks.mjs test/approved-dashboard.checks.mjs test/home-loading.checks.mjs test/no-ai.checks.mjs test/global-social-feed.checks.mjs",
-    "test:security": "node --test test/session-security.checks.mjs"
+    "test:security": "node --test test/session-security.checks.mjs",
+    "test:strength": "node --test test/strength-for-today.checks.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261015.1",
