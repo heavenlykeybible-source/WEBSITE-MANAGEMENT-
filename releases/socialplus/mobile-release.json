@@ -1,0 +1,31 @@
+{
+  "app": "SocialPlus",
+  "account": 10,
+  "domain": "https://socialplus.heavenlykey.org",
+  "release_status": "blocked",
+  "android": {
+    "status": "missing",
+    "artifact_url": null,
+    "sha256": null,
+    "package_name": null,
+    "version": null
+  },
+  "ios": {
+    "status": "missing",
+    "app_store_url": null,
+    "bundle_id": null,
+    "version": null
+  },
+  "pwa": {
+    "status": "unverified",
+    "manifest_url": null,
+    "service_worker_url": null
+  },
+  "requirements": [
+    "Locate and audit the original application source",
+    "Build and sign an Android release artifact",
+    "Create and sign an iOS release through Apple distribution",
+    "Validate install and launch on Android and iPhone",
+    "Verify HTTPS domain and live download paths"
+  ]
+}
