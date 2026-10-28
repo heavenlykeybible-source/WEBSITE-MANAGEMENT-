@@ -41,6 +41,8 @@ const fire = async(type,request) => {
   await Promise.all(tasks);
   return response;
 };
+const swSource=readFileSync('public/sw.js','utf8');
+assert.ok(swSource.includes("'/hk-approved-footer.js'")&&swSource.includes("'/hk-approved-footer.css'"),'Approved footer code and styles must be available offline');
 await fire('install');
 await fire('activate');
 const api = await fire('fetch',new Request('https://editor.test/api/me'));
@@ -57,6 +59,8 @@ const tokenized=await fire('fetch',{url:'https://editor.test/?session=secret',me
 assert.equal(tokenized,undefined,'Query-token navigations must bypass the offline cache');
 const tokenizedAsset=await fire('fetch',new Request('https://editor.test/timeline.js?access_token=private'));
 assert.equal(tokenizedAsset,undefined,'Query-bearing static requests must bypass offline caching');
+const footer = await fire('fetch',new Request('https://editor.test/hk-approved-footer.js'));
+assert.ok((await footer.text()).includes('offline'),'Approved footer must remain available offline');
 const script = await fire('fetch',new Request('https://editor.test/timeline.js'));
 assert.ok((await script.text()).includes('offline'),'Offline module must load from cache');
 offline=false;
