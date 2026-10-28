@@ -25,3 +25,11 @@ body[data-page="home"].gc-composed-dashboard .gc-local-timezone{order:98;grid-co
 
 /* Yellow controls use navy for both labels and monochrome icons. */
 body[data-page="home"].gc-composed-dashboard :is(.gc-composer-submit,.hk-ref-create,.social-rail .rail-link[aria-current="page"]) svg{color:#10295b!important;fill:currentColor!important}
+
+/* Friend presence appears only in the right sidebar, not the ACTIVE status strip. */
+.gc-online-members{padding:1rem;border:1px solid var(--border,#d9e1ed);border-radius:14px;background:var(--surface,#fff);margin-bottom:1rem}
+.gc-online-members h2{font-size:1rem;margin:0 0 .75rem}
+.gc-online-list{display:grid;gap:.5rem}
+.gc-online-friend{display:flex;align-items:center;gap:.45rem;padding:.35rem .25rem;text-decoration:none;border-radius:8px;color:inherit}
+.gc-online-friend:hover,.gc-online-friend:focus-visible{background:rgba(70,110,180,.08)}
+.gc-presence-dot{color:#16844e;font-size:1rem;line-height:1}
