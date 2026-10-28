@@ -343,6 +343,15 @@ function homeReadingCard(){
  retry.addEventListener('click',()=>void load());
  void load();return panel;
 }
+async function mountFriendRequests(host){
+ if(!session)return;
+ const panel=card("Friend requests"),status=el("p","","muted"),list=el("div",null,"stack");panel.append(status,list);host.append(panel);
+ async function refresh(){status.textContent="Loading friend requests…";try{const data=await api("/api/friends/requests");list.replaceChildren();const pending=(data.items||[]).filter(r=>r.status==="pending");status.textContent=pending.length?pending.length+" pending friend request(s)":"No pending friend requests.";
+ for(const r of pending){const incoming=r.recipient_user_id===session.user.userId,item=el("div",null,"item"),name=el("strong",r.display_name||"Community member");item.append(name,el("p",incoming?"Sent you a friend request":"Awaiting response","muted"));
+ for(const [action,label] of (incoming?[["accept","Accept"],["decline","Decline"]]:[["cancel","Cancel"]])){const btn=el("button",label,"btn secondary");btn.type="button";btn.addEventListener("click",async()=>{btn.disabled=true;try{await api("/api/friends/requests/"+r.request_id+"/"+action,"POST",{});await refresh();}catch(e){status.textContent=e.message;btn.disabled=false;}});item.append(btn);}list.append(item);}
+ }catch(e){status.textContent="Friend requests are temporarily unavailable.";}}
+ await refresh();
+}
 async function mountHome(){
  const {stream,aside}=socialFeedLayout("Home feed","Connecting Believers • Building Faith • Growing in Christ");
  void CareUI.mountDaily({host:aside,api,el,session});
@@ -362,6 +371,7 @@ async function mountHome(){
  q.placeholder="Search name or calling";q.maxLength=120;q.setAttribute("aria-label","Search believers");sb.type="submit";
  const country=el("input");country.placeholder="Country (optional)";country.maxLength=80;country.setAttribute("aria-label","Filter members by country");sf.append(q,country,sb);discover.append(sf);sf.addEventListener("submit",e=>{e.preventDefault();void discoverProfiles(discover,q.value,country.value.trim());});
  if(!session){sf.replaceChildren();const locked=el("a","Sign in to search members","btn secondary");locked.href="account.html?next="+encodeURIComponent("index.html");sf.append(locked);}aside.children[0].after(discover);
+ if(session)void mountFriendRequests(aside);
  const messages=card("Messages",session?"View your conversations and message requests.":"Connect with believers in a private conversation.");
  messages.classList.add("home-messages");const inbox=el("a",session?"Open messages":"Sign in to chat","btn secondary");
  inbox.href=session?"messages.html":"account.html?next=messages.html";messages.append(inbox);discover.after(messages);
