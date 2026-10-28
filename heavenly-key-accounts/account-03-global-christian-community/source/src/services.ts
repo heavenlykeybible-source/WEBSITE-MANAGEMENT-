@@ -394,6 +394,21 @@ export async function salvationDecision(env:Env,userId:number|null,input:any){
 export async function notify(env:Env,userId:number,kind:string,title:string,body:string,href:string){
   await env.DB.prepare("INSERT INTO notifications(user_id,kind,title,body,href) VALUES(?,?,?,?,?)").bind(userId,kind,title,body,href).run();
 }
+export async function updatePresence(env:Env,userId:number,online:boolean){
+ if(online)await env.DB.prepare("INSERT INTO member_presence(user_id,last_seen_at) VALUES(?,datetime('now')) ON CONFLICT(user_id) DO UPDATE SET last_seen_at=datetime('now')").bind(userId).run();
+ else await env.DB.prepare("DELETE FROM member_presence WHERE user_id=?").bind(userId).run();
+ return {online};
+}
+export async function onlineFriends(env:Env,userId:number){
+ const r=await env.DB.prepare(`SELECT p.user_id,p.display_name FROM member_presence mp
+ JOIN users u ON u.user_id=mp.user_id AND u.status='active'
+ JOIN profiles p ON p.user_id=mp.user_id
+ JOIN friend_requests f ON f.status='accepted' AND ((f.sender_user_id=? AND f.recipient_user_id=mp.user_id) OR (f.recipient_user_id=? AND f.sender_user_id=mp.user_id))
+ WHERE mp.user_id<>? AND mp.last_seen_at>=datetime('now','-90 seconds')
+ AND NOT EXISTS(SELECT 1 FROM user_blocks b WHERE (b.blocker_user_id=? AND b.blocked_user_id=mp.user_id) OR (b.blocker_user_id=mp.user_id AND b.blocked_user_id=?))
+ ORDER BY mp.last_seen_at DESC LIMIT 60`).bind(userId,userId,userId,userId,userId).all<any>();
+ return r.results;
+}
 export async function notifications(env:Env,userId:number){
   const r=await env.DB.prepare("SELECT * FROM notifications WHERE user_id=? ORDER BY notification_id DESC LIMIT 100").bind(userId).all<any>();return r.results;
 }
