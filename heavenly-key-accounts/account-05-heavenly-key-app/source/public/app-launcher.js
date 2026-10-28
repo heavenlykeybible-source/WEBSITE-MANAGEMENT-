@@ -3,8 +3,8 @@
   'use strict';
   const apps = [
     ['✦','Online Assistant','/assistant.html','Scripture and ministry assistance'],
-    ['📱','Heavenly Key All-in-One','/experience.html','Account 5'],
-    ['📖','Full KJV Bible','/bible.html','Read and search Scripture'],
+    ['📱','My Walk With God','/experience.html','Heavenly Key All-in-One Christian App'],
+    ['📖','Life Bible (Full Bible App)','/bible.html','Read and search the Authorised King James Version'],
     ['📅','365-Day Reading Plan','/devotional.html','Daily discipleship'],
     ['🎵','Hymn Library','/hymns.html','Hymn texts'],
     ['🎧','Audio Hymnal','/audio-hymns.html','Approved hymn recordings'],
@@ -12,7 +12,7 @@
     ['⌛','Eternity in View','/eternity-in-view/','Salvation and eternity portal'],
     ['🎓','From Creation to Eternity','/creation-to-eternity.html','35 Bible lessons'],
     ['📻','Heavenly Key Radio','https://radio.heavenlykey.org/','Dedicated radio website'],
-    ['🌍','Global Christian Community','https://global.heavenlykey.org/','Dedicated social network'],
+    ['🌍','Global Christian Social Network','https://global.heavenlykey.org/','Dedicated social network'],
     ['📚','Heavenly Key Bible Portal','https://onlinebible.heavenlykey.org/','Dedicated Bible website']
   ];
   const dialog = document.createElement('dialog');
