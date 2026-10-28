@@ -85,6 +85,19 @@ if (process.argv.includes('--verify-live')) {
       assert.ok(manifest.start_url,'PWA manifest must specify start_url');
       assert.ok(['standalone','fullscreen','minimal-ui'].includes(manifest.display),'PWA must be installable');
       assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length,'PWA needs install icons');
+      const appOrigin=new URL(release.domain).origin;
+      const manifestBase=new URL(release.pwa.manifest_url);
+      const start=new URL(manifest.start_url,manifestBase);
+      assert.equal(start.origin,appOrigin,'PWA start_url must remain on the SocialPlus origin');
+      const scope=new URL(manifest.scope||'/',manifestBase);
+      assert.equal(scope.origin,appOrigin,'PWA scope must remain on the SocialPlus origin');
+      assert.ok(start.pathname.startsWith(scope.pathname),'PWA start_url must be inside its scope');
+      for(const icon of manifest.icons){
+        assert.ok(icon&&typeof icon.src==='string'&&icon.src.trim(),'PWA icon must have a source');
+        const iconUrl=new URL(icon.src,manifestBase);
+        assert.equal(iconUrl.origin,appOrigin,'PWA install icons must be same-origin');
+        assert.ok(icon.sizes&&icon.sizes.trim(),'PWA install icon sizes are required');
+      }
     } else if(kind==='worker'){
       assert.ok(/javascript|ecmascript|text\/plain/i.test(mime),'Service worker must serve JavaScript');
       await response.body?.cancel();
