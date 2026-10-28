@@ -30,3 +30,24 @@ test('cross references link to the KJV reader and chapter switches invalidate re
  assert.ok(js.includes('latestRequest++'));
  assert.ok(js.includes("book.value+':'+chapter.value!==key"));
 });
+
+test('all fifteen Quick Bible Tools are uniquely wired',()=>{
+ const html=read('bible.html');
+ const original=['summary','lessons','characters','important','cross','definitions'];
+ const additional=['search','notes','maps','timeline','topical','verse-image','memory','promises'];
+ for(const id of original)assert.equal((html.match(new RegExp('data-study-tool="'+id+'"','g'))||[]).length,1,id);
+ for(const id of additional)assert.equal((html.match(new RegExp('data-extra-tool="'+id+'"','g'))||[]).length,1,id);
+ assert.ok(html.includes('href="/walk-offline.html#walk-bible-study"'));
+ assert.ok(html.includes('src="/extra-bible-tools.js"'));
+ assert.ok(html.includes('Quick Bible Tools'));
+});
+test('study links, async cancellations, and offline verse cards are guarded',()=>{
+ const core=read('chapter-study-tools.js'),extra=read('extra-bible-tools.js');
+ assert.ok(core.includes('latestRequest++'));
+ assert.ok(core.includes('referenceBooks[match[1]]'));
+ assert.ok(extra.includes('activeToolRequest++'));
+ assert.ok(extra.includes('request!==activeToolRequest'));
+ assert.ok(extra.includes('type===\'search\''));
+ assert.ok(extra.includes('type===\'verse-image\''));
+ assert.ok(extra.includes('No AI images are generated.'));
+});
