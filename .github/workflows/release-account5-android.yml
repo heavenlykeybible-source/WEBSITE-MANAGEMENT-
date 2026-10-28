@@ -53,12 +53,29 @@ jobs:
           "$apksigner" verify --verbose "$apk"
           sha256sum "$apk" > "$apk.sha256"
           cat "$apk.sha256"
+      - name: Install malware scanner and update signatures
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y clamav clamav-freshclam
+          sudo systemctl stop clamav-freshclam || true
+          sudo freshclam
+      - name: Scan signed release APK and fail closed on malware or scanner errors
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          clamscan --infected --no-summary "$apk"
+          printf 'malwareScan=passed\nsignatureVerified=true\n' > "$apk.security.txt"
+          sha256sum "$apk" >> "$apk.security.txt"
       - uses: actions/upload-artifact@v4
         with:
           name: heavenly-key-account5-signed-android-release
           path: |
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk.sha256
+            heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk.security.txt
           retention-days: 30
           if-no-files-found: error
       - name: Remove keystore from runner
