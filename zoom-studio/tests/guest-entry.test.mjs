@@ -73,3 +73,10 @@ test('embedded YouTube broadcasts require a valid eleven-character ID', () => {
   assert.ok(html.includes(String.raw`/^[\w-]{11}$/`));
   assert.match(html, /!parsed\.hash/);
 });
+
+test('broadcast iframe is sandboxed and supports accessible fullscreen playback', () => {
+  assert.match(html, /f\.sandbox='allow-scripts allow-same-origin allow-presentation'/);
+  assert.match(html, /f\.allowFullscreen=true/);
+  assert.match(html, /f\.loading='lazy'/);
+  assert.match(html, /f\.referrerPolicy='strict-origin-when-cross-origin'/);
+});
