@@ -67,7 +67,7 @@ test('failed and empty Space responses show honest states while retaining the di
 
 test('homepage loads final layout; only the authenticated ACTIVE module owns its rail and consent',()=>{
  const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8'),html=read('public/index.html');
- assert(html.includes('approved-dashboard.css?v=20261024-flow'));assert(html.includes('approved-dashboard.js?v=20261027-apps1'));
+ assert(html.includes('global-social-current.css?v=20261028-network'));assert(html.includes('approved-dashboard.js?v=20261027-apps1'));
  const official=read('public/official-community-feed.js');assert(!official.includes('hk-active-auto-'));assert(!official.includes("section.className='hk-active-section'"));assert(!official.includes('createElement'));assert(read('public/app.js').includes("api('/api/ministry/posts'"));
  assert(read('public/active-strip.js').includes("api('/api/active')"));
  const css=read('public/approved-dashboard.css');assert(css.includes('@media(min-width:1400px)'));assert(css.includes('@media(max-width:900px)'));assert(css.includes('.brand-words'));assert(css.includes('button[aria-pressed=true]'));

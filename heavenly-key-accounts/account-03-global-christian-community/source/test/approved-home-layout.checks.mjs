@@ -30,8 +30,8 @@ function fixture(){
 test('every guest receives the approved banner, encouraging cards and real registration/sign-in destinations',()=>{
  for(let i=0;i<2;i++){
   const banner=welcome(null),image=banner.children[0],copy=banner.children[1];
-  assert.equal(image.src,'assets/global-christian-community-approved-banner.jpeg');
-  assert.equal(image.width,1536);assert.equal(image.height,614);assert.equal(image.fetchPriority,'high');
+  assert.equal(image.src,'assets/global-christian-social-network-banner.jpeg');
+  assert.equal(image.width,1983);assert.equal(image.height,793);assert.equal(image.fetchPriority,'high');
   assert.equal(banner.attributes['aria-labelledby'],copy.querySelector('h2').id);
   assert.equal(copy.querySelectorAll('.gc-welcome-feature').length,3);
   assert.match(copy.querySelector('.gc-welcome-intro').textContent,/grow together in Christ/);
@@ -77,8 +77,10 @@ test('sign-in hides welcome immediately, member render retains ACTIVE, and sign-
 
 test('home loads current welcome assets and CSS makes guest/member sections mutually exclusive',()=>{
  const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
- assert(html.includes('app.js?v=20261027-theme3'));
- for(const file of ['approved-home-layout.js','approved-home-layout.css'])assert(html.includes(file+'?v=20261021-welcome3'));
+ assert(html.includes('app.js?v=20261028-network'));
+ assert(html.includes('approved-home-layout.js?v=20261021-welcome3'));
+ assert(html.includes('global-social-current.css?v=20261028-network'));
+ assert.equal((html.match(/rel="stylesheet"/g)||[]).length,1);
  const css=readFileSync(new URL('../public/approved-home-layout.css',import.meta.url),'utf8');
  assert(css.includes('.gc-approved-member .gc-visitor-banner{display:none!important}'));
  assert(css.includes('.gc-approved-guest .gc-active-section{display:none!important}'));
