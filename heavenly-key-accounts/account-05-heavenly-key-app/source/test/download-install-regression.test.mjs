@@ -73,3 +73,14 @@ test('device guide never offers an installation prompt for the wrong app scope',
  assert.doesNotMatch(js, /install\.hidden = false/);
  assert.match(js, /open the selected app/i);
 });
+
+test('premium install dialog has an accessible close control and device options', () => {
+ const js = publicFile('app-pages.js');
+ const css = publicFile('app-pages.css');
+ assert.match(js, /dialog\.setAttribute\('aria-label','Download '/);
+ assert.match(js, /dialog\.addEventListener\('close'/);
+ assert.match(js, /install-primary/);
+ assert.match(js, /install-device-description/);
+ assert.match(css, /\.hk-install-dialog\.downloadgrid|\.hk-install-dialog \.downloadgrid/);
+ assert.match(css, /@media\(max-width:480px\)/);
+});
