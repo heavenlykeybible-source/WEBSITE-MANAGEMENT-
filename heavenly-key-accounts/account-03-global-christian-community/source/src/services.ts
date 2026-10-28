@@ -319,6 +319,14 @@ export async function messages(env:Env,userId:number,id:number,before?:number){
   const r=await env.DB.prepare("SELECT message_id,sender_user_id,body,created_at FROM messages WHERE conversation_id=? AND status='delivered' AND message_id<? ORDER BY message_id DESC LIMIT 100").bind(id,cursor).all<any>();return r.results.reverse();
 }
 
+export async function newMessages(env:Env,userId:number,id:number,after:number){
+  await conversationAccess(env,userId,id);
+  if(!Number.isSafeInteger(after)||after<0)throw new Error("Choose a valid message cursor.");
+  const r=await env.DB.prepare("SELECT message_id,sender_user_id,body,created_at FROM messages WHERE conversation_id=? AND status='delivered' AND message_id>? ORDER BY message_id ASC LIMIT 100").bind(id,after).all<any>();
+  const items=r.results;
+  return {items,nextAfter:items.length?Number(items[items.length-1].message_id):after,hasMore:items.length===100};
+}
+
 export async function createPrayerCircle(env:Env,userId:number,input:any){
   const name=clamp(input.name,100),description=clamp(input.description,1000);if(name.length<2||description.length<10)throw new Error("Prayer Circle name and purpose are required.");
   const mod=moderateText(name+"\n"+description,"group",env.COMMUNITY_BLOCKED_WORDS);if(["block","hold"].includes(mod.decision))throw new Error("Prayer Circle violates Community Standards.");
