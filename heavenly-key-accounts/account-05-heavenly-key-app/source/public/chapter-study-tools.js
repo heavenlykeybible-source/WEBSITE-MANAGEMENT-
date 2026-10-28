@@ -8,7 +8,7 @@ const notes={
  'psalms:23':{summary:'David describes the LORD as his shepherd, provider, protector and enduring hope.',lessons:['Trust God for guidance.','God is present through hardship.'],characters:['David (speaker)','The LORD (shepherd)'],important:[1,4,6],cross:['John 10:11','Isaiah 40:11']},
  'john:3':{summary:'Jesus teaches Nicodemus about new birth and the love of God; John the Baptist points people to Christ.',lessons:['New birth is spiritual.','Faith in Christ is central to the chapter.'],characters:['Jesus','Nicodemus','John the Baptist'],important:[3,16,17,30],cross:['Numbers 21:8-9','John 1:12','1 John 4:9']}
 };
-const dictionary={grace:'God’s undeserved favour.',faith:'Trust or confidence in God.',redeem:'To buy back or deliver.',shepherd:'One who cares for and guides a flock.',covenant:'A solemn binding agreement.',righteousness:'What is right or just before God.',repent:'To turn away from sin and turn toward God.',holy:'Set apart as sacred.',salvation:'Deliverance or rescue.',spirit:'Breath, wind, or a nonphysical being; meaning depends on context.'};
+const dictionary={atonement:'Reconciliation with God; in Scripture, connected with sacrifice and forgiveness.',mercy:'Compassion shown to someone in need.',disciple:'A learner or follower.',parable:'A story used to teach a lesson.',prophet:'A person called to speak God’s message.',apostle:'One sent with a commission.',resurrection:'Rising from the dead.',redemption:'Deliverance by payment or release.',forgive:'To pardon or release from an offence.',blessed:'Favoured or made happy.',wisdom:'Sound judgment and understanding.',truth:'That which is true and faithful.',grace:'God’s undeserved favour.',faith:'Trust or confidence in God.',redeem:'To buy back or deliver.',shepherd:'One who cares for and guides a flock.',covenant:'A solemn binding agreement.',righteousness:'What is right or just before God.',repent:'To turn away from sin and turn toward God.',holy:'Set apart as sacred.',salvation:'Deliverance or rescue.',spirit:'Breath, wind, or a nonphysical being; meaning depends on context.'};
 const el=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;};
 let latestRequest=0;
 document.getElementById('study-root')?.addEventListener('change',event=>{if(event.target.matches('#kjv-book-picker,#kjv-chapter-picker')){latestRequest++;host?.replaceChildren();}});
@@ -38,7 +38,7 @@ tools?.addEventListener('click',async e=>{
   host.replaceChildren(el('h3',heading));
   if(kind==='definitions'){
    const words=Object.entries(dictionary).filter(([w])=>verses.some(v=>new RegExp('\\b'+w+'\\b','i').test(v)));
-   if(!words.length)host.append(el('p','No reviewed glossary terms found in this chapter.'));
+   if(!words.length)host.append(el('p','No matching terms in the reviewed glossary. Read the chapter above; the glossary is not exhaustive.'));
    for(const [word,definition] of words)host.append(el('p',word+': '+definition));
   }else if(kind==='cross'){
    if(!info?.cross?.length){host.append(el('p','Reviewed cross-references are not yet available for this chapter.'));return;}
@@ -53,11 +53,11 @@ tools?.addEventListener('click',async e=>{
     host.append(p);
    }
   }else if(kind==='important'){
-   if(!info?.important){host.append(el('p','Reviewed important-verse selections are not available for this chapter yet. Read the chapter above.'));return;}
+   if(!info?.important){host.append(el('p','No editor-reviewed important-verse selections for this chapter. To avoid inventing a ranking, here is the opening verse for reading (not an importance ranking).'));if(verses[0])host.append(el('p',entry.name+' '+chapter.value+':1 — '+verses[0]));return;}
    for(const n of info.important)if(verses[n-1])host.append(el('p',entry.name+' '+chapter.value+':'+n+' — '+verses[n-1]));
   }else{
    const values=kind==='summary'?(info?.summary?[info.summary]:null):info?.[kind];
-   if(!values){host.append(el('p','Reviewed '+button.textContent.toLowerCase()+' are not available for this chapter yet. No AI-generated or unverified study notes are shown.'));return;}
+   if(!values){const guidance={summary:'No reviewed summary yet. Read the chapter above and identify the main event or teaching.',lessons:'No reviewed lessons yet. Read the chapter above and consider what it teaches about God and how to live.',characters:'No reviewed character list yet. Read the chapter above and identify the people explicitly named.'};host.append(el('p',guidance[kind]||'Reviewed study notes are not available for this chapter.'));return;}
    for(const value of values)host.append(el('p',value));
   }
  }catch(err){if(request===latestRequest)host.replaceChildren(el('p','Unable to load chapter study material. Please try again online.'));}
