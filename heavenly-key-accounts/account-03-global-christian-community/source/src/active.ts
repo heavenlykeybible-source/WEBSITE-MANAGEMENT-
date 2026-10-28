@@ -21,8 +21,8 @@ export async function list(env:Env,userId:number,postId=0){
  AND a.author_user_id=po.author_user_id AND po.group_id IS NULL AND po.author_space_id IS NULL
  AND po.post_format IN ('design_card','article') AND po.visibility IN ('public','connections')
  AND (?=0 OR a.post_id=?)
- AND (a.author_user_id=? OR EXISTS(SELECT 1 FROM global_connections WHERE user_id=? AND target_type='profile' AND target_id=a.author_user_id))
- ORDER BY a.published_at DESC,a.post_id DESC LIMIT 20`).bind(postId,postId,userId,userId).all<any>();
+ AND (a.author_user_id=? OR EXISTS(SELECT 1 FROM global_connections WHERE user_id=? AND target_type='profile' AND target_id=a.author_user_id) OR EXISTS(SELECT 1 FROM friend_requests fr WHERE fr.status='accepted' AND ((fr.sender_user_id=? AND fr.recipient_user_id=a.author_user_id) OR (fr.recipient_user_id=? AND fr.sender_user_id=a.author_user_id))))
+ ORDER BY a.published_at DESC,a.post_id DESC LIMIT 20`).bind(postId,postId,userId,userId,userId,userId).all<any>();
  const items=[];for(const row of rows.results){const post=(await feed(env,userId,1,{postId:row.post_id}))[0];if(post)items.push({...post,active_published_at:row.published_at,active_expires_at:row.expires_at});}
  return items;
 }
