@@ -60,8 +60,7 @@ $('feed').onclick=async()=>{
  finally{button.disabled=false}
 };
 size.addEventListener('change',refresh);themeSelect?.addEventListener('change',refresh);
-document.querySelectorAll('.topic').forEach(button=>button.addEventListener('click',()=>{refresh()}));
-$('surprise').addEventListener('click',()=>refresh());
+document.addEventListener('daily-manna-topic-changed',()=>{refresh()});
 refresh();
 window.addEventListener('pagehide',()=>{if(objectUrl)URL.revokeObjectURL(objectUrl)});
 })();
