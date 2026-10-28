@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import path from 'node:path';
 const release=JSON.parse(fs.readFileSync('releases/socialplus/mobile-release.json','utf8'));
 assert.equal(release.account,10);
@@ -45,7 +46,14 @@ if(release.release_status==='ready'){
   assert.equal(release.verification?.domain_https_passed,true,'HTTPS domain check must pass');
   assert.equal(release.verification?.pwa_offline_passed,true,'PWA offline test must pass');
   assert.match(release.verification?.checked_commit||'',/^[0-9a-f]{40}$/i,'Verification must identify a real commit SHA');
-  if(process.env.GITHUB_SHA) assert.equal(release.verification.checked_commit,process.env.GITHUB_SHA,'Verification commit must match current build');
+  if(process.env.GITHUB_ACTIONS==='true'){
+    const tested=release.verification.checked_commit;
+    const current=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+    const ancestor=execFileSync('git',['merge-base',tested,current],{encoding:'utf8'}).trim();
+    assert.equal(ancestor,tested,'Verified source commit must be an ancestor of the current build');
+    const changes=execFileSync('git',['diff','--name-only',tested,current,'--',release.source.path],{encoding:'utf8'}).trim();
+    assert.equal(changes,'','Application source changed since device testing; reverify the updated source');
+  }
   assert.equal(release.android.status,'ready');
   assert.equal(release.ios.status,'ready');
   assert.equal(release.pwa.status,'ready');
