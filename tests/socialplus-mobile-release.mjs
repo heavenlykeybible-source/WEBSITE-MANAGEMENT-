@@ -4,6 +4,10 @@ const release=JSON.parse(fs.readFileSync('releases/socialplus/mobile-release.jso
 assert.equal(release.account,10);
 assert.equal(release.domain,'https://socialplus.heavenlykey.org');
 assert.ok(['blocked','ready'].includes(release.release_status));
+for(const platform of ['android','ios','pwa']) assert.ok(release[platform], 'Missing '+platform+' release record');
+assert.ok(['missing','ready'].includes(release.android.status));
+assert.ok(['missing','ready'].includes(release.ios.status));
+assert.ok(['unverified','ready'].includes(release.pwa.status));
 function validHttps(link){ const u=new URL(link); assert.equal(u.protocol,'https:'); assert.equal(u.username,''); assert.equal(u.password,''); return u; }
 if(release.android.status==='ready'){
   assert.ok(release.android.artifact_url,'Android download artifact is required');
@@ -23,8 +27,13 @@ if(release.pwa.status==='ready'){
   validHttps(release.pwa.service_worker_url);
 }
 if(release.release_status==='ready'){
+  assert.ok(release.requirements.every(item=>typeof item==='string' && item.trim()),'Requirements must be documented');
   assert.equal(release.android.status,'ready');
   assert.equal(release.ios.status,'ready');
   assert.equal(release.pwa.status,'ready');
 }
 console.log('PASS SocialPlus mobile artifact release gates');
+
+if (process.argv.includes('--require-ready')) {
+  assert.equal(release.release_status,'ready','SocialPlus is NOT cleared for global launch');
+}
