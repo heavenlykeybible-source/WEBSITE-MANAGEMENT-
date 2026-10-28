@@ -7,4 +7,4 @@ test('sharing, archive, favorites and local image export exist',()=>{const html=
 
 test('scripture image export uses fitted verse text and async Blob downloads',()=>{const html=read('strength-for-today.html');for(const token of ['function drawFittedVerse(', 'function measureWrappedLines(', 'drawFittedVerse(g,', 'onclick=async()=>', 'canvas.toBlob(', 'URL.revokeObjectURL'])assert.ok(html.includes(token),token);});
 
-test('past daily selections are date-addressable and honestly labeled as rotating content',()=>{const html=read('strength-for-today.html');for(const token of ['Past Daily Selections','These are repeated selections','historyDate.type=\'date\'','historyOpen.onclick=','Date.UTC(parts[0]'])assert.ok(html.includes(token),token);});
+test('past daily selections are date-addressable and honestly labeled as rotating content',()=>{const html=read('strength-for-today.html');for(const token of ['Past Daily Selections','These are repeated selections','historyDate.type=\'date\'','historyOpen.onclick=','date.getUTCFullYear()'])assert.ok(html.includes(token),token);});
