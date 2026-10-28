@@ -41,7 +41,7 @@ for(const act of ['login','register'])$(act).onclick=async()=>{try{await api(act
 $('logout').onclick=async()=>{try{await api('logout','POST');$('authmsg').textContent='Signed out.'}catch(e){$('authmsg').textContent=e.message}};
 $('autocap').onclick=()=>{$('vm').textContent='Automatic captions require a signed-in account, a WAV audio chunk, and a configured Cloudflare AI binding. Manual SRT captions are available now.'};
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
-</script><script src="/integrations.js" defer></script><script src="/ai-tools.js" defer></script><script src="/gateway-ui.js" defer></script><script src="/voice-enhance.js" defer></script><script src="/timeline.js" defer></script><script src="/voice-studio.js" defer></script><script src="/offline-status.js" defer></script><script defer src="hk-approved-footer.js">
+</script><script src="/integrations.js" defer></script><script src="/ai-tools.js" defer></script><script src="/gateway-ui.js" defer></script><script src="/voice-enhance.js" defer></script><script src="/timeline.js" defer></script><script src="/voice-studio.js" defer></script><script src="/offline-status.js" defer></script><script defer src="hk-approved-footer.js"></script><script>
 // User-initiated screen capture; requires browser permission and a secure context.
 let screenRecorder=null,screenStream=null,screenURL='';
 $('screenstart').onclick=async()=>{
