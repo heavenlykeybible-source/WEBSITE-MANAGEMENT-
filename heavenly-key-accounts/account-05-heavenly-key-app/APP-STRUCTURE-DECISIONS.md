@@ -20,6 +20,11 @@ Approved 2026-10-28. This is the implementation source of truth for the Account 
 10. **Approved Gospel Hymns and Songs** — inside My Walk With God, with rights-cleared hymns and approved media. Do not show church-name labels or church links as categorization; retain legally required attribution, rights notices, and source credits when applicable.
 11. **Prayer and Journal / Discipleship** — retain existing relevant capabilities, verify implementation before claiming active.
 
+## Audio Bible exclusion — owner directive
+- Remove Audio Bible from Account 5 app navigation, app catalogue, My Walk With God, Life Bible integrations, install pages and promotional UI. Do not publish or advertise an Audio Bible in Account 5.
+- This restriction concerns Audio Bible; approved gospel hymns and songs remain within My Walk With God.
+- Verify that removed Audio Bible routes and links cannot be reached through menus, search, app switchers or cached installation pages. Preserve unrelated Bible text-reading features.
+
 ## Account 5 app catalogue
 - Life Bible
 - My Walk With God
@@ -37,7 +42,8 @@ Approved 2026-10-28. This is the implementation source of truth for the Account 
 - No production deployment without owner approval. Preserve the latest source and avoid old homepage regressions.
 
 ## Development order approved
-1. Audit and repair the full Life Bible app first: every menu, route, dictionary, daily routine, reading and share function, and platform-specific UI. Test against current source and live behavior.
-2. Audit and repair each remaining public Heavenly Key app independently.
-3. Only after the underlying public apps are working, integrate them into the final My Walk With God all-in-one app and test the complete experience.
-4. Keep hymns and gospel songs in My Walk With God, not as a separate public app. Respect copyright, licenses and any required attribution even where church branding is removed.
+1. Remove all Audio Bible entries and functionality exposed by Account 5, and verify the exclusion across its public app surfaces.
+2. Audit and repair the full Life Bible app first: every menu, route, dictionary, daily routine, reading and share function, and platform-specific UI. Test against current source and live behavior.
+3. Audit and repair each remaining public Heavenly Key app independently.
+4. Only after the underlying public apps are working, integrate them into the final My Walk With God all-in-one app and test the complete experience.
+5. Keep hymns and gospel songs in My Walk With God, not as a separate public app. Respect copyright, licenses and any required attribution even where church branding is removed.
