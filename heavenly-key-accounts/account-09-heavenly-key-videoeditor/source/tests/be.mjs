@@ -187,5 +187,12 @@ const logout = await request('logout', { method: 'POST', cookie: login.cookie })
 check('Logout succeeds', logout.status === 200);
 const expired = await request('me', { cookie: login.cookie });
 check('Logged-out session is invalid', expired.status === 401);
+const stillSignedIn = await request('me',{cookie:recoveredLogin.cookie});
+check('Logging out one device does not sign out another valid session',stillSignedIn.status===200&&stillSignedIn.data?.email==='smoke@example.com');
+const secondLogout=await request('logout',{method:'POST',cookie:recoveredLogin.cookie});
+check('Other device can sign out independently',secondLogout.status===200);
+const secondExpired=await request('me',{cookie:recoveredLogin.cookie});
+check('Other device session is revoked after its own logout',secondExpired.status===401);
+
 console.log('RESULT', passed, '/', total);
 if (passed !== total) process.exitCode = 1;
