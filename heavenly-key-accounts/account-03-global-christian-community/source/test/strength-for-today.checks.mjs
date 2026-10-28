@@ -87,3 +87,11 @@ test('sidebar lifecycle avoids duplicate daily devotional links',()=>{
  const script=read('global-social-sidebar.js');
  assert.ok(script.includes("document.querySelectorAll('.gc-strength-for-today-link').forEach(x=>x.remove())"));
 });
+
+test('sidebar full Bible remote KJV data is permitted by content security policy',()=>{
+ const headers=read('_headers');
+ const reader=read('social-mini-bible.js');
+ assert.match(headers,/connect-src[^;]*https:\/\/raw\.githubusercontent\.com/);
+ assert.match(reader,/const SOURCE='https:\/\/raw\.githubusercontent\.com\/heavenlykeybible-source\/WEBSITE-MANAGEMENT-\/main\/apps\/heavenly-key-bible\/heavenly-key-website\/bible\/data\/kjv\//);
+ assert.ok(reader.includes("loadBook(23,1)"));
+});
