@@ -47,7 +47,7 @@ run([process.execPath,'../scripts/existing-worker-release.mjs','snapshot'],snaps
 let deployError;
 try {
   const remote=spawnSync('git',['ls-remote','--heads','origin','main'],{encoding:'utf8',shell:false,timeout:20000});
-  const newest=remote.stdout?.trim().split(/\\s+/)[0];
+  const newest=remote.stdout?.trim().split(/\s+/)[0];
   if(remote.status!==0||newest!==process.env.MEETINGSPACE_APPROVED_COMMIT)
     throw Error('Account 8 release cancelled: newer main revision appeared during preparation');
   run(['npx','--yes','wrangler@4','deploy','--config','wrangler.generated.json','--keep-vars']);
