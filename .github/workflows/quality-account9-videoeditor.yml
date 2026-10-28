@@ -75,6 +75,8 @@ jobs:
           assert.match(release||'',/^account9-[a-f0-9]{16}$/,'Worker must expose a content-addressed release ID');
           const traversal=await get('/%2e%2e%2fprivate');
           assert.equal(traversal.status,400,'Encoded traversal must be rejected');
+          const nulPath=await get('/bad%00path');
+          assert.equal(nulPath.status,400,'NUL bytes in static paths must be rejected');
           const missing=await get('/missing-account9-resource');
           assert.equal(missing.status,404);
           const headers=await worker.fetch(new Request('https://video.example/',{method:'HEAD'}),{});
