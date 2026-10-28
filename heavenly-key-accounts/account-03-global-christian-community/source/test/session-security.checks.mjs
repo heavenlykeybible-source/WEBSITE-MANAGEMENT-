@@ -69,3 +69,13 @@ test('password version invalidates old, legacy and concurrently issued sessions'
  f.kv.set('session:'+fresh,JSON.stringify(f.user));assert.equal(await auth.getSession(f.request(fresh),f.env),null);
  }finally{f.db.close();}
 });
+
+test('password hashing uses stronger parameters and refuses malformed salts',async()=>{
+ const pepper='session-security-test-pepper',password='Long Example Password 2026!',fresh=await auth.hashPassword(password,pepper);
+ assert.match(fresh.hash,/^pbkdf2-sha256\$310000\$[a-f0-9]{64}$/);
+ assert.match(fresh.salt,/^[a-f0-9]{32}$/);
+ assert.equal(await auth.verifyPassword(password,fresh.salt,fresh.hash,pepper),true);
+ assert.equal(await auth.verifyPassword(password+'wrong',fresh.salt,fresh.hash,pepper),false);
+ for(const malformed of ['', 'ab', 'z'.repeat(32)])assert.equal(await auth.verifyPassword(password,malformed,fresh.hash,pepper),false);
+ assert.equal(await auth.verifyPassword(password,fresh.salt,'pbkdf2-sha256$999999$'+'a'.repeat(64),pepper),false);
+});
