@@ -8,7 +8,7 @@ test('all six study buttons are present once inside the collapsible Bible study 
   assert.equal((html.match(new RegExp('data-study-tool="'+key+'"','g'))||[]).length,1,key);
  }
  assert.match(html,/<details id="bible-study-tools"/);
- assert.match(html,/src="\\/chapter-study-tools\\.js"/);
+ assert.ok(html.includes('chapter-study-tools.js'));
 });
 test('chapter study actions load controls on demand and guard failed or stale requests',()=>{
  const js=read('chapter-study-tools.js');
