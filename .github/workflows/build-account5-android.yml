@@ -26,9 +26,19 @@ jobs:
         with:
           gradle-version: '8.10.2'
       - name: Build Android debug APK for installation testing
-        run: gradle :app:assembleDebug --no-daemon
+        run: gradle :app:assembleDebug :app:lintDebug --no-daemon
+      - name: Verify APK and publish SHA-256 checksum
+        run: |
+          set -eu
+          apk=$(find app/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' -print -quit)
+          test -n "$apk"
+          test -s "$apk"
+          sha256sum "$apk" > "$apk.sha256"
+          cat "$apk.sha256"
       - uses: actions/upload-artifact@v4
         with:
           name: heavenly-key-android-testing-apk
-          path: heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/debug/*.apk
+          path: |
+            heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/debug/*.apk
+            heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/debug/*.sha256
           retention-days: 30
