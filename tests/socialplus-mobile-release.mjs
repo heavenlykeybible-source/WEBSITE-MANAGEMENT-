@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 const release=JSON.parse(fs.readFileSync('releases/socialplus/mobile-release.json','utf8'));
 assert.equal(release.account,10);
@@ -94,6 +95,21 @@ if (process.argv.includes('--verify-live')) {
   }
   await checkPublicUrl(release.domain,'SocialPlus home page');
   await checkPublicUrl(release.android.artifact_url,'Android installer','android');
+  // Download the complete release APK to verify its cryptographic identity.
+  // A ZIP magic header alone is not sufficient to validate a release artifact.
+  const apkResponse=await fetch(validHttps(release.android.artifact_url),{signal:AbortSignal.timeout(120000),redirect:'follow'});
+  assert.ok(apkResponse.ok,'Complete Android artifact is not downloadable: '+apkResponse.status);
+  assert.equal(new URL(apkResponse.url).protocol,'https:','APK download redirected to an insecure URL');
+  assert.ok(apkResponse.body,'Complete APK response has no body');
+  const digest=createHash('sha256');
+  let bytes=0;
+  for await (const chunk of apkResponse.body){
+    bytes+=chunk.byteLength;
+    assert.ok(bytes<=1024*1024*1024,'APK exceeds 1 GiB safety limit');
+    digest.update(chunk);
+  }
+  assert.ok(bytes>1024,'APK download is unexpectedly small');
+  assert.equal(digest.digest('hex').toLowerCase(),release.android.sha256.toLowerCase(),'Android APK SHA-256 checksum mismatch');
   await checkPublicUrl(release.ios.app_store_url,'iPhone App Store listing');
   await checkPublicUrl(release.pwa.manifest_url,'PWA manifest','manifest');
   await checkPublicUrl(release.pwa.service_worker_url,'PWA service worker','worker');
