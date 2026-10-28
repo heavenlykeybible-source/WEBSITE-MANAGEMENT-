@@ -12,6 +12,7 @@ const dictionary={grace:'God’s undeserved favour.',faith:'Trust or confidence 
 const el=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;};
 let latestRequest=0;
 document.getElementById('study-root')?.addEventListener('change',event=>{if(event.target.matches('#kjv-book-picker,#kjv-chapter-picker')){latestRequest++;host?.replaceChildren();}});
+tools?.addEventListener('click',e=>{if(e.target.closest('[data-extra-tool]')){latestRequest++;host?.replaceChildren();}},true);
 tools?.addEventListener('click',async e=>{
  const button=e.target.closest('button[data-study-tool]');if(!button||!host)return;
  const book=document.getElementById('kjv-book-picker'),chapter=document.getElementById('kjv-chapter-picker');
@@ -19,7 +20,7 @@ tools?.addEventListener('click',async e=>{
  extraHost?.replaceChildren();
  const request=++latestRequest;
  const key=book.value+':'+chapter.value,kind=button.dataset.studyTool,info=notes[key];
- const heading=button.textContent+' · '+book.selectedOptions[0].text+' '+chapter.value;
+ const heading=button.textContent.trim()+' · '+book.selectedOptions[0].text+' '+chapter.value;
  host.replaceChildren(el('p','Loading '+book.selectedOptions[0].text+' '+chapter.value+'…'));
  try{
   let entry={name:book.selectedOptions[0].text};
