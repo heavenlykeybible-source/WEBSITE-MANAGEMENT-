@@ -31,15 +31,17 @@ self.addEventListener('activate',event=>{
 });
 self.addEventListener('fetch',event=>{
  const request=event.request,url=new URL(request.url);
- if(request.method!=='GET'||url.origin!==self.location.origin||!PUBLIC.has(url.pathname)||request.headers.has('Authorization'))return;
- if(url.search && !( /^\/download\/(?:android|iphone|ipad|windows|mac)\/index\.html$/.test(url.pathname) &&
+ const guide=/^\/download\/(?:android|iphone|ipad|windows|mac)\/$/.test(url.pathname);
+ const cachePath=guide?url.pathname+'index.html':url.pathname;
+ if(request.method!=='GET'||url.origin!==self.location.origin||!PUBLIC.has(cachePath)||request.headers.has('Authorization'))return;
+ if(url.search && !( /^\/download\/(?:android|iphone|ipad|windows|mac)\/index\.html$/.test(cachePath) &&
    [...url.searchParams.keys()].every(key=>key==='app') && url.searchParams.getAll('app').length===1 && /^[a-z0-9-]{1,64}$/.test(url.searchParams.get('app')) )){
   if(!READING.has(url.pathname)||[...url.searchParams.keys()].some(key=>!['book','chapter'].includes(key))||
     url.searchParams.getAll('book').length>1||url.searchParams.getAll('chapter').length>1||
     url.searchParams.has('book')&&!/^[a-zA-Z0-9 -]{1,40}$/.test(url.searchParams.get('book'))||
     url.searchParams.has('chapter')&&!/^(?:[1-9]\d?|1[0-4]\d|150)$/.test(url.searchParams.get('chapter')))return;
  }
- const key=url.origin+url.pathname;
+ const key=url.origin+cachePath;
  event.respondWith(fetch(request,{cache:"no-cache"}).then(response=>{
   if(response.ok&&!/(?:private|no-store)/i.test(response.headers.get('cache-control')||''))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
   return response;
