@@ -1,14 +1,12 @@
 name: Deploy Account 3 Global Community
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'config/approved-homepage-footer.json'
-      - 'scripts/cleanup/sync-footer.mjs'
-      - 'heavenly-key-accounts/account-03-global-christian-community/source/**'
-      - '.github/workflows/deploy-global-community.yml'
   workflow_dispatch:
+    inputs:
+      approved_commit:
+        description: Exact approved main-branch commit SHA
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -29,6 +27,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify exact manually approved release
+        working-directory: ${{ github.workspace }}
+        env:
+          APPROVED_COMMIT: ${{ inputs.approved_commit }}
+        run: |
+          test "${{ github.ref }}" = 'refs/heads/main' || exit 1
+          test "$APPROVED_COMMIT" = "$(git rev-parse HEAD)" || exit 1
       - name: Build the single approved homepage footer
         working-directory: ${{ github.workspace }}
         run: node scripts/cleanup/sync-footer.mjs
