@@ -121,7 +121,7 @@ function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
  let parsed;try{parsed=new URL(u)}catch(e){return}if(parsed.protocol!=='https:'||parsed.username||parsed.password||parsed.port&&parsed.port!=='443'){note('The broadcast link was blocked because it is unsafe.');return}
  const ytHost=['youtube.com','www.youtube.com','m.youtube.com'].includes(parsed.hostname),shortHost=parsed.hostname==='youtu.be';
  const videoId=ytHost?(parsed.pathname==='/watch'?parsed.searchParams.get('v'):parsed.pathname.match(/^\/(?:live|embed)\/([\w-]{11})$/)?.[1]):shortHost?parsed.pathname.match(/^\/([\w-]{11})$/)?.[1]:null;
- const safeId=typeof videoId==='string'&&/^[\w-]{11}$/.test(videoId)?videoId:null;
+ const safeId=typeof videoId==='string'&&/^[\w-]{11}$/.test(videoId)&&!parsed.hash?videoId:null;
  if(safeId){const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+safeId+'?playsinline=1';f.allow='autoplay; encrypted-media; picture-in-picture';f.title='Live broadcast';f.referrerPolicy='strict-origin-when-cross-origin';w.appendChild(f)}
  else{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Watch the live broadcast';w.appendChild(a)}}
 
