@@ -54,25 +54,41 @@ if (process.argv.includes('--require-ready')) {
 
 if (process.argv.includes('--verify-live')) {
   assert.equal(release.release_status,'ready','Cannot check downloads before the app is ready');
-  async function checkPublicUrl(url, label, expectedType) {
-    const target = validHttps(url);
+  async function checkPublicUrl(url, label, kind='page') {
+    const target=validHttps(url);
     assert.ok(!target.port || target.port==='443',label+' must use standard HTTPS');
-    const response = await fetch(target,{method:'GET',redirect:'follow',signal:AbortSignal.timeout(15000),headers:{range:'bytes=0-127'}});
+    const response=await fetch(target,{method:'GET',redirect:'follow',signal:AbortSignal.timeout(15000),headers:kind==='android'?{range:'bytes=0-4095'}:{}});
     assert.ok(response.ok || response.status===206,label+' is not publicly accessible: '+response.status);
     assert.equal(new URL(response.url).protocol,'https:',label+' redirect must remain HTTPS');
     const mime=response.headers.get('content-type')||'';
-    if(expectedType==='android') {
-      assert.ok(!/text\/html/i.test(mime), 'Android installer returned HTML instead of an APK');
-      const bytes=new Uint8Array(await response.arrayBuffer());
-      assert.ok(bytes.length>0, 'Android installer response is empty');
+    if(kind==='android'){
+      assert.ok(!/text\\/html/i.test(mime),'Android installer returned HTML instead of APK');
+      const reader=response.body?.getReader();
+      assert.ok(reader,'APK download has no body');
+      const first=await reader.read();
+      await reader.cancel();
+      assert.ok(first.value?.length>=4,'APK response is empty or too short');
+      const b=first.value;
+      assert.deepEqual(Array.from(b.slice(0,4)),[0x50,0x4b,0x03,0x04],'Android artifact is not a ZIP-based APK');
+    } else if(kind==='manifest'){
+      const manifest=await response.json();
+      assert.equal(typeof manifest.name,'string','PWA manifest must have a name');
+      assert.ok(manifest.name.trim(),'PWA manifest name must not be empty');
+      assert.ok(manifest.start_url,'PWA manifest must specify start_url');
+      assert.ok(['standalone','fullscreen','minimal-ui'].includes(manifest.display),'PWA must be installable');
+      assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length,'PWA needs install icons');
+    } else if(kind==='worker'){
+      assert.ok(/javascript|ecmascript|text\\/plain/i.test(mime),'Service worker must serve JavaScript');
+      await response.body?.cancel();
     } else {
+      assert.ok(!/application\\/json/i.test(mime),'Expected a web page, not JSON');
       await response.body?.cancel();
     }
   }
   await checkPublicUrl(release.domain,'SocialPlus home page');
   await checkPublicUrl(release.android.artifact_url,'Android installer','android');
   await checkPublicUrl(release.ios.app_store_url,'iPhone App Store listing');
-  await checkPublicUrl(release.pwa.manifest_url,'PWA manifest');
-  await checkPublicUrl(release.pwa.service_worker_url,'PWA service worker');
+  await checkPublicUrl(release.pwa.manifest_url,'PWA manifest','manifest');
+  await checkPublicUrl(release.pwa.service_worker_url,'PWA service worker','worker');
   console.log('PASS SocialPlus live HTTPS download endpoints');
 }
