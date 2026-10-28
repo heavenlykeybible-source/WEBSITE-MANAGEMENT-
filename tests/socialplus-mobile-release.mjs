@@ -62,7 +62,7 @@ if (process.argv.includes('--verify-live')) {
     assert.equal(new URL(response.url).protocol,'https:',label+' redirect must remain HTTPS');
     const mime=response.headers.get('content-type')||'';
     if(kind==='android'){
-      assert.ok(!/text\\/html/i.test(mime),'Android installer returned HTML instead of APK');
+      assert.ok(!/text\/html/i.test(mime),'Android installer returned HTML instead of APK');
       const reader=response.body?.getReader();
       assert.ok(reader,'APK download has no body');
       const first=await reader.read();
@@ -78,10 +78,10 @@ if (process.argv.includes('--verify-live')) {
       assert.ok(['standalone','fullscreen','minimal-ui'].includes(manifest.display),'PWA must be installable');
       assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length,'PWA needs install icons');
     } else if(kind==='worker'){
-      assert.ok(/javascript|ecmascript|text\\/plain/i.test(mime),'Service worker must serve JavaScript');
+      assert.ok(/javascript|ecmascript|text\/plain/i.test(mime),'Service worker must serve JavaScript');
       await response.body?.cancel();
     } else {
-      assert.ok(!/application\\/json/i.test(mime),'Expected a web page, not JSON');
+      assert.ok(!/application\/json/i.test(mime),'Expected a web page, not JSON');
       await response.body?.cancel();
     }
   }
