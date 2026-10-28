@@ -3777,11 +3777,24 @@ async function appsCenter(){try{
 
 // END CONTROL SCREENS
 var CURRENT_NAV='Home';
+async function openMeetingStudioOwner(){
+  try{
+    if(!own())throw Error('Owner access required');
+    var d=await api('connections'),items=d.connections||[];
+    var conn=items.find(function(x){return x.account_id==='6401a8f41a41f5325ba5bd4d006b4ff5';});
+    if(!conn)throw Error('Meeting Studio account is not connected');
+    var r=await api('connections/'+conn.id+'/meeting-launch','POST',{});
+    if(!/^https:\/\/[a-z0-9.-]+\/api\/control-login$/.test(r.url||'')||!r.ticket)throw Error('Invalid Studio launch response');
+    var form=h('form',{method:'POST',action:r.url,target:'_blank'});
+    form.appendChild(h('input',{type:'hidden',name:'ticket',value:r.ticket}));
+    document.body.appendChild(form);form.submit();form.remove();
+  }catch(e){oops(e);}
+}
 function nav(){var M=ME.kind==='member',n=h('nav',{class:'sidenav','aria-label':'Control room navigation'},h('div',{class:'userchip'},ME.username,h('small',{},ME.role+' workspace')));
 function group(t){n.appendChild(h('div',{class:'nav-heading'},t));}
 function item(label,icon,fn,id){var a={class:CURRENT_NAV===label?'active':'',onclick:function(){CURRENT_NAV=label;fn();}};if(id)a.id=id;n.appendChild(h('button',a,h('span',{class:'nav-icon','aria-hidden':'true'},icon),h('span',{},label==='Waiting'?'Waiting ('+WAITN+')':label)));}
 group('Workspace');item('Home','⌂',controlHome);if(own()){item('Browser agent','↗',browserCenter);item('Domains and subdomains','◎',domainCenter);}if(!M&&lv()>=4)item('Website screens','▣',websiteScreens);item('Waiting','◷',waiting,'wb');if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
-if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);if(!M&&lv()>=4){item('Import and preview','⇧',nativeImports);item('Verification','✓',verificationCenter);}group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M)item('Connect ChatGPT','↔',connectChatGPT);if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4){item('Apps','▦',appsCenter);item('Cloudflare','☁',cloud);}
+if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);if(!M&&lv()>=4){item('Import and preview','⇧',nativeImports);item('Verification','✓',verificationCenter);}group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M)item('Connect ChatGPT','↔',connectChatGPT);if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4){item('Apps','▦',appsCenter);item('Cloudflare','☁',cloud);}if(own())item('Meeting Studio','◈',openMeetingStudioOwner);
 group('Administration');if(!M&&lv()>=4)item('System checks','✓',systemChecks);if(!M&&lv()>=3){item('Team','♧',users);item('Log','≡',logTab);}item('Account','○',account);item('Sign out','↪',logout);return n;}
 function lagosTime(value){if(!value)return 'Not recorded';var v=typeof value==='number'?value:String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
 async function systemChecks(){try{var data=await api('system/checks'),list=h('div'),status=h('p',{class:'tag',role:'status'},'');data.checks.forEach(function(c){list.appendChild(h('div',{class:'card'},h('b',{},(c.passed?'✓ ':'! ')+c.name),h('p',{class:'tag'},c.detail)));});show(nav(),h('div',{class:'eyebrow'},'System health'),h('h3',{class:'page-title'},'Connection & storage checks'),h('p',{class:'page-intro'},'These checks test this installation. Real WordPress, Blogger, GitHub and external AI connections need their own Check or Test action after you connect an account.'),list,h('p',{},'Managed sites: '+data.counts.static_sites+' · GitHub connections: '+data.counts.github_sites+' · Ready blogs: '+data.counts.blogs+' · Waiting: '+data.counts.waiting),h('button',{onclick:async function(){status.textContent='Testing a temporary storage object…';try{var r=await api('system/checks','POST',{action:'storage'});status.textContent=r.detail;}catch(e){status.textContent=e.message;}}},'Test file storage'),h('button',{class:'sm',onclick:aiAccounts},'Test AI'),status,h('p',{class:'tag'},'Build '+data.version));}catch(e){oops(e);}}
