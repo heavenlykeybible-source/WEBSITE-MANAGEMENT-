@@ -41,7 +41,6 @@ export async function handleNativeDownloads(request,env) {
     if(!Object.prototype.hasOwnProperty.call(catalogue,appId)) return reply({error:'Unknown app'},404);
   } catch { return reply({error:'Download catalogue unavailable'},503); }
   if(!env.NATIVE_RELEASES) return reply({error:'Native downloads are not yet published'},503);
-  if(request.method==='GET' && !env.DOWNLOAD_DB) return reply({error:'Download statistics database not configured'},503);
   const meta=platforms[platform];
   const key=appId+'/'+platform+'/release.'+meta.extension;
   try {
@@ -50,7 +49,14 @@ export async function handleNativeDownloads(request,env) {
     if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size)}});
     // A download event means a package response was initiated, not that the device installed it.
     // Use a single aggregate counter row rather than storing identifying visitor data.
-    await env.DOWNLOAD_DB.prepare('INSERT INTO native_download_counts (app_id, platform, downloads) VALUES (?, ?, 1) ON CONFLICT(app_id, platform) DO UPDATE SET downloads = downloads + 1').bind(appId,platform).run();
+    // Anonymous analytics are best-effort: a statistics outage must not block downloads.
+    if(env.DOWNLOAD_DB) {
+      try {
+        await env.DOWNLOAD_DB.prepare('INSERT INTO native_download_counts (app_id, platform, downloads) VALUES (?, ?, 1) ON CONFLICT(app_id, platform) DO UPDATE SET downloads = downloads + 1').bind(appId,platform).run();
+      } catch (error) {
+        console.warn('Native download counter unavailable', String(error));
+      }
+    }
     return new Response(object.body,{status:200,headers:{...headers,'content-type':meta.type,'content-disposition':'attachment; filename="heavenly-key-'+appId+'.'+meta.extension+'"','content-length':String(object.size)}});
   } catch { return reply({error:'Download temporarily unavailable'},503); }
 }
