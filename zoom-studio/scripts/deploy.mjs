@@ -1,6 +1,6 @@
 // Deploy the existing MeetingSpace Worker without migrating or replacing its database.
 import {spawnSync} from 'node:child_process';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 const target=process.env.MEETINGSPACE_TARGET_ACCOUNT || '8';
 if(target!=='8') throw Error('MeetingSpace deploys only Account 8; Account 7 is Heavenly Key Radio');
 const worker='heavenly-key-meetingspace';
@@ -12,12 +12,14 @@ const privatePreview=process.env.MEETINGSPACE_PRIVATE_PREVIEW==='1';
 if(!privatePreview){
   if(process.env.MEETINGSPACE_PRODUCTION_APPROVED!=='1')
     throw Error('Production deployment blocked: Control Room approval required (MEETINGSPACE_PRODUCTION_APPROVED=1)');
-  if(!/^[a-f0-9]{7,40}$/i.test(process.env.MEETINGSPACE_APPROVED_COMMIT||''))
+  if(!/^[a-f0-9]{40}$/i.test(process.env.MEETINGSPACE_APPROVED_COMMIT||''))
     throw Error('Production deployment blocked: approved Git commit SHA required');
   const actual=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8',shell:false});
-  if(actual.status!==0||!actual.stdout.trim().startsWith(process.env.MEETINGSPACE_APPROVED_COMMIT))
+  if(actual.status!==0||actual.stdout.trim()!==process.env.MEETINGSPACE_APPROVED_COMMIT)
     throw Error('Production deployment blocked: checked-out commit differs from approved commit');
-  const checks=spawnSync(process.execPath,['--test','tests/*.test.mjs'],{stdio:'inherit',shell:true});
+  const testFiles=readdirSync('tests').filter(name=>name.endsWith('.test.mjs')).sort().map(name=>'tests/'+name);
+  if(!testFiles.length)throw Error('Production deployment blocked: no regression tests found');
+  const checks=spawnSync(process.execPath,['--test',...testFiles],{stdio:'inherit',shell:false});
   if(checks.error||checks.status!==0)throw Error('Production deployment blocked: regression tests failed');
 }
 const expectedHealth={ok:true,meetingConfigured:true,...(privatePreview?{}:{turnConfigured:true})};
