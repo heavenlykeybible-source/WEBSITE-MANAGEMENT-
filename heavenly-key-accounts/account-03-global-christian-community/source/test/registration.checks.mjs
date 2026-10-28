@@ -31,7 +31,7 @@ test('Simple registration: long passphrases, sign-in, consent and atomic account
  assert.equal((await request('/api/auth/login',{email:shortAccount.email,password:shortAccount.password})).status,200);
  assert.equal((await request('/api/auth/register',{...input,ageConfirmed:false})).status,400);
  const created=await request('/api/auth/register',input);assert.equal(created.status,201,JSON.stringify(created));assert.ok(created.cookie?.startsWith('gc_session='));
- const account=db.prepare('SELECT * FROM users WHERE email=?').get(input.email);assert.ok(account.password_hash.startsWith('pbkdf2-sha256$310000);assert.notEqual(account.password_hash,input.password);
+ const account=db.prepare('SELECT * FROM users WHERE email=?').get(input.email);assert.ok(account.password_hash.startsWith('pbkdf2-sha256$310000$');assert.notEqual(account.password_hash,input.password);
  const profile=db.prepare('SELECT * FROM profiles WHERE user_id=?').get(account.user_id);assert.equal(profile.display_name,input.fullName);assert.equal(profile.location_visibility,'private');assert.equal(profile.country,null);
  assert.equal((await request('/api/me',null,created.cookie)).status,200);
  assert.equal((await request('/api/auth/register',input)).status,409);
