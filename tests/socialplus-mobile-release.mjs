@@ -51,3 +51,28 @@ console.log('PASS SocialPlus mobile artifact release gates');
 if (process.argv.includes('--require-ready')) {
   assert.equal(release.release_status,'ready','SocialPlus is NOT cleared for global launch');
 }
+
+if (process.argv.includes('--verify-live')) {
+  assert.equal(release.release_status,'ready','Cannot check downloads before the app is ready');
+  async function checkPublicUrl(url, label, expectedType) {
+    const target = validHttps(url);
+    assert.ok(!target.port || target.port==='443',label+' must use standard HTTPS');
+    const response = await fetch(target,{method:'GET',redirect:'follow',signal:AbortSignal.timeout(15000),headers:{range:'bytes=0-127'}});
+    assert.ok(response.ok || response.status===206,label+' is not publicly accessible: '+response.status);
+    assert.equal(new URL(response.url).protocol,'https:',label+' redirect must remain HTTPS');
+    const mime=response.headers.get('content-type')||'';
+    if(expectedType==='android') {
+      assert.ok(!/text\/html/i.test(mime), 'Android installer returned HTML instead of an APK');
+      const bytes=new Uint8Array(await response.arrayBuffer());
+      assert.ok(bytes.length>0, 'Android installer response is empty');
+    } else {
+      await response.body?.cancel();
+    }
+  }
+  await checkPublicUrl(release.domain,'SocialPlus home page');
+  await checkPublicUrl(release.android.artifact_url,'Android installer','android');
+  await checkPublicUrl(release.ios.app_store_url,'iPhone App Store listing');
+  await checkPublicUrl(release.pwa.manifest_url,'PWA manifest');
+  await checkPublicUrl(release.pwa.service_worker_url,'PWA service worker');
+  console.log('PASS SocialPlus live HTTPS download endpoints');
+}
