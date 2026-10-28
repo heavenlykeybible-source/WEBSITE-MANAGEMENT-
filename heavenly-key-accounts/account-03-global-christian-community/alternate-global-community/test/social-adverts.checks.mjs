@@ -18,7 +18,7 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
  const cookies=r=>r.cookies.map(c=>c.split(';')[0]).join('; ');
  function seed(id,role='member'){db.prepare("INSERT INTO users(user_id,email,password_hash,password_salt,role) VALUES(?,?,?,?,?)").run(id,'member'+id+'@example.invalid','not-a-password','',role);db.prepare("INSERT INTO profiles(user_id,full_name,display_name) VALUES(?,?,?)").run(id,'Member '+id,'Member '+id);}
  seed(1);seed(2,'administrator');seed(3,'moderator');const member='gc_session='+await auth.createSession(env,{userId:1,role:'member',status:'active'}),admin='gc_session='+await auth.createSession(env,{userId:2,role:'administrator',status:'active'}),moderator='gc_session='+await auth.createSession(env,{userId:3,role:'moderator',status:'active'});
- for(const route of ['/api/admin/adverts','/api/admin/social-signin'])for(const cookie of [null,member,moderator])assert.equal((await req(route,null,cookie)).status,403);
+ for(const cookie of [null,member,moderator]){assert.equal((await req('/api/admin/adverts',null,cookie)).status,410);assert.equal((await req('/api/admin/social-signin',null,cookie)).status,403);}
  assert.equal((await req('/api/auth/social/providers')).data.items.every(p=>!p.ready),true);
  assert.equal((await req('/api/auth/social/google/start',{})).status,503);
  const credentials={clientId:'test-client',clientSecret:'test-private-secret',enabled:true};
