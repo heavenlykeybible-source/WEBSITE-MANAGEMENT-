@@ -99,7 +99,8 @@ if (process.argv.includes('--verify-live')) {
       assert.equal(start.origin,appOrigin,'PWA start_url must remain on the SocialPlus origin');
       const scope=new URL(manifest.scope||'/',manifestBase);
       assert.equal(scope.origin,appOrigin,'PWA scope must remain on the SocialPlus origin');
-      assert.ok(start.pathname.startsWith(scope.pathname),'PWA start_url must be inside its scope');
+      const scopePrefix=scope.pathname.endsWith('/')?scope.pathname:scope.pathname+'/';
+      assert.ok(start.pathname===scope.pathname||start.pathname.startsWith(scopePrefix),'PWA start_url must be inside its scope');
       for(const icon of manifest.icons){
         assert.ok(icon&&typeof icon.src==='string'&&icon.src.trim(),'PWA icon must have a source');
         const iconUrl=new URL(icon.src,manifestBase);
