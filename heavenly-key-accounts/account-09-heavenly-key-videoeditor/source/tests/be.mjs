@@ -90,6 +90,11 @@ const me = await request('me', { cookie: login.cookie });
 check('Authenticated identity returned', me.status === 200 && me.data?.email === 'smoke@example.com');
 const unauthorized = await request('me');
 check('Anonymous identity request rejected', unauthorized.status === 401);
+const blockedOriginLogin = await request('login',{method:'POST',headers:{origin:'https://untrusted.example'},body:{email:'smoke@example.com',password:'correct horse battery'}});
+check('Cross-site login requests cannot create sessions',blockedOriginLogin.status===403&&!blockedOriginLogin.cookie);
+const validOriginLogin = await request('login',{method:'POST',headers:{origin:'https://studio.example'},body:{email:'smoke@example.com',password:'correct horse battery'}});
+check('Same-origin member login remains allowed',validOriginLogin.status===200&&validOriginLogin.cookie.length>5);
+
 const project = await request('projects', { method: 'POST', cookie: login.cookie, body: { name: 'Smoke test', data: { layers: [] } } });
 check('Project creation succeeds', project.status === 200 && !!project.data?.id);
 const projects = await request('projects', { cookie: login.cookie });
