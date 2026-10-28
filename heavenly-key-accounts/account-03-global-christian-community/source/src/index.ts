@@ -72,7 +72,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
     if(!validEmail(email))return error("Enter a valid email address.");
     if(fullName.length<2||fullName.length>100)return error("Enter your name using 2 to 100 characters.");
     const passwordIssue=passwordError(password);if(passwordIssue)return error(passwordIssue);
-    if(!await rate(env,"register-source:"+await sourceKey(request),10,3600))return error("Please wait before registering another account.",429);
+    // Registration already has a source limiter before JSON parsing; do not count the same source twice.
     if(!await rate(env,"register:"+email,5,3600))return error("Please wait before trying to register again.",429);
     if(await env.DB.prepare("SELECT 1 FROM users WHERE email=?").bind(email).first())return error("An account already exists for this email.",409);
     const pass=await hashPassword(password,env.PASSWORD_PEPPER);
