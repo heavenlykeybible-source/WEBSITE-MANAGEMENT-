@@ -70,6 +70,8 @@ jobs:
           clamscan --infected --no-summary "$apk"
           printf 'malwareScan=passed\nsignatureVerified=true\n' > "$apk.security.txt"
           sha256sum "$apk" >> "$apk.security.txt"
+          printf 'scannedSha256=' >> "$apk.security.txt"
+          sha256sum "$apk" | cut -d ' ' -f 1 >> "$apk.security.txt"
       - uses: actions/upload-artifact@v4
         with:
           name: heavenly-key-account5-signed-android-release
