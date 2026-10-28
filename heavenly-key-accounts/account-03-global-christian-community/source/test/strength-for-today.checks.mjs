@@ -47,7 +47,9 @@ test('right-sidebar authorised KJV Bible has premium inline reading, reference s
  const sidebar=read('global-social-sidebar.js'),reader=read('social-mini-bible.js'),css=read('global-social-current.css');
  assert.ok(sidebar.includes("aside.append(bible)"));
  assert.ok(sidebar.includes("import('./social-mini-bible.js')"));
- for(const value of ['Authorised King James Version','Psalms', '23,1','Bible Dictionary','Concordance','Copy Verse','Other Networks','Post to Network','Send to Member','/api/posts','/api/me'])assert.ok(reader.includes(value),value);
+ for(const value of ['Authorised King James Version','Psalms', 'loadBook(23,1)','Bible Dictionary','Concordance','Copy Verse','Other Networks','Post to Network','Send to Member','/api/posts','/api/me'])assert.ok(reader.includes(value),value);
  assert.ok(css.includes('gc-bible-reference')&&css.includes('#791c39'));
  new vm.Script(reader.replace('export function mountMiniBible','function mountMiniBible'),{filename:'social-mini-bible.js'});
 });
+
+test('right-sidebar Bible provides all 66 valid book selectors and fetches verses on demand',()=>{const source=read('social-mini-bible.js');const books=JSON.parse(source.match(/const BOOKS=(\[[^;]+\]);/)[1]);assert.equal(books.length,66);assert.equal(new Set(books.map(item=>item[1])).size,66);for(const token of ['loadBook(23,1)','fillVerses','isPlaceholder','cache:',"'/api/posts'",'navigator.share'])assert.ok(source.includes(token),token);});
