@@ -35,14 +35,6 @@
     "name": "KJV Bible Reader",
     "url": "https://apps.heavenlykey.org/bible.html"
   },
-  "hymns": {
-    "name": "Hymn Library",
-    "url": "https://apps.heavenlykey.org/hymns.html"
-  },
-  "audio-hymns": {
-    "name": "Audio Hymnal",
-    "url": "https://apps.heavenlykey.org/audio-hymns.html"
-  },
   "daily-reading": {
     "name": "Daily Reading Plan",
     "url": "https://apps.heavenlykey.org/devotional.html"
