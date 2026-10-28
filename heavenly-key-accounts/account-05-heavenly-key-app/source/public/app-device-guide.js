@@ -67,7 +67,7 @@
         document.head.append(manifest);
         // Browser install prompts are only valid on the app's own origin and scope.
         // A prompt received on this guide must not be presented as an install of another app.
-        if (promptEvent && install && destination.pathname === location.pathname) install.hidden = false;
+        // The guide URL is never the selected application's installation scope.
       }
       let nativeAvailable = false;
       if (/^(android|windows|mac)$/.test(platform)) {
