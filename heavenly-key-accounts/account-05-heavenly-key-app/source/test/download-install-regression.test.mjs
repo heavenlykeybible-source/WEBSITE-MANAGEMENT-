@@ -84,3 +84,19 @@ test('premium install dialog has an accessible close control and device options'
  assert.match(css, /\.hk-install-dialog\.downloadgrid|\.hk-install-dialog \.downloadgrid/);
  assert.match(css, /@media\(max-width:480px\)/);
 });
+
+test('premium download chooser keeps every device and a safe selected-device route', () => {
+ const js = publicFile('app-pages.js');
+ const css = publicFile('app-pages.css');
+ assert.match(js, /hk-install-dialog/);
+ assert.match(js, /install-primary/);
+ assert.match(js, /const devices=\[\['android'/);
+ assert.match(js, /\['iphone','iPhone'\]/);
+ assert.match(js, /\['ipad','iPad'\]/);
+ assert.match(js, /\['windows','Windows'\]/);
+ assert.match(js, /\['mac','Mac'\]/);
+ assert.match(js, /encodeURIComponent\(id\)/);
+ assert.match(js, /dialog\.addEventListener\('close'/);
+ assert.match(css, /\.hk-install-dialog \.downloadgrid/);
+ assert.match(css, /@media\(max-width:480px\)/);
+});
