@@ -54,26 +54,21 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
  const fbLogin=await req('/api/auth/social/facebook/start',{}),fbLoginState=new URL(fbLogin.data.url).searchParams.get('state'),restrictedLogin=await req('/api/auth/social/facebook/callback?state='+fbLoginState+'&code=valid',null,cookies(fbLogin));
  assert.equal(restrictedLogin.location,'https://community.example/safety.html');assert.equal((await req('/api/me',null,cookies(restrictedLogin))).data.user.status,'restricted');
  const expiredStart=await req('/api/auth/social/facebook/start',{}),expiredState=new URL(expiredStart.data.url).searchParams.get('state');db.prepare('UPDATE social_login_flows SET expires_at=0 WHERE state=?').run(expiredState);assert.match((await req('/api/auth/social/facebook/callback?state='+expiredState+'&code=valid',null,cookies(expiredStart))).location,/socialError=failed/);
- const input={title:'Faith conference',body:'Join believers for Scripture and prayer.',sponsor:'Test ministry',linkUrl:'https://example.org/program',buttonLabel:'View programme',placement:'feed',status:'draft',priority:5};
- assert.equal((await req('/api/admin/adverts',input,member)).status,403);assert.equal((await req('/api/admin/adverts',{...input,linkUrl:'javascript:alert(1)'},admin)).status,400);
- assert.equal((await req('/api/admin/adverts',{...input,startsAt:'2030-01-02',endsAt:'2030-01-01'},admin)).status,400);
- const draft=await req('/api/admin/adverts',input,admin);assert.equal(draft.status,201);assert.equal((await req('/api/adverts')).data.items.length,0);
- assert.equal((await req('/api/admin/adverts/'+draft.data.advertId,{...input,status:'published'},admin,'PATCH')).status,200);assert.equal((await req('/api/adverts')).data.items.length,1);
- const future=await req('/api/admin/adverts',{...input,status:'published',startsAt:new Date(Date.now()+86400000).toISOString()},admin);assert.equal(future.status,201);assert.equal((await req('/api/adverts')).data.items.length,1);
- const expired=await req('/api/admin/adverts',{...input,status:'published',endsAt:new Date(Date.now()-1000).toISOString()},admin);assert.equal(expired.status,201);assert.equal((await req('/api/adverts')).data.items.length,1);
- assert.equal((await req('/api/admin/adverts/'+draft.data.advertId,{...input,status:'paused'},admin,'PATCH')).status,200);assert.equal((await req('/api/adverts')).data.items.length,0);
- for(let i=0;i<51;i++)assert.equal((await req('/api/admin/adverts',{...input,title:'Draft '+i},admin)).status,201);
- const first=(await req('/api/admin/adverts',null,admin)).data;assert.equal(first.items.length,50);assert.ok(first.nextBefore);assert.equal((await req('/api/admin/adverts?before='+first.nextBefore,null,admin)).data.items.length,4);
- const audit=db.prepare("SELECT target_id FROM safety_audit WHERE action='advert_create' ORDER BY audit_id LIMIT 1").get();assert.equal(audit.target_id,draft.data.advertId);
- const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6P1EAAAAASUVORK5CYII=','base64');
- async function uploadImage(cookie,bytes=png,type='image/png'){return worker.fetch(new Request('https://community.example/api/admin/adverts/images',{method:'POST',headers:{Cookie:cookie,'Content-Type':type},body:bytes}),env);}
- assert.equal((await uploadImage(member)).status,403);assert.equal((await uploadImage(admin,Buffer.from('<svg></svg>'),'image/svg+xml')).status,400);assert.equal((await uploadImage(admin,Buffer.from('wrong file signature'))).status,400);assert.equal((await uploadImage(admin,Buffer.alloc(2*1024*1024+1))).status,413);
- const imageUpload=await uploadImage(admin);assert.equal(imageUpload.status,201);const imageUrl=(await imageUpload.json()).imageUrl;
- assert.equal((await req('/api/admin/adverts',{...input,imageUrl:'https://tracker.example/image.png'},admin)).status,400);
- assert.equal((await req(imageUrl)).status,404);const pictured=await req('/api/admin/adverts',{...input,imageUrl,status:'published'},admin);assert.equal(pictured.status,201);
- const imageResponse=await worker.fetch(new Request('https://community.example'+imageUrl),env);assert.equal(imageResponse.status,200);assert.equal(imageResponse.headers.get('Content-Type'),'image/png');assert.deepEqual(Buffer.from(await imageResponse.arrayBuffer()),png);
- await req('/api/admin/adverts/'+pictured.data.advertId,{...input,imageUrl,status:'paused'},admin,'PATCH');assert.equal((await req(imageUrl)).status,404);
-
- db.prepare("UPDATE users SET status='restricted' WHERE user_id=2").run();assert.equal((await req('/api/admin/adverts',input,admin)).status,403);
+ const input={title:'Faith conference',body:'Join believers for Scripture and prayer.',sponsor:'Test ministry',linkUrl:'https://example.org/program',buttonLabel:'View programme',placement:'feed',status:'published',priority:5};
+ // Owner directive: all advertisements are disabled regardless of administrator permissions.
+ const noAds=await req('/api/adverts');
+ assert.equal(noAds.status,200);assert.deepEqual(noAds.data.items,[]);assert.equal(noAds.data.advertisingEnabled,false);
+ for(const method of ['GET','POST','PATCH','DELETE']){
+  const response=await req('/api/admin/adverts',input,admin,method);
+  assert.equal(response.status,410);
+  assert.equal(response.data.advertisingEnabled,false);
+ }
+ for(const path of ['/api/adverts/images/12345678-1234-1234-1234-123456789abc','/api/admin/adverts/1','/api/admin/adverts/images']){
+  const response=await req(path,input,admin);
+  assert.equal(response.status,410);
+ }
+ assert.equal(db.prepare('SELECT COUNT(*) n FROM community_adverts').get().n,0);
+ db.prepare("UPDATE users SET status='restricted' WHERE user_id=2").run();
+ assert.equal((await req('/api/admin/adverts',input,admin)).status,410);
  }finally{globalThis.fetch=realFetch;db.close();rmSync(dir,{recursive:true,force:true});}
 });
