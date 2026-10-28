@@ -79,6 +79,10 @@ assert.equal(await refreshedScript.text(),'live /timeline.js','Online editor ass
 failureNext=true;
 const recoveredScript=await fire('fetch',new Request('https://editor.test/timeline.js'));
 assert.equal(await recoveredScript.text(),'live /timeline.js','Temporary server errors must preserve the last working editor asset');
+privateNext=true;
+const privateScript=await fire('fetch',new Request('https://editor.test/timeline.js'));
+assert.equal(await privateScript.text(),'private editor','Private network responses may reach their requester');
+assert.equal(await (await cache.match('/timeline.js')).text(),'live /timeline.js','Private editor scripts must never overwrite public offline cache');
 failureNext=true;
 const recoveredPage=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
 assert.equal(await recoveredPage.text(),'live /','Temporary 503 navigation must fall back to the last working editor page');
