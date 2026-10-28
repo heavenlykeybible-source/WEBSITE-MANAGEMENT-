@@ -17,15 +17,17 @@ Approved 2026-10-28. This is the implementation source of truth for the Account 
 7. **Heavenly Key Website & Blog** — integrated entry.
 8. **Heavenly Key Radio** — integrated entry.
 9. **Meeting Space** — integrated entry to Account 8.
-10. **Prayer and Journal / Discipleship** — retain existing relevant capabilities, verify implementation before claiming active.
+10. **Approved Gospel Hymns and Songs** — inside My Walk With God, with rights-cleared hymns and approved media. Do not show church-name labels or church links as categorization; retain legally required attribution, rights notices, and source credits when applicable.
+11. **Prayer and Journal / Discipleship** — retain existing relevant capabilities, verify implementation before claiming active.
 
 ## Account 5 app catalogue
 - Life Bible
 - My Walk With God
 - Global Christian Social Network
 - Meeting Space
-- Media Guru (official display name; video editing is a description, not part of the name)
-- Social Plus
+- Media Guru and Social Plus are private tools and must not appear within My Walk With God.
+- Website Management Control Room and studio/admin tools are private and must not appear within My Walk With God.
+- Include all other verified public Heavenly Key apps and services; public catalog must be verified against actual source.
 - Bible Study is a module of My Walk With God, not a standalone downloadable app.
 
 ## Quality and release rules
@@ -33,3 +35,9 @@ Approved 2026-10-28. This is the implementation source of truth for the Account 
 - Verify app pages, download links, Android/iOS/Desktop install paths and real install packages before marking available.
 - Do not claim App Store/Play Store availability without verified listings.
 - No production deployment without owner approval. Preserve the latest source and avoid old homepage regressions.
+
+## Development order approved
+1. Audit and repair the full Life Bible app first: every menu, route, dictionary, daily routine, reading and share function, and platform-specific UI. Test against current source and live behavior.
+2. Audit and repair each remaining public Heavenly Key app independently.
+3. Only after the underlying public apps are working, integrate them into the final My Walk With God all-in-one app and test the complete experience.
+4. Keep hymns and gospel songs in My Walk With God, not as a separate public app. Respect copyright, licenses and any required attribution even where church branding is removed.
