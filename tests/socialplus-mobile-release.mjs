@@ -40,6 +40,8 @@ if(release.release_status==='ready'){
   const sourceDir=path.resolve(root,release.source.path);
   assert.ok(sourceDir.startsWith(root+path.sep),'Source must remain within repository');
   assert.ok(fs.existsSync(sourceDir),'Source directory is missing');
+  assert.ok(fs.statSync(sourceDir).isDirectory(),'SocialPlus source path must be an application directory, not a file');
+  assert.ok(fs.existsSync(path.join(sourceDir,'package.json')) || fs.existsSync(path.join(sourceDir,'index.html')) || fs.existsSync(path.join(sourceDir,'wrangler.toml')),'SocialPlus source must include an application entry or build manifest');
   assert.ok(release.requirements?.every(item=>typeof item==='string' && item.trim()),'Requirements must be documented');
   assert.equal(release.verification?.android_install_passed,true,'Android installation test must pass');
   assert.equal(release.verification?.ios_install_passed,true,'iOS installation test must pass');
