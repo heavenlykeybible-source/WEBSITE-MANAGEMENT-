@@ -37,3 +37,21 @@ function walk(dir) {
 walk(process.cwd());
 assert.ok(scanned > 0,'No executable source files scanned');
 console.log(`Advertising SDK regression check passed: ${scanned} source files`);
+
+const communityVariants = [
+  'apps/global-christian-community',
+  'heavenly-key-accounts/account-03-global-christian-community/source',
+  'heavenly-key-accounts/account-03-global-christian-community/alternate-global-community',
+];
+for (const base of communityVariants) {
+  const backend = fs.readFileSync(path.join(base,'src/index.ts'),'utf8');
+  const frontend = fs.readFileSync(path.join(base,'public/app.js'),'utf8');
+  const guard = backend.indexOf('OWNER POLICY: All Heavenly Key platforms are advertising-free.');
+  const legacy = backend.indexOf('Adverts.uploadImage(env,admin,request)');
+  assert.ok(guard >= 0 && legacy > guard,'Advert endpoint protection must precede legacy routes: '+base);
+  assert.ok(backend.includes('advertisingEnabled:false'),'Public advert endpoint must declare disabled: '+base);
+  for(const fragment of ['function renderAdvert(', 'function mountAdverts(', 'SPONSORED ·', 'api("/api/adverts")']) {
+    assert.ok(!frontend.includes(fragment),'Advertising frontend survived in '+base+': '+fragment);
+  }
+}
+console.log('Three community variants enforce the no-advert owner policy.');
