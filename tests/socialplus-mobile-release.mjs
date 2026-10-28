@@ -9,7 +9,7 @@ if(release.android.status==='ready'){
   assert.ok(release.android.artifact_url,'Android download artifact is required');
   validHttps(release.android.artifact_url);
   assert.match(release.android.sha256||'',/^[a-f0-9]{64}$/i);
-  assert.match(release.android.package_name||'',/^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$/i);
+  assert.match(release.android.package_name||'',/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/i);
   assert.ok(release.android.version);
 }
 if(release.ios.status==='ready'){
