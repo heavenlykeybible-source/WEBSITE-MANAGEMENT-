@@ -3,7 +3,7 @@ import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 const root=resolve('heavenly-key-accounts/account-09-heavenly-key-videoeditor/source');
 const assets={};
-async function walk(dir,relative=''){for(const e of (await readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name,'en'))){const p=relative+'/'+e.name;if(e.isDirectory())await walk(dir+'/'+e.name,p);else if(!e.name.startsWith('_'))assets[p]=Buffer.from(await readFile(dir+'/'+e.name)).toString('base64');}}
+async function walk(dir,relative=''){for(const e of (await readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name,'en'))){const p=relative+'/'+e.name;if(e.isDirectory())await walk(dir+'/'+e.name,p);else if(e.isFile()&&!e.name.startsWith('_')&&!e.name.startsWith('.'))assets[p]=Buffer.from(await readFile(dir+'/'+e.name)).toString('base64');}}
 await walk(root+'/public');
 const headers={};for(const line of (await readFile(root+'/public/_headers','utf8')).split('\n')){const m=line.match(/^\s+([^:]+):\s*(.*)$/);if(m)headers[m[1]]=m[2];}
 const api=await readFile(root+'/functions/api/[[path]].js','utf8');
