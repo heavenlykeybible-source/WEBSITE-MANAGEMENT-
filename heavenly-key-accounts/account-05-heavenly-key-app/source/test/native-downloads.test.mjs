@@ -5,12 +5,13 @@ import {handleNativeDownloads} from '../src/native-downloads.js';
 const origin='https://apps.heavenlykey.org';
 function environment({packageExists=true,db=true,token='a'.repeat(40)}={}) {
  const calls={writes:0,reads:0,objects:0};
+ const verified={size:4,customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true'}};
  const env={
   DOWNLOAD_ADMIN_TOKEN:token,
   ASSETS:{fetch:async()=>new Response(JSON.stringify({'all-in-one':{name:'All-in-One',url:origin+'/experience.html'}}),{status:200})},
   NATIVE_RELEASES:{
-   head:async()=>{calls.objects++;return packageExists?{size:4}:null},
-   get:async()=>{calls.objects++;return packageExists?{size:4,body:new Uint8Array([1,2,3,4])}:null}
+   head:async()=>{calls.objects++;return packageExists?verified:null},
+   get:async()=>{calls.objects++;return packageExists?{...verified,body:new Uint8Array([1,2,3,4])}:null}
   }
  };
  if(db)env.DOWNLOAD_DB={prepare:sql=>({
@@ -73,4 +74,12 @@ test('native downloads continue if aggregate statistics write fails',async()=>{
  const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env);
  assert.equal(response.status,200);
  assert.deepEqual([...new Uint8Array(await response.arrayBuffer())],[1,2,3,4]);
+});
+
+test('unverified native releases are rejected',async()=>{
+ const {env}=environment();
+ env.NATIVE_RELEASES.head=async()=>({size:4,customMetadata:{malwareScan:'pending'}});
+ env.NATIVE_RELEASES.get=async()=>({size:4,body:new Uint8Array([1,2,3,4])});
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env)).status,403);
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
 });
