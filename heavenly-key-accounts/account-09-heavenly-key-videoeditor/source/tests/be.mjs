@@ -77,6 +77,9 @@ check('Health detects uninitialized or missing D1 schema without leaking errors'
 
 const invalid = await request('register', { method: 'POST', body: { email: 'invalid', password: 'long enough password' } });
 check('Invalid registration rejected', invalid.status === 400);
+const malformedRegistration=await request('register',{method:'POST',body:{email:'malformed@example.com',password:{value:'not-a-password'}}});
+check('Registration rejects non-string passwords',malformedRegistration.status===400);
+
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Account registration succeeds', created.status === 200);
 const login = await request('login', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
