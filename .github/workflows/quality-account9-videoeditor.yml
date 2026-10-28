@@ -52,8 +52,15 @@ jobs:
         run: node --check scripts/smoke-account9-live.mjs
       - name: Enforce single Account 9 release identity
         run: node scripts/test-account9-release-policy.mjs
-      - name: Verify Control Room release matches latest source
-        run: node scripts/verify-account9-release.mjs
+      - name: Verify freshly built Worker release matches latest source
+        run: node scripts/verify-account9-release.mjs /tmp/account9-quality-worker.mjs
+      - name: Preserve tested release for owner-approved deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: account9-tested-worker
+          path: /tmp/account9-quality-worker.mjs
+          if-no-files-found: error
+          retention-days: 7
       - name: Validate packaged Worker JavaScript
         run: node --check /tmp/account9-quality-worker.mjs
       - name: Exercise packaged Worker health and auth boundaries
