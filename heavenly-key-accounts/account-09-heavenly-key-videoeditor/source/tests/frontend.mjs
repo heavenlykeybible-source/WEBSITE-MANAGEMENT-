@@ -52,6 +52,7 @@ assert.ok(html.includes('aria-label="Studio sections"')&&html.includes("setAttri
 assert.ok(html.includes('button:focus-visible')&&html.includes('<label for="af">Choose audio</label>'),'Keyboard focus and audio upload label required');
 assert.ok(html.includes('invalidateVideoDownload();if(sourceURL)'),'Selecting a new video must invalidate the prior export');
 assert.ok(html.includes('audioBuffer=null;')&&html.includes("$('aexp').disabled=true"),'Loading an audio file must clear previously decoded audio');
+assert.ok(html.includes("player.pause();if(player.dataset.url){URL.revokeObjectURL(player.dataset.url)")&&html.includes("player.removeAttribute('src');player.load();if(f.size>200*1024*1024)"),'Rejected audio replacements must not leave stale audio playable');
 assert.ok(html.includes('v.onerror=()'),'Unsupported video codecs must show a helpful error');
 assert.equal(module,readFileSync('integrations.js','utf8'),'Integration modules must match');
 assert.ok(module.includes("if(generation!==libraryGeneration)return;selected=d.id")&&module.includes('const blob=await res.blob();if(generation!==libraryGeneration)return'),'Delayed private project or media fetch must not import after logout');
