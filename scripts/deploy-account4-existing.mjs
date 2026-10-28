@@ -33,6 +33,11 @@ if (process.argv.includes('--check')) {
   const approved = process.env.ACCOUNT4_APPROVED_COMMIT || '';
   if (git.status !== 0 || !/^[a-f0-9]{40}$/i.test(approved) || git.stdout.trim() !== approved)
     throw new Error('Account 4 production deployment blocked: exact approved Git commit required');
+  // Refuse stale direct uploads too, not just GitHub Actions deployments.
+  const remote = spawnSync('git', ['ls-remote', '--heads', 'origin', 'main'], {encoding:'utf8',shell:false,timeout:20000});
+  const latest = remote.stdout?.trim().split(/\s+/)[0];
+  if(remote.status !== 0 || !/^[a-f0-9]{40}$/i.test(latest) || latest !== approved)
+    throw new Error('Account 4 production deployment blocked: approved commit is not the latest main revision');
   const source = await fs.readFile('control-room-worker.js', 'utf8');
   if (source.length < 10000 || !source.includes('export default')) throw new Error('Worker source missing or incomplete');
   const metadata = {
