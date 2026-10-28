@@ -37,7 +37,13 @@ tools?.addEventListener('click',async e=>{
   }
   if(request!==latestRequest||book.value+':'+chapter.value!==key)return;
   host.replaceChildren(el('h3',heading));
-  if(kind==='definitions'){
+  if(kind==='dictionary'){
+   host.append(el('p','Search the reviewed biblical-term glossary. Definitions are brief study aids; read each term in its Scripture context.'));
+   const search=el('input');search.type='search';search.placeholder='Enter a Bible term';search.setAttribute('aria-label','Search Bible dictionary');
+   const result=el('div');
+   const show=()=>{const q=search.value.trim().toLowerCase();result.replaceChildren();if(!q){result.append(el('p','Enter a term to search.'));return;}const matches=Object.entries(dictionary).filter(([word])=>word.includes(q));if(!matches.length){result.append(el('p','No reviewed definition found for this term.'));return;}for(const [word,definition] of matches)result.append(el('p',word+' — '+definition));};
+   search.addEventListener('input',show);host.append(search,result);show();
+  }else if(kind==='definitions'){
    const words=Object.entries(dictionary).filter(([w])=>verses.some(v=>new RegExp('\\b'+w+'\\b','i').test(v)));
    if(!words.length)host.append(el('p','No matching terms in the reviewed glossary. Read the chapter above; the glossary is not exhaustive.'));
    for(const [word,definition] of words)host.append(el('p',word+': '+definition));
