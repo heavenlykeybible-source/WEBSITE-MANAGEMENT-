@@ -1471,3 +1471,9 @@ body[data-page="home"].gc-composed-dashboard :is(.gc-composer-submit,.hk-ref-cre
 .gc-bible-note,.gc-bible-foot{font-size:11px;line-height:1.5;color:#53627c}
 .gc-bible-foot{text-align:center;font-weight:800;color:#8f6320}
 .gc-mini-bible :is(button,a,select):focus-visible{outline:3px solid #d7a72b;outline-offset:2px}
+
+.gc-bible-member-panel{display:grid;gap:9px;padding:12px;border:1px solid #dcc487;border-radius:12px;background:#fffdf0}
+.gc-bible-member-panel[hidden]{display:none}
+.gc-bible-member-results{display:grid;gap:7px;max-height:280px;overflow:auto}
+.gc-bible-member-results button{min-height:45px;text-align:left;background:#173f95;color:#fff;border-color:#173f95}
+.gc-bible-member-panel input{width:100%;min-height:44px;box-sizing:border-box;border:1px solid #b9c8dd;border-radius:10px;padding:10px;color:#173a75;background:#fff;font:inherit}
