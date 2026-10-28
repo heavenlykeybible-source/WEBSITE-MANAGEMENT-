@@ -19,10 +19,12 @@ self.addEventListener('install',event=>{
     if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
    }catch{}
   }
-  await Promise.allSettled(SHELL.filter(path=>!core.includes(path)).map(async path=>{
+  for(const path of SHELL.filter(path=>!core.includes(path))){
+   try{
    const response=await fetch(path,{cache:'no-store',credentials:'omit'});
    if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
-  }));
+   }catch{}
+  }
  }));
 });
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE_REVIEWED_SHELL')event.waitUntil(self.skipWaiting());});
