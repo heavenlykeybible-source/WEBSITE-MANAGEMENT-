@@ -32,7 +32,8 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
  const request=event.request,url=new URL(request.url);
  if(request.method!=='GET'||url.origin!==self.location.origin||!PUBLIC.has(url.pathname)||request.headers.has('Authorization'))return;
- if(url.search){
+ if(url.search && !( /^\/download\/(?:android|iphone|ipad|windows|mac)\/index\.html$/.test(url.pathname) &&
+   [...url.searchParams.keys()].every(key=>key==='app') && url.searchParams.getAll('app').length===1 && /^[a-z0-9-]{1,64}$/.test(url.searchParams.get('app')) )){
   if(!READING.has(url.pathname)||[...url.searchParams.keys()].some(key=>!['book','chapter'].includes(key))||
     url.searchParams.getAll('book').length>1||url.searchParams.getAll('chapter').length>1||
     url.searchParams.has('book')&&!/^[a-zA-Z0-9 -]{1,40}$/.test(url.searchParams.get('book'))||
