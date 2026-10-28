@@ -65,11 +65,15 @@ if (process.argv.includes('--verify-live')) {
       assert.ok(!/text\/html/i.test(mime),'Android installer returned HTML instead of APK');
       const reader=response.body?.getReader();
       assert.ok(reader,'APK download has no body');
-      const first=await reader.read();
+      const header=[];
+      while(header.length<4){
+        const chunk=await reader.read();
+        if(chunk.done) break;
+        for(const byte of chunk.value){header.push(byte);if(header.length===4)break;}
+      }
       await reader.cancel();
-      assert.ok(first.value?.length>=4,'APK response is empty or too short');
-      const b=first.value;
-      assert.deepEqual(Array.from(b.slice(0,4)),[0x50,0x4b,0x03,0x04],'Android artifact is not a ZIP-based APK');
+      assert.equal(header.length,4,'APK response is empty or too short');
+      assert.deepEqual(header,[0x50,0x4b,0x03,0x04],'Android artifact is not a ZIP-based APK');
     } else if(kind==='manifest'){
       const manifest=await response.json();
       assert.equal(typeof manifest.name,'string','PWA manifest must have a name');
