@@ -10,3 +10,11 @@ test('scripture image export uses fitted verse text and async Blob downloads',()
 test('past daily selections are date-addressable and honestly labeled as rotating content',()=>{const html=read('strength-for-today.html');for(const token of ['Past Daily Selections','These are repeated selections','historyDate.type=\'date\'','historyOpen.onclick=','date.getUTCFullYear()'])assert.ok(html.includes(token),token);});
 
 test('on-device audio narration offers accessible playback without microphone or upload',()=>{const html=read('strength-for-today.html');for(const id of ['listen-strength','pause-strength','stop-strength','audio-status'])assert.ok(html.includes('id="'+id+'"'),id);for(const token of ['SpeechSynthesisUtterance','speechSynthesis.speak','speechSynthesis.cancel','speechSynthesis.pause','speechSynthesis.resume','selected[1]','selected[2]'])assert.ok(html.includes(token),token);});
+
+test('Daily Manna has both premium image sizes and branded social sharing',()=>{
+ const page=read('strength-for-today.html'),script=read('strength-share-studio.js');
+ for(const id of ['manna-image-size','manna-image-preview','manna-download-image','manna-share-image','manna-copy-caption','manna-network-format'])assert.ok(page.includes('id="'+id+'"'),id);
+ for(const expected of ['1080 × 1920','1080 × 1440','design_card','premium_text'])assert.ok(page.includes(expected),expected);
+ for(const expected of ['GLOBAL CHRISTIAN SOCIAL NETWORK','www.global.heavenlykey.org','Join the Global Christian Social Network www.global.heavenlykey.org','navigator.share','navigator.canShare','canvas.toBlob','URL.revokeObjectURL',"'image/png'", "postFormat:format"])assert.ok(script.includes(expected),expected);
+ new vm.Script(script,{filename:'strength-share-studio.js'});
+});
