@@ -1,0 +1,40 @@
+name: SocialPlus release readiness
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'config/heavenly-key-accounts.json'
+      - 'releases/socialplus/**'
+      - 'tests/account-registry.mjs'
+      - 'tests/socialplus-mobile-release.mjs'
+      - '.github/workflows/socialplus-release.yml'
+  pull_request:
+    paths:
+      - 'config/heavenly-key-accounts.json'
+      - 'releases/socialplus/**'
+      - 'tests/account-registry.mjs'
+      - 'tests/socialplus-mobile-release.mjs'
+      - '.github/workflows/socialplus-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  registry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node tests/account-registry.mjs
+      - run: node tests/socialplus-mobile-release.mjs
+  launch-gate:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node tests/account-registry.mjs
+      - run: node tests/socialplus-mobile-release.mjs --require-ready
