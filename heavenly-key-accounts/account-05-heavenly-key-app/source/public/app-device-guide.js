@@ -15,7 +15,8 @@
   window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
     promptEvent = event;
-    if (install && /^(android|windows|mac)$/.test(platform) && document.querySelector('link[rel="manifest"]')) install.hidden = false;
+    // A browser prompt on the directory/guide may install the directory, not the selected app.
+    // Keep it hidden; users should open the selected app for its own installation prompt.
   });
   window.addEventListener('appinstalled', () => {
     promptEvent = null;
@@ -64,7 +65,9 @@
         manifest.rel = 'manifest';
         manifest.href = '/manifests/' + encodeURIComponent(appId) + '.webmanifest';
         document.head.append(manifest);
-        if (promptEvent && install && /^(android|windows|mac)$/.test(platform)) install.hidden = false;
+        // Browser install prompts are only valid on the app's own origin and scope.
+        // A prompt received on this guide must not be presented as an install of another app.
+        if (promptEvent && install && destination.pathname === location.pathname) install.hidden = false;
       }
       let nativeAvailable = false;
       if (/^(android|windows|mac)$/.test(platform)) {
@@ -94,7 +97,7 @@
       } else if (!sameOrigin) {
         status('This app is hosted on another Heavenly Key website. Open it above and use installation options offered on that website. This page cannot install it directly.');
       } else if (!nativeAvailable) {
-        status('This is an installable web app when supported by your browser. Open the app or use the Install button when offered; this is not an APK or native store download.');
+        status('Open the selected app first, then use your browser Install App or Add to Home Screen option when supported. Native installers are not available until verified releases are published.');
       }
     } catch {
       if (open) { open.href = '/downloads.html'; open.textContent = 'Return to the Apps directory'; }
