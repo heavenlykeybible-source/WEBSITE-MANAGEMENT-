@@ -1,0 +1,44 @@
+name: Account 5 Security Scan
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/**'
+      - '.github/workflows/account5-security-scan.yml'
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/**'
+      - '.github/workflows/account5-security-scan.yml'
+  schedule:
+    - cron: '23 4 * * 1'
+permissions:
+  contents: read
+jobs:
+  malware-and-dependency-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install malware scanner and refresh signatures
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y clamav clamav-freshclam
+          sudo systemctl stop clamav-freshclam || true
+          sudo freshclam
+          clamscan --version
+      - name: Scan Account 5 source and static assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          clamscan --recursive --infected --no-summary heavenly-key-accounts/account-05-heavenly-key-app
+      - name: Audit production dependencies
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/source
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm audit --omit=dev --audit-level=high
