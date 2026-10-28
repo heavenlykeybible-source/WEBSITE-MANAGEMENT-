@@ -18,3 +18,5 @@ test('Daily Manna has both premium image sizes and branded social sharing',()=>{
  for(const expected of ['GLOBAL CHRISTIAN SOCIAL NETWORK','www.global.heavenlykey.org','Join the Global Christian Social Network www.global.heavenlykey.org','navigator.share','navigator.canShare','canvas.toBlob','URL.revokeObjectURL',"'image/png'", "postFormat:format"])assert.ok(script.includes(expected),expected);
  new vm.Script(script,{filename:'strength-share-studio.js'});
 });
+
+test('premium Daily Manna studio includes four usable portrait themes and both image layouts',()=>{const page=read('strength-for-today.html'),script=read('strength-share-studio.js');for(const theme of ['royal','crimson','midnight','ivory']){assert.ok(page.includes('value="'+theme+'"'),theme);assert.ok(script.includes(theme+':{'),theme)}assert.ok(page.includes('id="manna-theme"'));assert.ok(script.includes("themeSelect?.addEventListener('change',refresh)"));new vm.Script(script,{filename:'strength-share-studio.js'});});
