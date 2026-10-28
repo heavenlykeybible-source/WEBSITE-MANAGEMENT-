@@ -245,15 +245,7 @@ async function finishSocialAccount(){
  }catch(e){panel.append(el("p",e.message));const restart=el("a","Return to sign in","btn primary");restart.href="account.html";panel.append(restart);}
 }
 async function communityAdmin(host){if(!session||session.user.status!=="active"||!["administrator","owner"].includes(session.user.role))return;const {mountCommunityAdmin}=await import("./community-admin.js");await mountCommunityAdmin({host,api,el});}
-function renderAdvert(a){
- const card=el("article",null,"community-advert advert-"+a.placement);card.dataset.advertId=String(a.advert_id);
- card.append(el("small","SPONSORED · "+a.sponsor,"advert-disclosure"));
- if(a.image_url){const img=el("img");img.src=a.image_url;img.alt=a.title;img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";img.addEventListener("error",()=>img.remove(),{once:true});card.append(img);}
- card.append(el("h3",a.title),el("p",a.body));const link=el("a",a.button_label,"btn secondary");link.href=a.link_url;link.target="_blank";link.rel="noopener noreferrer sponsored";card.append(link);return card;
-}
-async function mountAdverts(stream,aside){
- try{const data=await api("/api/adverts");if(!stream.isConnected)return;for(const a of data.items||[]){const card=renderAdvert(a);if(a.placement==="sidebar"){aside.append(card);}else if(a.placement==="banner"){stream.querySelector(".stream-heading").after(card);}else{const composer=stream.querySelector(".composer-card");if(composer)composer.after(card);else stream.append(card);}}}catch{/* Optional adverts never interrupt community content. */}
-}
+// Advertisement rendering disabled by owner policy.
 async function mountAccount(){
  if(!session)document.body.classList.add("gc-auth-page");
  if(new URLSearchParams(location.search).get("social")==="complete"){await finishSocialAccount();return;}
