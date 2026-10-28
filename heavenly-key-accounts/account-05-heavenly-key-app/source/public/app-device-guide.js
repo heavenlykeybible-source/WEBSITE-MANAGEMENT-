@@ -51,7 +51,7 @@
       if (!Object.prototype.hasOwnProperty.call(apps, appId)) throw new Error('Unknown app');
       const app = apps[appId];
       const destination = new URL(app.url, location.origin);
-      if (destination.protocol !== 'https:' && destination.hostname !== 'localhost') throw new Error('Invalid app URL');
+      if (destination.protocol !== 'https:' && !(destination.protocol === 'http:' && destination.hostname === 'localhost')) throw new Error('Invalid app URL');
       if (open) {
         open.href = destination.href;
         open.textContent = 'Open ' + app.name + ' Now';
@@ -69,7 +69,7 @@
       if (/^(android|windows|mac)$/.test(platform)) {
         const nativeLink = document.createElement('a');
         nativeLink.className = 'button';
-        nativeLink.textContent = 'Download native installation package';
+        nativeLink.textContent = platform === 'android' ? 'Download verified Android APK' : 'Download native installation package';
         nativeLink.href = '/api/native-download/' + encodeURIComponent(appId) + '/' + platform;
         nativeLink.hidden = true;
         nativeLink.setAttribute('download', '');
@@ -77,6 +77,7 @@
         try {
           const available = await fetch(nativeLink.href, {method:'HEAD', cache:'no-store'});
           nativeLink.hidden = !available.ok;
+          if (available.ok && platform === 'android') status('A native Android APK is available. Use the verified APK download button, or open the web app instead. Android may ask you to approve installation outside the Play Store.');
         } catch { nativeLink.hidden = true; }
       }
       if (platform === 'iphone' || platform === 'ipad') {
