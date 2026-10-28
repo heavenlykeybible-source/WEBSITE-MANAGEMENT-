@@ -42,6 +42,21 @@ $('manna-copy-caption').onclick=async()=>{try{await navigator.clipboard.writeTex
 // Keep the original Download Image button aligned with the selected premium format.
 $('download').onclick=async()=>{try{const {blob}=await getImage();download(blob);$('status').textContent='Branded PNG downloaded to this device.'}catch(e){$('status').textContent=e.message}};
 $('external').onclick=$('manna-share-image').onclick;
+// Publish using the Social Network's existing design-card/premium-text post formats.
+// Image export remains local; publishing a post does not imply image upload.
+$('feed').onclick=async()=>{
+ if(!await authenticated())return;
+ const format=$('manna-network-format').value;
+ if(!confirm('Publish this Daily Manna as a '+(format==='premium_text'?'Premium Text Design':'Premium Design Card')+' on the Global Christian Social Network?'))return;
+ const button=$('feed');button.disabled=true;
+ const item=items[current];
+ try{
+  const body=item[2]+'\\n\\n'+item[3]+'\\n\\nPrayer: '+item[4]+'\\n\\nTogether we take Christ to the Nations of the World';
+  await request('/api/posts','POST',{postFormat:format,designCategory:'faith',title:item[0],body,scripture:item[1],postType:'post',visibility:'public',design:{templateId:'card-0',alignment:'center',fontSize:'medium',size:'medium',decoration:'none'}});
+  $('sharing-status').textContent='Daily Manna '+(format==='premium_text'?'premium text':'design card')+' submitted. Check the feed for its publishing or review status.';
+ }catch(e){$('sharing-status').textContent='Unable to publish: '+e.message}
+ finally{button.disabled=false}
+};
 size.addEventListener('change',refresh);
 document.querySelectorAll('.topic').forEach(button=>button.addEventListener('click',()=>{refresh()}));
 $('surprise').addEventListener('click',()=>refresh());
