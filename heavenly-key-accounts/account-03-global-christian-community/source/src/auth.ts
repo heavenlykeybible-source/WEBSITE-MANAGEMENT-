@@ -19,12 +19,13 @@ async function derive(password:string,saltHex:string,pepper:string,iterations=10
   return hex(new Uint8Array(bits));
 }
 export async function hashPassword(password:string,pepper:string){
-  const salt=randomHex(16);return {salt,hash:"pbkdf2-sha256$100000$"+await derive(password,salt,pepper)};
+  const salt=randomHex(16);return {salt,hash:"pbkdf2-sha256$310000$"+await derive(password,salt,pepper,310000)};
 }
 export async function verifyPassword(password:string,salt:string,expected:string,pepper:string){
-  const version=expected.match(/^pbkdf2-sha256\$100000\$([a-f0-9]{64})$/),digest=version?version[1]:expected;
+  if(!/^[a-f0-9]{32}$/.test(salt))return false;
+  const version=expected.match(/^pbkdf2-sha256\$(100000|310000)\$([a-f0-9]{64})$/),digest=version?version[2]:expected;
   if(!/^[a-f0-9]{64}$/.test(digest))return false;
-  const got=await derive(password,salt,pepper,version?100000:210000);if(got.length!==digest.length)return false;let diff=0;for(let i=0;i<got.length;i++)diff|=got.charCodeAt(i)^digest.charCodeAt(i);return diff===0;
+  const got=await derive(password,salt,pepper,version?Number(version[1]):210000);if(got.length!==digest.length)return false;let diff=0;for(let i=0;i<got.length;i++)diff|=got.charCodeAt(i)^digest.charCodeAt(i);return diff===0;
 }
 export async function createSession(env:Env,user:SessionUser,version?:number){
   const row=version===undefined?await env.DB.prepare("SELECT session_version FROM users WHERE user_id=?").bind(user.userId).first<any>():null;
