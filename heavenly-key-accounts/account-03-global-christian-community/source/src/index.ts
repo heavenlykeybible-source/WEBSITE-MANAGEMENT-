@@ -91,6 +91,10 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
     const row=await env.DB.prepare("SELECT user_id,password_hash,password_salt,role,status,session_version FROM users WHERE email=?").bind(email).first<any>();
     if(!row||!["active","restricted"].includes(row.status)||!await verifyPassword(password,row.password_salt,row.password_hash,env.PASSWORD_PEPPER))return error("Email or password is incorrect.",401);
     if(await Authenticator.isEnabled(env,Number(row.user_id))&&!await Authenticator.verifySecondFactor(env,Number(row.user_id),String(b.authenticatorCode||"")))return error("Enter a valid authenticator or recovery code.",401);
+    if(!String(row.password_hash).startsWith("pbkdf2-sha256$310000$")){
+      const upgraded=await hashPassword(password,env.PASSWORD_PEPPER);
+      await env.DB.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE user_id=? AND password_hash=? AND password_salt=?").bind(upgraded.hash,upgraded.salt,row.user_id,row.password_hash,row.password_salt).run();
+    }
     const id=await createSession(env,{userId:Number(row.user_id),role:row.role,status:row.status},Number(row.session_version));
     return json({ok:true,userId:Number(row.user_id),role:row.role},200,{"Set-Cookie":sessionCookie(id)});
   }
