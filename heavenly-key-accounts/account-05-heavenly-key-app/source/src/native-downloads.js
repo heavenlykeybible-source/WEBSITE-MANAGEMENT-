@@ -51,7 +51,8 @@ export async function handleNativeDownloads(request,env) {
     const sha256=object.customMetadata?.sha256;
     const scanned=object.customMetadata?.malwareScan;
     const signed=object.customMetadata?.signatureVerified;
-    if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true') return reply({error:'Release has not passed security verification'},403);
+    const scannedDigest=object.customMetadata?.scannedSha256;
+    if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true' || scannedDigest!==sha256) return reply({error:'Release has not passed security verification'},403);
     if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size),'x-release-sha256':sha256}});
     // A download event means a package response was initiated, not that the device installed it.
     // Use a single aggregate counter row rather than storing identifying visitor data.
