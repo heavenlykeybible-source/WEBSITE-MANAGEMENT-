@@ -1,0 +1,32 @@
+name: Test Account 5 Download and Application Flows
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/**'
+      - '.github/workflows/test-account5-downloads.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/**'
+      - '.github/workflows/test-account5-downloads.yml'
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Run all application tests
+        run: npm test
+      - name: Validate Cloudflare worker configuration
+        run: npx wrangler deploy --dry-run --outdir /tmp/account5-worker-check
