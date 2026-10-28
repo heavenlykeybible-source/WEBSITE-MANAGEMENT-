@@ -44,7 +44,7 @@ test('guest meeting lifecycle closes media and signaling on departure', () => {
 test('broadcast links require HTTPS and trusted YouTube hostnames', () => {
   assert.match(html, /parsed\.protocol!=='https:'/);
   assert.match(html, /parsed\.username\|\|parsed\.password/);
-  assert.match(html, /parsed\.hostname==='youtube\.com'/);
+  assert.match(html, /\['youtube\.com','www\.youtube\.com','m\.youtube\.com'\]\.includes\(parsed\.hostname\)/);
   assert.match(html, /parsed\.hostname==='youtu\.be'/);
   assert.match(html, /youtube-nocookie\.com\/embed/);
 });

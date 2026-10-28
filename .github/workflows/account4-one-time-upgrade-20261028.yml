@@ -1,0 +1,116 @@
+name: Account 4 one-time owner-authorized upgrade
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/account4-one-time-upgrade-20261028.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-management-production
+  cancel-in-progress: false
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: account-4
+    steps:
+      - name: Check out the source
+        uses: actions/checkout@v4
+
+      - name: Block stale branches and unapproved commits
+        env:
+          APPROVED_COMMIT: ${{ github.sha }}
+        run: |
+          test "${{ github.ref }}" = 'refs/heads/main' || { echo '::error::Production releases must run from main'; exit 1; }
+          test "$APPROVED_COMMIT" = "$(git rev-parse HEAD)" || { echo '::error::Approval SHA does not match checkout; stale release blocked'; exit 1; }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check Cloudflare deployment credentials
+        env:
+          CF_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ]; then
+            echo "::error::Add ACCOUNT4_CLOUDFLARE_API_TOKEN to Account 4 GitHub secrets."
+            exit 1
+          fi
+
+      - name: Confirm correct Account 4 destination
+        env:
+          CF_ACCOUNT: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CF_ACCOUNT" || { echo '::error::Missing ACCOUNT4_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
+          test "$CF_ACCOUNT" != 'cd095c096c2d5a42501e7d77cecbb34c' || { echo '::error::Account 3 destination detected; deployment blocked'; exit 1; }
+
+      - name: Verify existing Account 4 Worker and live bindings
+        run: node scripts/deploy-account4-existing.mjs --check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Integrate saved interfaces into active Worker
+        run: |
+          npm run build:cms
+          node --check control-room-worker.js
+          grep -q 'Cloudflare API tokens' control-room-worker.js
+          grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
+
+      - name: Run project tests
+        run: |
+          npm test
+          node tests/account4-studio-menu.mjs
+          node tests/account4-unified-access.mjs
+          node tests/owner-passkeys.mjs
+          node tests/ai-workspace.mjs
+          node tests/native-imports.mjs
+          node tests/browser-agent.mjs
+          node tests/domains.mjs
+
+      - name: Verify Account 4 owner approval interface
+        run: node tests/account4-permission-ui.mjs
+
+      - name: Install browser test dependencies
+        timeout-minutes: 4
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1 @cloudflare/puppeteer@1.4.0
+          npx playwright install chromium
+
+      - name: Verify CMS editing and preview controls
+        run: |
+          npm run test:cms-dom
+          npm run test:cms-browser
+          node tests/account4-permissions-browser.mjs
+          node tests/native-imports-browser.mjs
+          node tests/browser-agent-chromium.mjs
+
+      - name: Verify approved source was not replaced during build
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}" || { echo '::error::Checked-out release changed'; exit 1; }
+          test -f control-room-worker.js || { echo '::error::Missing Control Room Worker'; exit 1; }
+          node --check control-room-worker.js
+
+      - name: Block superseded releases
+        env:
+          APPROVED_COMMIT: ${{ github.sha }}
+        run: |
+          git fetch --no-tags origin main
+          test "$APPROVED_COMMIT" = "$(git rev-parse origin/main)" || { echo '::error::A newer main commit exists; stale production deployment refused'; exit 1; }
+
+      - name: Deploy existing Worker without changing its resources
+        run: node scripts/deploy-account4-existing.mjs
+        env:
+          ACCOUNT4_PRODUCTION_APPROVED: '1'
+          ACCOUNT4_APPROVED_COMMIT: ${{ github.sha }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
+

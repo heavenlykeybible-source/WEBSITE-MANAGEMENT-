@@ -24,3 +24,24 @@ async function mcpOwnerReview(req,env,agent,args,id){
  if(proposal.status==='waiting'&&await mcpReviewSession(req,env,agent))return json({jsonrpc:'2.0',id,error:{code:-32042,message:'The owner must review this exact proposal in the Control Room.',data:{elicitations:[{mode:'url',elicitationId:'proposal-'+proposal.id+'-agent-'+agent.id,url,message:'Review proposal #'+proposal.id+' in your Control Room. Inspect the preview, then approve or decline. No change has been published.'}]}}});
  return json({jsonrpc:'2.0',id,result:{content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result}});
 }
+
+const MCP_ACCESS_TOOL={name:'request_workspace_access',description:'Request one owner authorization for selected saved Cloudflare accounts. Compatible clients show an owner approval handoff; otherwise use the secure review URL. Never grants access itself.',inputSchema:{type:'object',properties:{connections:{type:'array',items:{type:'integer'}},hours:{type:'integer',minimum:1,maximum:720},reason:{type:'string'}},required:['connections','reason'],additionalProperties:false}};
+async function mcpWorkspaceAccess(req,env,agent,args,id){
+ const data=await requestAIWorkspaceAccess(env,{kind:'agent',agentId:agent.id,a:agent},args),request=data.permission_request;
+ const url=new URL('/?review_access='+request.id,req.url).href;
+ if(await mcpReviewSession(req,env,agent))return json({jsonrpc:'2.0',id,error:{code:-32042,message:'Owner authorization required',data:{elicitations:[{mode:'url',elicitationId:'access-'+request.id,url,message:request.reason+' Review all requested accounts, then approve or decline.'}]}}});
+ return json({jsonrpc:'2.0',id,result:{content:[{type:'text',text:JSON.stringify({request_id:request.id,review_url:url,status:'pending'})}],structuredContent:{request_id:request.id,review_url:url,status:'pending'}}});
+}
+
+async function ownerApprovalSession(req,env,user,sub,m){
+ if(sub!=='approval-session')return null;if(user.kind!=='staff'||user.role!=='owner')fail('Owner access required',403);if(m!=='POST')fail('Method not allowed',405);
+ const b=await body(req);await reauthenticate(env,user,b.password);const token='approval-session:'+crypto.randomUUID(),expires=Date.now()+10*60000;
+ await env.DB.prepare("DELETE FROM settings WHERE key LIKE 'owner:approval-session:%' AND json_extract(value_json,'$.expires') < ?").bind(Date.now()).run();
+ await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('owner:approval-session:'+await sha256(token),JSON.stringify({user:user.id,pass_ver:user.pass_ver||0,expires})).run();await audit(env,user.username,'approval-session-started','10 minute owner review session');return json({proof:token,expires});
+}
+async function checkOwnerApprovalSession(env,user,proof){
+ if(typeof proof!=='string'||!proof.startsWith('approval-session:'))return false;
+ const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('owner:approval-session:'+await sha256(proof)).first();if(!row)fail('Approval session expired. Verify again.',403);
+ const r=JSON.parse(row.value_json),current=await env.DB.prepare("SELECT pass_ver,role,kind FROM users WHERE id=? AND status='active'").bind(user.id).first();
+ if(!current||current.role!=='owner'||current.kind!=='staff'||r.user!==user.id||r.pass_ver!==(current.pass_ver||0)||r.expires<=Date.now())fail('Approval session expired or revoked. Verify again.',403);return true;
+}

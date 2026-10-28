@@ -126,11 +126,11 @@ test('Guest WebRTC signaling buffers candidates and reconnects through admission
   assert.match(host,/pendingIce:\[\]/);
   assert.match(host,/if\(g\.pc\.remoteDescription\)/);
   assert.match(host,/g\.pendingIce\.splice\(0\)/);
-  assert.match(guest,/joined=false;try\{shareTrack&&shareTrack\.stop\(\)\}/);
+  assert.match(guest,/joined=false;if\(AUD\)\{stopLocal\(\);onStage=false;mode\(false\)\}try\{shareTrack&&shareTrack\.stop\(\)\}/);
   assert.match(guest,/shareTrack=null;camTrack=null;sharing=false/);
   assert.match(guest,/show\('wait'\)/);
   assert.match(guest,/if\(pc&&pc\.signalingState!=='closed'&&pc\.remoteDescription\)/);
-  assert.match(guest,/if\(!local\)\{\$\('invrow'\)\.hidden=false/);
+  assert.match(guest,/if\(!local\)\{if\(!over&&joined&&epoch===invitationEpoch\)\$\('invrow'\)\.hidden=false/);
 });
 
 test('Guest screen sharing closes capture tracks on manual stop and room exit', () => {
@@ -146,7 +146,7 @@ test('Audio processing releases the original microphone and screen share on stag
  assert.match(source,/rawMedia=m/);
  assert.match(source,/rawMedia&&rawMedia!==local/);
  assert.match(source,/rawMedia\.getTracks\(\)\.forEach\(t=>t\.stop\(\)\)/);
- assert.match(source,/case 'demoted':try\{shareTrack&&shareTrack\.stop\(\)\}/);
+ assert.match(source,/case 'demoted':invitationEpoch\+\+;try\{shareTrack&&shareTrack\.stop\(\)\}/);
 });
 
 test('Host retries failed peer media using bounded ICE restarts', () => {
@@ -169,7 +169,7 @@ test('Joining guards repeated clicks and handles failed websocket creation', () 
 
 test('Screen sharing restores the actual camera and stops captures after setup failures', () => {
  const source=readFileSync(resolve(root,'site/join.html'),'utf8');
- assert.match(source,/const originalTrack=s\.track;await s\.replaceTrack\(t\);camTrack=originalTrack/);
+ assert.match(source,/const originalTrack=s\.track;await s\.replaceTrack\(t\);if\(over\|\|!joined\|\|!onStage\|\|pc\?\.connectionState==='closed'\)\{await s\.replaceTrack\(originalTrack\)\.catch\(\(\)=>\{\}\);capture\.getTracks\(\)\.forEach\(track=>track\.stop\(\)\);return\}camTrack=originalTrack/);
  assert.match(source,/if\(capture\)capture\.getTracks\(\)\.forEach\(t=>t\.stop\(\)\)/);
  assert.match(source,/if\(s&&camTrack\)await s\.replaceTrack\(camTrack\)/);
 });
@@ -222,7 +222,7 @@ test('Guest join acknowledgement timeout closes stalled sockets and cleans up ti
  assert.match(guest,/joinAckTimer=setTimeout\(\(\)=>\{/);
  assert.match(guest,/currentSocket\.readyState===WebSocket\.OPEN/);
  assert.match(guest,/case 'welcome':clearTimeout\(joinAckTimer\);joinAckTimer=null/);
- assert.match(guest,/ws\.onclose=\(\)=>\{if\(over\|\|ws!==currentSocket\)return;clearTimeout\(openTimer\);openTimer=null;clearTimeout\(joinAckTimer\)/);
+ assert.match(guest,/ws\.onclose=\(\)=>\{if\(over\|\|ws!==currentSocket\)return;invitationEpoch\+\+;clearTimeout\(openTimer\);openTimer=null;clearTimeout\(joinAckTimer\)/);
 });
 
 test('ICE restart attempts only count when signaling is stable', () => {
