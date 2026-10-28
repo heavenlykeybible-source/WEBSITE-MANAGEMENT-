@@ -1,6 +1,7 @@
 /* Browser-only Bible tools. No AI image generation or remote user-data upload. */
 const extraOutput=document.getElementById('extra-bible-output');
 const extraPanel=document.getElementById('chapter-study-tools');
+const chapterOutput=document.getElementById('chapter-study-output');
 const node=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n;};
 const dataSets={
  maps:[['Jerusalem','City central to the ministry, death and resurrection of Jesus.'],['Bethlehem','Town associated with the birth of Jesus.'],['Nazareth','Town where Jesus grew up.'],['Galilee','Region of much of Jesus’ public ministry.'],['Jericho','City near the Jordan Valley.'],['Mount Sinai','Traditional mountain associated with the giving of the Law; exact identification is debated.']],
