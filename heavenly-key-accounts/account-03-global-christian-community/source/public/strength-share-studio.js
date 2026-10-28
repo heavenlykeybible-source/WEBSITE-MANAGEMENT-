@@ -2,32 +2,34 @@
 const $=id=>document.getElementById(id),size=$('manna-image-size'),preview=$('manna-image-preview'),status=$('manna-image-status');
 if(!size||!preview||!status)return;
 const BRAND='GLOBAL CHRISTIAN SOCIAL NETWORK',SITE='www.global.heavenlykey.org',CAPTION='Join the Global Christian Social Network www.global.heavenlykey.org';
+const THEMES={royal:{start:'#051941',middle:'#1745a3',end:'#7b2054',gold:'#f6cc63',subtitle:'#f9dc9d',text:'#ffffff'},crimson:{start:'#350b28',middle:'#a5173a',end:'#3a173f',gold:'#ffd16d',subtitle:'#ffe1a6',text:'#ffffff'},midnight:{start:'#07152b',middle:'#243b73',end:'#09192e',gold:'#e2e6f0',subtitle:'#e2e6f0',text:'#ffffff'},ivory:{start:'#fff9e8',middle:'#f8eac9',end:'#eed8a0',gold:'#92611e',subtitle:'#855318',text:'#172b4a'}};
+const themeSelect=$('manna-theme');
 let objectUrl='',renderToken=0;
 function say(message){status.textContent=message}
 function fitLines(ctx,value,maxWidth,fontSize,minFont,maxLines){for(let px=fontSize;px>=minFont;px-=2){ctx.font='700 '+px+'px Georgia,serif';let lines=[],line='';for(const word of value.split(/\s+/)){const next=line?line+' '+word:word;if(ctx.measureText(next).width>maxWidth&&line){lines.push(line);line=word}else line=next}if(line)lines.push(line);if(lines.length<=maxLines&&lines.every(v=>ctx.measureText(v).width<=maxWidth))return {lines,px};}throw Error('The selected scripture is too long to fit legibly. Use Copy Text to share the complete verse.')}
 function draw(ctx,textValue,x,y,maxWidth,fontSize,minFont,maxLines,lineFactor=1.45){const result=fitLines(ctx,textValue,maxWidth,fontSize,minFont,maxLines);ctx.font='700 '+result.px+'px Georgia,serif';for(const line of result.lines){ctx.fillText(line,x,y);y+=Math.round(result.px*lineFactor)}return y}
 async function renderImage(){
  const item=items[current],vertical=size.value==='vertical',w=1080,h=vertical?1920:1440;
- const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+ const theme=THEMES[themeSelect?.value]||THEMES.royal;const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Image creation is not supported on this device.');
- const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,'#051941');bg.addColorStop(.5,'#1745a3');bg.addColorStop(1,'#7b2054');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+ const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,theme.start);bg.addColorStop(.5,theme.middle);bg.addColorStop(1,theme.end);ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
  ctx.strokeStyle='#ffffff22';ctx.lineWidth=3;
  for(let r=180;r<=760;r+=155){ctx.beginPath();ctx.arc(1010,120,r,0,Math.PI*2);ctx.stroke()}
- ctx.fillStyle='#f6cc63';ctx.fillRect(72,76,936,7);
- ctx.textBaseline='top';ctx.fillStyle='#f8d87b';ctx.font='700 32px system-ui,sans-serif';ctx.fillText('DAILY MANNA  •  KJV',77,128);
- ctx.fillStyle='#fff';ctx.font='800 62px system-ui,sans-serif';ctx.fillText('STRENGTH FOR TODAY',77,205);
+ ctx.fillStyle=theme.gold;ctx.fillRect(72,76,936,7);
+ ctx.textBaseline='top';ctx.fillStyle=theme.gold;ctx.font='700 32px system-ui,sans-serif';ctx.fillText('DAILY MANNA  •  KJV',77,128);
+ ctx.fillStyle=theme.text;ctx.font='800 62px system-ui,sans-serif';ctx.fillText('STRENGTH FOR TODAY',77,205);
  const titleY=vertical?380:330;
- ctx.fillStyle='#f9dc9d';const topicEnd=draw(ctx,item[0],77,titleY,915,56,38,3,1.35);
- ctx.font='700 34px system-ui,sans-serif';ctx.fillStyle='#f9d477';ctx.fillText(item[1]+' (KJV)',77,topicEnd+32);
+ ctx.fillStyle=theme.subtitle;const topicEnd=draw(ctx,item[0],77,titleY,915,56,38,3,1.35);
+ ctx.font='700 34px system-ui,sans-serif';ctx.fillStyle=theme.gold;ctx.fillText(item[1]+' (KJV)',77,topicEnd+32);
  const verseTop=topicEnd+130,footerTop=h-315,verseBottom=footerTop-105;
  const verse=fitLines(ctx,'“'+item[2]+'”',913,vertical?53:48,26,Math.floor((verseBottom-verseTop)/39));
- ctx.fillStyle='#fff';ctx.font='700 '+verse.px+'px Georgia,serif';
+ ctx.fillStyle=theme.text;ctx.font='700 '+verse.px+'px Georgia,serif';
  let y=verseTop;for(const line of verse.lines){ctx.fillText(line,77,y);y+=Math.round(verse.px*1.45)}
  if(y>verseBottom)throw Error('The passage does not fit the selected image size. Try the taller format.');
- ctx.fillStyle='#f6cc63';ctx.fillRect(77,footerTop,926,3);
- ctx.fillStyle='#fff';ctx.font='800 33px system-ui,sans-serif';ctx.fillText(BRAND,77,footerTop+37);
- ctx.font='700 34px system-ui,sans-serif';ctx.fillStyle='#ffe49e';ctx.fillText(SITE,77,footerTop+92);
- ctx.font='500 24px system-ui,sans-serif';ctx.fillStyle='#f6f7ff';ctx.fillText('Together we take Christ to the Nations of the World',77,footerTop+163);
+ ctx.fillStyle=theme.gold;ctx.fillRect(77,footerTop,926,3);
+ ctx.fillStyle=theme.text;ctx.font='800 33px system-ui,sans-serif';ctx.fillText(BRAND,77,footerTop+37);
+ ctx.font='700 34px system-ui,sans-serif';ctx.fillStyle=theme.subtitle;ctx.fillText(SITE,77,footerTop+92);
+ ctx.font='500 24px system-ui,sans-serif';ctx.fillStyle=theme.text;ctx.fillText('Together we take Christ to the Nations of the World',77,footerTop+163);
  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Unable to export PNG.')),'image/png'));
  return {blob,w,h};
 }
@@ -57,7 +59,7 @@ $('feed').onclick=async()=>{
  }catch(e){$('sharing-status').textContent='Unable to publish: '+e.message}
  finally{button.disabled=false}
 };
-size.addEventListener('change',refresh);
+size.addEventListener('change',refresh);themeSelect?.addEventListener('change',refresh);
 document.querySelectorAll('.topic').forEach(button=>button.addEventListener('click',()=>{refresh()}));
 $('surprise').addEventListener('click',()=>refresh());
 refresh();
