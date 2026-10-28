@@ -6,8 +6,6 @@
     ['📱','My Walk With God','/experience.html','Heavenly Key All-in-One Christian App'],
     ['📖','Life Bible (Full Bible App)','/bible.html','Read and search the Authorised King James Version'],
     ['📅','365-Day Reading Plan','/devotional.html','Daily discipleship'],
-    ['🎵','Hymn Library','/hymns.html','Hymn texts'],
-    ['🎧','Audio Hymnal','/audio-hymns.html','Approved hymn recordings'],
     ['🧮','My Walk With God','/walk-offline.html','Private offline notebook'],
     ['⌛','Eternity in View','/eternity-in-view/','Salvation and eternity portal'],
     ['🎓','From Creation to Eternity','/creation-to-eternity.html','35 Bible lessons'],
