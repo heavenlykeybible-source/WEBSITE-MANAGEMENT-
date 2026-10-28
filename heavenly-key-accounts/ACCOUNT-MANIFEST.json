@@ -59,9 +59,14 @@
     },
     {
       "account": 8,
-      "folder": "account-08-unverified",
-      "status": "not-identified",
-      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison"
+      "folder": "account-08-heavenly-key-meetingspace",
+      "status": "source-identified-live-verification-pending",
+      "legacySourcePolicy": "reference-only; do not deploy without current-version comparison",
+      "currentSource": "zoom-studio",
+      "deploymentWorkflow": ".github/workflows/zoom-studio.yml",
+      "website": "https://meeting.heavenlykey.org",
+      "worker": "heavenly-key-meetingspace",
+      "note": "Current MeetingSpace source is zoom-studio; the old account-08-unverified directory is a compatibility pointer, not a missing app."
     }
   ],
   "releaseGates": [

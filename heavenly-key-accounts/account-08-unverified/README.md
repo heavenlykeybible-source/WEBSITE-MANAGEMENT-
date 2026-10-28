@@ -1,7 +1,5 @@
-# No verified application source provided
+# Account 8 — source identified
 
-Recovery source: NOT IDENTIFIED.
+The old “unverified” label is obsolete. Open [Account 8 — Heavenly Key MeetingSpace](../account-08-heavenly-key-meetingspace/README.md), alongside the other account folders.
 
-Status: Unverified; no deployable application confirmed.
-
-Do not overwrite newer WEBSITE-MANAGEMENT- main branch application files. Keep secrets and production databases outside source control.
+The complete current application is [zoom-studio](../../zoom-studio/). Its Worker is `heavenly-key-meetingspace` and its website is https://meeting.heavenlykey.org. This directory remains only to preserve older links. Live functionality still requires verification.

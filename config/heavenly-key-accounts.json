@@ -41,7 +41,14 @@
     {
       "account": 8,
       "name": "Heavenly Key MeetingSpace",
-      "email": "omegawealthcreator@gmail.com"
+      "email": "omegawealthcreator@gmail.com",
+      "website": "https://meeting.heavenlykey.org",
+      "ai_target_url": "https://meeting.heavenlykey.org",
+      "page_url": "https://meeting.heavenlykey.org",
+      "folder": "heavenly-key-accounts/account-08-heavenly-key-meetingspace",
+      "source": "zoom-studio",
+      "worker": "heavenly-key-meetingspace",
+      "deployment_workflow": ".github/workflows/zoom-studio.yml"
     },
     {
       "account": 9,

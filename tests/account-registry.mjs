@@ -35,3 +35,24 @@ for (const field of ['website', 'ai_target_url', 'page_url']) {
   assert.equal(socialPlus[field], 'https://socialplus.heavenlykey.org');
 }
 console.log('PASS account registry uniqueness, secure origins and Account 10 domain');
+
+// An agent must be able to locate Account 8 without guessing another repository.
+const meetings = registry.accounts.find(account => account.account === 8);
+assert.equal(meetings.name, 'Heavenly Key MeetingSpace');
+for (const field of ['website', 'ai_target_url', 'page_url']) {
+  assert.equal(meetings[field], 'https://meeting.heavenlykey.org');
+}
+assert.equal(meetings.worker, 'heavenly-key-meetingspace');
+assert.ok(fs.existsSync(meetings.folder + '/README.md'));
+for (const file of ['package.json', 'site/index.html', 'site/join.html', 'site/_worker.js']) {
+  assert.ok(fs.existsSync(meetings.source + '/' + file), 'Missing MeetingSpace source: ' + file);
+}
+assert.ok(fs.existsSync(meetings.deployment_workflow));
+const manifest = JSON.parse(fs.readFileSync('heavenly-key-accounts/ACCOUNT-MANIFEST.json', 'utf8'));
+const meetingEntry = manifest.accounts.find(account => account.account === 8);
+assert.equal('heavenly-key-accounts/' + meetingEntry.folder, meetings.folder);
+assert.equal(meetingEntry.currentSource, meetings.source);
+assert.equal(meetingEntry.worker, meetings.worker);
+assert.equal(meetingEntry.deploymentWorkflow, meetings.deployment_workflow);
+assert.notEqual(meetingEntry.status, 'not-identified');
+console.log('PASS Account 8 source, account directory and deployment links resolve consistently');

@@ -1,6 +1,8 @@
-# Heavenly Key Live & Meeting Studio
+# Account 8 — Heavenly Key MeetingSpace
 
-The audited Zoom Studio upload lives here as an independent project. It does not replace the existing Control Room or the separate `studio/` work on other branches.
+[Account 8 directory entry](../heavenly-key-accounts/account-08-heavenly-key-meetingspace/README.md) · [Official account registry](../HEAVENLY-KEY-ACCOUNT-REGISTRY.md)
+
+This is the complete current Account 8 MeetingSpace source. The `zoom-studio` directory name is retained for existing build and workflow compatibility. The audited Zoom Studio upload lives here as an independent project. It does not replace the existing Control Room or the separate `studio/` work on other branches.
 
 The responsive blue, white and gold template includes the supplied ministry banner, feature guidance, main-website return link, meetings, groups and owner/admin user management. 24/7 Radio is on hold.
 
