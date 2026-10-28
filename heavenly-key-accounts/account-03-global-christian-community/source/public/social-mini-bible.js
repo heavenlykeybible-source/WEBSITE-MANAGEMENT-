@@ -36,7 +36,7 @@ export function mountMiniBible(host){
  const copy=tag('button','','Copy Verse'),share=tag('button','','Other Networks'),post=tag('button','','Post to Network'),member=tag('button','','Send to Member');for(const b of [copy,share,post,member])b.type='button';
  const full=tag('a','gc-bible-full','Read the Complete Bible · 66 Books ↗');full.href='https://onlinebible.heavenlykey.org/';full.target='_blank';full.rel='noopener noreferrer';
  const foot=tag('small','gc-bible-foot','Together we take Christ to the Nations of the World');
- const payload=()=>{const p=current();return p.text+' — '+p.book+' '+p.chapter+':'+p.verse+' (Authorised King James Version)\\nJoin the Global Christian Social Network '+WEB};
+ const payload=()=>{const p=current();return p.text+' — '+p.book+' '+p.chapter+':'+p.verse+' (Authorised King James Version)\nJoin the Global Christian Social Network '+WEB};
  const render=()=>{const p=current();reference.textContent=p.book+' '+p.chapter+':'+p.verse;verse.textContent=p.text||'Choose a verse';prev.disabled=!loaded||(Number(select.value)<=1&&Number(chapter.value)<=1);next.disabled=!loaded||(!loaded.chapters[chapter.value]?.some(v=>v.number>Number(select.value))&&Number(chapter.value)>=Object.keys(loaded.chapters).length);};
  prev.onclick=()=>{const n=Number(select.value);if(n>1){select.value=String(n-1);render()}else if(Number(chapter.value)>1){chapter.value=String(Number(chapter.value)-1);fillVerses(Number(loaded.chapters[chapter.value].at(-1)?.number||1))}};
  next.onclick=()=>{const n=Number(select.value);if(loaded?.chapters?.[chapter.value]?.some(v=>v.number===n+1)){select.value=String(n+1);render()}else if(Number(chapter.value)<Object.keys(loaded.chapters).length){chapter.value=String(Number(chapter.value)+1);fillVerses()}};
