@@ -49,7 +49,7 @@ extraPanel?.addEventListener('click',async event=>{
       for(let vi=0;vi<verses.length;vi++){const verse=verses[vi];if(typeof verse!=='string'||!verse.toLowerCase().includes(term))continue;total++;if(found.length<100)found.push([entry,ci+1,vi+1,verse]);}
      }
     }
-    if(token!==serial)return;results.replaceChildren(node('p',total+' matching verses'+(total>100?' · first 100 shown':'')));
+    if(token!==serial||request!==activeToolRequest)return;results.replaceChildren(node('p',total+' matching verses'+(total>100?' · first 100 shown':'')));
     for(const [entry,chapter,verse,text] of found){const p=node('p');const link=node('a',entry.name+' '+chapter+':'+verse);link.href='/bible.html?book='+encodeURIComponent(entry.id)+'&chapter='+chapter+'#study-root';p.append(link,document.createTextNode(' — '+text));results.append(p);}
    }catch{if(token===serial&&request===activeToolRequest)results.replaceChildren(node('p','Search could not finish. Check your connection and try again.'));}
   };
@@ -79,8 +79,8 @@ extraPanel?.addEventListener('click',async event=>{
   if(!entry){extraOutput.append(node('p','Bible text unavailable. Try again online.'));return;}
   const data=await fetch('/'+entry.path).then(r=>{if(!r.ok)throw Error();return r.json();}).catch(()=>null);
   if(request!==activeToolRequest||current()?.id!==ref.id||current()?.chapter!==ref.chapter)return;
-  const verses=data?.chapters?.[Number(ref.chapter)-1];
-  if(!Array.isArray(verses)||!verses.length){extraOutput.append(node('p','Chapter unavailable.'));return;}
+  const verses=data?.book===entry.name?data?.chapters?.[Number(ref.chapter)-1]:null;
+  if(!Array.isArray(verses)||!verses.length||!verses.every(v=>typeof v==='string')){extraOutput.append(node('p','Chapter unavailable.'));return;}
   const picker=node('select');picker.setAttribute('aria-label','Choose verse for share card');
   verses.forEach((_,i)=>{const opt=node('option','Verse '+(i+1));opt.value=i;picker.append(opt);});
   const card=node('blockquote');card.style.cssText='background:#fff8dc;color:#19345c;border:2px solid #1d4c8c;border-radius:14px;padding:22px;font-size:1.2rem;line-height:1.6;white-space:pre-wrap';
