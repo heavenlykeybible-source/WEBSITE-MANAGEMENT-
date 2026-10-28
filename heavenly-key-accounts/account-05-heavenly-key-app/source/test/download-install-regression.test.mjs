@@ -31,3 +31,17 @@ test('every published app in catalogue has a download control in directory', () 
     assert.ok(directory.includes('data-download-app="' + appId + '"'), 'Missing app download control for ' + appId);
   }
 });
+
+test('every device guide has exactly one installation event controller', () => {
+  for (const device of ['android', 'iphone', 'ipad', 'windows', 'mac']) {
+    const html = publicFile('download/' + device + '/index.html');
+    assert.match(html, /app-device-guide\.js/, device + ' missing primary guide script');
+    assert.doesNotMatch(html, /hk-page-script-index-1\.js/, device + ' has conflicting legacy prompt script');
+  }
+});
+
+test('native package status remains visible after browser install guidance updates', () => {
+  const js = publicFile('app-device-guide.js');
+  assert.match(js, /nativeAvailable = available\.ok/);
+  assert.match(js, /else if \(nativeAvailable\)/);
+});
