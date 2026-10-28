@@ -1,0 +1,28 @@
+name: Account 8 Meeting App Tests
+on:
+  push:
+    paths:
+      - 'zoom-studio/**'
+      - '.github/workflows/account8-tests.yml'
+  pull_request:
+    paths:
+      - 'zoom-studio/**'
+      - '.github/workflows/account8-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    name: Node.js regression suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: zoom-studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run all Account 8 tests
+        run: npm test
