@@ -84,5 +84,5 @@ tools?.addEventListener('click',async e=>{
    }
    for(const value of values)host.append(el('p',value));
   }
- }catch(err){if(request===latestRequest)host.replaceChildren(el('p','Unable to load chapter study material. Please try again online.'));}
+ }catch(err){if(request===latestRequest&&book.value+':'+chapter.value===key)host.replaceChildren(el('p','Unable to load chapter study material. Please try again online.'));}
 });
