@@ -19,7 +19,7 @@ function row(email, password, role) {
   const id = randomBytes(16).toString('hex');
   const salt = randomBytes(16).toString('hex');
   const pass = pbkdf2Sync(password, salt, 100000, 32, 'sha256').toString('hex');
-  return `INSERT INTO users(id,email,pass_hash,salt,created_at,role) VALUES(${[id,email,pass,salt].map(escapeSQL).join(',')},${Date.now()},${escapeSQL(role)}) ON CONFLICT(email) DO UPDATE SET pass_hash=excluded.pass_hash,salt=excluded.salt,role=excluded.role;`;
+  return `INSERT INTO users(id,email,pass_hash,salt,created_at,role) VALUES(${[id,email,pass,salt].map(escapeSQL).join(',')},${Date.now()},${escapeSQL(role)}) ON CONFLICT(email) DO UPDATE SET pass_hash=excluded.pass_hash,salt=excluded.salt,role=excluded.role; DELETE FROM sessions WHERE user_id=(SELECT id FROM users WHERE email=${escapeSQL(email)});`;
 }
 writeFileSync(filename, `-- PRIVATE: credentials hashed; treat the generated SQL as sensitive and delete after execution.\nBEGIN TRANSACTION;\n${row(ownerEmail,ownerPassword,'owner')}\n${adminEmail ? row(adminEmail,adminPassword,'admin') : ''}\nCOMMIT;\n`, {flag:'wx',mode:0o600});
 process.stdout.write(`Created private SQL file ${filename} for ${adminEmail ? 'Owner and Admin' : 'Owner only'}. No passwords printed.\n`);
