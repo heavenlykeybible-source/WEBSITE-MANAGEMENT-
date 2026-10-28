@@ -38,3 +38,4 @@ jobs:
           node-version: '24'
       - run: node tests/account-registry.mjs
       - run: node tests/socialplus-mobile-release.mjs --require-ready
+      - run: node tests/socialplus-mobile-release.mjs --verify-live
