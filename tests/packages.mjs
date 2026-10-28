@@ -95,7 +95,7 @@ async function mcpCall(){return route(new Request('https://control.example/mcp',
 const toolList=await (await mcpCall()).json();assert.ok(toolList.result.tools.length>0);assert.ok(!toolList.result.tools.some(t=>/approve|decide/.test(t.name)));
 db.prepare("UPDATE agents SET status='revoked' WHERE name='ChatGPT connection'").run();assert.equal((await mcpCall()).status,401);
 db.prepare("UPDATE agents SET status='active' WHERE name='ChatGPT connection'").run();const tk=db.prepare("SELECT key,value_json FROM settings WHERE key LIKE 'connect:token:%'").get();const expired=JSON.parse(tk.value_json);expired.expires=1;db.prepare('UPDATE settings SET value_json=? WHERE key=?').run(JSON.stringify(expired),tk.key);assert.equal((await mcpCall()).status,401);
-assert.match(UI,/Connect ChatGPT/);assert.match(UI,/Authorize ChatGPT/);
+assert.match(UI,/Connect ChatGPT/);assert.ok(UI.includes("'Authorize '+data.name"));
 console.log('PASS ChatGPT connection: discovery, callback restriction, owner-only consent, origin protection, PKCE, resource audience, code replay prevention, real tools, revoke and expiry');
 
 // A non-ChatGPT client completes the same owner-consented, single-use PKCE flow.

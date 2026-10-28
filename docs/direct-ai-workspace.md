@@ -30,6 +30,8 @@ These direct file updates apply to sites already served by Control Room managed 
 
 ## Repository and phone imports
 
+External MCP clients can use `list_workspace_sources`, `get_workspace_candidates`, `import_workspace_source` and `stage_workspace_source`. Continue the same scan until complete and the same stage until waiting/archived. Agent archives use their own bearer-authenticated `/api/agent/workspace/archive` endpoint; another agent cannot read them. Scoped assistants cannot enter the global workspace, and Worker staging retains existing infrastructure policy checks.
+
 Built website imports scan and stage in small resumable batches, rather than stopping at 40 files. Every Git blob is verified; the exact commit, complete file list and destination are recorded. Incomplete scans cannot be staged, and incomplete staged imports remain unsealed and cannot be approved. The selected destination cannot change partway through staging.
 
 The phone/computer folder importer uploads complete built output as separate bounded requests, up to 1000 files/125 MiB. ZIP remains a separate 25 MiB bounded path. Folder selection availability depends on the device/browser.
