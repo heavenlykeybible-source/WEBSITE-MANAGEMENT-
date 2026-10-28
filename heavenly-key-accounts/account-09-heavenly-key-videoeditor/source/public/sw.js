@@ -1,7 +1,7 @@
 'use strict';
 // Cache only public editor code and brand assets. Account data and API
 // responses must never enter CacheStorage.
-const VERSION='hk-account9-offline-v9';
+const VERSION='hk-account9-offline-v10';
 const CORE=['/','/index.html','/integrations.js','/offline-status.js','/ai-tools.js','/gateway-ui.js','/voice-enhance.js','/timeline.js','/voice-studio.js','/hk-approved-footer.js','/hk-approved-footer.css','/manifest.json','/assets/favicon.png','/assets/logo-256.png','/assets/logo-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
@@ -39,7 +39,7 @@ self.addEventListener('fetch',event=>{
       if(response.ok&&response.type!=='opaque'&&!response.headers.has('set-cookie')&&!/private|no-store/i.test(response.headers.get('cache-control')||''))event.waitUntil(cache.put(request,response.clone()));
       return response;
     }).catch(()=>null);
-    if(cached){event.waitUntil(fresh);return cached}
-    return (await fresh)||Response.error();
+    const updated=await fresh;
+    return updated||cached||Response.error();
   }));
 });
