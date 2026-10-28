@@ -49,6 +49,8 @@ const api = await fire('fetch',new Request('https://editor.test/api/me'));
 assert.equal(api,undefined,'Authenticated API calls must bypass service worker');
 const post = await fire('fetch',new Request('https://editor.test/projects',{method:'POST'}));
 assert.equal(post,undefined,'Mutating requests must bypass service worker');
+const authenticated = await fire('fetch',new Request('https://editor.test/timeline.js',{headers:{authorization:'Bearer test'}}));
+assert.equal(authenticated,undefined,'Authorized requests must bypass the offline cache');
 const remote = await fire('fetch',new Request('https://other.test/index.html'));
 assert.equal(remote,undefined,'Cross-origin requests must bypass the cache');
 let navigate = await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
