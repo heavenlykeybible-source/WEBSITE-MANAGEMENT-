@@ -9,7 +9,22 @@ const SHELL=['/icons/walk-with-god-192.png','/icons/walk-with-god-512.png','/ico
  '/audio-bible.js','/audio-bible-catalog.js','/audio-bible-manifest.json','/audio-background-catalog.js','/audio-background-manifest.json','/audio-playlist.js',
  '/audio-hymn-catalog.js','/audio-hymn-manifest.json','/audio-hymns.js','/audio-hymns.css','/featured-main-hymn.js','/lock-screen-media.js','/walk-offline.html','/walk-offline.js','/walk-offline-content.js','/offline-vault.js','/offline-status.js','/creation-to-eternity.html','/walk-offline.css','/creation-to-eternity.js','/creation-to-eternity.css','/offline-noscript.css'];
 const PUBLIC=new Set(SHELL),READING=new Set(['/bible.html','/audio-bible.html']);
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));});
+// Optional assets may be temporarily missing during deployment; never break the entire install.
+self.addEventListener('install',event=>{
+ event.waitUntil(caches.open(CACHE).then(async cache=>{
+  const core=['/index.html','/app.js','/styles.css','/manifest.webmanifest'];
+  for(const path of core){
+   try{
+    const response=await fetch(path,{cache:'no-store',credentials:'omit'});
+    if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
+   }catch{}
+  }
+  await Promise.allSettled(SHELL.filter(path=>!core.includes(path)).map(async path=>{
+   const response=await fetch(path,{cache:'no-store',credentials:'omit'});
+   if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
+  }));
+ }));
+});
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE_REVIEWED_SHELL')event.waitUntil(self.skipWaiting());});
 self.addEventListener('activate',event=>{
  event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('heavenly-key-app-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));
