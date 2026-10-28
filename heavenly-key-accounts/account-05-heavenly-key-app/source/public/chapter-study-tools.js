@@ -69,7 +69,7 @@ tools?.addEventListener('click',async e=>{
      host.append(el('p','What instruction, warning, promise or example appears in this chapter?'));
      host.append(el('p','Which verses support your conclusions?'));
     }else if(kind==='characters'){
-     const people=namedPeople.filter(name=>verses.some(v=>new RegExp('\\\\b'+name+'\\\\b','i').test(v)));
+     const people=namedPeople.filter(name=>verses.some(v=>new RegExp('\\b'+name+'\\b','i').test(v)));
      host.append(el('p','Names found in this chapter (automated name matching; not a complete or reviewed character analysis):'));
      if(people.length)for(const person of people)host.append(el('p',person));
      else host.append(el('p','No names from the current name index were detected. This does not mean the chapter has no characters.'));
