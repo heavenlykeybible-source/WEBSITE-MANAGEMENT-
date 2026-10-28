@@ -31,12 +31,13 @@ test('cross references link to the KJV reader and chapter switches invalidate re
  assert.ok(js.includes("book.value+':'+chapter.value!==key"));
 });
 
-test('all fifteen Quick Bible Tools are uniquely wired',()=>{
+test('only supported Quick Bible Tools are visible and uniquely wired',()=>{
  const html=read('bible.html');
  const original=['summary','lessons','characters','important','cross','definitions'];
- const additional=['search','notes','maps','timeline','topical','verse-image','memory','promises'];
+ const additional=['search','notes','timeline','topical','promises'];
  for(const id of original)assert.equal((html.match(new RegExp('data-study-tool="'+id+'"','g'))||[]).length,1,id);
  for(const id of additional)assert.equal((html.match(new RegExp('data-extra-tool="'+id+'"','g'))||[]).length,1,id);
+ for(const id of ['maps','verse-image','memory'])assert.ok(!html.includes('data-extra-tool="'+id+'"'),id+' must remain hidden until implemented');
  assert.ok(html.includes('href="/walk-offline.html#walk-bible-study"'));
  assert.ok(html.includes('src="/extra-bible-tools.js"'));
  assert.ok(html.includes('Quick Bible Tools'));
@@ -50,4 +51,9 @@ test('study links, async cancellations, and offline verse cards are guarded',()=
  assert.ok(extra.includes('type===\'search\''));
  assert.ok(extra.includes('type===\'verse-image\''));
  assert.ok(extra.includes('No AI images are generated.'));
+});
+
+test('chapter summary renders a complete paragraph instead of individual letters',()=>{
+ const core=read('chapter-study-tools.js');
+ assert.ok(core.includes("kind==='summary'?(info?.summary?[info.summary]:null)"));
 });
