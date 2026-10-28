@@ -1,0 +1,34 @@
+const host=document.getElementById('chapter-study-output');
+const book=document.getElementById('kjv-book-picker'),chapter=document.getElementById('kjv-chapter-picker');
+const tools=document.getElementById('chapter-study-tools');
+const notes={
+ 'genesis:1':{summary:'God creates the heavens and the earth, orders creation, and makes humanity in His image.',lessons:['God is the Creator.','Human life bears God-given dignity.'],characters:['God'],important:[1,3,27,31],cross:['John 1:1-3','Psalm 33:6','Hebrews 11:3']},
+ 'psalms:23':{summary:'David describes the LORD as his shepherd, provider, protector and enduring hope.',lessons:['Trust God for guidance.','God is present through hardship.'],characters:['David (speaker)','The LORD (shepherd)'],important:[1,4,6],cross:['John 10:11','Isaiah 40:11']},
+ 'john:3':{summary:'Jesus teaches Nicodemus about new birth and the love of God; John the Baptist points people to Christ.',lessons:['New birth is spiritual.','Faith in Christ is central to the chapter.'],characters:['Jesus','Nicodemus','John the Baptist'],important:[3,16,17,30],cross:['Numbers 21:8-9','John 1:12','1 John 4:9']}
+};
+const dictionary={grace:'God’s undeserved favour.',faith:'Trust or confidence in God.',redeem:'To buy back or deliver.',shepherd:'One who cares for and guides a flock.',covenant:'A solemn binding agreement.',righteousness:'What is right or just before God.',repent:'To turn away from sin and turn toward God.',holy:'Set apart as sacred.',salvation:'Deliverance or rescue.',spirit:'Breath, wind, or a nonphysical being; meaning depends on context.'};
+const el=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;};
+tools?.addEventListener('click',async e=>{
+ const button=e.target.closest('button[data-study-tool]');if(!button||!host||!book||!chapter)return;
+ const key=book.value+':'+chapter.value,kind=button.dataset.studyTool,info=notes[key];
+ host.replaceChildren(el('p','Loading '+book.selectedOptions[0].text+' '+chapter.value+'…'));
+ try{
+  const manifest=await(await fetch('/kjv-manifest.json')).json();
+  const entry=manifest.books.find(b=>b.id===book.value);if(!entry)throw Error('Book not found');
+  const data=await(await fetch('/'+entry.path)).json();
+  const verses=data.chapters[Number(chapter.value)-1];if(!Array.isArray(verses))throw Error('Chapter unavailable');
+  host.replaceChildren(el('h3',button.textContent+' · '+entry.name+' '+chapter.value));
+  if(kind==='definitions'){
+   const words=Object.entries(dictionary).filter(([w])=>verses.some(v=>new RegExp('\\b'+w+'\\b','i').test(v)));
+   if(!words.length)host.append(el('p','No reviewed glossary terms found in this chapter.'));
+   for(const [word,definition] of words)host.append(el('p',word+': '+definition));
+  }else if(kind==='important'){
+   if(!info?.important){host.append(el('p','Reviewed important-verse selections are not available for this chapter yet. Read the chapter above.'));return;}
+   for(const n of info.important)if(verses[n-1])host.append(el('p',entry.name+' '+chapter.value+':'+n+' — '+verses[n-1]));
+  }else{
+   const values=kind==='summary'?(info?[info.summary]:null):info?.[kind];
+   if(!values){host.append(el('p','Reviewed '+button.textContent.toLowerCase()+' are not available for this chapter yet. No AI-generated or unverified study notes are shown.'));return;}
+   for(const value of values)host.append(el('p',value));
+  }
+ }catch(err){host.replaceChildren(el('p','Unable to load chapter study material. Please try again online.'));}
+});
