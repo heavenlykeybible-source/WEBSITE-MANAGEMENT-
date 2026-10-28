@@ -36,7 +36,7 @@ jobs:
         run: npm run buildcheck
       - name: Verify SQL migrations against fresh local D1 database
         run: |
-          npx wrangler d1 migrations apply heavenly-key-global-community-db --local --config wrangler.toml --yes
+          npx wrangler d1 migrations apply heavenly-key-global-community-db --local --config wrangler.toml
       - name: Verify release preflight rejects unapproved promotion
         env:
           ACCOUNT3_SECRETS_VERIFIED: 'no'
