@@ -9,6 +9,7 @@ const notes={
  'john:3':{summary:'Jesus teaches Nicodemus about new birth and the love of God; John the Baptist points people to Christ.',lessons:['New birth is spiritual.','Faith in Christ is central to the chapter.'],characters:['Jesus','Nicodemus','John the Baptist'],important:[3,16,17,30],cross:['Numbers 21:8-9','John 1:12','1 John 4:9']}
 };
 const dictionary={atonement:'Reconciliation with God; in Scripture, connected with sacrifice and forgiveness.',mercy:'Compassion shown to someone in need.',disciple:'A learner or follower.',parable:'A story used to teach a lesson.',prophet:'A person called to speak God’s message.',apostle:'One sent with a commission.',resurrection:'Rising from the dead.',redemption:'Deliverance by payment or release.',forgive:'To pardon or release from an offence.',blessed:'Favoured or made happy.',wisdom:'Sound judgment and understanding.',truth:'That which is true and faithful.',grace:'God’s undeserved favour.',faith:'Trust or confidence in God.',redeem:'To buy back or deliver.',shepherd:'One who cares for and guides a flock.',covenant:'A solemn binding agreement.',righteousness:'What is right or just before God.',repent:'To turn away from sin and turn toward God.',holy:'Set apart as sacred.',salvation:'Deliverance or rescue.',spirit:'Breath, wind, or a nonphysical being; meaning depends on context.'};
+const namedPeople=['Jesus','Christ','Moses','Aaron','Abraham','Sarah','Isaac','Rebekah','Jacob','Esau','Joseph','Judah','David','Solomon','Samuel','Saul','Elijah','Elisha','Isaiah','Jeremiah','Ezekiel','Daniel','Jonah','Ruth','Naomi','Esther','Mordecai','Job','Noah','Adam','Eve','Cain','Abel','Peter','Paul','John','James','Andrew','Philip','Thomas','Matthew','Mary','Martha','Lazarus','Nicodemus','Pilate','Herod','Timothy','Titus','Barnabas','Stephen','Luke','Mark','Joshua','Caleb','Deborah','Gideon','Samson','Hannah','Elizabeth','Zacharias','Judas','Pharaoh'];
 const el=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;};
 let latestRequest=0;
 document.getElementById('study-root')?.addEventListener('change',event=>{if(event.target.matches('#kjv-book-picker,#kjv-chapter-picker')){latestRequest++;host?.replaceChildren();}});
@@ -25,7 +26,7 @@ tools?.addEventListener('click',async e=>{
  try{
   let entry={name:book.selectedOptions[0].text};
   let verses=[];
-  if(kind==='definitions'||kind==='important'){
+  if(['definitions','important','summary','lessons','characters'].includes(kind)){
    const manifestResponse=await fetch('/kjv-manifest.json');if(!manifestResponse.ok)throw Error('Bible catalogue unavailable');
    const manifest=await manifestResponse.json();
    entry=manifest.books.find(b=>b.id===key.split(':')[0]);if(!entry)throw Error('Book not found');
@@ -57,7 +58,24 @@ tools?.addEventListener('click',async e=>{
    for(const n of info.important)if(verses[n-1])host.append(el('p',entry.name+' '+chapter.value+':'+n+' — '+verses[n-1]));
   }else{
    const values=kind==='summary'?(info?.summary?[info.summary]:null):info?.[kind];
-   if(!values){const guidance={summary:'No reviewed summary yet. Read the chapter above and identify the main event or teaching.',lessons:'No reviewed lessons yet. Read the chapter above and consider what it teaches about God and how to live.',characters:'No reviewed character list yet. Read the chapter above and identify the people explicitly named.'};host.append(el('p',guidance[kind]||'Reviewed study notes are not available for this chapter.'));return;}
+   if(!values){
+    if(kind==='summary'){
+     host.append(el('p','Scripture-based chapter overview (selected verses, not a reviewed interpretation):'));
+     const positions=[0,Math.floor((verses.length-1)/2),verses.length-1];
+     for(const i of [...new Set(positions)])host.append(el('p',entry.name+' '+chapter.value+':'+(i+1)+' — '+verses[i]));
+    }else if(kind==='lessons'){
+     host.append(el('p','Chapter-specific study questions (not automatically inferred doctrine):'));
+     host.append(el('p','What does '+entry.name+' '+chapter.value+' teach about God?'));
+     host.append(el('p','What instruction, warning, promise or example appears in this chapter?'));
+     host.append(el('p','Which verses support your conclusions?'));
+    }else if(kind==='characters'){
+     const people=namedPeople.filter(name=>verses.some(v=>new RegExp('\\\\b'+name+'\\\\b','i').test(v)));
+     host.append(el('p','Names found in this chapter (automated name matching; not a complete or reviewed character analysis):'));
+     if(people.length)for(const person of people)host.append(el('p',person));
+     else host.append(el('p','No names from the current name index were detected. This does not mean the chapter has no characters.'));
+    }
+    return;
+   }
    for(const value of values)host.append(el('p',value));
   }
  }catch(err){if(request===latestRequest)host.replaceChildren(el('p','Unable to load chapter study material. Please try again online.'));}
