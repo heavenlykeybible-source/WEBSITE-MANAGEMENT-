@@ -64,6 +64,35 @@ export async function toggleGlobalConnect(env:Env,userId:number,targetType:"prof
   return {connected:true};
 }
 
+export async function sendFriendRequest(env:Env,sender:number,recipient:number){
+ if(!Number.isSafeInteger(recipient)||recipient<1||sender===recipient)throw new Error("Choose another member.");
+ const valid=await env.DB.prepare("SELECT 1 FROM users WHERE user_id=? AND status='active'").bind(recipient).first();
+ if(!valid||await env.DB.prepare("SELECT 1 FROM user_blocks WHERE (blocker_user_id=? AND blocked_user_id=?) OR (blocker_user_id=? AND blocked_user_id=?)").bind(sender,recipient,recipient,sender).first())throw new Error("This member is unavailable.");
+ const reverse=await env.DB.prepare("SELECT status FROM friend_requests WHERE sender_user_id=? AND recipient_user_id=?").bind(recipient,sender).first<any>();
+ if(reverse?.status==="accepted")return {status:"accepted"};
+ if(reverse?.status==="pending")throw new Error("This member already sent you a request. Accept it instead.");
+ const existing=await env.DB.prepare("SELECT status FROM friend_requests WHERE sender_user_id=? AND recipient_user_id=?").bind(sender,recipient).first<any>();
+ if(existing?.status==="accepted"||existing?.status==="pending")return {status:existing.status};
+ await env.DB.prepare("INSERT INTO friend_requests(sender_user_id,recipient_user_id,status) VALUES(?,?,'pending') ON CONFLICT(sender_user_id,recipient_user_id) DO UPDATE SET status='pending',updated_at=datetime('now') WHERE status IN ('declined','cancelled')").bind(sender,recipient).run();
+ await notify(env,recipient,"friend_request","New friend request","A member has sent you a friend request.","/friends.html");
+ return {status:"pending"};
+}
+export async function listFriendRequests(env:Env,userId:number){
+ const rows=await env.DB.prepare("SELECT r.request_id,r.sender_user_id,r.recipient_user_id,r.status,r.created_at,p.display_name FROM friend_requests r LEFT JOIN profiles p ON p.user_id=CASE WHEN r.sender_user_id=? THEN r.recipient_user_id ELSE r.sender_user_id END WHERE (r.sender_user_id=? OR r.recipient_user_id=?) AND r.status IN ('pending','accepted') ORDER BY r.updated_at DESC LIMIT 200").bind(userId,userId,userId).all<any>();
+ return rows.results;
+}
+export async function respondFriendRequest(env:Env,userId:number,requestId:number,action:"accept"|"decline"|"cancel"){
+ if(!Number.isSafeInteger(requestId)||requestId<1||!["accept","decline","cancel"].includes(action))throw new Error("Invalid friend request action.");
+ const row=await env.DB.prepare("SELECT sender_user_id,recipient_user_id,status FROM friend_requests WHERE request_id=?").bind(requestId).first<any>();
+ if(!row||row.status!=="pending")throw new Error("Friend request is no longer pending.");
+ if(action==="cancel"?row.sender_user_id!==userId:row.recipient_user_id!==userId)throw new Error("You cannot change this request.");
+ const status=action==="accept"?"accepted":action==="decline"?"declined":"cancelled";
+ const result=await env.DB.prepare("UPDATE friend_requests SET status=?,updated_at=datetime('now') WHERE request_id=? AND status='pending'").bind(status,requestId).run();
+ if(!result.meta?.changes)throw new Error("Friend request was already handled.");
+ if(action==="accept")await notify(env,row.sender_user_id,"friend_accepted","Friend request accepted","Your friend request was accepted.","/friends.html");
+ return {status};
+}
+
 export async function listConnections(env:Env,userId:number){
   const rows=await env.DB.prepare(`SELECT c.target_type,c.target_id,c.created_at,
     CASE WHEN c.target_type='profile' THEN p.display_name ELSE s.name END display_name
