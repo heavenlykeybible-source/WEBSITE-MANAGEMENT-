@@ -26,6 +26,13 @@ function signature(values) {
 if (process.argv.includes('--check')) {
   console.log('PASS: saved credentials can read existing Account 4 Worker; DB and FILES bindings found. No resources changed.');
 } else {
+  // Direct invocations must satisfy the same immutable approval gate as CI.
+  if (process.env.ACCOUNT4_PRODUCTION_APPROVED !== '1') throw new Error('Account 4 production deployment requires explicit approval');
+  const {spawnSync} = await import('node:child_process');
+  const git = spawnSync('git', ['rev-parse', 'HEAD'], {encoding:'utf8',shell:false});
+  const approved = process.env.ACCOUNT4_APPROVED_COMMIT || '';
+  if (git.status !== 0 || !/^[a-f0-9]{40}$/i.test(approved) || git.stdout.trim() !== approved)
+    throw new Error('Account 4 production deployment blocked: exact approved Git commit required');
   const source = await fs.readFile('control-room-worker.js', 'utf8');
   if (source.length < 10000 || !source.includes('export default')) throw new Error('Worker source missing or incomplete');
   const metadata = {
