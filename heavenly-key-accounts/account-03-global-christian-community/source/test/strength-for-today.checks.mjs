@@ -61,3 +61,29 @@ test('sidebar Bible direct member messaging respects request acceptance and perm
  assert.ok(source.includes('Verse copied.')&&source.includes('Scripture message delivered.'));
  new vm.Script(source.replace('export function mountMiniBible','function mountMiniBible'),{filename:'social-mini-bible.js'});
 });
+
+test('sidebar Bible books point to 66 actual KJV source files',()=>{
+ const reader=read('social-mini-bible.js');
+ const books=JSON.parse(reader.match(/const BOOKS=(\[[^;]+\]);/)[1]);
+ const sourceRoot=new URL('../../../../apps/heavenly-key-bible/heavenly-key-website/bible/data/kjv/',import.meta.url);
+ assert.equal(books.length,66);
+ for(const [name,code] of books){
+  const bible=JSON.parse(readFileSync(new URL(code+'.json',sourceRoot),'utf8'));
+  assert.equal(bible.book,name);
+  assert.ok(bible.chapters&&Object.keys(bible.chapters).length>0,name);
+ }
+});
+test('Daily Manna lives in My Walk with God, not Bible main reader',()=>{
+ const walk=readFileSync(new URL('../../../account-05-heavenly-key-app/source/public/walk-offline.html',import.meta.url),'utf8');
+ const bible=readFileSync(new URL('../../../../apps/heavenly-key-bible/heavenly-key-website/bible/index.html',import.meta.url),'utf8');
+ assert.ok(walk.includes('id="walk-daily-manna"'));
+ assert.ok(walk.includes('id="walk-manna-reader"'));
+ assert.ok(walk.includes('id="notebook-passphrase"'));
+ assert.ok(walk.includes('https://global.heavenlykey.org/strength-for-today.html'));
+ assert.ok(!bible.includes('id="walk-daily-manna"')&&!bible.includes('id="daily-manna-bible"'));
+ assert.ok(bible.includes('id="verses"'));
+});
+test('sidebar lifecycle avoids duplicate daily devotional links',()=>{
+ const script=read('global-social-sidebar.js');
+ assert.ok(script.includes("document.querySelectorAll('.gc-strength-for-today-link').forEach(x=>x.remove())"));
+});
