@@ -15,13 +15,14 @@ async function meetingAsset(request) {
   if (!['GET','HEAD'].includes(request.method)) return new Response('Method not allowed',{status:405,headers:{allow:'GET, HEAD'}});
   let path=new URL(request.url).pathname;
   if(path==='/')path='/index.html';
-  const file=MEETING_ASSETS[path];
+  let file=MEETING_ASSETS[path],status=200;
+  if(!file&&request.headers.get('accept')?.includes('text/html')&&!/\.(?!html?$)[a-z0-9]+$/i.test(path)){file=MEETING_ASSETS['/404.html'];status=404;}
   if(!file)return new Response('Not found',{status:404});
   // The bundled Worker serves its own assets; Pages' site/_headers is not applied here.
   const headers={
     'content-type':file.type,
     'etag':'"'+file.hash+'"',
-    'cache-control':path==='/join.html'||path==='/index.html'?'no-store':path.startsWith('/bg/')||path.startsWith('/icons/')?'public,max-age=3600':'no-cache',
+    'cache-control':status===404||path==='/join.html'||path==='/index.html'?'no-store':path.startsWith('/bg/')||path.startsWith('/icons/')?'public,max-age=3600':'no-cache',
     'x-content-type-options':'nosniff',
     'referrer-policy':'no-referrer',
     'x-frame-options':'DENY',
@@ -32,7 +33,7 @@ async function meetingAsset(request) {
   if(headers['cache-control']!=='no-store' && request.headers.get('if-none-match')===headers.etag)return new Response(null,{status:304,headers});
   const compressed=Uint8Array.from(atob(file.data),c=>c.charCodeAt(0));
   const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'));
-  return new Response(request.method==='HEAD'?null:stream,{headers});
+  return new Response(request.method==='HEAD'?null:stream,{status,headers});
 }
 async function controlRoomOwnerLogin(request,env) {
   if(request.method!=='POST')return json({error:'POST only'},405);

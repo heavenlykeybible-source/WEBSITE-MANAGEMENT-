@@ -116,5 +116,6 @@ const sw=readFileSync('public/sw.js','utf8');
 new Script(sw,{filename:'account9-service-worker.js'});
 assert.ok(sw.includes("url.pathname.startsWith('/api/')")&&sw.includes("request.method!=='GET'"),'Service worker must bypass authenticated APIs and writes');
 assert.ok(sw.includes("request.mode==='navigate'")&&sw.includes("cache.match('/index.html')"),'Offline navigation must fall back to cached editor');
-assert.ok(sw.includes("cache.put('/index.html',copy)")&&sw.includes('event.waitUntil(fresh)'),'Online launches must refresh offline page and static assets');
+// Verify refresh behavior instead of requiring one particular promise spelling.
+await import('./offline.mjs');
 console.log('PASS frontend integration wiring, duplicate source and security headers');
