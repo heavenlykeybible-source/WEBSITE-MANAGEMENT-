@@ -16,12 +16,13 @@ const caches = {
   async keys() { return ['hk-account9-offline-v5','hk-account9-offline-v6']; },
   async delete() { return true; }
 };
-let offline=true, networkCalls=0, privateNext=false, failureNext=false;
+let offline=true, networkCalls=0, privateNext=false, failureNext=false, navigationFailureNext=false;
 const fetch = async request => {
   networkCalls++;
   if (offline) throw Error('Offline');
   if(privateNext){privateNext=false;return new Response('private editor',{headers:{'cache-control':'private, no-store'}})}
   if(failureNext){failureNext=false;return new Response('Service unavailable',{status:503});}
+  if(navigationFailureNext){navigationFailureNext=false;return new Response('Editor temporarily unavailable',{status:503});}
   return new Response('live '+keyOf(request));
 };
 const self = {
@@ -82,6 +83,9 @@ failureNext=true;
 const recoveredPage=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
 assert.equal(await recoveredPage.text(),'live /','Temporary 503 navigation must fall back to the last working editor page');
 assert.equal(await (await cache.match('/index.html')).text(),'live /','Online launch must refresh offline editor');
+navigationFailureNext=true;
+const recoveredNavigation=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
+assert.equal(await recoveredNavigation.text(),'live /','Temporary navigation 503 must fall back to the last working editor');
 privateNext=true;
 navigate=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
 assert.equal(await navigate.text(),'private editor','Private response is still delivered to the requester');
