@@ -54,3 +54,22 @@ test('expired stage invitations invalidate pending camera access', () => {
   assert.match(html, /case 'demoted':invitationEpoch\+\+/);
   assert.match(html, /epoch!==invitationEpoch/);
 });
+
+test('meeting invites use exact same-origin secure WebSocket URLs', () => {
+  assert.match(html, /url\.protocol==='wss:'/);
+  assert.match(html, /url\.host===location\.host/);
+  assert.match(html, /url\.pathname==='\/meeting\/'\+room/);
+  assert.match(html, /!url\.search&&!url\.hash/);
+});
+
+test('stage media is cancelled when an invitation expires or the guest disconnects', () => {
+  assert.match(html, /getMedia\(false,epoch\)/);
+  assert.match(html, /epoch!==invitationEpoch\|\|!joined/);
+  assert.match(html, /if\(AUD\)\{stopLocal\(\);onStage=false;mode\(false\)\}/);
+});
+
+test('embedded YouTube broadcasts require a valid eleven-character ID', () => {
+  assert.match(html, /parsed\.searchParams\.get\('v'\)/);
+  assert.match(html, /\^\[\\w-\]\{11\}\$/);
+  assert.match(html, /!parsed\.hash/);
+});
