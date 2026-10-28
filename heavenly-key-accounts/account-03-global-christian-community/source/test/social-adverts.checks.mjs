@@ -78,9 +78,9 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
  await req('/api/admin/adverts/'+pictured.data.advertId,{...input,imageUrl,status:'paused'},admin,'PATCH');assert.equal((await req(imageUrl)).status,404);
 
  for(let i=0;i<25;i++)assert.equal((await req('/api/admin/adverts',{...input,title:'Published '+i,status:'published',priority:i%3},admin)).status,201);
- const ads1=(await req('/api/adverts')).data;assert.equal(ads1.items.length,20);assert.ok(ads1.nextCursor);
- const ads2=(await req('/api/adverts?cursor='+encodeURIComponent(ads1.nextCursor))).data;assert.equal(ads2.items.length,5);assert.equal(ads2.nextCursor,null);
- assert.equal(new Set([...ads1.items,...ads2.items].map(x=>x.advert_id)).size,25);assert.equal((await req('/api/adverts?cursor=bad')).status,400);
+ const ads1=(await req('/api/adverts')).data;assert.equal(ads1.items.length,2,'Only two adverts per placement are returned');
+ assert.equal(new Set(ads1.items.map(x=>x.advert_id)).size,2);
+ assert.equal((await req('/api/adverts?cursor=bad')).status,200,'Public adverts do not accept pagination cursors');
 
  db.prepare("UPDATE users SET status='restricted' WHERE user_id=2").run();assert.equal((await req('/api/admin/adverts',input,admin)).status,403);
  }finally{globalThis.fetch=realFetch;db.close();rmSync(dir,{recursive:true,force:true});}
