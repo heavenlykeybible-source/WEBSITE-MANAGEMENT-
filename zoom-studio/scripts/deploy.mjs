@@ -10,9 +10,9 @@ const privatePreview=process.env.MEETINGSPACE_PRIVATE_PREVIEW==='1';
 if(privatePreview && process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN &&
   /^(?:https:\/\/)?(?:meeting\.heavenlykey\.org|heavenly-key-meetingspace\.[^/]+\.workers\.dev)\/?$/i.test(process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN))
   throw Error('Private preview cannot target a known public production hostname');
-// Production is opt-in: require explicit approval and passing regression tests.
-// Preview deploys remain possible without changing the production release.
-if(!privatePreview){
+// Every deployment targets the same existing Worker; preview mode must not bypass approval.
+// Require explicit owner approval and passing tests even for private preview uploads.
+{
   if(process.env.MEETINGSPACE_PRODUCTION_APPROVED!=='1')
     throw Error('Production deployment blocked: Control Room approval required (MEETINGSPACE_PRODUCTION_APPROVED=1)');
   if(!/^[a-f0-9]{40}$/i.test(process.env.MEETINGSPACE_APPROVED_COMMIT||''))
