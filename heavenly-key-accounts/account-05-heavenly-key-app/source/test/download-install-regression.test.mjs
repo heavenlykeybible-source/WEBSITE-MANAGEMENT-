@@ -45,3 +45,8 @@ test('native package status remains visible after browser install guidance updat
   assert.match(js, /nativeAvailable = available\.ok/);
   assert.match(js, /else if \(nativeAvailable\)/);
 });
+
+test('unavailable native package links remain hidden even when button CSS uses display', () => {
+  const stylesheet = publicFile('app-pages.css');
+  assert.match(stylesheet, /\[hidden\]\s*\{\s*display\s*:\s*none\s*!important\s*\}/);
+});
