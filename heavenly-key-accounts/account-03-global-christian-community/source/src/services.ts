@@ -320,8 +320,8 @@ export async function messages(env:Env,userId:number,id:number,before?:number){
 }
 
 export async function newMessages(env:Env,userId:number,id:number,after:number){
+  if(!Number.isSafeInteger(id)||id<1||!Number.isSafeInteger(after)||after<0)throw new Error("Choose a valid message cursor.");
   await conversationAccess(env,userId,id);
-  if(!Number.isSafeInteger(after)||after<0)throw new Error("Choose a valid message cursor.");
   const r=await env.DB.prepare("SELECT message_id,sender_user_id,body,created_at FROM messages WHERE conversation_id=? AND status='delivered' AND message_id>? ORDER BY message_id ASC LIMIT 100").bind(id,after).all<any>();
   const items=r.results;
   return {items,nextAfter:items.length?Number(items[items.length-1].message_id):after,hasMore:items.length===100};
