@@ -23,3 +23,11 @@ test('download guide restricts app destinations to secure HTTPS or local develop
   assert.match(js, /destination\.protocol !== 'https:'/);
   assert.match(js, /destination\.protocol === 'http:' && destination\.hostname === 'localhost'/);
 });
+
+test('every published app in catalogue has a download control in directory', () => {
+  const catalogue = JSON.parse(publicFile('app-downloads.json'));
+  const directory = publicFile('downloads.html');
+  for (const appId of Object.keys(catalogue)) {
+    assert.ok(directory.includes('data-download-app="' + appId + '"'), 'Missing app download control for ' + appId);
+  }
+});
