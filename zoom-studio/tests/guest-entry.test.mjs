@@ -70,6 +70,6 @@ test('stage media is cancelled when an invitation expires or the guest disconnec
 
 test('embedded YouTube broadcasts require a valid eleven-character ID', () => {
   assert.match(html, /parsed\.searchParams\.get\('v'\)/);
-  assert.match(html, /\^\[\\w-\]\{11\}\$/);
+  assert.ok(html.includes(String.raw`/^[\w-]{11}$/`));
   assert.match(html, /!parsed\.hash/);
 });
