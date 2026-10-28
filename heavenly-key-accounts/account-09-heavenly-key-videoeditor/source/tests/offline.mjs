@@ -72,6 +72,8 @@ assert.ok((await script.text()).includes('offline'),'Offline module must load fr
 offline=false;
 navigate = await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
 assert.equal(await navigate.text(),'live /','Online navigation must fetch current editor');
+const refreshedScript=await fire('fetch',new Request('https://editor.test/timeline.js'));
+assert.equal(await refreshedScript.text(),'live /timeline.js','Online editor assets must update immediately instead of serving stale cached scripts');
 assert.equal(await (await cache.match('/index.html')).text(),'live /','Online launch must refresh offline editor');
 privateNext=true;
 navigate=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
