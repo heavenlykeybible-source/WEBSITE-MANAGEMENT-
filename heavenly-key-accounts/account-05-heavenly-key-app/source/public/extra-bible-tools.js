@@ -35,24 +35,24 @@ extraPanel?.addEventListener('click',async event=>{
   const scope=node('select');scope.setAttribute('aria-label','Search scope');for(const [value,label] of [['chapter','Current chapter'],['book','Current book'],['all','All 66 books']]){const o=node('option',label);o.value=value;scope.append(o);}
   const go=node('button','Search KJV');go.type='button';go.className='btn secondary';const results=node('div');results.setAttribute('aria-live','polite');let serial=0;
   const run=async()=>{
-   const token=++serial,term=field.value.trim().toLowerCase();results.replaceChildren();if(term.length<2){results.append(node('p','Enter at least two characters.'));return;}
+   const token=++serial,term=field.value.trim().toLowerCase(),chosenScope=scope.value;results.replaceChildren();if(term.length<2){results.append(node('p','Enter at least two characters.'));return;}
    const selected=current();if(!selected){results.append(node('p','Wait for the Bible reader to load.'));return;}
    results.append(node('p','Searching Scripture…'));
    try{
     const response=await fetch('/kjv-manifest.json');if(!response.ok)throw Error('Bible catalogue unavailable');const manifest=await response.json();
     if(!Array.isArray(manifest.books)||manifest.books.length!==66)throw Error('Incomplete Bible catalogue');
-    const entries=scope.value==='all'?manifest.books:manifest.books.filter(b=>b.id===selected.id);
+    const entries=chosenScope==='all'?manifest.books:manifest.books.filter(b=>b.id===selected.id);
     if(!entries.length)throw Error('Bible book unavailable');
     const found=[];let total=0;
-    for(const entry of entries){if(token!==serial||request!==activeToolRequest)return;const r=await fetch('/'+entry.path);if(!r.ok)throw Error('Bible text unavailable');const data=await r.json();if(data.book!==entry.name||!Array.isArray(data.chapters)||data.chapters.length!==entry.chapters)throw Error('Invalid Bible data');
-     for(let ci=0;ci<data.chapters.length;ci++){if(scope.value==='chapter'&&ci+1!==Number(selected.chapter))continue;
+    for(const entry of entries){if(token!==serial||request!==activeToolRequest||scope.value!==chosenScope)return;const r=await fetch('/'+entry.path);if(!r.ok)throw Error('Bible text unavailable');const data=await r.json();if(data.book!==entry.name||!Array.isArray(data.chapters)||data.chapters.length!==entry.chapters)throw Error('Invalid Bible data');
+     for(let ci=0;ci<data.chapters.length;ci++){if(chosenScope==='chapter'&&ci+1!==Number(selected.chapter))continue;
       const verses=data.chapters[ci];if(!Array.isArray(verses)||!verses.every(v=>typeof v==='string'))throw Error('Invalid chapter verses');
       for(let vi=0;vi<verses.length;vi++){const verse=verses[vi];if(typeof verse!=='string'||!verse.toLowerCase().includes(term))continue;total++;if(found.length<100)found.push([entry,ci+1,vi+1,verse]);}
      }
     }
-    if(token!==serial||request!==activeToolRequest||current()?.id!==selected.id||(scope.value==='chapter'&&current()?.chapter!==selected.chapter))return;results.replaceChildren(node('p',total+' matching verses'+(total>100?' · first 100 shown':'')));
+    if(token!==serial||request!==activeToolRequest||scope.value!==chosenScope||current()?.id!==selected.id||(chosenScope==='chapter'&&current()?.chapter!==selected.chapter))return;results.replaceChildren(node('p',total+' matching verses'+(total>100?' · first 100 shown':'')));
     for(const [entry,chapter,verse,text] of found){const p=node('p');const link=node('a',entry.name+' '+chapter+':'+verse);link.href='/bible.html?book='+encodeURIComponent(entry.id)+'&chapter='+chapter+'#study-root';p.append(link,document.createTextNode(' — '+text));results.append(p);}
-   }catch{if(token===serial&&request===activeToolRequest&&current()?.id===selected.id)results.replaceChildren(node('p','Search could not finish. Check your connection and try again.'));}
+   }catch{if(token===serial&&request===activeToolRequest&&scope.value===chosenScope&&current()?.id===selected.id)results.replaceChildren(node('p','Search could not finish. Check your connection and try again.'));}
   };
   go.addEventListener('click',run);field.addEventListener('keydown',e=>{if(e.key==='Enter')run();});scope.addEventListener('change',()=>{serial++;results.replaceChildren();});
   extraOutput.append(node('p','Search the Authorised King James Version by word or phrase.'),field,scope,go,results);return;
