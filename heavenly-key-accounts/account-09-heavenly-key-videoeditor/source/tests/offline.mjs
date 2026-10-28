@@ -78,6 +78,9 @@ assert.equal(await refreshedScript.text(),'live /timeline.js','Online editor ass
 failureNext=true;
 const recoveredScript=await fire('fetch',new Request('https://editor.test/timeline.js'));
 assert.equal(await recoveredScript.text(),'live /timeline.js','Temporary server errors must preserve the last working editor asset');
+failureNext=true;
+const recoveredPage=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
+assert.equal(await recoveredPage.text(),'live /','Temporary 503 navigation must fall back to the last working editor page');
 assert.equal(await (await cache.match('/index.html')).text(),'live /','Online launch must refresh offline editor');
 privateNext=true;
 navigate=await fire('fetch',{url:'https://editor.test/',method:'GET',mode:'navigate'});
