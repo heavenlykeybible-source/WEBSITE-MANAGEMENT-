@@ -550,11 +550,23 @@ async function openConversation(id){
 async function refreshThread(){
  const id=activeConversation,version=chatVersion,member=session?.user?.userId,host=threadHost,revision=++chatReadRevision;if(!id)return;
  const cached=chatBodies.get(id)||[],after=cached.length?Math.max(...cached.map(m=>m.message_id)):0;
- const d=after?await api('/api/messages/'+id+'/updates?after='+after):await api('/api/messages/'+id);
+ let latest=[],nextBefore=null,hasMore=false,cursor=after;
+ if(after){
+  for(let page=0;page<5;page++){
+   const d=await api('/api/messages/'+id+'/updates?after='+cursor);
+   const batch=d.items||[];latest.push(...batch);hasMore=Boolean(d.hasMore);
+   if(!hasMore||!batch.length)break;
+   if(!Number.isSafeInteger(d.nextAfter)||d.nextAfter<=cursor)throw new Error('Chat updates could not advance.');
+   cursor=d.nextAfter;
+  }
+ }else{
+  const d=await api('/api/messages/'+id);latest=d.items||[];nextBefore=d.nextBefore;
+ }
  if(activeConversation!==id||version!==chatVersion||revision!==chatReadRevision||member!==session?.user?.userId||host!==threadHost||!host?.isConnected)return;
  const history=host.querySelector('.chat-history');if(!history)return;
- const latest=d.items||[],items=after?[...cached,...latest.filter(m=>m.message_id>after)]:latest,signature=JSON.stringify(items.map(m=>[m.message_id,m.body]));
- if(!history.dataset.paginationReady){history.dataset.before=d.nextBefore||'';history.dataset.paginationReady='1';}
+ const items=after?[...cached,...latest.filter(m=>m.message_id>after)]:latest;
+ const signature=JSON.stringify(items.map(m=>[m.message_id,m.body]));
+ if(!history.dataset.paginationReady){history.dataset.before=nextBefore||'';history.dataset.paginationReady='1';}
  const older=host.querySelector('.chat-older');older.hidden=!history.dataset.before;
  if(history.dataset.signature===signature)return;history.dataset.signature=signature;chatBodies.set(id,items);renderThread(id);
 }
