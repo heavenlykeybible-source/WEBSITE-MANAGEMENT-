@@ -14,7 +14,8 @@
       "cms-runtime-20261015.css",
       "hk-approved-footer.js",
       "hk-approved-footer.css",
-      "app-switcher.css"
+      "app-switcher.css",
+      "walk-integrations.css"
     ]
   },
   "bible-study-portal": {
@@ -31,7 +32,8 @@
       "cms-runtime-20261015.css",
       "hk-approved-footer.js",
       "hk-approved-footer.css",
-      "app-switcher.css"
+      "app-switcher.css",
+      "creation-to-eternity-presentation.css"
     ]
   },
   "eternity-in-view": {

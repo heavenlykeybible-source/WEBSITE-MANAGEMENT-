@@ -36,7 +36,7 @@ test('release-aware worker and foreground update UI preserve user-controlled rel
  const sw=readFileSync(new URL('../public/sw.js',import.meta.url),'utf8');
  const platform=readFileSync(new URL('../public/platform.js',import.meta.url),'utf8');
  assert.match(sw,/const RELEASE='[^']+';/);
- assert.match(sw,/heavenly-key-app-shell-v10-/);
+ assert.match(sw,/heavenly-key-app-shell-v11-/);
  assert.match(platform,/registration\.update\(\)/);
  assert.match(platform,/ACTIVATE_REVIEWED_SHELL/);
  assert.match(platform,/Update app/);

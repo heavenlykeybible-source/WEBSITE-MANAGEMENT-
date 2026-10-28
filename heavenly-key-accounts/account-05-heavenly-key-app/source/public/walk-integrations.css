@@ -1,0 +1,40 @@
+/* Premium Daily Manna integration: separate from encrypted offline notebook */
+#walk-daily-manna{padding:0;overflow:hidden;border:1px solid #d8c084;border-radius:26px;background:#fff;box-shadow:0 20px 55px #10295527;margin:25px 0;color:#14315d}
+.walk-manna-head{position:relative;isolation:isolate;overflow:hidden;padding:clamp(23px,4vw,46px);background:linear-gradient(118deg,#061940 0%,#1746a4 60%,#8c2856 100%);color:white}
+.walk-manna-head:before{content:"✦";position:absolute;font-size:280px;top:-140px;right:-30px;opacity:.09;z-index:-1}
+.walk-manna-kicker{color:#ffda78;font-size:12px;font-weight:850;letter-spacing:.14em}
+#walk-daily-manna h2{font-size:clamp(29px,5vw,50px);line-height:1.1;margin:10px 0 17px;color:#fff}
+.walk-manna-head>p:not(.walk-manna-kicker){max-width:750px;color:#f3f6ff;line-height:1.7}
+.walk-manna-actions{display:flex;flex-wrap:wrap;gap:12px;margin:23px 0}
+.walk-manna-actions a{display:inline-flex;padding:13px 19px;border-radius:12px;align-items:center;text-decoration:none;font-weight:800;min-height:45px;box-sizing:border-box}
+.walk-manna-primary{background:linear-gradient(110deg,#ffe39a,#e4ae3c);color:#2c2319!important}
+.walk-manna-secondary{border:1px solid #d2dff7;color:white!important;background:#ffffff19}
+.walk-manna-head .walk-manna-hint{font-size:13px;color:#f1e6d4}
+.walk-manna-content{padding:clamp(9px,2vw,20px);background:#f4f7fd}
+.walk-manna-bar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;background:#133878;padding:13px 15px;border-radius:12px 12px 0 0;color:#f5d87e;font-size:12px;letter-spacing:.06em;font-weight:850}
+.walk-manna-bar a{color:#fff}
+#walk-manna-reader{width:100%;display:block;box-sizing:border-box;height:min(1050px,83vh);min-height:650px;background:#fff;border:1px solid #c5d5ea;border-top:0}
+.walk-manna-note{font-size:13px;line-height:1.7;color:#345277;padding:10px}
+.walk-manna-note a{font-weight:850;color:#14479f}
+.walk-manna-motto{text-align:center;padding:5px 16px 24px;color:#1c3e82;font-weight:850;font-size:14px}
+#walk-daily-manna a:focus-visible{outline:3px solid #edb528;outline-offset:3px}
+@media(max-width:580px){#walk-daily-manna{border-radius:18px}.walk-manna-actions a{width:100%;justify-content:center}.walk-manna-content{padding:8px}#walk-manna-reader{min-height:620px;height:78vh}}
+
+/* Embedded Bible Study portal inside My Walk with God */
+#walk-bible-study{padding:0;overflow:hidden;border:1px solid #d6bd79;border-radius:24px;background:#fff;box-shadow:0 20px 52px #122b5723;margin:28px 0;color:#173961}
+.walk-study-head{background:linear-gradient(125deg,#082b68,#1452ab 65%,#88622a);padding:clamp(22px,4vw,45px);color:white}
+.walk-study-kicker{color:#ffe5a3;font-size:12px;letter-spacing:.14em;font-weight:850}
+#walk-bible-study h2{font-size:clamp(29px,4.5vw,46px);margin:9px 0 15px;color:#fff}
+.walk-study-head p{max-width:740px;line-height:1.7;color:#f3f6ff}
+.walk-study-actions{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0 0}
+.walk-study-actions a{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:11px;min-height:45px;font-weight:800;text-decoration:none}
+.walk-study-primary{background:#f5c85d;color:#132f67!important}
+.walk-study-secondary{color:#fff!important;border:1px solid #ccd8f1;background:#ffffff1a}
+.walk-study-body{padding:12px;background:#eff4fc}
+.walk-study-bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#163c83;color:#ffe5a1;border-radius:12px 12px 0 0;padding:13px 16px;font-size:12px;font-weight:850}
+#walk-bible-study-reader{display:block;box-sizing:border-box;width:100%;height:min(1050px,82vh);min-height:650px;border:1px solid #bccfe8;background:#fff}
+.walk-study-note{font-size:13px;color:#3b5274;line-height:1.7;padding:8px}
+.walk-study-note a{color:#1343a0;font-weight:800}
+.walk-study-motto{text-align:center;padding:6px 15px 22px;color:#17418b;font-weight:800}
+#walk-bible-study a:focus-visible{outline:3px solid #f4c04b;outline-offset:3px}
+@media(max-width:600px){.walk-study-actions a{width:100%}#walk-bible-study-reader{height:76vh;min-height:580px}.walk-study-body{padding:7px}}
