@@ -67,3 +67,9 @@ test('native download button requires a security digest and a positive package l
  assert.match(js, /Number\.isSafeInteger\(size\) && size > 0/);
  assert.match(js, /nativeAvailable = available\.ok/);
 });
+
+test('device guide never offers an installation prompt for the wrong app scope', () => {
+ const js = publicFile('app-device-guide.js');
+ assert.doesNotMatch(js, /install\.hidden = false/);
+ assert.match(js, /open the selected app/i);
+});
