@@ -47,6 +47,13 @@
       "account": 9,
       "name": "Heavenly Key VideoEditor",
       "email": "emmanuelmeta247@gmail.com"
+    },
+    {
+      "account": 10,
+      "name": "SocialPlus",
+      "website": "https://socialplus.heavenlykey.org",
+      "ai_target_url": "https://socialplus.heavenlykey.org",
+      "page_url": "https://socialplus.heavenlykey.org"
     }
   ]
 }
