@@ -89,7 +89,7 @@ async function route(request:Request,env:Env,ctx?:ExecutionContext):Promise<Resp
   if(p==="/api/auth/login"&&m==="POST"){
     const b=await body(request),email=cleanEmail(b.email),password=String(b.password||"");
     if(password.length>256||Array.from(password).length>128||!validEmail(email))return error("Email or password is incorrect.",401);
-    if(!await rate(env,"login-source:"+await sourceKey(request),40,900))return error("Too many attempts. Please wait.",429);
+    // The early per-source limiter already protects shared network traffic; avoid charging each login twice.
     if(!await rate(env,"login:"+email,12,900))return error("Too many attempts. Please wait before trying again.",429);
     const row=await env.DB.prepare("SELECT user_id,password_hash,password_salt,role,status,session_version FROM users WHERE email=?").bind(email).first<any>();
     if(!row||!["active","restricted"].includes(row.status)||!await verifyPassword(password,row.password_salt,row.password_hash,env.PASSWORD_PEPPER))return error("Email or password is incorrect.",401);
