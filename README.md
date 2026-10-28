@@ -12,4 +12,6 @@ Use the [official account registry](HEAVENLY-KEY-ACCOUNT-REGISTRY.md) and [accou
 
 ### Account 8 — Heavenly Key MeetingSpace
 
-Open [Account 8](heavenly-key-accounts/account-08-heavenly-key-meetingspace/README.md) for its source, website, Worker, deployment workflow and test links. The complete meeting app is maintained in [zoom-studio/](zoom-studio/README.md). It is already in this repository; no separate meeting repository is required. Account 7 is Radio.
+Open [Account 8](heavenly-key-accounts/account-08-heavenly-key-meetingspace/README.md) for its source, website, Worker, deployment workflow and test links. The complete meeting app is maintained in [Account 8 / source](heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/README.md). It is already in this repository; no separate meeting repository is required. Account 7 is Radio.
+
+From the repository root, run `npm run test:meetings` to test MeetingSpace, `npm run build:meetings` to package it, or `npm run deploy:meetings` in an authorized deployment environment. All three commands use the Account 8 source folder.

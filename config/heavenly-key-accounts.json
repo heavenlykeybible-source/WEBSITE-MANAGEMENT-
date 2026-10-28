@@ -46,7 +46,7 @@
       "ai_target_url": "https://meeting.heavenlykey.org",
       "page_url": "https://meeting.heavenlykey.org",
       "folder": "heavenly-key-accounts/account-08-heavenly-key-meetingspace",
-      "source": "zoom-studio",
+      "source": "heavenly-key-accounts/account-08-heavenly-key-meetingspace/source",
       "worker": "heavenly-key-meetingspace",
       "deployment_workflow": ".github/workflows/zoom-studio.yml"
     },

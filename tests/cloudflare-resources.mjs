@@ -99,17 +99,18 @@ try{
   const before=writes.length;await assert.rejects(deployWorker(e.env,1,'meeting-app','export default {}',[{type:'r2_bucket',name:'OLDDB',bucket_name:'meeting-files'}]),x=>x.status===409);assert.equal(writes.length,before);
  });
  await test('generated Worker secrets stay encrypted, survive redeploy and support owner-only meeting launch',async()=>{
-  oldSettings=null;await deployWorker(e.env,1,'heavenly-key-zoom-studio','export default {}',[{type:'generated_secret',name:'AUTH_SECRET'}]);
+  oldSettings=null;await deployWorker(e.env,1,'heavenly-key-meetingspace','export default {}',[{type:'generated_secret',name:'AUTH_SECRET'}]);
   const upload=writes.findLast(x=>x.init.method==='PUT');
   const meta=JSON.parse(await upload.init.body.get('metadata').text()),secret=meta.bindings.find(x=>x.name==='AUTH_SECRET').text;
   assert.match(secret,/^[a-f0-9]{64}$/);
   const record=e.raw.prepare("SELECT value_json FROM settings WHERE key LIKE 'worker-secret:%'").get().value_json;
   assert.ok(!record.includes(secret));assert.ok(!JSON.stringify(e.raw.prepare('SELECT * FROM audit_log').all()).includes(secret));
   oldSettings={bindings:[{type:'secret_text',name:'AUTH_SECRET'}],compatibility_date:'2026-01-01'};
-  await deployWorker(e.env,1,'heavenly-key-zoom-studio','export default {}',[{type:'generated_secret',name:'AUTH_SECRET'}]);
+  await deployWorker(e.env,1,'heavenly-key-meetingspace','export default {}',[{type:'generated_secret',name:'AUTH_SECRET'}]);
   assert.deepEqual(JSON.parse(await writes.at(-1).init.body.get('metadata').text()).bindings,[{type:'inherit',name:'AUTH_SECRET'}]);
   const launch=await(await e.call('connections/1/meeting-launch','POST',{})).json();
-  assert.equal(launch.url,'https://heavenly-key-zoom-studio.account-seven.workers.dev/api/control-login');assert.ok(launch.ticket);assert.ok(!JSON.stringify(launch).includes(secret));
+  assert.equal(launch.url,'https://heavenly-key-meetingspace.account-seven.workers.dev/api/control-login');assert.ok(launch.ticket);assert.ok(!JSON.stringify(launch).includes(secret));
+  await assert.rejects(e.call('connections/1/meeting-launch','POST',{worker:'arbitrary-worker'}),x=>x.status===400);
   const claims=JSON.parse(Buffer.from(launch.ticket.split('.')[0],'base64url'));assert.equal(claims.e,'owner@studio.local');assert.equal(claims.k,'control-owner');assert.ok(claims.exp<=Date.now()+60000);
   const url=new URL('https://room');await assert.rejects(ownerApi(new Request(url,{method:'POST',body:'{}'}),e.env,{...e.user,role:'admin'},'connections/1/meeting-launch','POST',url),x=>x.status===403);
  });

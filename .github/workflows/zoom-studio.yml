@@ -1,11 +1,15 @@
-name: Zoom Studio checks and deployment
+name: Account 8 MeetingSpace checks and deployment
 on:
   push:
-    paths: ['zoom-studio/**', 'scripts/existing-worker-release.mjs', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
+    paths: ['heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/**', 'scripts/existing-worker-release.mjs', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
   pull_request:
-    paths: ['zoom-studio/**', 'scripts/existing-worker-release.mjs', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
+    paths: ['heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/**', 'scripts/existing-worker-release.mjs', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
   workflow_dispatch:
     inputs:
+      approved_commit:
+        description: Exact approved main-branch commit SHA to deploy
+        required: true
+        type: string
       deploy:
         description: 'Deploy Account 8 MeetingSpace to its confirmed dedicated Cloudflare Worker'
         type: boolean
@@ -26,7 +30,7 @@ jobs:
       - name: Verify existing Control Room
         run: node tests/run.mjs
       - name: Verify Zoom Studio
-        run: npm test --prefix zoom-studio
+        run: npm test --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source
   deploy:
     if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
     needs: checks
@@ -37,6 +41,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Verify exact approved main revision
+        env:
+          APPROVED_COMMIT: ${{ inputs.approved_commit }}
+        run: |
+          test "$APPROVED_COMMIT" = "$(git rev-parse HEAD)" || { echo "::error::Approved commit must match the current main revision"; exit 1; }
+      - name: Check public release notices
+        working-directory: heavenly-key-accounts/account-08-heavenly-key-meetingspace/source
+        run: node scripts/legal-preflight.mjs
       - name: Verify Account 8 deployment authorization
         env:
           MEETINGSPACE_TOKEN: ${{ secrets.MEETINGSPACE_ACCOUNT8_API_TOKEN }}
@@ -46,14 +58,16 @@ jobs:
             exit 1
           fi
       - name: Deploy the dedicated studio
-        working-directory: zoom-studio
+        working-directory: heavenly-key-accounts/account-08-heavenly-key-meetingspace/source
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.MEETINGSPACE_ACCOUNT8_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: '6401a8f41a41f5325ba5bd4d006b4ff5'
           MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID: '6401a8f41a41f5325ba5bd4d006b4ff5'
           STUDIO_D1_DATABASE_ID: 'f47b2e3f-f937-4d6e-8891-f08d8bc4f6b8'
           MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED: '1'
-          MEETINGSPACE_PRIVATE_PREVIEW: '1'
+          MEETINGSPACE_PRIVATE_PREVIEW: '0'
+          MEETINGSPACE_PRODUCTION_APPROVED: '1'
+          MEETINGSPACE_APPROVED_COMMIT: ${{ inputs.approved_commit }}
           MEETINGSPACE_SHARED_CLOUDFLARE_ACCOUNT: '1'
           MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN: 'https://meeting.heavenlykey.org'
         run: npm run deploy

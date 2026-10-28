@@ -7,7 +7,7 @@ import {gzipSync} from 'node:zlib';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const code=fs.readFileSync(path.join(root,'build/meeting-worker.mjs'));
 const manifest={sha256:createHash('sha256').update(code).digest('hex'),bytes:code.length,data:gzipSync(code,{level:9}).toString('base64')};
-const target=path.join(root,'../control-room-worker.js');
+const target=path.join(root,'../../../control-room-worker.js');
 const begin='// BEGIN REVIEWED MEETING PACKAGE',end='// END REVIEWED MEETING PACKAGE';
 let source=fs.readFileSync(target,'utf8');
 if(source.includes(begin))source=source.slice(0,source.indexOf(begin))+source.slice(source.indexOf(end)+end.length).replace(/^\n/,'');

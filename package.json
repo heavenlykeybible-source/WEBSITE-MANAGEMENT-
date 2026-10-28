@@ -6,7 +6,10 @@
     "build:cms": "node cms/build.mjs",
     "test": "node tests/run.mjs",
     "test:cms-dom": "node tests/cms-dom.mjs",
-    "test:cms-browser": "node tests/cms-browser.mjs"
+    "test:cms-browser": "node tests/cms-browser.mjs",
+    "test:meetings": "npm test --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source",
+    "build:meetings": "npm run bundle:control-room --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source",
+    "deploy:meetings": "npm run deploy --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source"
   },
   "devDependencies": {
     "@simplewebauthn/server": "13.2.2",

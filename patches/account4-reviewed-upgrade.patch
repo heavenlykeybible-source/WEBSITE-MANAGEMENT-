@@ -1,5 +1,5 @@
 diff --git a/control-room-worker.js b/control-room-worker.js
-index 452c1397..33ba0c29 100644
+index 452c139..a5c727a 100644
 --- a/control-room-worker.js
 +++ b/control-room-worker.js
 @@ -26,6 +26,27 @@ async function mcpOwnerReview(req,env,agent,args,id){
@@ -139,7 +139,22 @@ index 452c1397..33ba0c29 100644
    const domains=await domainWorkspaceRoutes(req,env,user,sub,m);if(domains)return domains;
    const cms = await cmsRoutes(req,env,user,sub,m,u);if(cms)return cms;
    const projects = await projectRoutes(req, env, user, sub, m);
-@@ -3051,12 +3117,15 @@ async function signup(req, env) {
+@@ -2258,10 +2324,11 @@ async function ownerApiUnlocked(req, env, user, sub, m, u) {
+   }
+   if (m === 'POST' && (x = sub.match(/^connections\/(\d+)\/meeting-launch$/))) {
+     if (user.kind !== 'staff' || user.role !== 'owner') fail('Only the owner can open this app as owner.',403);
+-    const c = await connById(env,x[1]), name='heavenly-key-zoom-studio';
+-    if (c.account_id !== '6401a8f41a41f5325ba5bd4d006b4ff5') fail('This launch belongs to Account 7 only.',403);
++    const c = await connById(env,x[1]), input=await body(req), name=input.worker||'heavenly-key-meetingspace';
++    if(!['heavenly-key-meetingspace','heavenly-key-zoom-studio'].includes(name))fail('Unknown meeting Worker.',400);
++    if (c.account_id !== '6401a8f41a41f5325ba5bd4d006b4ff5') fail('This launch requires the verified MeetingSpace Cloudflare account.',403);
+     const saved = await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('worker-secret:' + c.id + ':' + name + ':AUTH_SECRET').first();
+-    if (!saved) fail('Deploy the meeting app with a generated AUTH_SECRET first.',409);
++    if (!saved) fail('Owner launch is not linked for this meeting Worker. Use its normal sign-in; preserve its existing AUTH_SECRET when linking owner access.',409);
+     const d = await cf(env,c,'GET','/workers/subdomain'), subdomain=d.result?.subdomain;
+     if (!/^[a-z0-9][a-z0-9-]{0,62}$/.test(subdomain || '')) fail('Cloudflare did not return a usable Workers subdomain.',502);
+     const key = await unseal(env,JSON.parse(saved.value_json).sealed);
+@@ -3051,12 +3118,15 @@ async function signup(req, env) {
  
  // BEGIN AI WORKSPACE
  async function requestAIWorkspaceAccess(env,actor,args){
@@ -156,7 +171,7 @@ index 452c1397..33ba0c29 100644
   const id=crypto.randomUUID(),request={id,user:user.id,agent:actor.agentId,accounts,connections:policy.connections,hours:Number(args.hours||24),reason,conversation:actor.chatConversationId||'',expires:Date.now()+3600000,status:'pending'};
   await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('ai:access-request:'+id,JSON.stringify(request)).run();
   return {permission_request:request,message:'Awaiting the owner Approve or Decline choice in chat. No access has been granted. Do not repeat this request or claim the action was completed.'};
-@@ -3078,7 +3147,7 @@ async function aiWorkspaceRoutes(req,env,user,sub,m){
+@@ -3078,7 +3148,7 @@ async function aiWorkspaceRoutes(req,env,user,sub,m){
     const key='ai:access-request:'+b.id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('Request not found',404);const r=JSON.parse(row.value_json);if(r.user!==user.id||r.status!=='pending'||r.expires<Date.now())fail('This request expired or was already decided.',409);
     if(b.decision==='approve'){
      await reauthenticate(env,user,b.password);const old=await aiPolicy(env,user);const connections=[...new Set([...(old.expires_at>Date.now()?old.connections:[]),...r.connections])];for(const id of connections)await connById(env,id);
@@ -165,7 +180,7 @@ index 452c1397..33ba0c29 100644
      await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind('ai:permissions:'+user.id,JSON.stringify(policy)).run();
     }
     r.status=b.decision;r.decided_at=Date.now();await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(r),key).run();await audit(env,user.username,'ai-access-'+b.decision,r.accounts.map(c=>c.label).join(', '));return json({ok:true,decision:b.decision});
-@@ -3106,7 +3175,12 @@ const AI_EXTRA_TOOLS=[
+@@ -3106,7 +3176,12 @@ const AI_EXTRA_TOOLS=[
  ];
  function defaultAIPolicy(){return {mode:'work',max_tools:12,connections:[],expires_at:0};}
  async function aiPolicy(env,user){const r=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('ai:permissions:'+user.id).first();return r?{...defaultAIPolicy(),...JSON.parse(r.value_json)}:defaultAIPolicy();}
@@ -179,7 +194,7 @@ index 452c1397..33ba0c29 100644
  async function aiPermissionRoutes(req,env,user,sub,m){if(sub!=='ai/permissions')return null;if(user.kind==='member'||user.role!=='owner')fail('Owner access required',403);if(m==='GET')return json({policy:await aiPolicy(env,user),connections:(await env.DB.prepare('SELECT id,label,account_id FROM cf_connections ORDER BY label').all()).results});if(m==='POST'){const b=await body(req),p=cleanAIPolicy(b);await reauthenticate(env,user,b.password);for(const id of p.connections)await connById(env,id);await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind('ai:permissions:'+user.id,JSON.stringify(p)).run();await audit(env,user.username,'ai-permissions',p.mode+'; steps '+p.max_tools+'; accounts '+p.connections.join(',')+'; expires '+p.expires_at);return json({ok:true,policy:p});}fail('Method not allowed',405);}
  function aiToolEnabled(policy,name){if(policy.mode==='chat')return false;if(policy.mode==='read'&&!/^(list_|read_|get_|find_|my_proposals$)/.test(name))return false;if(AI_INFRA_WRITES.has(name)&&(!policy.connections.length||policy.expires_at<=Date.now()))return false;return true;}
  async function checkAIToolPermission(env,actor,name,args){if(!actor.aiPolicy)return;const p=actor.aiPolicy;if(!aiToolEnabled(p,name))fail('This action is disabled by the owner AI permissions',403);if(AI_INFRA_WRITES.has(name)){const c=/^[0-9]+$/.test(String(args.connection||''))?await connById(env,args.connection):await env.DB.prepare('SELECT * FROM cf_connections WHERE label=?').bind(String(args.connection||'')).first();if(!c)fail('Connection not found',404);if(!p.connections.includes(c.id))fail('The owner has not authorized this Cloudflare account. Request the exact account with request_workspace_access; the owner can approve inside this chat.',403);}}
-@@ -3432,10 +3506,12 @@ async function mcp(req, env) {
+@@ -3432,10 +3507,12 @@ async function mcp(req, env) {
    const ok = r => json({ jsonrpc: '2.0', id, result: r });
    if (msg.method === 'initialize') { const session=await mcpReviewInitialize(env,a,msg.params?.capabilities);const response=ok({ protocolVersion: (msg.params && msg.params.protocolVersion) || '2025-03-26', capabilities: { tools: {} }, serverInfo: { name: 'control-room', version: '2.1' } });if(session)response.headers.set('Mcp-Session-Id',session);return response; }
    if (msg.method === 'ping') return ok({});
@@ -193,7 +208,7 @@ index 452c1397..33ba0c29 100644
        if(p.name==='request_owner_review')return await mcpOwnerReview(req,env,a,p.arguments||{},id);
        const data = await toolCall(env, { kind: 'agent', agentId: a.id, a }, p.name, p.arguments || {});
        return ok({ content: [{ type: 'text', text: typeof data === 'string' ? data : JSON.stringify(data) }] });
-@@ -3757,7 +3833,7 @@ async function websiteScreens(){CURRENT_NAV='Website screens';try{
+@@ -3757,7 +3834,7 @@ async function websiteScreens(){CURRENT_NAV='Website screens';try{
  async function appsCenter(){try{
   var data=await api('connections'),selection=h('select',{'aria-label':'Apps account connection'}),status=h('p',{role:'status'}),cards=h('div');
   data.connections.forEach(function(c){selection.appendChild(h('option',{value:c.id},c.label));});
@@ -202,7 +217,30 @@ index 452c1397..33ba0c29 100644
   async function inspect(){cards.innerHTML='';status.textContent='Verifying the Apps account…';try{
    var c=data.connections.find(function(x){return String(x.id)===selection.value;}),result=await api('connections/'+c.id+'/workers');
    var directory=result.workers.find(function(x){return x.name==='heavenly-key-app'&&x.url==='https://heavenly-key-app.heavenlykeyapp.workers.dev/';});
-@@ -3809,7 +3885,9 @@ async function verifyOwnerDevice(){if(!window.isSecureContext||!navigator.creden
+@@ -3781,9 +3858,10 @@ async function openMeetingStudioOwner(){
+   try{
+     if(!own())throw Error('Owner access required');
+     var d=await api('connections'),items=d.connections||[];
+-    var conn=items.find(function(x){return x.account_id==='6401a8f41a41f5325ba5bd4d006b4ff5';});
+-    if(!conn)throw Error('Meeting Studio account is not connected');
+-    var r=await api('connections/'+conn.id+'/meeting-launch','POST',{});
++    var candidates=items.filter(function(x){return x.account_id==='6401a8f41a41f5325ba5bd4d006b4ff5';}),named=candidates.filter(function(x){return /account[ -]*8\\b/i.test(x.label||'');});
++    var conn=named.length===1?named[0]:candidates.length===1?candidates[0]:null;
++    if(!conn)throw Error('Account 8 MeetingSpace Cloudflare account is not connected');
++    var r=await api('connections/'+conn.id+'/meeting-launch','POST',{worker:'heavenly-key-meetingspace'});
+     const launchUrl=new URL(r.url||'');
+     if(launchUrl.protocol!=='https:'||!/^[a-z0-9.-]+$/.test(launchUrl.hostname)||launchUrl.pathname!=='/api/control-login'||launchUrl.username||launchUrl.password||launchUrl.port||launchUrl.search||launchUrl.hash||!r.ticket)throw Error('Invalid Studio launch response');
+     var form=h('form',{method:'POST',action:r.url,target:'_blank'});
+@@ -3795,7 +3873,7 @@ function nav(){var M=ME.kind==='member',n=h('nav',{class:'sidenav','aria-label':
+ function group(t){n.appendChild(h('div',{class:'nav-heading'},t));}
+ function item(label,icon,fn,id){var a={class:CURRENT_NAV===label?'active':'',onclick:function(){CURRENT_NAV=label;fn();}};if(id)a.id=id;n.appendChild(h('button',a,h('span',{class:'nav-icon','aria-hidden':'true'},icon),h('span',{},label==='Waiting'?'Waiting ('+WAITN+')':label)));}
+ group('Workspace');item('Home','⌂',controlHome);if(own()){item('Browser agent','↗',browserCenter);item('Domains and subdomains','◎',domainCenter);}if(!M&&lv()>=4)item('Website screens','▣',websiteScreens);item('Waiting','◷',waiting,'wb');if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
+-if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);if(!M&&lv()>=4){item('Import and preview','⇧',nativeImports);item('Verification','✓',verificationCenter);}group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M)item('Connect ChatGPT','↔',connectChatGPT);if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4){item('Apps','▦',appsCenter);item('Cloudflare','☁',cloud);}if(own())item('Meeting Studio','◈',openMeetingStudioOwner);
++if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);if(!M&&lv()>=4){item('Import and preview','⇧',nativeImports);item('Verification','✓',verificationCenter);}group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M)item('Connect ChatGPT','↔',connectChatGPT);if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4){item('Apps','▦',appsCenter);item('Cloudflare','☁',cloud);}if(own())item('MeetingSpace · Account 8','◈',openMeetingStudioOwner);
+ group('Administration');if(!M&&lv()>=4)item('System checks','✓',systemChecks);if(!M&&lv()>=3){item('Team','♧',users);item('Log','≡',logTab);}item('Account','○',account);item('Sign out','↪',logout);return n;}
+ function lagosTime(value){if(!value)return 'Not recorded';var v=typeof value==='number'?value:String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
+ async function systemChecks(){try{var data=await api('system/checks'),list=h('div'),status=h('p',{class:'tag',role:'status'},'');data.checks.forEach(function(c){list.appendChild(h('div',{class:'card'},h('b',{},(c.passed?'✓ ':'! ')+c.name),h('p',{class:'tag'},c.detail)));});show(nav(),h('div',{class:'eyebrow'},'System health'),h('h3',{class:'page-title'},'Connection & storage checks'),h('p',{class:'page-intro'},'These checks test this installation. Real WordPress, Blogger, GitHub and external AI connections need their own Check or Test action after you connect an account.'),list,h('p',{},'Managed sites: '+data.counts.static_sites+' · GitHub connections: '+data.counts.github_sites+' · Ready blogs: '+data.counts.blogs+' · Waiting: '+data.counts.waiting),h('button',{onclick:async function(){status.textContent='Testing a temporary storage object…';try{var r=await api('system/checks','POST',{action:'storage'});status.textContent=r.detail;}catch(e){status.textContent=e.message;}}},'Test file storage'),h('button',{class:'sm',onclick:aiAccounts},'Test AI'),status,h('p',{class:'tag'},'Build '+data.version));}catch(e){oops(e);}}
+@@ -3809,7 +3887,9 @@ async function verifyOwnerDevice(){if(!window.isSecureContext||!navigator.creden
  async function registerOwnerDevice(){var password=await passwordDialog('Confirm your password to register this device',true);if(!password)return false;var request_id=crypto.randomUUID(),options=await api('passkeys/register/options','POST',{password:password,request_id:request_id});options.challenge=passkeyDecode(options.challenge);options.user.id=passkeyDecode(options.user.id);options.excludeCredentials=(options.excludeCredentials||[]).map(function(c){return Object.assign({},c,{id:passkeyDecode(c.id)});});var credential=await navigator.credentials.create({publicKey:options});if(!credential)throw Error('Device registration cancelled');var result=await api('passkeys/register/verify','POST',{request_id:request_id,credential:passkeyJSON(credential),label:'Owner device'});if(result.verified!==true)throw Error('Device was not registered.');return true;}
  
  // END OWNER PASSKEY CLIENT
@@ -213,7 +251,7 @@ index 452c1397..33ba0c29 100644
  async function releaseHistory(){try{var d=await api('releases'),box=h('div');if(!d.releases.length)box.appendChild(h('p',{},'No proposal publications recorded yet.'));
    d.releases.forEach(function(r){var card=h('div',{class:'card'},h('b',{},r.title),h('p',{class:'tag'},r.kind+' · '+r.status+' · '+lagosTime(r.created_at)),h('p',{class:'tag'},'Version '+r.candidate_hash.slice(0,16)));if(r.error)card.appendChild(h('p',{},r.error));
      if(own()&&r.recoverable)card.appendChild(h('button',{class:'bad',onclick:async function(){if(!confirm('Create a recovery proposal for review?'))return;var pw=await passwordDialog('Confirm recovery');if(!pw)return;try{var result=await api('releases/'+r.id+'/restore','POST',{password:pw});if(result.proposal_id)openP(result.proposal_id);else releaseHistory();}catch(e){oops(e);}}},'Prepare recovery proposal'));
-@@ -3833,7 +3911,7 @@ function resetScreen(token){var p1=h('input',{type:'password',placeholder:'New p
+@@ -3833,7 +3913,7 @@ function resetScreen(token){var p1=h('input',{type:'password',placeholder:'New p
    show(h('p',{},'Choose your password'),h('p',{class:'tag'},'Use 10 or more characters. Capitals and symbols are optional.'),passwordField(p1),passwordField(p2),h('button',{onclick:function(){if(p1.value!==p2.value)return alert('The two passwords do not match');
      post('/api/reset',{token:token,password:p1.value}).then(function(){history.replaceState(null,'','/');alert('Password saved. Please sign in.');login();}).catch(oops);}},'Save password'));}
  function logout(){CHAT=[];CHAT_FILES=[];fetch('/api/logout',{method:'POST'}).then(login);}
@@ -222,7 +260,7 @@ index 452c1397..33ba0c29 100644
  async function waiting(st){st=typeof st==='string'?st:'waiting';CURRENT_NAV='Waiting';
  try{var d=await api('proposals?status='+st),box=h('tbody',{}),queueTable=h('table',{class:'queue-table'},h('thead',{},h('tr',{},h('th',{},'Account / website · Work · Arrival time · Status'))),box);
  if(!d.proposals.length)box.appendChild(h('tr',{},h('td',{},h('div',{class:'empty-state'},h('div',{class:'empty-icon'},'◇'),h('h4',{},st==='waiting'?'Your review room is clear':'No work in this view'),h('p',{class:'tag'},'New AI proposals and submitted uploads will arrive here, ready for your review.'),h('button',{onclick:function(){CURRENT_NAV='Assistant';claude();}},'✦ Start with the assistant')))));
-@@ -3846,7 +3924,7 @@ if(p.kind==='page')content=view(r.after);else if(p.kind==='design')content=dprev
+@@ -3846,7 +3926,7 @@ if(p.kind==='page')content=view(r.after);else if(p.kind==='design')content=dprev
  preview.appendChild(h('div',{class:'preview-shell'},h('div',{class:'preview-heading'},h('span',{},p.kind==='worker'?'Worker deployment review (not a live preview)':p.kind==='cloudflare_resource'?'Resource creation review':'Visual website preview'),h('span',{},'P-'+p.id+' · Not live')),h('div',{class:'preview-content'},content)));
  }catch(e){preview.textContent=e.message;loaded=false;}});box.appendChild(h('tr',{},h('td',{},row)));});
  var filters=h('div',{class:'filters'});['waiting','approved','rejected','changes_requested','uncertain'].forEach(function(x){filters.appendChild(h('button',{class:st===x?'selected':'sm',onclick:function(){waiting(x);}},x==='changes_requested'?'Changes requested':x.charAt(0).toUpperCase()+x.slice(1)));});
@@ -231,7 +269,7 @@ index 452c1397..33ba0c29 100644
  }catch(e){oops(e);}}
  function proposalDecisionMessage(kind,result){
   if(result.status==='rejected')return 'Proposal declined. Nothing was published.';
-@@ -3870,7 +3948,7 @@ async function openP(id,inChat){try{var d=await api('proposals/'+id);var P=d.pro
+@@ -3870,7 +3950,7 @@ async function openP(id,inChat){try{var d=await api('proposals/'+id);var P=d.pro
    var staged=null,stageError='';var password=h('input',{type:'password',autocomplete:'current-password',placeholder:'Your current password to approve'}),reviewed=h('input',{type:'checkbox',style:'width:auto;margin-right:8px'});
    if(P.status==='waiting'&&own()){try{staged=await api('proposals/'+id+'/stage','POST',{});if(P.kind==='page')d.before=JSON.parse(staged.before.content_json);if(P.kind==='design')d.before=staged.before;if(P.kind==='remote'&&staged.before)d.remote.before=staged.before;}catch(e){stageError=e.message;}}
  
@@ -240,7 +278,7 @@ index 452c1397..33ba0c29 100644
    var kids=[nav(),h('h3',{},P.title),h('div',{class:'tag'},P.kind+' \\u2022 '+P.agent+' \\u2022 '+(P.site||P.slug||'')),h('p',{},P.note||''),h('p',{class:'tag'},'Version '+(P.version||'P-'+P.id)+' · Submitted '+lagosTime(P.created_at)+' · Africa/Lagos')];
    if(P.owner_comment)kids.push(h('p',{class:'tag'},'Comment: '+P.owner_comment));
    if(P.kind==='page'){if(d.page_metadata&&d.page_metadata.page_title!==undefined)kids.push(h('p',{},'Proposed page title: '+d.page_metadata.page_title+' · Status after approval: '+d.page_metadata.page_status));kids.push(h('b',{},'Before'),view(d.before),h('b',{},'After (proposed)'),view(d.after));}
-@@ -3892,7 +3970,7 @@ async function openP(id,inChat){try{var d=await api('proposals/'+id);var P=d.pro
+@@ -3892,7 +3972,7 @@ async function openP(id,inChat){try{var d=await api('proposals/'+id);var P=d.pro
    else if(P.kind==='cloudflare_resource'){kids.push(h('p',{},'Create '+d.resource.kind.toUpperCase()+' '+d.resource.name+' on '+d.resource.connection),h('p',{},'Account '+d.resource.account_id),h('p',{class:'tag'},'Creates an empty resource. Existing databases, buckets and data are preserved.'));}
    else{kids.push(h('pre',{},JSON.stringify(d.worker.bindings||[],null,2)),h('p',{},'Deploy Worker "'+d.worker.name+'" to '+d.worker.connection),h('b',{},'Code to be deployed'),h('pre',{},d.worker.code));}
    if(P.status==='waiting'&&own()){
@@ -249,7 +287,16 @@ index 452c1397..33ba0c29 100644
      else kids.push(h('p',{},'Staging blocked: '+stageError));
      kids.push(h('button',{class:'sm',onclick:async function(){try{password.value=await verifyOwnerDevice();this.textContent='Device verified';}catch(e){oops(e);}}},'Verify with Face ID / passkey'),c,h('button',{onclick:decide('approve')},'Approve this version'),h('button',{class:'sm',onclick:decide('changes')},'Request changes'),h('button',{class:'bad',onclick:decide('reject')},'Decline'));
    }
-@@ -4201,10 +4279,12 @@ async function aiPermissions(){try{
+@@ -4017,7 +4097,7 @@ h('button',{class:'bad',onclick:async function(){try{var pw=await passwordDialog
+ }catch(e){oops(e);}}
+ async function listWorkers(c,w){try{var d=await api('connections/'+c.id+'/workers');w.innerHTML='';
+   if(!d.workers.length)w.appendChild(h('p',{class:'tag'},'No Workers.'));
+-  d.workers.forEach(function(x){w.appendChild(h('div',{class:'tag'},x.name+' · '+x.modified));if(x.url)w.appendChild(h('a',{href:x.url,target:'_blank',rel:'noopener',class:'btn sm'},'Open website'));if(x.name==='heavenly-key-zoom-studio'&&c.account_id==='6401a8f41a41f5325ba5bd4d006b4ff5'&&ME.role==='owner')w.appendChild(h('button',{onclick:async function(){try{var r=await api('connections/'+c.id+'/meeting-launch','POST',{}),form=h('form',{method:'POST',action:r.url,target:'_blank'}),ticket=h('input',{type:'hidden',name:'ticket',value:r.ticket});form.appendChild(ticket);document.body.appendChild(form);form.submit();form.remove();}catch(e){oops(e);}}},'Open meeting app as owner'));});}catch(e){oops(e);}}
++  d.workers.forEach(function(x){w.appendChild(h('div',{class:'tag'},x.name+' · '+x.modified));if(x.url)w.appendChild(h('a',{href:x.url,target:'_blank',rel:'noopener',class:'btn sm'},'Open website'));if(['heavenly-key-meetingspace','heavenly-key-zoom-studio'].includes(x.name)&&c.account_id==='6401a8f41a41f5325ba5bd4d006b4ff5'&&ME.role==='owner')w.appendChild(h('button',{onclick:async function(){try{var r=await api('connections/'+c.id+'/meeting-launch','POST',{worker:x.name}),form=h('form',{method:'POST',action:r.url,target:'_blank'}),ticket=h('input',{type:'hidden',name:'ticket',value:r.ticket});form.appendChild(ticket);document.body.appendChild(form);form.submit();form.remove();}catch(e){oops(e);}}},'Open meeting app as owner'));});}catch(e){oops(e);}}
+ async function resourceForm(c,kind,page,cursor){kind=kind||'d1';page=page||1;try{
+   var out=h('div'),status=h('p',{class:'tag',role:'status'},'');
+   try{var d=await api('connections/'+c.id+'/resources?kind='+kind+'&page='+page+(cursor?'&cursor='+encodeURIComponent(cursor):''));
+@@ -4201,10 +4281,12 @@ async function aiPermissions(){try{
   var remaining=Math.max(1,Math.min(720,Math.ceil((p.expires_at-Date.now())/3600000))),choices=[1,24,168,720];if(p.expires_at>Date.now()&&!choices.includes(remaining))choices.push(remaining);choices.sort(function(a,b){return a-b;}).forEach(function(hours){var o=h('option',{value:hours},hours===168?'7 days':hours===720?'30 days':hours+' hours');o.selected=hours===(p.expires_at>Date.now()?remaining:24);duration.appendChild(o);});
   d.connections.forEach(function(c){var cb=h('input',{type:'checkbox','aria-label':c.label});cb.checked=selected.has(c.id);cb.onchange=function(){if(cb.checked)selected.add(c.id);else selected.delete(c.id);};accounts.appendChild(h('label',{class:'permission-account'},cb,h('span',{},c.label)));});
   if(!d.connections.length)accounts.appendChild(h('p',{},'No Cloudflare accounts are connected. Add an existing account under Cloudflare connections.'));
@@ -264,7 +311,7 @@ index 452c1397..33ba0c29 100644
   }catch(e){oops(e);}}
  
  // END AI PERMISSION CLIENT
-@@ -4221,11 +4301,13 @@ async function nativeImports(){try{
+@@ -4221,11 +4303,13 @@ async function nativeImports(){try{
   show(nav(),h('main',{class:'card'},h('h3',{},'Import, scan and preview'),data.sources.length?null:h('section',{class:'card'},h('p',{},'No GitHub repository is connected to this Control Room yet. Your ChatGPT GitHub connection is separate. ZIP uploads below do not require GitHub.'),h('button',{onclick:github},'Connect a GitHub repository')),h('p',{},'Use connected repositories without a dashboard sign-in for each task. Select a complete built website or bundled Worker. Multi-file backend projects require a build; files are never silently deployed as a partial application.'),h('label',{},'1. Source repository'),source,h('label',{},'2. Exact project'),project,scanButton,report,h('label',{},'3. Destination'),dest,worker,h('p',{class:'tag'},'Websites use their existing managed content hosting. Bundled Workers target the exact selected Cloudflare account and Worker. This does not move databases or credentials.'),stage,status,preview,h('h4',{},'Upload from phone or computer'),h('p',{},'Use a built website ZIP up to 25 MB. Choose its managed site below.'),...data.sites.map(function(s){return h('div',{class:'card'},h('h4',{},s.name),packageForm(s));})));
   }catch(e){oops(e);}}
  var PROVIDER_SEEN={},PROVIDER_POLL=null;
@@ -279,7 +326,7 @@ index 452c1397..33ba0c29 100644
  async function browserCenter(){
   var mount=h('div'),status=h('p',{role:'status'}),goal=h('input',{placeholder:'Task, for example: prepare a sign-up form','aria-label':'Browser task goal'}),hosts=h('input',{placeholder:'example.com, accounts.example.com','aria-label':'Approved browser hosts'}),shot=h('div');
   function result(r){shot.innerHTML='';if(r.screenshot)shot.appendChild(h('img',{src:'data:image/jpeg;base64,'+r.screenshot,alt:'Private browser screenshot with input fields masked',style:'max-width:100%;border-radius:8px'}));}
-@@ -4245,8 +4327,11 @@ async function browserCenter(){
+@@ -4245,8 +4329,11 @@ async function browserCenter(){
  async function domainCenter(){
   var selection=h('select',{'aria-label':'Main-domain Cloudflare account'}),status=h('p',{role:'status'}),report=h('div');
   show(nav(),h('main',{class:'card'},h('h3',{},'Domains and subdomains'),h('p',{},'Use the main-domain account saved in this Control Room. This first check reads the zone, DNS and Worker mappings without opening the Cloudflare dashboard.'),selection,h('button',{onclick:async function(){this.disabled=true;report.innerHTML='';status.textContent='Checking saved zone and DNS permissions…';try{var data=await api('domains/inspect?connection='+encodeURIComponent(selection.value));status.textContent=data.notice;report.appendChild(h('p',{},data.label+' · '+data.zone.name+' · '+data.zone.status));data.hosts.forEach(function(host){var card=h('section',{class:'card'},h('h4',{},host.hostname));card.appendChild(h('p',{},host.records.length?host.records.map(function(r){return r.type+' → '+r.content+' · '+(r.proxied?'Proxied':'DNS only');}).join('; '):'No A, AAAA or CNAME record found.'));card.appendChild(h('p',{},host.workers.length?host.workers.map(function(w){return 'Worker: '+w.service+' · '+(w.enabled?'enabled':'disabled');}).join('; '):'No custom Worker domain found on this account.'));report.appendChild(card);});if(data.routing_notice)report.appendChild(h('p',{},data.routing_notice));}catch(e){status.textContent=e.message;}finally{this.disabled=false;}}},'Check domain and subdomains'),status,report));

@@ -44,7 +44,7 @@ if(!releaseMatch)throw Error('MeetingSpace build identity missing: refusing unve
 releaseEnv.RELEASE_HEALTH_EXPECT=JSON.stringify({...expectedHealth,releaseId:JSON.parse(releaseMatch[1])});
 run([process.execPath,'scripts/configure.mjs']);
 run([process.execPath,'scripts/verify-deployment-identity.mjs']);
-run([process.execPath,'../scripts/existing-worker-release.mjs','snapshot'],snapshotEnv);
+run([process.execPath,'../../../scripts/existing-worker-release.mjs','snapshot'],snapshotEnv);
 let deployError;
 try {
   const remote=spawnSync('git',['ls-remote','--heads','origin','main'],{encoding:'utf8',shell:false,timeout:20000});
@@ -55,7 +55,7 @@ try {
 }
 catch(error) { deployError=error; }
 let verifyError;
-try { run([process.execPath,'../scripts/existing-worker-release.mjs','verify'],releaseEnv); }
+try { run([process.execPath,'../../../scripts/existing-worker-release.mjs','verify'],releaseEnv); }
 catch(error) { verifyError=error; }
 if(deployError){if(verifyError)console.error('Post-deployment verification also failed:',verifyError);throw deployError;}
 if(verifyError)throw verifyError;

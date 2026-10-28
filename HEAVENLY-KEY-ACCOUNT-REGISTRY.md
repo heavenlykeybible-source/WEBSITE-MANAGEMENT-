@@ -26,4 +26,4 @@ This is the approved account mapping. Account numbers refer to Heavenly Key proj
 
 ## Account 8 source and navigation
 
-MeetingSpace is already in this repository at [`zoom-studio/`](zoom-studio/README.md). The [Account 8 folder](heavenly-key-accounts/account-08-heavenly-key-meetingspace/README.md) is its permanent entry alongside the other accounts. The old `account-08-unverified` label is obsolete. The website is https://meeting.heavenlykey.org and the dedicated Worker is `heavenly-key-meetingspace`. Source identified does not mean production verified.
+MeetingSpace is already in this repository at [`Account 8 / source`](heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/README.md). The [Account 8 folder](heavenly-key-accounts/account-08-heavenly-key-meetingspace/README.md) is its permanent entry alongside the other accounts. The old `account-08-unverified` label is obsolete. The website is https://meeting.heavenlykey.org and the dedicated Worker is `heavenly-key-meetingspace`. Source identified does not mean production verified.

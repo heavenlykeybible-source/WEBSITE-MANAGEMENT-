@@ -56,3 +56,13 @@ assert.equal(meetingEntry.worker, meetings.worker);
 assert.equal(meetingEntry.deploymentWorkflow, meetings.deployment_workflow);
 assert.notEqual(meetingEntry.status, 'not-identified');
 console.log('PASS Account 8 source, account directory and deployment links resolve consistently');
+
+assert.equal(meetings.source, meetings.folder + '/source');
+assert.ok(!fs.existsSync('zoom-studio/package.json'), 'Do not keep a second deployable MeetingSpace copy at the old location');
+const scripts = JSON.parse(fs.readFileSync('package.json', 'utf8')).scripts;
+assert.ok(scripts['test:meetings'].endsWith(meetings.source));
+assert.ok(scripts['build:meetings'].endsWith(meetings.source));
+const workflow = fs.readFileSync(meetings.deployment_workflow, 'utf8');
+assert.ok(workflow.includes('working-directory: ' + meetings.source));
+assert.ok(workflow.includes("MEETINGSPACE_PRIVATE_PREVIEW: '0'"), 'Public hostname must use public release mode');
+assert.ok(workflow.includes('MEETINGSPACE_APPROVED_COMMIT: ${{ inputs.approved_commit }}'), 'Deployment must use exact approval input');

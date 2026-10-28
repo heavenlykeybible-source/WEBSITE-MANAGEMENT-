@@ -31,3 +31,11 @@ The existing source directory remains authoritative so relative imports, bundle 
 ## Status
 
 Discovery/navigation fixes saved in source; no production deployment performed. Live joining, camera, microphone, screen sharing, host controls and external broadcast services remain unverified. This audit covers MeetingSpace discovery and the inspected release paths, not every application in the repository.
+
+## Follow-up: source move and launch repairs
+
+The full application has now moved into `heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/`. CI paths, footer packaging, deployment helpers and registry locations were updated. The former `zoom-studio/` folder contains only a redirect README.
+
+The reviewed Control Room upgrade now defaults owner entry to the dedicated MeetingSpace Worker, prefers the named Account 8 connection when the tenant is shared, rejects ambiguous selection, and preserves explicit legacy Worker launch support. Unknown Worker names are rejected; existing encrypted owner-launch secrets are preserved. No production secret has been generated or rotated.
+
+The deployment workflow now accepts an exact approved main revision and uses public-release mode for the public hostname, matching its existing deployment script. Public release notices and TURN readiness remain mandatory. The real browser test could not start in this environment because Chromium is not installed; this is not a passing device/media test. The live browser again returned an upstream connection failure.
