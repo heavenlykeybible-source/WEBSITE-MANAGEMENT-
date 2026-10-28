@@ -47,8 +47,9 @@ for (const base of communityVariants) {
   const backend = fs.readFileSync(path.join(base,'src/index.ts'),'utf8');
   const frontend = fs.readFileSync(path.join(base,'public/app.js'),'utf8');
   const guard = backend.indexOf('OWNER POLICY: All Heavenly Key platforms are advertising-free.');
-  const legacy = backend.indexOf('Adverts.uploadImage(env,admin,request)');
-  assert.ok(guard >= 0 && legacy > guard,'Advert endpoint protection must precede legacy routes: '+base);
+  const legacy = backend.indexOf('if(p==="/api/admin/social-signin"');
+  assert.ok(guard >= 0 && legacy > guard,'Advert endpoint protection must precede normal routes: '+base);
+  assert.ok(!backend.includes('Adverts.'),'Unreachable advert backend calls remain: '+base);
   assert.ok(backend.includes('advertisingEnabled:false'),'Public advert endpoint must declare disabled: '+base);
   for(const fragment of ['function renderAdvert(', 'function mountAdverts(', 'SPONSORED ·', 'api("/api/adverts")']) {
     assert.ok(!frontend.includes(fragment),'Advertising frontend survived in '+base+': '+fragment);
