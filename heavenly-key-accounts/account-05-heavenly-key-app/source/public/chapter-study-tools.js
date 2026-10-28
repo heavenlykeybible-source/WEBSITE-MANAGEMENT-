@@ -1,4 +1,5 @@
 const host=document.getElementById('chapter-study-output');
+const extraHost=document.getElementById('extra-bible-output');
 
 const tools=document.getElementById('chapter-study-tools');
 const referenceBooks={'John':'john','Psalm':'psalms','Psalms':'psalms','Isaiah':'isaiah','Hebrews':'hebrews','Numbers':'numbers','1 John':'1john'};
@@ -15,6 +16,7 @@ tools?.addEventListener('click',async e=>{
  const button=e.target.closest('button[data-study-tool]');if(!button||!host)return;
  const book=document.getElementById('kjv-book-picker'),chapter=document.getElementById('kjv-chapter-picker');
  if(!book||!chapter){host.replaceChildren(el('p','Bible reader is still loading. Please wait and try again.'));return;}
+ extraHost?.replaceChildren();
  const request=++latestRequest;
  const key=book.value+':'+chapter.value,kind=button.dataset.studyTool,info=notes[key];
  const heading=button.textContent+' · '+book.selectedOptions[0].text+' '+chapter.value;
@@ -40,7 +42,7 @@ tools?.addEventListener('click',async e=>{
   }else if(kind==='cross'){
    if(!info?.cross?.length){host.append(el('p','Reviewed cross-references are not yet available for this chapter.'));return;}
    for(const reference of info.cross){
-    const match=/^(1 John|John|Psalm|Psalms|Isaiah|Hebrews|Numbers) (\\d+):(\\d+)(?:-(\\d+))?$/.exec(reference);
+    const match=/^(1 John|John|Psalm|Psalms|Isaiah|Hebrews|Numbers) (\d+):(\d+)(?:-(\d+))?$/.exec(reference);
     const p=el('p','');
     if(match&&referenceBooks[match[1]]){
      const link=el('a',reference+' — Open in KJV Bible');
