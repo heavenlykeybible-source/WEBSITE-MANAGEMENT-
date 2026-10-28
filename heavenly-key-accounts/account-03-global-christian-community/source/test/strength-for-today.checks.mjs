@@ -53,3 +53,11 @@ test('right-sidebar authorised KJV Bible has premium inline reading, reference s
 });
 
 test('right-sidebar Bible provides all 66 valid book selectors and fetches verses on demand',()=>{const source=read('social-mini-bible.js');const books=JSON.parse(source.match(/const BOOKS=(\[[^;]+\]);/)[1]);assert.equal(books.length,66);assert.equal(new Set(books.map(item=>item[1])).size,66);for(const token of ['loadBook(23,1)','fillVerses','isPlaceholder','cache:',"'/api/posts'",'navigator.share'])assert.ok(source.includes(token),token);});
+
+test('sidebar Bible direct member messaging respects request acceptance and permissions',()=>{
+ const source=read('social-mini-bible.js'),css=read('global-social-current.css');
+ for(const token of ["'/api/discover?q='","'/api/messages/requests'","convo.status==='accepted'","convo.status==='requested'","recipientUserId:id","clientRequestId:crypto.randomUUID()","'/api/me'","navigator.clipboard.writeText(payload())"])assert.ok(source.includes(token),token);
+ assert.ok(css.includes('.gc-bible-member-panel[hidden]'));
+ assert.ok(source.includes('Verse copied.')&&source.includes('Scripture message delivered.'));
+ new vm.Script(source.replace('export function mountMiniBible','function mountMiniBible'),{filename:'social-mini-bible.js'});
+});
