@@ -28,7 +28,142 @@
  }
  
  // END MCP OWNER REVIEW
-@@ -337,6 +358,45 @@
+@@ -160,50 +181,114 @@
+ async function importSource(env,user,id){return ghById(env,id,scopeOf({kind:'owner',user,ow:null}));}
+ async function sourceTree(env,g){const head=await ghHead(env,g),result=await gh(env,g,'GET','/git/trees/'+head.tree+'?recursive=1');if(result.truncated)fail('Repository listing is incomplete. Choose a smaller connected project.',409);const pre=g.dir?g.dir+'/':'';return {head,files:(result.tree||[]).filter(f=>f.type==='blob'&&f.path.startsWith(pre)).map(f=>({...f,path:f.path.slice(pre.length)}))};}
+ function sourceFolder(value){const path=String(value||'').replace(/^\/+|\/+$/g,'');if(path&&(path.split('/').some(p=>!p||p==='.'||p==='..')||/[\x00-\x1f\\]/.test(path)||path.length>250))fail('Choose a valid project folder');return path;}
+-async function sourceCandidates(env,user,id){const g=await importSource(env,user,id),tree=await sourceTree(env,g);return {source:ghPublic(g),commit:tree.head.commit,candidates:tree.files.filter(f=>/(^|\/)index\.html?$/.test(f.path)||/(^|\/)[^/]*worker\.(?:m?js)$/.test(f.path)).slice(0,150).map(f=>({path:f.path,kind:/\.html?$/.test(f.path)?'static':'worker',directory:f.path.includes('/')?f.path.slice(0,f.path.lastIndexOf('/')):''})),notice:'Select built website output or a self-contained Worker. Source projects needing compilation cannot be deployed as static files.'};}
++async function sourceCandidates(env,user,id){const g=await importSource(env,user,id),tree=await sourceTree(env,g);return {source:ghPublic(g),commit:tree.head.commit,candidates:tree.files.filter(f=>/(^|\/)index\.html?$/.test(f.path)||/(^|\/)[^/]*worker\.(?:m?js)$/.test(f.path)||/(^|\/)package\.json$/.test(f.path)).slice(0,250).map(f=>({path:f.path,kind:/package\.json$/.test(f.path)?'project':/\.html?$/.test(f.path)?'static':'worker',directory:f.path.includes('/')?f.path.slice(0,f.path.lastIndexOf('/')):''})),notice:'Complete source projects can be imported into a private archive. Built websites and bundled Workers can be proposed for publication. Source archives never execute or publish automatically.'};}
+ async function scanConnectedSource(env,user,b){
+- const g=await importSource(env,user,b.source),tree=await sourceTree(env,g),kind=b.kind==='worker'?'worker':'static',directory=sourceFolder(b.directory),pre=directory?directory+'/':'';
++ if(b.scan)return continueConnectedScan(env,user,b.scan);
++ const g=await importSource(env,user,b.source),tree=await sourceTree(env,g),kind=b.kind==='worker'?'worker':b.kind==='project'?'project':'static',directory=sourceFolder(b.directory),pre=directory?directory+'/':'';
+  let selected=tree.files.filter(f=>f.path.startsWith(pre));
+  if(kind==='worker'){const entry=String(b.entry||'');selected=tree.files.filter(f=>f.path===entry);if(!/\.m?js$/.test(entry))fail('Choose a JavaScript Worker entry file');}
+- else if(selected.some(f=>/(^|\/)(package\.json|wrangler(?:\.[^/]*)?|[^/]+\.(tsx?|jsx|php))$/.test(f.path.slice(pre.length))))fail('This folder contains an application source project, not only built website output. Select its dist/build folder or use a reviewed build/deployment workflow. No files were imported.',409);
++ else if(kind==='static'&&selected.some(f=>/(^|\/)(package\.json|wrangler(?:\.[^/]*)?|[^/]+\.(tsx?|jsx|php))$/.test(f.path.slice(pre.length))))fail('This folder contains an application source project, not only built website output. Select its dist/build folder or use a reviewed build/deployment workflow. No files were imported.',409);
+  const metadata=/^(?:README(?:\.[^/]*)?|LICENSE(?:\.[^/]*)?|\.gitignore|\.DS_Store)$/i;
+- const omitted=selected.filter(f=>metadata.test(f.path.slice(pre.length))).map(f=>f.path);selected=selected.filter(f=>!metadata.test(f.path.slice(pre.length)));
+- if(!selected.length||selected.length>40)fail('Choose a built project containing 1–40 files. Larger built websites can use the existing ZIP importer.');
++ const omit=f=>kind==='project'?/(^|\/)(node_modules|\.git|\.wrangler|\.cache)(\/|$)/.test(f.path.slice(pre.length)):metadata.test(f.path.slice(pre.length));
++ const omitted=selected.filter(omit).map(f=>f.path);selected=selected.filter(f=>!omit(f));
++ if(!selected.length||selected.length>MAX_FILES)fail('Choose a complete built project containing 1–'+MAX_FILES+' files.');
+  if(selected.some(f=>f.mode==='120000'))fail('Symlinks are not supported.');
+  if(kind==='static'&&!selected.some(f=>f.path.slice(pre.length)==='index.html'))fail('No index.html entry page found. Choose the built website folder.');
+  const existing=await env.DB.prepare("SELECT key,value_json FROM settings WHERE key LIKE ?").bind('workspace:scan:'+user.id+':%').all();let active=0;
+  for(const r of existing.results){const scan=JSON.parse(r.value_json);if(scan.expires<Date.now()){for(const f of scan.files||[])await env.FILES.delete(f.key);await env.DB.prepare('DELETE FROM settings WHERE key=?').bind(r.key).run();}else active++;}if(active>=10)fail('Ten private scans are already open. Use an existing scan or wait for its expiry.',429);
+- const id=crypto.randomUUID(),files=[];let total=0;
+- try{for(const row of selected){
+-  const path=kind==='worker'?row.path.split('/').pop():cleanPath(row.path.slice(pre.length));if(kind==='static'){if(!MIME[ext(path)])fail('Unsupported file in built output: '+path);protectSourcePath(path);}
+-  if((row.size||0)>MAX_FILE)fail('File exceeds the 2 MB limit: '+path,413);
++ const id=crypto.randomUUID(),manifest={id,user:user.id,kind,source:g.id,repo:g.repo,branch:g.branch,root:g.dir||'',directory,commit:tree.head.commit,selected,files:[],bytes:0,omitted,expires:Date.now()+2*3600000};
++ await env.DB.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').bind('workspace:scan:'+user.id+':'+id,JSON.stringify(manifest)).run();
++ return continueConnectedScan(env,user,id);
++}
++function projectArchivePath(path){
++ if(typeof path!=='string'||!path||path.length>250||path.startsWith('/')||/[\\\x00-\x1f]/.test(path)||path.split('/').some(p=>!p||p==='.'||p==='..'||p==='.git'||p==='node_modules'||/^\.env(?:\.|$)/i.test(p))||/\.(?:pem|key|p12|pfx|sqlite|db)$/i.test(path))fail('Private configuration or unsafe source path: '+path);
++ return path;
++}
++async function continueConnectedScan(env,user,id){
++ if(!/^[a-f0-9-]{36}$/.test(String(id)))fail('Invalid scan');
++ return withOperationLock(env,'workspace-scan:'+id,async()=>{
++ const key='workspace:scan:'+user.id+':'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('Scan not found',404);
++ const scan=JSON.parse(row.value_json);if(scan.expires<Date.now())fail('Scan expired',410);if(scan.failed)fail('Scan failed. Start a new scan.',409);
++ const g=await importSource(env,user,scan.source);if(g.repo!==scan.repo||g.branch!==scan.branch||(g.dir||'')!==scan.root)fail('Source connection changed',409);
++ if(scan.complete)return scanReport(scan);
++ const {kind,directory}=scan,pre=directory?directory+'/':'',files=scan.files;let total=scan.bytes;
++ try{for(const row of scan.selected.slice(scan.files.length,scan.files.length+10)){
++  const path=kind==='worker'?row.path.split('/').pop():kind==='project'?projectArchivePath(row.path.slice(pre.length)):cleanPath(row.path.slice(pre.length));if(kind==='project')projectArchivePath(path);if(kind==='static'){if(!MIME[ext(path)])fail('Unsupported file in built output: '+path);protectSourcePath(path);}
++  const fileLimit=kind==='worker'?WORKER_CODE_LIMIT:MAX_FILE;if((row.size||0)>fileLimit)fail('File exceeds the selected package file limit: '+path,413);
+   const blob=await gh(env,g,'GET','/git/blobs/'+row.sha);if(blob.encoding!=='base64')fail('GitHub returned unsupported blob data',502);
+-  const bytes=Uint8Array.from(atob(String(blob.content||'').replace(/\s/g,'')),c=>c.charCodeAt(0));if(bytes.byteLength>MAX_FILE)fail('File exceeds the 2 MB limit',413);
+-  total+=bytes.byteLength;if(total>PACKAGE_LIMIT)fail('Built package exceeds 25 MB',413);
++  const bytes=Uint8Array.from(atob(String(blob.content||'').replace(/\s/g,'')),c=>c.charCodeAt(0));if(bytes.byteLength>fileLimit)fail('File exceeds the selected package file limit',413);
++  total+=bytes.byteLength;if(total>WORKSPACE_LIMIT)fail('Built package exceeds 125 MB',413);
+   const gitHeader=new TextEncoder().encode('blob '+bytes.byteLength+'\0'),gitBytes=new Uint8Array(gitHeader.length+bytes.length);gitBytes.set(gitHeader);gitBytes.set(bytes,gitHeader.length);if(hex(await crypto.subtle.digest('SHA-1',gitBytes))!==row.sha)fail('GitHub file integrity could not be verified',409);
+   if(kind==='worker'){const code=new TextDecoder('utf-8',{fatal:true}).decode(bytes);if(!/export\s+(?:default\b|\{[^}]*\bdefault\b)/s.test(code)||/\b(?:from\s*['"]|import\s*(?:\(|['"{*]))/.test(code))fail('Select a bundled, self-contained ES-module Worker. Multi-file projects need a build first.');}
+   const key='workspace-scans/'+user.id+'/'+id+'/'+path,hash=hex(await crypto.subtle.digest('SHA-256',bytes));await env.FILES.put(key,bytes);files.push({path,key,size:bytes.byteLength,hash});
+  }
+- const manifest={id,user:user.id,kind,source:g.id,repo:g.repo,branch:g.branch,root:g.dir||'',directory,commit:tree.head.commit,files,bytes:total,omitted,expires:Date.now()+2*3600000};
+- await env.DB.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').bind('workspace:scan:'+user.id+':'+id,JSON.stringify(manifest)).run();
+- return {id,kind,commit:manifest.commit,repo:g.repo,files:files.map(({path,size})=>({path,size})),bytes:total,omitted,checks:['Exact source commit recorded','Every selected file downloaded and Git blob hash verified','Private immutable copy retained for two hours','File paths, type and size limits checked'],notice:'Integrity and compatibility checks only, not malware analysis. Static previews run in an isolated frame; Workers require code review and cannot execute inside the control plane.'};
+- }catch(e){for(const f of files)await env.FILES.delete(f.key);throw e;}
+-}
++ scan.bytes=total;scan.complete=files.length===scan.selected.length;
++ await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(scan),key).run();return scanReport(scan);
++ }catch(e){scan.failed=true;await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(scan),key).run();for(const f of files)await env.FILES.delete(f.key);throw e;}
++ });
++}
++function scanReport(scan){return {id:scan.id,kind:scan.kind,commit:scan.commit,repo:scan.repo,files:scan.files.map(({path,size})=>({path,size})),bytes:scan.bytes,omitted:scan.omitted,complete:scan.complete,remaining:scan.selected.length-scan.files.length,checks:['Exact source commit recorded','Downloaded files verified against Git blob hashes','Private copy retained for two hours','Safe file paths, types and size bounds checked'],notice:scan.complete?'Complete built output scanned. Review before publishing. Source applications still require their normal build.':'Import in progress. Continue this scan; nothing can be published yet.'};}
++
+ async function stageConnectedSource(env,user,b){
+  if(!/^[a-f0-9-]{36}$/.test(String(b.scan)))fail('Choose an existing scan');
+  return withOperationLock(env,'source-import:'+b.scan,async()=>{
+  const key='workspace:scan:'+user.id+':'+b.scan,r=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!r)fail('Scan not found',404);const scan=JSON.parse(r.value_json);if(scan.expires<Date.now())fail('Scan expired. Rescan the source.',410);
+- if(scan.proposal_id)return {proposal_id:scan.proposal_id,reused:true};
++ if(!scan.complete||scan.failed)fail('Finish the complete source scan before staging.',409);
++ if(scan.kind==='project'){scan.archived=true;scan.expires=Date.now()+7*86400000;await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(scan),key).run();return {status:'archived',files:scan.files.length,bytes:scan.bytes,url:'/api/owner/workspace/archive?scan='+scan.id,notice:'Complete source project retained privately for seven days. Download it as a checkpoint. Backend source requires a build and separate reviewed release; this archive has not changed the live app.'};}
++ if(scan.proposal_id)return {proposal_id:scan.proposal_id,reused:true,status:'waiting'};
+  const g=await importSource(env,user,scan.source);if(g.repo!==scan.repo||g.branch!==scan.branch||(g.dir||'')!==scan.root||(await ghHead(env,g)).commit!==scan.commit)fail('The source changed after scanning. Rescan before importing.',409);
+- const actor={kind:'owner',user,ow:null,agentId:await userAgentId(env,user)},objects=[];for(const f of scan.files){const o=await env.FILES.get(f.key);if(!o)fail('Private scan data is missing. Rescan.',409);const bytes=await o.arrayBuffer();if(bytes.byteLength!==f.size||hex(await crypto.subtle.digest('SHA-256',bytes))!==f.hash)fail('Scanned data changed. Rescan.',409);objects.push({...f,bytes});}
++ const actor={kind:'owner',user,ow:null,agentId:await userAgentId(env,user)};
++ const load=async f=>{const o=await env.FILES.get(f.key);if(!o)fail('Private scan data is missing. Rescan.',409);const bytes=await o.arrayBuffer();if(bytes.byteLength!==f.size||hex(await crypto.subtle.digest('SHA-256',bytes))!==f.hash)fail('Scanned data changed. Rescan.',409);return {...f,bytes};};
+  let result;
+- if(scan.kind==='worker'){const conn=await connById(env,b.connection),name=String(b.worker||'');protectWorker(env,name);await cf(env,conn,'GET','/workers/scripts/'+encodeURIComponent(name)+'/settings');result=await coreProposeWorker(env,actor,{connection:conn.id,name,code:new TextDecoder().decode(objects[0].bytes),note:'Native source import '+scan.repo+'@'+scan.commit+'. Existing target bindings and secrets must be preserved.'});}
+- else{const site=await siteBySlug(env,b.site);await limitWaiting(env,actor);const id=await newUpload(env,actor,site,'Import '+scan.repo,'Exact source commit '+scan.commit);try{for(const f of objects)await putFileUnlocked(new Request('https://upload.local/',{method:'PUT',body:f.bytes}),env,actor,id,f.path);await finalizeUnlocked(env,actor,id);await env.DB.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').bind('proposal:scan:'+id,JSON.stringify({files:objects.length,bytes:scan.bytes,entry:'index.html',checks:['Immutable GitHub commit '+scan.commit,'Full file integrity rechecked before preview'],notice:'Sandboxed live frontend preview; backend integrations must be tested separately.'})).run();result={proposal_id:id};}catch(e){await env.DB.prepare("UPDATE proposals SET status='rejected' WHERE id=?").bind(id).run();throw e;}}
++ if(scan.kind==='worker'){
++  const conn=await connById(env,b.connection),name=String(b.worker||'');protectWorker(env,name);await cf(env,conn,'GET','/workers/scripts/'+encodeURIComponent(name)+'/settings');const f=await load(scan.files[0]);
++  result=await coreProposeWorker(env,actor,{connection:conn.id,name,code:new TextDecoder().decode(f.bytes),note:'Native source import '+scan.repo+'@'+scan.commit+'. Existing target bindings and secrets must be preserved.'});
++ }else{
++  const site=await siteBySlug(env,b.site);
++  if(scan.destination&&scan.destination!==site.id)fail('Continue using the original destination.',409);
++  if(!scan.draft){await limitWaiting(env,actor);scan.draft=await newUpload(env,actor,site,'Import '+scan.repo,'Exact source commit '+scan.commit);scan.destination=site.id;scan.staged=0;await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(scan),key).run();}
++  const id=scan.draft;
++  try{
++   for(const item of scan.files.slice(scan.staged,scan.staged+5)){const f=await load(item);await corePutFile(new Request('https://upload.local/',{method:'PUT',body:f.bytes}),env,actor,id,f.path);scan.staged++;}
++   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(scan),key).run();
++   if(scan.staged<scan.files.length)return {proposal_id:id,status:'importing',files:scan.staged,remaining:scan.files.length-scan.staged};
++   const draft=await env.DB.prepare("SELECT sealed,status FROM proposals WHERE id=? AND agent_id=?").bind(id,actor.agentId).first();if(!draft||draft.status!=='waiting')fail('Import draft is no longer available',409);if(!draft.sealed)await coreFinalize(env,actor,id);
++   await env.DB.prepare('INSERT INTO settings(key,value_json)VALUES(?,?) ON CONFLICT(key) DO NOTHING').bind('proposal:scan:'+id,JSON.stringify({files:scan.files.length,bytes:scan.bytes,entry:'index.html',checks:['Immutable GitHub commit '+scan.commit,'All file hashes rechecked before preview'],notice:'Complete built frontend. Backend integrations require separate verification.'})).run();result={proposal_id:id};
++  }catch(e){scan.failed=true;await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(scan),key).run();await env.DB.prepare("UPDATE proposals SET status='rejected' WHERE id=?").bind(id).run();throw e;}
++ }
+  scan.proposal_id=result.proposal_id;await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(scan),key).run();await audit(env,user.username,'native-source-import','proposal '+result.proposal_id+' from '+scan.repo+'@'+scan.commit);return {...result,kind:scan.kind,status:'waiting'};
+  });
+ }
++
++function projectArchiveStream(env,scan){
++ let index=0,offset=0;const central=[];
++ return new ReadableStream({async pull(controller){try{
++  if(index<scan.files.length){const f=scan.files[index++],o=await env.FILES.get(f.key);if(!o)throw Error('Archive data missing');const bytes=new Uint8Array(await o.arrayBuffer());if(bytes.length!==f.size||hex(await crypto.subtle.digest('SHA-256',bytes))!==f.hash)throw Error('Archive integrity mismatch');
++   const zip=controlZip([{path:projectArchivePath(f.path),bytes}]),view=new DataView(zip.buffer),end=zip.length-22,start=view.getUint32(end+16,true),entry=zip.slice(start,end);new DataView(entry.buffer).setUint32(42,offset,true);central.push(entry);controller.enqueue(zip.slice(0,start));offset+=start;return;
++  }
++  let size=0;for(const entry of central){controller.enqueue(entry);size+=entry.length;}const end=new Uint8Array(22),v=new DataView(end.buffer);v.setUint32(0,0x06054b50,true);v.setUint16(8,central.length,true);v.setUint16(10,central.length,true);v.setUint32(12,size,true);v.setUint32(16,offset,true);controller.enqueue(end);controller.close();
++ }catch(e){controller.error(e);}}});
++}
+ async function importWorkspaceRoutes(req,env,user,sub,m){
+  if(!sub.startsWith('workspace/'))return null;if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);const u=new URL(req.url);
++ if(sub==='workspace/phone/start'&&m==='POST'){
++  const b=await body(req);if(!Array.isArray(b.files)||!b.files.length||b.files.length>MAX_FILES)fail('Choose 1–1000 complete project files');
++  const names=new Set();let bytes=0;const selected=b.files.map(f=>{const path=projectArchivePath(f.path);if(names.has(path.toLowerCase()))fail('Duplicate project path');names.add(path.toLowerCase());if(!Number.isInteger(f.size)||f.size<0||f.size>MAX_FILE||!/^[a-f0-9]{64}$/.test(f.hash||''))fail('Invalid project file manifest');bytes+=f.size;return {path,size:f.size,hash:f.hash};});if(bytes>WORKSPACE_LIMIT)fail('Project exceeds 125 MB',413);
++  const active=await env.DB.prepare("SELECT COUNT(*) n FROM settings WHERE key LIKE ? AND json_extract(value_json,'$.expires')>?").bind('workspace:scan:'+user.id+':%',Date.now()).first();if(active.n>=10)fail('Use an existing project or wait for its expiry.',429);
++  const id=crypto.randomUUID(),scan={id,user:user.id,origin:'phone',kind:'project',selected,files:[],bytes:0,complete:false,repo:'Phone or computer',omitted:[],expires:Date.now()+2*3600000};await env.DB.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').bind('workspace:scan:'+user.id+':'+id,JSON.stringify(scan)).run();return json({id,files:selected.length,bytes});
++ }
++ if(sub==='workspace/phone/file'&&m==='PUT'){
++  const id=u.searchParams.get('scan'),path=projectArchivePath(u.searchParams.get('path'));if(!/^[a-f0-9-]{36}$/.test(id||''))fail('Invalid project');
++  return withOperationLock(env,'workspace-scan:'+id,async()=>{const key='workspace:scan:'+user.id+':'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('Project not found',404);const scan=JSON.parse(row.value_json);if(scan.origin!=='phone'||scan.archived||scan.expires<Date.now())fail('Project upload is closed',409);const planned=scan.selected.find(f=>f.path===path);if(!planned)fail('File is outside the selected project',403);
++   const bytes=await readLimited(req,MAX_FILE),hash=hex(await crypto.subtle.digest('SHA-256',bytes));if(bytes.length!==planned.size||hash!==planned.hash)fail('Project file changed since selection. Start a fresh import.',409);
++   if(!scan.files.some(f=>f.path===path)){const object='workspace-scans/'+user.id+'/'+id+'/'+path;await env.FILES.put(object,bytes);scan.files.push({path,key:object,size:bytes.length,hash});scan.bytes+=bytes.length;scan.complete=scan.files.length===scan.selected.length;await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(scan),key).run();}
++   return json({id,files:scan.files.length,complete:scan.complete});});
++ }
++ if(sub==='workspace/archive'&&m==='GET'){
++  const id=u.searchParams.get('scan');if(!/^[a-f0-9-]{36}$/.test(id||''))fail('Invalid archive');
++  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:scan:'+user.id+':'+id).first();if(!row)fail('Archive not found',404);const scan=JSON.parse(row.value_json);if(!scan.archived||!scan.complete||scan.failed||scan.expires<Date.now())fail('Archive unavailable',410);
++  return new Response(projectArchiveStream(env,scan),{headers:{'content-type':'application/zip','content-disposition':'attachment; filename="source-project-'+id+'.zip"','cache-control':'private, no-store','x-content-type-options':'nosniff'}});
++ }
+  if(sub==='workspace/catalog'&&m==='GET')return json({sources:(await env.DB.prepare('SELECT id,label,repo,branch,dir FROM github_sites WHERE owner_id IS NULL').all()).results,sites:(await env.DB.prepare('SELECT slug,name FROM sites ORDER BY name').all()).results,accounts:(await env.DB.prepare('SELECT id,label FROM cf_connections ORDER BY label').all()).results});
+  if(sub==='workspace/candidates'&&m==='GET')return json(await sourceCandidates(env,user,u.searchParams.get('source')));
+  if(sub==='workspace/workers'&&m==='GET'){const c=await connById(env,u.searchParams.get('connection')),d=await cf(env,c,'GET','/workers/scripts');return json({workers:(d.result||[]).map(w=>({name:w.id}))});}
+@@ -337,6 +422,45 @@
   return json(await inspectHeavenlyDomains(env,Number(connection)));
  }
  async function inspectDomainsTool(env,actor,args){await browserAgentOwner(env,actor);return inspectHeavenlyDomains(env,args.connection);}
@@ -74,16 +209,19 @@
  
  // END NATIVE WORKSPACE SERVER
  // BEGIN OWNER PASSKEY SERVER
-@@ -688,6 +748,8 @@
+@@ -688,7 +812,10 @@
  const SLUG = /^[a-z0-9-]{1,60}$/;
  const MIME = { html: 'text/html;charset=utf-8', htm: 'text/html;charset=utf-8', css: 'text/css;charset=utf-8', js: 'text/javascript;charset=utf-8', mjs: 'text/javascript;charset=utf-8', json: 'application/json', txt: 'text/plain;charset=utf-8', md: 'text/plain;charset=utf-8', xml: 'application/xml', svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', ico: 'image/x-icon', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', otf: 'font/otf', webmanifest: 'application/manifest+json', pdf: 'application/pdf' };
  const TEXT_EXT = new Set(['html', 'htm', 'css', 'js', 'mjs', 'json', 'txt', 'md', 'xml', 'svg', 'webmanifest']);
+-const MAX_FILE = 2 * 1024 * 1024, MAX_FILES = 200;
 +const WORKER_CODE_LIMIT = 7_000_000; // Five times the previous 1.4 MB limit.
 +const LARGE_JSON_LIMIT = 30 * 1024 * 1024; // Five times the prior 6 MiB envelope.
- const MAX_FILE = 2 * 1024 * 1024, MAX_FILES = 200;
++const MAX_FILE = 2 * 1024 * 1024, MAX_FILES = 1000;
++const WORKSPACE_LIMIT = 125 * 1024 * 1024;
  const SANDBOX = 'sandbox allow-scripts allow-forms allow-popups allow-modals';
  
-@@ -747,8 +809,8 @@
+ const hex = buf => [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+@@ -747,8 +874,8 @@
    return out;
  }
  async function body(req) {
@@ -94,7 +232,16 @@
    let data;
    try { data = JSON.parse(t || '{}'); } catch (e) { fail('Bad JSON'); }
    if (!data || typeof data !== 'object' || Array.isArray(data)) fail('JSON must be an object');
-@@ -1123,7 +1185,7 @@
+@@ -1017,7 +1144,7 @@
+   const bytes = await readLimited(req, MAX_FILE), len = bytes.byteLength;
+   const st = await env.DB.prepare('SELECT COUNT(*) n, COALESCE(SUM(size),0) t FROM upload_files WHERE proposal_id=?').bind(id).first();
+   const old = await env.DB.prepare('SELECT size FROM upload_files WHERE proposal_id=? AND path=?').bind(id, path).first();
+-  if ((!old && st.n >= MAX_FILES) || st.t - (old ? old.size : 0) + len > 25 * 1024 * 1024) fail('Upload limit reached (200 files, 25 MB)', 413);
++  if ((!old && st.n >= MAX_FILES) || st.t - (old ? old.size : 0) + len > WORKSPACE_LIMIT) fail('Upload limit reached (1000 files, 125 MB)', 413);
+   const o = await storeUploadObject(env, id, path, bytes);
+   await env.DB.prepare(UPSERT_FILE).bind(id, path, len, o.key, o.etag).run();
+   return { ok: true };
+@@ -1123,7 +1250,7 @@
    const additions = workerBindings(b.bindings);
    if (additions.length) cloudflareActor(actor);
    const code = String(b.code || '');
@@ -103,7 +250,39 @@
    await limitWaiting(env, actor);
    const r = await env.DB.prepare("INSERT INTO proposals (agent_id, kind, title, note, new_content_json) VALUES (?,'worker',?,?,?)")
      .bind(actor.agentId, ('Deploy Worker ' + name + ' to ' + conn.label).slice(0, 120), String(b.note || '').slice(0, 1000), JSON.stringify({ connection_id: conn.id, name, ...(additions.length ? { bindings:additions } : {}) })).run();
-@@ -1508,7 +1570,8 @@
+@@ -1132,6 +1259,13 @@
+   catch (e) { await env.DB.prepare('DELETE FROM proposals WHERE id=?').bind(id).run(); throw e; }
+   await audit(env, actor.kind + ':' + actor.agentId, 'propose-worker', 'proposal ' + id + ' ' + name);
+   return { ok: true, proposal_id: id, status: 'waiting' };
++}
++
++const FRIENDLY_NAVIGATION_HTML="<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"robots\" content=\"noindex\"><title>Let’s get you back home · Heavenly Key</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at top,#e4edf9,#f8faf7 65%);color:#173455;font:18px/1.6 system-ui,sans-serif}main{max-width:660px;background:#fff;padding:clamp(26px,6vw,60px);border-radius:28px;box-shadow:0 20px 80px #17345518;border-top:6px solid #b3933b}small{color:#567268;letter-spacing:.12em}h1{font-size:clamp(30px,6vw,46px);line-height:1.16;margin:18px 0}p{color:#526274}nav{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}a{display:inline-block;padding:12px 18px;border:1px solid #d9e1e7;border-radius:12px;color:#173455;text-decoration:none}a:first-child{background:#07563c;color:white;border-color:#07563c}a:focus-visible{outline:3px solid #b3933b;outline-offset:4px}</style></head><body><main><small>HEAVENLY KEY</small><h1>Let’s get you back home.</h1><p>This page is unavailable or its link has changed. Choose a destination below to continue.</p><nav aria-label=\"Continue browsing\"><a href=\"/\">Back to homepage</a><a href=\"https://global.heavenlykey.org/\">Community</a><a href=\"https://apps.heavenlykey.org/\">Apps</a><a href=\"https://onlinebible.heavenlykey.org/\">Bible</a></nav><p>Together we take Christ to the nations of the world.</p></main></body></html>";
++function isPageNavigation(req){const u=new URL(req.url);return ['GET','HEAD'].includes(req.method)&&req.headers.get('accept')?.includes('text/html')&&!u.pathname.startsWith('/api/')&&!['/mcp','/connect/token','/connect/register'].includes(u.pathname)&&!(/\.[a-z0-9]+$/i.test(u.pathname)&&!/\.html?$/i.test(u.pathname));}
++function friendlyNavigationResponse(req,status=404,home='/'){
++ const html=FRIENDLY_NAVIGATION_HTML.replace('href="/"','href="'+esc(home)+'"');
++ return new Response(req.method==='HEAD'?null:html,{status,headers:{'content-type':'text/html;charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'self'; base-uri 'none'; object-src 'none'"}});
+ }
+ 
+ // ---------- serving sites ----------
+@@ -1150,7 +1284,7 @@
+   let key = await find(path);
+   if (!key && !/\.[A-Za-z0-9]+$/.test(path)) { path = path + '/' + site.entry; key = await find(path); }
+   const o = key ? await env.FILES.get(key) : null;
+-  if (!o) return new Response('Not found', { status: 404 });
++  if (!o) return req&&isPageNavigation(req)?friendlyNavigationResponse(req,404,'/s/'+site.slug+'/'):new Response('Not found', { status: 404 });
+   const owner = !previewId && req && /\.html?$/i.test(path) ? await getUser(req, env) : null;
+   const editable = owner && owner.kind !== 'member' && owner.role === 'owner';
+   let content = o.body;
+@@ -1253,7 +1387,7 @@
+     if(name.endsWith('/'))continue;
+     if(name.startsWith('__MACOSX/')||name.split('/').pop()==='.DS_Store')continue;
+     if(names.has(name.toLowerCase()))fail('Duplicate ZIP paths');names.add(name.toLowerCase());
+-    if(size>MAX_FILE||(total+=size)>PACKAGE_LIMIT||entries.length>=MAX_FILES)fail('Package limit: 200 files, 2 MB per file and 25 MB expanded.',413);
++    if(size>MAX_FILE||(total+=size)>PACKAGE_LIMIT||entries.length>=MAX_FILES)fail('Package limit: 1000 files, 2 MB per file and 25 MB expanded.',413);
+     if(offset+30>start||v.getUint32(offset,true)!==0x04034b50||v.getUint16(offset+8,true)!==method||v.getUint16(offset+6,true)!==flags)bad();
+     const lnl=v.getUint16(offset+26,true),dataAt=offset+30+lnl+v.getUint16(offset+28,true);
+     if(dataAt+packed>start||new TextDecoder().decode(u.slice(offset+30,offset+30+lnl))!==name)bad();
+@@ -1508,7 +1642,8 @@
    if (!Number.isSafeInteger(id) || id < 1) fail('Bad connection');
    return withOperationLock(env, 'maintenance:' + id, async () => {
      const grant = await maintenanceGrant(env, id);
@@ -113,7 +292,7 @@
      if (!allowed) fail('No active maintenance permission for this agent and account', 403);
      const conn = await connById(env, id);
      let requestPath, payload;
-@@ -1691,6 +1754,7 @@
+@@ -1691,6 +1826,7 @@
    return { key, etag: object.etag };
  }
  async function reauthenticate(env, user, password) {
@@ -121,7 +300,16 @@
    if (await ownerPasskeys.consumeProof(env,user,password)) return;
    const key = 'confirm:' + user.id;
    const count = await env.DB.prepare('SELECT COUNT(*) n FROM login_attempts WHERE ip=? AND ts>?').bind(key, Date.now() - 15 * 60000).first();
-@@ -2044,6 +2108,7 @@
+@@ -1730,6 +1866,8 @@
+       if (!f.deleted && (!f.object_key || !f.object_etag)) fail('This legacy upload has no immutable manifest. Resubmit the files with the upgraded version.', 409);
+     }
+     candidate.files = rows;
++    const workspaceBase=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('proposal:workspace-base:'+P.id).first();
++    if(workspaceBase&&P.status==='waiting'){const expected=new Map(JSON.parse(workspaceBase.value_json).map(f=>[f.path,f.r2_key])),live=new Map((await env.DB.prepare('SELECT path,r2_key FROM site_files WHERE site_id=?').bind(P.site_id).all()).results.map(f=>[f.path,f.r2_key]));for(const f of rows)if((expected.get(f.path)||null)!==(live.get(f.path)||null))fail('A live file changed after this draft began. Reload and submit a new update: '+f.path,409);checks.push('Every changed file matches its draft baseline');}
+     baseline = (await env.DB.prepare('SELECT uf.path,sf.r2_key,sf.size FROM upload_files uf LEFT JOIN site_files sf ON sf.site_id=? AND sf.path=uf.path WHERE uf.proposal_id=? ORDER BY uf.path').bind(P.site_id, P.id).all()).results;
+     const cmsBase=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('proposal:cms-base:'+P.id).first();
+     if(cmsBase&&P.status==='waiting'){const expected=JSON.parse(cmsBase.value_json),current=baseline.find(f=>f.path===expected.path);if(!current||(current.r2_key||null)!==expected.base_key)fail('The live page changed after this edit was started. Reload it and submit again.',409);checks.push('CMS edit is based on the current live page');}
+@@ -2044,6 +2182,7 @@
    const sc = scopeOf(actor);
    const who = user.username;
    if(m==='POST'&&(/^connections\/\d+\/workers\/[^/]+\/delete$/.test(sub)||/^proposals\/\d+\/undo$/.test(sub)))fail('Direct changes are disabled. Use a reviewed recovery proposal in Releases; Worker deletion is unavailable under approval-only mode.',403);
@@ -129,7 +317,7 @@
    const permission=await aiPermissionRoutes(req,env,user,sub,m);if(permission)return permission;
    const device=await ownerPasskeys.routes(req,env,user,sub,m);if(device)return device;
    const operations=await controlOperationsRoutes(req,env,user,sub,m);if(operations)return operations;
-@@ -2051,6 +2116,7 @@
+@@ -2051,6 +2190,7 @@
    const imported=await importWorkspaceRoutes(req,env,user,sub,m);if(imported)return imported;
    const verification=await providerVerificationRoutes(req,env,user,sub,m);if(verification)return verification;
    const browser=await browserWorkspaceRoutes(req,env,user,sub,m);if(browser)return browser;
@@ -137,7 +325,7 @@
    const domains=await domainWorkspaceRoutes(req,env,user,sub,m);if(domains)return domains;
    const cms = await cmsRoutes(req,env,user,sub,m,u);if(cms)return cms;
    const projects = await projectRoutes(req, env, user, sub, m);
-@@ -2256,6 +2322,23 @@
+@@ -2256,6 +2396,23 @@
        bindings:[{type:'d1',name:'TEAMDB',id:'9549fc74-f6a8-4cf8-a066-7cb965c59b91'},{type:'r2_bucket',name:'FILES',bucket_name:'heavenlymedia'},{type:'ai',name:'AI'},{type:'generated_secret',name:'AUTH_SECRET'},{type:'durable_object_namespace',name:'MEETING_ROOMS',class_name:'MeetingRooms'}],
        note:'Complete Account 7 meeting website with 19 public files and ministry banner. Owner-selected heavenlykey-db and private heavenlymedia. Additive schema; preserve existing data. Generated private app secret and owner entry from this Control Room. Guest rooms use a hibernating Cloudflare SQLite Durable Object with browser-to-browser media. RTMP still requires the separate streaming relay. Package SHA-256: '+MEETING_INSTALL_PACKAGE.sha256}),201);
    }
@@ -161,7 +349,7 @@
    if (m === 'POST' && (x = sub.match(/^connections\/(\d+)\/meeting-launch$/))) {
      if (user.kind !== 'staff' || user.role !== 'owner') fail('Only the owner can open this app as owner.',403);
      const c = await connById(env,x[1]), name='heavenly-key-zoom-studio';
-@@ -3051,12 +3134,15 @@
+@@ -3051,12 +3208,15 @@
  
  // BEGIN AI WORKSPACE
  async function requestAIWorkspaceAccess(env,actor,args){
@@ -178,7 +366,7 @@
   const id=crypto.randomUUID(),request={id,user:user.id,agent:actor.agentId,accounts,connections:policy.connections,hours:Number(args.hours||24),reason,conversation:actor.chatConversationId||'',expires:Date.now()+3600000,status:'pending'};
   await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('ai:access-request:'+id,JSON.stringify(request)).run();
   return {permission_request:request,message:'Awaiting the owner Approve or Decline choice in chat. No access has been granted. Do not repeat this request or claim the action was completed.'};
-@@ -3078,7 +3164,7 @@
+@@ -3078,7 +3238,7 @@
     const key='ai:access-request:'+b.id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('Request not found',404);const r=JSON.parse(row.value_json);if(r.user!==user.id||r.status!=='pending'||r.expires<Date.now())fail('This request expired or was already decided.',409);
     if(b.decision==='approve'){
      await reauthenticate(env,user,b.password);const old=await aiPolicy(env,user);const connections=[...new Set([...(old.expires_at>Date.now()?old.connections:[]),...r.connections])];for(const id of connections)await connById(env,id);
@@ -187,7 +375,7 @@
      await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind('ai:permissions:'+user.id,JSON.stringify(policy)).run();
     }
     r.status=b.decision;r.decided_at=Date.now();await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(r),key).run();await audit(env,user.username,'ai-access-'+b.decision,r.accounts.map(c=>c.label).join(', '));return json({ok:true,decision:b.decision});
-@@ -3106,7 +3192,12 @@
+@@ -3106,7 +3266,12 @@
  ];
  function defaultAIPolicy(){return {mode:'work',max_tools:12,connections:[],expires_at:0};}
  async function aiPolicy(env,user){const r=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('ai:permissions:'+user.id).first();return r?{...defaultAIPolicy(),...JSON.parse(r.value_json)}:defaultAIPolicy();}
@@ -201,7 +389,41 @@
  async function aiPermissionRoutes(req,env,user,sub,m){if(sub!=='ai/permissions')return null;if(user.kind==='member'||user.role!=='owner')fail('Owner access required',403);if(m==='GET')return json({policy:await aiPolicy(env,user),connections:(await env.DB.prepare('SELECT id,label,account_id FROM cf_connections ORDER BY label').all()).results});if(m==='POST'){const b=await body(req),p=cleanAIPolicy(b);await reauthenticate(env,user,b.password);for(const id of p.connections)await connById(env,id);await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind('ai:permissions:'+user.id,JSON.stringify(p)).run();await audit(env,user.username,'ai-permissions',p.mode+'; steps '+p.max_tools+'; accounts '+p.connections.join(',')+'; expires '+p.expires_at);return json({ok:true,policy:p});}fail('Method not allowed',405);}
  function aiToolEnabled(policy,name){if(policy.mode==='chat')return false;if(policy.mode==='read'&&!/^(list_|read_|get_|find_|my_proposals$)/.test(name))return false;if(AI_INFRA_WRITES.has(name)&&(!policy.connections.length||policy.expires_at<=Date.now()))return false;return true;}
  async function checkAIToolPermission(env,actor,name,args){if(!actor.aiPolicy)return;const p=actor.aiPolicy;if(!aiToolEnabled(p,name))fail('This action is disabled by the owner AI permissions',403);if(AI_INFRA_WRITES.has(name)){const c=/^[0-9]+$/.test(String(args.connection||''))?await connById(env,args.connection):await env.DB.prepare('SELECT * FROM cf_connections WHERE label=?').bind(String(args.connection||'')).first();if(!c)fail('Connection not found',404);if(!p.connections.includes(c.id))fail('The owner has not authorized this Cloudflare account. Request the exact account with request_workspace_access; the owner can approve inside this chat.',403);}}
-@@ -3432,10 +3523,12 @@
+@@ -3137,7 +3302,14 @@
+ 
+ // END AI CAPABILITIES
+ // ---------- MCP endpoint (for AI clients that support MCP over HTTP) ----------
++const WORKSPACE_TOOLS = [
++ {name:'begin_site_update',description:'Start one private multi-file update for an existing managed site. Upload files in separate calls, then finish_site_update. No live change until owner approval. Up to 1000 files and 125 MB total; each file up to 2 MB.',inputSchema:{type:'object',properties:{site:{type:'string'},title:{type:'string'},note:{type:'string'}},required:['site','title']}},
++ {name:'upload_site_file',description:'Add or replace one file in your open update. Send UTF-8 text or base64 binary. The draft stays private. Repeat for every page, stylesheet, script and asset.',inputSchema:{type:'object',properties:{proposal_id:{type:'integer'},path:{type:'string'},content:{type:'string'},encoding:{type:'string',enum:['utf8','base64']},delete:{type:'boolean'}},required:['proposal_id','path']}},
++ {name:'get_site_update',description:'Inspect your resumable update and uploaded file manifest. Sealed updates await owner review.',inputSchema:{type:'object',properties:{proposal_id:{type:'integer'}},required:['proposal_id']}},
++ {name:'finish_site_update',description:'Seal your complete multi-file draft and send it for preview and manual owner approval. This does not publish it.',inputSchema:{type:'object',properties:{proposal_id:{type:'integer'}},required:['proposal_id']}}
++];
+ const TOOLS = [
++  ...WORKSPACE_TOOLS,
+   {name:'inspect_heavenlykey_domains',description:'Read heavenlykey.org zone and controlroom/radio/meeting/editor DNS and Worker domain mappings through the saved Account 1 connection. No credentials are returned and no DNS or routing changes occur.',inputSchema:{type:'object',properties:{connection:{type:'integer'}},required:['connection']}},
+   {name:'browser_request_task',description:'Request an owner-approved browser task on exact public HTTPS hosts. Use Browser agent in the owner dashboard to approve the goal. Cannot bypass provider verification.',inputSchema:{type:'object',properties:{goal:{type:'string'},hosts:{type:'array',items:{type:'string'},maxItems:8}},required:['goal','hosts']}},
+   {name:'browser_task_status',description:'Read this AI browser task status and available element IDs. Field values, cookies and screenshots are never returned to the AI.',inputSchema:{type:'object',properties:{id:{type:'string'}},required:['id']}},
+@@ -3177,6 +3349,7 @@
+   await checkAIToolPermission(env,actor,name,args);
+   const a = actor.a;
+   const sc = scopeOf(actor);
++  if(WORKSPACE_TOOLS.some(t=>t.name===name)&&(a.owner_id||a.site_id))fail('Use an unscoped managed-site assistant connection',403);
+   if (a.owner_id && !TENANT_TOOLS.has(name)) fail('That tool is not available for this account', 403);
+   const read = () => { if (!a.can_read) fail('No read permission', 403); };
+   const prop = () => { if (!a.can_propose) fail('No propose permission', 403); };
+@@ -3207,6 +3380,10 @@
+     case 'list_github_files': { read(); const g = await ghById(env, args.site, sc); return { files: await ghFiles(env, g, await ghHead(env, g)) }; }
+     case 'read_github_file': read(); return await ghReadFile(env, await ghById(env, args.site, sc), cleanPath(args.path));
+     case 'propose_github_changes': prop(); return await coreProposeGithub(env, actor, args);
++    case 'begin_site_update': { prop();await limitWaiting(env,actor);const site=await siteBySlug(env,args.site),baseline=(await env.DB.prepare('SELECT path,r2_key,size FROM site_files WHERE site_id=? ORDER BY path').bind(site.id).all()).results;if(baseline.length>MAX_FILES)fail('This site needs a larger dedicated import plan.',413);const id=await newUpload(env,actor,site,args.title,args.note);await env.DB.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').bind('proposal:workspace-base:'+id,JSON.stringify(baseline)).run();return {proposal_id:id,status:'draft',limits:{files:MAX_FILES,bytes:WORKSPACE_LIMIT,file_bytes:MAX_FILE}}; }
++    case 'upload_site_file': { prop();if(args.delete===true)return withOperationLock(env,'upload:'+args.proposal_id,async()=>{const path=cleanPath(args.path),p=await env.DB.prepare("SELECT id FROM proposals WHERE id=? AND kind='upload' AND status='waiting' AND sealed=0 AND agent_id=?").bind(+args.proposal_id,actor.agentId).first();if(!p)fail('Upload not found or already sent',404);const count=await env.DB.prepare('SELECT COUNT(*) n FROM upload_files WHERE proposal_id=?').bind(p.id).first(),old=await env.DB.prepare('SELECT path FROM upload_files WHERE proposal_id=? AND path=?').bind(p.id,path).first();if(!old&&count.n>=MAX_FILES)fail('File limit reached',413);await env.DB.prepare('INSERT INTO upload_files(proposal_id,path,size,deleted)VALUES(?,?,0,1) ON CONFLICT(proposal_id,path) DO UPDATE SET size=0,deleted=1').bind(p.id,path).run();return {ok:true,deleted:true};});if(typeof args.content!=='string')fail('File content is required');let bytes;if(args.encoding==='base64'){try{bytes=Uint8Array.from(atob(args.content),c=>c.charCodeAt(0));}catch{fail('Invalid base64 file');}}else bytes=enc.encode(String(args.content||''));if(bytes.length>MAX_FILE)fail('File exceeds 2 MB',413);return await corePutFile(new Request('https://upload.local/',{method:'PUT',body:bytes}),env,actor,+args.proposal_id,args.path); }
++    case 'get_site_update': { read();const p=await env.DB.prepare("SELECT id,title,status,sealed FROM proposals WHERE id=? AND agent_id=? AND kind='upload'").bind(+args.proposal_id,actor.agentId).first();if(!p)fail('Update not found',404);return {proposal:p,files:(await env.DB.prepare('SELECT path,size,deleted FROM upload_files WHERE proposal_id=? ORDER BY path').bind(p.id).all()).results}; }
++    case 'finish_site_update': { prop();return {proposal_id:+args.proposal_id,...await coreFinalize(env,actor,+args.proposal_id)}; }
+     case 'my_proposals': return { proposals: (await env.DB.prepare('SELECT id, kind, title, status, owner_comment, created_at FROM proposals WHERE agent_id=? AND sealed=1 ORDER BY id DESC LIMIT 30').bind(a.id).all()).results };
+     default: fail('Unknown tool', 404);
+   }
+@@ -3432,10 +3609,12 @@
    const ok = r => json({ jsonrpc: '2.0', id, result: r });
    if (msg.method === 'initialize') { const session=await mcpReviewInitialize(env,a,msg.params?.capabilities);const response=ok({ protocolVersion: (msg.params && msg.params.protocolVersion) || '2025-03-26', capabilities: { tools: {} }, serverInfo: { name: 'control-room', version: '2.1' } });if(session)response.headers.set('Mcp-Session-Id',session);return response; }
    if (msg.method === 'ping') return ok({});
@@ -215,7 +437,75 @@
        if(p.name==='request_owner_review')return await mcpOwnerReview(req,env,a,p.arguments||{},id);
        const data = await toolCall(env, { kind: 'agent', agentId: a.id, a }, p.name, p.arguments || {});
        return ok({ content: [{ type: 'text', text: typeof data === 'string' ? data : JSON.stringify(data) }] });
-@@ -3757,7 +3850,7 @@
+@@ -3481,6 +3660,14 @@
+   if(!user||user.role!=='owner'||user.kind==='member')fail('Sign in as the owner to connect ChatGPT.',403);
+   return user;
+ }
++function connectRedirect(value){
++ if(typeof value!=='string'||value.length>2048)fail('Invalid assistant callback URI');
++ let u;try{u=new URL(value);}catch{fail('Invalid assistant callback URI');}
++ const local=['127.0.0.1','[::1]','localhost'].includes(u.hostname);
++ if(u.username||u.password||u.hash||!(u.protocol==='https:'||u.protocol==='http:'&&local))fail('Use an HTTPS callback or a local loopback HTTP callback');
++ if(u.protocol==='https:'&&(!u.hostname.includes('.')||/^(?:[0-9.]+|\[)/.test(u.hostname)||/\.(local|internal|localhost)$/.test(u.hostname)))fail('Use a public HTTPS callback');
++ return value;
++}
+ async function connectRoutes(req,env,u) {
+   const p=u.pathname,m=req.method,issuer=u.origin,resource=issuer+'/mcp';
+   if(m==='GET'&&(p==='/.well-known/oauth-protected-resource'||p==='/.well-known/oauth-protected-resource/mcp'))return json({resource,authorization_servers:[issuer],scopes_supported:[CONNECT_SCOPE],bearer_methods_supported:['header']});
+@@ -3488,20 +3675,21 @@
+   if(p==='/connect/register'&&m==='POST') {
+     const b=await body(req);
+     if(b.token_endpoint_auth_method&&b.token_endpoint_auth_method!=='none')fail('Use public-client PKCE authentication');
+-    if(!Array.isArray(b.redirect_uris)||b.redirect_uris.length!==1||b.redirect_uris[0]!==CONNECT_CALLBACK)fail('Use the ChatGPT stable callback URI');
++    if(!Array.isArray(b.redirect_uris)||!b.redirect_uris.length||b.redirect_uris.length>5)fail('Register 1–5 exact assistant callback URIs');
++    const redirects=[...new Set(b.redirect_uris.map(connectRedirect))];
+     const count=await env.DB.prepare("SELECT count(*) n FROM settings WHERE key LIKE 'connect:client:%'").first();if(count.n>=200)fail('Client registration limit reached',429);
+-    const id='cr_client_'+hex(crypto.getRandomValues(new Uint8Array(24))),c={client_id:id,redirect_uris:[CONNECT_CALLBACK],name:String(b.client_name||'External assistant').slice(0,80)};
++    const id='cr_client_'+hex(crypto.getRandomValues(new Uint8Array(24))),c={client_id:id,redirect_uris:redirects,name:String(b.client_name||'External assistant').slice(0,80)};
+     await connectStore(env,'connect:client:'+id,c);
+     return json({...c,token_endpoint_auth_method:'none',grant_types:['authorization_code'],response_types:['code']},201);
+   }
+   if(p==='/connect/authorize'&&m==='GET') {
+     const q=u.searchParams,c=await connectClient(env,q.get('client_id')||'');
+-    if(q.get('redirect_uri')!==CONNECT_CALLBACK||!c.redirect_uris.includes(q.get('redirect_uri')))fail('Redirect URI mismatch');
++    if(!c.redirect_uris.includes(q.get('redirect_uri')))fail('Redirect URI mismatch');
+     if(q.get('response_type')!=='code'||q.get('code_challenge_method')!=='S256'||! /^[A-Za-z0-9_-]{43}$/.test(q.get('code_challenge')||''))fail('Authorization code with S256 PKCE is required');
+     if(q.get('resource')!==resource||q.get('scope')!==CONNECT_SCOPE)fail('Choose the controlroom:work scope and this server MCP resource');
+     const state=q.get('state');if(!state||state.length>2048)fail('Invalid OAuth state');
+     const id=hex(crypto.getRandomValues(new Uint8Array(24)));
+-    await connectStore(env,'connect:request:'+id,{client_id:c.client_id,name:c.name,redirect_uri:CONNECT_CALLBACK,challenge:q.get('code_challenge'),resource,scope:CONNECT_SCOPE,state,expires:Date.now()+600000});
++    await connectStore(env,'connect:request:'+id,{client_id:c.client_id,name:c.name,redirect_uri:q.get('redirect_uri'),challenge:q.get('code_challenge'),resource,scope:CONNECT_SCOPE,state,expires:Date.now()+600000});
+     return new Response(null,{status:302,headers:{location:'/?connect_request='+id,'cache-control':'no-store','referrer-policy':'no-referrer'}});
+   }
+   if(p==='/connect/consent') {
+@@ -3535,7 +3723,7 @@
+     const user=await env.DB.prepare('SELECT * FROM users WHERE id=?').bind(d.user_id).first();if(!user||user.status!=='active'||user.role!=='owner'||user.pass_ver!==d.pass_ver)return json({error:'invalid_grant'},400);
+     const consumed=await env.DB.prepare('DELETE FROM settings WHERE key=? RETURNING value_json').bind(key).first();if(!consumed)return json({error:'invalid_grant'},400);
+     const token='cr_oauth_'+hex(crypto.getRandomValues(new Uint8Array(32))),hash=await sha256(token);
+-    const row=await env.DB.prepare('INSERT INTO agents(name,token_hash,can_read,can_propose) VALUES(?,?,1,1)').bind('ChatGPT connection',hash).run();
++    const row=await env.DB.prepare('INSERT INTO agents(name,token_hash,can_read,can_propose) VALUES(?,?,1,1)').bind(d.name.startsWith('ChatGPT')?'ChatGPT connection':('Assistant: '+d.name).slice(0,80),hash).run();
+     await connectStore(env,'connect:token:'+hash,{agent_id:row.meta.last_row_id,user_id:user.id,pass_ver:user.pass_ver,resource:d.resource,expires:Date.now()+3600000});
+     return json({access_token:token,token_type:'Bearer',expires_in:3600,scope:CONNECT_SCOPE});
+   }
+@@ -3613,7 +3801,8 @@
+ export default {
+   async fetch(req, env) {
+     try {
+-      const response = await route(req, env);
++      let response = await route(req, env);
++      if((response.status===404||response.status>=500)&&isPageNavigation(req)){if(response.body)await response.body.cancel();response=friendlyNavigationResponse(req,response.status);}
+       const headers = new Headers(response.headers);
+       headers.set('referrer-policy', 'no-referrer');
+       headers.set('x-content-type-options', 'nosniff');
+@@ -3621,6 +3810,7 @@
+       return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+     }
+     catch (e) {
++      if(isPageNavigation(req))return friendlyNavigationResponse(req,e&&e.status||500);
+       if (e && e.status) return json({ error: e.message }, e.status);
+       return json({ error: 'Server error' }, 500);
+     }
+@@ -3757,7 +3947,7 @@
  async function appsCenter(){try{
   var data=await api('connections'),selection=h('select',{'aria-label':'Apps account connection'}),status=h('p',{role:'status'}),cards=h('div');
   data.connections.forEach(function(c){selection.appendChild(h('option',{value:c.id},c.label));});
@@ -224,7 +514,7 @@
   async function inspect(){cards.innerHTML='';status.textContent='Verifying the Apps account…';try{
    var c=data.connections.find(function(x){return String(x.id)===selection.value;}),result=await api('connections/'+c.id+'/workers');
    var directory=result.workers.find(function(x){return x.name==='heavenly-key-app'&&x.url==='https://heavenly-key-app.heavenlykeyapp.workers.dev/';});
-@@ -3777,25 +3870,47 @@
+@@ -3777,25 +3967,47 @@
  
  // END CONTROL SCREENS
  var CURRENT_NAV='Home';
@@ -272,11 +562,11 @@
  function item(label,icon,fn,id){var a={class:CURRENT_NAV===label?'active':'',onclick:function(){CURRENT_NAV=label;fn();}};if(id)a.id=id;n.appendChild(h('button',a,h('span',{class:'nav-icon','aria-hidden':'true'},icon),h('span',{},label==='Waiting'?'Waiting ('+WAITN+')':label)));}
  group('Workspace');item('Home','⌂',controlHome);if(own()){item('Browser agent','↗',browserCenter);item('Domains and subdomains','◎',domainCenter);}if(!M&&lv()>=4)item('Website screens','▣',websiteScreens);item('Waiting','◷',waiting,'wb');if(!M)item('Sites','▦',sites);item('Blogs','▤',remote);item('Code','⌘',github);if(!M){item('Pages','▣',pages);item('Design','◇',design);}if(lv()>=2)item('Assistant','✦',claude);
 -if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);if(!M&&lv()>=4){item('Import and preview','⇧',nativeImports);item('Verification','✓',verificationCenter);}group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M)item('Connect ChatGPT','↔',connectChatGPT);if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4){item('Apps','▦',appsCenter);item('Cloudflare','☁',cloud);}if(own())item('Meeting Studio','◈',openMeetingStudioOwner);
-+if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);if(!M&&lv()>=4){item('Import and preview','⇧',nativeImports);item('Verification','✓',verificationCenter);}group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M)item('Connect ChatGPT','↔',connectChatGPT);if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4){item('Apps','▦',appsCenter);item('Cloudflare','☁',cloud);}if(own())item('Meeting Studio','◈',openMeetingStudioOwner);if(own()){item('Social Network','◎',function(){openConnectedApp('social-network');});item('Meeting Space · Zoom app','◈',function(){openConnectedApp('meeting-space');});item('MediaGuru · Video editor','▷',function(){openConnectedApp('mediaguru');});item('Social Plus · Account 10','⊕',function(){openConnectedApp('social-plus');});}
++if(!M&&lv()>=2)item('Visual CMS','▤',cmsHome);if(!M&&lv()>=4){item('Import and preview','⇧',nativeImports);item('Verification','✓',verificationCenter);}group('Connections');if(!M&&lv()>=4)item('Project sources','▧',projectSources);if(own())item('AI','✧',aiAccounts);if(ME.role==='owner'&&!M){item('Connect ChatGPT','↔',connectChatGPT);item('Connect other AI','↔',agents);}if(ME.role==='owner'&&!M)item('AI permissions','⚙',aiPermissions);if(lv()>=3)item('Agents','◈',agents);item('Releases','↗',releaseHistory);item('Identity','◎',identity);if(!M&&lv()>=4){item('Apps','▦',appsCenter);item('Cloudflare','☁',cloud);}if(own())item('Meeting Studio','◈',openMeetingStudioOwner);if(own()){item('Social Network','◎',function(){openConnectedApp('social-network');});item('Meeting Space · Zoom app','◈',function(){openConnectedApp('meeting-space');});item('MediaGuru · Video editor','▷',function(){openConnectedApp('mediaguru');});item('Social Plus · Account 10','⊕',function(){openConnectedApp('social-plus');});}
  group('Administration');if(!M&&lv()>=4)item('System checks','✓',systemChecks);if(!M&&lv()>=3){item('Team','♧',users);item('Log','≡',logTab);}item('Account','○',account);item('Sign out','↪',logout);return n;}
  function lagosTime(value){if(!value)return 'Not recorded';var v=typeof value==='number'?value:String(value);if(/^\\d{4}-\\d\\d-\\d\\d \\d\\d:/.test(v))v=v.replace(' ','T')+'Z';var dt=new Date(v);if(isNaN(dt.getTime()))return 'Not recorded';return new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(dt)+' WAT';}
  async function systemChecks(){try{var data=await api('system/checks'),list=h('div'),status=h('p',{class:'tag',role:'status'},'');data.checks.forEach(function(c){list.appendChild(h('div',{class:'card'},h('b',{},(c.passed?'✓ ':'! ')+c.name),h('p',{class:'tag'},c.detail)));});show(nav(),h('div',{class:'eyebrow'},'System health'),h('h3',{class:'page-title'},'Connection & storage checks'),h('p',{class:'page-intro'},'These checks test this installation. Real WordPress, Blogger, GitHub and external AI connections need their own Check or Test action after you connect an account.'),list,h('p',{},'Managed sites: '+data.counts.static_sites+' · GitHub connections: '+data.counts.github_sites+' · Ready blogs: '+data.counts.blogs+' · Waiting: '+data.counts.waiting),h('button',{onclick:async function(){status.textContent='Testing a temporary storage object…';try{var r=await api('system/checks','POST',{action:'storage'});status.textContent=r.detail;}catch(e){status.textContent=e.message;}}},'Test file storage'),h('button',{class:'sm',onclick:aiAccounts},'Test AI'),status,h('p',{class:'tag'},'Build '+data.version));}catch(e){oops(e);}}
-@@ -3809,7 +3924,9 @@
+@@ -3809,7 +4021,9 @@
  async function registerOwnerDevice(){var password=await passwordDialog('Confirm your password to register this device',true);if(!password)return false;var request_id=crypto.randomUUID(),options=await api('passkeys/register/options','POST',{password:password,request_id:request_id});options.challenge=passkeyDecode(options.challenge);options.user.id=passkeyDecode(options.user.id);options.excludeCredentials=(options.excludeCredentials||[]).map(function(c){return Object.assign({},c,{id:passkeyDecode(c.id)});});var credential=await navigator.credentials.create({publicKey:options});if(!credential)throw Error('Device registration cancelled');var result=await api('passkeys/register/verify','POST',{request_id:request_id,credential:passkeyJSON(credential),label:'Owner device'});if(result.verified!==true)throw Error('Device was not registered.');return true;}
  
  // END OWNER PASSKEY CLIENT
@@ -287,7 +577,7 @@
  async function releaseHistory(){try{var d=await api('releases'),box=h('div');if(!d.releases.length)box.appendChild(h('p',{},'No proposal publications recorded yet.'));
    d.releases.forEach(function(r){var card=h('div',{class:'card'},h('b',{},r.title),h('p',{class:'tag'},r.kind+' · '+r.status+' · '+lagosTime(r.created_at)),h('p',{class:'tag'},'Version '+r.candidate_hash.slice(0,16)));if(r.error)card.appendChild(h('p',{},r.error));
      if(own()&&r.recoverable)card.appendChild(h('button',{class:'bad',onclick:async function(){if(!confirm('Create a recovery proposal for review?'))return;var pw=await passwordDialog('Confirm recovery');if(!pw)return;try{var result=await api('releases/'+r.id+'/restore','POST',{password:pw});if(result.proposal_id)openP(result.proposal_id);else releaseHistory();}catch(e){oops(e);}}},'Prepare recovery proposal'));
-@@ -3833,7 +3950,7 @@
+@@ -3833,7 +4047,7 @@
    show(h('p',{},'Choose your password'),h('p',{class:'tag'},'Use 10 or more characters. Capitals and symbols are optional.'),passwordField(p1),passwordField(p2),h('button',{onclick:function(){if(p1.value!==p2.value)return alert('The two passwords do not match');
      post('/api/reset',{token:token,password:p1.value}).then(function(){history.replaceState(null,'','/');alert('Password saved. Please sign in.');login();}).catch(oops);}},'Save password'));}
  function logout(){CHAT=[];CHAT_FILES=[];fetch('/api/logout',{method:'POST'}).then(login);}
@@ -296,7 +586,7 @@
  async function waiting(st){st=typeof st==='string'?st:'waiting';CURRENT_NAV='Waiting';
  try{var d=await api('proposals?status='+st),box=h('tbody',{}),queueTable=h('table',{class:'queue-table'},h('thead',{},h('tr',{},h('th',{},'Account / website · Work · Arrival time · Status'))),box);
  if(!d.proposals.length)box.appendChild(h('tr',{},h('td',{},h('div',{class:'empty-state'},h('div',{class:'empty-icon'},'◇'),h('h4',{},st==='waiting'?'Your review room is clear':'No work in this view'),h('p',{class:'tag'},'New AI proposals and submitted uploads will arrive here, ready for your review.'),h('button',{onclick:function(){CURRENT_NAV='Assistant';claude();}},'✦ Start with the assistant')))));
-@@ -3846,7 +3963,7 @@
+@@ -3846,7 +4060,7 @@
  preview.appendChild(h('div',{class:'preview-shell'},h('div',{class:'preview-heading'},h('span',{},p.kind==='worker'?'Worker deployment review (not a live preview)':p.kind==='cloudflare_resource'?'Resource creation review':'Visual website preview'),h('span',{},'P-'+p.id+' · Not live')),h('div',{class:'preview-content'},content)));
  }catch(e){preview.textContent=e.message;loaded=false;}});box.appendChild(h('tr',{},h('td',{},row)));});
  var filters=h('div',{class:'filters'});['waiting','approved','rejected','changes_requested','uncertain'].forEach(function(x){filters.appendChild(h('button',{class:st===x?'selected':'sm',onclick:function(){waiting(x);}},x==='changes_requested'?'Changes requested':x.charAt(0).toUpperCase()+x.slice(1)));});
@@ -305,7 +595,7 @@
  }catch(e){oops(e);}}
  function proposalDecisionMessage(kind,result){
   if(result.status==='rejected')return 'Proposal declined. Nothing was published.';
-@@ -3870,7 +3987,7 @@
+@@ -3870,7 +4084,7 @@
    var staged=null,stageError='';var password=h('input',{type:'password',autocomplete:'current-password',placeholder:'Your current password to approve'}),reviewed=h('input',{type:'checkbox',style:'width:auto;margin-right:8px'});
    if(P.status==='waiting'&&own()){try{staged=await api('proposals/'+id+'/stage','POST',{});if(P.kind==='page')d.before=JSON.parse(staged.before.content_json);if(P.kind==='design')d.before=staged.before;if(P.kind==='remote'&&staged.before)d.remote.before=staged.before;}catch(e){stageError=e.message;}}
  
@@ -314,7 +604,7 @@
    var kids=[nav(),h('h3',{},P.title),h('div',{class:'tag'},P.kind+' \\u2022 '+P.agent+' \\u2022 '+(P.site||P.slug||'')),h('p',{},P.note||''),h('p',{class:'tag'},'Version '+(P.version||'P-'+P.id)+' · Submitted '+lagosTime(P.created_at)+' · Africa/Lagos')];
    if(P.owner_comment)kids.push(h('p',{class:'tag'},'Comment: '+P.owner_comment));
    if(P.kind==='page'){if(d.page_metadata&&d.page_metadata.page_title!==undefined)kids.push(h('p',{},'Proposed page title: '+d.page_metadata.page_title+' · Status after approval: '+d.page_metadata.page_status));kids.push(h('b',{},'Before'),view(d.before),h('b',{},'After (proposed)'),view(d.after));}
-@@ -3892,7 +4009,7 @@
+@@ -3892,7 +4106,7 @@
    else if(P.kind==='cloudflare_resource'){kids.push(h('p',{},'Create '+d.resource.kind.toUpperCase()+' '+d.resource.name+' on '+d.resource.connection),h('p',{},'Account '+d.resource.account_id),h('p',{class:'tag'},'Creates an empty resource. Existing databases, buckets and data are preserved.'));}
    else{kids.push(h('pre',{},JSON.stringify(d.worker.bindings||[],null,2)),h('p',{},'Deploy Worker "'+d.worker.name+'" to '+d.worker.connection),h('b',{},'Code to be deployed'),h('pre',{},d.worker.code));}
    if(P.status==='waiting'&&own()){
@@ -323,7 +613,16 @@
      else kids.push(h('p',{},'Staging blocked: '+stageError));
      kids.push(h('button',{class:'sm',onclick:async function(){try{password.value=await verifyOwnerDevice();this.textContent='Device verified';}catch(e){oops(e);}}},'Verify with Face ID / passkey'),c,h('button',{onclick:decide('approve')},'Approve this version'),h('button',{class:'sm',onclick:decide('changes')},'Request changes'),h('button',{class:'bad',onclick:decide('reject')},'Decline'));
    }
-@@ -4201,10 +4318,12 @@
+@@ -3955,7 +4169,7 @@
+   var n=h('input',{placeholder:'Agent name, e.g. Gemini helper'});var idn=await api('identity');var sc=regSelect(idn.sites);
+   var kind=h('select',{});[['claude-code','Claude Code'],['gemini','Gemini CLI'],['cursor','Cursor'],['other','Other / generic']].forEach(function(x){kind.appendChild(h('option',{value:x[0]},x[1]));});
+   var out=h('div');
+-  show(nav(),h('h3',{},'AI agents'),h('p',{class:'tag'},'One tap creates the agent and its ready-to-paste connection. Agents can read and propose only.'),n,kind,h('b',{},'Limit this agent to one registered site (optional)'),sc,
++  show(nav(),h('h3',{},'AI agents'),h('p',{class:'tag'},'Connect any compatible MCP client, including ChatGPT, Claude, Gemini, Cursor or your own tools. Agents can upload complete multi-file drafts and request owner review. OAuth clients can register their exact HTTPS or local loopback callback with S256 PKCE.'),n,kind,h('b',{},'Limit this agent to one registered site (optional)'),sc,
+     h('button',{onclick:function(){api('agents','POST',{name:n.value,site_id:sc.value}).then(function(r){var text=cfg(r.token,kind.value);
+       out.innerHTML='';out.appendChild(h('p',{},'Copy now. The token is shown only once:'));out.appendChild(h('div',{class:'tok'},text));
+       out.appendChild(h('button',{class:'sm',onclick:function(){navigator.clipboard.writeText(text);}},'Copy'));}).catch(oops);}},'Create agent'),out,box);}catch(e){oops(e);}}
+@@ -4201,30 +4415,58 @@
   var remaining=Math.max(1,Math.min(720,Math.ceil((p.expires_at-Date.now())/3600000))),choices=[1,24,168,720];if(p.expires_at>Date.now()&&!choices.includes(remaining))choices.push(remaining);choices.sort(function(a,b){return a-b;}).forEach(function(hours){var o=h('option',{value:hours},hours===168?'7 days':hours===720?'30 days':hours+' hours');o.selected=hours===(p.expires_at>Date.now()?remaining:24);duration.appendChild(o);});
   d.connections.forEach(function(c){var cb=h('input',{type:'checkbox','aria-label':c.label});cb.checked=selected.has(c.id);cb.onchange=function(){if(cb.checked)selected.add(c.id);else selected.delete(c.id);};accounts.appendChild(h('label',{class:'permission-account'},cb,h('span',{},c.label)));});
   if(!d.connections.length)accounts.appendChild(h('p',{},'No Cloudflare accounts are connected. Add an existing account under Cloudflare connections.'));
@@ -338,8 +637,46 @@
   }catch(e){oops(e);}}
  
  // END AI PERMISSION CLIENT
-@@ -4221,10 +4340,12 @@
-  show(nav(),h('main',{class:'card'},h('h3',{},'Import, scan and preview'),data.sources.length?null:h('section',{class:'card'},h('p',{},'No GitHub repository is connected to this Control Room yet. Your ChatGPT GitHub connection is separate. ZIP uploads below do not require GitHub.'),h('button',{onclick:github},'Connect a GitHub repository')),h('p',{},'Use connected repositories without a dashboard sign-in for each task. Select a complete built website or bundled Worker. Multi-file backend projects require a build; files are never silently deployed as a partial application.'),h('label',{},'1. Source repository'),source,h('label',{},'2. Exact project'),project,scanButton,report,h('label',{},'3. Destination'),dest,worker,h('p',{class:'tag'},'Websites use their existing managed content hosting. Bundled Workers target the exact selected Cloudflare account and Worker. This does not move databases or credentials.'),stage,status,preview,h('h4',{},'Upload from phone or computer'),h('p',{},'Use a built website ZIP up to 25 MB. Choose its managed site below.'),...data.sites.map(function(s){return h('div',{class:'card'},h('h4',{},s.name),packageForm(s));})));
+ // BEGIN NATIVE WORKSPACE CLIENT
++function sourceProjectPhoneForm(){
++ var input=h('input',{type:'file',multiple:true,webkitdirectory:'','aria-label':'Choose complete application source folder'}),status=h('p',{role:'status'}),result=h('div'),busy=false;
++ var send=h('button',{onclick:async function(){if(busy)return;var files=Array.from(input.files||[]);if(!files.length)return;busy=true;send.disabled=true;input.disabled=true;try{
++  if(files.length>1000)throw Error('Choose up to 1000 files, excluding node_modules and private credentials');var root=files[0].webkitRelativePath.split('/')[0]+'/',manifest=[];
++  for(var i=0;i<files.length;i++){status.textContent='Checking complete project '+(i+1)+' of '+files.length;if(files[i].size>2097152)throw Error('File exceeds 2 MB: '+files[i].name);var bytes=await files[i].arrayBuffer();if(bytes.byteLength>2097152)throw Error('File exceeds 2 MB: '+files[i].name);var digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(function(b){return b.toString(16).padStart(2,'0');}).join('');manifest.push({path:files[i].webkitRelativePath.slice(root.length),size:bytes.byteLength,hash:digest});}
++  var draft=await api('workspace/phone/start','POST',{files:manifest});
++  for(var i=0;i<files.length;i++){status.textContent='Importing source '+(i+1)+' of '+files.length;var response=await fetch('/api/owner/workspace/phone/file?scan='+draft.id+'&path='+encodeURIComponent(manifest[i].path),{method:'PUT',headers:{'x-cr':'1'},body:files[i]});if(!response.ok){var problem=await response.json();throw Error(problem.error||'Source import failed');}}
++  var archive=await api('workspace/stage','POST',{scan:draft.id});status.textContent=archive.notice;result.appendChild(h('a',{href:archive.url,class:'btn'},'Download complete application source ZIP'));
++ }catch(e){status.textContent=e.message;}finally{busy=false;send.disabled=false;input.disabled=false;}}},'Import full application source privately');
++ return h('section',{class:'card'},h('h4',{},'Full application source · phone or computer'),h('p',{},'Import backend, frontend, migrations and build configuration together. Up to 1000 files / 125 MB; 2 MB per file. Exclude dependencies, credentials and .env files. This private source archive never executes or replaces your live app. Download your checkpoint within seven days.'),input,send,status,result);
++}
++function folderImportForm(site){
++ var input=h('input',{type:'file',multiple:true,webkitdirectory:'','aria-label':'Choose complete built website folder for '+site.name}),status=h('p',{role:'status'}),busy=false;
++ var send=h('button',{onclick:async function(){if(busy)return;var files=Array.from(input.files||[]);if(!files.length)return;busy=true;send.disabled=true;input.disabled=true;try{
++  var root=files[0].webkitRelativePath.split('/')[0]+'/',total=0;
++  if(files.length>1000)throw Error('Choose up to 1000 files');
++  var paths=files.map(function(f){var path=f.webkitRelativePath.slice(root.length);if(!path||path.split('/').some(function(p){return !p||p==='.'||p==='..'||p==='node_modules'||p==='.git'||p.startsWith('.env');})||/\\.(tsx?|jsx|php|sql|sh|exe)$/i.test(path)||/(^|\\/)(package(?:-lock)?\\.json|wrangler(?:\\.[^/]*)?)$/i.test(path)||f.size>2097152)throw Error('Choose built public output, excluding private configuration and source code: '+path);total+=f.size;return path;});
++  if(total>131072000)throw Error('Folder exceeds 125 MB');if(paths.indexOf('index.html')<0)throw Error('Choose the complete built folder containing index.html');
++  var draft=await api('upload/start','POST',{site:site.slug,title:'Complete folder import',note:files.length+' files from phone/computer; review the entire website before approval.'});
++  for(var i=0;i<files.length;i++){status.textContent='Uploading '+(i+1)+' of '+files.length+' · '+paths[i];var uploaded=await fetch('/api/owner/upload/'+draft.proposal_id+'?path='+encodeURIComponent(paths[i]),{method:'PUT',headers:{'x-cr':'1'},body:files[i]});if(!uploaded.ok){var problem=await uploaded.json();throw Error(problem.error||'File upload failed');}}
++  await api('upload/'+draft.proposal_id+'/finalize','POST',{});status.textContent='Complete folder saved as proposal #'+draft.proposal_id+'. Open Waiting to preview and review. Nothing is published.';
++ }catch(e){status.textContent=e.message;}finally{busy=false;send.disabled=false;input.disabled=false;}}},'Import complete folder for review');
++ return h('section',{class:'card'},h('h4',{},site.name+' · complete folder'),h('p',{},'Up to 1000 public files and 125 MB total, 2 MB per file. Your browser must support folder selection. ZIP upload remains available.'),input,send,status);
++}
+ async function nativeImports(){try{
+  var data=await api('workspace/catalog'),source=h('select',{'aria-label':'Source repository'}),project=h('select',{'aria-label':'Project to scan'}),dest=h('select',{'aria-label':'Destination site or account'}),worker=h('select',{'aria-label':'Destination Worker'}),status=h('p',{role:'status','aria-live':'polite'}),report=h('div'),preview=h('div'),scan=null,listing=null,busy=false;
+  source.appendChild(h('option',{value:''},'Choose connected GitHub repository'));data.sources.forEach(function(s){source.appendChild(h('option',{value:s.id},s.label+' · '+s.repo+' · '+s.branch));});
+  function reset(){scan=null;report.innerHTML='';preview.innerHTML='';stage.disabled=true;}
+- source.onchange=async function(){reset();project.innerHTML='';if(!source.value)return;status.textContent='Reading repository projects…';try{listing=await api('workspace/candidates?source='+encodeURIComponent(source.value));project.appendChild(h('option',{value:''},'Choose built website or Worker'));listing.candidates.forEach(function(c,i){project.appendChild(h('option',{value:i},(c.kind==='static'?'Website · ':'Worker · ')+c.path));});status.textContent=listing.candidates.length?'Choose the exact project. Source commit '+listing.commit.slice(0,12):'No index.html or Worker entry candidates found. Connect the built output folder or use the existing ZIP importer.';}catch(e){status.textContent=e.message;}};
+- project.onchange=function(){reset();dest.innerHTML='';worker.innerHTML='';if(project.value==='')return;var candidate=listing.candidates[+project.value];dest.appendChild(h('option',{value:''},'Choose exact destination'));(candidate.kind==='worker'?data.accounts:data.sites).forEach(function(c){dest.appendChild(h('option',{value:c.id||c.slug},candidate.kind==='worker'?c.label:'Managed website · '+c.name));});worker.hidden=candidate.kind!=='worker';};
++ source.onchange=async function(){reset();project.innerHTML='';if(!source.value)return;status.textContent='Reading repository projects…';try{listing=await api('workspace/candidates?source='+encodeURIComponent(source.value));project.appendChild(h('option',{value:''},'Choose built website or Worker'));listing.candidates.forEach(function(c,i){project.appendChild(h('option',{value:i},(c.kind==='static'?'Complete website · ':c.kind==='project'?'Full source project · ':'Bundled Worker · ')+c.path));});status.textContent=listing.candidates.length?'Choose the exact project. Source commit '+listing.commit.slice(0,12):'No index.html or Worker entry candidates found. Connect the built output folder or use the existing ZIP importer.';}catch(e){status.textContent=e.message;}};
++ project.onchange=function(){reset();dest.innerHTML='';worker.innerHTML='';if(project.value==='')return;var candidate=listing.candidates[+project.value];dest.hidden=candidate.kind==='project';if(candidate.kind==='project'){worker.hidden=true;status.textContent='This complete source project will be stored privately, with no live destination or automatic execution.';return;}dest.appendChild(h('option',{value:''},'Choose exact destination'));(candidate.kind==='worker'?data.accounts:data.sites).forEach(function(c){dest.appendChild(h('option',{value:c.id||c.slug},candidate.kind==='worker'?c.label:'Managed website · '+c.name));});worker.hidden=candidate.kind!=='worker';};
+  dest.onchange=async function(){preview.innerHTML='';if(project.value===''||listing.candidates[+project.value].kind!=='worker'||!dest.value)return;worker.innerHTML='';status.textContent='Reading Workers on selected account…';try{var result=await api('workspace/workers?connection='+encodeURIComponent(dest.value));result.workers.forEach(function(w){worker.appendChild(h('option',{value:w.name},w.name));});status.textContent='Choose the exact existing Worker. Its bindings and secrets will be retained.';}catch(e){status.textContent=e.message;}};
+- var scanButton=h('button',{onclick:async function(){if(busy||!source.value||project.value==='')return;busy=true;reset();source.disabled=true;project.disabled=true;scanButton.disabled=true;status.textContent='Downloading and verifying the complete selected project…';try{var c=listing.candidates[+project.value];scan=await api('workspace/scan','POST',{source:+source.value,kind:c.kind,directory:c.directory,entry:c.path});report.appendChild(h('div',{},h('h4',{},'Scan passed · '+scan.files.length+' files'),h('p',{},scan.repo+' · commit '+scan.commit.slice(0,12)),h('p',{},scan.notice)));scan.checks.forEach(function(t){report.appendChild(h('p',{class:'tag'},'Checked: '+t));});scan.files.forEach(function(f){report.appendChild(h('p',{class:'tag'},f.path+' · '+f.size+' bytes'));});if(scan.omitted.length)report.appendChild(h('p',{},'Non-runtime metadata omitted: '+scan.omitted.join(', ')));stage.disabled=false;status.textContent='Choose the destination, then prepare a preview/review. No live website has changed.';}catch(e){status.textContent=e.message;}finally{busy=false;source.disabled=false;project.disabled=false;scanButton.disabled=false;}}},'Scan selected project');
+- var stage=h('button',{disabled:true,onclick:async function(){if(busy||!scan||!dest.value)return;busy=true;stage.disabled=true;try{var result=await api('workspace/stage','POST',{scan:scan.id,site:scan.kind==='static'?dest.value:undefined,connection:scan.kind==='worker'?+dest.value:undefined,worker:worker.value});preview.innerHTML='';if(scan.kind==='static'){var link=await api('proposals/'+result.proposal_id+'/preview-link');preview.appendChild(h('section',{},h('h4',{},'Live isolated website preview'),h('iframe',{title:'Imported website live preview',class:'fr',sandbox:'allow-scripts allow-forms',src:link.url+'index.html'})));}else preview.appendChild(h('p',{},'Worker code review is ready. This server cannot execute an imported backend as a frontend preview. Review its complete code and target before deployment.'));var decision=h('div',{class:'card'},h('button',{onclick:function(){openP(result.proposal_id,decision);}},'Review and approve'),h('button',{class:'bad',onclick:async function(){try{await api('proposals/'+result.proposal_id+'/decide','POST',{decision:'reject',comment:'Declined in source importer'});decision.textContent='Declined. Nothing deployed.';}catch(e){status.textContent=e.message;}}},'Decline'));preview.appendChild(decision);status.textContent='Ready. Review and decide here; nothing is live until approved.';}catch(e){status.textContent=e.message;}finally{busy=false;stage.disabled=!scan;}}},'Prepare live preview / code review');
+- show(nav(),h('main',{class:'card'},h('h3',{},'Import, scan and preview'),data.sources.length?null:h('section',{class:'card'},h('p',{},'No GitHub repository is connected to this Control Room yet. Your ChatGPT GitHub connection is separate. ZIP uploads below do not require GitHub.'),h('button',{onclick:github},'Connect a GitHub repository')),h('p',{},'Use connected repositories without a dashboard sign-in for each task. Select a complete built website or bundled Worker. Multi-file backend projects require a build; files are never silently deployed as a partial application.'),h('label',{},'1. Source repository'),source,h('label',{},'2. Exact project'),project,scanButton,report,h('label',{},'3. Destination'),dest,worker,h('p',{class:'tag'},'Websites use their existing managed content hosting. Bundled Workers target the exact selected Cloudflare account and Worker. This does not move databases or credentials.'),stage,status,preview,h('h4',{},'Upload from phone or computer'),h('p',{},'Use a built website ZIP up to 25 MB. Choose its managed site below.'),...data.sites.map(function(s){return h('div',{class:'card'},h('h4',{},s.name),packageForm(s));})));
++ var scanButton=h('button',{onclick:async function(){if(busy||!source.value||project.value==='')return;busy=true;reset();source.disabled=true;project.disabled=true;scanButton.disabled=true;status.textContent='Downloading and verifying the complete selected project…';try{var c=listing.candidates[+project.value];scan=await api('workspace/scan','POST',{source:+source.value,kind:c.kind,directory:c.directory,entry:c.path});while(!scan.complete){status.textContent='Verified '+scan.files.length+' files · '+scan.remaining+' remaining…';scan=await api('workspace/scan','POST',{scan:scan.id});}report.appendChild(h('div',{},h('h4',{},'Scan passed · '+scan.files.length+' files'),h('p',{},scan.repo+' · commit '+scan.commit.slice(0,12)),h('p',{},scan.notice)));scan.checks.forEach(function(t){report.appendChild(h('p',{class:'tag'},'Checked: '+t));});scan.files.forEach(function(f){report.appendChild(h('p',{class:'tag'},f.path+' · '+f.size+' bytes'));});if(scan.omitted.length)report.appendChild(h('p',{},'Non-runtime metadata omitted: '+scan.omitted.join(', ')));stage.disabled=false;status.textContent='Choose the destination, then prepare a preview/review. No live website has changed.';}catch(e){status.textContent=e.message;}finally{busy=false;source.disabled=false;project.disabled=false;scanButton.disabled=false;}}},'Scan selected project');
++ var stage=h('button',{disabled:true,onclick:async function(){if(busy||!scan||(scan.kind!=='project'&&!dest.value))return;busy=true;stage.disabled=true;try{var result=await api('workspace/stage','POST',{scan:scan.id,site:scan.kind==='static'?dest.value:undefined,connection:scan.kind==='worker'?+dest.value:undefined,worker:worker.value});while(result.status==='importing'){status.textContent='Preparing '+result.files+' files · '+result.remaining+' remaining…';result=await api('workspace/stage','POST',{scan:scan.id,site:dest.value});}preview.innerHTML='';if(result.status==='archived'){preview.appendChild(h('p',{},result.notice));preview.appendChild(h('a',{href:result.url,class:'btn'},'Download complete source project ZIP'));status.textContent='Source project imported privately. No page or backend was published.';return;}if(scan.kind==='static'){var link=await api('proposals/'+result.proposal_id+'/preview-link');preview.appendChild(h('section',{},h('h4',{},'Live isolated website preview'),h('iframe',{title:'Imported website live preview',class:'fr',sandbox:'allow-scripts allow-forms',src:link.url+'index.html'})));}else preview.appendChild(h('p',{},'Worker code review is ready. This server cannot execute an imported backend as a frontend preview. Review its complete code and target before deployment.'));var decision=h('div',{class:'card'},h('button',{onclick:function(){openP(result.proposal_id,decision);}},'Review and approve'),h('button',{class:'bad',onclick:async function(){try{await api('proposals/'+result.proposal_id+'/decide','POST',{decision:'reject',comment:'Declined in source importer'});decision.textContent='Declined. Nothing deployed.';}catch(e){status.textContent=e.message;}}},'Decline'));preview.appendChild(decision);status.textContent='Ready. Review and decide here; nothing is live until approved.';}catch(e){status.textContent=e.message;}finally{busy=false;stage.disabled=!scan;}}},'Prepare live preview / code review');
++ show(nav(),h('main',{class:'card'},h('h3',{},'Import, scan and preview'),data.sources.length?null:h('section',{class:'card'},h('p',{},'No GitHub repository is connected to this Control Room yet. Your ChatGPT GitHub connection is separate. ZIP uploads below do not require GitHub.'),h('button',{onclick:github},'Connect a GitHub repository')),h('p',{},'Use connected repositories without a dashboard sign-in for each task. Select a complete built website or bundled Worker. Multi-file backend projects require a build; files are never silently deployed as a partial application.'),h('label',{},'1. Source repository'),source,h('label',{},'2. Exact project'),project,scanButton,report,h('label',{},'3. Destination'),dest,worker,h('p',{class:'tag'},'Websites use their existing managed content hosting. Bundled Workers target the exact selected Cloudflare account and Worker. This does not move databases or credentials.'),stage,status,preview,h('h4',{},'Upload from phone or computer'),sourceProjectPhoneForm(),h('p',{},'Use a built website ZIP up to 25 MB. Choose its managed site below.'),...data.sites.map(function(s){return h('div',{class:'card'},h('h4',{},s.name),folderImportForm(s),packageForm(s));})));
   }catch(e){oops(e);}}
  var PROVIDER_SEEN={},PROVIDER_POLL=null;
 -async function verificationPanel(mount){if(!own())return;try{var data=await api('verification');mount.innerHTML='';data.requests.forEach(function(r){var status=h('p',{role:'status'}),card=h('section',{class:'card'},h('h4',{},'Provider verification needed'),h('p',{},r.provider+' · '+r.reason),h('p',{class:'tag'},'Enter your email, password or verification code only on the official provider page. Human verification is not an email challenge and cannot be completed by this control room.'),h('a',{class:'btn',href:r.url,target:'_blank',rel:'noopener noreferrer'},'Open official '+r.provider+' verification'));
@@ -352,7 +689,7 @@
  
  async function browserCenter(){
   var mount=h('div'),status=h('p',{role:'status'}),goal=h('input',{placeholder:'Task, for example: prepare a sign-up form','aria-label':'Browser task goal'}),hosts=h('input',{placeholder:'example.com, accounts.example.com','aria-label':'Approved browser hosts'}),shot=h('div');
-@@ -4245,8 +4366,11 @@
+@@ -4245,8 +4487,11 @@
  async function domainCenter(){
   var selection=h('select',{'aria-label':'Main-domain Cloudflare account'}),status=h('p',{role:'status'}),report=h('div');
   show(nav(),h('main',{class:'card'},h('h3',{},'Domains and subdomains'),h('p',{},'Use the main-domain account saved in this Control Room. This first check reads the zone, DNS and Worker mappings without opening the Cloudflare dashboard.'),selection,h('button',{onclick:async function(){this.disabled=true;report.innerHTML='';status.textContent='Checking saved zone and DNS permissions…';try{var data=await api('domains/inspect?connection='+encodeURIComponent(selection.value));status.textContent=data.notice;report.appendChild(h('p',{},data.label+' · '+data.zone.name+' · '+data.zone.status));data.hosts.forEach(function(host){var card=h('section',{class:'card'},h('h4',{},host.hostname));card.appendChild(h('p',{},host.records.length?host.records.map(function(r){return r.type+' → '+r.content+' · '+(r.proxied?'Proxied':'DNS only');}).join('; '):'No A, AAAA or CNAME record found.'));card.appendChild(h('p',{},host.workers.length?host.workers.map(function(w){return 'Worker: '+w.service+' · '+(w.enabled?'enabled':'disabled');}).join('; '):'No custom Worker domain found on this account.'));report.appendChild(card);});if(data.routing_notice)report.appendChild(h('p',{},data.routing_notice));}catch(e){status.textContent=e.message;}finally{this.disabled=false;}}},'Check domain and subdomains'),status,report));

@@ -73,10 +73,13 @@ const resourceInfo=await (await route(new Request('https://control.example/.well
 const challenge401=await route(new Request('https://control.example/mcp',{method:'POST',body:'{}'}),env);assert.equal(challenge401.status,401);assert.match(challenge401.headers.get('www-authenticate'),/resource_metadata/);
 const callback='https://chatgpt.com/connector_platform_oauth_redirect';
 async function register(redirect=callback){return route(new Request('https://control.example/connect/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({redirect_uris:[redirect],token_endpoint_auth_method:'none',client_name:'ChatGPT test'})}),env);}
-await assert.rejects(register('https://evil.example/callback'));
+for(const uri of ['http://evil.example/callback','https://user:secret@example.com/callback','https://example.com/callback#fragment','javascript:alert(1)','https://127.0.0.1/callback'])await assert.rejects(register(uri));
+const external=await(await register('https://assistant.example/callback')).json();assert.deepEqual(external.redirect_uris,['https://assistant.example/callback']);
+const local=await(await register('http://127.0.0.1:43001/callback')).json();assert.deepEqual(local.redirect_uris,['http://127.0.0.1:43001/callback']);
 const client=await (await register()).json();
 const verifier='a'.repeat(64),challenge=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))).toString('base64url');
 const authURL=new URL('https://control.example/connect/authorize');authURL.search=new URLSearchParams({client_id:client.client_id,redirect_uri:callback,response_type:'code',code_challenge_method:'S256',code_challenge:challenge,scope:'controlroom:work',resource:'https://control.example/mcp',state:'test-state'});
+const mismatch=new URL(authURL);mismatch.searchParams.set('redirect_uri','https://assistant.example/callback');await assert.rejects(route(new Request(mismatch),env),e=>e.status===400);
 const authStart=await route(new Request(authURL),env);assert.equal(authStart.status,302);
 const requestID=new URL(authStart.headers.get('location'),'https://control.example').searchParams.get('connect_request');
 await assert.rejects(route(new Request('https://control.example/connect/consent?id='+requestID),env),e=>e.status===403);
@@ -95,4 +98,12 @@ db.prepare("UPDATE agents SET status='active' WHERE name='ChatGPT connection'").
 assert.match(UI,/Connect ChatGPT/);assert.match(UI,/Authorize ChatGPT/);
 console.log('PASS ChatGPT connection: discovery, callback restriction, owner-only consent, origin protection, PKCE, resource audience, code replay prevention, real tools, revoke and expiry');
 
+// A non-ChatGPT client completes the same owner-consented, single-use PKCE flow.
+const otherURL=new URL(authURL);otherURL.searchParams.set('client_id',external.client_id);otherURL.searchParams.set('redirect_uri',external.redirect_uris[0]);
+const otherStart=await route(new Request(otherURL),env),otherID=new URL(otherStart.headers.get('location'),'https://control.example').searchParams.get('connect_request');
+const otherConsent=await route(new Request('https://control.example/connect/consent',{method:'POST',headers:{cookie,origin:'https://control.example','content-type':'application/json'},body:JSON.stringify({id:otherID,decision:'approve',password:env.ADMIN_PASS})}),env),otherRedirect=new URL((await otherConsent.json()).url);assert.equal(otherRedirect.origin,'https://assistant.example');
+const otherExchange=redirect=>route(new Request('https://control.example/connect/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:external.client_id,redirect_uri:redirect,resource:'https://control.example/mcp',code:otherRedirect.searchParams.get('code'),code_verifier:verifier})}),env);
+assert.equal((await otherExchange(callback)).status,400);const otherToken=await(await otherExchange(external.redirect_uris[0])).json();assert.ok(otherToken.access_token);assert.equal((await otherExchange(external.redirect_uris[0])).status,400);
+const otherTools=await(await route(new Request('https://control.example/mcp',{method:'POST',headers:{authorization:'Bearer '+otherToken.access_token},body:JSON.stringify({jsonrpc:'2.0',id:19,method:'tools/list'})}),env)).json();assert.ok(otherTools.result.tools.some(t=>t.name==='begin_site_update'));assert.ok(!otherTools.result.tools.some(t=>/approve|decide/.test(t.name)));
+console.log('PASS external assistant OAuth: exact registered redirect, owner consent, PKCE, authenticated multi-file tools and replay rejection');
 db.close();
