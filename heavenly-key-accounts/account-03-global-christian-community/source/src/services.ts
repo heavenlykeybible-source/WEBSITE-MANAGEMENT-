@@ -446,6 +446,7 @@ export async function blockMember(env:Env,userId:number,targetId:number){
   if(userId===targetId)throw new Error("You cannot block yourself.");
   await env.DB.prepare("INSERT OR IGNORE INTO user_blocks(blocker_user_id,blocked_user_id) VALUES(?,?)").bind(userId,targetId).run();
   await env.DB.prepare("DELETE FROM global_connections WHERE target_type='profile' AND ((user_id=? AND target_id=?) OR (user_id=? AND target_id=?))").bind(userId,targetId,targetId,userId).run();
+  await env.DB.prepare("UPDATE friend_requests SET status='cancelled',updated_at=datetime('now') WHERE status='pending' AND ((sender_user_id=? AND recipient_user_id=?) OR (sender_user_id=? AND recipient_user_id=?))").bind(userId,targetId,targetId,userId).run();
   await env.DB.prepare("UPDATE conversations SET status='blocked',updated_at=datetime('now') WHERE (requester_user_id=? AND recipient_user_id=?) OR (requester_user_id=? AND recipient_user_id=?)").bind(userId,targetId,targetId,userId).run();
   return {blocked:true};
 }
