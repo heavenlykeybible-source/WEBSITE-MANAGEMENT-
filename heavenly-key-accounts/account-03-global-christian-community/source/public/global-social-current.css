@@ -1477,3 +1477,22 @@ body[data-page="home"].gc-composed-dashboard :is(.gc-composer-submit,.hk-ref-cre
 .gc-bible-member-results{display:grid;gap:7px;max-height:280px;overflow:auto}
 .gc-bible-member-results button{min-height:45px;text-align:left;background:#173f95;color:#fff;border-color:#173f95}
 .gc-bible-member-panel input{width:100%;min-height:44px;box-sizing:border-box;border:1px solid #b9c8dd;border-radius:10px;padding:10px;color:#173a75;background:#fff;font:inherit}
+
+/* Compact Daily Manna: inline in the right sidebar, above Authorised KJV Bible */
+.gc-mini-manna{--mini-manna-accent:#a72142;--mini-manna-gold:#ffd579;--mini-manna-base:#370a31;margin:20px 0 18px;border:3px solid #173f9b;border-radius:19px;overflow:hidden;background:#fff8dc;box-shadow:0 14px 34px #15396a22;color:#192f56;font-family:system-ui,sans-serif}
+.gc-manna-head{display:grid;gap:5px;padding:16px;background:linear-gradient(120deg,var(--mini-manna-base),var(--mini-manna-accent));color:#fff}
+.gc-manna-eyebrow{font-size:11px;font-weight:900;letter-spacing:.15em;color:var(--mini-manna-gold)}
+.gc-manna-head strong{font-size:19px;line-height:1.2;color:white}
+.gc-manna-body{display:grid;gap:10px;padding:16px 13px}
+.gc-manna-topic{font-size:18px;line-height:1.3;color:var(--mini-manna-accent)}
+.gc-manna-reference{color:#791c39;font-size:16px;font-weight:900}
+.gc-manna-verse{margin:0;border-left:4px solid var(--mini-manna-gold);background:#fffdf2;padding:14px 12px;border-radius:0 10px 10px 0;font:17px/1.55 Georgia,serif;color:#272727}
+.gc-manna-encouragement,.gc-manna-prayer{margin:0;font-size:13px;line-height:1.65}
+.gc-manna-prayer{font-weight:650}
+.gc-manna-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gc-manna-actions button,.gc-manna-full{border:1px solid #bbcae6;background:#fff;color:#183b85;border-radius:10px;padding:10px 7px;font:800 12px/1.4 system-ui;cursor:pointer;text-align:center;text-decoration:none;min-height:42px}
+.gc-manna-actions button:nth-child(3){background:#173f9b;color:white}
+.gc-manna-full{display:block;background:#eabf54;color:#232e59;border-color:#cba344}
+.gc-manna-status{min-height:1em;margin:0;font-size:12px;color:#294e80}
+.gc-manna-footer{text-align:center;font-size:11px;line-height:1.5;color:#7b611e;font-weight:800}
+.gc-mini-manna :is(button,a):focus-visible{outline:3px solid #d4a42d;outline-offset:2px}
