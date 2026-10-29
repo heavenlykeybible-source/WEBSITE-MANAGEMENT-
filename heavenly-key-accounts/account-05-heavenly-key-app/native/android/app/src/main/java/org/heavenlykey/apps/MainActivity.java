@@ -43,7 +43,7 @@ public final class MainActivity extends Activity {
     String host=url.getHost();
     // Keep only Account 5 pages inside this WebView. Open other ministry
     // services in the device browser so their separate security boundaries remain intact.
-    if ("https".equalsIgnoreCase(url.getScheme()) && "apps.heavenlykey.org".equalsIgnoreCase(host) && url.getUserInfo()==null) return false;
+    if ("https".equalsIgnoreCase(url.getScheme()) && "apps.heavenlykey.org".equalsIgnoreCase(host) && url.getUserInfo()==null && !url.getPath().startsWith("/api/native-download/")) return false;
     if (!request.isForMainFrame()) return true;
     String scheme = url.getScheme();
     if (!"https".equalsIgnoreCase(scheme) && !"mailto".equalsIgnoreCase(scheme) && !"tel".equalsIgnoreCase(scheme)) return true;
