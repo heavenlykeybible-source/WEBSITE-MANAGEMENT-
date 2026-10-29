@@ -475,6 +475,14 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const result=await env.DB.prepare('SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts ORDER BY created_at DESC LIMIT 100').all();
   return reply({items:result.results,publishingConnected:false});
  }
+ if(u.pathname==='/api/posts/queue'&&req.method==='PUT'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(typeof data?.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id))return reply({error:'Valid draft id required'},400);
+  if(typeof data?.scheduledAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/.test(data.scheduledAt)||!Number.isFinite(Date.parse(data.scheduledAt))||Date.parse(data.scheduledAt)<=Date.now())return reply({error:'Provide a future ISO 8601 timestamp with timezone'},400);
+  const result=await env.DB.prepare("UPDATE social_posts SET scheduled_at=? WHERE id=? AND status='draft'").bind(data.scheduledAt,data.id).run();
+  if(!result.meta?.changes)return reply({error:'Draft not found or no longer editable'},404);
+  return reply({id:data.id,status:'draft',scheduledAt:data.scheduledAt,published:false});
+ }
  if(u.pathname==='/api/posts/queue'&&req.method==='PATCH'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(typeof data?.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id))return reply({error:'Valid draft id required'},400);
