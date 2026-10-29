@@ -475,6 +475,11 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const result=await env.DB.prepare('SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts ORDER BY created_at DESC LIMIT 100').all();
   return reply({items:result.results,publishingConnected:false});
  }
+ if(u.pathname==='/api/posts/queue'&&req.method==='GET'){
+  const result=await env.DB.prepare("SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts WHERE status='draft' AND scheduled_at IS NOT NULL ORDER BY scheduled_at ASC LIMIT 100").all();
+  const now=Date.now();
+  return reply({items:(result.results||[]).map((post:any)=>({...post,due:Number.isFinite(Date.parse(String(post.scheduled_at)))&&Date.parse(String(post.scheduled_at))<=now})),publishingConnected:false,note:'Review-only queue. No automatic publishing or platform delivery is enabled.'});
+ }
  if(u.pathname==='/api/posts'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   const platforms=['facebook_page','instagram_professional','youtube','tiktok'];
