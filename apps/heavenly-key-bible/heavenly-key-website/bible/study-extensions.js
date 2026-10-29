@@ -55,7 +55,7 @@ function renderDictionary(){
    if(e.explanation){const explanation=document.createElement('p');explanation.textContent=e.explanation;card.append(explanation);}
    const actions=document.createElement('div');actions.className='dict-actions';
    const copy=document.createElement('button');copy.type='button';copy.textContent='Copy';copy.setAttribute('aria-label','Copy '+e.term+' definition');
-   copy.addEventListener('click',async()=>{const value=[e.term,e.meaning,e.explanation,e.reference].filter(Boolean).join('\\n');try{await navigator.clipboard.writeText(value);copy.textContent='Copied';}catch{const area=document.createElement('textarea');area.value=value;area.style.position='fixed';area.style.left='-9999px';document.body.append(area);area.select();const ok=document.execCommand('copy');area.remove();copy.textContent=ok?'Copied':'Copy unavailable';}});
+   copy.addEventListener('click',async()=>{const value=[e.term,e.meaning,e.explanation,e.reference].filter(Boolean).join('\n');try{await navigator.clipboard.writeText(value);copy.textContent='Copied';}catch{const area=document.createElement('textarea');area.value=value;area.style.position='fixed';area.style.left='-9999px';document.body.append(area);area.select();const ok=document.execCommand('copy');area.remove();copy.textContent=ok?'Copied':'Copy unavailable';}});
    actions.append(copy);
    const ref=document.createElement('button');ref.type='button';ref.className='dict-verse-button';ref.textContent='Read KJV: '+e.reference;ref.setAttribute('aria-label','Show KJV verse '+e.reference);ref.addEventListener('click',async()=>{
   let passage=card.querySelector('.dict-verse-text');
