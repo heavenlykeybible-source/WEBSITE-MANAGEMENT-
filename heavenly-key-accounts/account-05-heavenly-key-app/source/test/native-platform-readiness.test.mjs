@@ -57,3 +57,14 @@ test('platform workflows build separately and do not deploy automatically',()=>{
   assert.doesNotMatch(s,/wrangler deploy|cloudflare\/pages-action|store upload|app-store-connect deploy/i,name);
  }
 });
+
+test('Windows signed release candidate is gated and never publicly deployed',()=>{
+ const workflow=readWorkflow('release-account5-windows.yml');
+ assert.match(workflow,/workflow_dispatch/);
+ assert.match(workflow,/environment: production-release/);
+ assert.match(workflow,/HKEM_WINDOWS_PFX_BASE64/);
+ assert.match(workflow,/HKEM_WINDOWS_PFX_PASSWORD/);
+ assert.match(workflow,/signtool verify \/pa/);
+ assert.match(workflow,/Get-AuthenticodeSignature/);
+ assert.doesNotMatch(workflow,/wrangler deploy|actions\/create-release|cloudflare\/pages-action/);
+});
