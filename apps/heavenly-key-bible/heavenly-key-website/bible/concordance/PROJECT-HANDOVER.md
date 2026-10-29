@@ -182,3 +182,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Browser bundle registered 569 Genesis draft entries, commit 89325bd57c345ce543b7f2bae7a6d9a6979ccf78.
 - Draft checker includes Genesis 22 and expects 569, commit 9edd3ed0da0682bcd96917d00d180ce25532b03d.
 - Next Genesis 23, execute Node/browser validation, canonical reference checks and batch generator. Human doctrinal review remains outstanding. No deployment; Bible Dictionary unchanged.
+
+## Latest checkpoint — Genesis 23
+- Added 20 original Genesis 23:1–20 pending-review drafts, commit 2305824c3db508bf7fcf8895f922e4ab501831e7. Covers Sarah's death, mourning and Machpelah purchase.
+- Browser bundle registered 589 Genesis draft entries, commit a4a2c361e9c610787f3f528ca6c44e2177f30446.
+- Draft checker includes Genesis 23 and expects 589, commit eec3080a10dcb81e990c4e1f445b8d99a5ea06ba.
+- Next Genesis 24; run Node/browser QA, full-canon cross-reference checks and batch generator. Human doctrinal review remains outstanding. No deployment or Bible Dictionary changes.
