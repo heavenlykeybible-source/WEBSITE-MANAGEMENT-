@@ -1,5 +1,22 @@
 /* Full Bible Dictionary sidebar: shared canonical dictionary data, not a shortened duplicate. */
+// Account 6 is the single source of truth; no separate Account 3 dictionary database.
 const SOURCE="https://raw.githubusercontent.com/heavenlykeybible-source/WEBSITE-MANAGEMENT-/main/apps/heavenly-key-bible/heavenly-key-website/bible/";
+const MIRROR="https://cdn.jsdelivr.net/gh/heavenlykeybible-source/WEBSITE-MANAGEMENT-@main/apps/heavenly-key-bible/heavenly-key-website/bible/";
+const CACHE_PREFIX='hk-account3-account6-dictionary-v2-';
+async function fetchCanonicalJson(file,validate){
+ let failure;
+ for(const base of [SOURCE,MIRROR]){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
+  try{const response=await fetch(base+file,{signal:controller.signal,cache:'no-cache'});if(!response.ok)throw Error('HTTP '+response.status);
+   const data=await response.json();if(!validate(data))throw Error('Invalid Account 6 '+file);
+   try{localStorage.setItem(CACHE_PREFIX+file,JSON.stringify({savedAt:Date.now(),data}));}catch{}
+   return {data,cached:false};
+  }catch(error){failure=error;}finally{clearTimeout(timer);}
+ }
+ try{const saved=JSON.parse(localStorage.getItem(CACHE_PREFIX+file)||'null');if(saved&&validate(saved.data))return {data:saved.data,cached:true};}catch{}
+ throw failure||Error('Account 6 dictionary unavailable');
+}
+
 const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el};
 export function mountFullDictionary(host){
  if(!host?.isConnected)return;
@@ -56,5 +73,5 @@ export function mountFullDictionary(host){
  };
  search.oninput=()=>{page=0;render()};letters.onchange=()=>{page=0;render()};previous.onclick=()=>{page--;render()};next.onclick=()=>{page++;render()};
  count.textContent='Loading complete dictionary…';
- Promise.all([fetch(SOURCE+'dictionary.json').then(r=>{if(!r.ok)throw Error('Dictionary unavailable');return r.json()}),fetch(SOURCE+'original-language-guide.json').then(r=>r.ok?r.json():[]).catch(()=>[])]).then(([d,g])=>{if(!Array.isArray(d)||!d.every(x=>x.term&&x.meaning&&x.reference))throw Error('Invalid dictionary');dictionary=d;guide=Array.isArray(g)?g:[];render()}).catch(()=>{if(host.isConnected)count.textContent='Dictionary could not load. Please try again later.'});
+ Promise.all([fetchCanonicalJson('dictionary.json',d=>Array.isArray(d)&&d.length>0&&d.every(x=>x?.term&&x.meaning&&x.reference)),fetchCanonicalJson('original-language-guide.json',g=>Array.isArray(g)).catch(()=>({data:[],cached:false}))]).then(([d,g])=>{if(!host.isConnected)return;dictionary=d.data;guide=g.data;render();if(d.cached){const note=make('p','','Offline copy of Account 6 dictionary · reconnect for updates.');note.setAttribute('role','status');host.insertBefore(note,search);}}).catch(()=>{if(host.isConnected)count.textContent='Account 6 dictionary is temporarily unavailable. Check your connection and retry.';});
 }
