@@ -51,3 +51,14 @@ jobs:
         run: |
           curl --fail --show-error --silent --retry 3 --retry-delay 2 https://socialplus.heavenlykey.org/health > health.json
           node -e "const f=require('fs');const d=JSON.parse(f.readFileSync('health.json','utf8'));if(d.account!==10)process.exit(1)"
+      - name: Smoke test production dashboard and static assets
+        run: |
+          curl --fail --show-error --silent --retry 3 --retry-delay 2 https://socialplus.heavenlykey.org/ > dashboard.html
+          node -e "const fs=require('node:fs');const html=fs.readFileSync('dashboard.html','utf8');if(!html.includes('chatsTab')||!html.includes('postsTab')){console.error('Live dashboard is not the new SocialPlus app');process.exit(1)}"
+          curl --fail --show-error --silent https://socialplus.heavenlykey.org/editorial-studio.js > editorial-live.js
+          node --check editorial-live.js
+      - name: Confirm unauthenticated API requests are rejected
+        run: |
+          status=$(curl --silent --output api-unauthorized.json --write-out '%{http_code}' https://socialplus.heavenlykey.org/api/posts)
+          test "$status" = '401' || { echo "Unauthenticated API returned HTTP $status instead of 401"; exit 1; }
+          node -e "const fs=require('node:fs');const d=JSON.parse(fs.readFileSync('api-unauthorized.json','utf8'));if(d.error!=='Unauthorized')process.exit(1)"
