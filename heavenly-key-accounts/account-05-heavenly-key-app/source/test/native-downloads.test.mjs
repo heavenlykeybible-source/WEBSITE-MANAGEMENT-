@@ -92,3 +92,11 @@ test('reject release whose scanned digest differs from published digest',async()
  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env)).status,403);
  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
 });
+
+test('missing release file body cannot be counted or served',async()=>{
+ const {env,calls}=environment();
+ env.NATIVE_RELEASES.get=async()=>({size:4,customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true',scannedSha256:'b'.repeat(64)}});
+ const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env);
+ assert.equal(response.status,503);
+ assert.equal(calls.writes,0);
+});
