@@ -11,6 +11,6 @@ dotnet restore HeavenlyKeyWindows.csproj
 dotnet build HeavenlyKeyWindows.csproj --no-restore -c Release
 ```
 
-Requires the official Microsoft Edge WebView2 Runtime to operate. GitHub Actions checks compilation only; it does not produce a signed public MSIX installer or prove real-device compatibility.
+Requires the official Microsoft Edge WebView2 Runtime to operate. GitHub Actions tests compilation, a self-contained unsigned test build, and an unsigned MSIX packaging check. The manually triggered `release-account5-windows.yml` creates a production-signing-gated MSIX matching the public download service, but no public release is made by the workflow. Signed packages must pass Windows Defender scanning, review, and physical-device installation testing.
 
-Before public release, create a properly versioned package with required runtime dependencies, sign it with a trusted code-signing certificate, verify antivirus and SHA-256, test on supported Windows versions, and publish only with owner approval. Do not present an unsigned build as a certified download.
+Before public release, use a trusted code-signing certificate with an owner-approved `production-release` environment, verify the MSIX signature and SHA-256, scan the exact package, test installation/uninstallation on supported Windows versions and confirm the WebView2 runtime. Publish only after owner approval. Do not present an unsigned test build as a certified download.
