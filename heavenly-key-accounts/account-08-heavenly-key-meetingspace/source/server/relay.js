@@ -2,16 +2,18 @@
 // Needs Node 18+, FFmpeg, and: npm i ws
 // Accounts mode:  RELAY_SECRET=same-value-as-Pages PORT=8080 FALLBACK=./fallback/backup.mp4 node relay.js
 // Single owner:   TOKEN=choose-a-password PORT=8080 node relay.js
-// Each CPU core supports roughly one live subscriber. Set MAX_SESSIONS to match your server.
+// Measure encoder CPU and bandwidth on the deployment host before increasing MAX_SESSIONS.
 // Optional: ALLOWED_ORIGIN=https://your-site (only your site may connect), MAX_GUESTS (stage), MAX_AUDIENCE (viewers per room), MAX_ROOMS,
 // ICE_JSON='[{"urls":"turn:host:3478","username":"u","credential":"p"}]' (a TURN server helps guests behind strict networks).
 const { WebSocketServer } = require('ws');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
+const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
 const dns = require('dns').promises;
 
-const SECRET = process.env.RELAY_SECRET || '', TOKEN = process.env.TOKEN || '';
+let fileSecret='';if(process.env.RELAY_SECRET_FILE){try{fileSecret=fs.readFileSync(process.env.RELAY_SECRET_FILE,'utf8').trim()}catch(e){console.error('The private relay secret file could not be read.');process.exit(1)}}
+const SECRET = process.env.RELAY_SECRET || fileSecret, TOKEN = process.env.TOKEN || '';
 if (!SECRET && !TOKEN) { console.error('Set RELAY_SECRET (accounts) or TOKEN (single password).'); process.exit(1); }
 if ((SECRET && SECRET.length < 32) || (TOKEN && TOKEN.length < 12)) { console.error('RELAY_SECRET must be 32+ characters and TOKEN 12+ characters.'); process.exit(1); }
 const tokOk = (t) => { const a = Buffer.from(String(t || '')), b = Buffer.from(TOKEN); return a.length === b.length && crypto.timingSafeEqual(a, b); };
@@ -22,7 +24,17 @@ const MAX = +process.env.MAX_SESSIONS || 3;
 const MAX_GUESTS = +process.env.MAX_GUESTS || 6, MAX_ROOMS = +process.env.MAX_ROOMS || 3; // MAX_GUESTS = people on stage
 let EXTRA_ICE = []; try { EXTRA_ICE = JSON.parse(process.env.ICE_JSON || '[]'); } catch {}
 const ICE = [{ urls: 'stun:stun.cloudflare.com:3478' }, { urls: 'stun:stun.l.google.com:19302' }, ...EXTRA_ICE];
-const wss = new WebSocketServer({ port: process.env.PORT || 8080, maxPayload: 8 * 1024 * 1024 });
+const ffmpegReady = spawnSync('ffmpeg',['-version'],{stdio:'ignore',timeout:10000}).status === 0;
+if(!ffmpegReady){console.error('FFmpeg is not available; broadcasting cannot start.');process.exit(1)}
+const server=http.createServer((req,res)=>{
+ res.setHeader('cache-control','no-store');res.setHeader('content-type','application/json');
+ if(req.method!=='GET'||req.url!=='/healthz'){res.writeHead(404);return res.end(JSON.stringify({error:'Not found'}))}
+ res.end(JSON.stringify({ok:true,ffmpeg:true}));
+});
+const wss = new WebSocketServer({ server, maxPayload: 8 * 1024 * 1024 });
+server.listen(process.env.PORT || 8080, process.env.HOST || '0.0.0.0');
+const relayStatus=(ws,type,extra={})=>{if(ws?.readyState===1)ws.send(JSON.stringify({type,...extra}))};
+const rejectBroadcast=(ws,message,retryable=false)=>{relayStatus(ws,'relay-error',{message,retryable});ws.close()};
 const sessions = new Map();
 
 function auth(t) {
@@ -39,18 +51,18 @@ function auth(t) {
 }
 // FFmpeg diagnostics can contain complete destination URLs and private stream keys.
 // Drain stderr without logging it; report process failure without exposing credentials.
-const ff = (a) => { const p = spawn('ffmpeg', ['-loglevel', 'warning', ...a]); p.stdin.on('error', () => {}); p.stderr.on('data', () => {}); p.on('error', () => console.error('Broadcast media process failed to start.')); return p; };
+const ff = (a,progress=false) => { const p = spawn('ffmpeg', ['-loglevel', 'warning', ...(progress?['-progress','pipe:3','-stats_period','1']:[]), ...a],{stdio:progress?['pipe','pipe','pipe','pipe']:['pipe','pipe','pipe']}); p.stdin.on('error', () => {}); p.stderr.on('data', () => {}); p.on('error', () => console.error('Broadcast media process failed to start.')); return p; };
 const dims = (size) => size === 'portrait' ? [720, 1280] : size === 'square' ? [720, 720] : [1280, 720];
 const vf = (w, h) => `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p`;
-const TS = ['-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-b:v', '3000k', '-maxrate', '3000k', '-bufsize', '3000k', '-g', '30',
+const TS = ['-threads','2','-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-b:v', '3000k', '-maxrate', '3000k', '-bufsize', '3000k', '-g', '30',
   '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-f', 'mpegts', 'pipe:1'];
 const kill = (p) => { if (p) { try { p.stdin.end(); p.kill('SIGKILL'); } catch {} } };
 
 function startEnc(dests) {
   const tee = dests.map(d => `[f=flv:onfail=ignore]${d}`).join('|');
   return ff(['-fflags', '+genpts', '-use_wallclock_as_timestamps', '1', '-f', 'mpegts', '-i', 'pipe:0',
-    '-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '3000k', '-maxrate', '3000k', '-bufsize', '6000k', '-g', '60', '-pix_fmt', 'yuv420p',
-    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-map', '0:v', '-map', '0:a', '-f', 'tee', tee]);
+    '-threads','2','-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '3000k', '-maxrate', '3000k', '-bufsize', '6000k', '-g', '60', '-pix_fmt', 'yuv420p',
+    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-map', '0:v', '-map', '0:a', '-f', 'tee', tee],true);
 }
 const startIngest = (s) => ff(['-i', 'pipe:0', '-vf', vf(s.w, s.h), ...TS]);
 function startBackup(s) {
@@ -60,7 +72,12 @@ function startBackup(s) {
     return ff([...card, '-re', '-stream_loop', '-1', '-i', FALLBACK, '-map', '0:v', '-map', '1:a', '-vf', vf(s.w, s.h), ...TS]);
   return ff(['-re', '-stream_loop', '-1', '-i', FALLBACK, '-vf', vf(s.w, s.h), ...TS]);
 }
-function pipeOut(s, p) { p.stdout.on('data', d => { if (s.src === p && s.enc.stdin.writable) s.enc.stdin.write(d); }); }
+function pipeOut(s, p) { p.stdout.on('data', d => { if (s.src === p && s.enc.stdin.writable && !s.enc.stdin.write(d)){p.stdout.pause();s.enc.stdin.once('drain',()=>p.stdout.resume())} }); }
+function writeMedia(s,data){
+ if(!s||!s.ing||!s.ing.stdin.writable)return false;
+ if(s.ing.stdin.writableLength+data.length>8*1024*1024){relayStatus(s.ws,'relay-error',{message:'The streaming service cannot keep up with this broadcast. Reduce quality and start again.',retryable:false});endSession(s);return false}
+ s.last=Date.now();s.ing.stdin.write(data);return true;
+}
 function useBackup(s) {
   kill(s.ing); s.ing = null;
   if (!s.fb) { const b = s.fb = startBackup(s); pipeOut(s, b); b.on('exit', () => { if (s.fb === b) s.fb = null; }); }
@@ -69,9 +86,10 @@ function useBackup(s) {
 }
 function newSession(id, dests, size, pe) {
   const [w, h] = dims(size);
-  const s = { id, enc: startEnc(dests), w, h, pe, src: null, fb: null, ing: null, ws: null, last: Date.now(), fbSince: 0 };
+  const s = { id, signature:crypto.createHash('sha256').update(JSON.stringify([dests,size])).digest('hex'), enc: startEnc(dests), w, h, pe, src: null, fb: null, ing: null, ws: null, last: Date.now(), fbSince: 0 };
   s.enc.stdin.on('error', () => {});
-  s.enc.on('exit', () => { if (sessions.get(id) === s) endSession(s); });
+  let progress='';s.enc.stdio[3].on('data',chunk=>{progress+=chunk.toString();const lines=progress.split('\n');progress=lines.pop();for(const line of lines){const match=line.match(/^frame=(\d+)/);if(match&&Number(match[1])>0)relayStatus(s.ws,'broadcast-progress',{frames:Number(match[1]),destinations:dests.length})}});
+  s.enc.on('exit', () => { if (sessions.get(id) === s){relayStatus(s.ws,'relay-error',{message:'Broadcast encoding stopped. Check the streaming service and destination settings.',retryable:false});endSession(s)} });
   useBackup(s);
   s.timer = setInterval(() => {
     if (s.ing && Date.now() - s.last > STALL) useBackup(s);
@@ -189,7 +207,7 @@ function isPrivate(ip) {
 async function safeDests(list) {
   const out = [];
   for (const d of list.slice(0, 10)) {
-    const m = String(d).match(/^rtmps?:\/\/([A-Za-z0-9.-]+)(?::(\d{1,5}))?(?:\/[A-Za-z0-9._~\/?&=%+-]*)?$/); if (!m) continue;
+    const m = String(d).match(/^rtmps?:\/\/([A-Za-z0-9.-]+)(?::(\d{1,5}))?(?:\/[A-Za-z0-9._~\/?&=%+-]*)?$/); if (!m || (m[2]&&(Number(m[2])<1||Number(m[2])>65535))) continue;
     try { const addrs = await dns.lookup(m[1], { all: true }); if (addrs.length && !addrs.some(a => isPrivate(a.address))) out.push(d); } catch {}
   }
   // Never silently start a partial broadcast when a destination was rejected.
@@ -197,7 +215,7 @@ async function safeDests(list) {
 }
 wss.on('connection', (ws, req) => {
   const allowed = process.env.ALLOWED_ORIGIN;
-  if (allowed && req.headers.origin !== allowed) return ws.close();
+  if (allowed && req.headers.origin !== allowed) return rejectBroadcast(ws,'This streaming address does not allow this application.');
   if ((req.url || '').split('?')[0] === '/room') return roomConn(ws);
   const idle = setTimeout(() => { if (!ws.sid) ws.close(); }, 10000);
   ws.buf = []; ws.bufBytes = 0;
@@ -207,14 +225,17 @@ wss.on('connection', (ws, req) => {
       let m; try { m = JSON.parse(data.toString()); } catch { return; }
       if (m.type === 'stop') { const s = sessions.get(ws.sid); if (s && s.ws === ws) endSession(s); return; }
       if (m.type !== 'start') return;
-      const a = auth(m.token); if (!a) { ws.send('Not allowed. Sign in again.'); return ws.close(); }
+      const a = auth(m.token); if (!a) return rejectBroadcast(ws,'Not allowed. Sign in again.');
       ws.starting = true;
       const dests = await safeDests(Array.isArray(m.dests) ? m.dests : []);
       if (ws.readyState !== 1) return;
-      if (!dests.length) { ws.send('A destination is invalid or unavailable. Check all destination URLs and try again.'); return ws.close(); }
+      if (!dests.length) return rejectBroadcast(ws,'A destination is invalid or unavailable. Check all destination URLs and try again.');
       let s = sessions.get(a.id);
+      const signature=crypto.createHash('sha256').update(JSON.stringify([dests,m.size])).digest('hex');
+      if(s&&s.ws&&s.ws!==ws){rejectBroadcast(s.ws,'This broadcast was opened in another tab.');s.ws=null;}
+      if(s&&s.signature!==signature){endSession(s);s=null;}
       if (!s) {
-        if (sessions.size >= MAX) { ws.send('The server is full right now. Try again soon.'); return ws.close(); }
+        if (sessions.size >= MAX) return rejectBroadcast(ws,'The server is full right now. Try again soon.',true);
         s = newSession(a.id, dests, m.size, a.pe); sessions.set(a.id, s);
       }
       ws.sid = a.id; s.ws = ws; s.pe = a.pe; s.last = Date.now();
@@ -222,17 +243,17 @@ wss.on('connection', (ws, req) => {
       const ing = s.ing = startIngest(s);
       ing.stdout.once('data', () => { if (s.ing === ing && sessions.get(s.id) === s) { s.src = ing; s.fbSince = 0; kill(s.fb); s.fb = null; console.log(s.id, 'live feed is on'); } });
       pipeOut(s, ing);
-      ws.send('Connected. Backup is ready.');
+      relayStatus(ws,'relay-ready',{destinations:dests.length});
       ws.starting = false; clearTimeout(idle);
-      for (const b of ws.buf) if (s.ing && s.ing.stdin.writable) s.ing.stdin.write(b);
+      for (const b of ws.buf) if(!writeMedia(s,b))break;
       ws.buf = []; ws.bufBytes = 0;
     } else {
       const s = sessions.get(ws.sid);
-      if (s && s.ws === ws && s.ing && s.ing.stdin.writable) { s.last = Date.now(); s.ing.stdin.write(data); }
+      if (s && s.ws === ws) writeMedia(s,data);
     }
   });
   ws.on('close', () => { clearTimeout(idle); const s = sessions.get(ws.sid); if (s && s.ws === ws) { s.ws = null; useBackup(s); } });
 });
-console.log('Relay listening on port', process.env.PORT || 8080);
+server.on('listening',()=>console.log('Relay listening on port',server.address().port));
 
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { for (const s of [...sessions.values()]) endSession(s); setTimeout(() => process.exit(0), 2000); });

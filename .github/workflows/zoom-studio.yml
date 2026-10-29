@@ -33,9 +33,11 @@ jobs:
         run: npm test --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source
   browser-audit:
     uses: ./.github/workflows/account8-browser.yml
+  relay-audit:
+    uses: ./.github/workflows/account8-relay.yml
   deploy:
     if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
-    needs: [checks, browser-audit]
+    needs: [checks, browser-audit, relay-audit]
     runs-on: ubuntu-latest
     environment: account8-meetingspace-production
     steps:

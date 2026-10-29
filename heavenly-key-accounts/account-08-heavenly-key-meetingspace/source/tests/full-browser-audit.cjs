@@ -15,7 +15,7 @@ const {WebSocketServer}=require('ws');
  execFileSync(process.execPath,[path.join(root,'scripts/bundle-control-room.mjs')]);
  const {default:app,MeetingRooms}=await import('file://'+path.join(root,'build/meeting-worker.mjs'));
  const env={TEAMDB:DB,AUTH_SECRET:secret,MEETINGSPACE_PRIVATE_PREVIEW:'1',MEETING_ROOMS:{idFromName:x=>x,get:()=>({})}};
- const errors=[],checks=[],rooms=new Map();let browser,server,origin;
+ const errors=[],checks=[],rooms=new Map();let browser,server,origin,broadcastBehavior='ready',broadcastStarts=0;
  const socketServer=new WebSocketServer({noServer:true});
  const check=async(name,task)=>{await task();checks.push(name);console.log('PASS browser:',name)};
  try{
@@ -27,6 +27,7 @@ const {WebSocketServer}=require('ws');
   // Exercise the unchanged MeetingRooms admission/signalling class over real Node WebSockets.
   // The adapter emulates attachment persistence; Cloudflare upgrade/hibernation are unit-tested separately.
   server.on('upgrade',(req,socket,head)=>{
+   if(req.url==='/broadcast'&&req.headers.origin===origin){socketServer.handleUpgrade(req,socket,head,ws=>{ws.on('message',(data,binary)=>{if(binary){if(broadcastBehavior==='ready')ws.send(JSON.stringify({type:'broadcast-progress',frames:30,destinations:1}));return}const message=JSON.parse(data);if(message.type==='stop'){ws.close();return}if(message.type==='start'){broadcastStarts++;if(broadcastBehavior==='deny'){ws.send(JSON.stringify({type:'relay-error',message:'Fixture rejected this destination.',retryable:false}));ws.close()}else if(broadcastBehavior==='ready')ws.send(JSON.stringify({type:'relay-ready',destinations:1}))}})});return}
    const m=req.url.match(/^\/meeting\/([a-f0-9-]{36})\/room$/i);
    if(!m||req.headers.origin!==origin){socket.destroy();return}
    if(!rooms.has(m[1])){const sockets=[];const state={getWebSockets:()=>sockets,storage:{setAlarm:async()=>{}}};rooms.set(m[1],{room:new MeetingRooms(state,env),sockets});}
@@ -89,6 +90,14 @@ const {WebSocketServer}=require('ws');
   await check('unconfigured broadcast and AI services explain their failure',async()=>{
    await tab(4);await page.locator('#gl').click();await page.waitForFunction(()=>document.querySelector('#info').textContent.length>0);assert.equal(await page.locator('#st').innerText(),'Offline');
    await tab(7);await page.locator('#aitp').fill('Prayer meeting');await page.locator('[data-a="ai"][data-m="title"]').click();await page.waitForFunction(()=>document.querySelector('#aio').value!=='Writing...');assert.equal(await page.locator('#aio').inputValue(),'');assert.ok((await page.locator('#ast').innerText()).length>0);
+  });
+  await check('broadcast waits for relay acceptance, confirms encoding and stops terminal errors',async()=>{
+   await tab(4);await page.route('**/api/relay-token',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({url:origin.replace('http:','wss:')+'/broadcast',token:'fixture'})}));
+   await page.locator('[data-a="dadd"]').click();await page.locator('#dl input[type=password]').fill('fixture-key');
+   broadcastBehavior='hold';let count=broadcastStarts;await page.locator('#gl').click();await page.waitForFunction(()=>document.querySelector('#st').textContent==='Waiting for streaming server');assert.notEqual(await page.locator('#st').innerText(),'Broadcasting');await page.locator('#gl').click();assert.equal(await page.locator('#st').innerText(),'Offline');
+   broadcastBehavior='ready';await page.locator('#gl').click();await page.waitForFunction(()=>document.querySelector('#st').textContent==='Broadcasting');await page.locator('#gl').click();assert.equal(await page.locator('#st').innerText(),'Offline');
+   broadcastBehavior='deny';await page.locator('#gl').click();await page.waitForFunction(()=>!want&&document.querySelector('#info').textContent==='Fixture rejected this destination.');assert.equal(await page.locator('#gl').innerText(),'Go live');
+   await page.unroute('**/api/relay-token');await page.locator('#dl button').click();
   });
   await check('account refresh preserves sign-in on a transient network failure',async()=>{
    const before=await page.evaluate(()=>localStorage.getItem('ls_tok'));await page.route('**/api/me',r=>r.abort());await page.evaluate(()=>refreshMe());assert.equal(await page.evaluate(()=>localStorage.getItem('ls_tok')),before);await page.unroute('**/api/me');

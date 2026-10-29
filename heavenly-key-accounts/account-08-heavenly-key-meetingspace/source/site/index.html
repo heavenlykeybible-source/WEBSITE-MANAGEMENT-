@@ -100,7 +100,7 @@ a{color:var(--ac)}
 <div class="row"><input type="text" id="relay" placeholder="wss://your-relay.example.com" aria-label="Relay address"></div>
 <div class="row"><input type="password" id="tok" placeholder="Relay password" aria-label="Relay password"></div></div>
 <div class="row"><button class="go" id="gl">Go live</button><button id="rc">Record to file</button><span class="mu" id="info"></span></div>
-<p class="mu">Copy each server URL and stream key from the platform's live dashboard. Keys stay in this tab and are not saved. Keep this tab open and visible while live. TikTok: open LIVE Producer (livecenter.tiktok.com/producer) to get the server URL and key. It needs 1,000+ followers and LIVE access, and it works best in Portrait. Instagram: paste the URL and key only if your account shows them.</p></section>
+<p class="mu">Copy each server URL and stream key from the platform's live dashboard. Keys stay in this tab and are not saved. Keep this tab open and visible while live. TikTok: open LIVE Producer (livecenter.tiktok.com/producer) to get the server URL and key. Your account must have LIVE and external-streaming access. Use the orientation required by your platform. Instagram: paste the URL and key only if your account shows them.</p></section>
 
 <section id="t4"><div class="row"><input type="text" id="chn" placeholder="Twitch channel name" aria-label="Twitch channel"><button class="pri" id="chc">Connect</button></div>
 <div class="mu" id="chs">Reads the public chat of one Twitch channel. YouTube and Facebook chat need account sign-in and are not included yet. Add "+ Chat overlay" in Sources to show chat on screen.</div><ul id="cl"></ul></section>
@@ -706,26 +706,48 @@ function rd(){const ul=$('dl');ul.innerHTML='';ds.forEach((d,i)=>{const li=docum
  li.innerHTML='<input type="checkbox" checked aria-label="Enabled"><input type="text" placeholder="Server URL"><input type="password" placeholder="Stream key"><button aria-label="Remove">x</button>';
  const[c,u,k,x]=li.children;c.checked=d.on;u.value=d.url;k.value=d.key;c.onchange=()=>d.on=c.checked;u.oninput=()=>d.url=u.value;k.oninput=()=>d.key=k.value;x.onclick=()=>{ds.splice(i,1);rd()};ul.appendChild(li)})}
 function setSt(t,on){$('st').textContent=t;$('st').classList.toggle('on',!!on)}
-let want=false,retry=0,outs=[];
-function connect(){try{ws=new WebSocket(RU)}catch(e){want=false;$('gl').textContent='Go live';setSt('Offline');$('info').textContent='Invalid relay address.';return}
- ws.onopen=()=>{retry=0;const lowd=$('low').checked;
-  ws.send(JSON.stringify({type:'start',token:RT,dests:outs,size:W<H?'portrait':W==H?'square':'landscape'}));
-  const tr=lowd?2:qTier;rec=new MediaRecorder(mkStream(),{mimeType:mime(),videoBitsPerSecond:QV[tr],audioBitsPerSecond:QA[tr]});
-  rec.ondataavailable=e=>{if(!e.data.size||ws.readyState!==1)return;if(ws.bufferedAmount>3e6){qTier=Math.min(2,qTier+1);dmeter();msg('Slow network. Lowering the stream quality to keep you live.');ws.close();return}ws.send(e.data);sent+=e.data.size;$('info').textContent=(sent/1048576).toFixed(1)+' MB sent'};
-  rec.start(1000);setSt('On air',true)};
- ws.onmessage=e=>{$('info').textContent=String(e.data).slice(0,120)};
- ws.onclose=()=>{try{rec&&rec.state!=='inactive'&&rec.stop()}catch(e){}
-  if(want){setSt('Reconnecting. Backup is playing.',true);$('info').textContent='Connection lost. Retrying...';setTimeout(()=>want&&relink().then(ok=>ok&&want&&connect()),Math.min(15000,2000*++retry))}else setSt('Offline')};
- ws.onerror=()=>{}}
-$('gl').onclick=async()=>{if(want){want=false;try{ws.send(JSON.stringify({type:'stop'}))}catch(e){}try{ws.close()}catch(e){}if(liveEnds.length){api('/api/golive/end',{ends:liveEnds});liveEnds=[]}$('gl').textContent='Go live';return}
+let want=false,retry=0,outs=[],broadcastStarting=false,broadcastTimer=null,reconnectTimer=null,broadcastFrames=0;
+function stopBroadcast(reason){want=false;clearTimeout(broadcastTimer);clearTimeout(reconnectTimer);try{ws&&ws.readyState===1&&ws.send(JSON.stringify({type:'stop'}))}catch(e){}try{ws&&ws.close()}catch(e){}try{rec&&rec.state!=='inactive'&&rec.stop()}catch(e){}if(liveEnds.length){api('/api/golive/end',{ends:liveEnds});liveEnds=[]}$('gl').textContent='Go live';setSt('Offline');if(reason)$('info').textContent=reason}
+function connect(){
+ let current;try{current=ws=new WebSocket(RU)}catch(e){stopBroadcast('Invalid streaming-server address.');return}
+ let currentRecorder=null,accepted=false;
+ clearTimeout(broadcastTimer);broadcastTimer=setTimeout(()=>{if(ws===current&&!accepted)stopBroadcast('The streaming server did not accept the broadcast. Check the service and try again.')},15000);
+ function startMedia(){if(accepted||ws!==current||!want)return;accepted=true;broadcastFrames=0;clearTimeout(broadcastTimer);
+  try{if(typeof MediaRecorder==='undefined')throw Error('Broadcasting is not supported on this browser.');const tier=$('low').checked?2:qTier;
+   rec=currentRecorder=new MediaRecorder(mkStream(),{mimeType:mime(),videoBitsPerSecond:QV[tier],audioBitsPerSecond:QA[tier]});
+   currentRecorder.ondataavailable=e=>{if(!e.data.size||ws!==current||current.readyState!==1)return;if(current.bufferedAmount>3e6){qTier=Math.min(2,qTier+1);dmeter();msg('Slow network. Lowering the stream quality.');current.close();return}current.send(e.data);sent+=e.data.size;$('info').textContent=(sent/1048576).toFixed(1)+' MB sent'+(broadcastFrames?' · '+broadcastFrames+' frames processed. Check each platform for live video.':' · waiting for encoding confirmation.')};
+   currentRecorder.onerror=()=>stopBroadcast('Media capture stopped. Check your sources and start again.');
+   currentRecorder.start(1000);setSt('Sending stream',true);broadcastTimer=setTimeout(()=>{if(ws===current&&want&&!broadcastFrames)stopBroadcast('The streaming server did not confirm encoding. Check the destinations and streaming service.')},30000);
+  }catch(e){stopBroadcast(e.message||'Media capture could not start on this browser.')}
+ }
+ current.onopen=()=>{if(ws!==current||!want){current.close();return}current.send(JSON.stringify({type:'start',token:RT,dests:outs,size:W<H?'portrait':W==H?'square':'landscape'}));setSt('Waiting for streaming server')};
+ current.onmessage=e=>{if(ws!==current||!want)return;let message;try{message=JSON.parse(e.data)}catch(e){}
+  if(message?.type==='relay-ready'){startMedia();return}
+  if(message?.type==='broadcast-progress'){if(accepted){broadcastFrames=Number(message.frames)||0;if(broadcastFrames>0){clearTimeout(broadcastTimer);retry=0;setSt('Broadcasting',true);$('info').textContent=broadcastFrames+' frames processed. Confirm live video on each selected platform.'}}return}
+  if(message?.type==='relay-error'){const reason=String(message.message||'The streaming server rejected this broadcast.').slice(0,180);if(message.retryable){$('info').textContent=reason;current.close()}else stopBroadcast(reason);return}
+  const text=String(e.data).slice(0,180);$('info').textContent=text;
+  // Existing relays can still accept ingest, without claiming verified encoding.
+  if(text==='Connected. Backup is ready.')startMedia();
+  else if(/^(Not allowed|A destination is invalid)/.test(text))stopBroadcast(text);
+ };
+ current.onclose=()=>{if(ws!==current)return;clearTimeout(broadcastTimer);try{currentRecorder&&currentRecorder.state!=='inactive'&&currentRecorder.stop()}catch(e){}if(ws!==current)return;
+  if(want){if(++retry>5){stopBroadcast('The streaming connection could not be restored. Check the service and start again.');return}setSt('Reconnecting');$('info').textContent='Connection lost. Retrying the streaming server...';reconnectTimer=setTimeout(async()=>{if(!want)return;if(await relink()){if(want)connect()}else stopBroadcast($('info').textContent||'Please sign in and start again.')},Math.min(15000,2000*retry))}else setSt('Offline');
+ };
+ current.onerror=()=>{};
+}
+$('gl').onclick=async()=>{if(want){stopBroadcast();return}if(broadcastStarting)return;broadcastStarting=true;$('gl').disabled=true;
+ try{
  if(ds.some(d=>d.on&&(!d.url.trim()||!d.key.trim()))){$('info').textContent='Complete the server URL and stream key for every enabled destination, or turn it off.';return}
  if(ds.filter(d=>d.on).length+(acct.on?conn.sel.size:0)>10){$('info').textContent='Select at most 10 destinations for one broadcast.';return}
- if(!(await relink())){if(!acct.on)$('info').textContent='Enter your relay address.';return}
+ if(!(await relink()))return;
  outs=ds.filter(d=>d.on&&d.url&&d.key).map(d=>d.url.replace(/\/+$/,'')+'/'+d.key);
  if(acct.on&&conn.sel.size){$('info').textContent='Creating your broadcasts...';
   const r=await api('/api/golive/start',{ids:[...conn.sel],title:$('btl').value.trim()||'Live broadcast',privacy:$('bpr').value});
   if(!r.ok){$('info').textContent=r.error||'Could not create the broadcasts.';if(r.status===401||r.status===402)act.tab(8);return}
-  outs.push(...r.dests.map(d=>d.url));liveEnds=r.dests.map(d=>d.end);if(r.errors&&r.errors.length)msg(r.errors.join(' | '))}
+  outs.push(...r.dests.map(d=>d.url));liveEnds=r.dests.map(d=>d.end);if(r.errors&&r.errors.length)msg(r.errors.join(' | '));
+  if(!outs.length){$('info').textContent=r.errors?.join(' | ')||'No channel could create a live broadcast. Check its permissions.';return}}
  if(!outs.length){$('info').textContent='Add a channel or a destination with a stream key first.';return}
- AC.resume();sent=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect()};
+ await AC.resume();sent=0;broadcastFrames=0;want=true;retry=0;$('gl').textContent='Stop';setSt('Connecting');connect();
+ }catch(e){stopBroadcast('The broadcast could not start. Check your sources and connection.')}finally{broadcastStarting=false;$('gl').disabled=false}
+};
 </script><script defer src="hk-approved-footer.js"></script></body></html>

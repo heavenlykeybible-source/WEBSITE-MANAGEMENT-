@@ -45,3 +45,7 @@ Run `npm ci`, then `npx playwright install chromium` and `npm run test:browser` 
 The audit serves the actual bundled application, uses disposable SQLite data, and exercises its real meeting signalling class through a local WebSocket adapter. Browser cameras and microphones are synthetic. Screen-track replacement uses a test capture track; it does not verify an operating-system screen picker. No production users, payments or social accounts are involved.
 
 The release workflow requires both backend checks and this browser audit before its deployment job. Browser screenshots are saved as workflow artifacts; no automatic production deployment is enabled.
+
+## Public social broadcasting
+
+The complete streaming-host package is in [server/deploy](server/deploy/README.md). It contains a Node/FFmpeg image, HTTPS proxy configuration, private secret-file mounting and health checks. Run `npm run test:relay` to exercise real encoding through two disposable local RTMP receivers. The release workflow now also requires the relay/container audit. This does not create a production relay host or authorize a social-platform account.

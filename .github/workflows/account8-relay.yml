@@ -1,0 +1,43 @@
+name: Account 8 social broadcast relay audit
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RELAY_HOST: stream.example.test
+      MEETINGSPACE_ORIGIN: https://meeting.heavenlykey.org
+      RELAY_SECRET_PATH: /tmp/relay-fixture-secret
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-08-heavenly-key-meetingspace/source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - name: Install FFmpeg if necessary
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          fi
+      - run: npm run test:relay
+      - name: Validate deployment configuration
+        run: |
+          node -e "require('fs').writeFileSync('/tmp/relay-fixture-secret',require('crypto').randomBytes(32).toString('hex'),{mode:0o600})"
+          sudo chown 1000:1000 /tmp/relay-fixture-secret
+          sudo chmod 0400 /tmp/relay-fixture-secret
+          docker compose -f server/deploy/compose.yaml config --quiet
+      - name: Build relay container without publishing
+        run: docker build -t heavenlykey-meetingspace-relay:local -f server/deploy/Dockerfile server
+      - name: Verify non-root relay container starts with a mounted secret
+        run: docker compose -p account8-relay-ci -f server/deploy/compose.yaml up -d --no-build --wait --wait-timeout 90 relay
+      - name: Remove disposable CI containers
+        if: always()
+        run: docker compose -p account8-relay-ci -f server/deploy/compose.yaml down --volumes

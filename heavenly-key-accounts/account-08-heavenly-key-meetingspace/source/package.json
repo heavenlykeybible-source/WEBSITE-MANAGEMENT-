@@ -7,7 +7,8 @@
     "bundle:control-room": "node scripts/bundle-control-room.mjs",
     "configure": "node scripts/configure.mjs",
     "deploy": "node scripts/deploy.mjs",
-    "test:browser": "node tests/browser.test.cjs && node tests/full-browser-audit.cjs"
+    "test:browser": "node tests/browser.test.cjs && node tests/full-browser-audit.cjs",
+    "test:relay": "node --test tests/relay-integration.cjs"
   },
   "engines": {
     "node": ">=22"

@@ -1,0 +1,46 @@
+services:
+  relay:
+    image: heavenlykey-meetingspace-relay:local
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    init: true
+    tmpfs:
+      - /tmp
+    environment:
+      PORT: '8080'
+      ALLOWED_ORIGIN: ${MEETINGSPACE_ORIGIN:?Set the exact HTTPS MeetingSpace origin}
+      RELAY_SECRET_FILE: /run/secrets/relay_secret
+      MAX_SESSIONS: ${MAX_SESSIONS:-1}
+      FALLBACK_MAX_MINUTES: ${FALLBACK_MAX_MINUTES:-5}
+    secrets:
+      - relay_secret
+    expose:
+      - '8080'
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+  https:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      RELAY_HOST: ${RELAY_HOST:?Set the relay hostname}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      relay:
+        condition: service_healthy
+secrets:
+  relay_secret:
+    file: ${RELAY_SECRET_PATH:?Set the local path of the existing private relay secret}
+volumes:
+  caddy_data:
+  caddy_config:

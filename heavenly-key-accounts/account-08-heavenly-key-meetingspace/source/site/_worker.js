@@ -8,7 +8,7 @@ const enc = new TextEncoder();
 const DEFAULT_PLANS = [{ id: 'day', name: 'Daily', days: 1, amount: 500 }, { id: 'week', name: 'Weekly', days: 7, amount: 2500 }, { id: 'month', name: 'Monthly', days: 30, amount: 8000 }];
 const json = (o, s = 200, h = {}) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', ...h } });
 const safeEq = (a, b) => { if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; };
-const TERMS_VERSION = '2026-10';
+const TERMS_VERSION = '2026-10-29';
 const hex = (buf) => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
@@ -30,6 +30,7 @@ async function pw(env, password, saltHex) { return hex(await crypto.subtle.sign(
 const stretched = (s) => /^[0-9a-f]{64}$/.test(String(s || ''));
 const plans = (env) => { try { return JSON.parse(env.PLANS || '') } catch { return DEFAULT_PLANS } };
 const cur = (env) => env.CURRENCY || 'NGN';
+const relayReady=env=>{try{const url=new URL(env.RELAY_URL);return String(env.RELAY_SECRET||'').length>=32&&url.protocol==='wss:'&&!url.username&&!url.password&&!url.hash}catch(e){return false}};
 const rowToUser = (r) => r && ({ salt: r.salt, hash: r.hash, paidUntil: r.paid, verified: !!r.verified, banned: !!r.banned, tv: r.tv, created: r.created, terms: r.terms, termsAt: r.termsAt, seen: r.seen, warned: r.warned, role: r.role || 'user' });
 const getUser = async (env, email) => rowToUser(await env.TEAMDB.prepare('SELECT * FROM users WHERE email=?').bind(email).first());
 const putUser = (env, email, u) => env.TEAMDB.prepare('INSERT INTO users(email,salt,hash,paid,verified,banned,tv,created,terms,termsAt,seen,warned,role) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(email) DO UPDATE SET salt=excluded.salt,hash=excluded.hash,paid=excluded.paid,verified=excluded.verified,banned=excluded.banned,tv=excluded.tv,terms=excluded.terms,termsAt=excluded.termsAt,seen=excluded.seen,warned=excluded.warned,role=excluded.role').bind(email, u.salt, u.hash, u.paidUntil || 0, u.verified === false ? 0 : 1, u.banned ? 1 : 0, u.tv || 0, u.created || Date.now(), u.terms || null, u.termsAt || null, u.seen || Date.now(), u.warned || 0, u.role || 'user').run();
@@ -375,7 +376,7 @@ export default {
     const origin = request.headers.get('origin');
     if (request.method === 'POST' && origin && origin !== url.origin && path !== '/api/pay/webhook') return json({ error: 'Forbidden' }, 403);
 
-    if (path === '/api/health') return json({ ok: true, releaseId: typeof MEETING_RELEASE_ID === 'string' ? MEETING_RELEASE_ID : null, accountsConfigured: accounts, relayConfigured: !!(env.RELAY_URL && env.RELAY_SECRET), meetingConfigured: !!(env.MEETING_ROOMS && typeof env.MEETING_ROOMS.idFromName==='function' && typeof env.MEETING_ROOMS.get==='function'), turnConfigured: String(env.TURN_SHARED_SECRET||'').length>=32 && String(env.TURN_URLS||'').split(',').some(u=>{u=u.trim();const m=u.match(/^turns?:[a-z0-9.-]+(?::([0-9]{1,5}))?(?:\?transport=(?:udp|tcp))?$/i);return !!m&&!u.includes('..')&&(!m[1]||Number(m[1])<=65535)}), youtubeConfigured: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET), facebookConfigured: !!(env.FB_APP_ID && env.FB_APP_SECRET), aiConfigured: !!env.AI, radio: 'on-hold' });
+    if (path === '/api/health') return json({ ok: true, releaseId: typeof MEETING_RELEASE_ID === 'string' ? MEETING_RELEASE_ID : null, accountsConfigured: accounts, relayConfigured: relayReady(env), meetingConfigured: !!(env.MEETING_ROOMS && typeof env.MEETING_ROOMS.idFromName==='function' && typeof env.MEETING_ROOMS.get==='function'), turnConfigured: String(env.TURN_SHARED_SECRET||'').length>=32 && String(env.TURN_URLS||'').split(',').some(u=>{u=u.trim();const m=u.match(/^turns?:[a-z0-9.-]+(?::([0-9]{1,5}))?(?:\?transport=(?:udp|tcp))?$/i);return !!m&&!u.includes('..')&&(!m[1]||Number(m[1])<=65535)}), youtubeConfigured: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET), facebookConfigured: !!(env.FB_APP_ID && env.FB_APP_SECRET), aiConfigured: !!env.AI, radio: 'on-hold' });
     if (path === '/api/plans') return accounts ? json({ plans: plans(env), currency: cur(env), registrationOpen: env.MEETINGSPACE_PRIVATE_PREVIEW === '0' }) : json({ error: 'Accounts are not set up' }, 501);
     if (path === '/api/pay/webhook' && request.method === 'POST') {
       if (!accounts || !env.PAYSTACK_SECRET) return json({ error: 'Not set up' }, 501);
@@ -615,7 +616,7 @@ export default {
       return json({ url: 'wss://' + url.host + '/meeting/' + room, token: await sign(env.AUTH_SECRET, { k: 'meeting', r: room, u: email, exp: Date.now() + 10 * 60000, pe: (role !== 'user' || (env.MEETINGSPACE_PRIVATE_PREVIEW !== '0' && u.terms === 'private-approved')) ? Date.now() + 86400000 : u.paidUntil }) });
     }
     if (path === '/api/relay-token' || path === '/api/meeting-token') {
-      if (!env.RELAY_SECRET || !env.RELAY_URL) return json({ error: 'Streaming server is not set up.' }, 501);
+      if (!relayReady(env)) return json({ error: 'Streaming server is not set up with a secure address and matching private access key.' }, 501);
       if (!active) return json({ error: 'Choose a plan to go live.' }, 402);
       return json({ url: env.RELAY_URL, token: await sign(env.RELAY_SECRET, { u: email, exp: Date.now() + 10 * 60000, pe: role !== 'user' ? Date.now() + 24 * 36e5 : u.paidUntil }) });
     }
