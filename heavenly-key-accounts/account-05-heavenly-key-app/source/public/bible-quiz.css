@@ -18,3 +18,17 @@ body:has(.quiz-shell){background:linear-gradient(155deg,#ffdc35 0%,#fff5ad 23%,#
 .quiz-choices .quiz-answer-incorrect,.quiz-choices .quiz-answer-incorrect:disabled{background:#ffe1e5;border-color:#c9192b;color:#8c1020;opacity:1}
 .quiz-correct{background:#ddf8e5;border-color:#16803b}.quiz-wrong{background:#fff0f0;border-color:#c9192b}
 .quiz-history-entry{background:#fffef8;border-color:#e8ca65}
+
+/* Championship theme */
+.quiz-shell{background:linear-gradient(155deg,#ffda2f 0%,#ffca1c 23%,#ed1c24 23%,#ba1127 78%,#1260df 78%);border-radius:22px;padding:24px 18px 70px}
+.quiz-card{background:#fffdf6;border:3px solid #e8bb24;border-radius:22px;color:#153b73}
+.quiz-shell h1{color:#123b91;text-align:center;font-weight:900}
+.quiz-tagline{text-align:center;color:#123b91}
+.quiz-button{background:#fff;border:2px solid #1564d8;color:#123b91}
+.quiz-choices .quiz-answer-correct,.quiz-choices .quiz-answer-correct:disabled{background:#bff1cb;border:3px solid #16813b;color:#075226;opacity:1}
+.quiz-choices .quiz-answer-incorrect,.quiz-choices .quiz-answer-incorrect:disabled{background:#ffd7db;border:3px solid #c71c2b;color:#8b1120;opacity:1}
+.quiz-result.quiz-correct{background:#d7f8df;border-color:#16813b}
+.quiz-result.quiz-wrong{background:#ffe5e7;border-color:#c71c2b}
+.quiz-progress-fill{background:#155de0}
+.quiz-sound-toggle{background:#155de0;color:#fff;border:2px solid #ffcf24}
+@media(max-width:430px){.quiz-shell{padding:16px 10px 55px}}
