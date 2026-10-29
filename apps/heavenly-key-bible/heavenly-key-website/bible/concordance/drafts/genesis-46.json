@@ -229,5 +229,148 @@
     ],
     "application": "Resist inventing biographies where the text supplies names alone.",
     "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:22",
+    "explanation": "Rachel's descendants are summarized as fourteen persons.",
+    "context": "The summary follows the listings of Joseph, Benjamin and their descendants, closing Rachel's branch of the genealogy.",
+    "crossReferences": [
+      "Genesis 46:19",
+      "Genesis 46:20"
+    ],
+    "application": "Handle genealogical totals carefully, considering the list's own structure.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:23",
+    "explanation": "Dan's son Hushim is recorded.",
+    "context": "The short entry identifies a descendant of Bilhah's son Dan without adding an individual narrative.",
+    "crossReferences": [
+      "Genesis 30:5-6",
+      "Numbers 26:42"
+    ],
+    "application": "Do not invent details about people when Scripture supplies only their names.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:24",
+    "explanation": "Naphtali's sons Jahzeel, Guni, Jezer and Shillem are listed.",
+    "context": "The genealogy completes the names associated with Bilhah's two sons, Dan and Naphtali.",
+    "crossReferences": [
+      "Genesis 30:7-8",
+      "Numbers 26:48-49"
+    ],
+    "application": "Attend to even brief records as part of Scripture's history.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:25",
+    "explanation": "Bilhah's descendants are counted as seven, with her connection to Rachel recalled.",
+    "context": "The verse concludes the Bilhah grouping before the narrator states the wider household total.",
+    "crossReferences": [
+      "Genesis 29:29",
+      "Genesis 46:23-24"
+    ],
+    "application": "Keep numerical summaries attached to the group they describe.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:26",
+    "explanation": "The narrator counts sixty-six descendants who came with Jacob into Egypt, excluding the wives of Jacob's sons.",
+    "context": "This is one of several related totals in the chapter; the stated exclusions matter when comparing them.",
+    "crossReferences": [
+      "Genesis 46:26-27",
+      "Exodus 1:5"
+    ],
+    "application": "Read numerical statements with attention to who is included and excluded.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:27",
+    "explanation": "Joseph's two sons born in Egypt are included as the total of Jacob's household in Egypt is stated as seventy.",
+    "context": "The distinction between arrivals from Canaan and family members already in Egypt explains why the adjacent totals are not identical.",
+    "crossReferences": [
+      "Genesis 41:50-52",
+      "Exodus 1:5"
+    ],
+    "application": "Compare connected passages before assuming a contradiction.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:28",
+    "explanation": "Jacob sends Judah ahead to Joseph to direct the family toward Goshen, and they arrive there.",
+    "context": "Judah's role as advance messenger follows his prominent speech in the preceding reconciliation narrative.",
+    "crossReferences": [
+      "Genesis 44:18-34",
+      "Genesis 45:10"
+    ],
+    "application": "Plan responsibly when relocating a household.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:29",
+    "explanation": "Joseph prepares his chariot, goes to Goshen to meet his father, and embraces him with prolonged weeping.",
+    "context": "The reunion fulfills the family's hope after years in which Jacob believed Joseph dead.",
+    "crossReferences": [
+      "Genesis 37:34-35",
+      "Genesis 45:28"
+    ],
+    "application": "Value restored family relationships and express gratitude for reconciliation.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:30",
+    "explanation": "Israel tells Joseph that he can now die in peace because he has seen him alive.",
+    "context": "The statement expresses deep satisfaction at their reunion, not an instruction to seek death.",
+    "crossReferences": [
+      "Genesis 45:26-28",
+      "Luke 2:29-30"
+    ],
+    "application": "Receive restored relationships with thankfulness.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:31",
+    "explanation": "Joseph tells his brothers and his father's household that he will inform Pharaoh of their arrival from Canaan.",
+    "context": "The announcement begins a practical arrangement for their residence in Egypt.",
+    "crossReferences": [
+      "Genesis 45:16-20",
+      "Genesis 47:1"
+    ],
+    "application": "Communicate truthfully and responsibly with those who have authority over shared arrangements.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:32",
+    "explanation": "Joseph explains that his relatives are shepherds and have brought their flocks and herds with them.",
+    "context": "Their established occupation is relevant to where they can live and sustain their livelihood.",
+    "crossReferences": [
+      "Genesis 46:6",
+      "Genesis 47:3"
+    ],
+    "application": "Speak accurately about work and responsibilities.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:33",
+    "explanation": "Joseph anticipates Pharaoh asking the brothers what their occupation is.",
+    "context": "The question prepares them to give a clear answer in the royal audience.",
+    "crossReferences": [
+      "Genesis 47:2-3",
+      "Genesis 46:33"
+    ],
+    "application": "Prepare to answer straightforward questions honestly.",
+    "reviewStatus": "pending"
+  },
+  {
+    "ref": "Genesis 46:34",
+    "explanation": "Joseph advises them to describe their longstanding work with livestock, explaining that shepherds are regarded unfavorably by Egyptians and that Goshen is suitable for them.",
+    "context": "The explanation concerns the social circumstances of this narrative; it does not endorse contempt for any occupation or people.",
+    "crossReferences": [
+      "Genesis 47:3-6",
+      "Genesis 43:32"
+    ],
+    "application": "Be truthful about your calling while treating people of different backgrounds with dignity.",
+    "reviewStatus": "pending"
   }
 ]
