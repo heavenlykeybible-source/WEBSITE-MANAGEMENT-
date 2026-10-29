@@ -31,6 +31,16 @@ jobs:
           $exe = Get-Item ./test-publish/HeavenlyKeyWindows.exe -ErrorAction Stop
           if ($exe.Length -lt 100000) { throw "Windows executable is unexpectedly small" }
           Get-FileHash ./test-publish/HeavenlyKeyWindows.exe -Algorithm SHA256 | Format-List
+      - name: Verify MSIX package structure without signing or distribution
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Copy-Item -Path './test-publish' -Destination './signed-candidate' -Recurse -Force
+          New-Item -ItemType Directory -Path './test-msix' -Force | Out-Null
+          ./package-msix.ps1 -Publisher 'CN=Heavenly Key Test' -OutputPath (Join-Path (Resolve-Path './test-msix').Path 'HeavenlyKeyWindows.msix')
+          if (-not (Test-Path './test-msix/HeavenlyKeyWindows.msix')) { throw 'MSIX packaging failed' }
+          Get-FileHash './test-msix/HeavenlyKeyWindows.msix' -Algorithm SHA256 | Format-List
       - name: Retain nonproduction Windows testing build
         uses: actions/upload-artifact@v4
         with:
