@@ -10,6 +10,8 @@ test('native WebView stays on the Account 5 origin and sends APK downloads to sy
  assert.ok(activity.includes('Intent.ACTION_VIEW'));
  assert.ok(!activity.includes('host.endsWith(".heavenlykey.org")'));
  assert.ok(activity.includes('MIXED_CONTENT_NEVER_ALLOW'));
+ assert.ok(activity.includes('Build.VERSION.SDK_INT >= Build.VERSION_CODES.O'));
+ assert.ok(activity.includes('settings.setSafeBrowsingEnabled(true)'));
  assert.ok(activity.includes('handler.cancel()'));
  assert.ok(activity.includes('setAcceptThirdPartyCookies(browser,false)'));
 });
