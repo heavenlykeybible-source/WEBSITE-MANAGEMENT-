@@ -71,3 +71,34 @@ test('iPhone guide offers web app rather than pretending an IPA download exists'
  assert.match(r.status,/Safari/i);
  assert.equal(r.open.href,'https://apps.heavenlykey.org/experience.html');
 });
+
+test('verified Windows MSIX starts on Windows without changing selected app',async()=>{
+ const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',app:'walk-with-god'});
+ assert.deepEqual(r.downloads,['/api/native-download/walk-with-god/windows']);
+ assert.equal(r.open.href,'https://apps.heavenlykey.org/walk-offline.html');
+ assert.equal(r.links[0]?.hidden,false);
+});
+test('verified macOS DMG starts on a Mac desktop only',async()=>{
+ const r=await simulate({device:'mac',userAgent:'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)'});
+ assert.deepEqual(r.downloads,['/api/native-download/all-in-one/mac']);
+});
+test('Windows native package cannot auto-start from Android QR scan',async()=>{
+ const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Linux; Android 13)'});
+ assert.deepEqual(r.downloads,[]);
+ assert.match(r.status,/different device/i);
+});
+test('macOS package cannot auto-start on a phone',async()=>{
+ const r=await simulate({device:'mac',userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'});
+ assert.deepEqual(r.downloads,[]);
+ assert.match(r.status,/different device/i);
+});
+test('iPad installation guide never triggers Android or desktop package',async()=>{
+ const r=await simulate({device:'ipad',userAgent:'Mozilla/5.0 (iPad; CPU OS 17_1 like Mac OS X)'});
+ assert.deepEqual(r.downloads,[]);
+ assert.match(r.status,/Safari/i);
+});
+test('an unavailable Windows MSIX keeps its download button hidden',async()=>{
+ const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',available:false});
+ assert.deepEqual(r.downloads,[]);
+ assert.equal(r.links[0]?.hidden,true);
+});
