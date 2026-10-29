@@ -30,3 +30,11 @@ test('scheduled draft queue supports reviewing, rescheduling and unscheduling', 
   assert.match(html, /Remove schedule/);
   assert.match(html, /Reschedule/);
 });
+
+test('private media library has paginated listing controls', () => {
+  assert.match(html, /api\('\/api\/media\/list'/);
+  assert.match(html, /function addMediaLibrary\(\)/);
+  assert.match(html, /Refresh image library/);
+  assert.match(html, /Load more/);
+  assert.match(html, /Copy ID/);
+});
