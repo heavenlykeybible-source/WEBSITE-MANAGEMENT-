@@ -42,8 +42,8 @@ function setupDictionaryLetters(){
 setupDictionaryLetters();
 function renderDictionary(){
  if(!state.dictionary)return;
- const query=$('dict').value.trim().toLowerCase(),letter=$('letter').value;
- const matches=state.dictionary.filter(e=>(!letter||e.term[0].toUpperCase()===letter)&&(!query||[e.term,e.meaning,e.explanation,...(state.originalGuide||[]).filter(w=>w.english.toLowerCase()===e.term.toLowerCase()).flatMap(w=>[w.original,w.transliteration,w.strong,w.meaning])].some(v=>String(v||'').toLocaleLowerCase().includes(query))));
+ const query=$('dict').value.trim().toLocaleLowerCase(),letter=$('letter').value;
+ const matches=state.dictionary.filter(e=>(!letter||e.term[0].toUpperCase()===letter)&&(!query||[e.term,e.meaning,e.explanation,...(state.originalGuide||[]).filter(w=>w.english.toLocaleLowerCase()===e.term.toLocaleLowerCase()).flatMap(w=>[w.original,w.transliteration,w.strong,w.meaning])].some(v=>String(v||'').toLocaleLowerCase().includes(query))));
  const pageSize=25,totalPages=Math.max(1,Math.ceil(matches.length/pageSize));dictionaryPage=Math.max(0,Math.min(dictionaryPage,totalPages-1));
  const start=dictionaryPage*pageSize;
  $('dict-count').textContent=`${matches.length} matching entries · page ${dictionaryPage+1} of ${totalPages}`;
