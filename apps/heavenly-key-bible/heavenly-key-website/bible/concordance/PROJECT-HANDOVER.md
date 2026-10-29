@@ -87,3 +87,10 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Updated scripts/concordance-draft-check.mjs to include Genesis 8 and expect 203 entries, commit 0dd3f5d563dec8f817321f36cb1a600ac8fc1a14.
 - Connector-side structural check: 203 unique Genesis references, all exist in KJV GEN.json; no empty required fields or identical explanation strings found. Node audit and browser smoke tests NOT run. Verse-to-explanation alignment and non-Genesis cross-references still require careful verification.
 - Continue Genesis 9 onward, with the highest priority on semantic accuracy, canonical references, automated QA, and topical concordance. Only Concordance and Commentary; leave separate Dictionary unchanged. No deployment without explicit owner approval.
+
+## Latest checkpoint — Genesis 9
+- Added drafts/genesis-9.json: 29 original verse-specific drafts (Genesis 9:1–29), all pending human doctrinal review. Interpretive cautions recorded for disputed and historically misused passages. Commit 7da68f97b44b9a40d2575c257580c5c42527419a.
+- Rebuilt browser study-notes-genesis-drafts.js to 232 entries through Genesis 9, commit 0e9fa0cc4075a8ea4ebb77bda17381f264c13dad.
+- Updated scripts/concordance-draft-check.mjs to include chapter 9 and 232 entries, commit 8b6d23ad3ad19f0048dd2dbab4f7b93d010a31a0.
+- Connector-side structural check found 232 unique draft refs, all existing in GEN.json, and no identical explanations or missing explanation/context/application fields. Not an executed Node or browser test; non-Genesis cross-reference validity and doctrinal approval remain pending.
+- NEXT: Genesis 10 onward; more thorough text alignment and cross-reference validation, topical Concordance expansion, Node/browser tests. Separate Bible Dictionary is out of scope. No deployment without approval.
