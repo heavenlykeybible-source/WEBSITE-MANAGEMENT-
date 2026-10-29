@@ -146,3 +146,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Regenerated browser bundle with 395 Genesis draft entries, commit a8cb27433d2345c9b9f00708e281062c3e825ae4.
 - Updated scripts/concordance-draft-check.mjs to include chapter 16 and expect 395, commit d2238870070ac07d2962f4a453aa92a6e715c4d3.
 - Next: Genesis 17, actual Node/browser validation and full canonical cross-reference checks. The 500–1,000 verse packet generator is infrastructure, not completed commentary. No deployment or changes to Bible Dictionary.
+
+## Latest checkpoint — Genesis 17
+- Added 27 original pending-review Genesis 17 verse-specific commentaries, commit c96d738223833f0dd1981a3f2536e52e744dd516. Notes distinguish the Abrahamic covenant sign of circumcision from New Testament justification by faith, and avoid harmful generalizations about Ishmael.
+- Updated browser bundle to 422 Genesis draft entries, commit 48e6bb9911765962c0ce8a9f8e64acb25634b51b.
+- Updated draft-check script for 422 and Genesis 17, commit 778021fa17fdbc86d8191fa66bbe70402afde9e5.
+- NEXT: Genesis 18 and actual execution of full KJV packet generator/validators. No claim of 31,102 authored explanations; all new drafts pending human doctrinal review. No deployment; Bible Dictionary unchanged.
