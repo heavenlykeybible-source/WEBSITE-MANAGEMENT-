@@ -52,7 +52,12 @@ export async function handleNativeDownloads(request,env) {
     const scanned=object.customMetadata?.malwareScan;
     const signed=object.customMetadata?.signatureVerified;
     const scannedDigest=object.customMetadata?.scannedSha256;
-    if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true' || scannedDigest!==sha256) return reply({error:'Release has not passed security verification'},403);
+    // A shared all-in-one binary may not be presented as a separately
+    // installable app. The publisher must attest the exact app and device
+    // identity of the reviewed package, not merely its R2 key.
+    const releaseAppId=object.customMetadata?.appId;
+    const releasePlatform=object.customMetadata?.platform;
+    if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true' || scannedDigest!==sha256 || releaseAppId!==appId || releasePlatform!==platform) return reply({error:'Release has not passed security verification'},403);
     if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size),'x-release-sha256':sha256}});
     // A valid object header alone does not prove R2 returned a readable package body.
     // Reject missing bodies before recording an initiated download.
