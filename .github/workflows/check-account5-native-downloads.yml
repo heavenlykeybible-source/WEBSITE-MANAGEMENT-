@@ -1,0 +1,36 @@
+name: Verify Account 5 Native Download Experience
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/**'
+      - 'tests/account5-native-download-browser.cjs'
+      - '.github/workflows/check-account5-native-downloads.yml'
+permissions:
+  contents: read
+jobs:
+  native-downloads:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify downloads, private counters and existing offline preservation
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/source
+        run: node --test test/native-downloads.test.mjs test/native-device-experience.test.mjs test/admin-downloads.test.mjs test/download-install-regression.test.mjs test/app-installation.test.mjs test/offline-preservation.test.mjs
+      - run: npm install --no-save --ignore-scripts playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Test phone, tablet and desktop browser journeys
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --directory heavenly-key-accounts/account-05-heavenly-key-app/source/public > /tmp/native-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:8765/downloads.html >/dev/null; then break; fi
+            sleep 1
+          done
+          node tests/account5-native-download-browser.cjs

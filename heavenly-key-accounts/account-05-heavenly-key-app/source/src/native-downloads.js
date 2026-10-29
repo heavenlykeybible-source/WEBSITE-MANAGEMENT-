@@ -1,8 +1,8 @@
 // Native release distribution: signed packages must be uploaded to private R2.
 // No download is counted unless a real package exists and is returned.
 // Aggregate counts are private and require a configured admin bearer token.
-const headers = {'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'};
-const platforms = {android:{extension:'apk',type:'application/vnd.android.package-archive'},windows:{extension:'msix',type:'application/msix'},mac:{extension:'dmg',type:'application/x-apple-diskimage'}};
+const headers = {'x-frame-options':'DENY','cross-origin-resource-policy':'same-origin','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'};
+const platforms = {android:{extension:'apk',type:'application/vnd.android.package-archive'},windows:{extension:'exe',type:'application/vnd.microsoft.portable-executable'},mac:{extension:'dmg',type:'application/x-apple-diskimage'}};
 const idPattern = /^[a-z0-9-]{1,64}$/;
 const reply = (data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...headers,'content-type':'application/json; charset=utf-8'}});
 function authorized(request,env) {
@@ -45,7 +45,7 @@ export async function handleNativeDownloads(request,env) {
   const key=appId+'/'+platform+'/release.'+meta.extension;
   try {
     const object=request.method==='HEAD' ? await env.NATIVE_RELEASES.head(key) : await env.NATIVE_RELEASES.get(key);
-    if(!object || !object.size) return reply({error:'Native installation package not available for this app and device'},404);
+    if(!object || !Number.isSafeInteger(object.size) || object.size <= 0) return reply({error:'Native installation package not available for this app and device'},404);
     // A release is publishable only after the trusted release pipeline records its SHA-256.
     // This metadata is set by the publisher after malware scanning and signing checks.
     const sha256=object.customMetadata?.sha256;
@@ -53,17 +53,31 @@ export async function handleNativeDownloads(request,env) {
     const signed=object.customMetadata?.signatureVerified;
     const scannedDigest=object.customMetadata?.scannedSha256;
     if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true' || scannedDigest!==sha256) return reply({error:'Release has not passed security verification'},403);
-    if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size),'x-release-sha256':sha256}});
+    const checksum=object.checksums?.sha256;
+    const storedDigest=checksum ? Array.from(new Uint8Array(checksum),b=>b.toString(16).padStart(2,'0')).join('') : '';
+    if(storedDigest !== sha256.toLowerCase()) return reply({error:'Stored package checksum verification failed'},403);
+    const release=object.customMetadata || {};
+    const version=release.version, releasedAt=release.releasedAt, minOs=release.minOs, architecture=release.architecture;
+    const releaseTime=Date.parse(releasedAt);
+    if(!/^\d+\.\d+\.\d+(?:[-+][a-zA-Z0-9.-]+)?$/.test(version||'') ||
+       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(releasedAt||'') || !Number.isFinite(releaseTime) || new Date(releaseTime).toISOString().replace('.000Z','Z')!==releasedAt || releaseTime>Date.now() ||
+       !/^[a-zA-Z0-9 .()-]{1,64}$/.test(minOs||'') || !['universal','x64','arm64','x64-arm64','x86-arm64','armv7-arm64'].includes(architecture))
+      return reply({error:'Release version and compatibility review incomplete'},403);
+    const releaseHeaders={...headers,'content-type':meta.type,'content-length':String(object.size),'x-release-sha256':sha256,
+      'x-release-version':version,'x-release-date':releasedAt,'x-release-min-os':minOs,'x-release-architecture':architecture};
+    if(request.method==='HEAD') return new Response(null,{status:200,headers:releaseHeaders});
+    if(!object.body) return reply({error:'Release package body unavailable'},503);
     // A download event means a package response was initiated, not that the device installed it.
     // Use a single aggregate counter row rather than storing identifying visitor data.
-    // Anonymous analytics are best-effort: a statistics outage must not block downloads.
+    // Require an aggregate count before starting a package transfer; HEAD and failures never count.
+    if(!env.DOWNLOAD_DB) return reply({error:'Download accounting temporarily unavailable'},503);
     if(env.DOWNLOAD_DB) {
       try {
         await env.DOWNLOAD_DB.prepare('INSERT INTO native_download_counts (app_id, platform, downloads) VALUES (?, ?, 1) ON CONFLICT(app_id, platform) DO UPDATE SET downloads = downloads + 1').bind(appId,platform).run();
       } catch (error) {
-        console.warn('Native download counter unavailable', String(error));
+        return reply({error:'Download accounting temporarily unavailable'},503);
       }
     }
-    return new Response(object.body,{status:200,headers:{...headers,'content-type':meta.type,'content-disposition':'attachment; filename="heavenly-key-'+appId+'.'+meta.extension+'"','content-length':String(object.size),'x-release-sha256':sha256}});
+    return new Response(object.body,{status:200,headers:{...releaseHeaders,'content-disposition':'attachment; filename="heavenly-key-'+appId+'.'+meta.extension+'"','content-length':String(object.size),'x-release-sha256':sha256}});
   } catch { return reply({error:'Download temporarily unavailable'},503); }
 }

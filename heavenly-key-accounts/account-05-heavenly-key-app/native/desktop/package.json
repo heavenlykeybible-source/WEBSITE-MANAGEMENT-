@@ -1,0 +1,66 @@
+{
+  "name": "heavenly-key-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Heavenly Key installed desktop application",
+  "author": "Heavenly Key Evangelistic Movement",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test policy.test.cjs",
+    "package:test": "electron-builder --dir -c.forceCodeSigning=false",
+    "package:release": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "45.1.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "org.heavenlykey.apps",
+    "productName": "Heavenly Key",
+    "asar": true,
+    "forceCodeSigning": true,
+    "files": [
+      "main.cjs",
+      "policy.cjs",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "heavenly-key-${version}-windows-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.reference",
+      "hardenedRuntime": true,
+      "notarize": true,
+      "minimumSystemVersion": "14.0.0",
+      "artifactName": "heavenly-key-${version}-mac-universal.${ext}",
+      "icon": "build/icon.icns"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+name: Build Account 5 Desktop Applications
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/native/desktop/**'
+      - '.github/workflows/build-account5-desktop.yml'
+permissions:
+  contents: read
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm test
+      - name: Build unpacked application for testing only
+        run: npm run package:test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: heavenly-key-desktop-testing-only-${{ matrix.os }}
+          path: heavenly-key-accounts/account-05-heavenly-key-app/native/desktop/dist/
+          if-no-files-found: error
+          retention-days: 7

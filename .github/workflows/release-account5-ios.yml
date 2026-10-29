@@ -1,0 +1,90 @@
+name: Package Account 5 Signed iPhone Release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/ios
+    env:
+      IOS_CERTIFICATE_BASE64: ${{ secrets.HKEM_IOS_CERTIFICATE_BASE64 }}
+      IOS_CERTIFICATE_PASSWORD: ${{ secrets.HKEM_IOS_CERTIFICATE_PASSWORD }}
+      IOS_PROFILE_BASE64: ${{ secrets.HKEM_IOS_PROFILE_BASE64 }}
+      IOS_TEAM_ID: ${{ secrets.HKEM_IOS_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require owner distribution signing
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in IOS_CERTIFICATE_BASE64 IOS_CERTIFICATE_PASSWORD IOS_PROFILE_BASE64 IOS_TEAM_ID; do
+            test -n "${!name}" || { echo "::error::Missing signing secret: $name"; exit 1; }
+          done
+      - name: Prepare temporary signing keychain and profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          keychain="$RUNNER_TEMP/hkem-signing.keychain-db"
+          keypass="$(openssl rand -hex 32)"
+          echo "::add-mask::$keypass"
+          security create-keychain -p "$keypass" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keypass" "$keychain"
+          printf '%s' "$IOS_CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keypass" "$keychain"
+          security list-keychains -d user -s "$keychain"
+          printf '%s' "$IOS_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
+          security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" > "$RUNNER_TEMP/profile.plist"
+          uuid=$(/usr/libexec/PlistBuddy -c 'Print UUID' "$RUNNER_TEMP/profile.plist")
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$RUNNER_TEMP/profile.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$uuid.mobileprovision"
+          echo "IOS_PROFILE_UUID=$uuid" >> "$GITHUB_ENV"
+      - name: Generate project and original ministry icons
+        run: |
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          swift generate-icons.swift
+          xcodegen generate
+      - name: Archive signed app
+        run: |
+          xcodebuild -project HeavenlyKey.xcodeproj -scheme HeavenlyKey \
+            -destination 'generic/platform=iOS' -configuration Release \
+            -archivePath build/HeavenlyKey.xcarchive \
+            DEVELOPMENT_TEAM="$IOS_TEAM_ID" CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" PROVISIONING_PROFILE_SPECIFIER="$IOS_PROFILE_UUID" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" archive
+      - name: Export App Store IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, plistlib
+          options = {"method":"app-store-connect", "teamID":os.environ["IOS_TEAM_ID"],
+                     "signingStyle":"manual", "signingCertificate":"Apple Distribution",
+                     "provisioningProfiles":{"org.heavenlykey.apps":os.environ["IOS_PROFILE_UUID"]}}
+          with open("ExportOptions.plist","wb") as f: plistlib.dump(options,f)
+          PY
+          xcodebuild -exportArchive -archivePath build/HeavenlyKey.xcarchive \
+            -exportOptionsPlist ExportOptions.plist -exportPath build/export
+          codesign --verify --deep --strict build/HeavenlyKey.xcarchive/Products/Applications/HeavenlyKey.app
+          shasum -a 256 build/export/*.ipa > build/export/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: heavenly-key-signed-ios-app-store-package
+          path: heavenly-key-accounts/account-05-heavenly-key-app/native/ios/build/export/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Remove private signing material
+        if: always()
+        shell: bash
+        run: |
+          security delete-keychain "$RUNNER_TEMP/hkem-signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP/certificate.p12" "$RUNNER_TEMP/profile.mobileprovision" "$RUNNER_TEMP/profile.plist"
+          if [ -n "${IOS_PROFILE_UUID:-}" ]; then
+            rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$IOS_PROFILE_UUID.mobileprovision"
+          fi

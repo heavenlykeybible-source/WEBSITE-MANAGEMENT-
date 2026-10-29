@@ -1,0 +1,47 @@
+name: Build Account 5 Native iPhone App
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/native/ios/**'
+      - '.github/workflows/build-account5-ios.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/native/ios/**'
+      - '.github/workflows/build-account5-ios.yml'
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+      - name: Generate native Xcode project
+        run: |
+          swift generate-icons.swift
+          xcodegen generate
+      - name: Build for iPhone Simulator
+        run: |
+          xcodebuild -project HeavenlyKey.xcodeproj -scheme HeavenlyKey \
+            -sdk iphonesimulator -configuration Debug \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Compile device archive without signing
+        run: |
+          xcodebuild -project HeavenlyKey.xcodeproj -scheme HeavenlyKey \
+            -destination 'generic/platform=iOS' -configuration Release \
+            -archivePath build/HeavenlyKey.xcarchive CODE_SIGNING_ALLOWED=NO archive
+      - uses: actions/upload-artifact@v4
+        with:
+          name: heavenly-key-ios-compilation-artifacts-not-installable
+          path: |
+            heavenly-key-accounts/account-05-heavenly-key-app/native/ios/build/HeavenlyKey.xcarchive
+            heavenly-key-accounts/account-05-heavenly-key-app/native/ios/HeavenlyKey.xcodeproj
+          if-no-files-found: error
+          retention-days: 14

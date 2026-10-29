@@ -8,7 +8,7 @@
     ['📅','365-Day Reading Plan','/devotional.html','Daily discipleship'],
     ['🧮','My Walk With God','/walk-offline.html','Private offline notebook'],
     ['⌛','Eternity in View','/eternity-in-view/','Salvation and eternity portal'],
-    ['🎓','From Creation to Eternity','/creation-to-eternity.html','35 Bible lessons'],
+    ['🎓','Bible Study (in My Walk With God)','/walk-offline.html#walk-bible-study','35 Bible lessons within My Walk With God'],
     ['📻','Heavenly Key Radio','https://radio.heavenlykey.org/','Dedicated radio website'],
     ['🌍','Global Christian Social Network','https://global.heavenlykey.org/','Dedicated social network'],
     ['📚','Heavenly Key Bible Portal','https://onlinebible.heavenlykey.org/','Dedicated Bible website']

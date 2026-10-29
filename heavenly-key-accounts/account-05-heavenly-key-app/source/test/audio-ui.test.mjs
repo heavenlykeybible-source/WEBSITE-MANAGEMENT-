@@ -2,46 +2,43 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {KJV_BOOKS} from '../public/bible-catalog.js';
-import * as catalogue from '../public/audio-bible-catalog.js';
-import {nextApprovedBible} from '../public/audio-playlist.js';
+import {HYMNS,FEATURED_HYMN,approvedHymn,coverage,AUDIO_CACHE} from '../public/audio-hymn-catalog.js';
+import {nextApprovedHymn} from '../public/audio-playlist.js';
 import {approvedBackground} from '../public/audio-background-catalog.js';
 import {createLockScreenSession} from '../public/lock-screen-media.js';
-
-async function mount(manifest,query='?book=john&chapter=3'){
+const root=new URL('../public/',import.meta.url);
+async function mount(manifest){
  const nodes=new Map(),fetches=[],events={};
  function node(id){return {id,value:'',checked:false,disabled:false,hidden:false,paused:true,currentTime:0,children:[],listeners:{},attributes:{},plays:0,
-  append(n){this.children.push(n)},replaceChildren(...items){this.children=items},addEventListener(n,f){this.listeners[n]=f},getAttribute(n){return this.attributes[n]},removeAttribute(n){delete this.attributes[n];if(n==='src')this.src=''},
+  append(n){this.children.push(n)},replaceChildren(...items){this.children=items},addEventListener(n,f){this.listeners[n]=f},removeEventListener(n){delete this.listeners[n]},getAttribute(n){return this.attributes[n]},removeAttribute(n){delete this.attributes[n];if(n==='src')this.src=''},
   pause(){this.paused=true;this.listeners.pause?.()},load(){},play(){this.plays++;this.paused=false;this.listeners.play?.();return Promise.resolve();}};}
- for(const id of [...readFileSync(new URL('../public/audio-bible.html',import.meta.url),'utf8').matchAll(/id="([^"]+)"/g)].map(x=>x[1]))nodes.set(id,node(id));
- nodes.get('audio-speed').value='1';nodes.get('audio-music-volume').value='12';
- const location={href:'https://app.test/audio-bible.html'+query,search:query,origin:'https://app.test'};
- const context={KJV_BOOKS,...catalogue,nextApprovedBible,approvedBackground,createLockScreenSession,
-  document:{getElementById:id=>nodes.get(id),createElement:tag=>node(tag)},location,URL,URLSearchParams,navigator:{onLine:true},window:{addEventListener:(n,f)=>events[n]=f},
-  history:{replaceState(){}},fetch:async path=>{fetches.push(path);return {ok:true,json:async()=>path==='audio-background-manifest.json'?{publicationApproved:false}:manifest};}};
- const source=readFileSync(new URL('../public/audio-bible.js',import.meta.url),'utf8').replace(/^import .*;\n/gm,'');
+ for(const [,id] of readFileSync(new URL('audio-hymns.html',root),'utf8').matchAll(/id="([^"]+)"/g))nodes.set(id,node(id));
+ nodes.get('hymn-style').value='choir';nodes.get('hymn-music-volume').value='12';
+ const location={href:'https://apps.heavenlykey.org/audio-hymns.html',search:'',origin:'https://apps.heavenlykey.org'};
+ const context={HYMNS,FEATURED_HYMN,approvedHymn,coverage,AUDIO_CACHE,nextApprovedHymn,approvedBackground,createLockScreenSession,
+  document:{getElementById:id=>nodes.get(id),createElement:tag=>node(tag)},location,URL,URLSearchParams,navigator:{},window:{addEventListener:(n,f)=>events[n]=f},history:{replaceState(){}},
+  fetch:async path=>{fetches.push(path);return {ok:true,json:async()=>path==='audio-background-manifest.json'?{publicationApproved:false}:manifest};}};
+ const source=readFileSync(new URL('audio-hymns.js',root),'utf8').replace(/^import .*;\n/gm,'');
  await vm.runInNewContext('(async()=>{'+source+'})()',context);
  return {nodes,fetches,events};
 }
-test('missing recordings produce clear availability and zero media playback',async()=>{
- const manifest=JSON.parse(readFileSync(new URL('../public/audio-bible-manifest.json',import.meta.url),'utf8'));
- const h=await mount(manifest);assert.equal(h.nodes.get('audio-ready').hidden,true);
- assert.match(h.nodes.get('audio-status').textContent,/has not yet been released/);
- assert.equal(h.nodes.get('audio-player').plays,0);assert.equal(h.nodes.get('audio-background-player').plays,0);
- assert.deepEqual(h.fetches,['audio-background-manifest.json','audio-bible-manifest.json']);
+function approvedManifest(url='https://audio.heavenlykey.org/hymns/'+HYMNS[0].id+'/choir.mp3'){
+ return {version:1,narration:'human',publicationApproved:true,rights:{lyrics:true,tune:true,arrangement:true,performerConsent:true,recordingDistribution:true,streaming:true,offline:false},tracks:{[HYMNS[0].id]:{choir:{approved:true,url,mimeType:'audio/mpeg',performer:'Test choir'}}}};
+}
+test('integrated hymns without approved recordings perform no playback or remote media fetch',async()=>{
+ const manifest=JSON.parse(readFileSync(new URL('audio-hymn-manifest.json',root),'utf8')),h=await mount(manifest);
+ assert.equal(h.nodes.get('hymn-player-area').hidden,true);assert.equal(h.nodes.get('hymn-player').plays,0);assert.equal(h.nodes.get('hymn-background-player').plays,0);
+ assert.match(h.nodes.get('hymn-status').textContent,/No approved choir recording/);
+ assert.deepEqual(h.fetches,['audio-background-manifest.json','audio-hymn-manifest.json']);
 });
-test('numbered-book links select the right book and preserve chapter without playing media',async()=>{
- const h=await mount({publicationApproved:false},'?book=1samuel&chapter=31');
- assert.equal(h.nodes.get('audio-book').value,'1-samuel');assert.equal(h.nodes.get('audio-chapter').value,'31');
- assert.equal(h.nodes.get('audio-read').href,'bible.html?book=1-samuel&chapter=31');
- assert.equal(h.nodes.get('audio-player').plays,0);
-});
-test('approved recordings remain preload-none and chapter changes stop old playback',async()=>{
- const manifest={version:1,translation:'KJV',language:'en-NG',narration:'human',publicationApproved:true,narrator:{displayName:'Test narrator'},rights:{bibleText:true,narratorConsent:true,recordingDistribution:true,streaming:true},tracks:{john:{3:{approved:true,url:'https://audio.heavenlykey.org/bible/john/3.mp3',mimeType:'audio/mpeg'}}}};
- const h=await mount(manifest),audio=h.nodes.get('audio-player');
- assert.equal(h.nodes.get('audio-ready').hidden,false);assert.equal(audio.preload,'none');assert.equal(audio.plays,0);
- await audio.play();assert.equal(audio.paused,false);
- h.nodes.get('audio-chapter').value='4';h.nodes.get('audio-chapter').listeners.change();
- assert.equal(audio.paused,true);assert.equal(audio.src,'');assert.equal(h.nodes.get('audio-ready').hidden,true);
+test('approved hymn waits for user playback and changing hymn stops the previous session',async()=>{
+ const h=await mount(approvedManifest()),audio=h.nodes.get('hymn-player');
+ assert.equal(h.nodes.get('hymn-player-area').hidden,false);assert.equal(audio.plays,0);assert.equal(h.nodes.get('hymn-save').disabled,true,'Streaming rights do not imply offline permission');
+ await audio.play();assert.equal(audio.paused,false);h.nodes.get('hymn-next').listeners.click();assert.equal(audio.paused,true);assert.equal(audio.src,'');assert.equal(h.nodes.get('hymn-player-area').hidden,true);
  h.events.pagehide();assert.equal(audio.paused,true);
+});
+test('untrusted recording URLs and revoked publication never activate hymn playback',async()=>{
+ for(const manifest of [approvedManifest('https://evil.test/recording.mp3'),{...approvedManifest(),publicationApproved:false}]){
+  const h=await mount(manifest);assert.equal(h.nodes.get('hymn-player-area').hidden,true);assert.equal(h.nodes.get('hymn-player').plays,0);
+ }
 });

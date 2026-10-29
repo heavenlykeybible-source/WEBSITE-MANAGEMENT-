@@ -14,7 +14,7 @@ test('device guide only advertises native download when the server confirms its 
   const js = publicFile('app-device-guide.js');
   assert.match(js, /method:'HEAD'/);
   assert.match(js, /nativeLink\.hidden = !nativeAvailable/);
-  assert.match(js, /nativeLink\.hidden = true/);
+  assert.match(js, /nativeLink\.hidden\s*=\s*true/);
   assert.match(js, /\/api\/native-download\//);
 });
 
@@ -43,7 +43,7 @@ test('every device guide has exactly one installation event controller', () => {
 test('native package status remains visible after browser install guidance updates', () => {
   const js = publicFile('app-device-guide.js');
   assert.match(js, /nativeAvailable = available\.ok/);
-  assert.match(js, /else if \(nativeAvailable\)/);
+  assert.match(js, /else if\s*\(nativeAvailable\)/);
 });
 
 test('unavailable native package links remain hidden even when button CSS uses display', () => {
@@ -71,7 +71,8 @@ test('native download button requires a security digest and a positive package l
 test('device guide never offers an installation prompt for the wrong app scope', () => {
  const js = publicFile('app-device-guide.js');
  assert.doesNotMatch(js, /install\.hidden = false/);
- assert.match(js, /open the selected app/i);
+ assert.doesNotMatch(js, /beforeinstallprompt|Add to Home Screen|userChoice/);
+ assert.match(js, /No installer is offered/);
 });
 
 test('premium install dialog has an accessible close control and device options', () => {

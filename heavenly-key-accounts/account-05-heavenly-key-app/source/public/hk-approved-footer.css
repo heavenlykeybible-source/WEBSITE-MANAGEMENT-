@@ -131,3 +131,5 @@ body:not(.hk-admin) :is(.inner-main,.hk-premium-inner .inner-main) a:not(.button
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
 :host{clear:both;max-width:100%;width:100%}.site-footer{position:relative!important;inset:auto!important;display:block!important;width:100%;box-sizing:border-box;margin:0!important}.hk-footer-app-mark{font-size:clamp(38px,5vw,68px);line-height:1}.hk-footer-column{min-width:0;overflow-wrap:anywhere}
+
+.hk-about-link{text-align:center;padding:14px 12px;font-size:.9rem}

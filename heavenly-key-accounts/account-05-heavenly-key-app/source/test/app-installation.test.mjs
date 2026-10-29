@@ -25,14 +25,13 @@ test('all published app download entries have valid secure URLs and a device-spe
     assert.ok(existsSync(new URL('download/' + platform + '/index.html', publicDir)));
   }
 });
-test('installation guide never substitutes an unverified APK or App Store link', () => {
+test('native download guide never substitutes browser installation for a package', () => {
   const script = read('app-device-guide.js');
-  assert.match(script, /beforeinstallprompt/);
-  assert.match(script, /appinstalled/);
-  assert.match(script, /userChoice/);
-  assert.match(script, /sameOrigin/);
-  assert.match(script, /manifest/);
-  assert.doesNotMatch(script, /\.apk|\.ipa|apps\.apple\.com\/app\//);
+  assert.doesNotMatch(script, /beforeinstallprompt|userChoice|Add to Home Screen|serviceWorker.register/);
+  assert.match(script, /method:'HEAD'/);
+  assert.match(script, /nativeLink.hidden = !nativeAvailable/);
+  assert.match(script, /store.hostname!=='apps.apple.com'/);
+  assert.match(script, /not published yet/);
 });
 test('individual local PWA manifests have unique IDs and valid icons', () => {
   const apps = JSON.parse(read('app-downloads.json'));

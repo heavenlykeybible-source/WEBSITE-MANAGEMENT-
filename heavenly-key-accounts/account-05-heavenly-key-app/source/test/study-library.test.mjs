@@ -5,7 +5,6 @@ import {createHash} from 'node:crypto';
 import vm from 'node:vm';
 import {KJV_BOOKS,READING_YEAR,readingForDay} from '../public/bible-catalog.js';
 import {validBibleRef,moveBibleRef,bibleFont} from '../public/bible-mobile-controls.js';
-import {approvedTrack,audioCoverage,adjacentChapter} from '../public/audio-bible-catalog.js';
 import {createLockScreenSession} from '../public/lock-screen-media.js';
 
 const root=new URL('../',import.meta.url),read=path=>readFileSync(new URL(path,root),'utf8');
@@ -33,13 +32,12 @@ test('reading plan covers 365 valid chapters and reader controls respect canonic
  assert.equal(validBibleRef(books,'john','invalid'),null);assert.equal(bibleFont(500),32);assert.equal(bibleFont(-2),16);
  assert.ok(readingForDay(0).day>=1);
 });
-test('recorded audio stays unavailable until the existing approval and track gates pass',()=>{
- const actual=json('public/audio-bible-manifest.json');assert.equal(audioCoverage(actual),0);assert.equal(approvedTrack(actual,'john',3),null);
- const manifest={version:1,translation:'KJV',language:'en-NG',narration:'human',publicationApproved:true,narrator:{displayName:'Test narrator'},rights:{bibleText:true,narratorConsent:true,recordingDistribution:true,streaming:true,offline:true},tracks:{john:{3:{approved:true,url:'https://audio.heavenlykey.org/bible/john/3.mp3',mimeType:'audio/mpeg',offlineApproved:true}}}};
- assert.equal(approvedTrack(manifest,'john',3).offlineApproved,true);
- assert.equal(approvedTrack({...manifest,publicationApproved:false},'john',3),null);
- manifest.tracks.john[3].url='https://evil.test/track.mp3';assert.equal(approvedTrack(manifest,'john',3),null);
- assert.deepEqual(adjacentChapter('1-samuel',31,1),{book:'2-samuel',chapter:1});
+test('Audio Bible remains retired while written Bible and integrated hymn resources remain available',()=>{
+ assert.equal(existsSync(new URL('public/audio-bible-catalog.js',root)),false);
+ assert.equal(existsSync(new URL('public/audio-bible-manifest.json',root)),false);
+ assert.match(read('public/audio-bible.html'),/url=\/bible\.html/);
+ assert.doesNotMatch(read('public/audio-bible.html'),/<audio\b/);
+ assert.ok(existsSync(new URL('public/audio-hymns.html',root)));
 });
 test('lock-screen controls support play/pause/seek and clean up supported handlers',()=>{
  const handlers={},listeners={},audio={currentTime:5,duration:120,play(){this.played=true;return Promise.resolve();},pause(){this.paused=true;},addEventListener:(n,f)=>listeners[n]=f,removeEventListener:n=>delete listeners[n]};
@@ -63,7 +61,7 @@ test('offline shell contains every dependency but never automatically downloads 
 test('Android and Apple installation icon references and safe viewports are valid',()=>{
  const manifest=json('public/manifest.webmanifest');
  for(const icon of manifest.icons){const source=readFileSync(new URL('public'+icon.src,root),'utf8');const size=Number(icon.sizes.split('x')[0]);assert.equal(icon.type,'image/svg+xml');assert.ok(source.startsWith('<svg '));assert.match(source,new RegExp('width="'+size+'"'));assert.match(source,new RegExp('height="'+size+'"'));assert.match(source,/viewBox="0 0 \d+ \d+"/);}
- for(const page of ['index.html','bible.html','devotional.html','hymns.html','audio-bible.html','audio-hymns.html'])assert.match(read('public/'+page),/viewport-fit=cover/);
+ for(const page of ['index.html','bible.html','devotional.html','hymns.html','audio-hymns.html'])assert.match(read('public/'+page),/viewport-fit=cover/);
  assert.match(read('public/experience.html'),/apple-touch-icon.svg/);
  assert.match(read('public/styles.css'),/min-height:44px/);
 });
