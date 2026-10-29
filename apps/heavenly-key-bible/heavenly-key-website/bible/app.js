@@ -48,6 +48,34 @@ async function getCuratedReferences(){
   const response=await fetch("./data/annotations/center-references.json");
   if(!response.ok)throw Error("References unavailable");
   curatedReferences=await response.json();
+  // Every reviewed reference also supports navigation back to its source.
+  // Reverse links are derived only from the published reference pairs.
+  const bookByCode=new Map(codes.map((code,i)=>[code,books[i][0]]));
+  const reverse=[];
+  for(const [code,chapters] of Object.entries(curatedReferences)){
+   const sourceBook=bookByCode.get(code);
+   if(!sourceBook||!chapters||typeof chapters!=="object")continue;
+   for(const [ch,verses] of Object.entries(chapters)){
+    if(!verses||typeof verses!=="object")continue;
+    for(const [verse,targets] of Object.entries(verses)){
+     if(!Array.isArray(targets))continue;
+     const sourceRef=sourceBook+" "+ch+":"+verse;
+     for(const ref of targets){
+      const match=typeof ref==="string"&&/^(.+?) (\\d+):(\\d+)$/.exec(ref);
+      if(!match)continue;
+      const index=books.findIndex(b=>b[0]===match[1]&&Number(match[2])>=1&&Number(match[2])<=b[1]);
+      if(index<0||Number(match[3])<1)continue;
+      reverse.push([codes[index],match[2],match[3],sourceRef]);
+     }
+    }
+   }
+  }
+  for(const [code,ch,verse,sourceRef] of reverse){
+   const chapterRefs=curatedReferences[code]??={};
+   const verseRefs=chapterRefs[ch]??={};
+   const refs=verseRefs[verse]??=[];
+   if(!refs.includes(sourceRef))refs.push(sourceRef);
+  }
  }catch{curatedReferences={};}
  return curatedReferences;
 }
