@@ -28,7 +28,7 @@ function validReference(ref){
  const verses=book.chapters[m[2]];
  return !!verses&&verses.some(v=>v.number===Number(m[3]))&&(!m[4]||verses.some(v=>v.number===Number(m[4])&&Number(m[4])>=Number(m[3])));
 }
-let count=0;
+let count=0,shortExplanations=0,shortContexts=0;
 for(const group of registered){
  for(const [ref,note] of Object.entries(group)){
   count++;
@@ -39,6 +39,8 @@ for(const group of registered){
    if(typeof note[key]!=='string'||note[key].trim().length<12)errors.push('Missing or too short '+key+' for '+ref);
   }
   if(note.reviewStatus!=='approved')warnings.push('Pending editorial review: '+ref);
+  if(typeof note.explanation==='string'&&note.explanation.trim().split(/\s+/).length<30)shortExplanations++;
+  if(typeof note.context==='string'&&note.context.trim().split(/\s+/).length<20)shortContexts++;
   if(typeof note.references==='string'){
    for(const related of note.references.split(/\s*;\s*/).filter(Boolean)){
     if(!validReference(related))errors.push('Invalid cross-reference '+related+' in '+ref);
@@ -46,5 +48,5 @@ for(const group of registered){
   }
  }
 }
-console.log(JSON.stringify({files:files.length,registeredNotes:count,uniqueNotes:seen.size,versesInCanon:manifest.books.reduce((sum,b)=>sum+b.verses,0),errors:errors.length,warnings:warnings.length,errorExamples:errors.slice(0,100),warningExamples:warnings.filter(x=>!x.startsWith('Pending editorial review')).slice(0,30)},null,2));
+console.log(JSON.stringify({files:files.length,registeredNotes:count,uniqueNotes:seen.size,shortExplanations,shortContexts,versesInCanon:manifest.books.reduce((sum,b)=>sum+b.verses,0),errors:errors.length,warnings:warnings.length,errorExamples:errors.slice(0,100),warningExamples:warnings.filter(x=>!x.startsWith('Pending editorial review')).slice(0,30)},null,2));
 if(errors.length)process.exitCode=1;
