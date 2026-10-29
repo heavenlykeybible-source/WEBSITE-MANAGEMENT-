@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const status=$('kjv-tool-status'),verses=$('verses');
-if(!status||!verses||!$('kjv-listen')||!$('kjv-pause')||!$('kjv-stop'))return;
+if(!status||!verses||!$('kjv-listen')||!$('kjv-pause')||!$('kjv-stop')||!$('kjv-share')||!$('kjv-copy'))return;
 let speech=null;
 const speechAvailable=()=>typeof window.speechSynthesis!=='undefined'&&typeof window.SpeechSynthesisUtterance!=='undefined';
 function reference(){return (($('book')?.selectedOptions?.[0]?.textContent||$('book')?.value||'Bible')+' '+($('chapter')?.value||'1')).trim()}
