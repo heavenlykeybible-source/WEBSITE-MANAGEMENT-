@@ -96,6 +96,29 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   try{if(mediaBound){await env.MEDIA_BUCKET.head('account10-readiness-probe');mediaBucketReadOk=true}}catch{}
   return reply({account:10,dbBound,mediaBound,assetsBound:!!env.ASSETS,databaseQueryOk,mediaBucketReadOk,storageReady:databaseQueryOk&&mediaBucketReadOk,mediaOperationsEnabled:false,providerPublishingVerified:false,note:'Read-only probes; bucket head returning null counts as successful access. Schema migrations, write access and provider authorization remain unverified.'});
  }
+ if(u.pathname==='/api/media'&&req.method==='POST'){
+  if(!env.MEDIA_BUCKET)return reply({error:'Media storage is not configured'},503);
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(typeof data?.base64!=='string'||data.base64.length>1000000||!data.base64.length||typeof data?.contentType!=='string')return reply({error:'Provide a supported media file under 750 KB'},400);
+  const supported=['image/png','image/jpeg','image/webp'];
+  if(!supported.includes(data.contentType)||! /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(data.base64))return reply({error:'Invalid media format or encoding'},400);
+  let bytes:Uint8Array;
+  try{const binary=atob(data.base64);if(binary.length<12||binary.length>750000)return reply({error:'Invalid media size'},400);bytes=Uint8Array.from(binary,c=>c.charCodeAt(0))}catch{return reply({error:'Invalid base64'},400)}
+  const png=bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10;
+  const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+  const webp=String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP';
+  if(!(data.contentType==='image/png'&&png||data.contentType==='image/jpeg'&&jpeg||data.contentType==='image/webp'&&webp))return reply({error:'Media content does not match declared format'},415);
+  const id=crypto.randomUUID(),key='account10/uploads/'+id;
+  try{await env.MEDIA_BUCKET.put(key,bytes,{httpMetadata:{contentType:data.contentType},customMetadata:{source:'authenticated-operator'}})}catch{return reply({error:'Media storage write failed'},503)}
+  return reply({id,contentType:data.contentType,size:bytes.length,stored:true,published:false,publicUrl:null},201);
+ }
+ if(u.pathname==='/api/media'&&req.method==='GET'){
+  if(!env.MEDIA_BUCKET)return reply({error:'Media storage is not configured'},503);
+  const id=u.searchParams.get('id');if(!id||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))return reply({error:'Valid media id required'},400);
+  let object:R2ObjectBody|null;try{object=await env.MEDIA_BUCKET.get('account10/uploads/'+id)}catch{return reply({error:'Media storage read failed'},503)}
+  if(!object)return reply({error:'Media not found'},404);
+  return new Response(object.body,{headers:{'content-type':object.httpMetadata?.contentType||'application/octet-stream','cache-control':'private, no-store','x-content-type-options':'nosniff','content-disposition':'attachment; filename="socialplus-media"','content-security-policy':"default-src 'none'; sandbox",'referrer-policy':'no-referrer'}});
+ }
  if(u.pathname==='/api/accounts/import'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!Array.isArray(data?.items)||data.items.length<1||data.items.length>100)return reply({error:'Provide 1 to 100 accounts'},400);
