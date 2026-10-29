@@ -149,6 +149,7 @@ async function importBackup(){
    verified.push({...entry,text:verse.text});
   }
   const originalEntries=studyEntries(),merged=studyTools.mergeEntries(originalEntries,verified),previousProgress=planProgress();
+  if(merged.length>500)throw Error("The combined backup exceeds the 500 saved verse limit. Remove some entries before importing.");
   const progress={};for(const plan of studyTools.plans)progress[plan.id]=[...new Set([...previousProgress[plan.id],...parsed.progress[plan.id]])].sort((a,b)=>a-b);
   if(!save("hk-bible-study",merged))throw Error("Browser storage could not save your imported notes.");
   renderStudy();
