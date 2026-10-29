@@ -34,6 +34,19 @@ public final class MainActivity extends Activity {
   settings.setJavaScriptCanOpenWindowsAutomatically(false);
   settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
   CookieManager.getInstance().setAcceptThirdPartyCookies(browser,false);
+  // WebView does not handle attachment downloads automatically. Give verified
+  // Account 5 native installers to the user's system browser without adding
+  // broad storage permissions or silently fetching untrusted content.
+  browser.setDownloadListener((downloadUrl, userAgent, disposition, mime, length) -> {
+   try {
+    Uri target=Uri.parse(downloadUrl);
+    if (!"https".equalsIgnoreCase(target.getScheme()) ||
+        !"apps.heavenlykey.org".equalsIgnoreCase(target.getHost()) ||
+        target.getUserInfo()!=null ||
+        !target.getPath().matches("^/api/native-download/[a-z0-9-]{1,64}/(android|windows|mac)$")) return;
+    startActivity(new Intent(Intent.ACTION_VIEW,target).addCategory(Intent.CATEGORY_BROWSABLE));
+   } catch(Exception ignored) { }
+  });
   browser.setWebChromeClient(new WebChromeClient());
   browser.setWebViewClient(new WebViewClient() {
    @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
