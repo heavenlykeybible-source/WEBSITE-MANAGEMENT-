@@ -59,3 +59,9 @@ For each verse: unique reference, original specific explanation, biblical contex
 
 ## Owner correction: concordance and commentary ONLY
 The existing Bible Dictionary is a separate, completed resource. Do not rebuild or integrate it in this workstream. Earlier plans mentioning dictionary integration are superseded. The duplicate dictionary section was removed from the combined page (commit 267fe05c670448546bab549b5b365f5a444344c2) and the duplicate dictionary.js deleted (commit 25b6c82f7ea34ea054bd6884828eb1ab442de65b). Continue exclusively with KJV Concordance word/topic indexing and verse-specific Commentary, tests, review and coverage. Preserve the independent Bible Dictionary. No deployment without owner approval.
+
+## Latest continuation — Concordance and Commentary only
+- Reordered index.html so topical Concordance precedes the Commentary heading (commit 7aef87a34c37e284c7f50728860f787ebbb2a936).
+- Added reference-links.js and loaded it in index.html (commits a13e872cf21b939d8291580d85d4670dc0800a50 and 4751d04884a422c54f54767d9307712a9971f9e8). It enhances semicolon-separated verse references in the Commentary References tab into KJV deep links. Requires browser verification.
+- NO Bible Dictionary work; the existing separate Dictionary must remain untouched. No new commentary verses authored in this continuation; 136 Genesis drafts remain pending review.
+- NEXT: browser smoke test all navigation and links; run Node draft audit; canonical KJV reference verification; produce additional detailed Genesis commentary; expand topical concordance; preserve GitHub commits and this handover. No production deployment without owner approval.
