@@ -102,7 +102,7 @@ function renderDictionary(){
      const caution=document.createElement('p');caution.textContent=(item.reviewStatus&&item.reviewStatus.includes('requires independent')?'Editorial draft — pending lexicon review. ':'')+(item.caution||'Meanings depend on biblical context.');
      panel.append(heading,strong,meaning,reference,caution);
     }
-    button.addEventListener('click',()=>{const show=panel.hidden;for(const other of languageButtons.querySelectorAll('.dict-language-panel'))other.hidden=true;for(const other of languageButtons.querySelectorAll('.dict-language-button'))other.setAttribute('aria-expanded','false');panel.hidden=!show;button.setAttribute('aria-expanded',String(show));for(const other of languageButtons.querySelectorAll('.dict-language-button'))other.textContent=other.textContent.replace(' ▴',' ▾');button.textContent=language+(show?' ▴':' ▾');});
+    button.addEventListener('click',()=>{const show=panel.hidden;for(const other of languageButtons.querySelectorAll('.dict-language-panel'))other.hidden=true;for(const other of languageButtons.querySelectorAll('.dict-language-button')){other.setAttribute('aria-expanded','false');other.textContent=other.dataset.language+' ▾';}panel.hidden=!show;button.setAttribute('aria-expanded',String(show));button.textContent=language+(show?' ▴':' ▾');});button.dataset.language=language;
     const group=document.createElement('div');group.className='dict-language-group';group.append(button,panel);languageButtons.append(group);
    }
    card.append(languageButtons);
