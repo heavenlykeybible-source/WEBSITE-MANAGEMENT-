@@ -152,3 +152,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Updated browser bundle to 422 Genesis draft entries, commit 48e6bb9911765962c0ce8a9f8e64acb25634b51b.
 - Updated draft-check script for 422 and Genesis 17, commit 778021fa17fdbc86d8191fa66bbe70402afde9e5.
 - NEXT: Genesis 18 and actual execution of full KJV packet generator/validators. No claim of 31,102 authored explanations; all new drafts pending human doctrinal review. No deployment; Bible Dictionary unchanged.
+
+## Latest checkpoint — Genesis 18
+- Saved 33 original verse-specific Genesis 18:1–33 commentary drafts pending doctrinal review, commit c7d64d835f059864129ef9e00ddb98b63bc8f73c.
+- Updated browser study-notes bundle to 455 draft entries, commit c45ffe9ef1e0dafb2d55c045529504cac9aeb1f9.
+- Updated scripts/concordance-draft-check.mjs to expect 455 records and include Genesis 18, commit 7a763f097113fd9552f067220df36e2da161c87f.
+- No actual Node/browser execution or full-canon reference validation yet. All drafts pending human review; no deployment and no Bible Dictionary edits. Next Genesis 19 and validated large-batch pipeline.
