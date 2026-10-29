@@ -115,9 +115,9 @@ a{color:var(--ac)}
 <div class="row"><button data-a="ai" data-m="title">Titles</button><button data-a="ai" data-m="description">Description</button><button data-a="ai" data-m="announcement">Announcement</button><button data-a="ai" data-m="ticker">Ticker lines</button></div>
 <textarea id="aio" rows="5" placeholder="Your text appears here. You can edit it."></textarea>
 <div class="row"><button id="aua">Use as announcement</button><button id="aut">Add as ticker</button></div></section>
-<section id="t9"><p class="mu" role="status">Private preview: public registration is closed. Only accounts approved by Heavenly Key administrators may sign in.</p><div id="acOut"><div class="row"><input type="text" id="aem" placeholder="Username or email" autocomplete="username" aria-label="Username or email"></div>
+<section id="t9"><p id="accessNotice" class="mu" role="status">Private preview: public registration is closed. Only accounts approved by Heavenly Key administrators may sign in.</p><div id="acOut"><div class="row"><input type="text" id="aem" placeholder="Username or email" autocomplete="username" aria-label="Username or email"></div>
 <div class="row"><input type="password" id="apw" placeholder="Password (8 or more characters)" autocomplete="current-password" aria-label="Password"></div>
-<div class="row" hidden><label class="mu"><input type="checkbox" id="aag"> I am 18 or older and agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a> (needed to create an account)</label></div>
+<div class="row" id="signupConsent" hidden><label class="mu"><input type="checkbox" id="aag"> I am 18 or older and agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a> (needed to create an account)</label></div>
 <div class="row"><label class="mu"><input type="checkbox" id="showpw"> Show password</label></div><div class="row"><button class="pri" id="ali">Log in</button><button id="asu" hidden disabled>Create account</button><button id="afg">Forgot password?</button></div></div>
 <div id="acRs" hidden><p>Choose a new password.</p><div class="row"><input type="password" id="rpw" placeholder="New password (8 or more characters)" autocomplete="new-password" aria-label="New password"></div><div class="row"><button class="pri" id="rsv">Save new password</button></div></div>
 <div id="acIn" hidden><p id="acs"></p><h2>Choose a plan</h2><div class="cards" id="apl"></div><div class="row"><button id="alo">Log out</button><button id="arv" hidden>Resend confirmation email</button><button id="aloa">Log out of all devices</button></div>
@@ -201,13 +201,14 @@ function addMedia(files){const s=mk('media','Playlist '+uid,{files:[...files].ma
  play(s,0);place(s);ui()}
 function play(s,i){s.i=i;s.el.src=s.files[i].url;AC.resume();s.el.play().catch(()=>{});ui()}
 function nx(s,d){const n=s.i+d,L=s.files.length;if((n>=L||n<0)&&d>0&&!s.loop){s.el.pause();ui();return}play(s,(n+L)%L)}
-function addStream(t,st){const s=mk(t,(t==='camera'?'Camera ':'Screen ')+uid);s.el=document.createElement('video');s.el.muted=true;s.el.playsInline=true;s.el.srcObject=st;s.el.play();
+function addStream(t,st){const s=mk(t,(t==='camera'?'Camera ':'Screen ')+uid);s.el=document.createElement('video');s.el.muted=true;s.el.playsInline=true;s.el.srcObject=st;s.el.play().catch(()=>msg('Tap the source again if its preview does not start.'));
  if(st.getAudioTracks().length)wire(s,AC.createMediaStreamSource(st),false);
  st.getVideoTracks()[0].onended=()=>act.srm(S.indexOf(s));place(s);ui()}
-async function cam(){try{addStream('camera',await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720},audio:true}))}catch(e){msg('Camera or microphone not available: '+e.message)}}
+async function cam(){try{await AC.resume();addStream('camera',await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720},audio:true}))}catch(e){msg('Camera or microphone not available: '+e.message)}}
 async function scr(){try{addStream('screen',await navigator.mediaDevices.getDisplayMedia({video:true,audio:true}))}catch(e){msg('Screen sharing is not available on this device or was cancelled.')}}
 const mbuf=new Float32Array(512);
 async function mic(){try{
+ await AC.resume();
  const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1,sampleRate:48000}});
  let proc=null,use=st;
  if($('nrs').checked){try{await loadNS();proc=new Shiguredo.NoiseSuppressionProcessor(NSPATH);use=new MediaStream([await proc.startProcessing(st.getAudioTracks()[0])])}catch(e){proc=null;use=st;msg('Strong noise removal is not available here. Standard noise removal is on.')}}
@@ -409,13 +410,14 @@ const loginId=v=>{const t=String(v||'').trim().toLowerCase();return /^[a-z0-9][a
 const loginLabel=v=>v.endsWith('@studio.local')?v.slice(0,-13):v;
 const acct={on:false,tok:'',me:null};try{acct.tok=localStorage.getItem('ls_tok')||''}catch(e){}
 let RU='',RT='';
-async function api(path,body){try{const r=await fetch(path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(acct.tok?{authorization:'Bearer '+acct.tok}:{})},body:body?JSON.stringify(body):undefined});
- const j=await r.json().catch(()=>({}));return{ok:r.ok,status:r.status,...j}}catch(e){return{ok:false,status:0,error:'Network error'}}}
+async function api(path,body){const session=acct.tok;try{const r=await fetch(path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(acct.tok?{authorization:'Bearer '+acct.tok}:{})},body:body?JSON.stringify(body):undefined});
+ const j=await r.json().catch(()=>({}));if(acct.tok!==session)return{ok:false,status:409,error:'Your account changed. Please try again.'};return{ok:r.ok,status:r.status,...j}}catch(e){return{ok:false,status:0,error:'Network error'}}}
 async function relink(meeting=false){if(acct.on){const r=await api(meeting?'/api/meeting-token':'/api/relay-token');if(!r.ok){const msg=r.error||'The connection could not be started.';$('info').textContent=msg;if(meeting)gSt(msg);return false}if(meeting){gRoomURL=r.url;gRoomToken=r.token}else{RU=r.url;RT=r.token}return true}if(meeting){gRoomURL=$('relay').value.trim();gRoomToken=$('tok').value;return !!gRoomURL}RU=$('relay').value.trim();RT=$('tok').value;if(!/^wss:\/\/[a-z0-9.-]+(?::[0-9]{1,5})?(?:[/?#][^\s]*)?$/i.test(RU)){$('info').textContent='Enter a secure wss:// streaming relay address.';return false}if(!RT){$('info').textContent='Enter your streaming relay password.';return false}return true}
 function saveTok(t){acct.tok=t||'';try{t?localStorage.setItem('ls_tok',t):localStorage.removeItem('ls_tok')}catch(e){}}
-function acRender(){const m=acct.me;$('acOut').hidden=!!m;$('acIn').hidden=!m;$('ownerSetup').hidden=!(m&&m.role==='owner'&&localStorage.getItem('ls_owner_setup'));
+function readLocal(key){try{return localStorage.getItem(key)||''}catch(e){return ''}}
+function acRender(){const m=acct.me;$('acOut').hidden=!!m;$('acIn').hidden=!m;$('ownerSetup').hidden=!(m&&m.role==='owner'&&readLocal('ls_owner_setup'));
  if(m){const d=Math.max(0,m.paidUntil-Date.now());$('acs').textContent=loginLabel(m.email)+' ('+(m.role||'user')+') - '+(m.role==='owner'||m.role==='admin'?'Staff access':m.active?'Active for '+(d>864e5?Math.ceil(d/864e5)+' day(s)':Math.ceil(d/36e5)+' hour(s)'):'No active plan')+(m.verified===false?'. Please confirm your email (check your inbox).':'');$('arv').hidden=m.verified!==false;$('apl').hidden=!!m.admin;$('userrole').hidden=m.role!=='owner';document.querySelectorAll('.tabs button')[9].hidden=!m.admin;$('acb').textContent=m.active?'Account':'Subscribe'}else{$('acb').textContent='Sign in';document.querySelectorAll('.tabs button')[9].hidden=true}}
-async function refreshMe(){if(!acct.tok){acct.me=null;return acRender()}const r=await api('/api/me');if(r.ok)acct.me=r;else{saveTok('');acct.me=null}acRender()}
+async function refreshMe(){const token=acct.tok;if(!token){acct.me=null;return acRender()}const r=await api('/api/me');if(acct.tok!==token)return;if(r.ok)acct.me=r;else if(r.status===401||r.status===403){signOutLocal();$('acm').textContent=r.error||'Please sign in again.';return}else{$('acm').textContent=r.error||'Could not refresh your account. Please try again.'}acRender()}
 async function stretch(e,p){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(p),'PBKDF2',false,['deriveBits']);
  const b=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode('livestudio:'+loginId(e)),iterations:210000,hash:'SHA-256'},k,256);return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function acAuth(kind){const em=loginId($('aem').value),pwr=$('apw').value;
@@ -423,7 +425,7 @@ async function acAuth(kind){const em=loginId($('aem').value),pwr=$('apw').value;
  $('acm').textContent='Please wait...';const r=await api('/api/'+kind,{email:em,password:await stretch(em,pwr),agree:$('aag').checked});
  if(r.ok){saveTok(r.token);$('apw').value='';$('acm').textContent='';await refreshMe();loadConns();pendingJoin()}else $('acm').textContent=r.error||'Could not sign in.'}
 $('showpw').onchange=e=>$('apw').type=e.target.checked?'text':'password';
-$('ali').onclick=()=>acAuth('login');$('asu').onclick=()=>acAuth('signup');$('alo').onclick=()=>{saveTok('');acct.me=null;acRender();conn.list=[];renderConns()};
+$('ali').onclick=()=>acAuth('login');$('asu').onclick=()=>acAuth('signup');$('alo').onclick=()=>signOutLocal();
 async function aiWrite(task){const topic=$('aitp').value.trim();if(!topic){$('ast').textContent='Type what your broadcast is about first.';return}
  $('aio').value='Writing...';const r=await api('/api/ai',{task,topic});
  if(r.ok)$('aio').value=r.text;else{$('aio').value='';$('ast').textContent=r.status===401?'Sign in under Account to use the AI writer.':(r.error||'The AI writer is not available.')}}
@@ -432,8 +434,9 @@ $('aua').onclick=()=>{$('atx').value=$('aio').value.slice(0,400)};
 $('aut').onclick=()=>{const t=$('aio').value.split('\n').map(x=>x.replace(/^\s*(\d+[.)]|[-*])\s*/,'').trim()).filter(Boolean).join('   \u2022   ').slice(0,300);if(!t)return;
  place(mk('ticker','Ticker '+uid,{text:t,speed:120}));ui();msg('Ticker added to the selected scene.')};
 (async()=>{const r=await api('/api/plans');
- if(!r.ok||!r.plans){$('acb').hidden=true;document.querySelectorAll('.tabs button')[8].hidden=true;return}
+ if(!r.ok||!r.plans){$('acm').textContent=r.error||'Account services are temporarily unavailable. Please try again.';return}
  acct.on=true;$('manual').hidden=true;
+ const open=r.registrationOpen===true;$('asu').hidden=!open;$('asu').disabled=!open;$('signupConsent').hidden=!open;$('accessNotice').textContent=open?'Create an account or sign in. Please review the Terms and Privacy Policy before registering.':'Private preview: public registration is closed. Only accounts approved by Heavenly Key administrators may sign in.';
  $('apl').innerHTML=r.plans.map(p=>`<button class="card" data-a="buy" data-m="${esc(p.id)}"><b>${esc(p.name)}</b><small>${esc(r.currency)} ${Number(p.amount).toLocaleString()} for ${p.days} day(s)</small></button>`).join('');
  await refreshMe();await loadConns();const q2=new URLSearchParams(location.search),cn=q2.get('connected'),ce=q2.get('connect_error');if(cn||ce){history.replaceState(null,'',location.pathname);$('chm').textContent=cn?'Connected. Choose the channels to use below.':ce;act.tab(4)}const rs=q2.get('reset'),nt=q2.get('notice');if(rs){history.replaceState(null,'',location.pathname);rtok=rs;$('acOut').hidden=true;$('acRs').hidden=false;act.tab(8)}else if(nt){history.replaceState(null,'',location.pathname);$('acm').textContent=nt;act.tab(8)}const jn=q2.get('join');if(jn){try{sessionStorage.setItem('ls_join',jn)}catch(e){}history.replaceState(null,'',location.pathname)}await pendingJoin();const ref=new URLSearchParams(location.search).get('reference');
  if(ref&&acct.tok){history.replaceState(null,'',location.pathname);const v=await api('/api/pay/verify?reference='+encodeURIComponent(ref));$('acm').textContent=v.ok?'Payment received. Your plan is active.':(v.error||'The payment is not confirmed yet. Refresh in a minute.');await refreshMe();act.tab(8)}})();
@@ -448,7 +451,7 @@ $('afg').onclick=async()=>{const e=$('aem').value.trim();if(!e){$('acm').textCon
  const r=await api('/api/forgot',{email:e});$('acm').textContent=r.ok?'If that email has an account, a reset link is on its way.':(r.error||'Could not send the email.')};
 $('arv').onclick=async()=>{const r=await api('/api/resend',{});$('acm').textContent=r.ok?'Confirmation email sent.':(r.error||'Could not send the email.')};
 $('rsv').onclick=async()=>{if($('rpw').value.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}
- const em=JSON.parse(atob(rtok.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'))).e;const r=await api('/api/reset',{token:rtok,password:await stretch(em,$('rpw').value)});
+ let em;try{em=JSON.parse(atob(rtok.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'))).e;if(typeof em!=='string'||!em)throw Error()}catch(e){$('acm').textContent='This password reset link is invalid. Request a new one.';return}const r=await api('/api/reset',{token:rtok,password:await stretch(em,$('rpw').value)});
  if(r.ok){$('acRs').hidden=true;$('acOut').hidden=false;$('rpw').value='';$('acm').textContent='Password changed. You can log in now.'}else $('acm').textContent=r.error||'Could not change the password.'};
 let adC='';
 const adF=(n,c)=>c+' '+Number(n||0).toLocaleString();
@@ -466,18 +469,18 @@ $('approveuser').onclick=async()=>{const email=loginId($('approvaluser').value);
 $('revokeuser').onclick=async()=>{const email=loginId($('approvaluser').value);if(!email){$('admsg').textContent='Enter an account username or email.';return}adResult(await api('/api/admin/approve',{email,approved:false}))};
 $('createuser').onclick=async()=>{if($('userpw').value.length<8){$('admsg').textContent='Use a password of 8 or more characters.';return}const b=$('createuser');b.disabled=true;try{const email=loginId($('newuser').value),r=await api('/api/admin/create',{email,password:await stretch(email,$('userpw').value),role:acct.me.role==='owner'?$('userrole').value:'user'});adResult(r);if(r.ok){$('newuser').value='';$('userpw').value='';$('admsg').textContent='Account created. Share the username and password with the user.'}}finally{b.disabled=false}};
 $('resetuserpw').onclick=async()=>{if($('resetpw').value.length<8){$('admsg').textContent='Use a password of 8 or more characters.';return}const email=loginId($('resetuser').value),r=await api('/api/admin/password',{email,password:await stretch(email,$('resetpw').value)});adResult(r);if(r.ok){$('resetpw').value='';$('admsg').textContent='Password set. Previous logins have been signed out.'}};
-$('ownerSavePassword').onclick=async()=>{if($('ownerNewPassword').value.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}const r=await api('/api/control-password',{ticket:localStorage.getItem('ls_owner_setup')||'',password:await stretch(acct.me.email,$('ownerNewPassword').value)});if(r.ok){saveTok(r.token);localStorage.removeItem('ls_owner_setup');$('ownerNewPassword').value='';$('ownerSetup').hidden=true;$('acm').textContent='Owner password saved. You can sign in with username owner and your password.';refreshMe()}else $('acm').textContent=r.error||'Could not set the owner password.'};
+$('ownerSavePassword').onclick=async()=>{if($('ownerNewPassword').value.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}const r=await api('/api/control-password',{ticket:readLocal('ls_owner_setup'),password:await stretch(acct.me.email,$('ownerNewPassword').value)});if(r.ok){saveTok(r.token);try{localStorage.removeItem('ls_owner_setup')}catch(e){}$('ownerNewPassword').value='';$('ownerSetup').hidden=true;$('acm').textContent='Owner password saved. You can sign in with username owner and your password.';refreshMe()}else $('acm').textContent=r.error||'Could not set the owner password.'};
 $('changepw').onclick=async()=>{if($('newpw').value.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}const email=acct.me.email,r=await api('/api/account/password',{current:await stretch(email,$('oldpw').value),password:await stretch(email,$('newpw').value)});if(r.ok){saveTok(r.token);$('oldpw').value='';$('newpw').value='';$('acm').textContent='Password changed. Other devices have been signed out.'}else $('acm').textContent=r.error||'Could not change password.'};
 $('adsw').onclick=async()=>{const r=await api('/api/admin/sweep',{});msg(r.ok?'Cleaned up: '+Object.entries(r.removed).map(([k,v])=>k+' '+v).join(', '):(r.error||'Could not clean up.'))};
 $('adsb').onclick=()=>adLoad(true);$('adm').onclick=()=>adLoad(false);
 document.querySelectorAll('.tabs button')[9].addEventListener('click',()=>adLoad(true));
-$('aloa').onclick=async()=>{await api('/api/logout-all',{});saveTok('');acct.me=null;acRender();conn.list=[];renderConns();$('acm').textContent='Logged out of all devices.'};
+$('aloa').onclick=async()=>{const r=await api('/api/logout-all',{});if(!r.ok){$('acm').textContent=r.error||'Could not sign out other devices. Please try again.';return}signOutLocal();$('acm').textContent='Logged out of all devices.'};
 $('aexp').onclick=async()=>{const r=await api('/api/account/export');if(!r.ok){$('acm').textContent=r.error||'Could not export your data.';return}
  const{ok,status,...d}=r,a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='my-data.json';a.click()};
 $('adel').onclick=async()=>{if(!$('dpw').value){$('acm').textContent='Enter your password to confirm.';return}
  if(!confirm('Delete your account and connected channels? This cannot be undone and any remaining plan time is lost.'))return;
  const r=await api('/api/account/delete',{password:await stretch(acct.me.email,$('dpw').value)});
- if(r.ok){saveTok('');acct.me=null;$('dpw').value='';acRender();conn.list=[];renderConns();$('acm').textContent='Your account has been deleted.'}else $('acm').textContent=r.error||'Could not delete the account.'};
+ if(r.ok){signOutLocal();$('dpw').value='';$('acm').textContent='Your account has been deleted.'}else $('acm').textContent=r.error||'Could not delete the account.'};
 function tag(c,t,x,y,w,h){c.save();c.font='600 '+Math.max(14,Math.round(h*.045))+'px system-ui,sans-serif';c.textBaseline='middle';const tw=c.measureText(t).width+24,th=Math.max(26,Math.round(h*.07));
  c.fillStyle='rgba(8,16,36,.8)';c.fillRect(x+10,y+h-th-10,tw,th);c.fillStyle='#f2c14e';c.fillRect(x+10,y+h-th-10,4,th);c.fillStyle='#fff';c.fillText(t,x+22,y+h-th/2-10);c.restore()}
 const guests=new Map(),wait=new Map(),hands=new Map();let gws=null,gStarting=false,gHandshakeTimer=null,gRoomURL='',gRoomToken='',gice=[],gcs=null,glink='',alink='';
@@ -488,6 +491,7 @@ async function gStart(){
  if(gws)return gStop('Room closed.');
  gStarting=true;$('grs').disabled=true;gSt('Preparing your meeting...');
  try{
+  await AC.resume();
   if(!(await relink(true))){gSt('Sign in and confirm meeting access to start a room.');return}
   const roomURL=gRoomURL.replace(/\/+$/,'');gRoomURL=roomURL;gSt('Starting the room...');
   const w=gws=new WebSocket(roomURL+'/room');
@@ -588,7 +592,7 @@ const QV=[3000000,1200000,500000],QA=[192000,96000,64000];let qTier=0;
 function dmeter(){const t=$('low').checked?2:qTier,mb=(QV[t]+QA[t])*3600/8/1e6;$('dmt').textContent='Uploads about '+Math.round(mb)+' MB per hour at this quality.'+(t?' A lower quality is active.':'')}
 $('low').addEventListener('change',dmeter);dmeter();
 function qset(type,v){const it=SC[ed()].items;let s=it.map(x=>src(x.id)).find(s=>s&&s.type===type);
- if(!s){if(!v)return;s=mk(type,(type==='ticker'?'Ticker ':'Title ')+uid,type==='ticker'?{text:v,speed:120}:{text:v});place(s,type==='ticker'?'ticker':'lower');ui()}else if(v)s.text=v}
+ if(!s){if(!v)return;s=mk(type,(type==='ticker'?'Ticker ':'Title ')+uid,type==='ticker'?{text:v,speed:120}:{text:v});place(s,type==='ticker'?'ticker':'lower');ui()}else s.text=v}
 $('qtt').oninput=e=>qset('text',e.target.value);$('qtk').oninput=e=>qset('ticker',e.target.value);
 function netCheck(){const c=navigator.connection;if(!c)return;if((c.saveData||['slow-2g','2g','3g'].includes(c.effectiveType))&&!$('lite').checked){$('lite').checked=true;$('lite').onchange({target:$('lite')});msg('Slow or data-saver connection detected. Lite mode is on.')}}
 if(navigator.connection){navigator.connection.addEventListener('change',netCheck);netCheck()}
@@ -597,6 +601,7 @@ function applyMode(){const b=document.querySelectorAll('.tabs button');[1,2,3,5,
 $('mdb').onclick=()=>{pro=!pro;try{localStorage.setItem('ls_pro',pro?'1':'0')}catch(e){}applyMode()};applyMode();
 
 const tm={list:[],cur:'',role:'',last:0,timer:null,idle:0,pend:null,live:'',boost:0};
+function signOutLocal(){if(want)$('gl').click();if(gws||gStarting)gStop('Signed out. The meeting has closed.');saveTok('');acct.me=null;conn.list=[];conn.sel.clear();conn.seen.clear();clearTimeout(tm.timer);Object.assign(tm,{list:[],cur:'',role:'',last:0,timer:null,pend:null,live:''});['tcl','tml','tms','ppl','psu','adl','ads'].forEach(id=>$(id).textContent='');['tct','ttx','tnm','ptt','pds','pst','pwl','oldpw','newpw','ownerNewPassword'].forEach(id=>$(id).value='');$('tbody').hidden=true;$('psh').hidden=true;prList=[];prSel=null;prEdit='';acRender();renderConns();tmShow()}
 const tmShow=()=>{const ok=!!(acct.on&&acct.me);$('tmOut').hidden=ok;$('tmIn').hidden=!ok};
 async function tmLoad(){tmShow();if(!acct.on||!acct.me){$('tmOut').textContent=acct.on?'Sign in under Account to use groups.':'Groups need accounts. Ask the owner to turn them on.';return}
  const r=await api('/api/teams');if(!r.ok){$('tmOut').hidden=false;$('tmIn').hidden=true;$('tmOut').textContent=r.error||'Groups are not available.';return}
@@ -640,16 +645,16 @@ $('tic').onclick=async()=>{const u=await tmInvite();if(u){await cp(u);msg('Invit
 $('tiw').onclick=async()=>{const u=await tmInvite();if(u)wa(u,'Join our group on Live Studio:')};
 $('tlv').onclick=async()=>{if(!confirm('Leave this group?'))return;const r=await api('/api/team/leave',{team:tm.cur});if(r.ok){tm.cur='';tmLoad()}else msg(r.error||'Could not leave.')};
 $('tdl').onclick=async()=>{if(!confirm('Delete this group and all its messages for everyone? This cannot be undone.'))return;const r=await api('/api/team/delete',{team:tm.cur});if(r.ok){tm.cur='';tmLoad()}else msg(r.error||'Could not delete.')};
-$('tcs').onclick=async()=>{const t=$('tct').value.trim();if(!t)return;$('tct').value='';const r=await api('/api/team/send',{team:tm.cur,text:t,kind:$('tan').checked?'announce':'msg'});if(!r.ok)msg(r.error||'Could not send.');tm.idle=0;tm.boost=Date.now()+60000;tmPoll()};
+$('tcs').onclick=async()=>{const t=$('tct').value.trim();if(!t||$('tcs').disabled)return;const button=$('tcs');button.disabled=true;try{const r=await api('/api/team/send',{team:tm.cur,text:t,kind:$('tan').checked?'announce':'msg'});if(!r.ok){msg(r.error||'Could not send. Your message is still here; please try again.');return}if($('tct').value.trim()===t)$('tct').value='';tm.idle=0;tm.boost=Date.now()+60000;tmPoll()}finally{button.disabled=false}};
 $('tct').onkeydown=e=>{if(e.key==='Enter')$('tcs').click()};
 $('tmt').onclick=()=>{const t=prompt('Meeting title','Team meeting');if(t===null)return;tm.pend={team:tm.cur,title:t.trim()||'Team meeting'};
  if(gws&&alink)tmPublish();else{act.tab(10);gStart();msg('Starting the guest room. Your group gets the meeting link when it opens.')}};
 async function tmPublish(){const p=tm.pend;if(!p||!alink)return;tm.pend=null;const r=await api('/api/team/meeting/start',{team:p.team,title:p.title,link:alink});
  if(r.ok){tm.live=r.id;gSt('Meeting posted to the group. Members join from the group chat.');tmMeetings()}else gSt(r.error||'Could not post the meeting.')}
-$('tmend').onclick=async()=>{if(!tm.live){$('trp').textContent='No live meeting to end.';return}await api('/api/team/meeting/end',{meeting:tm.live});tm.live='';if(gws)gStop('Meeting ended.');tmMeetings();tm.idle=0;tmPoll()};
+$('tmend').onclick=async()=>{if(!tm.live){$('trp').textContent='No live meeting to end.';return}const r=await api('/api/team/meeting/end',{meeting:tm.live});if(!r.ok){$('trp').textContent=r.error||'Could not end this meeting. Please try again.';return}tm.live='';if(gws)gStop('Meeting ended.');tmMeetings();tm.idle=0;tmPoll()};
 Object.assign(act,{
  tjoin:async(i,b)=>{const r=await api('/api/team/meeting/join',{meeting:b.dataset.m});if(r.ok)window.open(r.link,'_blank','noopener');else msg(r.error||'Could not join.')},
- tmrole:async(i,b)=>{await api('/api/team/role',{team:tm.cur,email:b.dataset.m,role:i===1?'admin':'member'});tmMembers()},
+ tmrole:async(i,b)=>{const r=await api('/api/team/role',{team:tm.cur,email:b.dataset.m,role:i===1?'admin':'member'});if(!r.ok){msg(r.error||'Could not change this role. Please try again.');return}tmMembers()},
  tmrem:async(i,b)=>{if(!confirm('Remove this person from the group?'))return;const r=await api('/api/team/remove',{team:tm.cur,email:b.dataset.m});if(!r.ok)msg(r.error||'Could not remove.');tmMembers()}});
 async function pendingJoin(){let c='';try{c=sessionStorage.getItem('ls_join')||''}catch(e){}if(!c)return;
  if(!acct.me){$('acm').textContent='Sign in or create an account to join the group.';act.tab(8);return}
@@ -677,7 +682,7 @@ function prImage(t){const c=document.createElement('canvas');c.width=1080;c.heig
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='program.png';a.click();msg('Picture saved. Post it on Instagram, TikTok or WhatsApp status and add the link.')},'image/png')}
 Object.assign(act,{psel:i=>prShare(i),
  ped:i=>{const p=prList[i];prEdit=p.id;$('ptt').value=p.title;$('pds').value=p.descr||'';$('pwl').value=p.watch||'';$('pst').value=p.start?new Date(p.start-new Date(p.start).getTimezoneOffset()*6e4).toISOString().slice(0,16):'';$('pms').textContent='Editing. Tap Save program when done.'},
- pdl:async i=>{if(!confirm('Delete this program?'))return;await api('/api/program/delete',{id:prList[i].id});$('psh').hidden=true;prLoad()},
+ pdl:async i=>{if(!confirm('Delete this program?'))return;const r=await api('/api/program/delete',{id:prList[i].id});if(!r.ok){$('pms').textContent=r.error||'Could not delete this program. Please try again.';return}$('psh').hidden=true;await prLoad()},
  pshare:async(i,b)=>{if(!prSel)return;const k=b.dataset.m,t=prSel.title+(prSel.start?' - '+new Date(prSel.start).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}):'');
   if(k==='cp'){try{await navigator.clipboard.writeText(prSel.url);msg('Link copied.')}catch(e){prompt('Copy this link',prSel.url)}}
   else if(k==='nat'){if(navigator.share)navigator.share({title:prSel.title,text:t,url:prSel.url}).catch(()=>{});else msg('Sharing is not available on this device. Use the buttons.')}
@@ -690,11 +695,12 @@ ui();frame();
 const mkStream=()=>{const lowd=$('low').checked,s=(lowd?lo:$('cv')).captureStream(lowd?15:30);dest.stream.getAudioTracks().forEach(t=>s.addTrack(t));return s};
 const mime=()=>['video/webm;codecs=h264,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));
 let rr=null,ch=[];
-$('rc').onclick=()=>{if(rr){rr.stop();return}ch=[];AC.resume();
+$('rc').onclick=()=>{if(rr){if(rr.state!=='inactive'){rr.stop();$('rc').disabled=true}return}ch=[];AC.resume();
+ try{if(typeof MediaRecorder==='undefined')throw Error('Recording is not supported on this browser.');
  rr=new MediaRecorder(mkStream(),{mimeType:mime(),videoBitsPerSecond:4000000,audioBitsPerSecond:192000});
  rr.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};
- rr.onstop=()=>{const a=document.createElement('a');const ty=rr.mimeType||'video/webm';a.href=URL.createObjectURL(new Blob(ch,{type:ty}));a.download='recording-'+Date.now()+(ty.includes('mp4')?'.mp4':'.webm');a.click();rr=null;$('rc').textContent='Record to file'};
- rr.start(1000);$('rc').textContent='Stop recording'};
+ rr.onstop=()=>{const a=document.createElement('a');const ty=rr.mimeType||'video/webm',url=URL.createObjectURL(new Blob(ch,{type:ty}));a.href=url;a.download='recording-'+Date.now()+(ty.includes('mp4')?'.mp4':'.webm');a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);rr=null;$('rc').disabled=false;$('rc').textContent='Record to file'};
+ rr.start(1000);$('rc').textContent='Stop recording'}catch(e){rr=null;$('rc').disabled=false;msg(e.message||'Recording could not start on this browser.')}};
 let ds=[],ws=null,rec=null,live=false,sent=0;
 function rd(){const ul=$('dl');ul.innerHTML='';ds.forEach((d,i)=>{const li=document.createElement('li');
  li.innerHTML='<input type="checkbox" checked aria-label="Enabled"><input type="text" placeholder="Server URL"><input type="password" placeholder="Stream key"><button aria-label="Remove">x</button>';

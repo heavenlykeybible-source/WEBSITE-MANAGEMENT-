@@ -376,7 +376,7 @@ export default {
     if (request.method === 'POST' && origin && origin !== url.origin && path !== '/api/pay/webhook') return json({ error: 'Forbidden' }, 403);
 
     if (path === '/api/health') return json({ ok: true, releaseId: typeof MEETING_RELEASE_ID === 'string' ? MEETING_RELEASE_ID : null, accountsConfigured: accounts, relayConfigured: !!(env.RELAY_URL && env.RELAY_SECRET), meetingConfigured: !!(env.MEETING_ROOMS && typeof env.MEETING_ROOMS.idFromName==='function' && typeof env.MEETING_ROOMS.get==='function'), turnConfigured: String(env.TURN_SHARED_SECRET||'').length>=32 && String(env.TURN_URLS||'').split(',').some(u=>{u=u.trim();const m=u.match(/^turns?:[a-z0-9.-]+(?::([0-9]{1,5}))?(?:\?transport=(?:udp|tcp))?$/i);return !!m&&!u.includes('..')&&(!m[1]||Number(m[1])<=65535)}), youtubeConfigured: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET), facebookConfigured: !!(env.FB_APP_ID && env.FB_APP_SECRET), aiConfigured: !!env.AI, radio: 'on-hold' });
-    if (path === '/api/plans') return accounts ? json({ plans: plans(env), currency: cur(env) }) : json({ error: 'Accounts are not set up' }, 501);
+    if (path === '/api/plans') return accounts ? json({ plans: plans(env), currency: cur(env), registrationOpen: env.MEETINGSPACE_PRIVATE_PREVIEW === '0' }) : json({ error: 'Accounts are not set up' }, 501);
     if (path === '/api/pay/webhook' && request.method === 'POST') {
       if (!accounts || !env.PAYSTACK_SECRET) return json({ error: 'Not set up' }, 501);
       const raw = await request.text();

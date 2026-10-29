@@ -9,3 +9,4 @@ worker-under-test.mjs
 _worker_under_test.mjs
 _browser_worker.mjs
 build/
+test-results/

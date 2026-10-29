@@ -17,11 +17,11 @@ const { spawnSync } = require('child_process');
  server=http.createServer(async(req,res)=>{try{
   const origin='http://127.0.0.1:8751',url=new URL(req.url,origin);
   if(url.pathname.startsWith('/api/')){const chunks=[];for await(const c of req)chunks.push(c);const body=Buffer.concat(chunks);const r=await worker.fetch(new Request(url,{method:req.method,headers:req.headers,...(body.length?{body}: {})}),env);res.writeHead(r.status,Object.fromEntries(r.headers));res.end(Buffer.from(await r.arrayBuffer()));return}
-  const f=path.join(root,'site',url.pathname==='/'?'index.html':url.pathname);const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.png':'image/png','.webmanifest':'application/manifest+json'};
+  const f=path.join(root,'site',url.pathname==='/'?'index.html':url.pathname);const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jpg':'image/jpeg','.png':'image/png','.webmanifest':'application/manifest+json'};
   if(!fs.existsSync(f)){res.writeHead(404);return res.end()};res.setHeader('content-type',types[path.extname(f)]||'text/plain');res.end(fs.readFileSync(f));
  }catch(e){res.writeHead(500);res.end(String(e));errors.push(String(e))}});
  await new Promise(r=>server.listen(8751,'127.0.0.1',r));
- browser=await chromium.launch({headless:true,args:['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream']});
+ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--no-sandbox','--disable-dev-shm-usage','--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream']});
  const ctx=await browser.newContext({permissions:['camera','microphone']});
  const page=await ctx.newPage();page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://**/*',r=>r.abort());

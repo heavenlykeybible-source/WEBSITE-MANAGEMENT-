@@ -132,7 +132,7 @@ function onMsg(m){switch(m.t){
  case 'kick':end('You were removed from the room.');break;
  case 'closed':end(m.why||'The room has ended.');break;
  case 'error':end(m.msg||'Could not join.');break;
- case 'mute':if(local)setMic(false);note('The host muted your microphone. Tap Unmute when you are asked to speak.');break;
+ case 'mute':if(m.on){if(local)setMic(false);note('The host muted your microphone. Tap Unmute when you are asked to speak.')}else note('The host has invited you to unmute. Tap Unmute when you are ready.');break;
  case 'chat':addChat(m.name,m.text);break;
  case 'note':note(m.text);break;
  case 'watch':setWatch(m.url);break;

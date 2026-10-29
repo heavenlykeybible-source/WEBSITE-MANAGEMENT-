@@ -31,9 +31,11 @@ jobs:
         run: node tests/run.mjs
       - name: Verify Zoom Studio
         run: npm test --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source
+  browser-audit:
+    uses: ./.github/workflows/account8-browser.yml
   deploy:
     if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
-    needs: checks
+    needs: [checks, browser-audit]
     runs-on: ubuntu-latest
     environment: account8-meetingspace-production
     steps:

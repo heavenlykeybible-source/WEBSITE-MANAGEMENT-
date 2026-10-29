@@ -1,0 +1,30 @@
+name: Account 8 browser and peer-media audit
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: account8-browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-08-heavenly-key-meetingspace/source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: account8-browser-screenshots
+          path: heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/test-results/
+          if-no-files-found: ignore
