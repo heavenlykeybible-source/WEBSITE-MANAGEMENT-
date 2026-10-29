@@ -52,13 +52,13 @@ jobs:
             rm -f "$p12"
           }
           trap cleanup EXIT
-          printf '%s' "$P12_BASE64" | base64 --decode > "$p12"
+          printf '%s' "$P12_BASE64" | base64 -D > "$p12"
           security create-keychain -p "$keychain_password" "$keychain"
           security unlock-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
           security import "$p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
-          security list-keychains -d user -s "$keychain" "$(security list-keychains -d user | tr -d ' "' | head -1)"
+          security list-keychains -d user -s "$keychain"
           app="$PWD/release-derived/Build/Products/Release/HeavenlyKeyMac.app"
           test -d "$app"
           codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" "$app"
