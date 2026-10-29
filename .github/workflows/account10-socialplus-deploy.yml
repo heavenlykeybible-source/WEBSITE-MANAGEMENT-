@@ -31,7 +31,7 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" || { echo "Missing Cloudflare API token"; exit 1; }
           test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "Missing Cloudflare account ID"; exit 1; }
       - name: Install dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Validate source before production deployment
         run: npm run verify:local
       - name: Check remote D1 schema before deployment
