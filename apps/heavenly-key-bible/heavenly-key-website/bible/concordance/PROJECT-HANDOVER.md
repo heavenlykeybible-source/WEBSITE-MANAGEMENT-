@@ -122,3 +122,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Browser study-notes-genesis-drafts.js now includes 316 saved drafts, commit d36a19e058bcc7ac8939b014828245318a9a4ca6.
 - scripts/concordance-draft-check.mjs updated to include Genesis 12 and 316 expected drafts, commit 9e982e2f613be662b2aba35e6eba3a16e6a6cfb4.
 - Node and browser execution not verified. No doctrinal review, deployment or Bible Dictionary changes. Next: Genesis 13 and execute validation against full canonical data, including cross-references.
+
+## Latest checkpoint — Genesis 13
+- Added 18 original pending-review drafts for Genesis 13:1–18, commit 4ece4e9f1812150260b93832263c0d42ebd03a49.
+- Regenerated browser study notes to include 334 Genesis draft entries, commit 7cad7768dde32bf9a29c45474163e3b0c67513e9.
+- Updated scripts/concordance-draft-check.mjs to include chapter 13 and expected count 334, commit 77ac909d81f697b790c9e8288c5e918aec6073d4.
+- No Node/browser test or human doctrinal review has been run. Next: Genesis 14 onward and validation of the 66-book batch queue; avoid claiming all 31,102 explanations are done. Bible Dictionary untouched, no deployment.
