@@ -63,5 +63,6 @@ for(const group of registered){
   }
  }
 }
-console.log(JSON.stringify({files:files.length,registeredNotes:count,uniqueNotes:seen.size,shortExplanations,shortContexts,versesInCanon:manifest.books.reduce((sum,b)=>sum+b.verses,0),errors:errors.length,warnings:warnings.length,errorExamples:errors.slice(0,100),warningExamples:warnings.filter(x=>!x.startsWith('Pending editorial review')).slice(0,30)},null,2));
+const coverageByBook=manifest.books.map(b=>({book:b.name,covered:[...seen.keys()].filter(ref=>ref.startsWith(b.name+' ')).length,total:b.verses})).filter(b=>b.covered>0);
+console.log(JSON.stringify({files:files.length,registeredNotes:count,uniqueNotes:seen.size,coverageByBook,shortExplanations,shortContexts,versesInCanon:manifest.books.reduce((sum,b)=>sum+b.verses,0),errors:errors.length,warnings:warnings.length,errorExamples:errors.slice(0,100),warningExamples:warnings.filter(x=>!x.startsWith('Pending editorial review')).slice(0,30)},null,2));
 if(errors.length)process.exitCode=1;
