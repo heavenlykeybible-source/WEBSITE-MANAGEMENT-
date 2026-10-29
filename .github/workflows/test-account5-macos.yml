@@ -1,0 +1,24 @@
+name: Test Account 5 native Mac application
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/native/macos/**'
+      - '.github/workflows/test-account5-macos.yml'
+permissions:
+  contents: read
+jobs:
+  mac-build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Mac application project
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/macos
+        run: xcodegen generate
+      - name: Build unsigned Mac application for verification
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/macos
+        run: |
+          xcodebuild -project HeavenlyKeyMac.xcodeproj -scheme HeavenlyKeyMac -configuration Debug -sdk macosx CODE_SIGNING_ALLOWED=NO build
