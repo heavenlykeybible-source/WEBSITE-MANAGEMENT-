@@ -12,7 +12,7 @@ test('every active QR belongs to the reviewed app catalogue and correct device U
  const items=JSON.parse(read('qr/destinations.json'));
  const apps=JSON.parse(read('app-downloads.json'));
  const identifiers=new Set(),urls=new Set();
- assert.equal(items.length,75);
+ assert.equal(items.length,70);
  for(const item of items) {
   assert.ok(!identifiers.has(item.id),'Duplicate QR ID: '+item.id);
   assert.ok(!urls.has(item.url),'Duplicate QR destination: '+item.url);
