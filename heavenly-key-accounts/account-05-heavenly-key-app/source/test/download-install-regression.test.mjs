@@ -100,3 +100,16 @@ test('premium download chooser keeps every device and a safe selected-device rou
  assert.match(css, /\.hk-install-dialog \.downloadgrid/);
  assert.match(css, /@media\(max-width:480px\)/);
 });
+
+test('public app directory and device chooser do not require registration before download',()=>{
+ for(const page of ['index.html','downloads.html']){
+  const html=publicFile(page);
+  assert.match(html,/no Heavenly Key account required/i);
+  assert.match(html,/data-download-app="all-in-one"/);
+ }
+ const chooser=publicFile('app-pages.js');
+ assert.match(chooser,/No Heavenly Key sign-in required/);
+ assert.match(chooser,/Some member-only features require sign-in after opening the app/);
+ const guide=publicFile('app-device-guide.js');
+ assert.match(guide,/No Heavenly Key sign-in is required to download it/);
+});
