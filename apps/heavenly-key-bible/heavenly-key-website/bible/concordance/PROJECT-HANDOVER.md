@@ -176,3 +176,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Updated browser notes bundle to 545 draft entries, commit 7bf7eb57a75f45da9b3e733557de05acce12a0c4.
 - Updated draft validator to include Genesis 21 and expect 545, commit 3b4a72a2f8991ce63ef975f6874af471fd66209e.
 - Next Genesis 22 and actual execution of Node/browser QA, canonical reference checks and batch generator. All entries pending doctrinal review. No deployment or Bible Dictionary changes.
+
+## Latest checkpoint — Genesis 22
+- Added 24 original Genesis 22:1–24 pending-review drafts, commit 0060a1fc0dc27c94860bd2710b4890711906d367. Notes stress the explicit prevention of harm to Isaac, with no imitation of dangerous actions.
+- Browser bundle registered 569 Genesis draft entries, commit 89325bd57c345ce543b7f2bae7a6d9a6979ccf78.
+- Draft checker includes Genesis 22 and expects 569, commit 9edd3ed0da0682bcd96917d00d180ce25532b03d.
+- Next Genesis 23, execute Node/browser validation, canonical reference checks and batch generator. Human doctrinal review remains outstanding. No deployment; Bible Dictionary unchanged.
