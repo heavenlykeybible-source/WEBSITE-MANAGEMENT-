@@ -69,6 +69,24 @@ jobs:
           xcodebuild -exportArchive -archivePath "$PWD/HeavenlyKey.xcarchive" -exportPath "$PWD/ios-candidate" -exportOptionsPlist "$exportOptions"
           ipa="$(find ios-candidate -maxdepth 1 -name '*.ipa' -type f -print -quit)"
           test -n "$ipa" && test -s "$ipa"
+          # Verify the *exported IPA*, not merely the archive that preceded export.
+          inspection="$RUNNER_TEMP/hkem-ios-export-inspection"
+          mkdir -p "$inspection"
+          unzip -q "$ipa" -d "$inspection"
+          signed_app="$inspection/Payload/HeavenlyKey.app"
+          test -d "$signed_app"
+          test -s "$signed_app/embedded.mobileprovision"
+          bundle_id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$signed_app/Info.plist")
+          test "$bundle_id" = 'org.heavenlykey.apps' || {
+            echo "::error::Exported IPA does not contain the reviewed app bundle"; exit 1;
+          }
+          codesign --verify --deep --strict --verbose=2 "$signed_app"
+          security cms -D -i "$signed_app/embedded.mobileprovision" > "$inspection/profile.plist"
+          profile_team=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$inspection/profile.plist")
+          test "$profile_team" = "$APPLE_TEAM_ID" || {
+            echo "::error::Exported IPA provisioning profile team mismatch"; exit 1;
+          }
+          # Apple store installation and approval are separate release gates.
           shasum -a 256 "$ipa" > "$ipa.sha256"
           rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/hkem-account5.mobileprovision"
       - name: Retain signed IPA for manual TestFlight submission and device review
