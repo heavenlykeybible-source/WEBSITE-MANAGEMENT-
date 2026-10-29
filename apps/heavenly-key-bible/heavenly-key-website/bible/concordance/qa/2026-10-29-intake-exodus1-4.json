@@ -1,0 +1,78 @@
+{
+  "submitted": 100,
+  "target": 500,
+  "partialCheckpoint": true,
+  "pending": 100,
+  "reviewFlags": [
+    {
+      "ref": "Exodus 1:5",
+      "flags": [
+        "Household totals and Acts 7:14 require human review; do not invent a harmonization."
+      ]
+    },
+    {
+      "ref": "Exodus 1:19",
+      "flags": [
+        "Truthfulness and ethical interpretation of the midwives' answer require human review; no general endorsement of deception."
+      ]
+    },
+    {
+      "ref": "Exodus 3:2",
+      "flags": [
+        "Identity of the angel of the LORD requires authorized human review before a disputed explanation is published."
+      ]
+    },
+    {
+      "ref": "Exodus 3:8",
+      "flags": [
+        "Land-promise scope and disputed modern applications require human doctrinal review."
+      ]
+    },
+    {
+      "ref": "Exodus 3:14",
+      "flags": [
+        "Detailed original-language claims and the full theological relation to John 8:58 require authorized human review."
+      ]
+    },
+    {
+      "ref": "Exodus 3:19",
+      "flags": [
+        "Precise force of the KJV wording about a mighty hand requires textual review; retain its context without speculative certainty."
+      ]
+    },
+    {
+      "ref": "Exodus 3:22",
+      "flags": [
+        "Borrow and spoil language and its ethical application require human textual review before a contested interpretation is published."
+      ]
+    },
+    {
+      "ref": "Exodus 4:21",
+      "flags": [
+        "Divine hardening and Pharaoh's responsibility require authorized human doctrinal review; no disputed system is presented as settled."
+      ]
+    },
+    {
+      "ref": "Exodus 4:24",
+      "flags": [
+        "Pronoun referents, nature of the threat and covenant interpretation require human doctrinal review; withhold speculative reconstruction."
+      ]
+    },
+    {
+      "ref": "Exodus 4:25",
+      "flags": [
+        "Identity of the son and pronoun referents, ritual details and bloody husband expression require human review."
+      ]
+    },
+    {
+      "ref": "Exodus 4:26",
+      "flags": [
+        "Meaning of the release and the circumcision expression remains held for authorized human review."
+      ]
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "passed": true,
+  "limitations": "Reference existence and text binding are automated. Relevance, history, originality against external works and doctrinal correctness require human review."
+}

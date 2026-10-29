@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {parseHTML} from 'linkedom';
-import {root,study} from './concordance-core.mjs';
+import {root,study,loadCanon} from './concordance-core.mjs';
 const tests=[];
 async function harness(query='?book=GEN&chapter=46&verse=1'){
  const {window,document}=parseHTML(fs.readFileSync(study+'index.html','utf8'));
@@ -41,7 +41,7 @@ await check('real scripts load exact KJV and new draft with visible review warni
 await check('all publication-held entries withheld in every tab',async()=>{
  const entries=fs.readdirSync(study+'drafts').flatMap(f=>JSON.parse(fs.readFileSync(study+'drafts/'+f)));
  for(const e of entries.filter(x=>x.publicationHold)){
-  const [,ch,v]=e.ref.match(/Genesis (\d+):(\d+)/),h=await harness(`?book=GEN&chapter=${ch}&verse=${v}`);
+  const [,name,ch,v]=e.ref.match(/^(.+) (\d+):(\d+)$/),code=loadCanon().books.find(b=>b[0]===name)[1],h=await harness(`?book=${code}&chapter=${ch}&verse=${v}`);
   for(const tab of ['explanation','context','references']){await h.click(`[data-tab=${tab}]`);assert.match(h.document.querySelector('#detail').textContent,/withheld/);assert.ok(!h.document.querySelector('#detail').textContent.includes(e.explanation))}
  }
 });
@@ -59,7 +59,7 @@ await check('preserve legacy Genesis and Matthew study notes with unreviewed not
  for(const [query,text] of [['?book=GEN&chapter=1&verse=1',/Creator of heaven and earth/],['?book=MAT&chapter=5&verse=3',/spiritual need/]]){const h=await harness(query);assert.match(h.document.querySelector('#detail').textContent,text);assert.match(h.document.querySelector('#detail').textContent,/pending human doctrinal review/)}
 });
 await check('undrafted verse fallback and full Scripture context',async()=>{
- const h=await harness('?book=EXO&chapter=1&verse=1');assert.match(h.document.querySelector('#detail').textContent,/not yet published/);await h.click('[data-tab=context]');assert.match(h.document.querySelector('#detail').textContent,/Selected/);
+ const h=await harness('?book=EXO&chapter=40&verse=1');assert.match(h.document.querySelector('#detail').textContent,/not yet published/);await h.click('[data-tab=context]');assert.match(h.document.querySelector('#detail').textContent,/Selected/);
 });
 await check('selected-book concordance query returns deep links',async()=>{
  const h=await harness();h.document.querySelector('#search-scope').value='current';h.document.querySelector('#search-term').value='Beer-sheba';h.document.querySelector('#concordance-search').dispatchEvent(new h.window.Event('submit',{cancelable:true}));await h.flush();assert.match(h.document.querySelector('#search-progress').textContent,/matching verses found/);assert.ok(h.document.querySelectorAll('#search-results a').length);assert.match(h.document.querySelector('#search-results a').href,/book=GEN/);

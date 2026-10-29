@@ -14,7 +14,7 @@ Deeper Christian Life Ministry, official [What We Believe](https://dclm.org/abou
 
 ## Verse-level evidence
 
-The primary source for the new Genesis 46–47 notes is the repository KJV JSON. Historical/cultural fields are limited to details explicitly supported by the biblical narrative and named cross-references. No external dates, dynasties, archaeological identifications or original-language etymologies are asserted. Each new record preserves the exact local verse text and its SHA-256 to detect later source drift; a matching hash is not proof of semantic interpretation or of independent transcription accuracy.
+The primary source for the new Genesis 46–50 and Exodus 1–4 notes is the repository KJV JSON. Historical/cultural fields are limited to details explicitly supported by the biblical narrative and named cross-references. No external dates, dynasties, archaeological identifications or original-language etymologies are asserted. Each new record preserves the exact local verse text and its SHA-256 to detect later source drift; a matching hash is not proof of semantic interpretation or of independent transcription accuracy.
 
 All new entries start `pending`. Only an authorized human may approve doctrinal publication. Flagged numerical, textual and ethical questions additionally carry `publicationHold: true`; the application withholds their explanations in every tab, including copy/share output. `needs_revision` is also withheld. Unreviewed legacy notes now receive a visible pending warning. No database, separate Dictionary, production Worker or live site is changed by these scripts.
 

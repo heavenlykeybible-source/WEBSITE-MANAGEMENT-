@@ -2,11 +2,11 @@
   "canonicalVerses": 31102,
   "books": 66,
   "chapters": 1189,
-  "drafts": 1530,
-  "uniqueVerses": 1530,
-  "pendingReview": 1530,
-  "remainingOutsideDraftSet": 29572,
-  "nextMissing": "Exodus 1:1",
+  "drafts": 1630,
+  "uniqueVerses": 1630,
+  "pendingReview": 1630,
+  "remainingOutsideDraftSet": 29472,
+  "nextMissing": "Exodus 5:1",
   "legacyAudit": [
     "Genesis 1:1",
     "Genesis 1:2",
@@ -15,6 +15,72 @@
   "errors": [],
   "legacySchemaWarnings": 1384,
   "flaggedEntries": [
+    {
+      "ref": "Exodus 1:5",
+      "flags": [
+        "Household totals and Acts 7:14 require human review; do not invent a harmonization."
+      ]
+    },
+    {
+      "ref": "Exodus 1:19",
+      "flags": [
+        "Truthfulness and ethical interpretation of the midwives' answer require human review; no general endorsement of deception."
+      ]
+    },
+    {
+      "ref": "Exodus 3:2",
+      "flags": [
+        "Identity of the angel of the LORD requires authorized human review before a disputed explanation is published."
+      ]
+    },
+    {
+      "ref": "Exodus 3:8",
+      "flags": [
+        "Land-promise scope and disputed modern applications require human doctrinal review."
+      ]
+    },
+    {
+      "ref": "Exodus 3:14",
+      "flags": [
+        "Detailed original-language claims and the full theological relation to John 8:58 require authorized human review."
+      ]
+    },
+    {
+      "ref": "Exodus 3:19",
+      "flags": [
+        "Precise force of the KJV wording about a mighty hand requires textual review; retain its context without speculative certainty."
+      ]
+    },
+    {
+      "ref": "Exodus 3:22",
+      "flags": [
+        "Borrow and spoil language and its ethical application require human textual review before a contested interpretation is published."
+      ]
+    },
+    {
+      "ref": "Exodus 4:21",
+      "flags": [
+        "Divine hardening and Pharaoh's responsibility require authorized human doctrinal review; no disputed system is presented as settled."
+      ]
+    },
+    {
+      "ref": "Exodus 4:24",
+      "flags": [
+        "Pronoun referents, nature of the threat and covenant interpretation require human doctrinal review; withhold speculative reconstruction."
+      ]
+    },
+    {
+      "ref": "Exodus 4:25",
+      "flags": [
+        "Identity of the son and pronoun referents, ritual details and bloody husband expression require human review."
+      ]
+    },
+    {
+      "ref": "Exodus 4:26",
+      "flags": [
+        "Meaning of the release and the circumcision expression remains held for authorized human review."
+      ]
+    },
     {
       "ref": "Genesis 46:15",
       "flags": [

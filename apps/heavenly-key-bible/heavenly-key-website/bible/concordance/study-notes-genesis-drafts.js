@@ -2,6 +2,939 @@
 // Generated from drafts/*.json. Pending means unreviewed, never approved.
 (function(){
 const notes={
+  "Exodus 1:1": {
+    "explanation": "Exodus begins by naming the children of Israel who entered Egypt with Jacob, each with his household. The opening connects the coming deliverance with the family story in Genesis. Israel's later suffering is therefore the experience of the same people whose preservation Joseph had helped secure.",
+    "context": "The list introduces the generation that preceded the population growth and oppression described later in the chapter.",
+    "references": "Genesis 46:6; Genesis 50:24",
+    "application": "Read deliverance within God's continuing faithfulness rather than treating each biblical book as an unrelated story.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:6-7 narrates the migration, while Genesis 50:24 anticipates a future departure.",
+    "reviewFlags": []
+  },
+  "Exodus 1:2": {
+    "explanation": "Reuben, Simeon, Levi, and Judah begin the list of Jacob's sons. Their names preserve continuity with the patriarchal household rather than describing new individuals born after Joseph's death. The inclusion of men with morally complicated histories does not approve their wrongdoing or erase the warnings already recorded about them.",
+    "context": "This is the first of three verses naming the brothers before the household total.",
+    "references": "Genesis 35:23; Genesis 49:3; Genesis 49:5",
+    "application": "Receive biblical family history truthfully, remembering both God's faithfulness and the need for repentance where people sin.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 35:23 identifies these four among Leah's sons; Genesis 49 addresses their histories and futures.",
+    "reviewFlags": []
+  },
+  "Exodus 1:3": {
+    "explanation": "Issachar, Zebulun, and Benjamin continue the family list, adding names from different branches of Jacob's household. Benjamin's appearance here locates him among the brothers who came to Egypt. The verse gives names, not individual biographies or a separate judgment about the spiritual character of each tribe.",
+    "context": "The list prepares for the contrast between a small founding household and Israel's later multiplication.",
+    "references": "Genesis 46:13; Genesis 46:14; Genesis 46:21",
+    "application": "Respect the factual purpose of a genealogy without inventing personal achievements or hidden meanings for its names.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:13-14 and 46:21 record the corresponding family branches in the migration register.",
+    "reviewFlags": []
+  },
+  "Exodus 1:4": {
+    "explanation": "Dan, Naphtali, Gad, and Asher complete the names of the brothers listed as entering Egypt. Joseph is not omitted from the wider household; the following verse explains that he was already there. Reading the two verses together prevents mistaking the list's travel setting for a denial of Joseph's place.",
+    "context": "The names conclude the migration list before the total and the passing of the founding generation.",
+    "references": "Genesis 35:25; Genesis 35:26; Exodus 1:5",
+    "application": "Read connected statements together before treating an apparent omission as an error or an exclusion.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 35:25-26 names these sons in relation to Bilhah and Zilpah; Genesis 46 lists their descendants.",
+    "reviewFlags": []
+  },
+  "Exodus 1:5": {
+    "explanation": "The household total is given as seventy descendants of Jacob, with Joseph already in Egypt. The number establishes the modest beginning against which later growth is described. It should not be treated as a count of every person in the traveling party, including all wives and servants.",
+    "context": "The total connects the migration account with the growth announced in Exodus 1:7.",
+    "references": "Genesis 46:26; Genesis 46:27; Acts 7:14",
+    "application": "Define what a number counts before using it to draw conclusions about agreement between passages.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:26-27 distinguishes categories in its totals; Acts 7:14 gives a different figure requiring careful review.",
+    "reviewFlags": [
+      "Household totals and Acts 7:14 require human review; do not invent a harmonization."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 1:6": {
+    "explanation": "Joseph, his brothers, and their generation die, bringing the founding household's personal history to an end. Their deaths prepare for a different political situation but do not cancel God's promise to their descendants. The narrative shifts from the protection associated with Joseph to the vulnerability of later generations.",
+    "context": "This transition stands between the household list and Israel's multiplication under a new ruler.",
+    "references": "Genesis 50:24; Genesis 50:26",
+    "application": "Build faith on God's enduring Word rather than assuming the continued presence of respected leaders is guaranteed.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 50:26 records Joseph's death; the verse supplies no exact date for the death of every brother.",
+    "reviewFlags": []
+  },
+  "Exodus 1:7": {
+    "explanation": "Israel increases abundantly and becomes strong enough to fill the land. The repeated language emphasizes striking growth from the small household just named. The narrative presents this multiplication before describing oppression, showing that Egyptian policy will attempt to suppress an already growing people rather than create their identity.",
+    "context": "Their growth becomes the occasion for Pharaoh's fearful and oppressive response in the following verses.",
+    "references": "Genesis 46:3; Genesis 47:27",
+    "application": "Give God thanks for preservation across generations while refusing to equate numerical growth alone with complete spiritual maturity.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:3 contains God's promise to make Jacob a great nation in Egypt; this growth continues that storyline.",
+    "reviewFlags": []
+  },
+  "Exodus 1:8": {
+    "explanation": "A new king arises who does not know Joseph. The statement signals the loss of the recognition and protection associated with Joseph's service. The verse does not name the ruler, identify his dynasty, or establish whether his lack of knowledge is personal ignorance, political disregard, or both.",
+    "context": "The new ruler immediately interprets Israel's growth as a threat and proposes restrictive measures.",
+    "references": "Genesis 41:41; Acts 7:18",
+    "application": "Do not assume that yesterday's public favor guarantees security; remain faithful when circumstances and recognition change.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 41:39-41 describes Joseph's earlier honor; Acts 7:18 recalls this later change of king.",
+    "reviewFlags": []
+  },
+  "Exodus 1:9": {
+    "explanation": "The king portrays Israel as more numerous and stronger than his people. This is the ruler's alarming claim within a speech that prepares oppression. The narrative records the accusation without supplying a census that would independently verify every comparative assertion or justify treating the whole population as dangerous.",
+    "context": "The speech turns demographic anxiety into the proposed policy of Exodus 1:10.",
+    "references": "Exodus 1:7; Exodus 1:10",
+    "application": "Test fear-driven claims about groups instead of accepting language that makes neighbors into collective enemies.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 1:7 establishes real growth, but the king's precise comparison remains part of his rhetoric.",
+    "reviewFlags": []
+  },
+  "Exodus 1:10": {
+    "explanation": "Pharaoh proposes dealing wisely with Israel, fearing that they might join an enemy in war and leave Egypt. His supposed wisdom is directed toward control and exploitation. The text does not record an actual Israelite conspiracy, so imagined disloyalty must not be presented as an established fact.",
+    "context": "The next verse shows how this proposal becomes forced labor and affliction.",
+    "references": "Exodus 1:11; James 3:14; James 3:17",
+    "application": "Reject plans that disguise injustice as prudence, especially when they punish people for a threat that has not been demonstrated.",
+    "reviewStatus": "pending",
+    "historicalContext": "Pharaoh's stated fear includes losing the people from the land, revealing the interest in retaining their labor.",
+    "reviewFlags": []
+  },
+  "Exodus 1:11": {
+    "explanation": "Taskmasters are appointed to afflict Israel with burdens, and the people build the treasure cities Pithom and Raamses. The political fear becomes organized forced labor. The verse names the work and places but does not identify a particular Pharaoh or prove a complete external chronology from the place-names alone.",
+    "context": "This begins the escalating sequence of oppressive labor and, later, commands to kill male children.",
+    "references": "Exodus 1:10; Exodus 1:14",
+    "application": "Recognize that administrative systems can enforce injustice, and do not confuse productive construction with righteous treatment of workers.",
+    "reviewStatus": "pending",
+    "historicalContext": "The KJV identifies treasure cities; this note does not add claims about pyramids or an unrecorded building project.",
+    "reviewFlags": []
+  },
+  "Exodus 1:12": {
+    "explanation": "The more Israel is afflicted, the more the people multiply and spread, frustrating those who oppress them. The policy fails to achieve its aim even while it causes real suffering. God's preservation here should not become a simplistic promise that persecution always produces visible numerical growth in every setting.",
+    "context": "Egyptian frustration leads into even more rigorous service in the following verses.",
+    "references": "Genesis 46:3; Exodus 1:7",
+    "application": "Trust God's faithfulness through opposition without denying the pain endured or demanding an identical outcome in every hardship.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:3 supplies the earlier promise of national growth in Egypt; Exodus describes its continuation under pressure.",
+    "reviewFlags": []
+  },
+  "Exodus 1:13": {
+    "explanation": "The Egyptians compel Israel to serve with rigor. This concise statement intensifies the earlier account of taskmasters and burdens, emphasizing the harsh manner of the service. It is a report of oppression, not a neutral celebration of discipline or permission to treat dependent laborers without mercy.",
+    "context": "The next verse specifies the kinds of work that make life bitter for the people.",
+    "references": "Exodus 1:11; Exodus 1:14",
+    "application": "Judge work arrangements by how people are treated, not merely by the tasks completed or the authority commanding them.",
+    "reviewStatus": "pending",
+    "historicalContext": "The narrative's explanation of rigor is supplied by mortar, brick, and field service in Exodus 1:14.",
+    "reviewFlags": []
+  },
+  "Exodus 1:14": {
+    "explanation": "Israel's life is made bitter by hard labor in mortar, brick, and field service, all imposed harshly. The repeated emphasis exposes the human cost behind the building program. Their suffering is concrete and sustained; the narrative does not describe a voluntary apprenticeship or a beneficial arrangement for the enslaved.",
+    "context": "The account now moves from abusive labor to Pharaoh's attack on newborn sons.",
+    "references": "Exodus 5:7; Exodus 5:9",
+    "application": "Regard exhaustion and suffering under unjust work as matters for compassion, truth, and responsible action.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:7-9 later returns to brickmaking demands, illustrating the continuing burden without establishing that every detail is identical here.",
+    "reviewFlags": []
+  },
+  "Exodus 1:15": {
+    "explanation": "Pharaoh speaks to Hebrew midwives named Shiphrah and Puah. By recording their names, the narrative brings particular women into the center of the struggle over Israel's survival. It does not state that these were the only midwives serving the entire population, so staffing theories should remain unasserted.",
+    "context": "Their vocation places them where the king intends to implement a concealed attack on male infants.",
+    "references": "Exodus 1:16; Exodus 1:17",
+    "application": "Remember that people with ordinary responsibilities may face decisive moral choices when powerful authorities demand wrongdoing.",
+    "reviewStatus": "pending",
+    "historicalContext": "The names and occupation are given explicitly; no biographies or ages are supplied.",
+    "reviewFlags": []
+  },
+  "Exodus 1:16": {
+    "explanation": "Pharaoh orders the midwives to kill sons at birth while allowing daughters to live. The command turns a caregiving vocation into a proposed instrument of destruction. The distinction is the king's policy, not a divine estimate that daughters matter less or that newborn boys deserve harm.",
+    "context": "This command follows forced labor and precedes the midwives' refusal through fear of God.",
+    "references": "Exodus 1:17; Exodus 1:22",
+    "application": "Protect vulnerable life and refuse to use professional duties as a means of carrying out an evil order.",
+    "reviewStatus": "pending",
+    "historicalContext": "The KJV refers to the birth setting and stools but gives no further account of childbirth equipment.",
+    "reviewFlags": []
+  },
+  "Exodus 1:17": {
+    "explanation": "The midwives fear God and refuse Pharaoh's command, keeping the male children alive. Their obedience to God takes practical form in preserving those entrusted to their care. The verse places divine moral authority above a ruler's instruction to kill, rather than making political power the measure of right and wrong.",
+    "context": "Their refusal leads Pharaoh to summon them for an explanation.",
+    "references": "Acts 5:29; Proverbs 29:25",
+    "application": "Let reverence for God produce concrete protection of life, even when obedience to an earthly authority would be easier.",
+    "reviewStatus": "pending",
+    "historicalContext": "Acts 5:29 later states the priority of obeying God over men in a different setting.",
+    "reviewFlags": []
+  },
+  "Exodus 1:18": {
+    "explanation": "Pharaoh summons the midwives and asks why they have kept the boys alive. His question exposes the direct conflict between their protective conduct and his murderous policy. The women now face scrutiny from the very authority whose command they have disobeyed, making the danger of their choice clear.",
+    "context": "Their answer follows in Exodus 1:19; God's treatment of them is then linked to their fear of Him.",
+    "references": "Exodus 1:17; Exodus 1:19",
+    "application": "Expect that refusing wrongdoing may require an honest account of your actions, and seek courage rooted in God's authority.",
+    "reviewStatus": "pending",
+    "historicalContext": "The passage records the confrontation without describing a trial, written charge, or punishment imposed on them.",
+    "reviewFlags": []
+  },
+  "Exodus 1:19": {
+    "explanation": "The midwives tell Pharaoh that Hebrew women give birth before the midwives arrive. The narrative reports their explanation but does not independently describe every birth or resolve all questions about the statement. God's later favor is explicitly connected with their fear of Him, not a general approval of deceit.",
+    "context": "Their response follows the king's demand for an explanation and precedes the account of divine kindness.",
+    "references": "Exodus 1:17; Exodus 1:21",
+    "application": "Do not turn this episode into permission to lie or make unsupported claims about women of a particular ancestry.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 1:21 identifies fear of God as the stated reason for blessing; no medical claim about an entire ethnicity is verified here.",
+    "reviewFlags": [
+      "Truthfulness and ethical interpretation of the midwives' answer require human review; no general endorsement of deception."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 1:20": {
+    "explanation": "God deals kindly with the midwives, and Israel continues to multiply and become strong. The account contrasts the king's attempt to destroy life with divine preservation. It records a specific outcome rather than promising that every faithful refusal will immediately receive safety, wealth, or public recognition.",
+    "context": "The following verse directly links the midwives' blessing with their fear of God.",
+    "references": "Exodus 1:7; Exodus 1:12; Exodus 1:21",
+    "application": "Trust God's approval above a ruler's approval, while avoiding a formula that measures faithfulness by immediate material outcomes.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 1:7 and 1:12 have already emphasized growth despite measures intended to suppress it.",
+    "reviewFlags": []
+  },
+  "Exodus 1:21": {
+    "explanation": "Because the midwives fear God, He makes them houses. The blessing is expressed in household language, but the verse does not provide a detailed account of property, marriage, or number of children. Its explicit moral connection is reverence for God demonstrated in preserving the infants' lives.",
+    "context": "This closes the midwives' episode before Pharaoh broadens the command to all his people.",
+    "references": "Exodus 1:17; Psalms 128:1",
+    "application": "Seek a life established in reverence for God rather than pursuing blessing through compliance with wrongdoing.",
+    "reviewStatus": "pending",
+    "historicalContext": "The KJV uses houses here; this note does not turn that expression into an invented architectural or family biography.",
+    "reviewFlags": []
+  },
+  "Exodus 1:22": {
+    "explanation": "Pharaoh commands all his people to cast newborn sons into the river while preserving daughters. After the midwives' refusal, the violence becomes a public command. The chapter ends with a direct threat to infant life, preparing for the preservation of the child who will later confront Pharaoh.",
+    "context": "Exodus 2 opens with the birth and protection of a Levite son under this decree.",
+    "references": "Exodus 2:2; Exodus 2:3; Acts 7:19",
+    "application": "Resist the normalization of violence against vulnerable people, even when it is made an official or popular duty.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:3-6 places the child's rescue at the river, within the very setting named in the king's order.",
+    "reviewFlags": []
+  },
+  "Exodus 2:1": {
+    "explanation": "A man and woman from Levi's house marry, introducing the family into which Moses will be born. The verse identifies their tribal connection before naming the threatened child. It does not say that the couple's marriage begins only after Pharaoh's decree or describe all their children in this sentence.",
+    "context": "The account moves from a public order against Hebrew sons to a particular family's response.",
+    "references": "Exodus 6:20; Exodus 2:4",
+    "application": "Read a brief family introduction without forcing it into an unsupported detailed chronology.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 6:20 later names Amram and Jochebed; Exodus 2:4 already presupposes an older sister.",
+    "reviewFlags": []
+  },
+  "Exodus 2:2": {
+    "explanation": "The mother bears a son, sees that he is a goodly child, and hides him for three months. Her action protects a life threatened by Pharaoh's decree. The child's pleasing appearance is not a principle that only attractive infants deserve protection; the narrative highlights this mother's particular response.",
+    "context": "Continued concealment becomes impossible, leading to the protected basket at the river.",
+    "references": "Exodus 1:22; Hebrews 11:23",
+    "application": "Protect life because of its worth before God, and act faithfully under pressure without making appearance a condition of compassion.",
+    "reviewStatus": "pending",
+    "historicalContext": "Hebrews 11:23 describes the parents' concealment as an act of faith despite the king's command.",
+    "reviewFlags": []
+  },
+  "Exodus 2:3": {
+    "explanation": "When concealment can no longer continue, the mother prepares a waterproof ark of bulrushes and places her son among the riverside flags. This is an attempt to preserve him, not an act of obeying Pharaoh's murderous intent. The careful preparation and placement reveal purposeful protection within desperate circumstances.",
+    "context": "His sister watches what happens, and Pharaoh's daughter later discovers the ark.",
+    "references": "Exodus 2:4; Exodus 2:5; Hebrews 11:23",
+    "application": "Combine courage with practical care when protecting someone vulnerable rather than treating faith as an excuse for carelessness.",
+    "reviewStatus": "pending",
+    "historicalContext": "The KJV specifies bulrushes, slime, pitch, and the riverbank; it gives no dimensions or boat-building blueprint.",
+    "reviewFlags": []
+  },
+  "Exodus 2:4": {
+    "explanation": "The child's sister stands at a distance to learn what will happen to him. Her watchfulness keeps the family connected to his uncertain situation. She is neither described as abandoning him nor yet identified by name here; later intervention shows why her presence matters to the rescue.",
+    "context": "Her observation prepares for the offer to find a nurse after Pharaoh's daughter discovers the baby.",
+    "references": "Exodus 2:7; Numbers 26:59",
+    "application": "Attentive presence can open opportunities to help; do not underestimate responsible action by younger family members.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:7 records her speech; Numbers 26:59 names Miriam among the children of Amram and Jochebed.",
+    "reviewFlags": []
+  },
+  "Exodus 2:5": {
+    "explanation": "Pharaoh's daughter comes to wash at the river, sees the ark among the flags, and sends a maid to fetch it. The endangered child enters the attention of the ruler's own household. The verse records the discovery without attributing an unspoken plan or prior agreement to the princess.",
+    "context": "Her opening of the ark brings compassion into direct conflict with her father's policy.",
+    "references": "Exodus 2:6; Exodus 1:22",
+    "application": "Attend to an unexpected person in need rather than passing by simply because the need interrupts ordinary activity.",
+    "reviewStatus": "pending",
+    "historicalContext": "The setting and attendants are specified, but the text does not name the princess or establish a bathing ritual.",
+    "reviewFlags": []
+  },
+  "Exodus 2:6": {
+    "explanation": "Pharaoh's daughter opens the ark, sees the crying infant, recognizes him as a Hebrew child, and has compassion. Her knowledge does not prevent mercy. The verse presents a concrete response to a vulnerable life, without supplying the child's identifying features or the princess's complete religious beliefs.",
+    "context": "Her compassion makes possible the sister's offer to find a Hebrew nurse.",
+    "references": "Exodus 1:22; Exodus 2:7",
+    "application": "Let the sight of suffering lead to compassion across social boundaries rather than using group identity as a reason to withhold care.",
+    "reviewStatus": "pending",
+    "historicalContext": "The recognition is stated, but the narrative does not explain whether clothing, circumstances, or another sign led to it.",
+    "reviewFlags": []
+  },
+  "Exodus 2:7": {
+    "explanation": "The sister asks whether she should find a Hebrew nurse for the child. Her initiative offers a practical solution at the moment the princess shows compassion. She does not openly identify herself as the baby's sister in the reported words, and the narrative does not describe an elaborate prior scheme.",
+    "context": "The princess agrees, allowing the child's own mother to be called.",
+    "references": "Exodus 2:4; Exodus 2:8",
+    "application": "Act promptly and wisely when a genuine opening appears to protect and support someone in need.",
+    "reviewStatus": "pending",
+    "historicalContext": "The nursing need arises directly from the infant's situation; no unsupported childcare custom is required to explain the offer.",
+    "reviewFlags": []
+  },
+  "Exodus 2:8": {
+    "explanation": "Pharaoh's daughter authorizes the girl to go, and she calls the child's mother. The brief exchange turns the sister's proposal into an unexpected reunion. The family that had been forced to hide the baby can now care for him through the permission of the ruler's daughter.",
+    "context": "The next verse supplies the nursing arrangement and promised wages.",
+    "references": "Exodus 2:7; Exodus 2:9",
+    "application": "Follow through on a helpful proposal with reliable action, while distinguishing what the participants know from what the reader knows.",
+    "reviewStatus": "pending",
+    "historicalContext": "The narrator identifies the nurse as the child's mother; it does not report whether the princess knows that relationship.",
+    "reviewFlags": []
+  },
+  "Exodus 2:9": {
+    "explanation": "The princess entrusts the infant to his mother to nurse and promises wages. The endangered child receives protection, while his own mother is restored to his immediate care. The outcome is remarkable, but it is not a universal promise that every painful separation will quickly reverse in the same way.",
+    "context": "The child later grows and is brought into Pharaoh's daughter's household.",
+    "references": "Exodus 2:8; Exodus 2:10",
+    "application": "Receive unexpected provision gratefully without turning one family's rescue into a standard by which to judge every sufferer's experience.",
+    "reviewStatus": "pending",
+    "historicalContext": "The text states payment but gives no amount or duration for the nursing arrangement.",
+    "reviewFlags": []
+  },
+  "Exodus 2:10": {
+    "explanation": "The child grows, is brought to Pharaoh's daughter, becomes her son, and receives the name Moses, explained by his being drawn from the water. The verse records adoption and rescue without claiming that Egyptian status erases his Hebrew identity or his later solidarity with the afflicted people.",
+    "context": "The account next moves to the adult Moses confronting the burdens of his brethren.",
+    "references": "Exodus 2:11; Hebrews 11:24; Hebrews 11:25",
+    "application": "Remember the mercy through which life was preserved without allowing social advancement to erase concern for vulnerable relatives.",
+    "reviewStatus": "pending",
+    "historicalContext": "The naming explanation is supplied by the KJV; no additional Egyptian or Hebrew etymology is invented here.",
+    "reviewFlags": []
+  },
+  "Exodus 2:11": {
+    "explanation": "The grown Moses goes out to his brethren, sees their burdens, and witnesses an Egyptian striking a Hebrew. His identification with the victim is explicit. The verse establishes the injustice he observes before describing his response; concern for oppression does not automatically justify every action that follows.",
+    "context": "The next verse records Moses killing the Egyptian and concealing the body.",
+    "references": "Acts 7:23; Acts 7:24; Exodus 2:12",
+    "application": "Look honestly at the suffering of others while testing your intended response against righteousness rather than anger alone.",
+    "reviewStatus": "pending",
+    "historicalContext": "Acts 7:23-24 also recounts his visit and intervention, adding detail that should be read alongside Exodus.",
+    "reviewFlags": []
+  },
+  "Exodus 2:12": {
+    "explanation": "Moses checks his surroundings, kills the Egyptian, and hides him in the sand. The narrative records secrecy and a lethal act, not an instruction to imitate private vengeance. His effort to conceal what happened fails, and the following verses show fear, exposure, and flight rather than an immediate successful deliverance.",
+    "context": "The killing becomes known during the next day's confrontation between two Hebrews.",
+    "references": "Exodus 2:14; Acts 7:24; Romans 12:19",
+    "application": "Do not assume that a righteous concern authorizes concealed violence or excuses accountability for your own actions.",
+    "reviewStatus": "pending",
+    "historicalContext": "Acts 7:24-25 also describes the intervention and Moses' expectation of deliverance; it does not make this a general command for believers.",
+    "reviewFlags": []
+  },
+  "Exodus 2:13": {
+    "explanation": "On the following day Moses sees two Hebrews fighting and challenges the one doing wrong. Oppression by outsiders has not removed wrongdoing within the community itself. The question seeks to confront harm between brethren, even though Moses' own previous action will immediately be used to challenge his authority.",
+    "context": "The offender's reply exposes knowledge of the killing and unsettles Moses.",
+    "references": "Exodus 2:14; Acts 7:26",
+    "application": "Address injustice within your own community as well as injustice committed against it, while keeping yourself accountable.",
+    "reviewStatus": "pending",
+    "historicalContext": "The narrator identifies one man as in the wrong; it does not give all the circumstances of their dispute.",
+    "reviewFlags": []
+  },
+  "Exodus 2:14": {
+    "explanation": "The wrongdoer asks who appointed Moses ruler and judge and refers to the Egyptian's death. Moses realizes the killing is known and becomes afraid. The challenge exposes both rejected leadership and the failure of concealment; it does not prove that the man's original violence against his fellow was justified.",
+    "context": "Pharaoh's response in the next verse turns Moses' fear into flight from Egypt.",
+    "references": "Acts 7:27; Acts 7:28; Exodus 2:15",
+    "application": "Face the truth when wrongdoing becomes known rather than assuming that exposing another person's failure cancels your own responsibility.",
+    "reviewStatus": "pending",
+    "historicalContext": "Acts 7:27-28 recalls this rejection and the question about Moses' authority.",
+    "reviewFlags": []
+  },
+  "Exodus 2:15": {
+    "explanation": "When Pharaoh hears of the killing, he seeks Moses' death, and Moses flees to Midian and sits by a well. The hoped-for intervention in Egypt has ended in exile. The verse does not yet describe the later divine commission or imply that Moses has permanently ceased to matter in God's purposes.",
+    "context": "The well becomes the setting for helping the priest's daughters and finding a new household.",
+    "references": "Acts 7:29; Exodus 2:16",
+    "application": "Acknowledge consequences honestly while remaining open to faithful service in circumstances you did not expect.",
+    "reviewStatus": "pending",
+    "historicalContext": "Acts 7:29 likewise identifies Midian as the place of refuge; no exact route or distance is supplied.",
+    "reviewFlags": []
+  },
+  "Exodus 2:16": {
+    "explanation": "Seven daughters of Midian's priest come to draw water and fill troughs for their father's flock. Their work introduces the household Moses will join. The verse describes labor and family responsibility without specifying all aspects of the priest's theology, the daughters' ages, or the ownership arrangements of the well.",
+    "context": "Other shepherds interrupt their work, providing the occasion for Moses' help.",
+    "references": "Exodus 2:17; Exodus 2:18; Exodus 3:1",
+    "application": "Notice ordinary responsibilities and practical needs without inventing biographies for people briefly introduced in Scripture.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:18 names their father Reuel; Exodus 3:1 uses Jethro for Moses' father-in-law.",
+    "reviewFlags": []
+  },
+  "Exodus 2:17": {
+    "explanation": "Other shepherds drive the women away, but Moses stands up for them and waters their flock. His intervention combines protection from mistreatment with completion of the needed work. Unlike the earlier killing, this scene records practical rescue without describing a death or concealed violence.",
+    "context": "The women's unusually early return leads their father to ask what happened.",
+    "references": "Exodus 2:19; Exodus 2:12",
+    "application": "Defend those being pushed aside, and follow protection with the practical assistance their circumstances require.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:19 gives their account of his help and the water he drew.",
+    "reviewFlags": []
+  },
+  "Exodus 2:18": {
+    "explanation": "Reuel asks why his daughters have returned so soon. Their unusual arrival draws attention to the difference Moses' help has made. The question itself does not describe a new revelation or an accusation; it simply opens the way for them to explain the relief from obstruction at the well.",
+    "context": "Their answer leads Reuel to invite the unknown helper to share a meal.",
+    "references": "Exodus 2:17; Exodus 2:19",
+    "application": "Pay attention when someone's burden is unexpectedly lightened, and be willing to hear who helped and how.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:16-17 supplies the work and conflict behind their return; no separate daily timetable is given.",
+    "reviewFlags": []
+  },
+  "Exodus 2:19": {
+    "explanation": "The daughters describe Moses as an Egyptian who rescued them from the shepherds and watered the flock. Their designation reflects how they identify the stranger, not a denial by the narrator of his Hebrew birth. They report both deliverance from mistreatment and the practical service he provided afterward.",
+    "context": "Their father's response will turn this testimony into an invitation of hospitality.",
+    "references": "Exodus 2:11; Exodus 2:17",
+    "application": "Recognize helpful conduct truthfully while avoiding assumptions that a person's appearance or outsider description tells their whole identity.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:11 identifies Moses with the Hebrews, so the women's description must be read from their perspective.",
+    "reviewFlags": []
+  },
+  "Exodus 2:20": {
+    "explanation": "Reuel asks why they left the helper behind and tells them to invite him to eat. Gratitude moves beyond hearing a good report to extending hospitality. The verse does not say he already knows Moses' history or expects a future marriage; it describes an immediate welcome to the man who helped.",
+    "context": "The invitation leads to Moses remaining in the household and marrying Zipporah.",
+    "references": "Exodus 2:19; Exodus 2:21; Hebrews 13:2",
+    "application": "Express thanks through concrete welcome where appropriate, rather than receiving another person's service and forgetting the servant.",
+    "reviewStatus": "pending",
+    "historicalContext": "Bread functions as the stated meal invitation; the text does not provide a full menu or formal hospitality ritual.",
+    "reviewFlags": []
+  },
+  "Exodus 2:21": {
+    "explanation": "Moses agrees to live with Reuel, who gives him Zipporah as wife. The refugee finds a household and new family ties in Midian. The verse states the marriage without giving the duration of courtship, the couple's private conversation, or a universal pattern for every marriage arrangement.",
+    "context": "The next verse records the birth and naming of their son Gershom.",
+    "references": "Exodus 2:22; Exodus 3:1",
+    "application": "Serve faithfully within present responsibilities without pretending to know every detail of God's future direction.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:1 later shows Moses tending his father-in-law's flock, indicating his settled responsibilities in Midian.",
+    "reviewFlags": []
+  },
+  "Exodus 2:22": {
+    "explanation": "Zipporah bears a son, and Moses names him Gershom, explaining that he has been a stranger in a strange land. The name preserves his experience of displacement even within a welcoming household. His new family does not eliminate memory of exile or his connection with the people left in Egypt.",
+    "context": "The account moves from Moses' household back to Israel's continuing bondage.",
+    "references": "Exodus 18:3; Exodus 2:23",
+    "application": "Show compassion toward displaced people, remembering that safety and belonging may not immediately remove the pain of separation.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 18:3 later repeats the naming explanation, confirming its link with Moses' experience as a stranger.",
+    "reviewFlags": []
+  },
+  "Exodus 2:23": {
+    "explanation": "Over time the king of Egypt dies, yet Israel continues to groan under bondage and cries out. A ruler's death has not by itself ended their suffering. Their cry reaches God, preparing the account of divine attention and deliverance rather than treating political succession as automatic liberation.",
+    "context": "The next verses connect God's response with His covenant with the patriarchs.",
+    "references": "Exodus 4:19; Exodus 2:24",
+    "application": "Bring prolonged suffering to God in prayer without assuming that a change in leadership alone guarantees justice.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:19 later tells Moses that those seeking his life are dead; no ruler is named in either notice.",
+    "reviewFlags": []
+  },
+  "Exodus 2:24": {
+    "explanation": "God hears the people's groaning and remembers His covenant with Abraham, Isaac, and Jacob. Remembering here introduces faithful action in relation to a promise, not recovery from a lapse in divine knowledge. The coming deliverance belongs to God's commitment rather than Israel's ability to force an answer.",
+    "context": "God's attention is further stated in the next verse and explained to Moses at the bush.",
+    "references": "Genesis 15:13; Genesis 15:14; Exodus 6:5",
+    "application": "Pray with confidence in God's faithfulness, while allowing His promises rather than impatience to shape your hope.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 15:13-14 anticipates affliction and deliverance; Exodus 6:5 again joins groaning with covenant remembrance.",
+    "reviewFlags": []
+  },
+  "Exodus 2:25": {
+    "explanation": "God looks upon Israel and has regard for them. The chapter closes by emphasizing His attentive knowledge of their condition before the public acts of deliverance begin. Their continued bondage is not evidence that their pain is invisible to Him, and the narrative does not leave their cry unanswered.",
+    "context": "Exodus 3 opens the call of Moses through whom God will confront Pharaoh.",
+    "references": "Exodus 3:7; Exodus 3:9",
+    "application": "Hold to God's attentive care during waiting, without confusing the absence of immediate visible change with divine indifference.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:7 explicitly says God has seen affliction, heard the cry, and known their sorrows.",
+    "reviewFlags": []
+  },
+  "Exodus 3:1": {
+    "explanation": "Moses tends Jethro's flock and leads it to Horeb, called the mountain of God. His daily work becomes the setting for the divine call, not evidence that he has arranged an encounter. The verse introduces the location without establishing the mountain's exact modern identification or a detailed route through Midian.",
+    "context": "The burning bush appears during this shepherding journey, connecting ordinary responsibility with an unexpected commission.",
+    "references": "Exodus 2:21; Exodus 3:12",
+    "application": "Carry out present duties faithfully without treating ordinary work as a barrier to serving God.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:21 locates Moses in his father-in-law's household; Exodus 19 later returns Israel to the mountain setting.",
+    "reviewFlags": []
+  },
+  "Exodus 3:2": {
+    "explanation": "The angel of the LORD appears in a flame within a bush, and Moses sees that it burns without being consumed. The extraordinary sight arrests his attention. The narrative soon identifies God as the speaker, but a complete doctrinal account of the angel's identity should not be invented from this verse alone.",
+    "context": "The unconsumed bush leads Moses to turn aside and hear the divine address.",
+    "references": "Exodus 3:4; Acts 7:30; Acts 7:32",
+    "application": "Attend reverently to God's revelation while distinguishing the text's clear statements from unresolved theological explanations.",
+    "reviewStatus": "pending",
+    "historicalContext": "Acts 7:30-32 also recounts the bush encounter, while Exodus 3:4 identifies God speaking from it.",
+    "reviewFlags": [
+      "Identity of the angel of the LORD requires authorized human review before a disputed explanation is published."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 3:3": {
+    "explanation": "Moses decides to turn aside and examine why the bush is not burnt. His curiosity responds to what the narrative presents as an extraordinary sight. The verse does not portray investigation as unbelief or claim that attention to any unusual natural event guarantees a direct revelation from God.",
+    "context": "When Moses turns, God calls him by name in the following verse.",
+    "references": "Exodus 3:2; Exodus 3:4",
+    "application": "Be attentive rather than careless, while testing spiritual claims by God's Word instead of treating novelty as proof.",
+    "reviewStatus": "pending",
+    "historicalContext": "The reason for his attention is explicitly the unconsumed bush, not a previously described vision or ritual.",
+    "reviewFlags": []
+  },
+  "Exodus 3:4": {
+    "explanation": "God calls Moses twice by name from the bush after he turns aside, and Moses answers that he is present. The encounter becomes a personal address rather than merely an unusual observation. The double naming does not supply a formula that others must reproduce to establish a genuine divine call.",
+    "context": "The next words set a boundary and declare the ground holy before God identifies Himself.",
+    "references": "Genesis 46:2; Exodus 3:5",
+    "application": "Be ready to hear and obey God, grounding that readiness in His revealed Word rather than a manufactured experience.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:2 records a similarly repeated name and response in God's address to Jacob.",
+    "reviewFlags": []
+  },
+  "Exodus 3:5": {
+    "explanation": "God tells Moses not to approach further and to remove his shoes because the ground is holy. The instruction locates the holiness of the encounter in God's presence and authority. It is not a claim that every place with unusual vegetation is sacred or that footwear alone determines personal holiness.",
+    "context": "Reverent restraint precedes God's self-identification and the announcement of deliverance.",
+    "references": "Joshua 5:15; Hebrews 12:28",
+    "application": "Approach God with reverence and obedience, avoiding the assumption that familiarity removes His holiness.",
+    "reviewStatus": "pending",
+    "historicalContext": "Joshua 5:15 later records a similar command concerning holy ground; neither passage establishes a universal dress rule for all settings.",
+    "reviewFlags": []
+  },
+  "Exodus 3:6": {
+    "explanation": "God identifies Himself with Abraham, Isaac, and Jacob, and Moses hides his face in fear. The speaker connects the coming mission with the patriarchs' God rather than introducing an unrelated deity. Moses' response recognizes the gravity of the encounter, not a casual exchange with an ordinary visitor.",
+    "context": "This identification explains why Israel's suffering matters within God's continuing covenant faithfulness.",
+    "references": "Exodus 2:24; Matthew 22:31; Matthew 22:32",
+    "application": "Let knowledge of God's faithful relationship with His people deepen reverence instead of reducing Him to a familiar idea.",
+    "reviewStatus": "pending",
+    "historicalContext": "Jesus cites the patriarchal identification in Matthew 22:31-32 when teaching about resurrection.",
+    "reviewFlags": []
+  },
+  "Exodus 3:7": {
+    "explanation": "The LORD declares that He has seen Israel's affliction, heard their cry under the taskmasters, and known their sorrows. The layered description emphasizes attentive concern for real suffering. Their bondage has not escaped His notice, even though the visible process of deliverance is only now being announced.",
+    "context": "This explains the hearing and regard recorded at the close of Exodus 2 and introduces God's purpose to deliver.",
+    "references": "Exodus 2:23; Exodus 2:24; Exodus 2:25",
+    "application": "Bring distress to God and take others' suffering seriously rather than interpreting delay as proof that their pain is unimportant.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:23-25 supplies the cries and divine attention to which this speech directly relates.",
+    "reviewFlags": []
+  },
+  "Exodus 3:8": {
+    "explanation": "God announces deliverance from Egyptian power and a movement into a good, spacious land described as flowing with milk and honey. The named peoples locate the promise within a particular biblical setting. The verse must not become permission for modern readers to seize land through an invented personal mandate.",
+    "context": "The promise joins rescue from oppression to the destination already associated with the patriarchs.",
+    "references": "Genesis 15:18; Genesis 15:21; Exodus 3:17",
+    "application": "Receive biblical promises within their covenant setting and refuse to use them to excuse unsupported claims or violence.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 15:18-21 gives earlier land-promise context; no modern territorial judgment is supplied by this note.",
+    "reviewFlags": [
+      "Land-promise scope and disputed modern applications require human doctrinal review."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 3:9": {
+    "explanation": "God again states that Israel's cry has reached Him and that He has seen Egyptian oppression. The repetition underscores the reason for the commission now about to be given. The mission does not begin with Moses proving his importance; it begins with God's attention to the afflicted people.",
+    "context": "The next verse turns the announced concern into a direct instruction sending Moses to Pharaoh.",
+    "references": "Exodus 1:14; Exodus 2:23; Exodus 3:10",
+    "application": "Let service be directed toward genuine needs rather than personal recognition, remembering that compassion must attend to actual suffering.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 1:13-14 describes the oppressive service, and Exodus 2:23 records the cry.",
+    "reviewFlags": []
+  },
+  "Exodus 3:10": {
+    "explanation": "God sends Moses to Pharaoh to bring His people out of Egypt. Divine concern takes the form of a commission directed at the seat of oppressive power. The call identifies Moses' task, but it does not say the mission will be easy or that his own strength is sufficient for it.",
+    "context": "Moses immediately questions his adequacy, and God answers with the promise of His presence.",
+    "references": "Exodus 3:12; Exodus 6:13",
+    "application": "Obey a clearly established responsibility with dependence on God rather than making personal comfort the test of obedience.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:7-9 establishes the suffering that the mission addresses; Exodus 6:13 later restates the charge.",
+    "reviewFlags": []
+  },
+  "Exodus 3:11": {
+    "explanation": "Moses asks who he is to approach Pharaoh and lead Israel out. His question expresses a sense of inadequacy before the magnitude of the task. The narrative does not answer by celebrating his personal greatness; God's reply shifts attention from Moses' credentials to God's accompanying presence.",
+    "context": "This is the first response to the commission and begins a series of questions and objections.",
+    "references": "Exodus 2:15; Exodus 3:12",
+    "application": "Admit limitations honestly, but remain willing to hear God's answer rather than treating inadequacy as a final refusal.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:15 records Moses' earlier flight from Pharaoh, providing narrative background to the daunting return.",
+    "reviewFlags": []
+  },
+  "Exodus 3:12": {
+    "explanation": "God promises to be with Moses and gives a future sign: the delivered people will serve God at this mountain. The assurance concerns both the mission and its purpose. Freedom is directed toward worship and service, rather than simply replacing Egyptian control with Moses' personal authority.",
+    "context": "This answers Moses' question of adequacy and anticipates Israel's later gathering at the mountain.",
+    "references": "Exodus 19:1; Exodus 19:3; Exodus 3:1",
+    "application": "Depend on God's presence while remembering that deliverance calls people into faithful service rather than self-centered independence.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 19:1-3 later records Israel's arrival and Moses' approach to God in the mountain setting.",
+    "reviewFlags": []
+  },
+  "Exodus 3:13": {
+    "explanation": "Moses anticipates Israel asking the name of the God who sent him. His question concerns how to identify the source of the mission to the people. The verse does not establish a magical password or imply that merely pronouncing a name guarantees faith, deliverance, or authority over others.",
+    "context": "God's answer in the following verses joins His self-declaration to the God of the patriarchs.",
+    "references": "Exodus 3:6; Exodus 3:14; Exodus 3:15",
+    "application": "Ground claims of spiritual service in truthful knowledge of God rather than impressive language or personal assertion.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:6 has already connected the speaker with Abraham, Isaac, and Jacob; Moses now asks what to say publicly.",
+    "reviewFlags": []
+  },
+  "Exodus 3:14": {
+    "explanation": "God answers with I AM THAT I AM and instructs Moses to say that I AM has sent him. The commission rests on God's own self-identification rather than a name invented by Moses. The statement invites reverent attention, while detailed linguistic and philosophical explanations require responsible review beyond simple assertion.",
+    "context": "Exodus 3:15 continues the answer with the LORD's covenant identification across generations.",
+    "references": "Exodus 3:15; John 8:58",
+    "application": "Receive God's self-revelation humbly and avoid making speculative word studies into binding doctrine.",
+    "reviewStatus": "pending",
+    "historicalContext": "John 8:58 contains Jesus' I am declaration; the theological relation should be handled through careful biblical study rather than an invented quotation.",
+    "reviewFlags": [
+      "Detailed original-language claims and the full theological relation to John 8:58 require authorized human review."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 3:15": {
+    "explanation": "God instructs Moses to identify the sender as the LORD, the God of Abraham, Isaac, and Jacob, and speaks of His enduring memorial across generations. The declaration links divine identity with covenant faithfulness. It does not authorize dismissing biblical names and titles other than one preferred form of pronunciation.",
+    "context": "This completes the response to Moses' question about God's name and leads to instructions for the elders.",
+    "references": "Exodus 2:24; Exodus 3:6; Psalms 135:13",
+    "application": "Teach God's revealed identity faithfully without turning uncertain pronunciation claims into a test of another believer's salvation.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:24 has already named the patriarchs in relation to the covenant God remembers.",
+    "reviewFlags": []
+  },
+  "Exodus 3:16": {
+    "explanation": "Moses is told to gather Israel's elders and announce that the LORD has visited His people and seen what Egypt has done to them. The mission begins through communication with recognized community leaders. God's visitation here concerns attentive intervention, not a claim that He had previously been absent from their suffering.",
+    "context": "The next verse gives the promised destination, followed by the planned approach to Pharaoh.",
+    "references": "Genesis 50:24; Genesis 50:25; Exodus 3:18",
+    "application": "Communicate God's Word responsibly to those concerned, making His faithfulness rather than your own importance central.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 50:24-25 anticipates God's visitation and departure from Egypt, directly connecting the announcement with Joseph's hope.",
+    "reviewFlags": []
+  },
+  "Exodus 3:17": {
+    "explanation": "God promises to bring Israel out of affliction into the land described through its peoples and abundance. The repeated destination assures Moses that rescue has a purpose beyond escape. The promise is addressed to Israel in this narrative and should not be transformed into a guarantee of personal material luxury for every reader.",
+    "context": "This states the message Moses is to convey to the elders gathered under the previous instruction.",
+    "references": "Exodus 3:8; Genesis 46:4",
+    "application": "Hold God's promises in their proper setting and let hope produce obedience rather than entitlement.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:8 has already announced the same destination; the repetition reinforces the continuity of the mission.",
+    "reviewFlags": []
+  },
+  "Exodus 3:18": {
+    "explanation": "God says the elders will listen and instructs Moses to approach Egypt's king with them, requesting a three-day journey to sacrifice. The appeal acknowledges God's claim on the people. It is the announced first request within a larger deliverance narrative, not a license to invent motives or claim every negotiation must use this pattern.",
+    "context": "The next verses warn of Pharaoh's resistance and God's eventual wonders.",
+    "references": "Exodus 5:1; Exodus 5:3",
+    "application": "Make a clear and respectful appeal without assuming respectful speech guarantees a favorable response from an unjust authority.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:1-3 records Moses and Aaron presenting the worship request to Pharaoh.",
+    "reviewFlags": []
+  },
+  "Exodus 3:19": {
+    "explanation": "God warns that Egypt's king will not readily release Israel, introducing resistance before Moses begins the confrontation. The difficult wording about a mighty hand should be read with the following verse, which explicitly promises God's intervention. It does not mean the deliverance will ultimately fail or depend on Pharaoh's goodwill.",
+    "context": "Exodus 3:20 explains that after God's wonders Pharaoh will let the people go.",
+    "references": "Exodus 3:20; Exodus 6:1",
+    "application": "Do not judge a clear duty false merely because opposition was expected and then occurs.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 6:1 later speaks of a strong hand in connection with Pharaoh releasing and driving them out.",
+    "reviewFlags": [
+      "Precise force of the KJV wording about a mighty hand requires textual review; retain its context without speculative certainty."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 3:20": {
+    "explanation": "God promises to stretch out His hand, strike Egypt through His wonders, and bring Pharaoh to release the people. The coming acts belong to divine judgment and deliverance. Moses is not instructed to manufacture signs by deception or to substitute private violence for what God has promised to do.",
+    "context": "This explains how the resistance announced in the previous verse will be overcome.",
+    "references": "Exodus 7:3; Exodus 7:5",
+    "application": "Trust God's power without pretending to possess authority for acts that He has not commanded you to perform.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 7:3-5 develops the promised signs and the Egyptians' recognition of the LORD.",
+    "reviewFlags": []
+  },
+  "Exodus 3:21": {
+    "explanation": "God promises Israel favor with the Egyptians so that they will not depart empty-handed. The announcement addresses material provision at the end of bondage. It is not a general promise that every Christian journey will produce financial gain, nor does it authorize obtaining possessions through fraudulent claims of divine favor.",
+    "context": "The next verse specifies items to be requested, and Exodus 12 later records the outcome.",
+    "references": "Genesis 15:14; Exodus 12:36",
+    "application": "Recognize provision as God's kindness while maintaining honesty in how resources are sought and received.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 15:14 anticipates departure with great substance; Exodus 12:36 records favor and the giving of goods.",
+    "reviewFlags": []
+  },
+  "Exodus 3:22": {
+    "explanation": "Women are instructed to obtain silver, gold, and clothing from neighbors, and the departure is described as spoiling the Egyptians. The KJV's borrow wording must be read alongside the later account of favor and giving. The verse is not permission for believers to make deceitful loans they intend never to repay.",
+    "context": "Exodus 11 and 12 record the request and the Egyptians' response at the departure.",
+    "references": "Exodus 11:2; Exodus 12:35; Exodus 12:36",
+    "application": "Seek and receive assistance honestly, refusing to use a historical deliverance account to excuse theft or broken financial promises.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 12:35-36 supplies the stated fulfillment; no unsupported modern lending custom is imposed on the scene.",
+    "reviewFlags": [
+      "Borrow and spoil language and its ethical application require human textual review before a contested interpretation is published."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 4:1": {
+    "explanation": "Moses fears that the people will not believe him or accept his claim that the LORD appeared. His concern introduces the signs that follow. The narrative treats the question through divine provision, while God's earlier assurance that the elders will listen remains part of the same conversation.",
+    "context": "This objection follows the commission, naming revelation, and instructions about approaching Israel's elders.",
+    "references": "Exodus 3:18; Exodus 4:31",
+    "application": "Address doubts about a task through truthful dependence on God rather than inventing credentials or manipulating people into belief.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:18 promises a hearing; Exodus 4:31 later records the people's belief and worship.",
+    "reviewFlags": []
+  },
+  "Exodus 4:2": {
+    "explanation": "God asks what Moses holds, and Moses answers that it is a rod. The ordinary object becomes part of a divinely given sign. Its importance comes from God's action and instruction, not from an inherent magical quality or a general power available to anyone possessing a similar staff.",
+    "context": "The next verse commands Moses to cast it down and records its transformation.",
+    "references": "Exodus 3:1; Exodus 4:17",
+    "application": "Use what is entrusted to you faithfully without turning an object associated with ministry into a supposed source of power.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:1 places Moses in shepherding work; Exodus 4:17 later identifies the rod's use for signs.",
+    "reviewFlags": []
+  },
+  "Exodus 4:3": {
+    "explanation": "Moses throws the rod down at God's command, it becomes a serpent, and he flees from it. The sign is presented as a real and alarming event within the encounter. The verse is not a general command for believers to handle dangerous animals or reproduce a test of divine favor.",
+    "context": "God's next instruction transforms Moses' fearful response into obedience and restores the rod.",
+    "references": "Exodus 4:4; Matthew 4:7",
+    "application": "Do not imitate a particular miraculous event as a dangerous experiment or use risk-taking to prove faith.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:4 supplies the specific command and outcome; this note adds no zoological identification of the serpent.",
+    "reviewFlags": []
+  },
+  "Exodus 4:4": {
+    "explanation": "God tells Moses to take the serpent by the tail, and it becomes a rod in his hand. The restoration follows a specific command in this encounter. The power belongs to God; it is not a technique teaching readers to control serpents, acquire spiritual rank, or perform the sign through natural skill.",
+    "context": "The next verse explains the sign's purpose in relation to belief that the LORD appeared.",
+    "references": "Exodus 4:3; Exodus 4:5",
+    "application": "Obey God's revealed commands while refusing to turn exceptional signs into unauthorized tests of personal spirituality.",
+    "reviewStatus": "pending",
+    "historicalContext": "The command is directly addressed to Moses in the narrative, with no general instruction to repeat it outside this setting.",
+    "reviewFlags": []
+  },
+  "Exodus 4:5": {
+    "explanation": "The stated purpose of the rod sign is that the people may believe the LORD, the God of their fathers, has appeared to Moses. The sign points away from a performer's reputation toward God's identity and message. It does not create permission to accept every later supernatural claim without testing its teaching.",
+    "context": "This explains the first sign before God supplies a second one involving Moses' hand.",
+    "references": "Exodus 3:15; Deuteronomy 13:1; Deuteronomy 13:3",
+    "application": "Evaluate extraordinary claims by their relation to God's truth rather than treating spectacle alone as final authority.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:15 identifies the same patriarchal God; Deuteronomy 13:1-3 later warns against signs used to draw people from Him.",
+    "reviewFlags": []
+  },
+  "Exodus 4:6": {
+    "explanation": "At God's instruction Moses places his hand inside his bosom and withdraws it leprous as snow. The striking change supplies a second sign of divine power. The verse does not establish a medical diagnosis in modern terminology or teach that all people with visible disease are personally under the same judgment.",
+    "context": "The next instruction restores the hand, completing the sign before its purpose is discussed.",
+    "references": "Exodus 4:7; John 9:2; John 9:3",
+    "application": "Speak compassionately about illness and avoid assigning moral guilt from a bodily condition that the text does not explain that way.",
+    "reviewStatus": "pending",
+    "historicalContext": "The KJV describes the appearance but gives no clinical examination or account of contagiousness.",
+    "reviewFlags": []
+  },
+  "Exodus 4:7": {
+    "explanation": "Moses places the affected hand inside his bosom again, and it returns like his other flesh. Restoration completes the sign and demonstrates God's authority over what Moses cannot reverse by himself. The episode is not an instruction to neglect medical care or a guarantee that repeating the gesture will heal disease.",
+    "context": "God then explains how the signs will address the people's doubt about Moses' message.",
+    "references": "Exodus 4:6; Exodus 4:8",
+    "application": "Give God glory for His power while avoiding unauthorized healing techniques built from a unique narrative event.",
+    "reviewStatus": "pending",
+    "historicalContext": "The change is directly paired with Exodus 4:6, not attributed to a remedy or hidden natural process.",
+    "reviewFlags": []
+  },
+  "Exodus 4:8": {
+    "explanation": "God explains that if the people do not heed the first sign, the latter sign provides further testimony. The signs are described as having a voice because they communicate the credibility of the commission. The verse does not make repeated demands for spectacle the proper foundation of Christian discipleship.",
+    "context": "A third sign is then supplied in case the first two do not secure belief.",
+    "references": "Exodus 4:5; Exodus 4:9",
+    "application": "Attend to the message a sign is meant to confirm, rather than seeking increasingly impressive experiences for their own sake.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:5 states the purpose: recognition that the patriarchs' God appeared to Moses.",
+    "reviewFlags": []
+  },
+  "Exodus 4:9": {
+    "explanation": "God provides a further sign: river water poured on dry ground will become blood. The instruction specifically concerns water from the river and its transformation on the land. It anticipates the later confrontation with Egypt but should not be silently substituted for the larger river judgment described in Exodus 7.",
+    "context": "This completes the three signs supplied in answer to Moses' concern about unbelief.",
+    "references": "Exodus 7:17; Exodus 7:20",
+    "application": "Compare related events accurately instead of assuming similar signs are identical in every detail.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 7:17-21 later describes the river's water becoming blood; the scale and circumstances are separately narrated.",
+    "reviewFlags": []
+  },
+  "Exodus 4:10": {
+    "explanation": "Moses objects that he is not eloquent and is slow of speech and tongue. The verse states his own concern about communicating the mission. It does not diagnose a particular disability or say that God only uses people with effortless public speech; God's answer addresses dependence and divine help.",
+    "context": "After receiving signs, Moses raises a different concern, now about his ability to speak.",
+    "references": "Exodus 4:11; Exodus 4:12; Acts 7:22",
+    "application": "Acknowledge communication difficulties without assuming they place you beyond useful service or justify dishonesty about your abilities.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:11-12 answers in terms of God's creating and aiding human speech; Acts 7:22 provides another perspective on Moses' training.",
+    "reviewFlags": []
+  },
+  "Exodus 4:11": {
+    "explanation": "God answers Moses by asserting His authority as maker of the mouth and over the varieties of human ability, including hearing and sight. The point challenges Moses' assumption that his limitations defeat the commission. It does not authorize contempt toward disabled people or explain every individual's condition as personal punishment.",
+    "context": "The following promise is that God will be with Moses' mouth and teach him what to say.",
+    "references": "Exodus 4:12; John 9:1; John 9:3",
+    "application": "Honor the dignity of people with disabilities and depend on God without making careless judgments about the cause of their condition.",
+    "reviewStatus": "pending",
+    "historicalContext": "John 9:1-3 separately rejects a simplistic connection between one man's blindness and personal or parental sin.",
+    "reviewFlags": []
+  },
+  "Exodus 4:12": {
+    "explanation": "God tells Moses to go, promising to be with his mouth and teach him what to say. The answer directs him toward obedience with divine help rather than endless self-evaluation. The promise belongs to this commission and does not justify claiming every spontaneous word spoken by a religious leader is God's speech.",
+    "context": "Moses' next response asks that someone else be sent, exposing reluctance beyond the stated speech difficulty.",
+    "references": "Exodus 3:12; Exodus 4:15",
+    "application": "Prepare and speak faithfully with dependence on God, while remaining accountable for the truth of what you say.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:12 already promises God's presence; the assurance is now applied specifically to speaking.",
+    "reviewFlags": []
+  },
+  "Exodus 4:13": {
+    "explanation": "Moses asks the Lord to send by whomever He will send, a response that resists accepting the commission himself. After assurances and signs, the exchange moves beyond a request for information. The following divine anger shows that reluctance is not presented simply as a virtue of humility.",
+    "context": "God responds by appointing Aaron to assist, while continuing to charge Moses with the mission.",
+    "references": "Exodus 4:12; Exodus 4:14",
+    "application": "Do not let repeated attention to your limitations become a refusal to accept a responsibility clearly entrusted to you.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:14 gives the immediate interpretation through God's anger and provision of a spokesman.",
+    "reviewFlags": []
+  },
+  "Exodus 4:14": {
+    "explanation": "God's anger is kindled, yet He provides Aaron, Moses' brother, as a capable speaker who is coming to meet him. The response includes both correction and help. Assistance does not mean the original resistance was commendable, and Moses is not released from all responsibility for the mission.",
+    "context": "The following verses define how Moses and Aaron will communicate and work together.",
+    "references": "Exodus 4:15; Exodus 4:27",
+    "application": "Receive correction and practical support together, without treating help as permission to abandon your own duty.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:27 later records Aaron's journey and meeting with Moses, fulfilling the announced approach.",
+    "reviewFlags": []
+  },
+  "Exodus 4:15": {
+    "explanation": "Moses is to give Aaron the words, while God promises to guide both men's speech and teach their actions. Their cooperation has an ordered relation to the divine commission. Neither brother is authorized to invent a message merely because the other serves as speaker or leader.",
+    "context": "This explains the working arrangement introduced when Aaron is appointed to assist Moses.",
+    "references": "Exodus 4:28; Exodus 4:30",
+    "application": "Work with others through clear, faithful communication, keeping shared service answerable to God's truth.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:28-30 later records Moses' communication to Aaron and Aaron's address to the people.",
+    "reviewFlags": []
+  },
+  "Exodus 4:16": {
+    "explanation": "Aaron will speak to the people as Moses' mouth, while Moses stands in a God-representing relation to Aaron. The language describes delegated communication, not Moses becoming divine by nature. The wider sentence makes the representative function clear and must not be used to justify worshipping a human leader.",
+    "context": "This completes the explanation of their speaking roles before the rod is again mentioned.",
+    "references": "Exodus 7:1; Exodus 4:15",
+    "application": "Respect entrusted leadership without giving any person the worship or absolute authority that belongs to God alone.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 7:1 similarly uses representative language with Pharaoh and identifies Aaron as Moses' prophet.",
+    "reviewFlags": []
+  },
+  "Exodus 4:17": {
+    "explanation": "Moses is told to take the rod with which the signs will be performed. The reminder joins his departure to the earlier demonstrations and God's instructions. The staff remains an instrument within the commission, not an independent sacred power or a guarantee that possession of a similar object confers authority.",
+    "context": "The next scene moves from the divine encounter to Moses requesting leave from Jethro.",
+    "references": "Exodus 4:2; Exodus 4:5; Exodus 4:20",
+    "application": "Keep instruments of service subordinate to God, avoiding superstition about objects connected with ministry.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:2-5 supplies the first rod sign; Exodus 4:20 later calls it the rod of God.",
+    "reviewFlags": []
+  },
+  "Exodus 4:18": {
+    "explanation": "Moses returns to Jethro and asks permission to visit his brethren in Egypt and learn whether they are alive. Jethro sends him in peace. The account includes an orderly departure from current household responsibilities, without claiming that Moses repeats every detail of the bush encounter in this conversation.",
+    "context": "God's further assurance about former enemies follows before the return journey begins.",
+    "references": "Exodus 2:21; Exodus 3:1",
+    "application": "Communicate responsibly when a new duty affects people who currently depend on your presence or work.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:21 and 3:1 establish Moses' settled family and shepherding responsibilities in Midian.",
+    "reviewFlags": []
+  },
+  "Exodus 4:19": {
+    "explanation": "God tells Moses to return to Egypt because those who sought his life are dead. The assurance addresses the danger associated with his earlier flight. It does not promise that every risk is gone or that the coming Pharaoh will welcome him; resistance has already been explicitly announced.",
+    "context": "Moses prepares the family and takes the rod as he sets out toward Egypt.",
+    "references": "Exodus 2:15; Exodus 3:19",
+    "application": "Distinguish the removal of one obstacle from a guarantee that obedience will encounter no further difficulty.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:15 records the threat that caused his flight; Exodus 3:19 warns of future resistance.",
+    "reviewFlags": []
+  },
+  "Exodus 4:20": {
+    "explanation": "Moses takes his wife and sons on an ass and returns toward Egypt with the rod of God in his hand. The journey joins household movement with the public commission. Calling it God's rod locates its significance in the divine purpose, rather than changing the object into a deity.",
+    "context": "Further instructions about Pharaoh and Israel's status follow during the return narrative.",
+    "references": "Exodus 4:17; Exodus 18:3; Exodus 18:4",
+    "application": "Consider family responsibilities alongside public service, keeping trust directed toward God rather than the objects used in your work.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 18:3-4 later names the two sons; this verse itself gives no precise account of each stage of their travel.",
+    "reviewFlags": []
+  },
+  "Exodus 4:21": {
+    "explanation": "God commands Moses to perform the wonders entrusted to him and warns that Pharaoh's heart will be hardened so that release is resisted. The verse presents divine sovereignty within a serious confrontation. Detailed explanations of the relation between hardening and human responsibility require the wider Exodus account and careful doctrinal review.",
+    "context": "The following verses frame Israel as God's firstborn and announce the consequences of refusal.",
+    "references": "Exodus 8:15; Exodus 9:12",
+    "application": "Take God's warning seriously without using a difficult passage to excuse personal stubbornness or invent a complete philosophical system.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 8:15 and 9:12 use different descriptions of hardening within the continuing narrative.",
+    "reviewFlags": [
+      "Divine hardening and Pharaoh's responsibility require authorized human doctrinal review; no disputed system is presented as settled."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 4:22": {
+    "explanation": "Moses is to tell Pharaoh that Israel is God's son and firstborn. The national relationship expresses God's claim and the people's belonging to Him. It does not mean every Israelite is individually sinless, nor does it remove the distinction between this national description and the unique person of Jesus Christ.",
+    "context": "The next verse uses the firstborn relationship to explain the warning to Pharaoh.",
+    "references": "Hosea 11:1; Exodus 19:5; Exodus 19:6",
+    "application": "Let belonging to God lead to obedience and holiness rather than the assumption that privileged language excuses sin.",
+    "reviewStatus": "pending",
+    "historicalContext": "Hosea 11:1 recalls Israel as God's son called from Egypt; Exodus 19:5-6 describes Israel's calling to holiness.",
+    "reviewFlags": []
+  },
+  "Exodus 4:23": {
+    "explanation": "God demands that Pharaoh release His son to serve Him and warns that refusal will bring death to Pharaoh's firstborn. The statement announces grave judgment in response to persistent refusal. It does not give private individuals authority to threaten families or commit violence in the name of accomplishing religious goals.",
+    "context": "The warning anticipates the climactic plague and keeps Israel's release directed toward service to God.",
+    "references": "Exodus 11:4; Exodus 11:5; Exodus 12:29",
+    "application": "Respond seriously to God's call to obedience, while refusing to confuse divine judgment with permission for personal revenge.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 11:4-6 and 12:29 later record the firstborn judgment in its narrative fulfillment.",
+    "reviewFlags": []
+  },
+  "Exodus 4:24": {
+    "explanation": "At a lodging place on the journey, the LORD meets him and seeks to kill him. The compressed account presents a grave interruption before the Egyptian mission. The pronoun's precise referent and the full circumstances should not be confidently supplied where the text leaves them compressed and debated.",
+    "context": "Zipporah's circumcision of her son and the release that follows connect the episode with a covenant sign.",
+    "references": "Genesis 17:10; Genesis 17:14; Exodus 4:25",
+    "application": "Treat God's holiness seriously while admitting when a difficult narrative requires careful human review rather than a dramatic reconstruction.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 17:10-14 gives circumcision's covenant setting, but this verse does not provide a complete explanation of the incident.",
+    "reviewFlags": [
+      "Pronoun referents, nature of the threat and covenant interpretation require human doctrinal review; withhold speculative reconstruction."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 4:25": {
+    "explanation": "Zipporah circumcises her son with a sharp stone, casts it at his feet, and speaks of a bloody husband. The action is linked to the danger just described, but several pronouns and the expression's precise force are difficult. The account is not a practical medical guide or a universal marriage instruction.",
+    "context": "The next verse records release and explicitly relates the speech to circumcision.",
+    "references": "Genesis 17:11; Exodus 4:26; Acts 15:5",
+    "application": "Avoid turning an obscure and exceptional episode into unsafe conduct, a ritual formula, or an unsupported demand on Christian families.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 17 establishes the covenant sign; Acts 15 later addresses circumcision in relation to Gentile believers.",
+    "reviewFlags": [
+      "Identity of the son and pronoun referents, ritual details and bloody husband expression require human review."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 4:26": {
+    "explanation": "The threat ends, and Zipporah's words are linked explicitly with circumcision. This conclusion confirms that the act matters to the episode, but does not resolve every question about participants, motives, or timing. Interpretations should remain proportionate to the short account rather than claiming a fully narrated explanation that Scripture does not give.",
+    "context": "The narrative resumes the mission with Aaron being sent to meet Moses.",
+    "references": "Exodus 4:24; Exodus 4:25",
+    "application": "Be willing to pause a disputed explanation for review instead of making certainty a condition of respecting Scripture.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:24-25 contains the actions summarized here; no outside ritual history is asserted as the definitive explanation.",
+    "reviewFlags": [
+      "Meaning of the release and the circumcision expression remains held for authorized human review."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 4:27": {
+    "explanation": "God tells Aaron to go into the wilderness to meet Moses, and Aaron obeys, meeting him at the mountain of God with a kiss. The reunion fulfills the help announced earlier. Moses does not have to manufacture a partner's call; Aaron's arrival is separately directed by God in the narrative.",
+    "context": "Moses next explains the message and signs, preparing their joint approach to Israel's elders.",
+    "references": "Exodus 4:14; Exodus 4:28",
+    "application": "Receive appropriate cooperation with gratitude and communicate clearly before beginning a shared responsibility.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:14 has already announced that Aaron is coming and will be glad to see Moses.",
+    "reviewFlags": []
+  },
+  "Exodus 4:28": {
+    "explanation": "Moses tells Aaron all the words of the LORD who sent him and all the signs commanded. Their cooperation begins with transmitting the commission accurately. The verse does not describe Moses adding a private agenda or asking Aaron to substitute his own message because he is the more fluent speaker.",
+    "context": "This prepares for the gathering of elders and Aaron's public address.",
+    "references": "Exodus 4:15; Exodus 4:30",
+    "application": "Share entrusted teaching faithfully, distinguishing God's Word from personal additions and ensuring colleagues understand the task.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:15 instructed Moses to give Aaron the words, and Exodus 4:30 records the public result.",
+    "reviewFlags": []
+  },
+  "Exodus 4:29": {
+    "explanation": "Moses and Aaron gather all the elders of Israel, beginning the public mission according to God's earlier instruction. The step is orderly and communal rather than a private claim to leadership made without addressing those concerned. The verse records the gathering before any statement of the people's response.",
+    "context": "Aaron's speech and signs follow, then the people believe and worship.",
+    "references": "Exodus 3:16; Exodus 4:30",
+    "application": "Follow through on agreed responsibilities in the proper order rather than treating planning or intention as completion.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:16 commanded the gathering of elders and supplied the message to be delivered.",
+    "reviewFlags": []
+  },
+  "Exodus 4:30": {
+    "explanation": "Aaron speaks the words the LORD gave Moses, and the signs are performed before the people. Public communication and the provided testimony come together in the mission. The verse reports fulfillment of the commission rather than an independent message designed to enhance Aaron's reputation or replace God's announced purpose.",
+    "context": "The response of belief and worship in the next verse follows both the message and signs.",
+    "references": "Exodus 4:15; Exodus 4:17",
+    "application": "Keep public ministry faithful to God's truth, directing attention to Him rather than to the prominence of a speaker.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:15-17 set out the speaking arrangement and provision of the rod for signs.",
+    "reviewFlags": []
+  },
+  "Exodus 4:31": {
+    "explanation": "The people believe and worship when they hear that the LORD has visited Israel and seen their affliction. Their response centers on God's attentive care and promised intervention. The chapter closes with hope before the confrontation with Pharaoh, not with a claim that every later difficulty has already disappeared.",
+    "context": "Exodus 5 will show the first confrontation and the increased burden that follows.",
+    "references": "Exodus 3:16; Genesis 50:24; Exodus 5:1",
+    "application": "Respond to God's faithfulness with reverent trust, while remaining prepared to obey when the road to deliverance includes further hardship.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:16 announced the visitation message, and Genesis 50:24 anticipated God's faithful intervention.",
+    "reviewFlags": []
+  },
   "Genesis 1:4": {
     "explanation": "God distinguishes light from darkness and calls the light good; creation is ordered by divine judgment rather than chance.",
     "context": "The separation follows the first command for light and begins the pattern of distinctions in the creation week.",

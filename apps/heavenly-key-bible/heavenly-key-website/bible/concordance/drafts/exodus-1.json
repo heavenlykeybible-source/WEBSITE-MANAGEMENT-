@@ -1,0 +1,345 @@
+[
+  {
+    "ref": "Exodus 1:1",
+    "kjvText": "Now these [are] the names of the children of Israel, which came into Egypt; every man and his household came with Jacob.",
+    "kjvTextHash": "0c365e13f029746879cb573bb9dd1c47a8e39cdc18b5387875dcd139d28c893a",
+    "explanation": "Exodus begins by naming the children of Israel who entered Egypt with Jacob, each with his household. The opening connects the coming deliverance with the family story in Genesis. Israel's later suffering is therefore the experience of the same people whose preservation Joseph had helped secure.",
+    "context": "The list introduces the generation that preceded the population growth and oppression described later in the chapter.",
+    "historicalContext": "Genesis 46:6-7 narrates the migration, while Genesis 50:24 anticipates a future departure.",
+    "crossReferences": [
+      "Genesis 46:6",
+      "Genesis 50:24"
+    ],
+    "application": "Read deliverance within God's continuing faithfulness rather than treating each biblical book as an unrelated story.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:2",
+    "kjvText": "Reuben, Simeon, Levi, and Judah,",
+    "kjvTextHash": "6125492a41c8a5c06e8de88af772df85a8b7fc089becd5af4e83a9a6372e1f05",
+    "explanation": "Reuben, Simeon, Levi, and Judah begin the list of Jacob's sons. Their names preserve continuity with the patriarchal household rather than describing new individuals born after Joseph's death. The inclusion of men with morally complicated histories does not approve their wrongdoing or erase the warnings already recorded about them.",
+    "context": "This is the first of three verses naming the brothers before the household total.",
+    "historicalContext": "Genesis 35:23 identifies these four among Leah's sons; Genesis 49 addresses their histories and futures.",
+    "crossReferences": [
+      "Genesis 35:23",
+      "Genesis 49:3",
+      "Genesis 49:5"
+    ],
+    "application": "Receive biblical family history truthfully, remembering both God's faithfulness and the need for repentance where people sin.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:3",
+    "kjvText": "Issachar, Zebulun, and Benjamin,",
+    "kjvTextHash": "668feee425fe5c950cbb20f3b16276fef5f50e91ea3010477f32c3dcf11d326e",
+    "explanation": "Issachar, Zebulun, and Benjamin continue the family list, adding names from different branches of Jacob's household. Benjamin's appearance here locates him among the brothers who came to Egypt. The verse gives names, not individual biographies or a separate judgment about the spiritual character of each tribe.",
+    "context": "The list prepares for the contrast between a small founding household and Israel's later multiplication.",
+    "historicalContext": "Genesis 46:13-14 and 46:21 record the corresponding family branches in the migration register.",
+    "crossReferences": [
+      "Genesis 46:13",
+      "Genesis 46:14",
+      "Genesis 46:21"
+    ],
+    "application": "Respect the factual purpose of a genealogy without inventing personal achievements or hidden meanings for its names.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:4",
+    "kjvText": "Dan, and Naphtali, Gad, and Asher.",
+    "kjvTextHash": "5160d38b2c4f4dac724ab8a0df29e5d7b13d288bf46849257005883990f82e63",
+    "explanation": "Dan, Naphtali, Gad, and Asher complete the names of the brothers listed as entering Egypt. Joseph is not omitted from the wider household; the following verse explains that he was already there. Reading the two verses together prevents mistaking the list's travel setting for a denial of Joseph's place.",
+    "context": "The names conclude the migration list before the total and the passing of the founding generation.",
+    "historicalContext": "Genesis 35:25-26 names these sons in relation to Bilhah and Zilpah; Genesis 46 lists their descendants.",
+    "crossReferences": [
+      "Genesis 35:25",
+      "Genesis 35:26",
+      "Exodus 1:5"
+    ],
+    "application": "Read connected statements together before treating an apparent omission as an error or an exclusion.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:5",
+    "kjvText": "And all the souls that came out of the loins of Jacob were seventy souls: for Joseph was in Egypt [already].",
+    "kjvTextHash": "dedb3f0b3a0e3e0dd861da3ee6c0aa786bb80670fed06c842e94bdf91d51fa17",
+    "explanation": "The household total is given as seventy descendants of Jacob, with Joseph already in Egypt. The number establishes the modest beginning against which later growth is described. It should not be treated as a count of every person in the traveling party, including all wives and servants.",
+    "context": "The total connects the migration account with the growth announced in Exodus 1:7.",
+    "historicalContext": "Genesis 46:26-27 distinguishes categories in its totals; Acts 7:14 gives a different figure requiring careful review.",
+    "crossReferences": [
+      "Genesis 46:26",
+      "Genesis 46:27",
+      "Acts 7:14"
+    ],
+    "application": "Define what a number counts before using it to draw conclusions about agreement between passages.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Household totals and Acts 7:14 require human review; do not invent a harmonization."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Exodus 1:6",
+    "kjvText": "And Joseph died, and all his brethren, and all that generation.",
+    "kjvTextHash": "a6a443c084eb0ba831d071ed069ee8c56f8cb30093ef338c7de1f628bb69ccda",
+    "explanation": "Joseph, his brothers, and their generation die, bringing the founding household's personal history to an end. Their deaths prepare for a different political situation but do not cancel God's promise to their descendants. The narrative shifts from the protection associated with Joseph to the vulnerability of later generations.",
+    "context": "This transition stands between the household list and Israel's multiplication under a new ruler.",
+    "historicalContext": "Genesis 50:26 records Joseph's death; the verse supplies no exact date for the death of every brother.",
+    "crossReferences": [
+      "Genesis 50:24",
+      "Genesis 50:26"
+    ],
+    "application": "Build faith on God's enduring Word rather than assuming the continued presence of respected leaders is guaranteed.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:7",
+    "kjvText": "¶ And the children of Israel were fruitful, and increased abundantly, and multiplied, and waxed exceeding mighty; and the land was filled with them.",
+    "kjvTextHash": "d54b3a18fbda916e746e555c74060930caa735835249a5ff3d8aaef76696ced6",
+    "explanation": "Israel increases abundantly and becomes strong enough to fill the land. The repeated language emphasizes striking growth from the small household just named. The narrative presents this multiplication before describing oppression, showing that Egyptian policy will attempt to suppress an already growing people rather than create their identity.",
+    "context": "Their growth becomes the occasion for Pharaoh's fearful and oppressive response in the following verses.",
+    "historicalContext": "Genesis 46:3 contains God's promise to make Jacob a great nation in Egypt; this growth continues that storyline.",
+    "crossReferences": [
+      "Genesis 46:3",
+      "Genesis 47:27"
+    ],
+    "application": "Give God thanks for preservation across generations while refusing to equate numerical growth alone with complete spiritual maturity.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:8",
+    "kjvText": "Now there arose up a new king over Egypt, which knew not Joseph.",
+    "kjvTextHash": "19999d1fe62d57178b926b957bc42f608d6934d04dde9985d741568e4d6d439f",
+    "explanation": "A new king arises who does not know Joseph. The statement signals the loss of the recognition and protection associated with Joseph's service. The verse does not name the ruler, identify his dynasty, or establish whether his lack of knowledge is personal ignorance, political disregard, or both.",
+    "context": "The new ruler immediately interprets Israel's growth as a threat and proposes restrictive measures.",
+    "historicalContext": "Genesis 41:39-41 describes Joseph's earlier honor; Acts 7:18 recalls this later change of king.",
+    "crossReferences": [
+      "Genesis 41:41",
+      "Acts 7:18"
+    ],
+    "application": "Do not assume that yesterday's public favor guarantees security; remain faithful when circumstances and recognition change.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:9",
+    "kjvText": "And he said unto his people, Behold, the people of the children of Israel [are] more and mightier than we:",
+    "kjvTextHash": "e58e6795a412ad83545462cf82f54fd94b5354021558f3c83c1efdf75e36a8b2",
+    "explanation": "The king portrays Israel as more numerous and stronger than his people. This is the ruler's alarming claim within a speech that prepares oppression. The narrative records the accusation without supplying a census that would independently verify every comparative assertion or justify treating the whole population as dangerous.",
+    "context": "The speech turns demographic anxiety into the proposed policy of Exodus 1:10.",
+    "historicalContext": "Exodus 1:7 establishes real growth, but the king's precise comparison remains part of his rhetoric.",
+    "crossReferences": [
+      "Exodus 1:7",
+      "Exodus 1:10"
+    ],
+    "application": "Test fear-driven claims about groups instead of accepting language that makes neighbors into collective enemies.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:10",
+    "kjvText": "Come on, let us deal wisely with them; lest they multiply, and it come to pass, that, when there falleth out any war, they join also unto our enemies, and fight against us, and [so] get them up out of the land.",
+    "kjvTextHash": "df493c6c9108986eab6f43a1869ab6cd62e4a94828d325e1cea64697f777c0e4",
+    "explanation": "Pharaoh proposes dealing wisely with Israel, fearing that they might join an enemy in war and leave Egypt. His supposed wisdom is directed toward control and exploitation. The text does not record an actual Israelite conspiracy, so imagined disloyalty must not be presented as an established fact.",
+    "context": "The next verse shows how this proposal becomes forced labor and affliction.",
+    "historicalContext": "Pharaoh's stated fear includes losing the people from the land, revealing the interest in retaining their labor.",
+    "crossReferences": [
+      "Exodus 1:11",
+      "James 3:14",
+      "James 3:17"
+    ],
+    "application": "Reject plans that disguise injustice as prudence, especially when they punish people for a threat that has not been demonstrated.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:11",
+    "kjvText": "Therefore they did set over them taskmasters to afflict them with their burdens. And they built for Pharaoh treasure cities, Pithom and Raamses.",
+    "kjvTextHash": "93c34b9f55810acbc228bfbb59ef39d2b4c357c6c27c8fcf5e70deaca6f3576c",
+    "explanation": "Taskmasters are appointed to afflict Israel with burdens, and the people build the treasure cities Pithom and Raamses. The political fear becomes organized forced labor. The verse names the work and places but does not identify a particular Pharaoh or prove a complete external chronology from the place-names alone.",
+    "context": "This begins the escalating sequence of oppressive labor and, later, commands to kill male children.",
+    "historicalContext": "The KJV identifies treasure cities; this note does not add claims about pyramids or an unrecorded building project.",
+    "crossReferences": [
+      "Exodus 1:10",
+      "Exodus 1:14"
+    ],
+    "application": "Recognize that administrative systems can enforce injustice, and do not confuse productive construction with righteous treatment of workers.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:12",
+    "kjvText": "But the more they afflicted them, the more they multiplied and grew. And they were grieved because of the children of Israel.",
+    "kjvTextHash": "682c28c9d18766d57659bd0fb0069bce9ab849e0dfd90454d41d0fc0d1630140",
+    "explanation": "The more Israel is afflicted, the more the people multiply and spread, frustrating those who oppress them. The policy fails to achieve its aim even while it causes real suffering. God's preservation here should not become a simplistic promise that persecution always produces visible numerical growth in every setting.",
+    "context": "Egyptian frustration leads into even more rigorous service in the following verses.",
+    "historicalContext": "Genesis 46:3 supplies the earlier promise of national growth in Egypt; Exodus describes its continuation under pressure.",
+    "crossReferences": [
+      "Genesis 46:3",
+      "Exodus 1:7"
+    ],
+    "application": "Trust God's faithfulness through opposition without denying the pain endured or demanding an identical outcome in every hardship.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:13",
+    "kjvText": "And the Egyptians made the children of Israel to serve with rigour:",
+    "kjvTextHash": "7109900d71a86cc6bed7ed938a530abb187669933fd522b3897ff7d3bee93980",
+    "explanation": "The Egyptians compel Israel to serve with rigor. This concise statement intensifies the earlier account of taskmasters and burdens, emphasizing the harsh manner of the service. It is a report of oppression, not a neutral celebration of discipline or permission to treat dependent laborers without mercy.",
+    "context": "The next verse specifies the kinds of work that make life bitter for the people.",
+    "historicalContext": "The narrative's explanation of rigor is supplied by mortar, brick, and field service in Exodus 1:14.",
+    "crossReferences": [
+      "Exodus 1:11",
+      "Exodus 1:14"
+    ],
+    "application": "Judge work arrangements by how people are treated, not merely by the tasks completed or the authority commanding them.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:14",
+    "kjvText": "And they made their lives bitter with hard bondage, in morter, and in brick, and in all manner of service in the field: all their service, wherein they made them serve, [was] with rigour.",
+    "kjvTextHash": "6cf47614daf006086bceb909827c426eaa324c0fd9abbadcf05e3a88094a0423",
+    "explanation": "Israel's life is made bitter by hard labor in mortar, brick, and field service, all imposed harshly. The repeated emphasis exposes the human cost behind the building program. Their suffering is concrete and sustained; the narrative does not describe a voluntary apprenticeship or a beneficial arrangement for the enslaved.",
+    "context": "The account now moves from abusive labor to Pharaoh's attack on newborn sons.",
+    "historicalContext": "Exodus 5:7-9 later returns to brickmaking demands, illustrating the continuing burden without establishing that every detail is identical here.",
+    "crossReferences": [
+      "Exodus 5:7",
+      "Exodus 5:9"
+    ],
+    "application": "Regard exhaustion and suffering under unjust work as matters for compassion, truth, and responsible action.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:15",
+    "kjvText": "¶ And the king of Egypt spake to the Hebrew midwives, of which the name of the one [was] Shiphrah, and the name of the other Puah:",
+    "kjvTextHash": "331f5a07fada68f4e5fc50a740d22b65e8ab12b62157f1ccabef048c5cfc67bb",
+    "explanation": "Pharaoh speaks to Hebrew midwives named Shiphrah and Puah. By recording their names, the narrative brings particular women into the center of the struggle over Israel's survival. It does not state that these were the only midwives serving the entire population, so staffing theories should remain unasserted.",
+    "context": "Their vocation places them where the king intends to implement a concealed attack on male infants.",
+    "historicalContext": "The names and occupation are given explicitly; no biographies or ages are supplied.",
+    "crossReferences": [
+      "Exodus 1:16",
+      "Exodus 1:17"
+    ],
+    "application": "Remember that people with ordinary responsibilities may face decisive moral choices when powerful authorities demand wrongdoing.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:16",
+    "kjvText": "And he said, When ye do the office of a midwife to the Hebrew women, and see [them] upon the stools; if it [be] a son, then ye shall kill him: but if it [be] a daughter, then she shall live.",
+    "kjvTextHash": "8e4ae7fd9be37753897fe787f064080ebcbe04c16a73c3e13d00b6ee61e8209a",
+    "explanation": "Pharaoh orders the midwives to kill sons at birth while allowing daughters to live. The command turns a caregiving vocation into a proposed instrument of destruction. The distinction is the king's policy, not a divine estimate that daughters matter less or that newborn boys deserve harm.",
+    "context": "This command follows forced labor and precedes the midwives' refusal through fear of God.",
+    "historicalContext": "The KJV refers to the birth setting and stools but gives no further account of childbirth equipment.",
+    "crossReferences": [
+      "Exodus 1:17",
+      "Exodus 1:22"
+    ],
+    "application": "Protect vulnerable life and refuse to use professional duties as a means of carrying out an evil order.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:17",
+    "kjvText": "But the midwives feared God, and did not as the king of Egypt commanded them, but saved the men children alive.",
+    "kjvTextHash": "be04741b2be1d4e6f51c8429afdfd56977800c6a111e3c52663104a77be1c8b4",
+    "explanation": "The midwives fear God and refuse Pharaoh's command, keeping the male children alive. Their obedience to God takes practical form in preserving those entrusted to their care. The verse places divine moral authority above a ruler's instruction to kill, rather than making political power the measure of right and wrong.",
+    "context": "Their refusal leads Pharaoh to summon them for an explanation.",
+    "historicalContext": "Acts 5:29 later states the priority of obeying God over men in a different setting.",
+    "crossReferences": [
+      "Acts 5:29",
+      "Proverbs 29:25"
+    ],
+    "application": "Let reverence for God produce concrete protection of life, even when obedience to an earthly authority would be easier.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:18",
+    "kjvText": "And the king of Egypt called for the midwives, and said unto them, Why have ye done this thing, and have saved the men children alive?",
+    "kjvTextHash": "f94d369ef493e1ff3cb4b076f8dfb84b82d54276b8e0cee25f3ff522978d4f6b",
+    "explanation": "Pharaoh summons the midwives and asks why they have kept the boys alive. His question exposes the direct conflict between their protective conduct and his murderous policy. The women now face scrutiny from the very authority whose command they have disobeyed, making the danger of their choice clear.",
+    "context": "Their answer follows in Exodus 1:19; God's treatment of them is then linked to their fear of Him.",
+    "historicalContext": "The passage records the confrontation without describing a trial, written charge, or punishment imposed on them.",
+    "crossReferences": [
+      "Exodus 1:17",
+      "Exodus 1:19"
+    ],
+    "application": "Expect that refusing wrongdoing may require an honest account of your actions, and seek courage rooted in God's authority.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:19",
+    "kjvText": "And the midwives said unto Pharaoh, Because the Hebrew women [are] not as the Egyptian women; for they [are] lively, and are delivered ere the midwives come in unto them.",
+    "kjvTextHash": "d899696ba74bcb85be820120a6ebd6ab8c1215966b4d9997f113ff319e962750",
+    "explanation": "The midwives tell Pharaoh that Hebrew women give birth before the midwives arrive. The narrative reports their explanation but does not independently describe every birth or resolve all questions about the statement. God's later favor is explicitly connected with their fear of Him, not a general approval of deceit.",
+    "context": "Their response follows the king's demand for an explanation and precedes the account of divine kindness.",
+    "historicalContext": "Exodus 1:21 identifies fear of God as the stated reason for blessing; no medical claim about an entire ethnicity is verified here.",
+    "crossReferences": [
+      "Exodus 1:17",
+      "Exodus 1:21"
+    ],
+    "application": "Do not turn this episode into permission to lie or make unsupported claims about women of a particular ancestry.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Truthfulness and ethical interpretation of the midwives' answer require human review; no general endorsement of deception."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Exodus 1:20",
+    "kjvText": "Therefore God dealt well with the midwives: and the people multiplied, and waxed very mighty.",
+    "kjvTextHash": "486b17adf4e177263bfefe0fece2ecc83950d4d745144a2fb6235a88b0b03e0c",
+    "explanation": "God deals kindly with the midwives, and Israel continues to multiply and become strong. The account contrasts the king's attempt to destroy life with divine preservation. It records a specific outcome rather than promising that every faithful refusal will immediately receive safety, wealth, or public recognition.",
+    "context": "The following verse directly links the midwives' blessing with their fear of God.",
+    "historicalContext": "Exodus 1:7 and 1:12 have already emphasized growth despite measures intended to suppress it.",
+    "crossReferences": [
+      "Exodus 1:7",
+      "Exodus 1:12",
+      "Exodus 1:21"
+    ],
+    "application": "Trust God's approval above a ruler's approval, while avoiding a formula that measures faithfulness by immediate material outcomes.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:21",
+    "kjvText": "And it came to pass, because the midwives feared God, that he made them houses.",
+    "kjvTextHash": "3ab096612e3cf63b5cd9e8bfdc94d78ed7688b3b800fe2ca77d91845d54644ef",
+    "explanation": "Because the midwives fear God, He makes them houses. The blessing is expressed in household language, but the verse does not provide a detailed account of property, marriage, or number of children. Its explicit moral connection is reverence for God demonstrated in preserving the infants' lives.",
+    "context": "This closes the midwives' episode before Pharaoh broadens the command to all his people.",
+    "historicalContext": "The KJV uses houses here; this note does not turn that expression into an invented architectural or family biography.",
+    "crossReferences": [
+      "Exodus 1:17",
+      "Psalms 128:1"
+    ],
+    "application": "Seek a life established in reverence for God rather than pursuing blessing through compliance with wrongdoing.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Exodus 1:22",
+    "kjvText": "And Pharaoh charged all his people, saying, Every son that is born ye shall cast into the river, and every daughter ye shall save alive.",
+    "kjvTextHash": "7a2414290863de208564a94f9e538a20415441388b864adfc1c6f4868e971e2b",
+    "explanation": "Pharaoh commands all his people to cast newborn sons into the river while preserving daughters. After the midwives' refusal, the violence becomes a public command. The chapter ends with a direct threat to infant life, preparing for the preservation of the child who will later confront Pharaoh.",
+    "context": "Exodus 2 opens with the birth and protection of a Levite son under this decree.",
+    "historicalContext": "Exodus 2:3-6 places the child's rescue at the river, within the very setting named in the king's order.",
+    "crossReferences": [
+      "Exodus 2:2",
+      "Exodus 2:3",
+      "Acts 7:19"
+    ],
+    "application": "Resist the normalization of violence against vulnerable people, even when it is made an official or popular duty.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  }
+]
