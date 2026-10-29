@@ -73,3 +73,10 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Updated scripts/concordance-draft-check.mjs to include chapter 6 and expect 157 drafts (commit 7104e6dfb5ed959d4b70401f7dd15530e3edf53a). Node test has NOT been executed.
 - Connector-side inspection before correction found one invalid Genesis reference among 158. Corrections saved; full subsequent reference and content audit remains pending. Cross-references outside Genesis and browser behavior have not been verified.
 - No Dictionary changes, no deployment. NEXT: execute tests, compare every draft to its actual KJV verse, verify all cross-references, fix misaligned Genesis 2 and other earlier drafts, then continue systematic commentary and topical concordance expansion.
+
+## Latest Genesis 7 checkpoint
+- Added drafts/genesis-7.json with 24 original verse-specific drafts (Genesis 7:1–24), all pending review. Commit e2028fd7cf0a21cc8bcee9da0c159c5957a4c59b.
+- Regenerated study-notes-genesis-drafts.js with 181 draft records through Genesis 7, commit 2d010a0fd35bf24d17e22ba8f0313cdf0c73b02d.
+- Updated scripts/concordance-draft-check.mjs to expect 181 records and include Genesis 7, commit e7e369d538e417947782063aa56f788e2b332689.
+- Connector-side check: 181 unique draft references, all exist in the saved KJV GEN.json; no empty explanation/context/application fields and no identical explanation strings found. This is not a full executed Node/browser test or human doctrinal review; non-Genesis cross-references still need validation.
+- Next: review earlier draft accuracy against actual verse text, run Node and browser tests, validate all cross-references, then Genesis 8 onward. Only Concordance and Commentary in scope; leave existing separate Dictionary untouched. No deployment.
