@@ -30,7 +30,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet publish HeavenlyKeyWindows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./signed-candidate
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Sign and verify Windows candidate
+      - name: Package and sign Windows MSIX release candidate
         shell: pwsh
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
         env:
@@ -41,16 +41,22 @@ jobs:
           $pfx = Join-Path $env:RUNNER_TEMP 'account5-windows.pfx'
           try {
             [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERT_BASE64))
-            $exe = (Resolve-Path './signed-candidate/HeavenlyKeyWindows.exe').Path
+            $password = ConvertTo-SecureString $env:WINDOWS_CERT_PASSWORD -AsPlainText -Force
+            $certificate = Get-PfxCertificate -FilePath $pfx -Password $password
+            if (-not $certificate -or -not $certificate.HasPrivateKey -or (Get-Date) -gt $certificate.NotAfter) {
+              throw 'Valid, non-expired code signing certificate required'
+            }
+            $msix = Join-Path (Resolve-Path '.').Path 'signed-candidate/HeavenlyKeyWindows.msix'
+            ./package-msix.ps1 -Publisher $certificate.Subject -OutputPath $msix
             $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse -File | Where-Object { $_.FullName -match '\\x64\\' } | Sort-Object FullName -Descending | Select-Object -First 1).FullName
             if (-not $signtool) { throw 'Windows SDK signtool is not installed' }
-            & $signtool sign /fd SHA256 /f $pfx /p $env:WINDOWS_CERT_PASSWORD /tr https://timestamp.digicert.com /td SHA256 $exe
-            if ($LASTEXITCODE -ne 0) { throw 'Signing failed' }
-            & $signtool verify /pa /v $exe
-            if ($LASTEXITCODE -ne 0) { throw 'Signature verification failed' }
-            $auth = Get-AuthenticodeSignature $exe
-            if ($auth.Status -ne 'Valid') { throw "Authenticode verification failed: $($auth.Status)" }
-            (Get-FileHash $exe -Algorithm SHA256).Hash | Out-File -Encoding ascii ./signed-candidate/HeavenlyKeyWindows.exe.sha256
+            & $signtool sign /fd SHA256 /f $pfx /p $env:WINDOWS_CERT_PASSWORD /tr https://timestamp.digicert.com /td SHA256 $msix
+            if ($LASTEXITCODE -ne 0) { throw 'MSIX signing failed' }
+            & $signtool verify /pa /v $msix
+            if ($LASTEXITCODE -ne 0) { throw 'MSIX signature verification failed' }
+            $auth = Get-AuthenticodeSignature $msix
+            if ($auth.Status -ne 'Valid') { throw "MSIX Authenticode verification failed: $($auth.Status)" }
+            (Get-FileHash $msix -Algorithm SHA256).Hash | Out-File -Encoding ascii './signed-candidate/HeavenlyKeyWindows.msix.sha256'
           }
           finally {
             if (Test-Path $pfx) { Remove-Item $pfx -Force }
@@ -60,7 +66,7 @@ jobs:
         with:
           name: heavenly-key-account5-windows-signed-candidate
           path: |
-            heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.exe
-            heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.exe.sha256
+            heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.msix
+            heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.msix.sha256
           retention-days: 14
           if-no-files-found: error
