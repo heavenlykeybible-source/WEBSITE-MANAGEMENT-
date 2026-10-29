@@ -295,3 +295,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Browser commentary bundle synchronized to 1250 drafts, commit 9cd31842bc7d00562f0bf841d8fe3e77548f47d9.
 - Draft checker now includes Genesis 41 with expected count 1250, commit 2e34131c2ecc01895c291b6634c2ec7ab2cd2e09.
 - Next Genesis 42. Not yet executed: Node/browser checks, complete canonical cross-reference verification, 500–1000 verse generator, human doctrinal review. Do not deploy without owner approval. Bible Dictionary unchanged.
+
+## Latest checkpoint — Genesis 42
+- Added 38 original Genesis 42:1–38 pending-review entries, commit 094b6a1988f71cb29f6387f0484e3fd3bc4ee1f8.
+- Browser bundle synchronized to 1288 total draft entries, commit efee1fa313a7795548433d9246a3264def8af8f5.
+- Validator updated to Genesis 42 and expected count 1288, commit bc07c18cc112965c526c91db1d82ec1d9ced9312.
+- Next chapter Genesis 43. Node/browser tests and batch generation remain unexecuted; cross-reference validation and doctrinal review pending. No production deployment; separate Bible Dictionary untouched.
