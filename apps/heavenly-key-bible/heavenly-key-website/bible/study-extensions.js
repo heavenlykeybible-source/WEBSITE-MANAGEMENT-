@@ -12,7 +12,7 @@ async function showDailyScripture(reference){
  const sequence=++readingSequence;
  target.textContent='Loading today’s KJV reading…';
  const match=/^(.+?) (\d+):(\d+)$/.exec(String(reference||'').trim());
- const book=match&&state.manifest?.books?.find(b=>b.name.toLocaleLowerCase()===match[1].toLocaleLowerCase());
+ const book=match&&state.manifest?.books?.find(b=>String(b.name||'').toLocaleLowerCase()===match[1].toLocaleLowerCase());
  if(!book){target.textContent='Reading reference unavailable; open the Bible reader to search manually.';return;}
  const chapter=Number(match[2]),verse=Number(match[3]);
  try{
@@ -63,7 +63,7 @@ function renderDictionary(){
   if(passage){passage.remove();return;}
   passage=document.createElement('p');passage.className='dict-verse-text';passage.textContent='Loading KJV verse…';card.append(passage);
   const match=/^(.+?) (\d+):(\d+)$/.exec(String(e.reference||'').trim());
-  const book=match&&allBooks().find(book=>book.name.toLocaleLowerCase()===match[1].toLocaleLowerCase());
+  const book=match&&allBooks().find(book=>String(book.name||'').toLocaleLowerCase()===match[1].toLocaleLowerCase());
   if(!book){passage.textContent='Reference unavailable in the included KJV.';return;}
   try{
     let promise=chapterCache.get(book.code);
