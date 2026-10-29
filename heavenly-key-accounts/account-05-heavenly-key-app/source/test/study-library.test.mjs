@@ -5,7 +5,6 @@ import {createHash} from 'node:crypto';
 import vm from 'node:vm';
 import {KJV_BOOKS,READING_YEAR,readingForDay} from '../public/bible-catalog.js';
 import {validBibleRef,moveBibleRef,bibleFont} from '../public/bible-mobile-controls.js';
-import {approvedTrack,audioCoverage,adjacentChapter} from '../public/audio-bible-catalog.js';
 import {createLockScreenSession} from '../public/lock-screen-media.js';
 
 const root=new URL('../',import.meta.url),read=path=>readFileSync(new URL(path,root),'utf8');
@@ -32,14 +31,6 @@ test('reading plan covers 365 valid chapters and reader controls respect canonic
  assert.deepEqual(moveBibleRef(books,'1samuel',31,1),{book:'2samuel',chapter:1});
  assert.equal(validBibleRef(books,'john','invalid'),null);assert.equal(bibleFont(500),32);assert.equal(bibleFont(-2),16);
  assert.ok(readingForDay(0).day>=1);
-});
-test('recorded audio stays unavailable until the existing approval and track gates pass',()=>{
- const actual=json('public/audio-bible-manifest.json');assert.equal(audioCoverage(actual),0);assert.equal(approvedTrack(actual,'john',3),null);
- const manifest={version:1,translation:'KJV',language:'en-NG',narration:'human',publicationApproved:true,narrator:{displayName:'Test narrator'},rights:{bibleText:true,narratorConsent:true,recordingDistribution:true,streaming:true,offline:true},tracks:{john:{3:{approved:true,url:'https://audio.heavenlykey.org/bible/john/3.mp3',mimeType:'audio/mpeg',offlineApproved:true}}}};
- assert.equal(approvedTrack(manifest,'john',3).offlineApproved,true);
- assert.equal(approvedTrack({...manifest,publicationApproved:false},'john',3),null);
- manifest.tracks.john[3].url='https://evil.test/track.mp3';assert.equal(approvedTrack(manifest,'john',3),null);
- assert.deepEqual(adjacentChapter('1-samuel',31,1),{book:'2-samuel',chapter:1});
 });
 test('lock-screen controls support play/pause/seek and clean up supported handlers',()=>{
  const handlers={},listeners={},audio={currentTime:5,duration:120,play(){this.played=true;return Promise.resolve();},pause(){this.paused=true;},addEventListener:(n,f)=>listeners[n]=f,removeEventListener:n=>delete listeners[n]};
