@@ -47,6 +47,33 @@ jobs:
             throw 'Windows MSIX staging leaked previous release artifacts'
           }
           if (-not (Test-Path './test-msix/HeavenlyKeyWindows.msix')) { throw 'MSIX packaging failed' }
+          # Read the actual MSIX ZIP payload and identity, not just its staging folder.
+          Add-Type -AssemblyName System.IO.Compression
+          $msixPath = (Resolve-Path './test-msix/HeavenlyKeyWindows.msix').Path
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($msixPath)
+          try {
+            $entries = @($zip.Entries | ForEach-Object { $_.FullName })
+            if ($entries -notcontains 'HeavenlyKeyWindows.exe') { throw 'MSIX is missing launch executable' }
+            if ($entries -notcontains 'AppxManifest.xml') { throw 'MSIX manifest missing' }
+            if ($entries | Where-Object { $_ -match '(?i)(old-release|\\.security\\.txt$|\\.pfx$|\\.sha256$)' }) {
+              throw 'MSIX leaked stale installer files, reports, or signing materials'
+            }
+            $manifestEntry = $zip.GetEntry('AppxManifest.xml')
+            $reader = [IO.StreamReader]::new($manifestEntry.Open())
+            try { [xml]$manifestXml = $reader.ReadToEnd() } finally { $reader.Dispose() }
+            $identity = $manifestXml.Package.Identity
+            if ($identity.Name -ne 'HeavenlyKey.Apps' -or $identity.ProcessorArchitecture -ne 'x64') {
+              throw 'MSIX identity or target architecture differs from reviewed Windows app'
+            }
+            $application = $manifestXml.Package.Applications.Application
+            if ($application.Executable -ne 'HeavenlyKeyWindows.exe') {
+              throw 'Windows package entry point is not the built application'
+            }
+            foreach ($asset in @('Assets/Square150x150Logo.png','Assets/Square44x44Logo.png','Assets/StoreLogo.png')) {
+              if ($entries -notcontains $asset) { throw "MSIX missing required image: $asset" }
+            }
+            Write-Host "Verified MSIX identity, x64 executable, image assets and clean payload"
+          } finally { $zip.Dispose() }
           Get-FileHash './test-msix/HeavenlyKeyWindows.msix' -Algorithm SHA256 | Format-List
       - name: Retain nonproduction Windows testing build
         uses: actions/upload-artifact@v4
