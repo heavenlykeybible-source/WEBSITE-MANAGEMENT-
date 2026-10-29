@@ -113,3 +113,14 @@ test('public app directory and device chooser do not require registration before
  const guide=publicFile('app-device-guide.js');
  assert.match(guide,/No Heavenly Key sign-in is required to download it/);
 });
+
+test('scanned native install guides start verified package download for matching device only',()=>{
+ const js=publicFile('app-device-guide.js');
+ assert.match(js,/function matchesDevice\(\)/);
+ assert.match(js,/nativeAvailable && matchesDevice\(\)/);
+ assert.match(js,/window\.location\.assign\(nativeLink\.href\)/);
+ assert.match(js,/nativeLink\.hidden = !nativeAvailable/);
+ assert.match(js,/download is starting/i);
+ assert.match(js,/different device/i);
+ assert.doesNotMatch(js,/window\.location\.assign\(destination\.href\)/);
+});
