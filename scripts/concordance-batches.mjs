@@ -21,7 +21,7 @@ if (canonRefs.size !== canon.length || canon.some(v => !v.ref || !v.text)) error
 const seen = new Set(), fingerprints = new Map(), records = [];
 for (const path of batchPaths) {
   const batch = read(path);
-  if (!Array.isArray(batch) || batch.length < 500 || batch.length > 1000) errors.push(path + ': batch size must be 500–1,000');
+  if (!Array.isArray(batch) || batch.length === 0 || batch.length > 1000 || (batch.length < 500 && batchPaths.indexOf(path) !== batchPaths.length - 1)) errors.push(path + ': expected 500–1,000 entries (final remainder excepted)');
   for (const entry of batch) {
     if (!entry || typeof entry !== 'object') { errors.push(path + ': invalid record'); continue; }
     const ref = entry.ref;
