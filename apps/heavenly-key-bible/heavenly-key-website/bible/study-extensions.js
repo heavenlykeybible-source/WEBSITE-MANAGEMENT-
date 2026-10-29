@@ -31,19 +31,32 @@ async function showDailyScripture(reference){
 
 function allBooks(){return state.manifest?.books||[];}
 function loadBooks(){if(booksLoaded)return Promise.resolve();if(loading)return loading;loading=(async()=>{let errors=[];for(const b of allBooks()){try{const r=await fetch('./data/kjv/'+encodeURIComponent(b.code)+'.json');if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();for(const [ch,verses] of Object.entries(data.chapters||{})){for(const v of verses){const ref=`${b.name} ${ch}:${v.number}`,t=v.text||'';const words=t.toLowerCase().match(/[a-z]+(?:['’][a-z]+)*/g)||[];const counts=new Map();for(const word of words)counts.set(word,(counts.get(word)||0)+1);for(const [word,n] of counts){if(!textIndex.has(word))textIndex.set(word,[]);textIndex.get(word).push({ref,text:t,n,book:b.code,chapter:ch});}}}}catch(e){errors.push(b.name);}}state.failed=errors;if(errors.length){textIndex.clear();throw new Error('Concordance incomplete: unable to load '+errors.length+' Bible book(s): '+errors.join(', ')+'. Check your connection and search again.');}booksLoaded=true;})();return loading.finally(()=>{if(!booksLoaded)loading=null;});}
+function setupDictionaryLetters(){
+ const nav=$('dict-letters');if(!nav)return;
+ for(const letter of ['All',...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']){
+  const button=document.createElement('button');button.type='button';button.className='dict-letter';button.textContent=letter;button.setAttribute('aria-pressed',String(letter==='All'));
+  button.addEventListener('click',()=>{$('letter').value=letter==='All'?'':letter;dictionaryPage=0;for(const b of nav.children)b.setAttribute('aria-pressed',String(b===button));renderDictionary();});nav.append(button);
+ }
+ $('letter').addEventListener('change',()=>{for(const b of nav.children)b.setAttribute('aria-pressed',String(b.textContent===($('letter').value||'All')));});
+}
+setupDictionaryLetters();
 function renderDictionary(){
  if(!state.dictionary)return;
  const query=$('dict').value.trim().toLowerCase(),letter=$('letter').value;
  const matches=state.dictionary.filter(e=>(!letter||e.term[0].toUpperCase()===letter)&&(!query||e.term.toLowerCase().includes(query)||e.meaning.toLowerCase().includes(query)||String(e.explanation||'').toLowerCase().includes(query)));
  const pageSize=25,totalPages=Math.max(1,Math.ceil(matches.length/pageSize));dictionaryPage=Math.max(0,Math.min(dictionaryPage,totalPages-1));
  const start=dictionaryPage*pageSize;
- $('dict-count').textContent=`${matches.length} matching entries · page ${dictionaryPage+1} of ${totalPages} · ${state.dictionary.length} editorial draft entries (source review pending)`;
+ $('dict-count').textContent=`${matches.length} matching entries · page ${dictionaryPage+1} of ${totalPages}`;
  $('dict-results').replaceChildren();
  for(const e of matches.slice(start,start+pageSize)){
-   const card=document.createElement('article');card.className='result';
-   const title=document.createElement('strong');title.textContent=e.term;card.append(title);
+   const card=document.createElement('details');card.className='result';
+   const title=document.createElement('summary');title.textContent=e.term;card.append(title);
    const meaning=document.createElement('div');meaning.textContent=e.meaning;card.append(meaning);
    if(e.explanation){const explanation=document.createElement('p');explanation.textContent=e.explanation;card.append(explanation);}
+   const actions=document.createElement('div');actions.className='dict-actions';
+   const copy=document.createElement('button');copy.type='button';copy.textContent='Copy';copy.setAttribute('aria-label','Copy '+e.term+' definition');
+   copy.addEventListener('click',async()=>{const value=[e.term,e.meaning,e.explanation,e.reference].filter(Boolean).join('\\n');try{await navigator.clipboard.writeText(value);copy.textContent='Copied';}catch{const area=document.createElement('textarea');area.value=value;area.style.position='fixed';area.style.left='-9999px';document.body.append(area);area.select();const ok=document.execCommand('copy');area.remove();copy.textContent=ok?'Copied':'Copy unavailable';}});
+   actions.append(copy);
    const ref=document.createElement('button');ref.type='button';ref.className='dict-verse-button';ref.textContent='Read KJV: '+e.reference;ref.setAttribute('aria-label','Show KJV verse '+e.reference);ref.addEventListener('click',async()=>{
   let passage=card.querySelector('.dict-verse-text');
   if(passage){passage.remove();return;}
@@ -59,7 +72,7 @@ function renderDictionary(){
     const verse=(data.chapters?.[match[2]]||[]).find(v=>String(v.number)===match[3]);
     passage.textContent=verse?.text||'Verse unavailable.';
   }catch{if(passage.isConnected)passage.textContent='Unable to open KJV verse. Check offline downloads or reconnect.';}
- });card.append(ref);
+ });actions.append(ref);
    // Let readers continue a dictionary study into an actual whole-Bible word search.
    // Only use a single-word entry; multiword dictionary titles might contain punctuation.
    if(/^[A-Za-z]+(?:['’][A-Za-z]+)*$/.test(e.term)){
@@ -72,9 +85,9 @@ function renderDictionary(){
      $('concordance-form').requestSubmit();
      $('concordance-form').scrollIntoView({behavior:'smooth',block:'start'});
     });
-    card.append(concordanceButton);
+    actions.append(concordanceButton);
    }
-   $('dict-results').append(card);
+   card.append(actions);$('dict-results').append(card);
  }
  if(!matches.length){const empty=document.createElement('p');empty.textContent='No entry found yet. This does not mean the word is absent from Scripture.';$('dict-results').append(empty);}
  $('dict-prev').disabled=dictionaryPage===0;$('dict-next').disabled=dictionaryPage>=totalPages-1;
