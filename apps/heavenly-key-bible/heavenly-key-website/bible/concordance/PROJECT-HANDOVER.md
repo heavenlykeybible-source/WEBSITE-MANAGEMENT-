@@ -116,3 +116,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Connector-side structural inspection: 296 unique Genesis verse references present in saved KJV GEN.json, no identical explanation text and no missing required text fields. This does not validate historical or doctrinal correctness or cross-references in other books. Node/browser tests still unexecuted.
 - Mass preparation tool scripts/concordance-prepare-queue.mjs saved earlier, designed to create up to 1,000 verse-text packets and a manifest; it has NOT been executed or verified across all books. This is queue infrastructure, not 31,102 written explanations.
 - NEXT: validate canonical mapping and all KJV book files; run actual Node scripts, fix findings, continue original content from Genesis 12; expand topical Concordance. Keep Bible Dictionary separate and untouched. No deployment.
+
+## Latest checkpoint — Genesis 12
+- Saved 20 original pending-review verse-specific commentaries Genesis 12:1–20 in drafts/genesis-12.json. Commit 9205f70e79c556f9962c545a8fa69fcf27f7abea.
+- Browser study-notes-genesis-drafts.js now includes 316 saved drafts, commit d36a19e058bcc7ac8939b014828245318a9a4ca6.
+- scripts/concordance-draft-check.mjs updated to include Genesis 12 and 316 expected drafts, commit 9e982e2f613be662b2aba35e6eba3a16e6a6cfb4.
+- Node and browser execution not verified. No doctrinal review, deployment or Bible Dictionary changes. Next: Genesis 13 and execute validation against full canonical data, including cross-references.
