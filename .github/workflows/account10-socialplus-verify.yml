@@ -1,0 +1,33 @@
+name: Account 10 SocialPlus verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'account10-social-management/**'
+      - '.github/workflows/account10-socialplus-verify.yml'
+  pull_request:
+    paths:
+      - 'account10-social-management/**'
+      - '.github/workflows/account10-socialplus-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: account10-social-management
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify Worker, dashboard and security contracts
+        run: npm run verify:local
