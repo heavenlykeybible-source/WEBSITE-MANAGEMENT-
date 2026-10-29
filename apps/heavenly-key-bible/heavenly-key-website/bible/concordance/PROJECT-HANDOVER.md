@@ -271,3 +271,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Verified 36 existing pending-review Genesis 37:1–36 draft entries in `drafts/genesis-37.json` and their matching browser bundle entries; total now 1117.
 - Updated checker to include Genesis 37 and expect 1117 entries, commit b55060d3afe793a6e29cd826364b8c2c197a201b.
 - Next Genesis 38. Node/browser QA and batch generator not executed in this checkpoint. Cross-references and doctrinal content require human verification. No deployment; Bible Dictionary unchanged.
+
+## Latest checkpoint — Genesis 38
+- Added 30 original pending-review Genesis 38:1–30 drafts, commit 8815e82f602cee4cb503675ea648738e40a9424b.
+- Browser bundle now contains 1147 Genesis drafts, commit dd5ce087bc0b8e191b44996d8c0653dd17dfddc9.
+- Checker includes Genesis 38 and expects 1147, commit 4c7f15cb29858c54862445690fea826fb01da9ab.
+- Next Genesis 39. Automated tests and batch generator not executed; cross-reference validation and human doctrinal review outstanding. No deployment; Bible Dictionary unchanged.
