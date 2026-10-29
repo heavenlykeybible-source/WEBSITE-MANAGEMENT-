@@ -30,7 +30,7 @@ async function showDailyScripture(reference){
 }
 
 function allBooks(){return state.manifest?.books||[];}
-function loadBooks(){if(booksLoaded)return Promise.resolve();if(loading)return loading;loading=(async()=>{let errors=[];for(const b of allBooks()){try{const r=await fetch('./data/kjv/'+encodeURIComponent(b.code)+'.json');if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();for(const [ch,verses] of Object.entries(data.chapters||{})){for(const v of verses){const ref=`${b.name} ${ch}:${v.number}`,t=v.text||'';const words=t.toLowerCase().match(/[a-z]+(?:['’][a-z]+)*/g)||[];const counts=new Map();for(const word of words)counts.set(word,(counts.get(word)||0)+1);for(const [word,n] of counts){if(!textIndex.has(word))textIndex.set(word,[]);textIndex.get(word).push({ref,text:t,n,book:b.code,chapter:ch});}}}}catch(e){errors.push(b.name);}}state.failed=errors;if(errors.length){textIndex.clear();throw new Error('Concordance incomplete: unable to load '+errors.length+' Bible book(s): '+errors.join(', ')+'. Check your connection and search again.');}booksLoaded=true;})();return loading.finally(()=>{if(!booksLoaded)loading=null;});}
+function loadBooks(){if(booksLoaded)return Promise.resolve();if(loading)return loading;loading=(async()=>{let errors=[];for(const b of allBooks()){try{const r=await fetch('./data/kjv/'+encodeURIComponent(b.code)+'.json');if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();for(const [ch,chapterData] of Object.entries(data.chapters||{})){const verses=Array.isArray(chapterData)?chapterData:(Array.isArray(chapterData?.verses)?chapterData.verses:[]);for(const v of verses){const ref=`${b.name} ${ch}:${v.number}`,t=v.text||'';const words=t.toLowerCase().match(/[a-z]+(?:['’][a-z]+)*/g)||[];const counts=new Map();for(const word of words)counts.set(word,(counts.get(word)||0)+1);for(const [word,n] of counts){if(!textIndex.has(word))textIndex.set(word,[]);textIndex.get(word).push({ref,text:t,n,book:b.code,chapter:ch});}}}}catch(e){errors.push(b.name);}}state.failed=errors;if(errors.length){textIndex.clear();throw new Error('Concordance incomplete: unable to load '+errors.length+' Bible book(s): '+errors.join(', ')+'. Check your connection and search again.');}booksLoaded=true;})();return loading.finally(()=>{if(!booksLoaded)loading=null;});}
 function setupDictionaryLetters(){
  const nav=$('dict-letters');if(!nav)return;
  for(const letter of ['All',...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']){
@@ -229,7 +229,7 @@ contextButton.addEventListener('click',async()=>{
   let promise=chapterCache.get(r.book);
   if(!promise){promise=fetch('./data/kjv/'+encodeURIComponent(r.book)+'.json').then(response=>{if(!response.ok)throw Error('KJV unavailable');return response.json();}).catch(error=>{chapterCache.delete(r.book);throw error;});chapterCache.set(r.book,promise);}
   const data=await promise;if(!section.isConnected)return;
-  const chapter=data.chapters?.[String(r.chapter)]||[];
+  const chapterData=data.chapters?.[String(r.chapter)];const chapter=Array.isArray(chapterData)?chapterData:(Array.isArray(chapterData?.verses)?chapterData.verses:[]);
   if(!chapter.length)throw Error('Chapter unavailable');
   const verses=chapter.map(v=>`${v.number}. ${v.text}`).join('\n');
   section.textContent=verses;section.style.whiteSpace='pre-wrap';
