@@ -25,7 +25,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          sdk_tool="$(find "$sdk_root/cmdline-tools" -type f -name sdkmanager -print -quit)"
+          test -n "$sdk_tool" && test -x "$sdk_tool"
+          "$sdk_tool" --sdk_root="$sdk_root" --install "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
