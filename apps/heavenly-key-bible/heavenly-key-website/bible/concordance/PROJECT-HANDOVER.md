@@ -164,3 +164,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Browser study-notes bundle regenerated to 493 Genesis drafts, commit f2d94908c9a7c38021cf1570931368c884949f58.
 - Draft checker updated to include Genesis 19 and expect 493, commit 7a45387fe6a5c4d09fcc673993582ed093df7d04.
 - Next: Genesis 20 and actual execution of validators and large-batch generator. Node/browser tests and full-canon cross-reference checks not yet run. No deployment. Bible Dictionary unchanged.
+
+## Latest checkpoint — Genesis 20
+- Saved 18 original Genesis 20:1–18 pending-review drafts, commit 7890b116437f7b6f6e94081b50e35aeafc59054b.
+- Browser bundle updated to 511 unique draft entries, commit de72905ed92b8ded4db12f7fc3dec7abcd4dbb95. Connector-side inspection found no missing explanation/context/application/reference arrays.
+- Draft validator updated to include Genesis 20 and expect 511 entries, commit 4ccc06033c22cdc376075dd1a2a83837df45b4aa.
+- Actual Node execution, browser testing, canonical full-canon reference checks and human doctrinal review remain outstanding. Next Genesis 21. No deployment or Bible Dictionary changes.
