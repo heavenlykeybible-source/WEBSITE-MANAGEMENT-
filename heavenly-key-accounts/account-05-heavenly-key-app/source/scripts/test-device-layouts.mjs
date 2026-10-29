@@ -86,6 +86,22 @@ try{
      }
      console.log('PASS all',Object.keys(catalogue).length,'app selection dialogs on small phone');
     }
+    if(id==='all-in-one' && size.name==='phone'){
+     // Run actual all-in-one app navigation, not merely static page rendering.
+     for(const screen of ['grow','community','live']){
+       const choice=page.locator('#home [data-screen="'+screen+'"]');
+       await page.locator('#home').evaluate(el=>{el.hidden=false;el.classList.add('active');});
+       // Navigate from the original home tile after restoring its view via the tab bar.
+       await page.locator('.tabbar [data-screen="home"]').click({timeout:5000});
+       await choice.click({timeout:5000});
+       const view=page.locator('#'+screen);
+       if(await view.isHidden())throw Error('All-in-one screen is hidden after click: '+screen);
+       if(!page.url().endsWith('#'+screen))throw Error('All-in-one history not updated for '+screen);
+       await page.goBack({waitUntil:'domcontentloaded',timeout:8000});
+       if(await page.locator('#home').isHidden())throw Error('Back did not restore home from '+screen);
+     }
+     console.log('PASS all-in-one interactive mobile navigation and browser Back');
+    }
     if(['directory','all-in-one'].includes(id)){
      await page.screenshot({path:path.join(screenshots,id+'-'+size.name+'.png'),fullPage:true,timeout:20000});
     }
