@@ -23,3 +23,12 @@ jobs:
           if(!response.ok||!json.success){console.log('ZONE READ DENIED',response.status,(json.errors||[]).map(x=>x.code));process.exit(0)}
           console.log('VISIBLE ZONE COUNT',json.result?.length||0); for(const zone of json.result||[]) console.log(JSON.stringify({name:zone.name,status:zone.status,accountName:zone.account?.name||'',accountId:zone.account?.id||'',nameServers:zone.name_servers||[]}));
           JS
+
+      - name: Read public authoritative DNS for MediaGuru
+        run: |
+          node --input-type=module <<'JS'
+          import {resolveNs,resolve4,resolveCname} from 'node:dns/promises';
+          for(const [type,name,fn] of [['NS','heavenlykey.org',resolveNs],['A','mediaeditor.heavenlykey.org',resolve4],['CNAME','mediaeditor.heavenlykey.org',resolveCname]]){
+            try{console.log(type,name,JSON.stringify(await fn(name)))}catch(e){console.log(type,name,e.code)}
+          }
+          JS
