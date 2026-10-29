@@ -89,3 +89,19 @@ test('Apple iOS and Mac signed release workflows require manual approval and cre
   assert.doesNotMatch(workflow,/wrangler deploy|cloudflare\/pages-action|actions\/create-release/,filename);
  }
 });
+
+test('Android shell only sends Android APK attachments to its external system browser',()=>{
+ const android=readNative('android/app/src/main/java/org/heavenlykey/apps/MainActivity.java');
+ assert.match(android,/native-download\/\[a-z0-9-\]\{1,64\}\/android/);
+ assert.doesNotMatch(android,/\(android\|windows\|mac\)/);
+});
+test('iOS release verifies the exported app before it can be retained for review',()=>{
+ const release=readWorkflow('release-account5-ios.yml');
+ assert.match(release,/unzip -q "\$ipa"/);
+ assert.match(release,/codesign --verify --deep --strict/);
+ assert.match(release,/CFBundleIdentifier/);
+ assert.match(release,/org\.heavenlykey\.apps/);
+ assert.match(release,/TeamIdentifier:0/);
+ assert.match(release,/embedded\.mobileprovision/);
+ assert.doesNotMatch(release,/wrangler deploy/);
+});
