@@ -1,0 +1,15 @@
+{
+  "batch": 6,
+  "title": "Heavenly Key Holy Bible - Batch 6 (New Testament Part 1: Matthew to Acts)",
+  "booksIncluded": [
+    "Matthew",
+    "Mark",
+    "Luke",
+    "John",
+    "Acts"
+  ],
+  "totalChaptersIncludedSampled": 25,
+  "totalVersesGenerated": 250,
+  "doctrinalAlignment": "Evangelical Holiness / Deeper Life Emphasis (Pastor W. F. Kumuyi standards)",
+  "reviewStatus": "pending"
+}
