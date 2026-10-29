@@ -359,14 +359,14 @@ async function loadPortal() {
  renderTracks(); } catch { if(token===portalRequest)message("portal-status","Collection could not be loaded. Check your connection and press Refresh."); }
 }
 for(const [name] of books)book.add(new Option(name,name));
-const location=read("hk-bible-reader-location"); book.value=Array.isArray(location)&&books.some(x=>x[0]===location[0])?location[0]:"Genesis"; chapters(Array.isArray(location)?location[1]:1);
+const savedLocation=read("hk-bible-reader-location"),urlParams=new URLSearchParams(window.location.search),requestedBook=urlParams.get("book"),requestedChapter=Number(urlParams.get("chapter")),requested=books.find(x=>x[0]===requestedBook);const initialBook=requested&&Number.isInteger(requestedChapter)&&requestedChapter>=1&&requestedChapter<=requested[1]?requestedBook:null;book.value=initialBook||(Array.isArray(savedLocation)&&books.some(x=>x[0]===savedLocation[0])?savedLocation[0]:"Genesis");chapters(initialBook?requestedChapter:(Array.isArray(savedLocation)?savedLocation[1]:1));
 el("reader-form").addEventListener("submit",event=>{event.preventDefault();loadChapter();});
 window.addEventListener("hk-read-reference",event=>{
  const name=event.detail?.book,num=Number(event.detail?.chapter),verse=event.detail?.verse;
  const target=books.find(b=>b[0]===name);
  if(!target||!Number.isInteger(num)||num<1||num>target[1]||(verse!==undefined&&(!Number.isInteger(verse)||verse<1||verse>176))){event.preventDefault();return;}
- book.value=name;chapters(num);loadChapter().then(()=>{
-  if(verse===undefined||book.value!==name||Number(chapter.value)!==num)return;
+ book.value=name;chapters(num);loadChapter().then(loaded=>{
+  if(!loaded||verse===undefined||book.value!==name||Number(chapter.value)!==num)return;
   const row=el("verses").querySelector('[data-verse="'+verse+'"]');
   if(row){row.classList.add("is-selected");row.scrollIntoView({block:"center"});}
   else message("reader-status","Verse "+verse+" does not exist in "+name+" "+num+".");
