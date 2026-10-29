@@ -43,13 +43,13 @@ setupDictionaryLetters();
 function renderDictionary(){
  if(!state.dictionary)return;
  const query=$('dict').value.trim().toLowerCase(),letter=$('letter').value;
- const matches=state.dictionary.filter(e=>(!letter||e.term[0].toUpperCase()===letter)&&(!query||e.term.toLowerCase().includes(query)||e.meaning.toLowerCase().includes(query)||String(e.explanation||'').toLowerCase().includes(query)));
+ const matches=state.dictionary.filter(e=>(!letter||e.term[0].toUpperCase()===letter)&&(!query||[e.term,e.meaning,e.explanation,...(state.originalGuide||[]).filter(w=>w.english.toLowerCase()===e.term.toLowerCase()).flatMap(w=>[w.original,w.transliteration,w.strong,w.meaning])].some(v=>String(v||'').toLocaleLowerCase().includes(query))));
  const pageSize=25,totalPages=Math.max(1,Math.ceil(matches.length/pageSize));dictionaryPage=Math.max(0,Math.min(dictionaryPage,totalPages-1));
  const start=dictionaryPage*pageSize;
  $('dict-count').textContent=`${matches.length} matching entries · page ${dictionaryPage+1} of ${totalPages}`;
  $('dict-results').replaceChildren();
  for(const e of matches.slice(start,start+pageSize)){
-   const card=document.createElement('article');card.className='result';
+   const card=document.createElement('article');card.className='result';card.setAttribute('aria-label',e.term+' dictionary definition');
    const title=document.createElement('h3');title.className='dict-entry-title';title.textContent=e.term;card.append(title);
    const meaning=document.createElement('div');meaning.textContent=e.meaning;card.append(meaning);
    if(e.explanation){const explanation=document.createElement('p');explanation.textContent=e.explanation;card.append(explanation);}
