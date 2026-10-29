@@ -34,3 +34,12 @@ This checklist distinguishes repository code from an operational Cloudflare depl
 
 ## Launch gate
 Do not announce production readiness until the above checks pass on a deployed Worker, with verified provider credentials and device testing. Signed WhatsApp text webhooks can be imported into the internal inbox, and an explicitly approved operator reply can be submitted to the WhatsApp Cloud API when configured. This does not establish successful live delivery, Meta compliance approval, or launch readiness.
+
+## Verified Cloudflare inventory — 2026-10-29
+- Account 10 connection ID: 10; account ID: `c26cc139515e4f56b9fc7010bd98d1b5` (read access verified).
+- Worker `heavenly-key-social-management` exists; last modified `2026-10-28T12:42:36.183219Z`.
+- Worker reports compatibility date `2025-01-01`, **zero bindings**, and `has_assets: false`. This is inconsistent with the repository's D1 binding and `[assets]` configuration. Do not call the live Worker production-ready.
+- D1 `heavenlykey-social-management-db` exists with ID `96001ae8-d057-40d1-ba8a-167d8eab63cc`, matching `wrangler.toml`. Schema and migration state have **not** been checked.
+- R2 `heavenlykey-social-management-storage` exists. It is not currently bound to the Worker; repository R2 binding remains commented out.
+- Cloudflare Workers Builds configuration access was denied; token may require Workers Builds Configuration: Edit for the correct account. No deployment or configuration mutation performed.
+- NEXT: confirm token and Worker deployment permissions; configure bindings and static assets from canonical source with owner approval, validate D1 schema/migrations, run tests and staging provider checks before production cutover.
