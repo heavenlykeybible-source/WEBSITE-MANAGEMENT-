@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded',function(){
  if(!explore||!study)return;
  const grid=study.querySelector('.study-tools-grid');
  const featureNames=['Search','Reading Plans','Bookmarks','Notes','Bible Maps','Timeline','Topical Bible','Verse Images','Scripture Memory','Promises of God','Bible Questions','My Progress'];
- const quickNames=['summary','lessons','characters','important','cross','definitions','related'];
+ const quickNames=['summary','lessons','characters','important','references','definitions','related'];
  const quickButtons=[...document.querySelectorAll('button[data-tool]')];
  const quick=quickNames.map(n=>quickButtons.find(b=>b.dataset.tool===n)).filter(Boolean);
  const labels=['Bible Summary','Key Lessons','Main Characters','Important Verses','Cross References','Word Definitions','Related Chapters'];
