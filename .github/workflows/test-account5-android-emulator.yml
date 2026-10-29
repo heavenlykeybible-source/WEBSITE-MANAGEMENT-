@@ -11,6 +11,10 @@ jobs:
   emulator-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [24, 29]
     defaults:
       run:
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/android
@@ -36,10 +40,10 @@ jobs:
       - name: Enable KVM access for emulator
         run: |
           if test -e /dev/kvm; then sudo chmod a+rw /dev/kvm; fi
-      - name: Install and launch on Android 10 emulator
+      - name: Install and launch on Android API ${{ matrix.api-level }} emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: ${{ matrix.api-level }}
           arch: x86_64
           profile: pixel_3a
           disable-animations: true
@@ -52,5 +56,5 @@ jobs:
             adb shell pidof org.heavenlykey.apps | grep -Eq '[0-9]+'
       - name: Explain test scope
         run: |
-          echo "Emulator smoke test verifies APK installation and process launch on Android 10."
+          echo "Emulator smoke test verifies APK installation and process launch on Android API ${{ matrix.api-level }}."
           echo "It is NOT production signing, a physical-device test, or confirmation of live website content."
