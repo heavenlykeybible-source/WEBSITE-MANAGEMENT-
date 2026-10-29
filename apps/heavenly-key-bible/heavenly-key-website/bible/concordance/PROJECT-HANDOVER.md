@@ -36,3 +36,9 @@ For each verse: unique reference, original specific explanation, biblical contex
 - After each action: state exactly what changed, commit SHA, number of new verse explanations actually added, what remains, tests performed and whether deployment occurred.
 - Never confuse a planning target (500–1,000 verses per batch) with completed content; never claim tests passed without running them.
 - Keep this handover updated as work progresses, so another AI can resume without repeating completed work.
+
+## Progress update
+- Search module now reads Bible book options from its selector. Commit: 1425527d2fdcc9b380dbcefb86d066d503700b14.
+- Added scripts/concordance-draft-check.mjs for structural and bundle consistency checks. Commit: 40c2b0474ed95bbf8504db3ba28a06f5075a1adc. Not yet executed; tests not claimed passed.
+- 136 Genesis drafts still pending doctrinal review; zero newly authored verses this session.
+- Next: run tests, validate references against canonical KJV, add topical concordance and dictionary links, expand commentary, test browser. No deployment.
