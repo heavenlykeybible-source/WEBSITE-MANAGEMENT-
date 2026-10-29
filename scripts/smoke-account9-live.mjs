@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const raw=process.env.ACCOUNT9_LIVE_URL;
 if(!raw)throw Error('Set ACCOUNT9_LIVE_URL to the exact approved Account 9 deployment origin.');
 const origin=new URL(raw);
-if(origin.protocol!=='https:'||!['mediaeditor.heavenlykey.org'].includes(origin.hostname)||origin.port||origin.username||origin.password||origin.search||origin.hash||origin.pathname!=='/')throw Error('ACCOUNT9_LIVE_URL must be an HTTPS origin ending in /');
+if(origin.protocol!=='https:'||!['mediaguru.heavenlykey.org'].includes(origin.hostname)||origin.port||origin.username||origin.password||origin.search||origin.hash||origin.pathname!=='/')throw Error('ACCOUNT9_LIVE_URL must be an HTTPS origin ending in /');
 // Apply a separate timeout to each request: one slow asset must not consume
 // the entire verification budget for subsequent routes.
 const REQUEST_TIMEOUT_MS=12000;

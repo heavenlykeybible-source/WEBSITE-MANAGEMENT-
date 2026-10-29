@@ -9,7 +9,7 @@ const api=async(method='GET',body)=>{
   if(!response.ok||!result?.success)throw Error('Cloudflare domain API '+method+' failed (HTTP '+response.status+', error codes '+JSON.stringify((result?.errors||[]).map(e=>e.code))+')');
   return result.result;
 };
-const hostname='mediaeditor.heavenlykey.org',service='heavenlykey-studio';
+const hostname='mediaguru.heavenlykey.org',service='heavenlykey-studio';
 const domains=await api();
 if(!Array.isArray(domains))throw Error('Unexpected Cloudflare domains listing');
 const current=domains.find(d=>d.hostname===hostname);
@@ -20,4 +20,4 @@ if(!current?.enabled){
 }
 const final=await api();
 if(!final.some(d=>d.hostname===hostname&&d.service===service&&d.enabled===true))throw Error('Domain attachment failed verification');
-console.log('PASS mediaeditor.heavenlykey.org is attached to heavenlykey-studio Worker');
+console.log('PASS mediaguru.heavenlykey.org is attached to heavenlykey-studio Worker');

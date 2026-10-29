@@ -2,9 +2,9 @@
 
 ## Account 9 canonical production domain — 26 October 2026
 
-**Only public hostname:** `mediaeditor.heavenlykey.org`.
+**Only public hostname:** `mediaguru.heavenlykey.org`.
 
-Remove `editor.heavenlykey.org` and `videoeditor.heavenlykey.org` from the Account 9 Worker custom domains and Cloudflare DNS after confirming they are not used by another application. Bind `mediaeditor.heavenlykey.org` to the existing `heavenlykey-studio` Worker and preserve its `DB`, `MEDIA`, and `AI` bindings. Do not delete the Worker, D1 database or R2 bucket. GitHub live-launch smoke checks accept only `https://mediaeditor.heavenlykey.org/`. DNS/route changes require authorized Cloudflare zone configuration and have not been executed by this source commit.
+Remove `editor.heavenlykey.org` and `videoeditor.heavenlykey.org` from the Account 9 Worker custom domains and Cloudflare DNS after confirming they are not used by another application. Bind `mediaguru.heavenlykey.org` to the existing `heavenlykey-studio` Worker and preserve its `DB`, `MEDIA`, and `AI` bindings. Do not delete the Worker, D1 database or R2 bucket. GitHub live-launch smoke checks accept only `https://mediaguru.heavenlykey.org/`. DNS/route changes require authorized Cloudflare zone configuration and have not been executed by this source commit.
 
 Target: `heavenlykey-studio` (Cloudflare Pages), using direct GitHub integration. No Account 4 dependency.
 

@@ -30,7 +30,7 @@ jobs:
             if(!response.ok||!data.success)throw Error('Cloudflare '+method+' domain failed (HTTP '+response.status+', codes '+JSON.stringify((data.errors||[]).map(e=>e.code))+').');
             return data.result;
           }
-          const worker='heavenlykey-studio', hostname='mediaeditor.heavenlykey.org';
+          const worker='heavenlykey-studio', hostname='mediaguru.heavenlykey.org';
           const domains=await api('');
           const current=domains.find(d=>d.hostname===hostname);
           if(current&&current.service!==worker)throw Error('Domain belongs to another Worker. Refusing to override existing route.');
@@ -68,20 +68,20 @@ jobs:
             if(!zone)console.log('ZONE NOT FOUND under authorized token');
             else{
               console.log('Zone status:',zone.status,'Cloudflare-assigned nameservers:',JSON.stringify(zone.name_servers||[]),'previous nameservers:',JSON.stringify(zone.original_name_servers||[]));
-              const dns=await inspect('https://api.cloudflare.com/client/v4/zones/'+zone.id+'/dns_records?name=mediaeditor.heavenlykey.org');
+              const dns=await inspect('https://api.cloudflare.com/client/v4/zones/'+zone.id+'/dns_records?name=mediaguru.heavenlykey.org');
               if(dns.ok){
                 for(const record of dns.result||[])console.log('Domain record:',JSON.stringify({id:record.id,type:record.type,proxied:record.proxied,content:record.type==='A'||record.type==='AAAA'?'[IP address masked]':record.content}));
               }else console.log('DNS RECORD READ NOT AUTHORIZED',JSON.stringify(dns.errorCodes));
             }
           }
-          const publicSite=await fetch('https://mediaeditor.heavenlykey.org/',{signal:AbortSignal.timeout(15000),redirect:'manual'}).catch(e=>({status:0,error:e.message}));
+          const publicSite=await fetch('https://mediaguru.heavenlykey.org/',{signal:AbortSignal.timeout(15000),redirect:'manual'}).catch(e=>({status:0,error:e.message}));
           console.log('Public origin HTTP:',publicSite.status,'location:',publicSite.headers?.get('location')||'');
           JS
 
       - name: Verify public MediaGuru routing and backend
         run: |
           node --input-type=module <<'JS'
-          const origin='https://mediaeditor.heavenlykey.org';
+          const origin='https://mediaguru.heavenlykey.org';
           for(const path of ['/','/api/health']){
             const response=await fetch(origin+path,{redirect:'error',cache:'no-store',signal:AbortSignal.timeout(20000)});
             if(response.status!==200)throw Error(path+' returned HTTP '+response.status);
