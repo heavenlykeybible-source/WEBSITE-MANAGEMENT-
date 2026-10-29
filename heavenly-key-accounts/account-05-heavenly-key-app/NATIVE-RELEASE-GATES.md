@@ -37,8 +37,9 @@
 - Testing: `test-account5-windows.yml`; unsigned self-contained executable is strictly an internal test artifact.
 - Signed candidate: `release-account5-windows.yml`.
 - Secrets: `HKEM_WINDOWS_PFX_BASE64`, `HKEM_WINDOWS_PFX_PASSWORD`.
-- Requires trusted Authenticode signature, verified SHA-256, exact-package malware scan, supported Windows installation/launch and owner approval.
-- The signed candidate is not yet a complete MSIX package. To offer an MSIX, a separately produced, signed and validated MSIX must be prepared and tested; the download service's `windows` endpoint currently expects an MSIX, not an EXE. **Do not publish the EXE at the MSIX endpoint.**
+- The packaging script `native/windows/package-msix.ps1` creates a full-trust MSIX with Windows package identity and local image assets. Its unsigned structure is checked in `test-account5-windows.yml`.
+- The gated release workflow assembles and signs an MSIX, matching the Windows `.msix` endpoint. The signed candidate must still pass signature verification, an exact-package malware scan, Windows 10/11 installation and launch tests, and owner approval before publication.
+- An unsigned MSIX test package and a signed EXE by themselves must never be published as a signed MSIX release.
 
 ## macOS
 - Testing: `test-account5-macos.yml`; unsigned test ZIP cannot be distributed publicly.
