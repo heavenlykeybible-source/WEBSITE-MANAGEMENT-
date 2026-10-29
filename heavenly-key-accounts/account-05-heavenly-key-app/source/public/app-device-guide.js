@@ -19,7 +19,7 @@
     if (platform === 'iphone') return /iPhone|iPod/i.test(agent);
     if (platform === 'ipad') return isIPad;
     if (platform === 'windows') return /Windows NT/i.test(agent);
-    if (platform === 'mac') return /Macintosh|Mac OS X/i.test(agent) && !isIPad;
+    if (platform === 'mac') return /Macintosh|Mac OS X/i.test(agent) && !isIPad && !/iPhone|iPod|iPad|Android/i.test(agent);
     return false;
   }
   function status(message) {
