@@ -85,13 +85,8 @@ export default {
   }
   // Extensionless public URLs mapped to the original, unchanged static assets.
   if(request.method==="GET"||request.method==="HEAD"){
-   const routes={"/":"/index.html","/install":"/install/index.html","/kingdom-quest":"/kingdom-quest.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
+   const routes={"/":"/index.html","/install":"/install/index.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
    const pathname=url.pathname.replace(/\/$/,"")||"/";
-   if(pathname==="/kingdom-quest.html"){
-    const redirect=new URL(url);
-    redirect.pathname="/kingdom-quest";
-    return Response.redirect(redirect.toString(),308);
-   }
    if(routes[pathname]){
     const assetUrl=new URL(routes[pathname],url.origin);
     return env.ASSETS.fetch(new Request(assetUrl,request));
