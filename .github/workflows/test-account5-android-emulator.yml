@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api-level: [24, 29]
+        api-level: [24, 29, 35]
     defaults:
       run:
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/android
