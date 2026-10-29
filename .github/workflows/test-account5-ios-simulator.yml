@@ -1,0 +1,24 @@
+name: Test Account 5 iPhone iPad native build
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/native/ios/**'
+      - '.github/workflows/test-account5-ios-simulator.yml'
+permissions:
+  contents: read
+jobs:
+  ios-simulator-build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate iOS project
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/ios
+        run: xcodegen generate
+      - name: Compile iOS/iPadOS for simulator only
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/ios
+        run: |
+          xcodebuild -project HeavenlyKey.xcodeproj -scheme HeavenlyKey -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
