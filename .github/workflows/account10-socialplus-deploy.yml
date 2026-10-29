@@ -57,6 +57,16 @@ jobs:
           node -e "const fs=require('node:fs');const html=fs.readFileSync('dashboard.html','utf8');if(!html.includes('chatsTab')||!html.includes('postsTab')){console.error('Live dashboard is not the new SocialPlus app');process.exit(1)}"
           curl --fail --show-error --silent https://socialplus.heavenlykey.org/editorial-studio.js > editorial-live.js
           node --check editorial-live.js
+      - name: Authenticated live database, media and draft API smoke tests
+        env:
+          ADMIN_SMOKE_TOKEN: ${{ secrets.ACCOUNT10_SMOKE_ADMIN_TOKEN }}
+        run: |
+          test -n "$ADMIN_SMOKE_TOKEN" || { echo "Missing smoke-test admin token secret"; exit 1; }
+          curl --fail --show-error --silent --retry 3 -H "Authorization: Bearer $ADMIN_SMOKE_TOKEN" https://socialplus.heavenlykey.org/api/storage/readiness > storage-readiness.json
+          node -e "const fs=require('node:fs');const d=JSON.parse(fs.readFileSync('storage-readiness.json','utf8'));for(const x of ['dbBound','mediaBound','assetsBound','databaseQueryOk','mediaBucketReadOk'])if(d[x]!==true){console.error('Missing or inaccessible storage:',x);process.exit(1)}"
+          curl --fail --show-error --silent -H "Authorization: Bearer $ADMIN_SMOKE_TOKEN" https://socialplus.heavenlykey.org/api/posts > posts-smoke.json
+          curl --fail --show-error --silent -H "Authorization: Bearer $ADMIN_SMOKE_TOKEN" https://socialplus.heavenlykey.org/api/posts/queue > queue-smoke.json
+          node -e "const fs=require('node:fs');for(const file of ['posts-smoke.json','queue-smoke.json']){const d=JSON.parse(fs.readFileSync(file,'utf8'));if(!Array.isArray(d.items)||d.publishingConnected!==false){console.error('Unexpected or unsafe draft endpoint response',file);process.exit(1)}}"
       - name: Confirm unauthenticated API requests are rejected
         run: |
           status=$(curl --silent --output api-unauthorized.json --write-out '%{http_code}' https://socialplus.heavenlykey.org/api/posts)
