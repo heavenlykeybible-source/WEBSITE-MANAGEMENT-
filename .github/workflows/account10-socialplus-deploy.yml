@@ -34,6 +34,16 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Validate source before production deployment
         run: npm run verify:local
+      - name: Check remote D1 schema before deployment
+        run: |
+          npx wrangler d1 execute heavenlykey-social-management-db --remote --command "SELECT COUNT(*) AS total FROM social_posts"
+          npx wrangler d1 execute heavenlykey-social-management-db --remote --command "SELECT COUNT(*) AS total FROM conversations"
+          npx wrangler d1 execute heavenlykey-social-management-db --remote --command "SELECT COUNT(*) AS total FROM webhook_events"
+          npx wrangler d1 execute heavenlykey-social-management-db --remote --command "SELECT COUNT(*) AS total FROM social_accounts"
+      - name: Confirm admin secret exists without revealing its value
+        run: |
+          npx wrangler secret list --name heavenly-key-social-management > worker-secrets.json
+          node -e "const fs=require('fs');const raw=fs.readFileSync('worker-secrets.json','utf8');const list=JSON.parse(raw);if(!Array.isArray(list)||!list.some(x=>x.name==='ADMIN_TOKEN')){console.error('Missing Worker ADMIN_TOKEN secret');process.exit(1)}"
       - name: Deploy approved Worker with configured D1, R2 and assets
         run: npx wrangler deploy
       - name: Verify public health endpoint (not a launch-readiness claim)
