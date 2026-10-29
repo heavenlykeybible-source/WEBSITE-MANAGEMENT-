@@ -7,7 +7,7 @@ const list=document.getElementById('topic-results');
 const count=document.getElementById('topic-count');
 if(!input||!list||!count)return;
 const books=Array.from(document.getElementById('book').options).map(o=>[o.text,o.value]);
-function urlFor(ref){const match=ref.match(/^(.+) (\\d+):(\\d+)$/);if(!match)return null;const code=books.find(b=>b[0]===match[1])?.[1];if(!code)return null;const url=new URL(location.href);url.searchParams.set('book',code);url.searchParams.set('chapter',match[2]);url.searchParams.set('verse',match[3]);url.hash='commentary-heading';return url.toString()}
+function urlFor(ref){const match=ref.match(/^(.+) (\d+):(\d+)$/);if(!match)return null;const code=books.find(b=>b[0]===match[1])?.[1];if(!code)return null;const url=new URL(location.href);url.searchParams.set('book',code);url.searchParams.set('chapter',match[2]);url.searchParams.set('verse',match[3]);url.hash='commentary-heading';return url.toString()}
 function render(){const q=input.value.trim().toLowerCase();list.replaceChildren();let shown=0;for(const [name,refs] of topics){if(q&&!name.toLowerCase().includes(q))continue;shown++;const item=document.createElement('li');const heading=document.createElement('strong');heading.textContent=name;item.append(heading);const links=document.createElement('p');for(const ref of refs){const url=urlFor(ref);if(!url)continue;const a=document.createElement('a');a.href=url;a.textContent=ref;a.style.marginRight='12px';links.append(a)}item.append(links);list.append(item)}count.textContent=shown+' topics shown. Starter index; references await canonical verification.'}
 input.addEventListener('input',render);render();
 })();
