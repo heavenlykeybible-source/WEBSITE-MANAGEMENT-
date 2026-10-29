@@ -32,3 +32,22 @@ body:has(.quiz-shell){background:linear-gradient(155deg,#ffdc35 0%,#fff5ad 23%,#
 .quiz-progress-fill{background:#155de0}
 .quiz-sound-toggle{background:#155de0;color:#fff;border:2px solid #ffcf24}
 @media(max-width:430px){.quiz-shell{padding:16px 10px 55px}}
+
+/* Illustrated championship layout, without dove artwork */
+.quiz-shell{max-width:800px;box-shadow:0 18px 48px #142d6560;overflow:hidden}
+.quiz-hero{position:relative;text-align:center;background:linear-gradient(155deg,#fff18a,#ffd128 55%,#f6aa12);border:4px solid #fff2a2;border-radius:24px;padding:20px 12px 16px;margin-bottom:18px;box-shadow:inset 0 2px 12px #ffffffa0,0 8px 0 #ae142a}
+.quiz-hero-icons{display:flex;justify-content:space-evenly;align-items:center;font-size:clamp(2.2rem,9vw,4rem);filter:drop-shadow(0 4px 2px #6d3e2150)}
+.quiz-hero h1{font-size:clamp(2rem,7vw,3.8rem);letter-spacing:.035em;line-height:1.08;margin:12px 0;color:#1044a9;text-shadow:2px 2px #fff,3px 4px #ff9c16}
+.quiz-hero .quiz-tagline{font-size:clamp(.72rem,2.6vw,1rem);letter-spacing:.06em;color:#ad1027;font-weight:900;margin:12px 0}
+.quiz-version{display:inline-block;background:#124ab6;color:#fff;padding:7px 15px;border-radius:999px;font-weight:750;font-size:.8rem}
+.quiz-card{box-shadow:0 12px 0 #850e22,0 18px 32px #40051e66;padding:clamp(16px,4vw,30px)}
+.quiz-card h2{text-align:center;background:#fff1b0;border:2px solid #efbd23;border-radius:16px;padding:18px 12px;font-size:clamp(1.2rem,4vw,1.65rem)}
+.quiz-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.quiz-choices .quiz-button{border-width:3px;box-shadow:0 5px 0 #0b3e9a;font-weight:800;min-height:74px;text-align:center;transition:transform .12s}
+.quiz-choices .quiz-button:active:not(:disabled){transform:translateY(3px)}
+.quiz-choices .quiz-answer-correct,.quiz-choices .quiz-answer-correct:disabled{box-shadow:0 5px 0 #075226}
+.quiz-choices .quiz-answer-incorrect,.quiz-choices .quiz-answer-incorrect:disabled{box-shadow:0 5px 0 #8b1120}
+.quiz-scoreboard{background:#fff1ac;border:2px solid #eab92d;border-radius:14px;padding:12px;margin:12px 0;color:#103c91;font-weight:800}
+.quiz-result{box-shadow:0 5px 0 #b9b9b9}.quiz-result .quiz-button{background:#1456cf;color:#fff;border-color:#ffcc29;text-align:center}
+.quiz-progress{height:15px;border:2px solid #fff;border-radius:20px}
+@media(max-width:520px){.quiz-choices{grid-template-columns:1fr}.quiz-choices .quiz-button{min-height:62px}.quiz-hero{padding:12px 8px}.quiz-hero-icons{font-size:2.5rem}}
