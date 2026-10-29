@@ -68,7 +68,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   }
   return reply({received:true,signatureVerified:true,stored:true,duplicate:!newlyStored,processed:false,importQueued:autoProcess,eventEntries:count,eventCategories:[...new Set(types)],sent:false});
  }
- if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false});
+ if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false,detail:'Public health response does not verify deployment readiness; run authenticated diagnostics and live provider tests.'});
  if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
  if(req.method==='OPTIONS')return reply({error:'Cross-origin API access is disabled'},403);
  const type=req.headers.get('content-type')||'';
