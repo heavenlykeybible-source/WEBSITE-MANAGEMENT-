@@ -106,7 +106,7 @@ function renderPlan(){
  el("plan-passages").replaceChildren();
  for(const passage of plan.days[planDay]){
   const button=document.createElement("button");button.type="button";button.textContent=passage.book+" "+passage.chapter;
-  button.addEventListener("click",()=>{book.value=passage.book;chapters(passage.chapter);loadChapter().then(()=>{const target=el("verses").querySelector('[data-verse="'+Number(verse.number)+'"]');(target||el("reader")).scrollIntoView({behavior:"smooth",block:"center"});});});
+  button.addEventListener("click",()=>{book.value=passage.book;chapters(passage.chapter);loadChapter().then(loaded=>{if(!loaded)return;const target=el("verses").querySelector('[data-verse="'+Number(verse.number)+'"]');(target||el("reader")).scrollIntoView({behavior:"smooth",block:"center"});});});
   el("plan-passages").append(button);
  }
  message("plan-day","Day "+(planDay+1)+" of "+plan.days.length);
@@ -251,7 +251,7 @@ async function loadChapter() {
  const centerReferences=await getCuratedReferences();
  const bookCode=codes[books.findIndex(x=>x[0]===name)];
 
- if(token !== chapterRequest) return;
+ if(token !== chapterRequest) return false;
  const verses = Array.isArray(data.verses) ? data.verses : [];
  const valid = verses.filter(v => v.isPlaceholder === false && typeof v.text === "string" && v.text.trim());
  narrationText=valid.map(v=>v.text);el("narrate").disabled=!narrationText.length;
@@ -271,7 +271,8 @@ async function loadChapter() {
    link.setAttribute("aria-label","Read related passage "+cross[i]);
    link.addEventListener("click",()=>{
     book.value=match[1];chapters(Number(match[2]));
-    loadChapter().then(()=>{
+    loadChapter().then(loaded=>{
+     if(!loaded)return;
      const targetVerse=el("verses").querySelector('[data-verse="'+Number(match[3])+'"]');
      if(targetVerse)targetVerse.scrollIntoView({behavior:"smooth",block:"center"});else message("reader-status","Related chapter opened; the referenced verse is unavailable in this edition.");
     });
@@ -286,8 +287,8 @@ async function loadChapter() {
  shareText = name+" "+num+" (KJV)\n\n"+valid.map(v=>v.number+" "+v.text).join("\n")+"\n\nHEAVENLY KEY BIBLE";
  el("share").disabled = false;
  }
-
- } catch { if(token===chapterRequest)message("reader-status","This chapter could not be loaded. Check your connection and try again."); }
+ return valid.length>0;
+ } catch { if(token===chapterRequest)message("reader-status","This chapter could not be loaded. Check your connection and try again."); return false; }
 }
 function renderTracks() {
  const q = el("search").value.trim().toLowerCase(); el("tracks").replaceChildren();
