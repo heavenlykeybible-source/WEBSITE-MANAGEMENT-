@@ -264,7 +264,7 @@ async function loadChapter() {
    const match=/^(.+?) (\d+):(\d+)$/.exec(cross[i]);
    const target=match&&books.find(entry=>entry[0]===match[1]);
    if(!target||Number(match[2])<1||Number(match[2])>target[1]||Number(match[3])<1)continue;
-   if(i)refs.append(document.createTextNode(" · "));
+   if(refs.querySelector(".reference-link"))refs.append(document.createTextNode(" · "));
    const link=document.createElement("button");link.type="button";
    link.className="reference-link";link.textContent=cross[i];
    link.setAttribute("aria-label","Read related passage "+cross[i]);
@@ -272,7 +272,7 @@ async function loadChapter() {
     book.value=match[1];chapters(Number(match[2]));
     loadChapter().then(()=>{
      const targetVerse=el("verses").querySelector('[data-verse="'+Number(match[3])+'"]');
-     if(targetVerse)targetVerse.scrollIntoView({behavior:"smooth",block:"center"});
+     if(targetVerse)targetVerse.scrollIntoView({behavior:"smooth",block:"center"});else message("reader-status","Related chapter opened; the referenced verse is unavailable in this edition.");
     });
    });
    refs.append(link);
