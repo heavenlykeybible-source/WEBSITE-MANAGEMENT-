@@ -25,7 +25,7 @@ struct ResourcesView: View {
     private let resources = [
         Resource(id: "bible", title: "Authorised King James Version", symbol: "book.closed", address: "https://apps.heavenlykey.org/bible.html"),
         Resource(id: "walk", title: "My Walk With God", symbol: "figure.walk", address: "https://apps.heavenlykey.org/walk-offline.html"),
-        Resource(id: "study", title: "From Creation to Eternity", symbol: "books.vertical", address: "https://apps.heavenlykey.org/creation-to-eternity.html"),
+        Resource(id: "study", title: "Bible Study in My Walk With God", symbol: "books.vertical", address: "https://apps.heavenlykey.org/walk-offline.html#walk-bible-study"),
         Resource(id: "eternity", title: "Eternity in View", symbol: "sun.max", address: "https://apps.heavenlykey.org/eternity-in-view/"),
         Resource(id: "community", title: "Global Christian Social Network", symbol: "person.3", address: "https://global.heavenlykey.org"),
         Resource(id: "radio", title: "Heavenly Key Radio", symbol: "radio", address: "https://radio.heavenlykey.org")
