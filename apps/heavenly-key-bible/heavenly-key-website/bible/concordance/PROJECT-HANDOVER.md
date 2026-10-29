@@ -94,3 +94,10 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Updated scripts/concordance-draft-check.mjs to include chapter 9 and 232 entries, commit 8b6d23ad3ad19f0048dd2dbab4f7b93d010a31a0.
 - Connector-side structural check found 232 unique draft refs, all existing in GEN.json, and no identical explanations or missing explanation/context/application fields. Not an executed Node or browser test; non-Genesis cross-reference validity and doctrinal approval remain pending.
 - NEXT: Genesis 10 onward; more thorough text alignment and cross-reference validation, topical Concordance expansion, Node/browser tests. Separate Bible Dictionary is out of scope. No deployment without approval.
+
+## Latest checkpoint — Genesis 10
+- Added drafts/genesis-10.json: 32 original pending-review commentaries for Genesis 10:1–32. Commit 3c0f7ea6f8cc2be96661fbca559985368fef7dcd.
+- Regenerated study-notes-genesis-drafts.js from nine draft JSON files: 264 Genesis drafts, all pending doctrinal review. Commit 5a7490e934c6970e17f9e40452bb7fb5f4a553f2.
+- Extended scripts/concordance-draft-check.mjs to Genesis 10 and 264 records. Commit a932868cd1adc04fe85505aabab55d57f3730f67.
+- Connector-side check: 264 distinct draft refs, all present in GEN.json, no identical explanation strings or empty required fields. This does not constitute executed Node/browser tests, complete semantic alignment or validation of cross-references in other books.
+- NEXT: Genesis 11 onward, verify old Genesis 1–5 verse-specific content accuracy, implement robust canonical cross-reference validation and browser QA. Focus only on Concordance and Commentary; independent Bible Dictionary untouched. No deployment without approval.
