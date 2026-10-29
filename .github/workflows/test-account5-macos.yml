@@ -21,4 +21,22 @@ jobs:
       - name: Build unsigned Mac application for verification
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/macos
         run: |
-          xcodebuild -project HeavenlyKeyMac.xcodeproj -scheme HeavenlyKeyMac -configuration Debug -sdk macosx CODE_SIGNING_ALLOWED=NO build
+          xcodebuild -project HeavenlyKeyMac.xcodeproj -scheme HeavenlyKeyMac -configuration Debug -sdk macosx -derivedDataPath "$PWD/test-derived" CODE_SIGNING_ALLOWED=NO build
+      - name: Package unsigned Mac build for testing only
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/macos
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$PWD/test-derived/Build/Products/Debug/HeavenlyKeyMac.app"
+          test -d "$app"
+          ditto -c -k --keepParent "$app" ./heavenly-key-macos-unsigned-test.zip
+          shasum -a 256 ./heavenly-key-macos-unsigned-test.zip | tee ./heavenly-key-macos-unsigned-test.zip.sha256
+      - name: Retain nonproduction Mac testing archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavenly-key-account5-macos-test-build-unsigned
+          path: |
+            heavenly-key-accounts/account-05-heavenly-key-app/native/macos/heavenly-key-macos-unsigned-test.zip
+            heavenly-key-accounts/account-05-heavenly-key-app/native/macos/heavenly-key-macos-unsigned-test.zip.sha256
+          retention-days: 14
+          if-no-files-found: error
