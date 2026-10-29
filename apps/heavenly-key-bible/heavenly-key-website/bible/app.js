@@ -148,11 +148,11 @@ async function importBackup(){
    if(!verse||verse.number!==entry.number||verse.isPlaceholder!==false||typeof verse.text!=="string"||!verse.text.trim())throw Error("A backup verse does not exist in the KJV.");
    verified.push({...entry,text:verse.text});
   }
-  const merged=studyTools.mergeEntries(studyEntries(),verified),previousProgress=planProgress();
+  const originalEntries=studyEntries(),merged=studyTools.mergeEntries(originalEntries,verified),previousProgress=planProgress();
   const progress={};for(const plan of studyTools.plans)progress[plan.id]=[...new Set([...previousProgress[plan.id],...parsed.progress[plan.id]])].sort((a,b)=>a-b);
   if(!save("hk-bible-study",merged))throw Error("Browser storage could not save your imported notes.");
   renderStudy();
-  if(!save("hk-bible-plan-progress",progress)){message("backup-status","Your notes were imported, but reading progress could not be saved.");return;}
+  if(!save("hk-bible-plan-progress",progress)){const restored=save("hk-bible-study",originalEntries);renderStudy();message("backup-status",restored?"Reading progress could not be saved, so the imported notes were rolled back. Try again after freeing browser storage.":"Reading progress could not be saved, and restoring the previous notes failed. Export a backup of your notes now.");return;}
   renderPlan();el("study-import").value="";
   message("backup-status","Backup imported. Your existing notes were kept when the same verse appeared twice.");
  }catch(error){message("backup-status",error instanceof SyntaxError?"This file is not a valid JSON study backup.":error.message||"The backup could not be imported.");}
