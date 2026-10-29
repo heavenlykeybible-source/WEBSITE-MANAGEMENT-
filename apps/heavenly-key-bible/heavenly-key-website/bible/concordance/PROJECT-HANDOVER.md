@@ -194,3 +194,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Browser bundle now contains 656 Genesis draft entries, commit 15678edf82c6d1de0509ba1c3ac6813045d989e6.
 - Draft checker includes Genesis 24 and expects 656 entries, commit e144f2733abf1bccf0a23a6a9b4e9f77734e71d5.
 - Next Genesis 25, execute Node/browser validation, verify cross-references against the complete KJV corpus and exercise batch generator. Human doctrinal review remains outstanding. No deployment or Bible Dictionary changes.
+
+## Latest checkpoint — Genesis 25
+- Added 34 verse-specific pending-review drafts Genesis 25:1–34, commit 25cd8246d33267aca63ba4a9596ff11142a322aa, covering Keturah's family, Abraham's death, Ishmael's genealogy, and Isaac's twins.
+- Browser bundle updated to 690 Genesis draft entries, commit 3799bf2be43ebee8434734dde688995c97c9f1a7.
+- Draft checker includes Genesis 25 and expects 690, commit 8bd12ba05772090f3710139cead019346eb688c9.
+- Next Genesis 26; execute Node/browser QA, verify full-canon cross-references and batch generator. Human doctrinal review pending. No deployment; Bible Dictionary unchanged.
