@@ -87,8 +87,8 @@ function renderDictionary(){
     });
     actions.append(concordanceButton);
    }
-   const languageEntries=(state.originalGuide||[]).filter(item=>String(item.english).trim().toLowerCase()===String(e.term).trim().toLowerCase());
-   const languageButtons=document.createElement('div');languageButtons.className='dict-language-buttons';
+   const languageEntries=(state.originalGuide||[]).filter(item=>String(item.english).trim().toLocaleLowerCase()===String(e.term).trim().toLocaleLowerCase());
+   const languageButtons=document.createElement('div');languageButtons.className='dict-language-buttons';languageButtons.setAttribute('aria-label','Original-language meanings for '+e.term);
    for(const language of ['Hebrew','Greek']){
     const button=document.createElement('button');button.type='button';button.className='dict-language-button';button.textContent=language+' ▾';button.setAttribute('aria-expanded','false');
     const panel=document.createElement('div');panel.className='dict-language-panel';panel.hidden=true;panel.id='dict-'+String(e.term).toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+language.toLowerCase();button.setAttribute('aria-controls',panel.id);
