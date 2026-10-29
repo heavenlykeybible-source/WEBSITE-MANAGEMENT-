@@ -475,6 +475,14 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const result=await env.DB.prepare('SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts ORDER BY created_at DESC LIMIT 100').all();
   return reply({items:result.results,publishingConnected:false});
  }
+ if(u.pathname==='/api/posts/queue'&&req.method==='PATCH'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(typeof data?.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id))return reply({error:'Valid draft id required'},400);
+  if(data.action!=='unschedule')return reply({error:'Only unschedule is supported; external publishing is disabled'},400);
+  const result=await env.DB.prepare("UPDATE social_posts SET scheduled_at=NULL WHERE id=? AND status='draft' AND scheduled_at IS NOT NULL").bind(data.id).run();
+  if(!result.meta?.changes)return reply({error:'Scheduled draft not found or already changed'},404);
+  return reply({id:data.id,status:'draft',scheduledAt:null,published:false});
+ }
  if(u.pathname==='/api/posts/queue'&&req.method==='GET'){
   const result=await env.DB.prepare("SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts WHERE status='draft' AND scheduled_at IS NOT NULL ORDER BY scheduled_at ASC LIMIT 100").all();
   const now=Date.now();
