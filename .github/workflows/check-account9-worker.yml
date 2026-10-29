@@ -9,15 +9,36 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     environment: account9-staging
     steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: |
-          node --input-type=module <<'JS'
-          const base='https://api.cloudflare.com/client/v4/accounts/ceb3b48449319950191a4f6bae9b8b82';
-          for(const path of ['/workers/subdomain','/workers/scripts','/pages/projects/heavenlykey-studio']){const r=await fetch(base+path,{headers:{authorization:'Bearer '+process.env.CF_TOKEN}}),d=await r.json();console.log(JSON.stringify({path,status:r.status,success:d.success,result:r.ok?(path==='/workers/scripts'?d.result.map(x=>({id:x.id})):path==='/workers/subdomain'?d.result:{name:d.result?.name,subdomain:d.result?.subdomain}):undefined,codes:d.errors?.map(x=>x.code)}));}
-          JS
+      - name: Inspect existing Worker and public MediaGuru routing
         env:
           CF_TOKEN: ${{ secrets.ACCOUNT9_CF_API_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          import {resolveNs,resolveCname,resolve4} from 'node:dns/promises';
+          const base='https://api.cloudflare.com/client/v4/accounts/ceb3b48449319950191a4f6bae9b8b82';
+          async function api(path){
+            const r=await fetch(base+path,{headers:{authorization:'Bearer '+process.env.CF_TOKEN},signal:AbortSignal.timeout(15000)});
+            const d=await r.json();
+            if(!r.ok||!d.success){console.log('READ FAILED',path,r.status,JSON.stringify(d.errors?.map(x=>x.code)));return null}
+            return d.result;
+          }
+          const sub=await api('/workers/subdomain');
+          const scripts=await api('/workers/scripts');
+          console.log('WORKER EXISTS',Array.isArray(scripts)&&scripts.some(x=>x.id==='heavenlykey-studio'));
+          console.log('WORKERS SUBDOMAIN',sub?.subdomain||'unavailable');
+          for(const [name,fn] of [['heavenlykey.org',resolveNs],['mediaguru.heavenlykey.org',resolveCname],['mediaguru.heavenlykey.org',resolve4]]){
+            try{console.log('DNS',name,JSON.stringify(await fn(name)))}catch(e){console.log('DNS',name,e.code)}
+          }
+          const urls=['https://mediaguru.heavenlykey.org/','https://mediaguru.heavenlykey.org/api/health'];
+          if(sub?.subdomain&&/^[a-z0-9-]+$/.test(sub.subdomain))urls.push('https://heavenlykey-studio.'+sub.subdomain+'.workers.dev/','https://heavenlykey-studio.'+sub.subdomain+'.workers.dev/api/health');
+          for(const url of urls){
+            try{
+              const r=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(15000)});
+              const body=await r.text();
+              console.log('PUBLIC',JSON.stringify({url,status:r.status,type:r.headers.get('content-type'),release:r.headers.get('x-heavenly-key-release'),server:r.headers.get('server'),location:r.headers.get('location'),bodyPreview:body.slice(0,400)}));
+            }catch(e){console.log('PUBLIC FAILED',url,e.cause?.code||e.message)}
+          }
+          JS
