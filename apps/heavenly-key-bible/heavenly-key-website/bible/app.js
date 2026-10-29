@@ -170,9 +170,10 @@ function renderStudy() {
  for(const entry of entries) {
   const card=document.createElement("article"), title=document.createElement("h3"), text=document.createElement("p"), note=document.createElement("p"), open=document.createElement("button"), remove=document.createElement("button");
   title.textContent=entry.book+" "+entry.chapter+":"+entry.number; text.textContent=entry.text; note.textContent=typeof entry.note==="string"?entry.note:"";
-  open.textContent="Open chapter"; open.type="button"; open.addEventListener("click",()=>{if(!books.some(x=>x[0]===entry.book))return;book.value=entry.book;chapters(entry.chapter);loadChapter().then(()=>{const target=el("verses").querySelector('[data-verse="'+entry.number+'"]');(target||el("reader")).scrollIntoView({behavior:"smooth",block:"center"});});});
+  open.textContent="Open verse"; open.type="button"; open.addEventListener("click",()=>{if(!books.some(x=>x[0]===entry.book))return;book.value=entry.book;chapters(entry.chapter);loadChapter().then(()=>{const target=el("verses").querySelector('[data-verse="'+entry.number+'"]');(target||el("reader")).scrollIntoView({behavior:"smooth",block:"center"});});});
+  const edit=document.createElement("button");edit.type="button";edit.textContent="Edit note";edit.addEventListener("click",()=>{selectedVerse={key:entry.key,book:entry.book,chapter:entry.chapter,number:entry.number,text:entry.text};el("study-editor").hidden=false;el("study-note").value=typeof entry.note==="string"?entry.note:"";message("selected-reference",entry.book+" "+entry.chapter+":"+entry.number+" (KJV)");message("selected-text",entry.text);el("selected-text").hidden=false;message("save-status","Edit your note and select Save.");el("study-editor").scrollIntoView({behavior:"smooth",block:"center"});});
   remove.textContent="Remove"; remove.type="button"; remove.addEventListener("click",()=>{if(save("hk-bible-study",studyEntries().filter(x=>x.key!==entry.key)))renderStudy();else message("study-status","Your browser could not save this change.");});
-  card.className="study-card";card.append(title,text,note,open,remove);el("saved-verses").append(card);
+  card.className="study-card";card.append(title,text,note,open,edit,remove);el("saved-verses").append(card);
  }
 }
 function selectVerse(verse,name,num) {
