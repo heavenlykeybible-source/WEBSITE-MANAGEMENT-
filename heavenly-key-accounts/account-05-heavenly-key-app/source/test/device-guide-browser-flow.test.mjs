@@ -24,7 +24,7 @@ async function simulate({device='android',userAgent='Mozilla/5.0 (Linux; Android
  const origin='https://apps.heavenlykey.org';
  const location={origin,protocol:'https:',search:'?app='+app,pathname:'/download/'+device+'/',assign(url){downloads.push(url)}};
  const window={location,addEventListener(event,callback){listeners[event]=callback}};
- const navigator={userAgent,maxTouchPoints:0,serviceWorker:null};
+ const navigator={userAgent,maxTouchPoints:0};
  const fetch=async (url,options={})=>{
   requests.push({url,method:options.method||'GET'});
   if(url==='/app-downloads.json')return {
