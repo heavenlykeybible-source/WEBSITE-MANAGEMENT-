@@ -1,0 +1,80 @@
+name: Package Account 5 Signed and Notarized Mac Release Candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mac-signed-candidate:
+    runs-on: macos-15
+    timeout-minutes: 60
+    environment: production-release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require Apple signing and notarization secrets
+        env:
+          P12_BASE64: ${{ secrets.HKEM_MAC_DEVELOPER_ID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.HKEM_MAC_DEVELOPER_ID_P12_PASSWORD }}
+          DEVELOPER_ID: ${{ secrets.HKEM_MAC_DEVELOPER_ID }}
+          APPLE_ID: ${{ secrets.HKEM_APPLE_NOTARY_ID }}
+          APP_PASSWORD: ${{ secrets.HKEM_APPLE_NOTARY_PASSWORD }}
+          TEAM_ID: ${{ secrets.HKEM_APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          for value in "$P12_BASE64" "$P12_PASSWORD" "$DEVELOPER_ID" "$APPLE_ID" "$APP_PASSWORD" "$TEAM_ID"; do
+            test -n "$value" || { echo "::error::Missing required Apple signing/notarization secret"; exit 1; }
+          done
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate native macOS project and compile
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/macos
+        run: |
+          set -euo pipefail
+          xcodegen generate
+          xcodebuild -project HeavenlyKeyMac.xcodeproj -scheme HeavenlyKeyMac -configuration Release -sdk macosx -derivedDataPath "$PWD/release-derived" CODE_SIGNING_ALLOWED=NO build
+      - name: Sign and notarize a Mac DMG release candidate
+        shell: bash
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/macos
+        env:
+          P12_BASE64: ${{ secrets.HKEM_MAC_DEVELOPER_ID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.HKEM_MAC_DEVELOPER_ID_P12_PASSWORD }}
+          DEVELOPER_ID: ${{ secrets.HKEM_MAC_DEVELOPER_ID }}
+          APPLE_ID: ${{ secrets.HKEM_APPLE_NOTARY_ID }}
+          APP_PASSWORD: ${{ secrets.HKEM_APPLE_NOTARY_PASSWORD }}
+          TEAM_ID: ${{ secrets.HKEM_APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          keychain="$RUNNER_TEMP/account5-signing.keychain-db"
+          p12="$RUNNER_TEMP/account5-signing.p12"
+          keychain_password="$(openssl rand -hex 24)"
+          cleanup() {
+            security delete-keychain "$keychain" >/dev/null 2>&1 || true
+            rm -f "$p12"
+          }
+          trap cleanup EXIT
+          printf '%s' "$P12_BASE64" | base64 --decode > "$p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security import "$p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
+          security list-keychains -d user -s "$keychain" "$(security list-keychains -d user | tr -d ' "' | head -1)"
+          app="$PWD/release-derived/Build/Products/Release/HeavenlyKeyMac.app"
+          test -d "$app"
+          codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          mkdir -p release-candidate
+          hdiutil create -volname 'Heavenly Key' -srcfolder "$app" -ov -format UDZO "release-candidate/HeavenlyKeyMac.dmg"
+          xcrun notarytool submit "release-candidate/HeavenlyKeyMac.dmg" --apple-id "$APPLE_ID" --password "$APP_PASSWORD" --team-id "$TEAM_ID" --wait
+          xcrun stapler staple "release-candidate/HeavenlyKeyMac.dmg"
+          xcrun stapler validate "release-candidate/HeavenlyKeyMac.dmg"
+          shasum -a 256 "release-candidate/HeavenlyKeyMac.dmg" > "release-candidate/HeavenlyKeyMac.dmg.sha256"
+      - name: Retain signed and notarized DMG for manual security approval
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavenly-key-account5-mac-notarized-candidate
+          path: |
+            heavenly-key-accounts/account-05-heavenly-key-app/native/macos/release-candidate/HeavenlyKeyMac.dmg
+            heavenly-key-accounts/account-05-heavenly-key-app/native/macos/release-candidate/HeavenlyKeyMac.dmg.sha256
+          retention-days: 14
+          if-no-files-found: error
