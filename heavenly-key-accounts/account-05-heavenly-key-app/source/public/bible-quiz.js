@@ -6,7 +6,7 @@ function playCue(kind){
  try{
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
  audioContext=audioContext||new AC();
- if(audioContext.state==='suspended'){audioContext.resume().catch(()=>{});return;}
+ if(audioContext.state==='suspended'){audioContext.resume().catch(()=>{});}
  const notes={question:[[523,0],[659,.1]],correct:[[523,0],[659,.11],[784,.22]],incorrect:[[392,0],[330,.16]],complete:[[523,0],[659,.13],[784,.26],[1047,.39]]}[kind]||[];
  for(const [frequency,offset] of notes){const osc=audioContext.createOscillator(),gain=audioContext.createGain(),time=audioContext.currentTime+offset;osc.type='sine';osc.frequency.value=frequency;gain.gain.setValueAtTime(.0001,time);gain.gain.exponentialRampToValueAtTime(.065,time+.018);gain.gain.exponentialRampToValueAtTime(.0001,time+.19);osc.connect(gain).connect(audioContext.destination);osc.start(time);osc.stop(time+.2);}
  }catch(_){}
