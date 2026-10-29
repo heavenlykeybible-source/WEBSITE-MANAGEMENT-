@@ -4,3 +4,17 @@
 .quiz-tagline{font-size:1.1rem;font-weight:750;color:#153b73;margin:2px 0 8px}.quiz-sound-toggle{display:block;margin:0 0 16px auto;padding:9px 13px;border:1px solid #9fb7d8;border-radius:999px;background:#f2f7ff;color:#153b73;font:inherit;font-size:.85rem;font-weight:650;cursor:pointer}.quiz-sound-toggle:focus-visible{outline:3px solid #f5a623;outline-offset:3px}
 
 .quiz-history{display:grid;gap:10px;margin:18px 0}.quiz-history-entry{display:grid;gap:5px;border:1px solid #d8e4f3;border-radius:12px;padding:13px;background:#f8fbff;color:#17375e}.quiz-history-entry span{font-weight:650}.quiz-history-entry small{color:#53657d}
+
+/* Bible Champions championship palette: yellow, red and blue; no dove artwork. */
+body:has(.quiz-shell){background:linear-gradient(155deg,#ffdc35 0%,#fff5ad 23%,#f8fbff 43%,#eaf2ff 100%);color:#0d2355}
+.quiz-shell h1{color:#0751ce;text-transform:uppercase;font-weight:900;letter-spacing:.035em;text-shadow:1px 2px 0 #ffcc24}
+.quiz-tagline{color:#c41422;font-weight:800}
+.quiz-card{background:#fffdf6;border:3px solid #e4b929;box-shadow:0 14px 34px #9d172524}
+.quiz-button{background:#fff;border:2px solid #1465d9;color:#102f74;box-shadow:0 3px 0 #0b4fa11a}
+.quiz-button:hover,.quiz-button:focus-visible{background:#eaf2ff;border-color:#004bc5}
+.quiz-progress{background:#ffe6a6}.quiz-progress-fill{background:linear-gradient(90deg,#ec1729,#0759e8)}
+.quiz-sound-toggle{background:#084ec4;color:#fff;border-color:#f4c12f}
+.quiz-choices .quiz-answer-correct,.quiz-choices .quiz-answer-correct:disabled{background:#d7f6df;border:3px solid #16803b;color:#075b27;opacity:1;font-weight:800}
+.quiz-choices .quiz-answer-incorrect,.quiz-choices .quiz-answer-incorrect:disabled{background:#ffe1e5;border-color:#c9192b;color:#8c1020;opacity:1}
+.quiz-correct{background:#ddf8e5;border-color:#16803b}.quiz-wrong{background:#fff0f0;border-color:#c9192b}
+.quiz-history-entry{background:#fffef8;border-color:#e8ca65}
