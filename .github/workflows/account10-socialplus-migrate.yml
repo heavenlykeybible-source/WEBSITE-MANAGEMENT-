@@ -38,7 +38,7 @@ jobs:
         id: media_schema
         run: |
           npx wrangler d1 execute heavenlykey-social-management-db --remote --json --command "SELECT name FROM pragma_table_info('social_posts') WHERE name='media_id'" > media-schema.json
-          node -e "const fs=require('node:fs');const d=JSON.parse(fs.readFileSync('media-schema.json','utf8'));if(!Array.isArray(d)||!Array.isArray(d[0]?.results))process.exit(1);fs.appendFileSync(process.env.GITHUB_OUTPUT,'already_applied='+(d[0].results.length?'true':'false')+'\\n')"
+          node -e "const fs=require('node:fs');const d=JSON.parse(fs.readFileSync('media-schema.json','utf8'));if(!Array.isArray(d)||!Array.isArray(d[0]?.results))process.exit(1);fs.appendFileSync(process.env.GITHUB_OUTPUT,'already_applied='+(d[0].results.length?'true':'false')+String.fromCharCode(10))"
       - name: Apply post-media migration only if missing
         if: steps.media_schema.outputs.already_applied == 'false'
         run: npx wrangler d1 execute heavenlykey-social-management-db --remote --file=migrations/0007_post_media.sql
