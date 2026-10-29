@@ -112,6 +112,15 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   try{await env.MEDIA_BUCKET.put(key,bytes,{httpMetadata:{contentType:data.contentType},customMetadata:{source:'authenticated-operator'}})}catch{return reply({error:'Media storage write failed'},503)}
   return reply({id,contentType:data.contentType,size:bytes.length,stored:true,published:false,publicUrl:null},201);
  }
+ if(u.pathname==='/api/media/list'&&req.method==='GET'){
+  if(!env.MEDIA_BUCKET)return reply({error:'Media storage is not configured'},503);
+  const cursor=u.searchParams.get('cursor')||undefined;
+  if(cursor&&(cursor.length>1024||!/^[A-Za-z0-9_+\/=:-]+$/.test(cursor)))return reply({error:'Invalid page cursor'},400);
+  try{
+   const result=await env.MEDIA_BUCKET.list({prefix:'account10/uploads/',limit:50,...(cursor?{cursor}:{})});
+   return reply({items:result.objects.map(item=>({id:item.key.slice('account10/uploads/'.length),size:item.size,uploadedAt:item.uploaded.toISOString()})).filter(item=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id)),cursor:result.truncated?result.cursor:null,private:true});
+  }catch{return reply({error:'Unable to list private media'},503)}
+ }
  if(u.pathname==='/api/media'&&req.method==='GET'){
   if(!env.MEDIA_BUCKET)return reply({error:'Media storage is not configured'},503);
   const id=u.searchParams.get('id');if(!id||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))return reply({error:'Valid media id required'},400);
