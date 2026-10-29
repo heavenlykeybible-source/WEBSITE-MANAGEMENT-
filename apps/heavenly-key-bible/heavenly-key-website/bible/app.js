@@ -145,7 +145,7 @@ async function importBackup(){
   message("backup-status","Checking the backup verse references…");
   for(const entry of parsed.entries){
    const source=await getBook(entry.book),verse=source.chapters[String(entry.chapter)]?.[entry.number-1];
-   if(!verse||verse.number!==entry.number)throw Error("A backup verse does not exist in the KJV.");
+   if(!verse||verse.number!==entry.number||verse.isPlaceholder!==false||typeof verse.text!=="string"||!verse.text.trim())throw Error("A backup verse does not exist in the KJV.");
    verified.push({...entry,text:verse.text});
   }
   const merged=studyTools.mergeEntries(studyEntries(),verified),previousProgress=planProgress();
@@ -171,7 +171,7 @@ function renderStudy() {
   const card=document.createElement("article"), title=document.createElement("h3"), text=document.createElement("p"), note=document.createElement("p"), open=document.createElement("button"), remove=document.createElement("button");
   title.textContent=entry.book+" "+entry.chapter+":"+entry.number; text.textContent=entry.text; note.textContent=typeof entry.note==="string"?entry.note:"";
   open.textContent="Open verse"; open.type="button"; open.addEventListener("click",()=>{if(!books.some(x=>x[0]===entry.book))return;book.value=entry.book;chapters(entry.chapter);loadChapter().then(()=>{const target=el("verses").querySelector('[data-verse="'+entry.number+'"]');(target||el("reader")).scrollIntoView({behavior:"smooth",block:"center"});});});
-  const edit=document.createElement("button");edit.type="button";edit.textContent="Edit note";edit.addEventListener("click",()=>{selectedVerse={key:entry.key,book:entry.book,chapter:entry.chapter,number:entry.number,text:entry.text};el("study-editor").hidden=false;el("study-note").value=typeof entry.note==="string"?entry.note:"";message("selected-reference",entry.book+" "+entry.chapter+":"+entry.number+" (KJV)");message("selected-text",entry.text);el("selected-text").hidden=false;message("save-status","Edit your note and select Save.");el("study-editor").scrollIntoView({behavior:"smooth",block:"center"});});
+  const edit=document.createElement("button");edit.type="button";edit.textContent="Edit note";edit.addEventListener("click",()=>{selectedVerse={key:entry.key,book:entry.book,chapter:entry.chapter,number:entry.number,text:entry.text};el("study-editor").hidden=false;el("study-note").value=typeof entry.note==="string"?entry.note:"";message("selected-reference",entry.book+" "+entry.chapter+":"+entry.number+" (KJV)");message("selected-text",entry.text);el("selected-text").hidden=false;el("memory-toggle").textContent="Hide verse to practise";message("selected-reference",entry.book+" "+entry.chapter+":"+entry.number+" (KJV)");message("save-status","Edit your note and select Save.");el("study-editor").scrollIntoView({behavior:"smooth",block:"center"});});
   remove.textContent="Remove"; remove.type="button"; remove.addEventListener("click",()=>{if(!window.confirm("Remove saved verse "+entry.book+" "+entry.chapter+":"+entry.number+" and its note?"))return;if(save("hk-bible-study",studyEntries().filter(x=>x.key!==entry.key))){if(selectedVerse?.key===entry.key){selectedVerse=null;el("study-editor").hidden=true;}renderStudy();}else message("study-status","Your browser could not save this change.");});
   card.className="study-card";card.append(title,text,note,open,edit,remove);el("saved-verses").append(card);
  }
