@@ -170,3 +170,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Browser bundle updated to 511 unique draft entries, commit de72905ed92b8ded4db12f7fc3dec7abcd4dbb95. Connector-side inspection found no missing explanation/context/application/reference arrays.
 - Draft validator updated to include Genesis 20 and expect 511 entries, commit 4ccc06033c22cdc376075dd1a2a83837df45b4aa.
 - Actual Node execution, browser testing, canonical full-canon reference checks and human doctrinal review remain outstanding. Next Genesis 21. No deployment or Bible Dictionary changes.
+
+## Latest checkpoint — Genesis 21
+- Added 34 original verse-specific pending-review drafts Genesis 21:1–34, commit 29e564dc780b4ca159f75bf1da1e634c8357ab46. Covers Isaac's birth, Hagar and Ishmael's rescue, and the Beer-sheba covenant, with care not to normalize family abandonment.
+- Updated browser notes bundle to 545 draft entries, commit 7bf7eb57a75f45da9b3e733557de05acce12a0c4.
+- Updated draft validator to include Genesis 21 and expect 545, commit 3b4a72a2f8991ce63ef975f6874af471fd66209e.
+- Next Genesis 22 and actual execution of Node/browser QA, canonical reference checks and batch generator. All entries pending doctrinal review. No deployment or Bible Dictionary changes.
