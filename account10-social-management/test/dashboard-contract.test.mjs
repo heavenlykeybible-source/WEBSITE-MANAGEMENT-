@@ -20,3 +20,13 @@ test('dashboard retains its post draft editor', () => {
   assert.match(html, /socialplus-post-editor-ready/);
   assert.match(html, /\/api\/posts/);
 });
+
+test('scheduled draft queue supports reviewing, rescheduling and unscheduling', () => {
+  assert.match(html, /function addScheduledQueue\(\)/);
+  assert.match(html, /api\('\/api\/posts\/queue'/);
+  assert.match(html, /method:'PUT'/);
+  assert.match(html, /method:'PATCH'/);
+  assert.match(html, /date\.toISOString\(\)/);
+  assert.match(html, /Remove schedule/);
+  assert.match(html, /Reschedule/);
+});
