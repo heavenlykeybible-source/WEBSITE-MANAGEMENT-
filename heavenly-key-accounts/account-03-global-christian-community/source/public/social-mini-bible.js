@@ -30,9 +30,7 @@ export function mountMiniBible(host){
  function fillVerses(preferred=1){select.replaceChildren();for(const v of loaded?.chapters?.[chapter.value]||[]){if(v.isPlaceholder)continue;const o=tag('option','','Verse '+v.number);o.value=String(v.number);select.append(o)}select.value=String(preferred);if(!select.value)select.selectedIndex=0;render()}
  book.onchange=()=>void loadBook();chapter.onchange=()=>fillVerses();select.onchange=render;
  const prev=tag('button','','‹ Previous'),next=tag('button','','Next ›');prev.type=next.type='button';
- const dictionary=tag('a','','Bible Dictionary'),concordance=tag('a','','Concordance');
- dictionary.href='https://onlinebible.heavenlykey.org/study-extensions.html#dictionary';concordance.href='https://onlinebible.heavenlykey.org/study-extensions.html#concordance';
- for(const a of [dictionary,concordance]){a.target='_blank';a.rel='noopener noreferrer'}
+ 
  const copy=tag('button','','Copy Verse'),share=tag('button','','Other Networks'),post=tag('button','','Post to Network'),member=tag('button','','Send to Member');for(const b of [copy,share,post,member])b.type='button';
  const full=tag('a','gc-bible-full','Read the Complete Bible · 66 Books ↗');full.href='https://onlinebible.heavenlykey.org/';full.target='_blank';full.rel='noopener noreferrer';
  const foot=tag('small','gc-bible-foot','Together we take Christ to the Nations of the World');
@@ -51,6 +49,6 @@ findMember.onclick=async()=>{const q=memberSearch.value.trim();if(q.length<2){st
 
  const note=tag('small','gc-bible-note','Choose any of the 66 books, chapters and verses. Bible text loads on demand. Posts are submitted only when you confirm. Member messages respect message-request approvals and recipient permissions.');
  status.setAttribute('role','status');status.setAttribute('aria-live','polite');
- controls.append(prev,next);tools.append(dictionary,concordance,copy,share,post,member);
+ controls.append(prev,next);tools.append(copy,share,post,member);
  content.append(book,chapter,select,reference,verse,controls,tools,memberPanel,full,status,note,foot);host.replaceChildren(title,content);void loadBook(23,1);
 }
