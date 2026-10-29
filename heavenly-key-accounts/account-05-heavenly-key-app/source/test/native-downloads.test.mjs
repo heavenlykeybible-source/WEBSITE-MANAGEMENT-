@@ -100,3 +100,20 @@ test('missing release file body cannot be counted or served',async()=>{
  assert.equal(response.status,503);
  assert.equal(calls.writes,0);
 });
+
+test('anonymous visitors can fetch verified native packages without cookies or authorization',async()=>{
+ const {env,calls}=environment();
+ const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android',{headers:{accept:'application/vnd.android.package-archive'}}),env);
+ assert.equal(response.status,200);
+ assert.match(response.headers.get('content-disposition'),/attachment/);
+ assert.equal(response.headers.get('set-cookie'),null);
+ assert.equal(calls.writes,1);
+});
+test('anonymous download access does not expose administrator download statistics',async()=>{
+ const {env,calls}=environment();
+ const download=await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env);
+ assert.equal(download.status,200);
+ const stats=await handleNativeDownloads(request('/api/admin/download-counts'),env);
+ assert.equal(stats.status,401);
+ assert.equal(calls.reads,0);
+});
