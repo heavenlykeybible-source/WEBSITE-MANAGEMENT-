@@ -62,6 +62,18 @@ try{
     if(state.width>state.viewport+12)throw Error('Horizontal overflow: '+JSON.stringify(state));
     if(state.unsafeLinks)throw Error('Inert javascript links: '+state.unsafeLinks);
     if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
+    // Check that eager-loaded, same-origin images needed for the visible UI
+    // have decoded successfully. This catches broken logos and app artwork
+    // that page-text and layout assertions alone cannot detect.
+    if(['directory','app-home','all-in-one'].includes(id)){
+      await page.locator('img:not([loading="lazy"])').evaluateAll(async imgs=>{
+        await Promise.all(imgs.map(img=>img.decode().catch(()=>{})));
+      });
+      const broken=await page.locator('img:not([loading="lazy"])').evaluateAll(imgs=>imgs
+        .filter(img=>img.getAttribute('src') && new URL(img.src,location.href).origin===location.origin && img.naturalWidth===0)
+        .map(img=>img.getAttribute('src')));
+      if(broken.length)throw Error('Broken same-origin app artwork: '+broken.join(', '));
+    }
     if(id==='directory' && size.name==='phone'){
      // Every advertised app must open its correct chooser and five device links.
      // Catch buttons that look correct but cannot be clicked on a small phone.
