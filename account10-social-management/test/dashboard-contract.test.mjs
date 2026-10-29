@@ -46,3 +46,10 @@ test('saved drafts can be edited without publishing', () => {
   assert.match(html, /Save draft edits/);
   assert.match(html, /Draft edited and saved internally/);
 });
+
+test('draft manager offers manual copying and safe deletion', () => {
+  assert.match(html, /Copy post text/);
+  assert.match(html, /manual publishing/);
+  assert.match(html, /Delete draft/);
+  assert.match(html, /method:'DELETE'/);
+});
