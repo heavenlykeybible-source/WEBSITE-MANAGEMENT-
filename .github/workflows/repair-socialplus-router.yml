@@ -1,0 +1,31 @@
+name: Repair SocialPlus existing public router
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: heavenlykey-portal-routing
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate routing patch
+        run: node --test tests/socialplus-router-repair.mjs
+      - name: Resolve Account 10 origin and patch existing Account 1 router
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT10_CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT10_CLOUDFLARE_API_TOKEN }}
+        run: node scripts/repair-socialplus-router.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: socialplus-router-before
+          path: socialplus-router-before.json
+          if-no-files-found: ignore

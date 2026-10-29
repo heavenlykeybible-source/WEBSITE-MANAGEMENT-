@@ -1,9 +1,13 @@
-const HK_DOMAIN_HOSTS=['controlroom.heavenlykey.org','radio.heavenlykey.org','meeting.heavenlykey.org','editor.heavenlykey.org'];
+const HK_DOMAIN_HOSTS=['controlroom.heavenlykey.org','radio.heavenlykey.org','meeting.heavenlykey.org','editor.heavenlykey.org','mediaguru.heavenlykey.org','meetingspace.heavenlykey.org','socialplus.heavenlykey.org'];
 async function domainZoneRead(env,conn,path,permission){
  const token=await unseal(env,conn.token_enc);
  const response=await fetch('https://api.cloudflare.com/client/v4'+path,{headers:{authorization:'Bearer '+token},redirect:'manual',signal:AbortSignal.timeout(20000)});
  let data;try{data=await response.json();}catch{fail('Cloudflare returned an unreadable domain response. Saved credentials were preserved.',502);}
- if(!response.ok||data.success!==true)fail('Cloudflare domain check failed (HTTP '+response.status+'). This operation requires '+permission+' on heavenlykey.org in the selected account. Saved credentials were preserved.',response.status===401||response.status===403?403:502);
+ if(!response.ok||data.success!==true){
+  const codes=(Array.isArray(data.errors)?data.errors:[]).map(e=>e.code).filter(c=>Number.isSafeInteger(c)).slice(0,8);
+  const stage=path.includes('/dns_records')?'DNS records': 'zone lookup';
+  fail('Cloudflare '+stage+' check failed (HTTP '+response.status+(codes.length?'; error codes '+codes.join(', '):'')+'). Selected connection: '+conn.id+'. This request needs '+permission+' for heavenlykey.org. The response alone does not establish whether the cause is the saved token, resource scope, account selection or provider restrictions. Saved credentials were preserved.',response.status===401||response.status===403?403:502);
+ }
  return data;
 }
 async function inspectHeavenlyDomains(env,connection){
