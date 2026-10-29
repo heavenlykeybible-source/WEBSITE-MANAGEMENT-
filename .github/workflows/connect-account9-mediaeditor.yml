@@ -77,3 +77,21 @@ jobs:
           const publicSite=await fetch('https://mediaeditor.heavenlykey.org/',{signal:AbortSignal.timeout(15000),redirect:'manual'}).catch(e=>({status:0,error:e.message}));
           console.log('Public origin HTTP:',publicSite.status,'location:',publicSite.headers?.get('location')||'');
           JS
+
+      - name: Verify public MediaGuru routing and backend
+        run: |
+          node --input-type=module <<'JS'
+          const origin='https://mediaeditor.heavenlykey.org';
+          for(const path of ['/','/api/health']){
+            const response=await fetch(origin+path,{redirect:'error',cache:'no-store',signal:AbortSignal.timeout(20000)});
+            if(response.status!==200)throw Error(path+' returned HTTP '+response.status);
+            if(path==='/'){
+              if(!(response.headers.get('content-type')||'').includes('text/html'))throw Error('Domain does not serve the editor HTML');
+              if(!/^account9-[a-f0-9]{16}$/.test(response.headers.get('x-heavenly-key-release')||''))throw Error('Domain is not serving the canonical Account 9 Worker release');
+            }else{
+              const data=await response.json();
+              if(data.status!=='ready')throw Error('Account 9 backend bindings or schema need repair');
+            }
+            console.log('PASS public '+path);
+          }
+          JS
