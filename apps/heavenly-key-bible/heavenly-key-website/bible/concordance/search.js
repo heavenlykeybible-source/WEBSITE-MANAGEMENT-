@@ -25,7 +25,7 @@ async function search(event){
  results.replaceChildren();
  const query=term.value.trim().toLocaleLowerCase();
  if(query.length<2){message('Enter at least two characters.');return}
- const selected=scope.value==='current'?window.kjvConcordanceBooks.filter(b=>b[1]===bookSelector.value):window.kjvConcordanceBooks;
+ const selected=scope.value==='current'?Array.from(bookSelector.options).filter(b=>b.value===bookSelector.value).map(b=>[b.text,b.value]):Array.from(bookSelector.options).map(b=>[b.text,b.value]);
  stop.hidden=false;let checked=0,hits=0,failures=0;
  message('Searching '+selected.length+' book(s)…');
  try{
