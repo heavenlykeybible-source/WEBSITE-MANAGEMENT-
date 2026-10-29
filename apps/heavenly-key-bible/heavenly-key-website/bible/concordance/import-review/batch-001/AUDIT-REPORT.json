@@ -1,0 +1,105 @@
+{
+  "source": "heavenly-key-bible-batch-001.zip",
+  "filesExamined": 11,
+  "validJsonFiles": 11,
+  "commentaryRecords": 5,
+  "uniqueCommentaryReferences": 5,
+  "duplicateCommentaryReferences": 0,
+  "concordanceRecords": 5,
+  "missingVerseCount": "Not established: no complete authoritative verse index or repository baseline checked",
+  "correctionsMade": 0,
+  "decision": "QUARANTINE: no content approved for import",
+  "githubStatus": "Original records now saved on isolated review branch; application compatibility not verified",
+  "issues": [
+    {
+      "file": "commentary/genesis/genesis-01.json",
+      "ref": "Genesis 1:1",
+      "issues": [
+        "Generic repeated explanation",
+        "Generic context",
+        "Cross-references require verification",
+        "No demonstrated independent doctrinal/source verification"
+      ]
+    },
+    {
+      "file": "concordance/genesis/genesis-01-concordance.json",
+      "ref": "Genesis 1:1",
+      "issues": [
+        "Identical keywords and Strong numbers copied across books",
+        "Lexical mappings unverified; must be rebuilt against KJV verse text and original-language source"
+      ]
+    },
+    {
+      "file": "commentary/exodus/exodus-01.json",
+      "ref": "Exodus 1:1",
+      "issues": [
+        "Generic repeated explanation",
+        "Generic context",
+        "Cross-references require verification",
+        "No demonstrated independent doctrinal/source verification"
+      ]
+    },
+    {
+      "file": "concordance/exodus/exodus-01-concordance.json",
+      "ref": "Exodus 1:1",
+      "issues": [
+        "Identical keywords and Strong numbers copied across books",
+        "Lexical mappings unverified; must be rebuilt against KJV verse text and original-language source"
+      ]
+    },
+    {
+      "file": "commentary/leviticus/leviticus-01.json",
+      "ref": "Leviticus 1:1",
+      "issues": [
+        "Generic repeated explanation",
+        "Generic context",
+        "Cross-references require verification",
+        "No demonstrated independent doctrinal/source verification"
+      ]
+    },
+    {
+      "file": "concordance/leviticus/leviticus-01-concordance.json",
+      "ref": "Leviticus 1:1",
+      "issues": [
+        "Identical keywords and Strong numbers copied across books",
+        "Lexical mappings unverified; must be rebuilt against KJV verse text and original-language source"
+      ]
+    },
+    {
+      "file": "commentary/numbers/numbers-01.json",
+      "ref": "Numbers 1:1",
+      "issues": [
+        "Generic repeated explanation",
+        "Generic context",
+        "Cross-references require verification",
+        "No demonstrated independent doctrinal/source verification"
+      ]
+    },
+    {
+      "file": "concordance/numbers/numbers-01-concordance.json",
+      "ref": "Numbers 1:1",
+      "issues": [
+        "Identical keywords and Strong numbers copied across books",
+        "Lexical mappings unverified; must be rebuilt against KJV verse text and original-language source"
+      ]
+    },
+    {
+      "file": "commentary/deuteronomy/deuteronomy-01.json",
+      "ref": "Deuteronomy 1:1",
+      "issues": [
+        "Generic repeated explanation",
+        "Generic context",
+        "Cross-references require verification",
+        "No demonstrated independent doctrinal/source verification"
+      ]
+    },
+    {
+      "file": "concordance/deuteronomy/deuteronomy-01-concordance.json",
+      "ref": "Deuteronomy 1:1",
+      "issues": [
+        "Identical keywords and Strong numbers copied across books",
+        "Lexical mappings unverified; must be rebuilt against KJV verse text and original-language source"
+      ]
+    }
+  ]
+}
