@@ -2,6 +2,7 @@ package org.heavenlykey.apps;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Build;
 import android.content.Intent;
 import android.net.Uri;
 import android.webkit.WebSettings;
@@ -29,7 +30,7 @@ public final class MainActivity extends Activity {
   settings.setAllowContentAccess(false);
   settings.setAllowFileAccessFromFileURLs(false);
   settings.setAllowUniversalAccessFromFileURLs(false);
-  settings.setSafeBrowsingEnabled(true);
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) settings.setSafeBrowsingEnabled(true);
   settings.setJavaScriptCanOpenWindowsAutomatically(false);
   settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
   CookieManager.getInstance().setAcceptThirdPartyCookies(browser,false);
