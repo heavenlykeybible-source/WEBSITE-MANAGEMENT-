@@ -140,3 +140,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Updated browser study notes to 379 draft entries, commit 9aa93adbbae92c36d954470797ed311387273426.
 - Updated draft checker to include Genesis 15 and expect 379, commit a3c4e33e8898d7e8d4147bca7fe999a965dd1d5f.
 - Node/browser test execution, full-canon cross-reference verification and human doctrinal review remain outstanding. No deployment. Next: Genesis 16, scale reliable batch ingestion, and run actual tests. Bible Dictionary remains separate.
+
+## Latest checkpoint — Genesis 16
+- Saved 16 original verse-specific drafts Genesis 16:1–16, all pending review. Commit 456dba7034caf94f09046de94d1a6105b5c1828a. Carefully contextualized Hagar's mistreatment, Genesis 16:9 and Genesis 16:12 to avoid justifying abuse or ethnic prejudice.
+- Regenerated browser bundle with 395 Genesis draft entries, commit a8cb27433d2345c9b9f00708e281062c3e825ae4.
+- Updated scripts/concordance-draft-check.mjs to include chapter 16 and expect 395, commit d2238870070ac07d2962f4a453aa92a6e715c4d3.
+- Next: Genesis 17, actual Node/browser validation and full canonical cross-reference checks. The 500–1,000 verse packet generator is infrastructure, not completed commentary. No deployment or changes to Bible Dictionary.
