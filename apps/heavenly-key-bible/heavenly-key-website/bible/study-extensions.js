@@ -87,11 +87,11 @@ function renderDictionary(){
     });
     actions.append(concordanceButton);
    }
-   const languageEntries=(state.originalGuide||[]).filter(item=>String(item.english).toLowerCase()===String(e.term).toLowerCase());
+   const languageEntries=(state.originalGuide||[]).filter(item=>String(item.english).trim().toLowerCase()===String(e.term).trim().toLowerCase());
    const languageButtons=document.createElement('div');languageButtons.className='dict-language-buttons';
    for(const language of ['Hebrew','Greek']){
     const button=document.createElement('button');button.type='button';button.className='dict-language-button';button.textContent=language+' ▾';button.setAttribute('aria-expanded','false');
-    const panel=document.createElement('div');panel.className='dict-language-panel';panel.hidden=true;
+    const panel=document.createElement('div');panel.className='dict-language-panel';panel.hidden=true;panel.id='dict-'+String(e.term).toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+language.toLowerCase();button.setAttribute('aria-controls',panel.id);
     const words=languageEntries.filter(item=>item.language===language);
     if(!words.length){const note=document.createElement('p');note.textContent='A verified '+language+' equivalent has not yet been established for this English entry. Some English Bible terms do not have a direct one-word equivalent in both original languages. No translation is supplied rather than displaying an inaccurate one.';panel.append(note);}
     else for(const item of words){
@@ -99,7 +99,7 @@ function renderDictionary(){
      const strong=document.createElement('p');strong.textContent='Strong’s number: '+item.strong;
      const meaning=document.createElement('p');meaning.textContent='Meaning: '+item.meaning;
      const reference=document.createElement('p');reference.textContent='Scripture: '+item.reference+' (KJV)';
-     const caution=document.createElement('p');caution.textContent=item.caution||'Meanings depend on biblical context.';
+     const caution=document.createElement('p');caution.textContent=(item.reviewStatus&&item.reviewStatus.includes('requires independent')?'Editorial draft — pending lexicon review. ':'')+(item.caution||'Meanings depend on biblical context.');
      panel.append(heading,strong,meaning,reference,caution);
     }
     button.addEventListener('click',()=>{const show=panel.hidden;for(const other of languageButtons.querySelectorAll('.dict-language-panel'))other.hidden=true;for(const other of languageButtons.querySelectorAll('.dict-language-button'))other.setAttribute('aria-expanded','false');panel.hidden=!show;button.setAttribute('aria-expanded',String(show));for(const other of languageButtons.querySelectorAll('.dict-language-button'))other.textContent=other.textContent.replace(' ▴',' ▾');button.textContent=language+(show?' ▴':' ▾');});
