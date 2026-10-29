@@ -38,7 +38,14 @@ jobs:
           $ErrorActionPreference = 'Stop'
           Copy-Item -Path './test-publish' -Destination './signed-candidate' -Recurse -Force
           New-Item -ItemType Directory -Path './test-msix' -Force | Out-Null
+          # Deliberately leave a previous installer and metadata in the publish
+          # directory to ensure the new MSIX cannot recursively package them.
+          Set-Content -LiteralPath './signed-candidate/old-release.msix' -Value 'prior package'
+          Set-Content -LiteralPath './signed-candidate/old-release.security.txt' -Value 'prior report'
           ./package-msix.ps1 -Publisher 'CN=Heavenly Key Test' -OutputPath (Join-Path (Resolve-Path './test-msix').Path 'HeavenlyKeyWindows.msix')
+          if ((Test-Path './msix-staging/old-release.msix') -or (Test-Path './msix-staging/old-release.security.txt')) {
+            throw 'Windows MSIX staging leaked previous release artifacts'
+          }
           if (-not (Test-Path './test-msix/HeavenlyKeyWindows.msix')) { throw 'MSIX packaging failed' }
           Get-FileHash './test-msix/HeavenlyKeyWindows.msix' -Algorithm SHA256 | Format-List
       - name: Retain nonproduction Windows testing build
