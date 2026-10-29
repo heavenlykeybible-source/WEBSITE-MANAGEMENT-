@@ -87,6 +87,25 @@ function renderDictionary(){
     });
     actions.append(concordanceButton);
    }
+   const languageEntries=(state.originalGuide||[]).filter(item=>String(item.english).toLowerCase()===String(e.term).toLowerCase());
+   const languageButtons=document.createElement('div');languageButtons.className='dict-language-buttons';
+   for(const language of ['Hebrew','Greek']){
+    const button=document.createElement('button');button.type='button';button.className='dict-language-button';button.textContent=language+' ▾';button.setAttribute('aria-expanded','false');
+    const panel=document.createElement('div');panel.className='dict-language-panel';panel.hidden=true;
+    const words=languageEntries.filter(item=>item.language===language);
+    if(!words.length){button.disabled=true;button.title='No verified '+language+' entry available for this word yet';}
+    else for(const item of words){
+     const heading=document.createElement('h4');heading.textContent=item.original+' — '+item.transliteration;
+     const strong=document.createElement('p');strong.textContent='Strong’s number: '+item.strong;
+     const meaning=document.createElement('p');meaning.textContent='Meaning: '+item.meaning;
+     const reference=document.createElement('p');reference.textContent='Scripture: '+item.reference+' (KJV)';
+     const caution=document.createElement('p');caution.textContent=item.caution||'Meanings depend on biblical context.';
+     panel.append(heading,strong,meaning,reference,caution);
+    }
+    button.addEventListener('click',()=>{const show=panel.hidden;for(const other of languageButtons.querySelectorAll('.dict-language-panel'))other.hidden=true;for(const other of languageButtons.querySelectorAll('.dict-language-button'))other.setAttribute('aria-expanded','false');panel.hidden=!show;button.setAttribute('aria-expanded',String(show));button.textContent=language+(show?' ▴':' ▾');});
+    const group=document.createElement('div');group.className='dict-language-group';group.append(button,panel);languageButtons.append(group);
+   }
+   card.append(languageButtons);
    card.append(actions);$('dict-results').append(card);
  }
  if(!matches.length){const empty=document.createElement('p');empty.textContent='No entry found yet. This does not mean the word is absent from Scripture.';$('dict-results').append(empty);}
@@ -174,7 +193,7 @@ let done={};try{done=JSON.parse(localStorage.getItem(DONE)||'{}')||{};}catch{}co
 async function checkReminder(){if(notificationPending)return;const s=safeSettings();if(!s?.enabled||!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.time))return;const now=new Date(),today=localDay(now),current=now.toTimeString().slice(0,5),lastKey='hk-read-pray-last-v2';if(current<s.time||localStorage.getItem(lastKey)===today)return;const title='READ & PRAY DAILY ROUTINE',body='Have you prayed today? It’s time to read God’s Word and pray.';setMessage('routine-status',body);notificationPending=true;try{if(localStorage.getItem(lastKey)===today)return;if('Notification'in window&&Notification.permission==='granted'){if('serviceWorker'in navigator){const registration=await navigator.serviceWorker.ready;await registration.showNotification(title,{body,tag:'hk-read-pray-daily',icon:'./icon-192.png',data:{url:'./study-extensions.html'}});localStorage.setItem(lastKey,today);}else {new Notification(title,{body});localStorage.setItem(lastKey,today);}}}catch(e){setMessage('notify-status','Reminder due, but device notification could not be shown: '+e.message);}finally{notificationPending=false;}}
 const loadJson=async path=>{const response=await fetch(path);if(!response.ok)throw Error(path+' HTTP '+response.status);return response.json();};
 loadJson('./dictionary.json').then(dict=>{if(!Array.isArray(dict))throw Error('Invalid dictionary data');state.dictionary=dict;renderDictionary();}).catch(e=>{$('dict-count').textContent='Dictionary unavailable: '+e.message;});
-loadJson('./original-language-guide.json').then(guide=>{state.originalGuide=guide;renderOriginalLanguageGuide();}).catch(e=>{$('original-count').textContent='Original-language guide unavailable: '+e.message;});
+loadJson('./original-language-guide.json').then(guide=>{state.originalGuide=guide;renderOriginalLanguageGuide();renderDictionary();}).catch(e=>{$('original-count').textContent='Original-language guide unavailable: '+e.message;});
 Promise.all([loadJson('./daily-topics.json'),loadJson('./daily-lessons.json'),loadJson('./data/kjv/manifest.json')]).then(([topics,lessons,manifest])=>{state.topics=topics;state.lessons=lessons;state.manifest=manifest;for(const topic of Object.keys(topics))$('topic').add(new Option(topic,topic));const saved=safeSettings();if(saved){$('topic').value=saved.topic||'Faith';$('time').value=saved.time||'06:00';$('place').value=saved.place||'';$('rotation').value=saved.rotation||'chosen';}renderRoutine();checkReminder();}).catch(e=>setMessage('routine-status','Daily reading resources unavailable: '+e.message));
 $('dict').addEventListener('input',()=>{dictionaryPage=0;renderDictionary();});$('letter').addEventListener('change',()=>{dictionaryPage=0;renderDictionary();});$('dict-prev').addEventListener('click',()=>{dictionaryPage--;renderDictionary();});$('dict-next').addEventListener('click',()=>{dictionaryPage++;renderDictionary();});
 function resetConcordanceResults(){
