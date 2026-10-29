@@ -61,6 +61,21 @@ jobs:
           finally {
             if (Test-Path $pfx) { Remove-Item $pfx -Force }
           }
+      - name: Scan exact signed MSIX with Microsoft Defender
+        shell: pwsh
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $msix = (Resolve-Path './signed-candidate/HeavenlyKeyWindows.msix').Path
+          $status = Get-MpComputerStatus -ErrorAction Stop
+          if (-not $status.AntivirusEnabled -or -not $status.RealTimeProtectionEnabled) {
+            throw 'Microsoft Defender antivirus must be enabled to scan signed release'
+          }
+          Update-MpSignature -ErrorAction Stop
+          Start-MpScan -ScanType CustomScan -ScanPath $msix -ErrorAction Stop
+          $threats = @(Get-MpThreatDetection -ErrorAction Stop)
+          if ($threats.Count -gt 0) { throw 'Defender reports threat detections; release blocked' }
+          "malwareScan=passed" | Out-File -Encoding ascii './signed-candidate/HeavenlyKeyWindows.msix.security.txt'
       - name: Save signed release candidate for security and physical-device review
         uses: actions/upload-artifact@v4
         with:
@@ -68,5 +83,6 @@ jobs:
           path: |
             heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.msix
             heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.msix.sha256
+            heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.msix.security.txt
           retention-days: 14
           if-no-files-found: error
