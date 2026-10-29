@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const script = readFileSync(new URL('../public/app-device-guide.js', import.meta.url), 'utf8');
 const sha = 'a'.repeat(64);
 
-async function simulate({device='android',userAgent='Mozilla/5.0 (Linux; Android 12)',available=true,app='all-in-one'}={}) {
+async function simulate({device='android',userAgent='Mozilla/5.0 (Linux; Android 12)',available=true,app='all-in-one',maxTouchPoints=0}={}) {
  const downloads=[],statuses=[],requests=[],links=[],listeners={};
  const open={href:null,textContent:'',insertAdjacentElement(_position,link){links.push(link)}};
  const heading={textContent:''};
@@ -24,7 +24,7 @@ async function simulate({device='android',userAgent='Mozilla/5.0 (Linux; Android
  const origin='https://apps.heavenlykey.org';
  const location={origin,protocol:'https:',search:'?app='+app,pathname:'/download/'+device+'/',assign(url){downloads.push(url)}};
  const window={location,addEventListener(event,callback){listeners[event]=callback}};
- const navigator={userAgent,maxTouchPoints:0};
+ const navigator={userAgent,maxTouchPoints};
  const fetch=async (url,options={})=>{
   requests.push({url,method:options.method||'GET'});
   if(url==='/app-downloads.json')return {
@@ -101,4 +101,15 @@ test('an unavailable Windows MSIX keeps its download button hidden',async()=>{
  const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',available:false});
  assert.deepEqual(r.downloads,[]);
  assert.equal(r.links[0]?.hidden,true);
+});
+
+test('desktop-class iPad browser cannot auto-download a Mac DMG',async()=>{
+ const r=await simulate({device:'mac',userAgent:'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)',maxTouchPoints:5});
+ assert.deepEqual(r.downloads,[]);
+ assert.match(r.status,/different device/i);
+});
+test('desktop-class iPad browser still receives iPad Safari instructions',async()=>{
+ const r=await simulate({device:'ipad',userAgent:'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)',maxTouchPoints:5});
+ assert.deepEqual(r.downloads,[]);
+ assert.match(r.status,/Safari/i);
 });
