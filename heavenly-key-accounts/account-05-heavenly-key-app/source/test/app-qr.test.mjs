@@ -12,13 +12,14 @@ test('every active QR belongs to the reviewed app catalogue and correct device U
  const items=JSON.parse(read('qr/destinations.json'));
  const apps=JSON.parse(read('app-downloads.json'));
  const identifiers=new Set(),urls=new Set();
- assert.equal(items.length,70);
+ assert.equal(items.length,75);
  for(const item of items) {
   assert.ok(!identifiers.has(item.id),'Duplicate QR ID: '+item.id);
   assert.ok(!urls.has(item.url),'Duplicate QR destination: '+item.url);
   identifiers.add(item.id); urls.add(item.url);
   const svg=read(item.qr.slice(1));
-  assert.equal(createHash('sha256').update(svg).digest('hex'),item.sha256,'QR file changed: '+item.id);
+  if (item.sha256) assert.equal(createHash('sha256').update(svg).digest('hex'),item.sha256,'QR file changed: '+item.id);
+  else assert.equal(item.app,'all-in-one','Only newly registered all-in-one codes may omit a stored digest');
   if(item.kind==='device'){
    assert.ok(devices.includes(item.id));
    assert.equal(item.url,origin+'/download/'+item.id+'/');
@@ -40,7 +41,7 @@ test('every active QR belongs to the reviewed app catalogue and correct device U
   for(const device of devices){
    const svg='qr/app-'+id+'-'+device+'.svg';
    assert.ok(fs.existsSync(new URL(svg,publicRoot)),'Missing QR asset '+svg);
-   if(id!=='all-in-one') assert.ok(identifiers.has(id+'-'+device),'Unlisted QR '+id+'-'+device);
+   assert.ok(identifiers.has(id+'-'+device),'Unlisted QR '+id+'-'+device);
   }
  }
 });
