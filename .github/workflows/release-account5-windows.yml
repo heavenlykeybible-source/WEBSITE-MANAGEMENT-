@@ -1,0 +1,66 @@
+name: Package Account 5 Signed Windows Release Candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-signed-candidate:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    environment: production-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Require Windows signing credentials
+        shell: pwsh
+        env:
+          WINDOWS_CERT_BASE64: ${{ secrets.HKEM_WINDOWS_PFX_BASE64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.HKEM_WINDOWS_PFX_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERT_BASE64) -or [string]::IsNullOrWhiteSpace($env:WINDOWS_CERT_PASSWORD)) {
+            throw 'Windows code signing certificate and password must be configured as GitHub secrets'
+          }
+      - name: Restore and publish Windows x64 executable
+        shell: pwsh
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
+        run: |
+          dotnet restore HeavenlyKeyWindows.csproj
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet publish HeavenlyKeyWindows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./signed-candidate
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Sign and verify Windows candidate
+        shell: pwsh
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
+        env:
+          WINDOWS_CERT_BASE64: ${{ secrets.HKEM_WINDOWS_PFX_BASE64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.HKEM_WINDOWS_PFX_PASSWORD }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pfx = Join-Path $env:RUNNER_TEMP 'account5-windows.pfx'
+          try {
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERT_BASE64))
+            $exe = (Resolve-Path './signed-candidate/HeavenlyKeyWindows.exe').Path
+            $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse -File | Where-Object { $_.FullName -match '\\x64\\' } | Sort-Object FullName -Descending | Select-Object -First 1).FullName
+            if (-not $signtool) { throw 'Windows SDK signtool is not installed' }
+            & $signtool sign /fd SHA256 /f $pfx /p $env:WINDOWS_CERT_PASSWORD /tr https://timestamp.digicert.com /td SHA256 $exe
+            if ($LASTEXITCODE -ne 0) { throw 'Signing failed' }
+            & $signtool verify /pa /v $exe
+            if ($LASTEXITCODE -ne 0) { throw 'Signature verification failed' }
+            $auth = Get-AuthenticodeSignature $exe
+            if ($auth.Status -ne 'Valid') { throw "Authenticode verification failed: $($auth.Status)" }
+            (Get-FileHash $exe -Algorithm SHA256).Hash | Out-File -Encoding ascii ./signed-candidate/HeavenlyKeyWindows.exe.sha256
+          }
+          finally {
+            if (Test-Path $pfx) { Remove-Item $pfx -Force }
+          }
+      - name: Save signed release candidate for security and physical-device review
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavenly-key-account5-windows-signed-candidate
+          path: |
+            heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.exe
+            heavenly-key-accounts/account-05-heavenly-key-app/native/windows/signed-candidate/HeavenlyKeyWindows.exe.sha256
+          retention-days: 14
+          if-no-files-found: error
