@@ -89,6 +89,10 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   if(reader){let received=0;try{while(true){const {done,value}=await reader.read();if(done)break;received+=value.byteLength;if(received>1048576){await reader.cancel();return reply({error:'Request payload too large'},413)}}}catch{return reply({error:'Unable to read request payload'},400)}}
  }
 
+ if(u.pathname==='/api/storage/readiness'&&req.method==='GET'){
+  const dbBound=!!env.DB,mediaBound=!!env.MEDIA_BUCKET;
+  return reply({account:10,dbBound,mediaBound,assetsBound:!!env.ASSETS,storageReady:dbBound&&mediaBound,mediaOperationsEnabled:false,providerPublishingVerified:false,note:'Binding presence only; this does not verify bucket permissions, schema migrations, or provider authorization.'});
+ }
  if(u.pathname==='/api/accounts/import'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!Array.isArray(data?.items)||data.items.length<1||data.items.length>100)return reply({error:'Provide 1 to 100 accounts'},400);
