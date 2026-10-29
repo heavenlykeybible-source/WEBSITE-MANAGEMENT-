@@ -83,6 +83,11 @@ export default {
    }catch{return Response.json({success:false,error:{message:"The ministry media service is temporarily unavailable."}},{status:502});}
    finally{clearTimeout(timeout);}
   }
+  // Canonical extensionless devotional URL; preserve legacy links with a permanent redirect.
+  if(url.pathname==="/strength-for-today.html")return Response.redirect(new URL("/strength-for-today",url),308);
+  if(url.pathname==="/strength-for-today"){
+   return env.ASSETS.fetch(new Request(new URL("/strength-for-today.html",url),request));
+  }
   // Extensionless public URLs mapped to the original, unchanged static assets.
   if(request.method==="GET"||request.method==="HEAD"){
    const routes={"/":"/index.html","/install":"/install/index.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
