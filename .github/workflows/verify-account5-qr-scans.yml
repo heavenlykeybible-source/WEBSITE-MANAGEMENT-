@@ -1,0 +1,21 @@
+name: Verify Account 5 Real QR Scanner Destinations
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/qr/**'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/app-downloads.json'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/verify-qr-scans.py'
+      - '.github/workflows/verify-account5-qr-scans.yml'
+permissions:
+  contents: read
+jobs:
+  decode-qr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install QR decoder
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zbar-tools
+      - name: Decode and verify every active QR image
+        run: python3 heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/verify-qr-scans.py
