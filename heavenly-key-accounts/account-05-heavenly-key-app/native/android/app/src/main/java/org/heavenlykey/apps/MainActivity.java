@@ -41,9 +41,13 @@ public final class MainActivity extends Activity {
    @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request) {
     Uri url=request.getUrl();
     String host=url.getHost();
-    if("https".equalsIgnoreCase(url.getScheme()) && host!=null && (host.equals("heavenlykey.org")||host.endsWith(".heavenlykey.org"))) return false;
+    // Keep only Account 5 pages inside this WebView. Open other ministry
+    // services in the device browser so their separate security boundaries remain intact.
+    if ("https".equalsIgnoreCase(url.getScheme()) && "apps.heavenlykey.org".equalsIgnoreCase(host) && url.getUserInfo()==null) return false;
     if (!request.isForMainFrame()) return true;
-    if (!"https".equalsIgnoreCase(url.getScheme()) && !"mailto".equalsIgnoreCase(url.getScheme()) && !"tel".equalsIgnoreCase(url.getScheme())) return true;
+    String scheme = url.getScheme();
+    if (!"https".equalsIgnoreCase(scheme) && !"mailto".equalsIgnoreCase(scheme) && !"tel".equalsIgnoreCase(scheme)) return true;
+    if ("https".equalsIgnoreCase(scheme) && (host==null || url.getUserInfo()!=null)) return true;
     try {startActivity(new Intent(Intent.ACTION_VIEW,url));}catch(Exception ignored){}
     return true;
    }
