@@ -1,0 +1,82 @@
+name: Package Account 5 Signed iPhone iPad Release Candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  signed-ios-candidate:
+    runs-on: macos-15
+    timeout-minutes: 50
+    environment: production-release
+    env:
+      IOS_P12: ${{ secrets.HKEM_IOS_DISTRIBUTION_P12_BASE64 }}
+      IOS_P12_PASSWORD: ${{ secrets.HKEM_IOS_DISTRIBUTION_P12_PASSWORD }}
+      IOS_PROFILE: ${{ secrets.HKEM_IOS_PROFILE_BASE64 }}
+      IOS_PROFILE_NAME: ${{ secrets.HKEM_IOS_PROFILE_NAME }}
+      APPLE_TEAM_ID: ${{ secrets.HKEM_APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check iOS distribution secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for v in "$IOS_P12" "$IOS_P12_PASSWORD" "$IOS_PROFILE" "$IOS_PROFILE_NAME" "$APPLE_TEAM_ID"; do
+            test -n "$v" || { echo "::error::iOS signing requires provisioned Apple distribution credentials"; exit 1; }
+          done
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate native iOS app project
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/ios
+        run: xcodegen generate
+      - name: Archive and export signed review IPA
+        shell: bash
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/ios
+        run: |
+          set -euo pipefail
+          umask 077
+          keychain="$RUNNER_TEMP/hkem-ios-signing.keychain-db"
+          keypassword="$(openssl rand -hex 24)"
+          p12="$RUNNER_TEMP/hkem-ios-distribution.p12"
+          profile="$RUNNER_TEMP/hkem-ios.mobileprovision"
+          exportOptions="$RUNNER_TEMP/hkem-ios-export.plist"
+          cleanup() {
+            security delete-keychain "$keychain" >/dev/null 2>&1 || true
+            rm -f "$p12" "$profile" "$exportOptions"
+          }
+          trap cleanup EXIT
+          printf %s "$IOS_P12" | base64 -D > "$p12"
+          printf %s "$IOS_PROFILE" | base64 -D > "$profile"
+          test -s "$p12" && test -s "$profile"
+          security create-keychain -p "$keypassword" "$keychain"
+          security unlock-keychain -p "$keypassword" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security import "$p12" -k "$keychain" -P "$IOS_P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keypassword" "$keychain"
+          security list-keychains -d user -s "$keychain"
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$profile" "$HOME/Library/MobileDevice/Provisioning Profiles/hkem-account5.mobileprovision"
+          cat > "$exportOptions" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+          <key>method</key><string>app-store-connect</string>
+          <key>teamID</key><string>$APPLE_TEAM_ID</string>
+          <key>signingStyle</key><string>manual</string>
+          <key>provisioningProfiles</key><dict><key>org.heavenlykey.apps</key><string>$IOS_PROFILE_NAME</string></dict>
+          </dict></plist>
+          EOF
+          xcodebuild -project HeavenlyKey.xcodeproj -scheme HeavenlyKey -configuration Release -sdk iphoneos -archivePath "$PWD/HeavenlyKey.xcarchive" DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER="$IOS_PROFILE_NAME" archive
+          xcodebuild -exportArchive -archivePath "$PWD/HeavenlyKey.xcarchive" -exportPath "$PWD/ios-candidate" -exportOptionsPlist "$exportOptions"
+          ipa="$(find ios-candidate -maxdepth 1 -name '*.ipa' -type f -print -quit)"
+          test -n "$ipa" && test -s "$ipa"
+          shasum -a 256 "$ipa" > "$ipa.sha256"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/hkem-account5.mobileprovision"
+      - name: Retain signed IPA for manual TestFlight submission and device review
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavenly-key-account5-ios-signed-candidate
+          path: |
+            heavenly-key-accounts/account-05-heavenly-key-app/native/ios/ios-candidate/*.ipa
+            heavenly-key-accounts/account-05-heavenly-key-app/native/ios/ios-candidate/*.ipa.sha256
+          if-no-files-found: error
+          retention-days: 14
