@@ -8,6 +8,7 @@ const dir=dirname(fileURLToPath(import.meta.url));
 const bible=join(dir,'..');
 const manifest=JSON.parse(readFileSync(join(bible,'data/kjv/manifest.json'),'utf8'));
 const bookByName=new Map(manifest.books.map(b=>[b.name,b]));
+bookByName.set('Psalm',bookByName.get('Psalms')); // common singular citation form
 const cache=new Map();
 const errors=[],warnings=[],seen=new Map(),registered=[];
 const page=readFileSync(join(dir,'index.html'),'utf8');
