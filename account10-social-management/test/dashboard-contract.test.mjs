@@ -53,3 +53,10 @@ test('draft manager offers manual copying and safe deletion', () => {
   assert.match(html, /Delete draft/);
   assert.match(html, /method:'DELETE'/);
 });
+
+test('post draft editor supports private image attachments', () => {
+  assert.match(html, /Private image ID for post draft/);
+  assert.match(html, /Attached image ID/);
+  assert.match(html, /mediaId:media\.value\.trim\(\)\|\|null/);
+  assert.match(html, /mediaId:mediaId\.value\.trim\(\)/);
+});
