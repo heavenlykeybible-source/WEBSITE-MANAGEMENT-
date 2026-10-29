@@ -54,6 +54,9 @@ export async function handleNativeDownloads(request,env) {
     const scannedDigest=object.customMetadata?.scannedSha256;
     if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true' || scannedDigest!==sha256) return reply({error:'Release has not passed security verification'},403);
     if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size),'x-release-sha256':sha256}});
+    // A valid object header alone does not prove R2 returned a readable package body.
+    // Reject missing bodies before recording an initiated download.
+    if (!object.body) return reply({error:'Native package body unavailable'},503);
     // A download event means a package response was initiated, not that the device installed it.
     // Use a single aggregate counter row rather than storing identifying visitor data.
     // Anonymous analytics are best-effort: a statistics outage must not block downloads.
