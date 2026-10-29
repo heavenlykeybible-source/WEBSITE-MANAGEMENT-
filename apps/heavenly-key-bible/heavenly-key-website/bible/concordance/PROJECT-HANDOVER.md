@@ -101,3 +101,10 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Extended scripts/concordance-draft-check.mjs to Genesis 10 and 264 records. Commit a932868cd1adc04fe85505aabab55d57f3730f67.
 - Connector-side check: 264 distinct draft refs, all present in GEN.json, no identical explanation strings or empty required fields. This does not constitute executed Node/browser tests, complete semantic alignment or validation of cross-references in other books.
 - NEXT: Genesis 11 onward, verify old Genesis 1–5 verse-specific content accuracy, implement robust canonical cross-reference validation and browser QA. Focus only on Concordance and Commentary; independent Bible Dictionary untouched. No deployment without approval.
+
+## Mass-processing infrastructure checkpoint
+- User requests scaling toward all 31,102 KJV verses in 500–1,000 verse batches, without generic explanations.
+- Added scripts/concordance-prepare-queue.mjs: reads the actual 66-book mapping and local KJV book JSON files; checks exact 31,102 canonical records and draft references; writes up to 1,000 verse-text work packets plus a manifest of drafted/undrafted verses. It prepares work only, and never manufactures commentary or marks it approved. Commits c4c62be63331814d813cb33661cd4bafa267b312 and mapping correction ceea595b29b241ddab5a46ee9bf450a98329166b.
+- The new generator has NOT been executed in a local Node checkout. Verify compatibility with all 66 book JSONs before reporting packet output as completed.
+- Verified previous total remains 264 saved new Genesis drafts through chapter 10. A Genesis 11 draft create attempt encountered GitHub 409 and was not saved. Retry from a fresh repository head, preserving concurrent changes.
+- NEXT: run queue generator and validators; author real reviewed-quality verse-specific commentary in large work packets; avoid fabricated progress. Only Concordance and Commentary; separate Bible Dictionary untouched. Do not deploy without owner approval.
