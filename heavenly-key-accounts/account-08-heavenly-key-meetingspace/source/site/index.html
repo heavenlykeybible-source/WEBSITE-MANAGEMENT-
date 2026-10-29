@@ -353,7 +353,7 @@ async function quick(m){const N={radio:'24/7 Radio',camtpl:'Camera + background'
  else if(m==='pic'){await mic();place(mk('text','Title '+uid,{text:'Live'}),'lower');msg('No camera is used. Speak into your microphone, or add music from Sources.')}
  else{await cam();const c=S.filter(s=>s.type==='camera').pop();if(c){const it=SC[ed()].items.find(x=>x.id===c.id);if(it)it.p='full';if(m==='camtpl')setBgMode(c,'tpl');ui()}}
  ui();$('cvs').scrollIntoView({behavior:'smooth'})}
-Object.assign(act,{q:(i,b)=>quick(b.dataset.m),bgsel:i=>setBg(i),tab:i=>document.querySelectorAll('.tabs button')[i].click(),
+Object.assign(act,{q:(i,b)=>quick(b.dataset.m),bgsel:i=>setBg(i),tab:i=>{document.querySelectorAll('.tabs button')[i].click();document.querySelector('.tabs').scrollIntoView({behavior:'smooth',block:'start'})},
  flip:async i=>{const s=S[i];s.face=s.face==='environment'?'user':'environment';
   try{const v=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:s.face},width:1280,height:720},audio:false}),old=s.el.srcObject;
    old.getVideoTracks().forEach(t=>t.stop());s.el.srcObject=new MediaStream([...v.getVideoTracks(),...old.getAudioTracks()]);s.el.play();msg('Switched to the '+(s.face==='environment'?'rear':'front')+' camera.')}
@@ -408,6 +408,7 @@ $('asp').onclick=()=>speak($('atx').value);
 $('arp').onchange=()=>{clearInterval(arT);const n=+$('arp').value;if(n)arT=setInterval(()=>speak($('atx').value),n*1000)};
 const loginId=v=>{const t=String(v||'').trim().toLowerCase();return /^[a-z0-9][a-z0-9._-]{1,39}$/.test(t)?t+'@studio.local':t};
 const loginLabel=v=>v.endsWith('@studio.local')?v.slice(0,-13):v;
+let pendingMeetingStart=false;
 const acct={on:false,tok:'',me:null};try{acct.tok=localStorage.getItem('ls_tok')||''}catch(e){}
 let RU='',RT='';
 async function api(path,body){const session=acct.tok;try{const r=await fetch(path,{method:body?'POST':'GET',headers:{'content-type':'application/json',...(acct.tok?{authorization:'Bearer '+acct.tok}:{})},body:body?JSON.stringify(body):undefined});
@@ -423,7 +424,7 @@ async function stretch(e,p){const k=await crypto.subtle.importKey('raw',new Text
 async function acAuth(kind){const em=loginId($('aem').value),pwr=$('apw').value;
  if(kind==='signup'&&pwr.length<8){$('acm').textContent='Use a password of 8 or more characters.';return}
  $('acm').textContent='Please wait...';const r=await api('/api/'+kind,{email:em,password:await stretch(em,pwr),agree:$('aag').checked});
- if(r.ok){saveTok(r.token);$('apw').value='';$('acm').textContent='';await refreshMe();loadConns();pendingJoin()}else $('acm').textContent=r.error||'Could not sign in.'}
+ if(r.ok){saveTok(r.token);$('apw').value='';$('acm').textContent='';await refreshMe();loadConns();pendingJoin();if(pendingMeetingStart&&acct.me){act.tab(10);await gStart()}}else $('acm').textContent=r.error||'Could not sign in.'}
 $('showpw').onchange=e=>$('apw').type=e.target.checked?'text':'password';
 $('ali').onclick=()=>acAuth('login');$('asu').onclick=()=>acAuth('signup');$('alo').onclick=()=>signOutLocal();
 async function aiWrite(task){const topic=$('aitp').value.trim();if(!topic){$('ast').textContent='Type what your broadcast is about first.';return}
@@ -489,10 +490,12 @@ const gsend=o=>{if(gws&&gws.readyState===1)gws.send(JSON.stringify(o))},gSt=t=>{
 async function gStart(){
  if(gStarting)return;
  if(gws)return gStop('Room closed.');
+ if(!acct.me){pendingMeetingStart=true;act.tab(8);$('acm').textContent='Sign in to start your meeting. Guests can join your invitation without an account.';$('aem').focus({preventScroll:true});return}
+ pendingMeetingStart=false;
  gStarting=true;$('grs').disabled=true;gSt('Preparing your meeting...');
  try{
   await AC.resume();
-  if(!(await relink(true))){gSt('Sign in and confirm meeting access to start a room.');return}
+  if(!(await relink(true)))return;
   const roomURL=gRoomURL.replace(/\/+$/,'');gRoomURL=roomURL;gSt('Starting the room...');
   const w=gws=new WebSocket(roomURL+'/room');
   clearTimeout(gHandshakeTimer);gHandshakeTimer=setTimeout(()=>{if(gws===w&&$('gin').hidden)gStop('The meeting service did not confirm the room. Please try again.')},15000);
