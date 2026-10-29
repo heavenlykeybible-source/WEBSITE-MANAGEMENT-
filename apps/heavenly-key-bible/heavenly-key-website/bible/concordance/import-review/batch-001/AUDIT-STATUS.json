@@ -1,0 +1,18 @@
+{
+  "batch": "heavenly-key-bible-batch-001",
+  "status": "quarantined-pending-review",
+  "sourceArchive": "heavenly-key-bible-batch-001.zip",
+  "auditArchive": "heavenly-key-bible-batch-001-audit.zip",
+  "originalFileCount": 11,
+  "commentaryRecords": 5,
+  "uniqueCommentaryVerses": 5,
+  "concordanceRecords": 5,
+  "findings": [
+    "Incomplete Pentateuch verse coverage",
+    "Generic repeated commentary",
+    "Repeated or unverified concordance keywords and Strong numbers"
+  ],
+  "approvedForIntegration": false,
+  "uploadedOriginalData": false,
+  "notes": "Original ZIP and audited ZIP are not yet uploaded to this branch. Do not publish or merge. Preserve existing commentary and concordance files."
+}
