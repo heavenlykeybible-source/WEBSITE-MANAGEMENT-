@@ -16,7 +16,7 @@
 4. Add signed distribution credentials to GitHub Secrets, not repository source code, chat, logs or downloadable build artifacts.
 5. Run the appropriate manually dispatched signed release workflow after review.
 6. Verify the finished package on the target device, validate signing, scan the exact package, record its checksum, and approve the precise release identifier.
-7. Upload only the reviewed signed binary to Cloudflare `NATIVE_RELEASES` R2 with exact `sha256`, `scannedSha256`, `malwareScan=passed`, and `signatureVerified=true` metadata. Do not set these fields without corresponding evidence. The serving worker must verify these markers before showing a public installer.
+7. Upload only the reviewed signed binary to Cloudflare `NATIVE_RELEASES` R2 with exact `sha256`, `scannedSha256`, `malwareScan=passed`, `signatureVerified=true`, `appId`, and `platform` metadata. Do not set these fields without corresponding evidence. The serving worker must verify these markers and require the metadata `appId` and `platform` to match the requested QR destination before showing a public installer. The existing all-in-one app binary must be identified as `appId=all-in-one`; a separate app QR requires its own distinct, reviewed package and must not silently install the all-in-one wrapper.
 8. Obtain separate owner approval before deploying site changes or making packages publicly downloadable.
 
 ## Android
