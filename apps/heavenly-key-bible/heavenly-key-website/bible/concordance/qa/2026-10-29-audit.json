@@ -1,0 +1,93 @@
+{
+  "canonicalVerses": 31102,
+  "books": 66,
+  "chapters": 1189,
+  "drafts": 1449,
+  "uniqueVerses": 1449,
+  "pendingReview": 1449,
+  "remainingOutsideDraftSet": 29653,
+  "nextMissing": "Genesis 48:1",
+  "legacyAudit": [
+    "Genesis 1:1",
+    "Genesis 1:2",
+    "Genesis 1:3"
+  ],
+  "errors": [],
+  "legacySchemaWarnings": 1384,
+  "flaggedEntries": [
+    {
+      "ref": "Genesis 46:15",
+      "flags": [
+        "Genealogical subtotal and geographical summary require human review; do not publish a speculative counting harmonization."
+      ]
+    },
+    {
+      "ref": "Genesis 46:21",
+      "flags": [
+        "Relationship and chronology of Benjaminite registers require human review before a detailed harmonization is published."
+      ]
+    },
+    {
+      "ref": "Genesis 46:26",
+      "flags": [
+        "Review numerical categories alongside Acts 7:14; no speculative solution to differing totals is asserted."
+      ]
+    },
+    {
+      "ref": "Genesis 46:27",
+      "flags": [
+        "KJV household total compared with Acts 7:14 requires human textual and doctrinal review before publication."
+      ]
+    },
+    {
+      "ref": "Genesis 47:19",
+      "flags": [
+        "Ethical interpretation of famine-driven personal service requires human review; narrative description is not blanket approval of coercion."
+      ]
+    },
+    {
+      "ref": "Genesis 47:20",
+      "flags": [
+        "Review moral and historical conclusions about land consolidation; avoid presenting this policy as a universal divine economic command."
+      ]
+    },
+    {
+      "ref": "Genesis 47:21",
+      "flags": [
+        "Population relocation and its unstated purpose require review before any stronger historical or ethical claim is published."
+      ]
+    },
+    {
+      "ref": "Genesis 47:23",
+      "flags": [
+        "Personal service and land tenure require human ethical review; no automatic endorsement of the arrangement is asserted."
+      ]
+    },
+    {
+      "ref": "Genesis 47:24",
+      "flags": [
+        "Review applications of this economic policy; do not equate Pharaoh's fifth with a Christian giving requirement."
+      ]
+    },
+    {
+      "ref": "Genesis 47:25",
+      "flags": [
+        "Review the relationship between gratitude and constrained consent; avoid using this verse to justify exploitation."
+      ]
+    },
+    {
+      "ref": "Genesis 47:26",
+      "flags": [
+        "Human review required before drawing broader historical or prescriptive conclusions from the enduring-law summary."
+      ]
+    },
+    {
+      "ref": "Genesis 47:31",
+      "flags": [
+        "Compare the KJV bed wording with Hebrews 11:21 under human textual review; withhold a speculative harmonization."
+      ]
+    }
+  ],
+  "passed": true,
+  "limitations": "Validates local data structure, numbering, reference existence, exact duplicates, new text binding and bundle parity. Does not certify semantic relevance, historical truth, absence of plagiarism, doctrine, or human approval. Legacy schema warnings remain unresolved."
+}

@@ -1,27 +1,16 @@
-// Node 20+. Read-only validation of saved Genesis drafts and browser bundle.
-// Run: node scripts/concordance-draft-check.mjs
+/** Read-only full-canon, draft and bundle audit. No theological certification. */
 import fs from 'node:fs';
 import vm from 'node:vm';
-import assert from 'node:assert/strict';
-const root='apps/heavenly-key-bible/heavenly-key-website/bible/concordance/';
-const files=['genesis-1-04-18.json','genesis-1-19-31.json','genesis-2-3.json','genesis-4-5.json','genesis-6.json','genesis-7.json','genesis-8.json','genesis-9.json','genesis-10.json','genesis-11.json','genesis-12.json','genesis-13.json','genesis-14.json','genesis-15.json','genesis-16.json','genesis-17.json','genesis-18.json','genesis-19.json','genesis-20.json','genesis-21.json','genesis-22.json','genesis-23.json','genesis-24.json','genesis-25.json','genesis-26.json','genesis-27.json','genesis-28.json','genesis-29.json','genesis-30.json','genesis-31.json','genesis-32.json','genesis-33.json','genesis-34.json','genesis-35.json','genesis-36.json','genesis-37.json','genesis-38.json','genesis-39.json','genesis-40.json','genesis-41.json','genesis-42.json','genesis-43.json','genesis-44.json','genesis-45.json'];
-const entries=files.flatMap(f=>JSON.parse(fs.readFileSync(root+'drafts/'+f,'utf8')));
-const problems=[];const refs=new Set(), explanations=new Map();
-for(const e of entries){
- if(refs.has(e.ref))problems.push('duplicate verse '+e.ref);refs.add(e.ref);
- if(!/^Genesis (?:[1-9]|[1-3][0-9]|4[0-5]):[1-9][0-9]*$/.test(e.ref))problems.push('unexpected reference '+e.ref);
- for(const field of ['explanation','context','application'])if(typeof e[field]!=='string'||!e[field].trim())problems.push(e.ref+': missing '+field);
- if(!Array.isArray(e.crossReferences)||!e.crossReferences.length||e.crossReferences.some(r=>typeof r!=='string'||!r.trim()))problems.push(e.ref+': missing cross-references');
- if(e.reviewStatus!=='pending')problems.push(e.ref+': review status changed without documented approval');
- const norm=String(e.explanation||'').trim().toLowerCase().replace(/\\s+/g,' ');
- if(explanations.has(norm))problems.push('identical explanations: '+e.ref+' and '+explanations.get(norm));explanations.set(norm,e.ref);
-}
-if(entries.length!==1384)problems.push('expected 1384 saved Genesis drafts, found '+entries.length);
-const registered={};const sandbox={window:{registerConcordanceStudyNotes:notes=>Object.assign(registered,notes)}};
-vm.runInNewContext(fs.readFileSync(root+'study-notes-genesis-drafts.js','utf8'),sandbox,{timeout:2000});
-if(Object.keys(registered).length!==entries.length)problems.push('browser bundle record count differs');
-for(const e of entries){const b=registered[e.ref];if(!b||b.explanation!==e.explanation||b.context!==e.context||b.application!==e.application||b.references!==e.crossReferences.join('; ')||b.reviewStatus!==e.reviewStatus)problems.push('browser bundle mismatch: '+e.ref)}
-const html=fs.readFileSync(root+'index.html','utf8');if(!html.includes('study-notes-genesis-drafts.js'))problems.push('browser bundle not loaded');
-const engine=fs.readFileSync(root+'concordance.js','utf8');if(!engine.includes('pending human doctrinal review'))problems.push('missing draft review warning');
-const report={drafts:entries.length,uniqueVerses:refs.size,pendingReview:entries.filter(e=>e.reviewStatus==='pending').length,errors:problems,passed:problems.length===0,limitations:'Checks structure, exact duplicates and bundle parity; does not verify KJV reference validity, biblical accuracy, doctrinal approval or browser behavior.'};
-console.log(JSON.stringify(report,null,2));if(problems.length)process.exitCode=1;
+import {study,loadCanon,loadDrafts,validateEntries} from './concordance-core.mjs';
+const {canon,byRef,books,chapters}=loadCanon(),{entries}=loadDrafts();
+const result=validateEntries(entries,byRef);
+// Preserve older records; enforce the new schema only where text binding was added.
+for(const e of entries.filter(e=>'kjvTextHash' in e))result.errors.push(...validateEntries([e],byRef,{strict:true}).errors);
+const registered={},sandbox={window:{registerConcordanceStudyNotes:notes=>Object.assign(registered,notes)}};
+vm.runInNewContext(fs.readFileSync(study+'study-notes-genesis-drafts.js','utf8'),sandbox,{timeout:5000});
+if(Object.keys(registered).length!==entries.length)result.errors.push('Bundle count differs');
+for(const e of entries){const b=registered[e.ref];for(const [key,value] of Object.entries({explanation:e.explanation,context:e.context,application:e.application,references:e.crossReferences.join('; '),reviewStatus:e.reviewStatus,historicalContext:e.historicalContext,reviewFlags:e.reviewFlags,publicationHold:e.publicationHold}))if(JSON.stringify(b?.[key])!==JSON.stringify(value))result.errors.push(e.ref+': bundle mismatch '+key)}
+if(!fs.readFileSync(study+'index.html','utf8').includes('study-notes-genesis-drafts.js'))result.errors.push('Missing bundle script');
+const refs=new Set(entries.map(e=>e.ref));
+console.log(JSON.stringify({canonicalVerses:canon.length,books:books.length,chapters,drafts:entries.length,uniqueVerses:refs.size,pendingReview:entries.filter(e=>e.reviewStatus==='pending').length,remainingOutsideDraftSet:canon.length-refs.size,nextMissing:canon.find(v=>!refs.has(v.ref)&&!['Genesis 1:1','Genesis 1:2','Genesis 1:3'].includes(v.ref))?.ref,legacyAudit:['Genesis 1:1','Genesis 1:2','Genesis 1:3'].filter(r=>!refs.has(r)),errors:result.errors,legacySchemaWarnings:result.warnings.length,flaggedEntries:entries.filter(e=>e.reviewFlags?.length).map(e=>({ref:e.ref,flags:e.reviewFlags})),passed:!result.errors.length,limitations:'Validates local data structure, numbering, reference existence, exact duplicates, new text binding and bundle parity. Does not certify semantic relevance, historical truth, absence of plagiarism, doctrine, or human approval. Legacy schema warnings remain unresolved.'},null,2));
+if(result.errors.length)process.exitCode=1;

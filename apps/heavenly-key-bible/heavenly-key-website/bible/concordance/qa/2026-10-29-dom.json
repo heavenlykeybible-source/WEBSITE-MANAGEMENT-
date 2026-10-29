@@ -1,0 +1,17 @@
+{
+  "passed": 10,
+  "failed": 0,
+  "tests": [
+    "real scripts load exact KJV and new draft with visible review warning",
+    "all publication-held entries withheld in every tab",
+    "needs_revision never exposes text or falls back",
+    "chapter and cross-book navigation both directions",
+    "copy, share, fallback and permission failure handling",
+    "preserve legacy Genesis and Matthew study notes with unreviewed notice",
+    "undrafted verse fallback and full Scripture context",
+    "selected-book concordance query returns deep links",
+    "all-book concordance search and honest zero result",
+    "scripture request errors clear content and display status"
+  ],
+  "limitations": "DOM execution with local KJV fetches and mocked clipboard/share; not browser, mobile layout, native device permissions, production performance or real network QA."
+}

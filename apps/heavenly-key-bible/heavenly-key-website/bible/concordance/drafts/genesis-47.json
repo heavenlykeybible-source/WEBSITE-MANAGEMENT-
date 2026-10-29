@@ -1,0 +1,492 @@
+[
+  {
+    "ref": "Genesis 47:1",
+    "kjvText": "Then Joseph came and told Pharaoh, and said, My father and my brethren, and their flocks, and their herds, and all that they have, are come out of the land of Canaan; and, behold, they [are] in the land of Goshen.",
+    "kjvTextHash": "80a1d8332e180be56c06ff5b2483f796912215c78495bba1a602434c2e30761a",
+    "explanation": "Joseph informs Pharaoh that his father, brothers, livestock, and possessions have arrived from Canaan and are in Goshen. His report follows the plan he announced to the family. The account brings their private arrival under the public arrangements already offered by the Egyptian ruler.",
+    "context": "Genesis 46 ends with preparation for this audience; the following verses show the brothers requesting permission to reside.",
+    "historicalContext": "Goshen is the location proposed in Genesis 45:10 and reached in Genesis 46:28; no independent geographical reconstruction is required here.",
+    "crossReferences": [
+      "Genesis 45:10",
+      "Genesis 46:31"
+    ],
+    "application": "Complete agreed arrangements with clear communication rather than assuming an earlier invitation settles every practical detail.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:2",
+    "kjvText": "And he took some of his brethren, [even] five men, and presented them unto Pharaoh.",
+    "kjvTextHash": "697e51a4ee17e5904a04f1fbeb9a3316ce5537140c545d9f85f0c8bcba7a2f52",
+    "explanation": "Joseph chooses five of his brothers and presents them to Pharaoh. They act as representatives of the wider household, allowing the ruler to hear directly from the family. The text gives the number but does not identify which brothers were chosen or explain Joseph's selection criteria.",
+    "context": "Their presentation prepares for Pharaoh's question about their work and their request for land.",
+    "historicalContext": "This is the royal audience anticipated in Genesis 46:33; the verse does not describe additional court ceremony.",
+    "crossReferences": [
+      "Genesis 46:33",
+      "Genesis 47:3"
+    ],
+    "application": "Represent others faithfully without inventing reasons for a selection when the facts are not supplied.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:3",
+    "kjvText": "And Pharaoh said unto his brethren, What [is] your occupation? And they said unto Pharaoh, Thy servants [are] shepherds, both we, [and] also our fathers.",
+    "kjvTextHash": "4f858b75b5a1628a3dbcb5104e226bf70c3659d405f03c46d93f723dc3f234c3",
+    "explanation": "Pharaoh asks the brothers about their occupation, and they identify themselves and their fathers as shepherds. Their answer follows Joseph's preparation and truthfully describes their established way of life. They do not deny their work because Joseph has warned of Egyptian prejudice against shepherds.",
+    "context": "The occupation question introduces their explanation of why they need Goshen's pasture during the famine.",
+    "historicalContext": "Genesis 46:32-34 provides the narrative's own account of their livestock work and the relevant social difficulty.",
+    "crossReferences": [
+      "Genesis 46:32",
+      "Genesis 46:34"
+    ],
+    "application": "Tell the truth about your circumstances even when you suspect that others may regard them unfavorably.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:4",
+    "kjvText": "They said moreover unto Pharaoh, For to sojourn in the land are we come; for thy servants have no pasture for their flocks; for the famine [is] sore in the land of Canaan: now therefore, we pray thee, let thy servants dwell in the land of Goshen.",
+    "kjvTextHash": "590469b066bd9c86ff7b8bd608ca61fad63a8ad778b373ccae7748d447fc0129",
+    "explanation": "The brothers explain that they have come to sojourn because severe famine has left no pasture for their flocks in Canaan. They ask to dwell in Goshen. Their request identifies both the immediate crisis and a practical need, without claiming that Egypt has replaced the family's promised inheritance.",
+    "context": "Their request follows the occupational introduction and precedes Pharaoh's grant of suitable land.",
+    "historicalContext": "The KJV calls their stay a sojourn; Genesis 50:24 later reaffirms the promise of return to the land given to the fathers.",
+    "crossReferences": [
+      "Genesis 45:6",
+      "Genesis 50:24"
+    ],
+    "application": "Present genuine needs clearly and humbly, while remembering that present refuge need not erase long-term obligations.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:5",
+    "kjvText": "And Pharaoh spake unto Joseph, saying, Thy father and thy brethren are come unto thee:",
+    "kjvTextHash": "aa5029a7e59da6d356f7a643c5e552d416c91016db8f55d6e27d50e703f1650a",
+    "explanation": "Pharaoh acknowledges to Joseph that his father and brothers have come to him. The brief statement links the family's request with Joseph's responsibility toward them. It introduces the ruler's authorization in the next verse, so it should not be isolated as if it were the whole response.",
+    "context": "The brothers have asked for Goshen, and Pharaoh now addresses Joseph about where they may live.",
+    "historicalContext": "The verse records a royal reply within this particular family-settlement narrative, without supplying a general administrative rule.",
+    "crossReferences": [
+      "Genesis 47:4",
+      "Genesis 47:6"
+    ],
+    "application": "Listen to a person's full response before drawing conclusions from an introductory statement.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:6",
+    "kjvText": "The land of Egypt [is] before thee; in the best of the land make thy father and brethren to dwell; in the land of Goshen let them dwell: and if thou knowest [any] men of activity among them, then make them rulers over my cattle.",
+    "kjvTextHash": "e9655b4638f2c139e009530c5e2da90d708c6c4dcc3133a5f084106aadb61fcb",
+    "explanation": "Pharaoh allows the family to settle in the best land, specifically Goshen, and offers capable men responsibility over his cattle. The description men of activity concerns ability for the task. The permission combines generous residence with possible service suited to their existing knowledge of livestock.",
+    "context": "This grants the request made in Genesis 47:4 and leads to Joseph's actual settlement of the household.",
+    "historicalContext": "Pharaoh's own cattle are expressly mentioned, so Genesis 46:34 should not be expanded into a claim that Egypt had no livestock keepers.",
+    "crossReferences": [
+      "Genesis 46:34",
+      "Genesis 47:11"
+    ],
+    "application": "Entrust practical work to people whose ability fits the responsibility, rather than treating background alone as a disqualification.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:7",
+    "kjvText": "And Joseph brought in Jacob his father, and set him before Pharaoh: and Jacob blessed Pharaoh.",
+    "kjvTextHash": "f303ff97a1ee5ff5941514a1f6c9c65e7228fe25c468919b89df6138dfb401e9",
+    "explanation": "Joseph brings Jacob before Pharaoh, and Jacob blesses the ruler. The elderly father is more than a dependent receiving material aid; he also speaks a blessing. The verse does not give the wording of that blessing or describe a conversion or spiritual endorsement of Pharaoh.",
+    "context": "Jacob's personal audience follows the brothers' request and frames the conversation about his age.",
+    "historicalContext": "Genesis 47:10 records another blessing at Jacob's departure, forming a frame around the brief meeting.",
+    "crossReferences": [
+      "Genesis 47:10",
+      "Genesis 12:3"
+    ],
+    "application": "Receive help gratefully while continuing to seek the good of those who assist you.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:8",
+    "kjvText": "And Pharaoh said unto Jacob, How old [art] thou?",
+    "kjvTextHash": "3921c6e4375e4d13586cd52630f6a8d21cfc3ed9636764aef8a7bf6481b34ac1",
+    "explanation": "Pharaoh asks Jacob his age. The question draws attention to the elderly patriarch and opens the way for Jacob to reflect on the character of his life. Its meaning is clarified by the answer; the verse itself does not reveal Pharaoh's private motives for asking.",
+    "context": "This question stands between Jacob's opening blessing and his description of life as a pilgrimage.",
+    "historicalContext": "Jacob states his age in the following verse, so no calculation from an external chronology is needed.",
+    "crossReferences": [
+      "Genesis 47:9",
+      "Genesis 47:28"
+    ],
+    "application": "Hear an older person's account with attention rather than reducing their life to an outward appearance or a number.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:9",
+    "kjvText": "And Jacob said unto Pharaoh, The days of the years of my pilgrimage [are] an hundred and thirty years: few and evil have the days of the years of my life been, and have not attained unto the days of the years of the life of my fathers in the days of their pilgrimage.",
+    "kjvTextHash": "98dd0effc081620fc31ea0af4c2505a7b077624dd53c1c4668b4896e9b6a86ac",
+    "explanation": "Jacob describes his 130 years as a pilgrimage marked by trouble and shorter than the lives of his fathers. His words gather up sorrow and displacement without denying God's preservation. The verse records his personal assessment, not a declaration that God's promises have failed.",
+    "context": "Jacob speaks after years of bereavement and family conflict but at a moment of reunion and provision in Egypt.",
+    "historicalContext": "Genesis 25:7 gives Abraham's age as 175 and Genesis 35:28 gives Isaac's as 180, illuminating Jacob's comparison.",
+    "crossReferences": [
+      "Genesis 25:7",
+      "Genesis 35:28",
+      "Hebrews 11:13"
+    ],
+    "application": "Remember God's sustaining care while honestly acknowledging suffering; faith does not require pretending that hardship was painless.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:10",
+    "kjvText": "And Jacob blessed Pharaoh, and went out from before Pharaoh.",
+    "kjvTextHash": "21a74b8868dfa79227099b4846fed8924892de794c458e8455e426c38085fe3d",
+    "explanation": "Jacob blesses Pharaoh again and leaves his presence. The closing blessing completes the audience without adding a long speech or demand. The narrative presents a respectful encounter between the patriarch and the ruler who has authorized a place for his family during famine.",
+    "context": "This repeats the blessing at Genesis 47:7 and closes the conversation about Jacob's years.",
+    "historicalContext": "The precise words of either blessing are not preserved; this commentary does not reconstruct them.",
+    "crossReferences": [
+      "Genesis 47:7",
+      "Genesis 47:6"
+    ],
+    "application": "Let gratitude and goodwill shape how you conclude an encounter, including with people outside your own community.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:11",
+    "kjvText": "¶ And Joseph placed his father and his brethren, and gave them a possession in the land of Egypt, in the best of the land, in the land of Rameses, as Pharaoh had commanded.",
+    "kjvTextHash": "f18f80fd487f09c571ab991f665678c9d24cb36a2d042cab998825e162cdd7e3",
+    "explanation": "Joseph settles his father and brothers in the best part of Egypt, described as the land of Rameses, according to Pharaoh's command. The promised refuge becomes an actual possession for the household. The place-name alone does not identify the Pharaoh of Joseph's time or establish an exact date.",
+    "context": "The settlement carries out the permission given in Genesis 47:6 and precedes the account of food provision.",
+    "historicalContext": "The verse itself supplies the name Rameses; no unsupported identification with a particular dynasty is asserted.",
+    "crossReferences": [
+      "Genesis 47:6",
+      "Genesis 45:18"
+    ],
+    "application": "Follow through on authorized commitments so that promised assistance becomes practical provision.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:12",
+    "kjvText": "And Joseph nourished his father, and his brethren, and all his father’s household, with bread, according to [their] families.",
+    "kjvTextHash": "0f4d1f1cc962f8ab79df535ae31a210e71a338537f16444ed1b8010ef233dd84",
+    "explanation": "Joseph provides bread for his father, brothers, and the entire household according to their families. The provision is organized around the people who need sustenance, including dependents. Joseph's earlier promise to nourish them is therefore fulfilled through continuing care rather than a single ceremonial welcome.",
+    "context": "This closes the immediate settlement account before the narrative returns to famine across Egypt and Canaan.",
+    "historicalContext": "Genesis 45:11 had promised support through the famine; the verse gives no exact ration weight or distribution schedule.",
+    "crossReferences": [
+      "Genesis 45:11",
+      "1 Timothy 5:8"
+    ],
+    "application": "Care for relatives consistently, taking account of the people dependent on each household.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:13",
+    "kjvText": "¶ And [there was] no bread in all the land; for the famine [was] very sore, so that the land of Egypt and [all] the land of Canaan fainted by reason of the famine.",
+    "kjvTextHash": "f47544f3934afb39d4523be79b7c1de9dd218d10d0784474067f41b007ab88e7",
+    "explanation": "The famine becomes so severe that both Egypt and Canaan languish for lack of bread. The narrative turns from Joseph's well-supplied family to the wider population's distress. This contrast introduces the economic measures that follow and keeps the suffering of ordinary people in view.",
+    "context": "The verse begins the account of money, livestock, and land being exchanged for food.",
+    "historicalContext": "Genesis 41:54-57 already describes the regional famine and grain purchases; no additional climate reconstruction is claimed.",
+    "crossReferences": [
+      "Genesis 41:54",
+      "Genesis 41:57"
+    ],
+    "application": "Do not let your own provision make you indifferent to hunger and hardship beyond your household.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:14",
+    "kjvText": "And Joseph gathered up all the money that was found in the land of Egypt, and in the land of Canaan, for the corn which they bought: and Joseph brought the money into Pharaoh’s house.",
+    "kjvTextHash": "a1ee9904e7aa4825bbefd5e1a31802376031e1c18743e3510e10468a13b8664b",
+    "explanation": "Joseph gathers the money paid for grain in Egypt and Canaan and brings it into Pharaoh's house. The narrative identifies the revenue as royal rather than Joseph's private accumulation. This transaction belongs to the famine administration and is followed by the exhaustion of people's purchasing money.",
+    "context": "The next verse describes the Egyptians approaching Joseph when money is no longer available.",
+    "historicalContext": "The KJV uses corn for grain in this account; the passage does not identify a modern maize crop or name the currency units.",
+    "crossReferences": [
+      "Genesis 41:56",
+      "Genesis 47:15"
+    ],
+    "application": "Handle entrusted funds transparently and distinguish institutional resources from personal property.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:15",
+    "kjvText": "And when money failed in the land of Egypt, and in the land of Canaan, all the Egyptians came unto Joseph, and said, Give us bread: for why should we die in thy presence? for the money faileth.",
+    "kjvTextHash": "45341adc72edbf2ab9341de2715078406a93c7abbaa6f9e27bde307782fd712e",
+    "explanation": "When money fails, the Egyptians ask Joseph for bread so that they will not die. Their appeal reveals that a food crisis can persist even where grain is stored, if people no longer have the means to obtain it. The narrative foregrounds their urgent dependence.",
+    "context": "Their request leads to an exchange of livestock for food rather than an immediate end to the famine.",
+    "historicalContext": "Genesis 47:14 explains the preceding transfer of purchasing money into Pharaoh's treasury; this verse supplies no alternative income figures.",
+    "crossReferences": [
+      "Genesis 47:14",
+      "Genesis 47:16"
+    ],
+    "application": "Recognize inability to pay as a serious human need rather than assuming available supplies are accessible to everyone.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:16",
+    "kjvText": "And Joseph said, Give your cattle; and I will give you for your cattle, if money fail.",
+    "kjvTextHash": "135cd297ad0297c0f2074511f4c3793dc8a3c84d52e9bec514b17825820a0df5",
+    "explanation": "Joseph proposes exchanging food for cattle after money has failed. The proposal keeps grain available through another form of payment, but it also means that households part with assets. The verse describes the policy taken in this crisis without making it a general command for Christian relief work.",
+    "context": "Genesis 47:17 records the exchange and its duration, before the people face a further loss of resources.",
+    "historicalContext": "Livestock are explicitly the next means of exchange; the text gives no price table or estimate of exchange fairness.",
+    "crossReferences": [
+      "Genesis 47:17",
+      "Genesis 47:18"
+    ],
+    "application": "Assess how emergency decisions affect both immediate survival and people's future ability to sustain themselves.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:17",
+    "kjvText": "And they brought their cattle unto Joseph: and Joseph gave them bread [in exchange] for horses, and for the flocks, and for the cattle of the herds, and for the asses: and he fed them with bread for all their cattle for that year.",
+    "kjvTextHash": "1cb38f22f73b90a1496dbd58c8bd7ca8a7b7f57a82541a5ba0383e8b0831ea49",
+    "explanation": "The people exchange horses, flocks, cattle, and asses for bread, and Joseph feeds them through that year. The list shows how extensive the exchange becomes. Food preserves life in the immediate crisis, while ownership of livestock passes away from the households that previously held it.",
+    "context": "This completes the policy proposed in the preceding verse and prepares for the people's statement that only land and bodies remain.",
+    "historicalContext": "The passage lists kinds of animals but does not quantify herds or describe how the animals were subsequently managed.",
+    "crossReferences": [
+      "Genesis 47:16",
+      "Genesis 47:18"
+    ],
+    "application": "Consider long-term livelihood as well as immediate consumption when planning help during a prolonged crisis.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:18",
+    "kjvText": "When that year was ended, they came unto him the second year, and said unto him, We will not hide [it] from my lord, how that our money is spent; my lord also hath our herds of cattle; there is not ought left in the sight of my lord, but our bodies, and our lands:",
+    "kjvTextHash": "9a146d6c211e5deb7320a3f4895acae6bc2bfcb84f9c9dfbf9d9e97342fbb23e",
+    "explanation": "At the end of that year, the people openly tell Joseph that their money and livestock are gone, leaving their bodies and land. Their statement describes a narrowing of choices under severe pressure. It introduces the costly proposal they make next, rather than portraying their situation as prosperity.",
+    "context": "The account progresses from money to livestock and then to land and personal service.",
+    "historicalContext": "The second year is relative to the preceding transaction; the verse does not independently fix its place within the entire seven-year famine.",
+    "crossReferences": [
+      "Genesis 47:17",
+      "Genesis 47:19"
+    ],
+    "application": "Hear the full circumstances of distressed people before judging the choices they make under pressure.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:19",
+    "kjvText": "Wherefore shall we die before thine eyes, both we and our land? buy us and our land for bread, and we and our land will be servants unto Pharaoh: and give [us] seed, that we may live, and not die, that the land be not desolate.",
+    "kjvTextHash": "29919ce3596e336f2530d10969f3d938361059a49f58ca289a63779f92956240",
+    "explanation": "The people ask Joseph to acquire them and their land for bread, and they request seed so that the land may produce again. Their proposal joins immediate survival with future cultivation, but it also involves dependence on Pharaoh. Their urgent request should not be romanticized as unrestricted choice.",
+    "context": "The following verses record the transfer of land and the terms imposed on future harvests.",
+    "historicalContext": "The stated context is famine and exhausted resources; this note makes no claim about an otherwise unattested legal contract.",
+    "crossReferences": [
+      "Genesis 47:18",
+      "Genesis 47:23"
+    ],
+    "application": "Protect human dignity when people are desperate; do not turn their vulnerability into a simple model for ministry practice.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Ethical interpretation of famine-driven personal service requires human review; narrative description is not blanket approval of coercion."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Genesis 47:20",
+    "kjvText": "And Joseph bought all the land of Egypt for Pharaoh; for the Egyptians sold every man his field, because the famine prevailed over them: so the land became Pharaoh’s.",
+    "kjvTextHash": "2e588f495491ef314576b07f240b6c1f65e86f9e58336e0d47379e160b5f7638",
+    "explanation": "Joseph purchases the Egyptians' fields for Pharaoh because the famine has compelled them to sell. The result is a major concentration of landholding under the crown. The verse states both the transaction and its pressure-filled cause; it does not instruct believers to imitate every feature of this policy.",
+    "context": "This is the outcome of the people's proposal and the setting for the later one-fifth harvest requirement.",
+    "historicalContext": "The chapter itself explains the transfer; no independent claim about the origin of all Egyptian royal land is made.",
+    "crossReferences": [
+      "Genesis 47:19",
+      "Genesis 47:26"
+    ],
+    "application": "Examine the effects of power during emergencies, particularly when people cannot bargain from a secure position.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Review moral and historical conclusions about land consolidation; avoid presenting this policy as a universal divine economic command."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Genesis 47:21",
+    "kjvText": "And as for the people, he removed them to cities from [one] end of the borders of Egypt even to the [other] end thereof.",
+    "kjvTextHash": "85a1088698a2fecb2f756c202772831b13324dcda0352a849c829fb0ef1239db",
+    "explanation": "Joseph moves the people to cities across Egypt. The KJV records the breadth of the movement but gives no detailed explanation of the logistics or each household's destination. Speculation about the exact administrative purpose should be distinguished from what this verse actually says.",
+    "context": "This action follows the land transfer and precedes the stated exception for priests' land.",
+    "historicalContext": "The note follows the KJV wording about removal to cities and does not substitute another textual reading as the verse text.",
+    "crossReferences": [
+      "Genesis 47:20",
+      "Genesis 47:22"
+    ],
+    "application": "Acknowledge the human impact of large administrative decisions even when the account gives few personal details.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Population relocation and its unstated purpose require review before any stronger historical or ethical claim is published."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Genesis 47:22",
+    "kjvText": "Only the land of the priests bought he not; for the priests had a portion [assigned them] of Pharaoh, and did eat their portion which Pharaoh gave them: wherefore they sold not their lands.",
+    "kjvTextHash": "c1cea18aba8aafcff1ebdacc93077a838fa5ebec0196c307f86086cf7676f502",
+    "explanation": "The priests' land is exempt from purchase because Pharaoh already supplies them with a portion sufficient for food. Their support allows them to retain land that other households sell. The verse describes an exception within Egyptian arrangements without endorsing Egyptian worship or prescribing church financial policy.",
+    "context": "The exception interrupts the account of general land transfer and is repeated in the summary of the law.",
+    "historicalContext": "The priests mentioned belong to Pharaoh's setting; they are not identified as Israel's later Levitical priesthood.",
+    "crossReferences": [
+      "Genesis 47:20",
+      "Genesis 47:26"
+    ],
+    "application": "Distinguish a reported institutional privilege from a biblical command, and notice how access to provision affects outcomes in crisis.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:23",
+    "kjvText": "Then Joseph said unto the people, Behold, I have bought you this day and your land for Pharaoh: lo, [here is] seed for you, and ye shall sow the land.",
+    "kjvTextHash": "e090545eb6d7ce5473eacef3116be689fef709eaf28896a4f948564974d424c8",
+    "explanation": "Joseph tells the people that they and their land have been acquired for Pharaoh, then supplies seed for cultivation. The provision offers a path back to production under changed ownership. The text holds together preservation of life and the loss of former independence rather than erasing either feature.",
+    "context": "This introduces the terms for dividing the future harvest in Genesis 47:24.",
+    "historicalContext": "Seed and sowing are explicitly mentioned; the verse does not specify crop species, acreage, or a detailed planting calendar.",
+    "crossReferences": [
+      "Genesis 47:19",
+      "Genesis 47:24"
+    ],
+    "application": "Seek restoration of productive livelihoods when helping people recover from hunger, while considering the conditions attached to assistance.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Personal service and land tenure require human ethical review; no automatic endorsement of the arrangement is asserted."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Genesis 47:24",
+    "kjvText": "And it shall come to pass in the increase, that ye shall give the fifth [part] unto Pharaoh, and four parts shall be your own, for seed of the field, and for your food, and for them of your households, and for food for your little ones.",
+    "kjvTextHash": "b79c7634c1f11b5e4e4f56ca6dea3f0147653b8c05dffe1702e124bafa06a05d",
+    "explanation": "Joseph requires one-fifth of the increase for Pharaoh and leaves four parts for seed and household food, including the children. The terms specify an ongoing allocation of produce. This is an Egyptian famine settlement, not a command establishing a Christian tithe or a universal tax rate.",
+    "context": "The requirement follows the provision of seed and is later summarized as a continuing law.",
+    "historicalContext": "One-fifth is the fraction stated in the text; no claim about comparison with all other ancient tax systems is made.",
+    "crossReferences": [
+      "Genesis 47:23",
+      "Genesis 47:26"
+    ],
+    "application": "Read financial passages in their own setting before applying them to church giving or modern public policy.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Review applications of this economic policy; do not equate Pharaoh's fifth with a Christian giving requirement."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Genesis 47:25",
+    "kjvText": "And they said, Thou hast saved our lives: let us find grace in the sight of my lord, and we will be Pharaoh’s servants.",
+    "kjvTextHash": "78396356eb7f38392455c33ace956321f80baade5d64690f3885ce20017e9507",
+    "explanation": "The people acknowledge Joseph's preservation of their lives and accept service to Pharaoh. Their gratitude is part of the account and should be heard, while the preceding verses still show how constrained their options were. Neither feature cancels the other or settles every ethical question about the policy.",
+    "context": "Their reply follows the explanation of seed provision and the harvest division.",
+    "historicalContext": "The words are the people's reported response; they are not presented here as a general divine command to accept bondage.",
+    "crossReferences": [
+      "Genesis 47:19",
+      "Genesis 47:24"
+    ],
+    "application": "Be grateful for rescue while remaining attentive to the dignity and future freedom of those who receive help.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Review the relationship between gratitude and constrained consent; avoid using this verse to justify exploitation."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Genesis 47:26",
+    "kjvText": "And Joseph made it a law over the land of Egypt unto this day, [that] Pharaoh should have the fifth [part;] except the land of the priests only, [which] became not Pharaoh’s.",
+    "kjvTextHash": "200c65a9f169ec9c9e0359e982804c50046d1a721ccdd2b96bbaa8cc2fb163ab",
+    "explanation": "The narrative summarizes the lasting law that gives Pharaoh one-fifth of the produce, with priests' land excepted. The expression unto this day refers to the narrator's horizon, not a claim that the arrangement continues into the present. The summary closes the account of Joseph's famine administration.",
+    "context": "The repeated exception recalls Genesis 47:22 and the harvest fraction recalls Genesis 47:24.",
+    "historicalContext": "The verse does not identify the precise date of the narrator's present or provide an independent history of later Egyptian taxation.",
+    "crossReferences": [
+      "Genesis 47:22",
+      "Genesis 47:24"
+    ],
+    "application": "Avoid extending a historical summary beyond the time and scope the text actually establishes.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Human review required before drawing broader historical or prescriptive conclusions from the enduring-law summary."
+    ],
+    "publicationHold": true
+  },
+  {
+    "ref": "Genesis 47:27",
+    "kjvText": "¶ And Israel dwelt in the land of Egypt, in the country of Goshen; and they had possessions therein, and grew, and multiplied exceedingly.",
+    "kjvTextHash": "bc1bad84b2255a1f0bf1e2e64da0014b5094eece43915274ec55bfff8270d6a7",
+    "explanation": "Israel settles in Goshen, acquires possessions, and grows greatly in number. The verse resumes the family's story after the wider famine account. Their increase recalls God's assurance before the journey and prepares for Exodus, where growth continues even when circumstances turn against them.",
+    "context": "This returns from Egyptian land policy to the household through which the covenant narrative continues.",
+    "historicalContext": "Exodus 1:7 later describes Israel's further multiplication; this verse gives no population estimate or annual growth rate.",
+    "crossReferences": [
+      "Genesis 46:3",
+      "Exodus 1:7"
+    ],
+    "application": "Receive material security gratefully without assuming it guarantees permanent ease or removes the need for faithfulness.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:28",
+    "kjvText": "And Jacob lived in the land of Egypt seventeen years: so the whole age of Jacob was an hundred forty and seven years.",
+    "kjvTextHash": "c2c01d3179539661a5118cdcf8383e07d94de6ab24baa50f9b54e2657da7994a",
+    "explanation": "Jacob lives seventeen years in Egypt and reaches the age of 147. The exact figures close the account of his residence and prepare for his final instructions. They also show that his relieved words at the reunion were not a prediction of immediate death.",
+    "context": "This follows the family's growth and leads directly to Jacob's request concerning his burial.",
+    "historicalContext": "Genesis 47:9 gives his age on arrival as 130; adding the seventeen stated years yields the age supplied here.",
+    "crossReferences": [
+      "Genesis 46:30",
+      "Genesis 47:9"
+    ],
+    "application": "Use the years granted after a long-awaited answer to prayer with continued gratitude and responsibility.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:29",
+    "kjvText": "And the time drew nigh that Israel must die: and he called his son Joseph, and said unto him, If now I have found grace in thy sight, put, I pray thee, thy hand under my thigh, and deal kindly and truly with me; bury me not, I pray thee, in Egypt:",
+    "kjvTextHash": "75369d4fadc72944fefd28b685cfbf8c582bd43152a186aacd7acffe88b5805c",
+    "explanation": "As death approaches, Jacob asks Joseph for kindness and truth, requests an oath gesture, and insists that he not be buried in Egypt. His concern looks beyond present comfort to his family burial place. The request is personal and covenant-related, not a prohibition on burial outside one's birthplace for all believers.",
+    "context": "The next verse specifies burial with his fathers, and Genesis 50 records Joseph's fulfillment of the promise.",
+    "historicalContext": "Genesis 24:2-3 records the same hand-under-thigh oath gesture; Scripture does not explain its symbolism here.",
+    "crossReferences": [
+      "Genesis 24:2",
+      "Genesis 50:5"
+    ],
+    "application": "Honor serious final wishes with integrity where they can properly be fulfilled, without inventing a universal rule from them.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:30",
+    "kjvText": "But I will lie with my fathers, and thou shalt carry me out of Egypt, and bury me in their buryingplace. And he said, I will do as thou hast said.",
+    "kjvTextHash": "d8e0c00e3bb7d858e1af80d71698fcc0932c62c3efe7cf20b8067f54753da35b",
+    "explanation": "Jacob asks to be carried out of Egypt and buried with his fathers, and Joseph promises to comply. The request binds the son's practical duty to the father's enduring connection with Canaan. It expresses burial hope without denying that the family has received real refuge in Egypt.",
+    "context": "This clarifies the request not to be buried in Egypt and leads to Joseph's solemn oath.",
+    "historicalContext": "Genesis 49:29-32 later identifies the burial property, and Genesis 50:13 describes the burial there.",
+    "crossReferences": [
+      "Genesis 49:29",
+      "Genesis 50:13"
+    ],
+    "application": "Keep promises involving the vulnerable and bereaved with care, planning, and respect for what was actually requested.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 47:31",
+    "kjvText": "And he said, Swear unto me. And he sware unto him. And Israel bowed himself upon the bed’s head.",
+    "kjvTextHash": "3765e3771b534387d71b910e6be1ec35b684693c478a5cb369ec98422bebf715",
+    "explanation": "Joseph swears to fulfill the burial request, and Israel bows upon the bed's head. The scene closes with a solemn commitment and the elderly patriarch's response. It should be explained first in the KJV's own wording, while comparisons with Hebrews are handled without invented details about posture or furniture.",
+    "context": "The oath secures the request before Jacob's later blessing of Joseph's sons and his instructions to the wider family.",
+    "historicalContext": "Hebrews 11:21 speaks of Jacob worshipping while leaning on his staff; this note does not force an unsupported physical reconstruction.",
+    "crossReferences": [
+      "Genesis 50:5",
+      "Hebrews 11:21"
+    ],
+    "application": "Treat solemn commitments as obligations to fulfill, especially when the person receiving the promise cannot later enforce it.",
+    "reviewStatus": "pending",
+    "reviewFlags": [
+      "Compare the KJV bed wording with Hebrews 11:21 under human textual review; withhold a speculative harmonization."
+    ],
+    "publicationHold": true
+  }
+]

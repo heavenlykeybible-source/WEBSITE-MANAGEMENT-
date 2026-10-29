@@ -1,0 +1,25 @@
+{
+  "passed": 19,
+  "failed": 0,
+  "tests": [
+    "66 books, 1189 chapters, 31102 contiguous verse records",
+    "all saved draft references, cross-references, duplicate text and bundle fields",
+    "valid new record meets strict intake schema",
+    "reject wrong verse",
+    "reject mismatched KJV text",
+    "reject mismatched hash",
+    "reject nonexistent cross-reference",
+    "reject empty explanation",
+    "reject missing historical context",
+    "reject automatic approval",
+    "reject obsolete rejected status",
+    "require hold for review flags",
+    "reject duplicated record",
+    "reject normalized duplicate explanation",
+    "expand real KJV same-chapter ranges and Psalm alias",
+    "reject invalid and descending ranges",
+    "500-verse missing-only resumable packets start at next missing, no duplicates",
+    "1000-verse scaling requires explicit reliability override",
+    "intake refuses an already-saved batch"
+  ]
+}

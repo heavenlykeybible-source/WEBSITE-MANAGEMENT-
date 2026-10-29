@@ -18,7 +18,7 @@ function enhance(){
  let linked=0;
  for(const part of parts){
   const match=part.trim().match(pattern);
-  const option=match?Array.from(bookSelector.options).find(o=>o.text===match[1]):null;
+  const option=match?Array.from(bookSelector.options).find(o=>o.text===match[1].replace(/^Psalm$/,'Psalms')):null;
   if(!option){fragment.append(document.createTextNode(part));continue}
   const url=new URL(location.href);
   url.searchParams.set('book',option.value);
