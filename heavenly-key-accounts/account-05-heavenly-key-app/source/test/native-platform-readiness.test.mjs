@@ -68,3 +68,17 @@ test('Windows signed release candidate is gated and never publicly deployed',()=
  assert.match(workflow,/Get-AuthenticodeSignature/);
  assert.doesNotMatch(workflow,/wrangler deploy|actions\/create-release|cloudflare\/pages-action/);
 });
+
+test('Apple iOS and Mac signed release workflows require manual approval and credentials',()=>{
+ for(const [filename,secrets,proof] of [
+  ['release-account5-ios.yml',['HKEM_IOS_DISTRIBUTION_P12_BASE64','HKEM_IOS_PROFILE_BASE64','HKEM_APPLE_TEAM_ID'],'xcodebuild -exportArchive'],
+  ['release-account5-macos.yml',['HKEM_MAC_DEVELOPER_ID_P12_BASE64','HKEM_APPLE_NOTARY_PASSWORD','HKEM_APPLE_TEAM_ID'],'xcrun notarytool submit']
+ ]){
+  const workflow=readWorkflow(filename);
+  assert.match(workflow,/workflow_dispatch/,filename);
+  assert.match(workflow,/environment: production-release/,filename);
+  for(const secret of secrets)assert.ok(workflow.includes(secret),filename+': '+secret);
+  assert.ok(workflow.includes(proof),filename+': required signing or notarization step');
+  assert.doesNotMatch(workflow,/wrangler deploy|cloudflare\/pages-action|actions\/create-release/,filename);
+ }
+});
