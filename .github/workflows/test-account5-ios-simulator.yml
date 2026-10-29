@@ -10,7 +10,7 @@ permissions:
 jobs:
   ios-simulator-build:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
@@ -21,4 +21,20 @@ jobs:
       - name: Compile iOS/iPadOS for simulator only
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/ios
         run: |
-          xcodebuild -project HeavenlyKey.xcodeproj -scheme HeavenlyKey -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+          xcodebuild -project HeavenlyKey.xcodeproj -scheme HeavenlyKey -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$PWD/test-derived" CODE_SIGNING_ALLOWED=NO build
+      - name: Install and launch on an iPhone simulator
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/ios
+        shell: bash
+        run: |
+          set -euo pipefail
+          device="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next((x["udid"] for vs in d.values() for x in vs if x.get("isAvailable") and x.get("name","").startswith("iPhone")), ""))')"
+          test -n "$device" || { echo "::error::No available iPhone simulator"; exit 1; }
+          xcrun simctl boot "$device"
+          xcrun simctl bootstatus "$device" -b
+          app="$PWD/test-derived/Build/Products/Debug-iphonesimulator/HeavenlyKey.app"
+          test -d "$app"
+          xcrun simctl install "$device" "$app"
+          xcrun simctl launch "$device" org.heavenlykey.apps
+          xcrun simctl shutdown "$device"
+      - name: Confirm scope
+        run: echo "Simulator installation does not establish physical-device or App Store distribution readiness."
