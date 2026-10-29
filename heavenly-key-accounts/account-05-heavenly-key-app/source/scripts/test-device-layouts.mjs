@@ -62,6 +62,28 @@ try{
     if(state.width>state.viewport+12)throw Error('Horizontal overflow: '+JSON.stringify(state));
     if(state.unsafeLinks)throw Error('Inert javascript links: '+state.unsafeLinks);
     if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
+    if(id==='directory' && size.name==='phone'){
+     // Every advertised app must open its correct chooser and five device links.
+     // Catch buttons that look correct but cannot be clicked on a small phone.
+     for(const appId of Object.keys(catalogue)){
+      const button=page.locator('[data-download-app="'+appId+'"]');
+      if(await button.count()!==1)throw Error('Missing or duplicate app chooser: '+appId);
+      await button.click({timeout:5000});
+      const dialog=page.locator('dialog.hk-install-dialog');
+      await dialog.waitFor({state:'visible',timeout:5000});
+      const expectedName=catalogue[appId].name;
+      const actualName=(await dialog.locator('h2').innerText()).trim();
+      if(actualName!==expectedName)throw Error('Wrong app chooser heading '+appId+': '+actualName);
+      for(const device of ['android','iphone','ipad','windows','mac']){
+       const guide='/download/'+device+'/?app='+encodeURIComponent(appId);
+       if(await dialog.locator('a[href="'+guide+'"]').count()<1)throw Error('Missing device '+device+' for '+appId);
+       if(await dialog.locator('img[src="/qr/app-'+appId+'-'+device+'.svg"]').count()!==1)throw Error('Missing matching QR image '+device+' for '+appId);
+      }
+      await dialog.locator('button.dialog-close').click();
+      await dialog.waitFor({state:'detached',timeout:5000});
+     }
+     console.log('PASS all',Object.keys(catalogue).length,'app selection dialogs on small phone');
+    }
     if(['directory','all-in-one'].includes(id)){
      await page.screenshot({path:path.join(screenshots,id+'-'+size.name+'.png'),fullPage:true,timeout:20000});
     }
