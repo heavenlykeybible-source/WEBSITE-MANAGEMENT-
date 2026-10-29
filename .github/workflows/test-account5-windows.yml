@@ -22,3 +22,19 @@ jobs:
       - name: Compile native Windows application
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
         run: dotnet build HeavenlyKeyWindows.csproj --no-restore -c Release
+      - name: Package Windows x64 self-contained testing executable
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
+        shell: pwsh
+        run: |
+          dotnet publish HeavenlyKeyWindows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./test-publish
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $exe = Get-Item ./test-publish/HeavenlyKeyWindows.exe -ErrorAction Stop
+          if ($exe.Length -lt 100000) { throw "Windows executable is unexpectedly small" }
+          Get-FileHash ./test-publish/HeavenlyKeyWindows.exe -Algorithm SHA256 | Format-List
+      - name: Retain nonproduction Windows testing build
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavenly-key-account5-windows-test-build-unsigned
+          path: heavenly-key-accounts/account-05-heavenly-key-app/native/windows/test-publish/
+          retention-days: 14
+          if-no-files-found: error
