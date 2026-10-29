@@ -128,3 +128,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Regenerated browser study notes to include 334 Genesis draft entries, commit 7cad7768dde32bf9a29c45474163e3b0c67513e9.
 - Updated scripts/concordance-draft-check.mjs to include chapter 13 and expected count 334, commit 77ac909d81f697b790c9e8288c5e918aec6073d4.
 - No Node/browser test or human doctrinal review has been run. Next: Genesis 14 onward and validation of the 66-book batch queue; avoid claiming all 31,102 explanations are done. Bible Dictionary untouched, no deployment.
+
+## Latest checkpoint — Genesis 14
+- Added 24 original pending-review verse-specific Genesis 14:1–24 draft commentaries, commit f0bf4ec73f24ad8876d555d22ec2fb897e0e54ee. Treat Melchizedek carefully: typological significance in Hebrews, no unsupported claim of identity.
+- Regenerated browser notes to 358 draft entries, commit 76808c4de70d5f34ea743d159eb15dc35a61bdec.
+- Updated draft validation script to expect 358 and include Genesis 14, commit b451860a1291d7cad8651f0816904cc312ce21e2.
+- Next: Genesis 15, systematic full-canon cross-reference checks and actual execution of Node scripts. Batch queue infrastructure exists but has not yet been run. All drafts pending doctrinal review. No deployment or Bible Dictionary changes.
