@@ -106,7 +106,7 @@ function renderPlan(){
  el("plan-passages").replaceChildren();
  for(const passage of plan.days[planDay]){
   const button=document.createElement("button");button.type="button";button.textContent=passage.book+" "+passage.chapter;
-  button.addEventListener("click",()=>{book.value=passage.book;chapters(passage.chapter);loadChapter();el("reader").scrollIntoView({behavior:"smooth"});});
+  button.addEventListener("click",()=>{book.value=passage.book;chapters(passage.chapter);loadChapter().then(()=>{const target=el("verses").querySelector('[data-verse="'+Number(verse.number)+'"]');(target||el("reader")).scrollIntoView({behavior:"smooth",block:"center"});});});
   el("plan-passages").append(button);
  }
  message("plan-day","Day "+(planDay+1)+" of "+plan.days.length);
@@ -195,7 +195,7 @@ async function searchScripture(event){
    const data=await getBook(name);if(token!==searchRequest)return;
    for(const [ch,verses] of Object.entries(data.chapters)){
     for(const verse of verses){
-     if(!verse.text.toLowerCase().includes(query))continue;
+     if(verse.isPlaceholder===true||typeof verse.text!=="string"||!verse.text.trim()||!verse.text.toLocaleLowerCase().includes(query))continue;
      count++;
      if(count<=100){const button=document.createElement("button");button.type="button";button.className="search-result";button.textContent=name+" "+ch+":"+verse.number+" — "+verse.text;button.addEventListener("click",()=>{book.value=name;chapters(Number(ch));loadChapter();el("reader").scrollIntoView({behavior:"smooth"});});el("scripture-results").append(button);}
     }
