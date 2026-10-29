@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/be.mjs && node tests/frontend.mjs && node tests/offline.mjs",
+    "test": "node tests/be.mjs && node tests/frontend.mjs && node tests/offline.mjs && node tests/timeline-runtime.mjs",
     "preflight": "node scripts/preflight.mjs",
     "check": "npm run preflight && npm test"
   }

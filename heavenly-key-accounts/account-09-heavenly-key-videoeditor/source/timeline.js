@@ -33,14 +33,14 @@ async function runTimeline(record){
  const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
  if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
  const state={cancelled:false};session=state;setBusy(true);
- const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null,sourceStream=null;
+ const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null,sourceStream=null,encoderError=null;
  try{
   const fragments=[];let finished;
   if(record){
    stream=canvas.captureStream(30);
    try{if(v.captureStream){sourceStream=v.captureStream();for(const track of sourceStream.getAudioTracks())stream.addTrack(track)}}catch{}
    rec=new MediaRecorder(stream,{mimeType:mime});
-   finished=new Promise((resolve,reject)=>{rec.onstop=resolve;rec.onerror=e=>reject(e.error||Error('Encoder failed'))});
+   finished=new Promise(resolve=>{rec.onstop=resolve;rec.onerror=e=>{encoderError=e.error||Error('Encoder failed');resolve()}});
    rec.ondataavailable=e=>{if(e.data.size)fragments.push(e.data)};
    $('clipDownload').hidden=true;
   }
@@ -58,17 +58,17 @@ async function runTimeline(record){
     const end=()=>finish(),error=()=>finish(Error('Video playback failed'));
     v.addEventListener('ended',end);v.addEventListener('error',error);
     const started=Date.now(),maxMs=Math.max(15000,((c.end-c.start)/c.speed+12)*1000);
-    timer=setInterval(()=>{if(state.cancelled||v.currentTime>=c.end-.03||v.ended)return finish();if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
+    timer=setInterval(()=>{if(encoderError)return finish(encoderError);if(rec&&rec.state==='inactive')return finish(Error('Video encoder stopped before timeline finished'));if(state.cancelled||v.currentTime>=c.end-.03||v.ended)return finish();if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
    });
   }
   v.pause();
-  if(rec&&rec.state!=='inactive'){rec.stop();await finished}
+  if(rec&&rec.state!=='inactive'){rec.stop();await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Timeline encoder did not finish within 15 seconds')),15000);finished.then(()=>{clearTimeout(timeout);resolve()})})}if(encoderError)throw encoderError;
   if(state.cancelled)return info('Timeline operation stopped.');
   if(record){
    const blob=new Blob(fragments,{type:mime});if(!blob.size)throw Error('Encoder generated an empty video.');
    if(exportUrl)URL.revokeObjectURL(exportUrl);exportUrl=URL.createObjectURL(blob);
    $('clipDownload').href=exportUrl;$('clipDownload').download='heavenly-key-timeline.'+(mime.startsWith('video/mp4')?'mp4':'webm');$('clipDownload').hidden=false;
-   info('Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
+   info((stream.getAudioTracks().length?'':'Warning: this browser exported video without audio. ')+'Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
   }else info('Timeline preview complete.');
  }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}info('Timeline failed: '+e.message)}
  finally{v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration);if(stream)stream.getTracks().forEach(t=>t.stop());if(sourceStream)sourceStream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}

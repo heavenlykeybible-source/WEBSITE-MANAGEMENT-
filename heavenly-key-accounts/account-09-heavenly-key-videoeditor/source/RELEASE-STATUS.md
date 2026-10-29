@@ -8,7 +8,7 @@ Verified against Website Management main source:
 - Canonical Worker build, source/asset matching, packaged health/authentication boundaries and release replacement policy passed.
 - Repository `node tests/run.mjs` passed.
 
-Fixed the obsolete frontend assertion that required the previous background-refresh implementation. The current service worker waits for fresh online assets and falls back to the saved working asset on temporary failure; the behavior suite verifies this. No application runtime code changed in this verification.
+Fixed the obsolete frontend assertion that required the previous background-refresh implementation. The current service worker waits for fresh online assets and falls back to the saved working asset on temporary failure; the behavior suite verifies this. Subsequent runtime fixes: timeline exports now time out if the encoder fails to stop, reject encoder errors and premature stops, unlock controls on failure, and warn when the browser captures no audio. Four executable timeline regression cases cover success, timeout, error and premature stop. Offline cache version advanced for the changed asset.
 
 Unverified and blocked:
 - The live request to https://mediaeditor.heavenlykey.org/ returned an Envoy 503 with an upstream connection failure from this execution environment. This is not proof that the origin itself is unavailable.
