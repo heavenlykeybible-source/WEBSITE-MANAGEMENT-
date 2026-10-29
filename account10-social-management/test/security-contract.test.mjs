@@ -32,3 +32,9 @@ test('private media routes require authentication and validate image signatures'
   assert.match(source, /Media content does not match declared format/);
   assert.match(source, /content-disposition':'attachment/);
 });
+
+test('draft deletion cannot remove posts outside draft status', () => {
+  assert.match(source, /req\.method==='DELETE'/);
+  assert.match(source, /DELETE FROM social_posts WHERE id=\? AND status='draft'/);
+  assert.match(source, /Draft not found or not deletable/);
+});
