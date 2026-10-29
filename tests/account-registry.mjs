@@ -40,7 +40,7 @@ console.log('PASS account registry uniqueness, secure origins and Account 10 dom
 const meetings = registry.accounts.find(account => account.account === 8);
 assert.equal(meetings.name, 'Heavenly Key MeetingSpace');
 for (const field of ['website', 'ai_target_url', 'page_url']) {
-  assert.equal(meetings[field], 'https://meeting.heavenlykey.org');
+  assert.equal(meetings[field], 'https://meetingspace.heavenlykey.org');
 }
 assert.equal(meetings.worker, 'heavenly-key-meetingspace');
 assert.ok(fs.existsSync(meetings.folder + '/README.md'));

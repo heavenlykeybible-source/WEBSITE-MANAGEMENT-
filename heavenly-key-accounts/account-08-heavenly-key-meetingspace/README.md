@@ -6,7 +6,7 @@ This is the Account 8 entry alongside the other Heavenly Key accounts.
 |---|---|
 | Complete current application source | [source](source/) |
 | App and deployment guide | [README](source/README.md) |
-| Public website | https://meeting.heavenlykey.org |
+| Public website | https://meetingspace.heavenlykey.org |
 | Worker | `heavenly-key-meetingspace` |
 | Database | `heavenly-key-meetingspace-db` |
 | Deployment workflow | [Zoom Studio](../../.github/workflows/zoom-studio.yml) |

@@ -8,7 +8,7 @@ const origin=process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN;
 if(!origin || !/^https:\/\/[a-z0-9.-]+\/?$/i.test(origin)) throw Error('Set MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN to the confirmed HTTPS URL for Account 8');
 const privatePreview=process.env.MEETINGSPACE_PRIVATE_PREVIEW==='1';
 if(privatePreview && process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN &&
-  /^(?:https:\/\/)?(?:meeting\.heavenlykey\.org|heavenly-key-meetingspace\.[^/]+\.workers\.dev)\/?$/i.test(process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN))
+  /^(?:https:\/\/)?(?:(?:meeting|meetingspace)\.heavenlykey\.org|heavenly-key-meetingspace\.[^/]+\.workers\.dev)\/?$/i.test(process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN))
   throw Error('Private preview cannot target a known public production hostname');
 // Every deployment targets the same existing Worker; preview mode must not bypass approval.
 // Require explicit owner approval and passing tests even for private preview uploads.

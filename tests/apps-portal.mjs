@@ -8,5 +8,5 @@ async function render(verified){let target,roots=[];
 const wrong=await render(false);assert.ok(wrong.all.some(n=>/not the verified Account 5/.test(n.textContent)));assert.equal(wrong.all.filter(n=>n.tag==='section'&&n.children.some(child=>child?.tag==='h4')).length,0);
 const right=await render(true);assert.equal(right.all.filter(n=>n.tag==='section'&&n.children.some(child=>child?.tag==='h4')).length,10);const updates=right.all.filter(n=>n.tag==='button'&&n.children.includes('Update this Worker'));assert.equal(updates.length,1);updates[0].onclick();assert.equal(right.target(),'heavenly-key-app');console.log('Apps portal: verified account required; missing workers cannot be updated; exact existing Worker selected.');
 
-assert.ok(wrong.all.some(n=>n.tag==='a'&&n.href==='https://meeting.heavenlykey.org'&&n.children.includes('Open MeetingSpace')), 'Account 8 remains visible even when Account 5 is not verified');
+assert.ok(wrong.all.some(n=>n.tag==='a'&&n.href==='https://meetingspace.heavenlykey.org'&&n.children.includes('Open MeetingSpace')), 'Account 8 remains visible even when Account 5 is not verified');
 assert.ok(right.all.some(n=>n.tag==='a'&&n.href.endsWith('/account-08-heavenly-key-meetingspace')), 'Account 8 guide is directly accessible from Apps');

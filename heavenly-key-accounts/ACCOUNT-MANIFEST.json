@@ -64,7 +64,7 @@
       "legacySourcePolicy": "reference-only; do not deploy without current-version comparison",
       "currentSource": "heavenly-key-accounts/account-08-heavenly-key-meetingspace/source",
       "deploymentWorkflow": ".github/workflows/zoom-studio.yml",
-      "website": "https://meeting.heavenlykey.org",
+      "website": "https://meetingspace.heavenlykey.org",
       "worker": "heavenly-key-meetingspace",
       "note": "The complete MeetingSpace app is in this account folder under source/. The old zoom-studio folder is a redirect guide."
     }

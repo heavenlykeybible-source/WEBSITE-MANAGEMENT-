@@ -72,7 +72,12 @@ test('owner launch requires a signed single-use ticket and never overrides anoth
 });
 test('missing database yields a clear setup failure while public template still loads',async()=>{
  assert.equal((await app.fetch(new Request('https://meeting/'),{},{})).status,200);
- assert.equal((await app.fetch(new Request('https://meeting/api/health'),{},{})).status,503);
+ const response=await app.fetch(new Request('https://meeting/api/health'),{},{});
+ assert.equal(response.status,503);
+ const health=await response.json();assert.equal(health.ok,false);assert.equal(health.databaseReady,false);
+ assert.equal(health.accountsConfigured,false);assert.equal(health.meetingConfigured,false);
+ assert.match(health.error,/TEAMDB/);
+
 });
 
 const {MeetingRooms}=await import(pathToFileURL(path.join(root,'build/meeting-worker.mjs')));
@@ -355,4 +360,18 @@ test('fresh Control Room owner launch permits one private password setup and inv
  assert.equal((await save(fresh,{ticket:setup,password})).status,403);
  assert.equal((await app.fetch(new Request('https://meeting/api/me',{headers:{authorization:'Bearer '+auth}}),env,{})).status,401);
  const signIn=await app.fetch(new Request('https://meeting/api/login',{method:'POST',headers:{origin:'https://meeting','content-type':'application/json'},body:JSON.stringify({email:'owner',password})}),env,{});assert.equal(signIn.status,200);d.raw.close();
+});
+
+test('health diagnoses a failed database without leaking errors and recovers on retry',async()=>{
+ const d=database();let failed=true;
+ const db={...d.DB,async exec(sql){if(failed)throw Error('private SQL and secret-value');return d.DB.exec(sql)}};
+ const env={TEAMDB:db,AUTH_SECRET:secret};
+ try {
+  const first=await app.fetch(new Request('https://meeting/api/health'),env,{});
+  assert.equal(first.status,503);const body=await first.json();assert.equal(body.databaseReady,false);
+  assert.ok(!JSON.stringify(body).includes('secret-value'));
+  failed=false;
+  const second=await app.fetch(new Request('https://meeting/api/health'),env,{});
+  assert.equal(second.status,200);assert.equal((await second.json()).databaseReady,true);
+ } finally {d.raw.close()}
 });

@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 15
     env:
       RELAY_HOST: stream.example.test
-      MEETINGSPACE_ORIGIN: https://meeting.heavenlykey.org
+      MEETINGSPACE_ORIGIN: https://meetingspace.heavenlykey.org
       RELAY_SECRET_PATH: /tmp/relay-fixture-secret
     defaults:
       run:

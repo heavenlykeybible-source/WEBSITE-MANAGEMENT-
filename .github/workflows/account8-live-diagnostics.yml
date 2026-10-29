@@ -1,0 +1,63 @@
+name: Account 8 live deployment diagnosis
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/account8-live-diagnostics.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: account8-meetingspace-production
+    steps:
+      - name: Inspect exact Account 8 setup without changing production
+        env:
+          ACCOUNT8_TOKEN: ${{ secrets.MEETINGSPACE_ACCOUNT8_API_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          import {appendFileSync} from 'node:fs';
+          let failed=false;
+          const summary=[];
+          const note=line=>{console.log(line);summary.push(line)};
+          const origin='https://meetingspace.heavenlykey.org';
+          for(const path of ['/','/join.html','/api/health','/api/plans']){
+            try {
+              const response=await fetch(origin+path,{cache:'no-store',signal:AbortSignal.timeout(20000)});
+              note(`PUBLIC ${path}: HTTP ${response.status}`);
+              if(!response.ok)failed=true;
+              if(path==='/api/health'){
+                const health=await response.json();
+                // Only known public readiness flags; no arbitrary response bodies or secrets.
+                const fields=['ok','releaseId','databaseReady','accountsConfigured','meetingConfigured','turnConfigured','relayConfigured','youtubeConfigured','facebookConfigured'];
+                for(const field of fields)if(Object.hasOwn(health,field))note(`${field}: ${JSON.stringify(health[field])}`);
+                if(!health.ok||!health.accountsConfigured||!health.meetingConfigured)failed=true;
+              } else await response.body?.cancel();
+            }catch {note(`PUBLIC ${path}: request failed`);failed=true}
+          }
+          const token=process.env.ACCOUNT8_TOKEN;
+          if(!token)note('DEPLOYMENT BLOCKER: MEETINGSPACE_ACCOUNT8_API_TOKEN is absent from the Account 8 GitHub environment/repository secrets.');
+          else {
+            const base='https://api.cloudflare.com/client/v4/accounts/6401a8f41a41f5325ba5bd4d006b4ff5';
+            try {
+              const response=await fetch(base+'/workers/scripts/heavenly-key-meetingspace/settings',{headers:{authorization:'Bearer '+token},signal:AbortSignal.timeout(20000)});
+              const body=await response.json();
+              if(!response.ok||!body.success){note(`Account 8 credential cannot read Worker settings: HTTP ${response.status}`);failed=true}
+              else {
+                const bindings=body.result.bindings||[];
+                for(const name of ['TEAMDB','AUTH_SECRET','MEETING_ROOMS','AI','RELAY_URL','RELAY_SECRET','TURN_URLS','TURN_SHARED_SECRET']){
+                  const binding=bindings.find(b=>b.name===name);note(`BINDING ${name}: ${binding?'present ('+binding.type+')':'missing'}`);
+                }
+                // Verify the dedicated D1 identity, never read records or execute SQL.
+                const response=await fetch(base+'/d1/database/f47b2e3f-f937-4d6e-8891-f08d8bc4f6b8',{headers:{authorization:'Bearer '+token},signal:AbortSignal.timeout(20000)});
+                const d=await response.json();
+                const valid=response.ok&&d.success&&d.result?.name==='heavenly-key-meetingspace-db';
+                note('Dedicated Account 8 database identity: '+(valid?'verified':'not verified'));
+                if(!valid)failed=true;
+              }
+            }catch {note('Account 8 settings request failed. No production changes made.');failed=true}
+          }
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Account 8 live setup diagnosis\n\n'+summary.map(x=>'- '+x).join('\n')+'\n');
+          if(failed){console.error('Live app readiness failed. No production data, settings, or credentials were modified.');process.exitCode=1}
+          JS

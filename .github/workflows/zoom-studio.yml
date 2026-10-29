@@ -73,5 +73,5 @@ jobs:
           MEETINGSPACE_PRODUCTION_APPROVED: '1'
           MEETINGSPACE_APPROVED_COMMIT: ${{ inputs.approved_commit }}
           MEETINGSPACE_SHARED_CLOUDFLARE_ACCOUNT: '1'
-          MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN: 'https://meeting.heavenlykey.org'
+          MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN: 'https://meetingspace.heavenlykey.org'
         run: npm run deploy

@@ -84,6 +84,16 @@ export default {
         if(!env.MEETING_ROOMS)return new Response('Meeting connection is not configured',{status:503});
         return env.MEETING_ROOMS.get(env.MEETING_ROOMS.idFromName(path.split('/')[2])).fetch(request);
       }
+      if(path==='/api/health'){
+        let databaseReady=false;
+        try { await initializeMeetingDatabase(env); databaseReady=true; } catch {}
+        const response=await studioApplication.fetch(request,env,ctx);
+        const health=await response.json();
+        // Keep configuration visible during an outage; never expose SQL or credentials.
+        return json({...health,ok:databaseReady && health.accountsConfigured,databaseReady,
+          ...(!databaseReady?{error:'Meeting database is unavailable. Verify the dedicated TEAMDB binding.'}:{})},
+          databaseReady && health.accountsConfigured?200:503);
+      }
       if(path.startsWith('/api/')||path.startsWith('/p/'))await initializeMeetingDatabase(env);
       if(path==='/api/control-login')return await controlRoomOwnerLogin(request,env);
       if(path==='/api/control-password')return await controlRoomOwnerPassword(request,env);
