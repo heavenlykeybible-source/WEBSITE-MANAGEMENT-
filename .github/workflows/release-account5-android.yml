@@ -78,6 +78,9 @@ jobs:
           sha256sum "$apk" >> "$apk.security.txt"
           printf 'scannedSha256=' >> "$apk.security.txt"
           sha256sum "$apk" | cut -d ' ' -f 1 >> "$apk.security.txt"
+      - name: Create dated release and compatibility manifest
+        run: |
+          node ../create-release-manifest.mjs --file app/build/outputs/apk/release/app-release.apk --report app/build/outputs/apk/release/app-release.apk.security.txt --app all-in-one --platform android --version 1.0.0 --min-os 'Android 7.0' --architecture universal --output app/build/outputs/apk/release/release-manifest.json
       - uses: actions/upload-artifact@v4
         with:
           name: heavenly-key-account5-signed-android-release
@@ -85,6 +88,7 @@ jobs:
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk.sha256
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk.security.txt
+            heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/release-manifest.json
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/bundle/release/app-release.aab
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/bundle/release/app-release.aab.sha256
           retention-days: 30

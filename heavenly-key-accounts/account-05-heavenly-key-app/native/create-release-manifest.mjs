@@ -1,0 +1,16 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {parseArgs} from 'node:util';
+const {values}=parseArgs({options:Object.fromEntries(['file','report','app','platform','version','min-os','architecture','output'].map(key=>[key,{type:'string'}]))});
+for(const key of ['file','report','app','platform','version','min-os','architecture','output'])if(!values[key])throw Error('Required option: --'+key);
+if(!/^[a-z0-9-]{1,64}$/.test(values.app)||!['android','windows','mac'].includes(values.platform))throw Error('Invalid app/platform');
+if(!/^\d+\.\d+\.\d+(?:[-+][a-zA-Z0-9.-]+)?$/.test(values.version))throw Error('Invalid version');
+if(!/^[a-zA-Z0-9 .()-]{1,64}$/.test(values['min-os'])||!['universal','x64','arm64','x64-arm64','x86-arm64','armv7-arm64'].includes(values.architecture))throw Error('Invalid compatibility metadata');
+const bytes=readFileSync(values.file);if(bytes.length===0)throw Error('Empty package');
+const sha256=createHash('sha256').update(bytes).digest('hex');
+const report=readFileSync(values.report,'utf8');
+if(!/^malwareScan=passed$/m.test(report)||!/^signatureVerified=true$/m.test(report)||!report.includes('scannedSha256='+sha256))throw Error('Package digest must match successful scanner/signature report');
+const extensions={android:'apk',windows:'exe',mac:'dmg'};
+const metadata={sha256,scannedSha256:sha256,malwareScan:'passed',signatureVerified:'true',version:values.version,releasedAt:new Date().toISOString().replace(/\.\d{3}Z$/,'Z'),minOs:values['min-os'],architecture:values.architecture};
+writeFileSync(values.output,JSON.stringify({app:values.app,platform:values.platform,objectKey:values.app+'/'+values.platform+'/release.'+extensions[values.platform],size:bytes.length,customMetadata:metadata,sha256},null,2)+'\n');
+console.log('Verified release manifest created. Upload with the recorded SHA-256 storage checksum.');
