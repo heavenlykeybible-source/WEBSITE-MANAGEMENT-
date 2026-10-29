@@ -7,6 +7,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: production-release
     defaults:
       run:
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/android
