@@ -481,7 +481,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  }
  if(u.pathname==='/api/automation/preview'&&req.method==='POST'){let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}if(typeof data?.message!=='string'||data.message.length>4096)return reply({error:'Invalid message'},400);const rows=await env.DB.prepare('SELECT keyword,reply FROM automation_rules LIMIT 100').all<{keyword:string;reply:string}>();const match=rows.results.find(r=>r.keyword.trim().length>0&&data.message.toLowerCase().includes(r.keyword.toLowerCase()));return reply({matched:!!match,reply:match?.reply??null,sent:false})}
  if(u.pathname==='/api/posts'&&req.method==='GET'){
-  const result=await env.DB.prepare('SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts ORDER BY created_at DESC LIMIT 100').all();
+  const result=await env.DB.prepare('SELECT id,body,platform,status,scheduled_at,media_id,created_at FROM social_posts ORDER BY created_at DESC LIMIT 100').all();
   return reply({items:result.results,publishingConnected:false});
  }
  if(u.pathname==='/api/posts'&&req.method==='DELETE'){
@@ -496,7 +496,8 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   if(typeof data?.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id))return reply({error:'Valid draft id required'},400);
   const platforms=['facebook_page','instagram_professional','youtube','tiktok'];
   if(typeof data.body!=='string'||!data.body.trim()||data.body.length>5000||!platforms.includes(data.platform))return reply({error:'Provide valid post text and destination'},400);
-  const result=await env.DB.prepare("UPDATE social_posts SET body=?,platform=? WHERE id=? AND status='draft'").bind(data.body.trim(),data.platform,data.id).run();
+  if(data.mediaId!==undefined&&data.mediaId!==null){if(typeof data.mediaId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.mediaId))return reply({error:'Invalid media ID'},400);if(!env.MEDIA_BUCKET)return reply({error:'Media storage is unavailable'},503);const object=await env.MEDIA_BUCKET.head('account10/uploads/'+data.mediaId);if(!object)return reply({error:'Attached media was not found'},404)}
+  const result=await env.DB.prepare("UPDATE social_posts SET body=?,platform=?,media_id=CASE WHEN ? THEN ? ELSE media_id END WHERE id=? AND status='draft'").bind(data.body.trim(),data.platform,data.mediaId!==undefined?1:0,data.mediaId??null,data.id).run();
   if(!result.meta?.changes)return reply({error:'Draft not found or not editable'},404);
   return reply({id:data.id,status:'draft',updated:true,published:false});
  }
@@ -517,7 +518,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   return reply({id:data.id,status:'draft',scheduledAt:null,published:false});
  }
  if(u.pathname==='/api/posts/queue'&&req.method==='GET'){
-  const result=await env.DB.prepare("SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts WHERE status='draft' AND scheduled_at IS NOT NULL ORDER BY scheduled_at ASC LIMIT 100").all();
+  const result=await env.DB.prepare("SELECT id,body,platform,status,scheduled_at,media_id,created_at FROM social_posts WHERE status='draft' AND scheduled_at IS NOT NULL ORDER BY scheduled_at ASC LIMIT 100").all();
   const now=Date.now();
   return reply({items:(result.results||[]).map((post:any)=>({...post,due:Number.isFinite(Date.parse(String(post.scheduled_at)))&&Date.parse(String(post.scheduled_at))<=now})),publishingConnected:false,note:'Review-only queue. No automatic publishing or platform delivery is enabled.'});
  }
@@ -526,8 +527,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const platforms=['facebook_page','instagram_professional','youtube','tiktok'];
   if(typeof data?.body!=='string'||!data.body.trim()||data.body.length>5000||!platforms.includes(data.platform))return reply({error:'Provide post text and a supported destination'},400);
   if(data.scheduledAt!==undefined&&(typeof data.scheduledAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/.test(data.scheduledAt)||!Number.isFinite(Date.parse(data.scheduledAt))||Date.parse(data.scheduledAt)<=Date.now()))return reply({error:'scheduledAt must be a future ISO 8601 timestamp with timezone'},400);
+  if(data.mediaId!==undefined&&data.mediaId!==null){if(typeof data.mediaId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.mediaId))return reply({error:'Invalid media ID'},400);if(!env.MEDIA_BUCKET)return reply({error:'Media storage is unavailable'},503);const object=await env.MEDIA_BUCKET.head('account10/uploads/'+data.mediaId);if(!object)return reply({error:'Attached media was not found'},404)}
   const id=crypto.randomUUID();
-  await env.DB.prepare('INSERT INTO social_posts(id,body,platform,status,scheduled_at) VALUES(?,?,?,?,?)').bind(id,data.body.trim(),data.platform,'draft',data.scheduledAt||null).run();
+  await env.DB.prepare('INSERT INTO social_posts(id,body,platform,status,scheduled_at,media_id) VALUES(?,?,?,?,?,?)').bind(id,data.body.trim(),data.platform,'draft',data.scheduledAt||null,data.mediaId??null).run();
   return reply({id,status:'draft',published:false,note:'Saved for review. Publishing is disabled until verified platform authorization and delivery adapters are installed.'},201);
  }
  if(u.pathname==='/api/takeover'&&req.method==='POST'){
