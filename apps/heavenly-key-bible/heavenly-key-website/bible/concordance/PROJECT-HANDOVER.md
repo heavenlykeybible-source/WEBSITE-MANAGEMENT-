@@ -341,3 +341,10 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Executed PASS: strict 100-entry pre-save intake, dynamic audit of 1,630 unique drafts against all 31,102 canonical local KJV verses and cross-reference targets, bundle parity check, 19 validation tests and 10 DOM integration tests (now including held Exodus entries). Evidence refreshed in qa/. The existing browser bundle filename is retained for compatibility but now registers Exodus JSON as well as Genesis; chapter files remain the canonical draft source.
 - No further broad audit work undertaken during this content pass. Prior browser limitation remains: no Chromium binary available and download failed; no real-device/mobile-layout validation claimed. Existing 1,384 legacy schema warnings and substantive human review remain unresolved. No production deployment or dictionary changes.
 - **Next actual missing authoring verse: Exodus 5:1.** The next missing-only packet contains Exodus 5:1–22:19, 500 verses. Prepare text once, then focus on original writing and validate each successful intake; do not count a packet as authored commentary.
+
+## Content checkpoint — Exodus 5–6
+- Base GitHub branch head verified: `91e01344592725d901813d1bf1a99c81566846e0`.
+- Added 53 original pending verse explanations: Exodus 5:1–23 and 6:1–30. Total unique drafts 1,683; remaining outside this set 29,419 of 31,102. Legacy Genesis 1:1–3 still not counted.
+- Two new publication holds: Exodus 6:3 (divine-name knowledge) and 6:20 (kinship marriage and later prohibitions). All 53 drafts need human review; total explicit holds now 36.
+- Executed successfully: strict intake against actual KJV text, cross-reference existence, duplicate and field checks; updated draft/bundle audit; 19 validation tests; 10 DOM integration checks. Browser/device limitation from prior checkpoints remains. No deployment or separate Dictionary changes.
+- Next writing verse Exodus 7:1. This checkpoint contains 53, not 500, authored entries. Continue content production without claiming packet preparation as completed commentary.

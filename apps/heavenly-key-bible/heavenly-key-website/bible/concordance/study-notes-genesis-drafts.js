@@ -935,6 +935,489 @@ const notes={
     "historicalContext": "Exodus 3:16 announced the visitation message, and Genesis 50:24 anticipated God's faithful intervention.",
     "reviewFlags": []
   },
+  "Exodus 5:1": {
+    "explanation": "Moses and Aaron confront Pharaoh with the LORD's demand that His people be released to hold a feast in the wilderness. The request concerns God's claim upon Israel, not merely leisure from labor. Deliverance is directed toward worship, and the messengers speak as commissioned servants rather than independent political claimants.",
+    "context": "This follows Israel's initial belief and worship, beginning the promised confrontation with Egypt's ruler.",
+    "references": "Exodus 3:18; Exodus 4:31",
+    "application": "Let freedom from bondage lead toward faithful service to God rather than self-centered independence.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:18 supplied the request for a wilderness journey and sacrifice; no calendar date for this feast is given.",
+    "reviewFlags": []
+  },
+  "Exodus 5:2": {
+    "explanation": "Pharaoh questions the LORD's authority and explicitly refuses to release Israel. His lack of acknowledgment becomes active resistance rather than an innocent request for information. The confrontation is therefore about whose command governs the people's future, while God's later acts will answer the ruler's challenge through judgment and deliverance.",
+    "context": "The refusal fulfills the warning that Pharaoh would resist before the wonders secured release.",
+    "references": "Exodus 3:19; Exodus 7:5",
+    "application": "Examine whether claimed ignorance has become an excuse to resist truth already presented clearly.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:19-20 anticipated resistance; Exodus 7:5 later states that Egypt will know the LORD.",
+    "reviewFlags": []
+  },
+  "Exodus 5:3": {
+    "explanation": "The messengers repeat that the Hebrews' God has met with them and request a three-day journey to sacrifice, speaking of the danger of disobedience. Their appeal places worship under divine obligation. It does not authorize modern ministers to invent threats of disease or violence to compel attendance or financial support.",
+    "context": "Pharaoh responds by accusing them of interrupting work rather than addressing God's claim.",
+    "references": "Exodus 3:18; Exodus 5:4",
+    "application": "Present God's Word faithfully without adding manipulative threats that He has not given you to announce.",
+    "reviewStatus": "pending",
+    "historicalContext": "The journey request repeats Exodus 3:18; the verse does not give a complete timetable for the whole deliverance.",
+    "reviewFlags": []
+  },
+  "Exodus 5:4": {
+    "explanation": "Pharaoh accuses Moses and Aaron of drawing the people away from work and orders a return to burdens. He reduces the divine claim to an interference with production. The answer reveals the oppressive priority of the ruler without establishing that the worship request was actually an expression of laziness.",
+    "context": "This begins Pharaoh's interpretation of the mission as lost labor, leading to heavier requirements.",
+    "references": "Exodus 1:11; Exodus 1:14",
+    "application": "Do not dismiss legitimate spiritual and human needs merely because meeting them interrupts productivity.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 1:11-14 already describes the forced labor behind the word burdens.",
+    "reviewFlags": []
+  },
+  "Exodus 5:5": {
+    "explanation": "Pharaoh points to the large population and accuses the messengers of making people rest from their burdens. He views their numbers chiefly through the labor they can supply. His accusation belongs to the ruler's speech; the narrative does not endorse his reduction of an entire people to economic usefulness.",
+    "context": "The accusation prepares the same-day command making brick production more difficult.",
+    "references": "Exodus 1:7; Exodus 1:10",
+    "application": "Value people beyond their output, refusing to treat rest or worship as inherently wasteful.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 1:7 reports Israel's growth, while Exodus 1:10 shows the ruler's earlier anxiety about losing them.",
+    "reviewFlags": []
+  },
+  "Exodus 5:6": {
+    "explanation": "On the same day Pharaoh issues instructions to the taskmasters and their officers. The timing connects the new pressure directly with the audience just described. The verse introduces an administrative response that will turn the ruler's contempt into concrete suffering, rather than leaving his hostility at the level of words.",
+    "context": "The content of the order follows: withdraw straw while retaining the brick quota.",
+    "references": "Exodus 5:7; Exodus 5:14",
+    "application": "Recognize that harmful orders can become systemic injustice when officials carry them out without moral accountability.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:14 distinguishes Israelite officers from Pharaoh's taskmasters; the precise rank structure is not otherwise supplied here.",
+    "reviewFlags": []
+  },
+  "Exodus 5:7": {
+    "explanation": "Pharaoh orders that straw no longer be supplied for brickmaking and that the people gather it themselves. A necessary part of their established work must now be obtained through additional labor. The following requirement that production remain unchanged exposes the order as increased oppression rather than a simple change of supplier.",
+    "context": "The retained quota makes the loss of materials central to the coming crisis.",
+    "references": "Exodus 5:8; Exodus 5:11",
+    "application": "Consider resources and time when assigning work; do not impose impossible expectations by withholding what the task requires.",
+    "reviewStatus": "pending",
+    "historicalContext": "The text identifies straw within their brickmaking work but does not specify a recipe or manufacturing measurements.",
+    "reviewFlags": []
+  },
+  "Exodus 5:8": {
+    "explanation": "Pharaoh keeps the previous number of bricks unchanged and calls the people idle because they ask to sacrifice. The accusation misrepresents a worship request as proof of laziness. It serves to justify a heavier burden without acknowledging the extra time required to collect the materials formerly supplied to them.",
+    "context": "The next verse makes the intended suppression of the messengers' words explicit.",
+    "references": "Exodus 5:7; Exodus 5:18",
+    "application": "Reject blame that ignores altered conditions and avoid calling someone lazy merely because they seek a legitimate duty or relief.",
+    "reviewStatus": "pending",
+    "historicalContext": "Tale here concerns the stated brick count; Exodus 5:18 restates the unchanged requirement.",
+    "reviewFlags": []
+  },
+  "Exodus 5:9": {
+    "explanation": "Pharaoh demands more work so the people will be occupied and disregard what he calls vain words. He intends labor pressure to drown out the promise of deliverance. The verse records his dismissive label; it does not describe God's message as genuinely empty or establish oppression as a cure for unbelief.",
+    "context": "Taskmasters and officers now announce the policy directly to the people.",
+    "references": "Exodus 5:1; Exodus 6:9",
+    "application": "Do not use exhaustion as a tool to silence people or prevent them from considering truth.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:1 identifies the message Pharaoh dismisses; Exodus 6:9 later shows the impact of cruel bondage on hearing hope.",
+    "reviewFlags": []
+  },
+  "Exodus 5:10": {
+    "explanation": "The taskmasters and officers announce Pharaoh's decision that straw will no longer be supplied. The formula Thus saith Pharaoh sharply contrasts with the LORD's demand at the chapter's opening. The people hear the immediate force of royal authority, while the narrative prepares to show its inability to defeat God's purpose.",
+    "context": "This public announcement carries the private royal command into daily labor conditions.",
+    "references": "Exodus 5:1; Exodus 5:7",
+    "application": "Remember that an official command can have real power without possessing ultimate moral authority.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:1 opens with Thus saith the LORD, creating a contrast within the chapter itself.",
+    "reviewFlags": []
+  },
+  "Exodus 5:11": {
+    "explanation": "The people are told to find straw wherever they can while no part of their work is reduced. The order transfers the problem of unavailable supplies onto the workers without adjusting expectations. The burden is therefore practical and measurable, not simply a misunderstanding that encouragement alone could remove.",
+    "context": "Their search spreads them throughout the land, making the retained daily demands still harder.",
+    "references": "Exodus 5:7; Exodus 5:12",
+    "application": "Address actual obstacles when evaluating performance rather than demanding unchanged results under substantially worsened conditions.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:12 describes collecting stubble as the workers respond to the order.",
+    "reviewFlags": []
+  },
+  "Exodus 5:12": {
+    "explanation": "The people scatter throughout Egypt collecting stubble in place of straw. The narrative shows the consequence of the supply order in the workers' movements and efforts. Their dispersal is not an exodus into freedom; it is additional labor imposed while they remain under the same coercive demands.",
+    "context": "Taskmasters continue pressing the original daily requirements despite the time spent gathering material.",
+    "references": "Exodus 5:11; Exodus 5:13",
+    "application": "Notice the hidden labor created by a decision before judging those struggling to meet its consequences.",
+    "reviewStatus": "pending",
+    "historicalContext": "Stubble is the substitute specifically named; no exact agricultural season or distance traveled is stated.",
+    "reviewFlags": []
+  },
+  "Exodus 5:13": {
+    "explanation": "The taskmasters urge the workers to complete daily tasks as they did when straw was supplied. They demand the same outcome while ignoring a material change in circumstances. The comparison becomes an instrument of pressure because it treats earlier production conditions as though they still existed unchanged.",
+    "context": "The failure to maintain quotas leads to the beating of Israelite officers.",
+    "references": "Exodus 5:7; Exodus 5:14",
+    "application": "Make fair comparisons that account for resources, time, and burdens rather than using past results to excuse present cruelty.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:7 records the withdrawn supply that makes this comparison unjust.",
+    "reviewFlags": []
+  },
+  "Exodus 5:14": {
+    "explanation": "Israelite officers appointed under Pharaoh's taskmasters are beaten and challenged about reduced brick output on two successive days. The punishment falls on intermediaries who must answer for workers under impossible demands. The narrative exposes violence in enforcing the policy; it does not make the officers responsible for Pharaoh's decision to remove supplies.",
+    "context": "These officers appeal directly to Pharaoh to explain the injustice.",
+    "references": "Exodus 5:15; Exodus 5:16",
+    "application": "Do not punish people for failing to overcome conditions imposed by those who hold power over them.",
+    "reviewStatus": "pending",
+    "historicalContext": "The verse identifies officers as Israelites and their superiors as Pharaoh's taskmasters, without naming individual officials.",
+    "reviewFlags": []
+  },
+  "Exodus 5:15": {
+    "explanation": "The Israelite officers appeal to Pharaoh, asking why he treats his servants this way. They seek relief from the same authority who imposed the burden, apparently hoping that explaining the conditions will secure a fair response. Their appeal demonstrates the urgency of suffering, not proof that Pharaoh is unaware of his policy.",
+    "context": "They describe the missing straw, retained demands, and beatings before Pharaoh repeats his accusation.",
+    "references": "Exodus 5:6; Exodus 5:16",
+    "application": "Present injustice clearly where an appeal is possible, while recognizing that facts may not persuade an authority committed to oppression.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:6-9 has already shown Pharaoh personally directing the increased workload.",
+    "reviewFlags": []
+  },
+  "Exodus 5:16": {
+    "explanation": "The officers explain that straw is withheld, bricks are demanded, and they are beaten, locating the fault with Pharaoh's people. Their complaint identifies a contradiction between means and expectations. The speech refuses the assumption that punishment proves worker guilt and makes the actual cause of reduced output explicit.",
+    "context": "Pharaoh does not remedy the contradiction but again calls them idle.",
+    "references": "Exodus 5:7; Exodus 5:8",
+    "application": "Speak accurately about the causes of injustice rather than accepting a false account simply because punishment has been imposed.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:7-8 confirms both the withheld materials and unchanged quota mentioned in the complaint.",
+    "reviewFlags": []
+  },
+  "Exodus 5:17": {
+    "explanation": "Pharaoh repeats that the people are idle and treats their wish to sacrifice as the reason for the accusation. Repetition replaces engagement with the officers' evidence. His answer reveals a settled refusal to recognize either the work conditions or the legitimacy of God's claim upon Israel.",
+    "context": "He immediately reaffirms the work order instead of offering relief.",
+    "references": "Exodus 5:8; Exodus 5:18",
+    "application": "Do not use repeated labels to evade a truthful complaint; examine facts before judging motives.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:8 introduced the same explanation before the policy's consequences were reported.",
+    "reviewFlags": []
+  },
+  "Exodus 5:18": {
+    "explanation": "Pharaoh sends the officers back to work, again withholding straw while demanding the full brick count. The appeal has secured no concession. The verse confirms that the suffering results from deliberate policy rather than an unauthorized misunderstanding by lesser officials, leaving the officers aware of their predicament.",
+    "context": "Their realization leads to an angry encounter with Moses and Aaron outside the audience.",
+    "references": "Exodus 5:7; Exodus 5:19",
+    "application": "Recognize when a problem lies in a continuing unjust decision rather than blaming the victims for failing to explain themselves well enough.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:7-8 supplied the original command now repeated directly by the king.",
+    "reviewFlags": []
+  },
+  "Exodus 5:19": {
+    "explanation": "The officers recognize that they are in an evil situation because the daily brick requirement will not be reduced. Their assessment follows an explicit royal refusal, not merely a vague fear. The narrative acknowledges the worsening circumstances before presenting God's renewed promise, allowing distress to be described truthfully.",
+    "context": "On leaving Pharaoh, they encounter the messengers whose request preceded the increased burden.",
+    "references": "Exodus 5:18; Exodus 6:1",
+    "application": "Be honest about a difficult situation without assuming that recognizing hardship means God's purposes have ended.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:18 directly states the unchanged demand that produces this realization.",
+    "reviewFlags": []
+  },
+  "Exodus 5:20": {
+    "explanation": "The officers meet Moses and Aaron waiting as they come from Pharaoh. This encounter brings the messengers face to face with the immediate human consequences of the ruler's response. The verse introduces the accusation that follows without claiming that the messengers intended the increased oppression or had the authority to prevent it.",
+    "context": "The officers direct their anger toward Moses and Aaron, who will then turn to God.",
+    "references": "Exodus 5:21; Exodus 5:22",
+    "application": "Remain available to those affected by a difficult situation rather than withdrawing when their suffering becomes uncomfortable.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:21 records the complaint arising at this meeting; no additional conversation is supplied here.",
+    "reviewFlags": []
+  },
+  "Exodus 5:21": {
+    "explanation": "The officers call upon the LORD to judge Moses and Aaron, blaming them for making Israel abhorrent to Pharaoh and exposing them to death. Their words express genuine distress but do not establish that God's commission was false. They mistake Pharaoh's retaliation for evidence that the messengers have defeated Israel's hope.",
+    "context": "Moses brings the complaint and its consequences back to the LORD.",
+    "references": "Exodus 3:19; Exodus 5:9",
+    "application": "Distinguish the source of wrongdoing from those whose faithful action an oppressor uses as a pretext for retaliation.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:19 warned of resistance; Exodus 5:7-9 identifies Pharaoh as author of the added oppression.",
+    "reviewFlags": []
+  },
+  "Exodus 5:22": {
+    "explanation": "Moses returns to the LORD and asks why the people have been treated so harshly and why he was sent. His questions bring confusion into prayer rather than concealing it behind confidence he does not feel. The complaint records his struggle; it is not the narrator's final verdict that God has acted unjustly.",
+    "context": "The next verse states the absence of visible deliverance, and Exodus 6 begins God's answer.",
+    "references": "Exodus 3:10; Exodus 6:1",
+    "application": "Bring distress and unanswered questions before God, remaining willing to receive correction and renewed assurance.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:10 records the commission that Moses now questions in light of events.",
+    "reviewFlags": []
+  },
+  "Exodus 5:23": {
+    "explanation": "Moses says that speaking in God's name has been followed by harsher treatment and no deliverance. He describes what he can presently see, but the account has not reached God's promised outcome. The verse closes with unresolved tension, making the following divine answer essential to reading the mission responsibly.",
+    "context": "Exodus 6:1 responds that Moses will now see God's action against Pharaoh.",
+    "references": "Exodus 3:20; Exodus 6:1",
+    "application": "Do not equate an unfinished stage of obedience with final failure; bring the gap between promise and experience to God.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:20 promised wonders before release; Moses has not yet witnessed that sequence completed.",
+    "reviewFlags": []
+  },
+  "Exodus 6:1": {
+    "explanation": "God answers Moses by promising action that will cause Pharaoh not merely to permit departure but to drive Israel out. The assurance confronts the apparent failure described at the previous chapter's close. Deliverance will depend upon God's strong intervention rather than Pharaoh becoming sympathetic through ordinary persuasion.",
+    "context": "This begins the renewed declaration of divine identity, covenant remembrance, and deliverance.",
+    "references": "Exodus 5:23; Exodus 12:31; Exodus 12:33",
+    "application": "Trust God's faithfulness beyond the immediate response of those resisting His command, without inventing a timetable He has not supplied.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 12:31-33 later records Pharaoh's demand and Egyptian urgency for Israel to leave.",
+    "reviewFlags": []
+  },
+  "Exodus 6:2": {
+    "explanation": "God identifies Himself to Moses as the LORD. The short declaration grounds the following promises in the identity of the speaker. It does not introduce an unrelated god after the bush encounter; the same Lord who commissioned Moses now answers his discouragement with renewed covenant assurance.",
+    "context": "The following verses connect this identity with the patriarchs and the promises made to them.",
+    "references": "Exodus 3:15; Exodus 6:6",
+    "application": "Let confidence in God's character shape how you hear His promises rather than treating them as detached optimistic sayings.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:15 already identified the LORD as the God of Abraham, Isaac, and Jacob.",
+    "reviewFlags": []
+  },
+  "Exodus 6:3": {
+    "explanation": "God contrasts His appearance to the patriarchs as God Almighty with their knowledge of His name JEHOVAH. The verse requires careful reading alongside Genesis, where the LORD's name already appears. It should not be simplified into an unsupported claim that those earlier passages never used or knew the name at all.",
+    "context": "The statement leads into covenant establishment and its coming realization through deliverance.",
+    "references": "Genesis 15:7; Genesis 17:1; Exodus 3:15",
+    "application": "Handle a difficult comparison openly, preserving the KJV text while deferring disputed explanations for responsible review.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 15:7 and 17:1 supply relevant patriarchal self-identifications, requiring comparison rather than an invented linguistic solution.",
+    "reviewFlags": [
+      "Nature of patriarchal knowledge of the divine name requires human textual and doctrinal review; no speculative harmonization."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 6:4": {
+    "explanation": "God recalls establishing His covenant to give the patriarchs Canaan, the land where they lived as pilgrims and strangers. Their temporary residence did not exhaust the promised inheritance. The statement anchors Israel's future in a prior commitment rather than making the nation's present enslavement the final measure of God's faithfulness.",
+    "context": "Covenant remembrance introduces the promise to bring the afflicted descendants out of Egypt.",
+    "references": "Genesis 17:8; Exodus 6:8",
+    "application": "Read present circumstances in light of God's actual promises while avoiding unsupported extensions to private claims of property.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 17:8 explicitly joins Canaan, sojourning, and God's promise to Abraham's descendants.",
+    "reviewFlags": []
+  },
+  "Exodus 6:5": {
+    "explanation": "God has heard the groaning of enslaved Israel and remembered His covenant. The declaration joins compassion for suffering with fidelity to a promise. Remembering does not imply that God has just discovered their misery or corrected forgetfulness; it introduces the intervention about to unfold in the narrative.",
+    "context": "The following message promises release, redemption, and a renewed relationship as God's people.",
+    "references": "Exodus 2:24; Exodus 3:7",
+    "application": "Pray with confidence that suffering matters to God, grounding hope in His faithfulness rather than the strength of your own words.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 2:24 already joins groaning and covenant remembrance, showing continuity in the account.",
+    "reviewFlags": []
+  },
+  "Exodus 6:6": {
+    "explanation": "God commands Moses to announce that He will bring Israel from burdens, free them from bondage, and redeem them with power and judgments. The repeated divine actions place rescue in God's hands. The judgments are His acts within this deliverance, not authorization for private violence by those claiming a comparable mission.",
+    "context": "The promise progresses from release toward belonging to God and receiving the promised land.",
+    "references": "Exodus 3:20; Exodus 12:31",
+    "application": "Trust God for deliverance while refusing to use a particular judgment narrative as permission for personal retaliation.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:20 anticipated wonders, while Exodus 12 narrates the decisive judgment and departure.",
+    "reviewFlags": []
+  },
+  "Exodus 6:7": {
+    "explanation": "God promises to take Israel as His people and to be their God, so that they will know Him as the One who freed them. Rescue is relational as well as a change of circumstances. Belonging to God carries a purpose that will later be expressed through covenant instruction and holy living.",
+    "context": "This follows the promise of release and precedes the promise of entrance into Canaan.",
+    "references": "Exodus 19:4; Exodus 19:5; Exodus 19:6",
+    "application": "Let gratitude for God's saving work lead to faithful belonging, worship, and obedience rather than mere relief from difficulty.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 19:4-6 later relates deliverance to Israel's calling as a holy nation.",
+    "reviewFlags": []
+  },
+  "Exodus 6:8": {
+    "explanation": "God promises to bring Israel into the land sworn to Abraham, Isaac, and Jacob and give it as an inheritance. His declaration closes with His identity as the LORD. The promise belongs to this covenant history; it should not be converted into a personal guarantee that every desired property will be acquired.",
+    "context": "This completes the message Moses is to give before the account records the people's inability to listen.",
+    "references": "Genesis 26:3; Genesis 35:12",
+    "application": "Distinguish God's stated covenant promises from personal ambitions, and avoid presenting either as interchangeable with the other.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 26:3 and 35:12 continue the land promise through Isaac and Jacob respectively.",
+    "reviewFlags": []
+  },
+  "Exodus 6:9": {
+    "explanation": "Moses delivers the message, but Israel cannot heed it because of anguish of spirit and cruel bondage. The narrator identifies crushing circumstances rather than simply calling the people lazy or indifferent. Hearing hope can be difficult under sustained trauma, and the verse should not be used to shame suffering people.",
+    "context": "God continues the mission despite this painful reception, directing Moses again to Pharaoh.",
+    "references": "Exodus 5:14; Exodus 5:19",
+    "application": "Speak hope compassionately, taking exhaustion and suffering seriously rather than demanding an immediate outward response.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:14-19 records beatings and the refused appeal that contribute to the distress.",
+    "reviewFlags": []
+  },
+  "Exodus 6:10": {
+    "explanation": "The LORD speaks to Moses again after the people fail to heed the promise. The brief transition shows that the mission does not end with a discouraging audience. Its content is supplied by the next verse, so this notice should not be treated as an independent new command with imagined details.",
+    "context": "The instruction that follows sends Moses back to Pharaoh to demand release.",
+    "references": "Exodus 6:9; Exodus 6:11",
+    "application": "Do not treat one discouraging response as sufficient proof that a clear responsibility has been withdrawn.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 6:9 describes the preceding disappointment; Exodus 6:11 supplies the renewed commission.",
+    "reviewFlags": []
+  },
+  "Exodus 6:11": {
+    "explanation": "God commands Moses to speak to Pharaoh so that Israel may leave Egypt. The instruction renews the same core demand after worsening oppression and discouragement. Pharaoh's earlier refusal has not changed God's purpose, nor is Moses told to replace the demand with a message designed merely to preserve royal approval.",
+    "context": "Moses answers by comparing Israel's unwillingness to listen with the likely response of Pharaoh.",
+    "references": "Exodus 5:1; Exodus 5:2",
+    "application": "Remain faithful to a clearly entrusted message without confusing persistence with permission to add claims God has not given.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:1-2 records the first demand and refusal to which this return relates.",
+    "reviewFlags": []
+  },
+  "Exodus 6:12": {
+    "explanation": "Moses argues that if Israel would not listen, Pharaoh is even less likely to hear him, and he describes his lips as uncircumcised. The expression conveys his sense of inadequacy in speaking. It is not a medical diagnosis or a declaration that lack of polished speech makes someone spiritually worthless.",
+    "context": "God responds by charging both Moses and Aaron with the deliverance task.",
+    "references": "Exodus 4:10; Exodus 4:15",
+    "application": "Admit communication difficulties honestly, but do not assume that a painful response removes every reason to obey.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:10-16 records the earlier speech objection and the provision of Aaron as spokesman.",
+    "reviewFlags": []
+  },
+  "Exodus 6:13": {
+    "explanation": "God gives Moses and Aaron a charge concerning Israel and Pharaoh: bring the people out of Egypt. The shared commission answers Moses' discouragement by reaffirming responsibility. It does not grant either leader ownership of the people; they remain servants carrying out the LORD's purpose of deliverance.",
+    "context": "A genealogy now identifies the family line of these commissioned brothers before the narrative resumes.",
+    "references": "Exodus 4:15; Exodus 6:26",
+    "application": "Carry shared responsibilities faithfully, keeping service to God's people distinct from personal control over them.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 4:15-16 explains their cooperative speaking roles, while Exodus 6:26-27 returns to this charge.",
+    "reviewFlags": []
+  },
+  "Exodus 6:14": {
+    "explanation": "The genealogy begins with Reuben, Israel's firstborn, and names Hanoch, Pallu, Hezron, and Carmi as his family branches. This provides the wider family setting before narrowing to Levi. The verse does not assess each descendant's character or treat firstborn status as proof that Reuben leads the coming mission.",
+    "context": "Reuben and Simeon precede Levi in the family framework that will identify Moses and Aaron.",
+    "references": "Genesis 46:9; Numbers 26:5",
+    "application": "Preserve genealogical information accurately without attaching invented moral qualities or hidden symbolism to the names.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:9 lists the same sons with Phallu as the KJV spelling there.",
+    "reviewFlags": []
+  },
+  "Exodus 6:15": {
+    "explanation": "Simeon's sons are named, including Shaul with his Canaanite maternal connection. The family list supplies identity within Israel's larger household. That ancestry detail is not a verdict of personal guilt or permission for ethnic contempt, and the narrative supplies no separate account of Shaul's conduct here.",
+    "context": "This second family group leads to the extended genealogy of Levi and the commissioned brothers.",
+    "references": "Genesis 46:10; Exodus 6:16",
+    "application": "Avoid turning a recorded family background into an unsupported judgment about someone's moral worth.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:10 supplies the corresponding Simeonite migration list.",
+    "reviewFlags": []
+  },
+  "Exodus 6:16": {
+    "explanation": "Levi's sons are named as Gershon, Kohath, and Merari, and his lifespan is given as 137 years. The register now reaches the family branch central to the deliverance leaders. The age is information about Levi, not a command or promise that every faithful servant will reach the same lifespan.",
+    "context": "Subsequent verses trace the three branches, giving particular attention to Kohath's descendants.",
+    "references": "Genesis 46:11; Numbers 3:17",
+    "application": "Read genealogies for the connections they establish rather than forcing every numerical detail into a speculative scheme.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 46:11 names the same sons; Numbers 3:17 later organizes the Levite families under these names.",
+    "reviewFlags": []
+  },
+  "Exodus 6:17": {
+    "explanation": "Libni and Shimi are named as Gershon's sons according to their families. This short branch establishes their place in Levi's register before the account turns to Kohath. It does not provide their ages, occupations, or spiritual experiences, so an explanation should not manufacture those details merely to enlarge the entry.",
+    "context": "Gershon's descendants are part of the broader Levitical setting of Moses and Aaron's genealogy.",
+    "references": "Exodus 6:16; Numbers 3:18",
+    "application": "Respect the limited factual purpose of a brief family notice rather than filling its silences with invented biography.",
+    "reviewStatus": "pending",
+    "historicalContext": "Numbers 3:18 repeats these names in its later family register.",
+    "reviewFlags": []
+  },
+  "Exodus 6:18": {
+    "explanation": "Kohath's sons are named as Amram, Izhar, Hebron, and Uzziel, and his age is stated as 133 years. This branch leads to the named parents of Moses and Aaron. The verse supplies family connections but does not by itself settle every question about the total chronology of Israel's residence in Egypt.",
+    "context": "The register will expand several of these branches after briefly naming Merari's descendants.",
+    "references": "Numbers 3:19; Exodus 6:20",
+    "application": "Distinguish what a genealogy explicitly states from chronological reconstructions that need additional evidence and review.",
+    "reviewStatus": "pending",
+    "historicalContext": "Numbers 3:19 repeats the four names; Exodus 6:20 supplies the next central household.",
+    "reviewFlags": []
+  },
+  "Exodus 6:19": {
+    "explanation": "Mahali and Mushi are named as Merari's sons, completing the initial outline of Levi's three branches. The family summary locates them within the same ancestry as the coming leaders. It does not say that every branch has the same duties or predict the character of all later members.",
+    "context": "The account then narrows to Amram's marriage and the birth of Aaron and Moses.",
+    "references": "Exodus 6:16; Numbers 3:20",
+    "application": "Notice distinct family relationships without imposing uniform roles or moral judgments where the text does not give them.",
+    "reviewStatus": "pending",
+    "historicalContext": "Numbers 3:20 records Merari's sons with Mahli as its KJV spelling.",
+    "reviewFlags": []
+  },
+  "Exodus 6:20": {
+    "explanation": "Amram marries Jochebed, described as his father's sister, and she bears Aaron and Moses; his lifespan is given as 137 years. The notice identifies the brothers' household. Its report of a kinship marriage must not be treated as a command for believers to reproduce that arrangement or ignore later biblical prohibitions.",
+    "context": "This provides the central lineage within the genealogy of the commissioned deliverers.",
+    "references": "Numbers 26:59; Leviticus 18:12",
+    "application": "Distinguish a historical report of a marriage from a moral instruction authorizing the same relationship.",
+    "reviewStatus": "pending",
+    "historicalContext": "Numbers 26:59 also names Jochebed and her children; Leviticus 18:12 later addresses a father's sister.",
+    "reviewFlags": [
+      "Kinship wording and its relation to later marriage prohibitions require human review; no prescriptive approval asserted."
+    ],
+    "publicationHold": true
+  },
+  "Exodus 6:21": {
+    "explanation": "Izhar's sons are named as Korah, Nepheg, and Zichri. The register locates another Kohathite branch beside Amram's household, showing the wider family related to Moses and Aaron. Korah's later actions should not be projected backward as an assertion that every member of this listed household shares his guilt.",
+    "context": "This expands one of the branches introduced in Exodus 6:18 before turning to Uzziel's sons.",
+    "references": "Exodus 6:18; Numbers 16:1",
+    "application": "Judge people by their own conduct rather than treating a relative's later wrongdoing as proof of inherited personal guilt.",
+    "reviewStatus": "pending",
+    "historicalContext": "Numbers 16:1 later identifies Korah through Izhar and Kohath in the rebellion account.",
+    "reviewFlags": []
+  },
+  "Exodus 6:22": {
+    "explanation": "Mishael, Elzaphan, and Zithri are named as Uzziel's sons. The brief list places them within the Kohathite family that surrounds the central priestly household. It provides no complete biographies, and later service involving some of the names should be identified as later narrative rather than inserted as an event occurring here.",
+    "context": "The genealogy proceeds from related Kohathite branches to Aaron's own marriage and children.",
+    "references": "Exodus 6:18; Leviticus 10:4",
+    "application": "Keep stages of biblical history distinct when using later passages to illuminate a family connection.",
+    "reviewStatus": "pending",
+    "historicalContext": "Leviticus 10:4 later identifies Mishael and Elzaphan as Uzziel's sons in a specific duty.",
+    "reviewFlags": []
+  },
+  "Exodus 6:23": {
+    "explanation": "Aaron marries Elisheba, identified through Amminadab and Naashon, and their sons are Nadab, Abihu, Eleazar, and Ithamar. The names establish the household central to later priestly service. The verse itself does not narrate the sons' future conduct or claim that family membership guarantees faithful service.",
+    "context": "This household notice prepares the later naming of Eleazar's son Phinehas.",
+    "references": "Exodus 28:1; Leviticus 10:1",
+    "application": "Receive family responsibility seriously without assuming that inherited opportunity replaces personal obedience and holiness.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 28:1 later names Aaron and these sons in connection with the priesthood; Leviticus 10 records their subsequent history.",
+    "reviewFlags": []
+  },
+  "Exodus 6:24": {
+    "explanation": "Assir, Elkanah, and Abiasaph are named among Korah's sons, and their families are identified as Korhites. The register distinguishes descendants within the wider Levitical tree. It does not state that all Korah's descendants perish in his later rebellion, and another passage expressly prevents that assumption.",
+    "context": "This branch stands between Aaron's household and the continuation through Eleazar.",
+    "references": "Exodus 6:21; Numbers 26:11",
+    "application": "Read family history with care rather than assigning the same fate to everyone associated with a wrongdoer.",
+    "reviewStatus": "pending",
+    "historicalContext": "Numbers 26:11 says that Korah's children did not die, a relevant safeguard against careless collective conclusions.",
+    "reviewFlags": []
+  },
+  "Exodus 6:25": {
+    "explanation": "Eleazar marries a daughter of Putiel, and Phinehas is born; the section closes by identifying Levitical family heads. This extends Aaron's household into another generation. The verse does not identify Putiel further, and unsupported ancestry theories should not be presented as though the register supplies them.",
+    "context": "The genealogy now returns to its main narrative purpose: identifying Aaron and Moses.",
+    "references": "Exodus 6:23; Numbers 25:7",
+    "application": "Preserve the identity the text actually gives without embellishing an unfamiliar name with an invented history.",
+    "reviewStatus": "pending",
+    "historicalContext": "Numbers 25:7 later names Phinehas through Eleazar and Aaron, confirming this family relationship.",
+    "reviewFlags": []
+  },
+  "Exodus 6:26": {
+    "explanation": "The narrator identifies these family members as the Aaron and Moses charged by the LORD to bring Israel out according to their armies. The genealogical pause serves the mission story rather than creating a separate application. The ordered-company language does not imply that the enslaved people have already completed their departure.",
+    "context": "The following verse again connects the brothers with their speech to Pharaoh.",
+    "references": "Exodus 6:13; Exodus 12:41",
+    "application": "Keep preparation and identity connected with faithful execution, without counting a commission as a completed outcome.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 6:13 states the charge; Exodus 12:41 later uses hosts language for the departure.",
+    "reviewFlags": []
+  },
+  "Exodus 6:27": {
+    "explanation": "The same Moses and Aaron are identified as those who speak to Pharaoh to bring Israel out. The repetition reconnects the genealogy with the confrontation already narrated. The verse makes the family register serve continuity of persons and mission, rather than introducing a different pair of leaders with similar names.",
+    "context": "The account resumes the exchange between God and Moses concerning the message to Pharaoh.",
+    "references": "Exodus 5:1; Exodus 6:26",
+    "application": "Read narrative transitions carefully so that a change of emphasis is not mistaken for a change of identity.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 5:1 records their earlier audience, and Exodus 6:26 has just identified their commission.",
+    "reviewFlags": []
+  },
+  "Exodus 6:28": {
+    "explanation": "The narrative returns to the occasion when the LORD spoke to Moses in Egypt. This introductory statement sets up the command and objection in the following verses. Its purpose is continuity after the genealogy, not the announcement of an extra message whose content must be invented.",
+    "context": "Exodus 6:29-30 restates the divine instruction and Moses' concern about speaking.",
+    "references": "Exodus 6:10; Exodus 6:29",
+    "application": "Read transitional verses together with their continuation rather than forcing them to carry a separate teaching beyond their role.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 6:10-12 already contains the corresponding command and objection before the family register.",
+    "reviewFlags": []
+  },
+  "Exodus 6:29": {
+    "explanation": "The LORD again identifies Himself and commands Moses to tell Pharaoh everything He says. The obligation is faithfulness to the given message, not the production of a more impressive substitute. Divine authority belongs to the speaker who sends, while Moses remains accountable as the messenger entrusted with His words.",
+    "context": "Moses responds once more by questioning whether Pharaoh will listen to his inadequate lips.",
+    "references": "Exodus 6:2; Exodus 7:2",
+    "application": "Communicate Scripture accurately, refusing to add personal claims merely to make the message appear stronger.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 7:2 continues the instruction to speak all that God commands.",
+    "reviewFlags": []
+  },
+  "Exodus 6:30": {
+    "explanation": "Moses again describes his lips as uncircumcised and asks how Pharaoh will hear him. The chapter ends by returning to the speaking difficulty raised before the genealogy. The concern has not removed God's commission; the following chapter explains the representative role of Moses and the speaking role of Aaron.",
+    "context": "Exodus 7:1-2 supplies God's answer and the arrangement for the renewed confrontation.",
+    "references": "Exodus 6:12; Exodus 7:1; Exodus 7:2",
+    "application": "Bring limitations honestly before God without using them as grounds for abandoning a clearly established duty.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 6:12 contains the earlier form of the same objection, and Exodus 4:15-16 explains their cooperation.",
+    "reviewFlags": []
+  },
   "Genesis 1:4": {
     "explanation": "God distinguishes light from darkness and calls the light good; creation is ordered by divine judgment rather than chance.",
     "context": "The separation follows the first command for light and begins the pattern of distinctions in the creation week.",

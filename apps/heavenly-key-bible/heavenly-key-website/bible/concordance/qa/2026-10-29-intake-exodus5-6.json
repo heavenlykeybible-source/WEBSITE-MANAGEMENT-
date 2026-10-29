@@ -1,0 +1,24 @@
+{
+  "submitted": 53,
+  "target": 500,
+  "partialCheckpoint": true,
+  "pending": 53,
+  "reviewFlags": [
+    {
+      "ref": "Exodus 6:3",
+      "flags": [
+        "Nature of patriarchal knowledge of the divine name requires human textual and doctrinal review; no speculative harmonization."
+      ]
+    },
+    {
+      "ref": "Exodus 6:20",
+      "flags": [
+        "Kinship wording and its relation to later marriage prohibitions require human review; no prescriptive approval asserted."
+      ]
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "passed": true,
+  "limitations": "Reference existence and text binding are automated. Relevance, history, originality against external works and doctrinal correctness require human review."
+}

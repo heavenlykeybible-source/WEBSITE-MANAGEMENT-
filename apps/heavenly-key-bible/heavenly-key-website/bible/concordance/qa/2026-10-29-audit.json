@@ -2,11 +2,11 @@
   "canonicalVerses": 31102,
   "books": 66,
   "chapters": 1189,
-  "drafts": 1630,
-  "uniqueVerses": 1630,
-  "pendingReview": 1630,
-  "remainingOutsideDraftSet": 29472,
-  "nextMissing": "Exodus 5:1",
+  "drafts": 1683,
+  "uniqueVerses": 1683,
+  "pendingReview": 1683,
+  "remainingOutsideDraftSet": 29419,
+  "nextMissing": "Exodus 7:1",
   "legacyAudit": [
     "Genesis 1:1",
     "Genesis 1:2",
@@ -79,6 +79,18 @@
       "ref": "Exodus 4:26",
       "flags": [
         "Meaning of the release and the circumcision expression remains held for authorized human review."
+      ]
+    },
+    {
+      "ref": "Exodus 6:3",
+      "flags": [
+        "Nature of patriarchal knowledge of the divine name requires human textual and doctrinal review; no speculative harmonization."
+      ]
+    },
+    {
+      "ref": "Exodus 6:20",
+      "flags": [
+        "Kinship wording and its relation to later marriage prohibitions require human review; no prescriptive approval asserted."
       ]
     },
     {
