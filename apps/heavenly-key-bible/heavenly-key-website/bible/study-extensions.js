@@ -58,6 +58,14 @@ function renderDictionary(){
    const copy=document.createElement('button');copy.type='button';copy.textContent='Copy';copy.setAttribute('aria-label','Copy '+e.term+' definition');
    copy.addEventListener('click',async()=>{const value=[e.term,e.meaning,e.explanation,e.reference].filter(Boolean).join('\n');try{await navigator.clipboard.writeText(value);copy.textContent='Copied';}catch{const area=document.createElement('textarea');area.value=value;area.style.position='fixed';area.style.left='-9999px';document.body.append(area);area.select();let ok=false;try{ok=document.execCommand('copy');}catch{}finally{area.remove();}copy.textContent=ok?'Copied':'Copy unavailable';}});
    actions.append(copy);
+   const share=document.createElement('button');share.type='button';share.textContent='Share to other networks';share.setAttribute('aria-label','Share '+e.term+' Bible dictionary definition');
+   share.addEventListener('click',async()=>{
+    const message=[e.term,e.meaning,e.explanation,'Scripture: '+e.reference+' (KJV)'].filter(Boolean).join('\\n');
+    const url=new URL('./dictionary',location.href).href;
+    try{if(navigator.share){await navigator.share({title:e.term+' — Bible Dictionary',text:message,url});return;}}catch(error){if(error?.name==='AbortError')return;}
+    try{await navigator.clipboard.writeText(message+'\\n'+url);share.textContent='Copied for sharing';}
+    catch{window.prompt('Copy dictionary definition to share:',message+'\\n'+url);}
+   });actions.append(share);
    const ref=document.createElement('button');ref.type='button';ref.className='dict-verse-button';ref.textContent='Read KJV: '+e.reference;ref.setAttribute('aria-label','Show KJV verse '+e.reference);ref.addEventListener('click',async()=>{
   let passage=card.querySelector('.dict-verse-text');
   if(passage){passage.remove();return;}
