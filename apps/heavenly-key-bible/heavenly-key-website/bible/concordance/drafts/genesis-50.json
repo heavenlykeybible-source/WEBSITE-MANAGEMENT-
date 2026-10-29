@@ -1,0 +1,399 @@
+[
+  {
+    "ref": "Genesis 50:1",
+    "kjvText": "And Joseph fell upon his father’s face, and wept upon him, and kissed him.",
+    "kjvTextHash": "a0b4fb3206aac6520a77f22e17e3cd1058a96132c1cb28b064e664666398870d",
+    "explanation": "Joseph falls upon his father's face, weeps, and kisses him after Jacob's death. The scene gives grief a visible and affectionate expression. Joseph's faith and public responsibilities do not eliminate mourning, and the narrative does not rebuke him for responding personally to the loss.",
+    "context": "The chapter moves from Jacob's final instructions to mourning, preparation, and burial.",
+    "historicalContext": "Genesis 49:33 records the death immediately before this response; no additional deathbed words are supplied.",
+    "crossReferences": [
+      "Genesis 49:33",
+      "John 11:35"
+    ],
+    "application": "Allow sincere mourning and compassionate presence rather than demanding that faith suppress every expression of sorrow.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:2",
+    "kjvText": "And Joseph commanded his servants the physicians to embalm his father: and the physicians embalmed Israel.",
+    "kjvTextHash": "68125d05c762c2c0470e7220a909f61017076c44c07457ede99ab7a632ac60ae",
+    "explanation": "Joseph directs his physician servants to embalm Jacob, and they carry out the work. The verse describes a bodily preparation within the Egyptian setting. It does not specify the method, assert that Jacob embraced Egyptian worship, or command Christians to adopt the same funeral practice.",
+    "context": "The preparation precedes the stated period of mourning and the request to take Jacob to Canaan.",
+    "historicalContext": "The text identifies physicians as those responsible but provides no embalming recipe or account of associated ceremonies.",
+    "crossReferences": [
+      "Genesis 50:3",
+      "Genesis 50:13"
+    ],
+    "application": "Distinguish respectful care for the dead from unsupported assumptions about a person's religious allegiance.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:3",
+    "kjvText": "And forty days were fulfilled for him; for so are fulfilled the days of those which are embalmed: and the Egyptians mourned for him threescore and ten days.",
+    "kjvTextHash": "ac946e2c9ad59f817dac1b8cb286450720257fc57bdb5fa4b270fa8bea0d1573",
+    "explanation": "The account assigns forty days to the embalming and seventy days to the Egyptians' mourning. These numbers convey an extended public response to Jacob's death. The verse does not explain whether every part of the two periods is consecutive, so their sum should not automatically be reported as the funeral's total duration.",
+    "context": "Once mourning is past, Joseph approaches Pharaoh's household about the promised burial journey.",
+    "historicalContext": "Both figures come directly from the KJV; no external rule about all Egyptian funerals is asserted.",
+    "crossReferences": [
+      "Genesis 50:2",
+      "Genesis 50:4"
+    ],
+    "application": "Report time periods accurately and avoid claiming a precise combined chronology when the text does not establish it.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:4",
+    "kjvText": "And when the days of his mourning were past, Joseph spake unto the house of Pharaoh, saying, If now I have found grace in your eyes, speak, I pray you, in the ears of Pharaoh, saying,",
+    "kjvTextHash": "292ea2ffb49e73be07437f0c4fa2a2b7096e2012ff3648968f1a2fe2b364d54c",
+    "explanation": "After mourning, Joseph asks Pharaoh's household to convey his request to the ruler. He seeks permission through the people addressed rather than departing without notice. The verse does not state why he uses intermediaries, so explanations involving a particular court taboo must not be presented as fact.",
+    "context": "The next verse gives the content of the request: fulfilling Jacob's burial oath and then returning.",
+    "historicalContext": "The narrative records the communication route but supplies no general description of Egyptian court protocol for mourners.",
+    "crossReferences": [
+      "Genesis 50:5",
+      "Genesis 50:6"
+    ],
+    "application": "Communicate obligations responsibly with those affected, while distinguishing known reasons from plausible but unverified explanations.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:5",
+    "kjvText": "My father made me swear, saying, Lo, I die: in my grave which I have digged for me in the land of Canaan, there shalt thou bury me. Now therefore let me go up, I pray thee, and bury my father, and I will come again.",
+    "kjvTextHash": "2274075685358d1e9c69014bbfaf1fcdce08c1fb65ccbf76fd2239aba140238c",
+    "explanation": "Joseph explains that Jacob bound him by oath to bury him in Canaan and asks leave to fulfill it, promising to return. His request honors both a family commitment and his continuing responsibility in Egypt. The reported grave preparation should not be expanded into an invented construction history.",
+    "context": "This states the reason for the journey and leads to Pharaoh's consent.",
+    "historicalContext": "Genesis 47:29-31 records the oath, while Genesis 49:29-32 identifies the purchased family burial property.",
+    "crossReferences": [
+      "Genesis 47:30",
+      "Genesis 47:31",
+      "Genesis 49:30"
+    ],
+    "application": "Keep solemn promises and communicate how you will fulfill them without neglecting other entrusted duties.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:6",
+    "kjvText": "And Pharaoh said, Go up, and bury thy father, according as he made thee swear.",
+    "kjvTextHash": "c76e658a72328a86c863ec58da8ad7364c7b82a0b15eebf96e1b7eb8c2ce434e",
+    "explanation": "Pharaoh grants Joseph permission to go and bury his father according to the oath. The response recognizes the stated obligation and permits its fulfillment. The verse records cooperation in this circumstance, not a claim that every ruler will always accommodate a believer's family or religious responsibilities.",
+    "context": "The permission is followed by the large company that accompanies the burial journey.",
+    "historicalContext": "Joseph's request in Genesis 50:5 includes returning to Egypt; the later narrative records that return.",
+    "crossReferences": [
+      "Genesis 50:5",
+      "Genesis 50:14"
+    ],
+    "application": "Honor legitimate commitments and, where possible, make room for others to fulfill serious family responsibilities.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:7",
+    "kjvText": "¶ And Joseph went up to bury his father: and with him went up all the servants of Pharaoh, the elders of his house, and all the elders of the land of Egypt,",
+    "kjvTextHash": "d00742f9fd32840198428e2dbe3e8204da71613ffb015a3fb7ae603835ef0ca9",
+    "explanation": "Joseph travels to bury Jacob accompanied by Pharaoh's servants, household elders, and the elders of Egypt. The delegation gives the burial public weight beyond Joseph's private family grief. The verse does not name the officials or supply independent diplomatic purposes for their attendance.",
+    "context": "This begins the description of those who accompany the permitted burial journey.",
+    "historicalContext": "The next two verses add family members and a military-style escort, showing the size of the procession within the narrative.",
+    "crossReferences": [
+      "Genesis 50:8",
+      "Genesis 50:9"
+    ],
+    "application": "Recognize that support for the bereaved may include practical accompaniment as well as spoken sympathy.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:8",
+    "kjvText": "And all the house of Joseph, and his brethren, and his father’s house: only their little ones, and their flocks, and their herds, they left in the land of Goshen.",
+    "kjvTextHash": "8798fde9d3ba0c5e33136c9294e96c10781b60e9d7f2c3490410b3b5fa158b7f",
+    "explanation": "Joseph's household, brothers, and father's household accompany the burial, while the little ones, flocks, and herds remain in Goshen. The journey therefore does not constitute the family's permanent departure from Egypt. Its arrangements also distinguish those traveling from dependents and possessions remaining behind.",
+    "context": "This qualifies the procession description and anticipates the group's return after burial.",
+    "historicalContext": "Genesis 50:14 explicitly records the return to Egypt; this journey must not be confused with the later Exodus.",
+    "crossReferences": [
+      "Genesis 50:14",
+      "Genesis 47:27"
+    ],
+    "application": "Arrange necessary journeys with care for the people and responsibilities that remain at home.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:9",
+    "kjvText": "And there went up with him both chariots and horsemen: and it was a very great company.",
+    "kjvTextHash": "f8cd246ba225dce457e9ca4bc85d12c1c0c2df0e106411389dcfc729b9f6243b",
+    "explanation": "Chariots and horsemen accompany the travelers, making a very large company. The detail adds to the account of public honor and the scale of the journey. It does not describe a battle or authorize constructing an otherwise unrecorded military campaign around Jacob's funeral.",
+    "context": "The verse completes the procession description before the mourning at Atad.",
+    "historicalContext": "Genesis 50:7-8 lists officials and family members, providing the immediate explanation for the large company.",
+    "crossReferences": [
+      "Genesis 50:7",
+      "Genesis 50:10"
+    ],
+    "application": "Preserve the distinction between what a narrative reports and dramatic details that readers might imagine around it.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:10",
+    "kjvText": "And they came to the threshingfloor of Atad, which [is] beyond Jordan, and there they mourned with a great and very sore lamentation: and he made a mourning for his father seven days.",
+    "kjvTextHash": "252389bbacb768d635c71b92eda0f0523e4c2ccdd55dcc75c9b85e9829fa275f",
+    "explanation": "At the threshingfloor of Atad, described as beyond Jordan, the company makes a very grievous lamentation and Joseph mourns for seven days. The additional mourning shows the depth of the farewell. The passage supplies a place description but does not reconstruct the full itinerary from Egypt.",
+    "context": "The mourning attracts local attention before the sons complete Jacob's burial in Canaan.",
+    "historicalContext": "The KJV explicitly gives seven days here; the exact modern location and route are not established by this note.",
+    "crossReferences": [
+      "Genesis 50:11",
+      "Genesis 50:13"
+    ],
+    "application": "Give grief appropriate time while remaining faithful to the responsibilities that accompany a funeral.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:11",
+    "kjvText": "And when the inhabitants of the land, the Canaanites, saw the mourning in the floor of Atad, they said, This [is] a grievous mourning to the Egyptians: wherefore the name of it was called Abel-mizraim, which [is] beyond Jordan.",
+    "kjvTextHash": "97c3ca77a79c032f1edbdeea3a298ef24e139ff53b0e66a4602b10fab2b71973",
+    "explanation": "The Canaanite observers interpret the great mourning at Atad as an Egyptian mourning, and the location receives the name Abel-mizraim. The verse explains the name through the event. The observers' description does not change Jacob's ancestry or mean that the covenant family has ceased to be Israel.",
+    "context": "This records the local response to the mourning before returning to the sons' fulfillment of Jacob's commands.",
+    "historicalContext": "The place-name explanation comes from the KJV itself; no additional Hebrew etymology or precise archaeological identification is asserted.",
+    "crossReferences": [
+      "Genesis 50:10",
+      "Genesis 50:12"
+    ],
+    "application": "Distinguish how outside observers describe an event from the full history known within the biblical narrative.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:12",
+    "kjvText": "And his sons did unto him according as he commanded them:",
+    "kjvTextHash": "a1bc599d51d2e46f0a5d0044af8cbda29a85da8bbbc1c349292d18233dada8a4",
+    "explanation": "Jacob's sons do as he commanded them, giving a concise statement of faithful execution. The specific action is supplied in the following verse: carrying and burying him at Machpelah. Their obedience here is practical, requiring a journey rather than merely a declaration of affection for their father.",
+    "context": "The summary transitions from public mourning to the actual burial that fulfills Jacob's final instructions.",
+    "historicalContext": "Genesis 49:29-32 records those instructions, allowing the reader to compare promise and performance directly.",
+    "crossReferences": [
+      "Genesis 49:29",
+      "Genesis 50:13"
+    ],
+    "application": "Let respect for another person's legitimate wishes be expressed through reliable action, especially after they can no longer remind you.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:13",
+    "kjvText": "For his sons carried him into the land of Canaan, and buried him in the cave of the field of Machpelah, which Abraham bought with the field for a possession of a buryingplace of Ephron the Hittite, before Mamre.",
+    "kjvTextHash": "608ab4a505d4b0ce4670ffa7ca64e6925a3d853ad218597bb9d9fa281d89f1eb",
+    "explanation": "The sons carry Jacob into Canaan and bury him in the cave at Machpelah, the purchased family burial place before Mamre. The burial fulfills his expressed desire and Joseph's oath. It preserves the family's connection to Canaan while their daily residence continues in Egypt.",
+    "context": "This is the culmination of the burial journey and is followed by the return of the party to Egypt.",
+    "historicalContext": "Genesis 23:17-20 supplies the purchase account; Genesis 49:30 repeats the location in Jacob's final instructions.",
+    "crossReferences": [
+      "Genesis 23:19",
+      "Genesis 49:30",
+      "Genesis 47:31"
+    ],
+    "application": "Fulfill entrusted promises accurately rather than substituting a more convenient action after the person has died.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:14",
+    "kjvText": "¶ And Joseph returned into Egypt, he, and his brethren, and all that went up with him to bury his father, after he had buried his father.",
+    "kjvTextHash": "52a09aca890246ad285172a8c7c79c01ab9367fdb634f71023b243ef0f6f6a9e",
+    "explanation": "Joseph, his brothers, and the accompanying company return to Egypt after the burial. Joseph fulfills the assurance he gave when asking permission to leave. The family has honored Jacob's burial wish without claiming that the promised national return to Canaan has now been accomplished.",
+    "context": "The burial episode closes and the narrative turns to the brothers' fear after their father's death.",
+    "historicalContext": "Genesis 50:5 records Joseph's promise to return, and Genesis 50:24 locates the hoped-for national departure in the future.",
+    "crossReferences": [
+      "Genesis 50:5",
+      "Genesis 50:24"
+    ],
+    "application": "Keep commitments made in obtaining assistance or permission, including after the immediate family duty has been completed.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:15",
+    "kjvText": "¶ And when Joseph’s brethren saw that their father was dead, they said, Joseph will peradventure hate us, and will certainly requite us all the evil which we did unto him.",
+    "kjvTextHash": "624416633b93c74632c75d4e5f785f237084ef9d0b1fa9dd9f55b622c1d1cd94",
+    "explanation": "After Jacob dies, Joseph's brothers fear that he may hate them and repay their wrongdoing. Their anxiety reveals that past reconciliation has not fully removed their fear of retaliation. The verse reports their suspicion; it does not say that Joseph has secretly planned revenge while his father lived.",
+    "context": "This begins the final reconciliation scene, in which Joseph again reassures them.",
+    "historicalContext": "Genesis 45:4-15 records Joseph's earlier welcome, providing a contrast with their continued fear.",
+    "crossReferences": [
+      "Genesis 45:5",
+      "Genesis 45:15"
+    ],
+    "application": "Past wrongdoing can leave deep fear; seek truthful reassurance without assuming another person's hidden hostility as fact.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:16",
+    "kjvText": "And they sent a messenger unto Joseph, saying, Thy father did command before he died, saying,",
+    "kjvTextHash": "f5f63797be148550ad132f29d9cfaece9d187894259fb95d23416729de7afd39",
+    "explanation": "The brothers send a message reporting that Jacob gave a command before his death. The narrative presents their claim but does not separately record that command in the earlier deathbed scene. It would be unwarranted either to assert that the message is fabricated or to add unrecorded details to it.",
+    "context": "The next verse supplies the reported request for forgiveness and records Joseph's tears.",
+    "historicalContext": "Genesis 49:29-32 records burial instructions; it does not independently confirm or deny the additional message reported here.",
+    "crossReferences": [
+      "Genesis 50:15",
+      "Genesis 50:17"
+    ],
+    "application": "Distinguish a reported statement from independent confirmation, and avoid declaring deception where the text does not establish it.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:17",
+    "kjvText": "So shall ye say unto Joseph, Forgive, I pray thee now, the trespass of thy brethren, and their sin; for they did unto thee evil: and now, we pray thee, forgive the trespass of the servants of the God of thy father. And Joseph wept when they spake unto him.",
+    "kjvTextHash": "c3fdd144ae30297a39792c984509bab4a0f509357622640b8f6054a3a014844e",
+    "explanation": "The message asks Joseph to forgive his brothers' trespass and sin, expressly admitting that they did evil. Joseph weeps at the appeal. The verse names wrongdoing rather than excusing it, while the tears are reported without an exhaustive explanation of every feeling behind them.",
+    "context": "The appeal is followed by the brothers' personal appearance and Joseph's assurance against revenge.",
+    "historicalContext": "Genesis 37:27-28 records the sale of Joseph; the message's language of sin accords with that narrative harm.",
+    "crossReferences": [
+      "Genesis 37:28",
+      "Genesis 42:21"
+    ],
+    "application": "Confess wrong plainly and seek forgiveness without minimizing the injury done to another person.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:18",
+    "kjvText": "And his brethren also went and fell down before his face; and they said, Behold, we [be] thy servants.",
+    "kjvTextHash": "efb5eaecb66564c2569f0aaee0af9b6011c27a91a3129cb2a6a43412b2b37719",
+    "explanation": "The brothers come and fall before Joseph, offering themselves as his servants. Their gesture shows fear and vulnerability before the brother who holds power. The narrative recalls earlier bowing in the Joseph story, but the immediate question is how Joseph will respond to their appeal after Jacob's death.",
+    "context": "Joseph answers in the next verse by rejecting the place of ultimate judgment and telling them not to fear.",
+    "historicalContext": "Genesis 37:7-10 records the dreams, and Genesis 42:6 records earlier bowing in Egypt; the connections arise from Scripture itself.",
+    "crossReferences": [
+      "Genesis 37:7",
+      "Genesis 42:6",
+      "Genesis 50:19"
+    ],
+    "application": "Use a position of strength to answer vulnerability with truth and mercy rather than humiliation.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:19",
+    "kjvText": "And Joseph said unto them, Fear not: for [am] I in the place of God?",
+    "kjvTextHash": "32eec15e86ccdc0596bd334f2638aca87b90935b0b0854e07382215cf28d043b",
+    "explanation": "Joseph tells his brothers not to fear and asks whether he is in God's place. He refuses to make his power a platform for personal vengeance. The statement does not deny every role of lawful human judgment; it addresses his own response to those who fear his retaliation.",
+    "context": "This introduces the distinction between their evil intention and God's preserving purpose in the next verse.",
+    "historicalContext": "Romans 12:19 similarly warns against personal vengeance, offering a thematic comparison rather than changing the narrative's immediate setting.",
+    "crossReferences": [
+      "Romans 12:19",
+      "Genesis 50:20"
+    ],
+    "application": "Leave ultimate judgment to God and refuse to turn personal injury into a claim to retaliatory authority.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:20",
+    "kjvText": "But as for you, ye thought evil against me; [but] God meant it unto good, to bring to pass, as [it is] this day, to save much people alive.",
+    "kjvTextHash": "b2ed86abcd30ee3e954a61747c115ec417db7a5749f679656af896f7df82642d",
+    "explanation": "Joseph distinguishes his brothers' evil intention from God's good purpose in preserving many lives. The same history contains human wrongdoing and divine preservation, but the good outcome does not make the evil act righteous. The verse is not permission to harm others in hope that God will produce benefit.",
+    "context": "It explains Joseph's refusal of revenge and recalls his earlier interpretation of events during the famine.",
+    "historicalContext": "Genesis 45:5-8 links Joseph's position in Egypt with the preservation of the family through famine.",
+    "crossReferences": [
+      "Genesis 45:5",
+      "Genesis 45:7",
+      "Romans 12:21"
+    ],
+    "application": "Trust God's ability to bring good through suffering while continuing to name, resist, and repent of wrongdoing.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:21",
+    "kjvText": "Now therefore fear ye not: I will nourish you, and your little ones. And he comforted them, and spake kindly unto them.",
+    "kjvTextHash": "e1cc48e03789b0eabc8f085c7ed86c1da3897456c9be28e7fb5720eacc70fad5",
+    "explanation": "Joseph reassures the brothers and promises to nourish them and their little ones. His comfort takes the form of both kind speech and continuing provision. He does not require their children to suffer for their fathers' past crime, and he makes practical care part of the renewed assurance.",
+    "context": "This closes the reconciliation scene with the same concern for preservation expressed in the preceding verse.",
+    "historicalContext": "Genesis 45:11 contains Joseph's earlier promise to nourish the family during famine, linking his words here with demonstrated provision.",
+    "crossReferences": [
+      "Genesis 45:11",
+      "Genesis 50:20"
+    ],
+    "application": "Let forgiveness be expressed through truthful, appropriate conduct, while refusing to transfer blame to innocent dependents.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:22",
+    "kjvText": "¶ And Joseph dwelt in Egypt, he, and his father’s house: and Joseph lived an hundred and ten years.",
+    "kjvTextHash": "220a72b9197f231d506061fdb164eb42a030c7bbac5729f1ef762b7997202a7a",
+    "explanation": "Joseph remains in Egypt with his father's household and lives to 110 years. The verse carries the story beyond the burial and reconciliation scenes into the close of Joseph's life. It does not claim that longevity is an automatic reward guaranteed to every faithful servant.",
+    "context": "The following verse records descendants Joseph lives to see before his final statements about God's promise.",
+    "historicalContext": "The age is explicitly supplied by the KJV; no external royal chronology is required to state it.",
+    "crossReferences": [
+      "Genesis 50:23",
+      "Genesis 50:26"
+    ],
+    "application": "Receive the years God grants with gratitude without using length of life to rank another person's faithfulness.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:23",
+    "kjvText": "And Joseph saw Ephraim’s children of the third [generation:] the children also of Machir the son of Manasseh were brought up upon Joseph’s knees.",
+    "kjvTextHash": "d07660b69356e73293da9271d4beda0e380931f12fe3506c3128457d3a41fedc",
+    "explanation": "Joseph lives to see later generations in Ephraim's line, and descendants of Machir in Manasseh's line are brought up upon his knees. The picture emphasizes family continuity and close involvement. It does not provide enough information for an exact birth chronology of every descendant or a complete legal theory of adoption.",
+    "context": "This shows the family's growth before Joseph's death and his assurance that God will bring Israel out of Egypt.",
+    "historicalContext": "Numbers 26:29 later names Machir and Gilead within Manasseh's families; the connection confirms the family line without specifying every age.",
+    "crossReferences": [
+      "Genesis 41:51",
+      "Numbers 26:29"
+    ],
+    "application": "Value opportunities to care for later generations without pretending that a brief family notice supplies a full biography.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:24",
+    "kjvText": "And Joseph said unto his brethren, I die: and God will surely visit you, and bring you out of this land unto the land which he sware to Abraham, to Isaac, and to Jacob.",
+    "kjvTextHash": "be300d3ce7e2ac55b9be5c2baaf4cfce47f9376b4757834f71e6515d7f3fe5aa",
+    "explanation": "Joseph acknowledges his coming death but assures his brethren that God will visit them and bring them to the land promised to Abraham, Isaac, and Jacob. Hope is placed in God's sworn commitment beyond Joseph's lifetime. His own death does not mark the end of the family's covenant future.",
+    "context": "The assurance leads to his request that his bones be carried out when God fulfills the promised departure.",
+    "historicalContext": "Exodus 3:16-17 later joins divine visitation with bringing Israel out of Egypt, and Genesis 48:21 records Jacob's similar assurance.",
+    "crossReferences": [
+      "Genesis 48:21",
+      "Exodus 3:16",
+      "Exodus 3:17"
+    ],
+    "application": "Pass on confidence in God's Word rather than making another generation's hope depend on your continued presence.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:25",
+    "kjvText": "And Joseph took an oath of the children of Israel, saying, God will surely visit you, and ye shall carry up my bones from hence.",
+    "kjvTextHash": "9dff8ab11723665dd2ced012dbf1a5f5e3a59365d37a2466c9f5aad20d5fc4ef",
+    "explanation": "Joseph requires an oath that Israel will carry his bones from Egypt when God visits them. The request makes his burial remains a witness to confidence in future deliverance. It is a particular instruction rooted in the promised departure, not a universal command about transporting every believer's remains.",
+    "context": "The oath follows the promise of return and precedes the account of Joseph's embalming and coffin in Egypt.",
+    "historicalContext": "Exodus 13:19 explicitly records Moses taking Joseph's bones, and Hebrews 11:22 identifies the instruction as an act of faith.",
+    "crossReferences": [
+      "Exodus 13:19",
+      "Hebrews 11:22",
+      "Joshua 24:32"
+    ],
+    "application": "Express trust in God's promises through faithful commitments, while distinguishing particular covenant instructions from universal funeral requirements.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  },
+  {
+    "ref": "Genesis 50:26",
+    "kjvText": "So Joseph died, [being] an hundred and ten years old: and they embalmed him, and he was put in a coffin in Egypt.",
+    "kjvTextHash": "2f253214e7d009b028219ba439d1fd2fabf098b5563ef91ca2aab11c91b079b3",
+    "explanation": "Joseph dies at 110, is embalmed, and is placed in a coffin in Egypt. Genesis ends with death outside the promised land, yet the preceding oath points beyond the coffin to God's future visitation. The closing note holds mortality and hope together rather than claiming the whole promise is already fulfilled.",
+    "context": "Exodus continues the story of the growing family and eventual deliverance; later Scripture records the transport and burial of Joseph's bones.",
+    "historicalContext": "Exodus 13:19 and Joshua 24:32 supply the later stages; no additional embalming method or archaeological claim is added here.",
+    "crossReferences": [
+      "Exodus 13:19",
+      "Joshua 24:32",
+      "Hebrews 11:22"
+    ],
+    "application": "Face mortality honestly while grounding enduring hope in God's faithfulness rather than in earthly status or permanence.",
+    "reviewStatus": "pending",
+    "reviewFlags": []
+  }
+]

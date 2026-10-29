@@ -2,11 +2,11 @@
   "canonicalVerses": 31102,
   "books": 66,
   "chapters": 1189,
-  "drafts": 1449,
-  "uniqueVerses": 1449,
-  "pendingReview": 1449,
-  "remainingOutsideDraftSet": 29653,
-  "nextMissing": "Genesis 48:1",
+  "drafts": 1530,
+  "uniqueVerses": 1530,
+  "pendingReview": 1530,
+  "remainingOutsideDraftSet": 29572,
+  "nextMissing": "Exodus 1:1",
   "legacyAudit": [
     "Genesis 1:1",
     "Genesis 1:2",
@@ -85,6 +85,72 @@
       "ref": "Genesis 47:31",
       "flags": [
         "Compare the KJV bed wording with Hebrews 11:21 under human textual review; withhold a speculative harmonization."
+      ]
+    },
+    {
+      "ref": "Genesis 48:4",
+      "flags": [
+        "Scope and later fulfillment of the land promise require authorized human review before disputed applications are published."
+      ]
+    },
+    {
+      "ref": "Genesis 48:16",
+      "flags": [
+        "Identity and interpretation of the Angel require authorized human doctrinal review; no worship of created angels is endorsed."
+      ]
+    },
+    {
+      "ref": "Genesis 48:19",
+      "flags": [
+        "Meaning and later fulfillment of multitude of nations require human review; exclude speculative modern ethnic identifications."
+      ]
+    },
+    {
+      "ref": "Genesis 48:22",
+      "flags": [
+        "Additional portion and sword/bow allusion require human historical and textual review; do not invent a military narrative."
+      ]
+    },
+    {
+      "ref": "Genesis 49:6",
+      "flags": [
+        "The wall allusion and detailed relation to the Shechem episode require human textual review; do not replace KJV wording with speculation."
+      ]
+    },
+    {
+      "ref": "Genesis 49:10",
+      "flags": [
+        "Meaning of Shiloh and detailed messianic chronology require authorized human doctrinal review before publication."
+      ]
+    },
+    {
+      "ref": "Genesis 49:11",
+      "flags": [
+        "Proposed typological links involving the foal or wine require human review; no speculative fulfillment is asserted."
+      ]
+    },
+    {
+      "ref": "Genesis 49:13",
+      "flags": [
+        "Relationship between the maritime saying and later allotment requires human geographical review; no speculative boundary map is supplied."
+      ]
+    },
+    {
+      "ref": "Genesis 49:15",
+      "flags": [
+        "Precise historical fulfillment and moral force of Issachar's tribute require human review."
+      ]
+    },
+    {
+      "ref": "Genesis 49:17",
+      "flags": [
+        "Detailed fulfillment and symbolic claims about Dan require human doctrinal review; exclude speculative Antichrist identifications."
+      ]
+    },
+    {
+      "ref": "Genesis 49:24",
+      "flags": [
+        "Referents and theological use of shepherd and stone language require authorized human review before a disputed interpretation is published."
       ]
     }
   ],

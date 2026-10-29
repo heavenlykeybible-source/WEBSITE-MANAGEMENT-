@@ -9632,6 +9632,768 @@ const notes={
     ],
     "publicationHold": true
   },
+  "Genesis 48:1": {
+    "explanation": "News of Jacob's sickness leads Joseph to visit him with Manasseh and Ephraim. The family gathers while the patriarch can still speak to them. The verse introduces the blessing scene as a response to illness, without describing the particular disease or implying that illness itself proves spiritual failure.",
+    "context": "Jacob's burial request has been secured; the narrative now turns to the future place of Joseph's sons within Israel.",
+    "references": "Genesis 41:50; Genesis 47:29",
+    "application": "Make time for the sick and include younger generations in appropriate opportunities to hear a family's testimony of faith.",
+    "reviewStatus": "pending",
+    "historicalContext": "The two boys were born in Egypt before Jacob arrived, as Genesis 41:50 and 48:5 state; no exact ages are given here.",
+    "reviewFlags": []
+  },
+  "Genesis 48:2": {
+    "explanation": "When Jacob hears that Joseph is coming, he gathers his strength and sits up on the bed. Physical weakness remains part of the scene, yet he prepares to receive his son. The narrative does not present the effort as a miraculous cure or say that his final illness has ended.",
+    "context": "His posture prepares for a deliberate account of God's promise and the blessing that follows.",
+    "references": "Genesis 48:1; Genesis 49:33",
+    "application": "Respect the limits of someone who is ill while valuing the words they still wish to share.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 48:1 establishes sickness and Genesis 49:33 later records his death; the text does not diagnose his condition.",
+    "reviewFlags": []
+  },
+  "Genesis 48:3": {
+    "explanation": "Jacob recalls that God Almighty appeared to him at Luz in Canaan and blessed him. He grounds the coming family declaration in God's earlier promise rather than his present residence in Egypt. His testimony directs attention to the One who established the family's hope.",
+    "context": "The next verse states the promise of fruitfulness and land that underlies Jacob's reception of Joseph's sons.",
+    "references": "Genesis 35:6; Genesis 35:11; Genesis 35:12",
+    "application": "Pass on an accurate account of God's faithfulness, keeping the emphasis on His Word rather than personal importance.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 35:6-12 recounts Jacob's arrival at Luz, also called Bethel, and God's appearance and blessing there.",
+    "reviewFlags": []
+  },
+  "Genesis 48:4": {
+    "explanation": "Jacob recalls God's promise of multiplication, a multitude of people, and the land for his descendants as an everlasting possession. The quoted assurance explains why inheritance remains important even in Egypt. This verse should not be used alone to settle every later question about covenant fulfillment or present-day boundaries.",
+    "context": "It supplies the covenant setting for Jacob's recognition of Ephraim and Manasseh in the following verse.",
+    "references": "Genesis 35:11; Genesis 35:12",
+    "application": "Keep the promises of Scripture in context and avoid making disputed applications appear more certain than the text supports.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 35:11-12 provides the earlier promise; this note does not add an external treaty or modern geographical claim.",
+    "reviewFlags": [
+      "Scope and later fulfillment of the land promise require authorized human review before disputed applications are published."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 48:5": {
+    "explanation": "Jacob receives Ephraim and Manasseh as his own, giving them standing alongside Reuben and Simeon in the family inheritance. Their birth in Egypt does not exclude them from this recognition. The declaration concerns their place in Israel's household, not a denial that Joseph is their biological father.",
+    "context": "The promise recalled in the preceding verses frames this deliberate inclusion of the two grandsons.",
+    "references": "Genesis 41:51; Genesis 41:52; Joshua 14:4",
+    "application": "Read family declarations according to their stated purpose, distinguishing inheritance standing from biological parentage.",
+    "reviewStatus": "pending",
+    "historicalContext": "Joshua 14:4 later describes Joseph's children as two tribes, Manasseh and Ephraim, showing the narrative's later inheritance connection.",
+    "reviewFlags": []
+  },
+  "Genesis 48:6": {
+    "explanation": "Jacob distinguishes any later offspring of Joseph from Ephraim and Manasseh: they will belong to Joseph but be named under their brothers in inheritance. The verse sets a limit on the special arrangement just announced. It does not state that Joseph actually had additional children afterward.",
+    "context": "This qualifies the preceding recognition of the first two sons as Jacob's own in the inheritance structure.",
+    "references": "Genesis 48:5; Joshua 14:4",
+    "application": "Do not turn a provision for a possible future circumstance into a claim that the circumstance occurred.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 48:5 identifies the two already-born sons; the conditional wording here supplies no list of later births.",
+    "reviewFlags": []
+  },
+  "Genesis 48:7": {
+    "explanation": "Jacob recalls Rachel's death on the journey in Canaan and her burial near Ephrath, identified as Bethlehem. The memory places personal bereavement beside the blessing of Rachel's grandsons. The verse does not explicitly explain every connection in Jacob's thoughts, so his unstated motives should not be supplied as fact.",
+    "context": "The recollection occurs between the inheritance declaration and Jacob's invitation to bring Joseph's sons near.",
+    "references": "Genesis 35:19; Genesis 35:20",
+    "application": "Allow faithful testimony to acknowledge grief as well as blessing, without inventing reasons for another person's memories.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 35:16-20 narrates Rachel's death and burial during Benjamin's birth, providing the biblical background for this memory.",
+    "reviewFlags": []
+  },
+  "Genesis 48:8": {
+    "explanation": "Israel sees Joseph's sons and asks who they are. Read with his dim sight in the following verses, the question introduces their formal presentation. It need not be treated as evidence that he has forgotten his earlier inheritance declaration or as a diagnosis of his mental condition.",
+    "context": "Joseph answers by identifying the boys as God's gift and brings them forward for blessing.",
+    "references": "Genesis 48:9; Genesis 48:10",
+    "application": "Avoid drawing sweeping conclusions about an elderly person's understanding from a brief question.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 48:10 expressly mentions age-related loss of sight; the passage supplies no further medical information.",
+    "reviewFlags": []
+  },
+  "Genesis 48:9": {
+    "explanation": "Joseph identifies the boys as his sons whom God has given him in Egypt, and Jacob invites them to receive a blessing. Joseph's answer acknowledges divine kindness in the place where he once suffered. The children are presented as persons to be received, not merely as additions to Joseph's status.",
+    "context": "The identification answers Jacob's question and leads to the affectionate embrace before the blessing.",
+    "references": "Genesis 41:50; Genesis 41:52",
+    "application": "Receive children with gratitude to God and seek their spiritual good without treating them as possessions or achievements.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 41:50-52 records their births and Joseph's expressions of gratitude before the famine began.",
+    "reviewFlags": []
+  },
+  "Genesis 48:10": {
+    "explanation": "Jacob's sight is dim with age, so Joseph brings his sons near, and Jacob kisses and embraces them. The account combines physical limitation with deliberate affection. It does not suggest that diminished eyesight makes the patriarch's words meaningless or removes the need for thoughtful assistance.",
+    "context": "The embrace prepares for Jacob's reflection on seeing not only Joseph but also Joseph's descendants.",
+    "references": "Genesis 48:8; Genesis 48:11",
+    "application": "Offer assistance that preserves dignity and makes personal connection possible for people with impaired sight.",
+    "reviewStatus": "pending",
+    "historicalContext": "The limitation is explicitly related to age; no attempt is made to identify a specific disease.",
+    "reviewFlags": []
+  },
+  "Genesis 48:11": {
+    "explanation": "Jacob tells Joseph that he had not expected to see his face again, yet God has allowed him to see his children also. The verse contrasts long-standing grief with a greater restoration than Jacob had anticipated. Gratitude arises from his actual experience, not from a promise that every bereavement will be reversed in this life.",
+    "context": "His words follow the embrace and recall the despair created by Joseph's apparent death.",
+    "references": "Genesis 37:35; Genesis 45:28",
+    "application": "Give thanks for unexpected mercies without using another person's restoration as a guarantee about every sufferer's circumstances.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 37:35 records Jacob's mourning, and Genesis 45:26-28 records the news that Joseph was alive.",
+    "reviewFlags": []
+  },
+  "Genesis 48:12": {
+    "explanation": "Joseph moves the boys from the close position at Jacob's knees and bows with his face to the ground. The gesture expresses respect in the family encounter before the arranged presentation for blessing. The verse gives no independent basis for calculating the sons' ages from this posture.",
+    "context": "The next verse describes how Joseph positions the older and younger sons in relation to Jacob's hands.",
+    "references": "Genesis 48:10; Genesis 48:13",
+    "application": "Show appropriate honor while avoiding speculative conclusions from a brief description of a physical gesture.",
+    "reviewStatus": "pending",
+    "historicalContext": "The wording describes bodily position and movement, but does not say that both sons were infants or reconstruct the room's furniture.",
+    "reviewFlags": []
+  },
+  "Genesis 48:13": {
+    "explanation": "Joseph positions Ephraim toward Jacob's left hand and Manasseh toward his right. The arrangement anticipates recognition of the firstborn, as Joseph later makes explicit. Careful placement is important to the narrative because Jacob deliberately crosses the expected pattern when he lays his hands on them.",
+    "context": "Genesis 48:14 describes Jacob's action, and verses 17-18 explain Joseph's objection.",
+    "references": "Genesis 48:14; Genesis 48:18",
+    "application": "Notice the preparations within a passage so that its later reversal is understood rather than treated as accidental.",
+    "reviewStatus": "pending",
+    "historicalContext": "The relative right and left positions are supplied by the verse itself; no external ritual reconstruction is needed.",
+    "reviewFlags": []
+  },
+  "Genesis 48:14": {
+    "explanation": "Jacob intentionally places his right hand on the younger Ephraim and his left on the firstborn Manasseh. The KJV stresses that he guides his hands knowingly. His poor eyesight therefore does not explain the crossing as an error, a point clarified by his answer to Joseph.",
+    "context": "The unexpected hand placement leads to Joseph's objection and Jacob's explanation of the sons' futures.",
+    "references": "Genesis 48:18; Genesis 48:19",
+    "application": "Do not assume that an action contrary to your expectations must result from ignorance before hearing its explanation.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 48:19 explicitly confirms that Jacob knows the birth order; this is the narrative's explanation of his action.",
+    "reviewFlags": []
+  },
+  "Genesis 48:15": {
+    "explanation": "Jacob begins the blessing by recalling the God before whom Abraham and Isaac walked and who has fed him throughout his life. He views his survival through the lens of God's continuing care. The testimony recognizes dependence on God without denying the hardships described earlier to Pharaoh.",
+    "context": "The blessing of Joseph embraces his sons and continues in the next verse with a request for their preservation and increase.",
+    "references": "Genesis 28:20; Genesis 47:9",
+    "application": "Remember God's sustaining mercy across an entire life, including years whose difficulties remain real.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 47:9 records Jacob's troubled years, providing a contrast with his grateful acknowledgment of lifelong provision here.",
+    "reviewFlags": []
+  },
+  "Genesis 48:16": {
+    "explanation": "Jacob asks that the Angel who redeemed him from evil bless the lads, carry forward the family name, and grant increase. The wording recalls deliverance and covenant continuity. Identifying the Angel in a doctrinally precise way requires care; the note does not turn this prayer into permission to worship created angels.",
+    "context": "The request continues the invocation of God in Genesis 48:15 and applies the blessing to Joseph's sons.",
+    "references": "Genesis 31:11; Genesis 31:13; Hebrews 11:21",
+    "application": "Seek God's preservation for the next generation while refusing to make speculative angelology a settled teaching.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 31:11-13 records an angelic address connected with God's self-identification; the precise theological relation requires further review.",
+    "reviewFlags": [
+      "Identity and interpretation of the Angel require authorized human doctrinal review; no worship of created angels is endorsed."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 48:17": {
+    "explanation": "Joseph is displeased when he sees Jacob's right hand on Ephraim and tries to move it to Manasseh. His reaction shows that the hand placement has significance to him. He acts before hearing that Jacob's decision is intentional, creating the exchange that clarifies the blessing.",
+    "context": "The action recalls Joseph's careful arrangement in Genesis 48:13 and leads to his spoken correction.",
+    "references": "Genesis 48:13; Genesis 48:18",
+    "application": "Seek understanding before correcting an action whose purpose may not yet be clear to you.",
+    "reviewStatus": "pending",
+    "historicalContext": "Manasseh's status as firstborn is confirmed in the next verse; the account states Joseph's reaction without naming additional motives.",
+    "reviewFlags": []
+  },
+  "Genesis 48:18": {
+    "explanation": "Joseph tells his father that Manasseh is the firstborn and asks him to put his right hand there. His words explain the objection plainly: he expects birth order to govern the gesture. The narrative does not describe this disagreement as hostility or rejection of Jacob's faith.",
+    "context": "Jacob's reply in the next verse affirms his knowledge of the firstborn while maintaining the chosen order.",
+    "references": "Genesis 41:51; Genesis 48:19",
+    "application": "Explain concerns clearly and respectfully rather than assuming disagreement must become personal contempt.",
+    "reviewStatus": "pending",
+    "historicalContext": "The earlier birth account names Manasseh before Ephraim in Genesis 41:51-52, consistent with Joseph's statement.",
+    "reviewFlags": []
+  },
+  "Genesis 48:19": {
+    "explanation": "Jacob refuses to change his hands and assures Joseph that he knows the birth order. He promises greatness to both lines while assigning greater prominence to Ephraim. The verse concerns their descendants within the biblical story; it does not identify modern nations through speculative ancestry claims.",
+    "context": "This answers Joseph's objection and provides the basis for Ephraim's precedence in the blessing formula.",
+    "references": "Genesis 48:14; Genesis 48:20",
+    "application": "Distinguish a promise about a biblical family from unsupported claims that assign spiritual rank to modern ethnic groups.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 48:20 explicitly places Ephraim before Manasseh; no external genealogy of present-day peoples is asserted.",
+    "reviewFlags": [
+      "Meaning and later fulfillment of multitude of nations require human review; exclude speculative modern ethnic identifications."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 48:20": {
+    "explanation": "Jacob blesses the brothers with a formula that Israel will use, asking that others be made like Ephraim and Manasseh. He gives Ephraim first place in the order. Both sons remain included in the blessing, so the younger's precedence is not the older's exclusion from God's kindness.",
+    "context": "The spoken order confirms the deliberate hand placement and the explanation just given to Joseph.",
+    "references": "Genesis 48:19; Jeremiah 31:9",
+    "application": "Avoid confusing another person's greater prominence with your own exclusion from God's care.",
+    "reviewStatus": "pending",
+    "historicalContext": "Jeremiah 31:9 later uses firstborn language for Ephraim; the connection concerns prominence rather than a change to biological birth order.",
+    "reviewFlags": []
+  },
+  "Genesis 48:21": {
+    "explanation": "Jacob acknowledges that he is dying but assures Joseph that God will remain with the family and bring them back to their fathers' land. The promise outlasts the patriarch's personal presence. Their future rests on God's faithfulness, not on keeping an elderly human leader alive indefinitely.",
+    "context": "The assurance carries forward the promise recalled at the chapter's opening and anticipates Joseph's words near his own death.",
+    "references": "Genesis 50:24; Exodus 12:41",
+    "application": "Prepare others to trust God beyond your own lifetime, rather than making their faith depend entirely on your presence.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 50:24 repeats this hope, while Exodus 12:41 records the later departure from Egypt.",
+    "reviewFlags": []
+  },
+  "Genesis 48:22": {
+    "explanation": "Jacob grants Joseph an additional portion and describes taking it from the Amorite with sword and bow. The verse supplies no complete account of that conflict. It should not be silently equated with either Jacob's earlier land purchase or his sons' condemned violence without careful examination.",
+    "context": "The grant closes the chapter's account of Joseph's special inheritance standing through his two sons.",
+    "references": "Genesis 33:19; Joshua 24:32",
+    "application": "Admit when a historical allusion is not fully explained rather than filling the gap with an invented episode.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 33:19 records a purchase near Shechem, while Joshua 24:32 later connects Joseph's burial with purchased land; the relationship needs review.",
+    "reviewFlags": [
+      "Additional portion and sword/bow allusion require human historical and textual review; do not invent a military narrative."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 49:1": {
+    "explanation": "Jacob gathers his sons to speak about what will befall them in days to come. The chapter addresses the sons and the tribes associated with them through poetic pronouncements. Its phrase last days must be read within that setting rather than automatically turned into a modern end-times timetable.",
+    "context": "The individual sayings follow Joseph's blessing scene and precede Jacob's final burial instructions.",
+    "references": "Genesis 49:28; Deuteronomy 33:1",
+    "application": "Approach prophetic Scripture with attention to its audience and context, resisting unsupported date-setting.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 49:28 identifies the recipients as the twelve tribes, providing the chapter's own interpretive frame.",
+    "reviewFlags": []
+  },
+  "Genesis 49:2": {
+    "explanation": "Jacob repeats the call to gather and listen, identifying the recipients as his sons and himself as their father Israel. The repeated summons gives weight to the words that follow. Hearing is more than occupying the same room: the family is called to attend to the patriarch's final declarations.",
+    "context": "This second introductory verse prepares for the sequence beginning with Reuben, the firstborn.",
+    "references": "Genesis 35:10; Genesis 49:1",
+    "application": "Listen attentively to serious instruction rather than allowing familiarity with the speaker to reduce its importance.",
+    "reviewStatus": "pending",
+    "historicalContext": "Jacob and Israel are names already used for the same patriarch in Genesis 35:10; no second speaker is introduced.",
+    "reviewFlags": []
+  },
+  "Genesis 49:3": {
+    "explanation": "Reuben is addressed as Jacob's firstborn, the beginning of his strength and a bearer of expected dignity and power. The verse establishes the significance of his birth position before the following rebuke. It describes the standing from which he falls rather than an unconditional assurance that he will retain preeminence.",
+    "context": "Genesis 49:4 explains why firstborn privilege does not secure Reuben's future excellence.",
+    "references": "Genesis 29:32; 1 Chronicles 5:1",
+    "application": "Recognize that position and opportunity bring responsibility; they do not remove the consequences of serious wrongdoing.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 29:32 records Reuben's birth, while 1 Chronicles 5:1-2 later discusses the loss of his birthright.",
+    "reviewFlags": []
+  },
+  "Genesis 49:4": {
+    "explanation": "Jacob links Reuben's loss of excellence to his defilement of his father's bed. The image of unstable water introduces a moral judgment grounded in an identified act. The verse does not declare that every descendant of Reuben is personally guilty of his ancestor's sin.",
+    "context": "The rebuke reverses the expectations stated in the previous verse and recalls the incident recorded in Genesis 35.",
+    "references": "Genesis 35:22; 1 Chronicles 5:1",
+    "application": "Sexual wrongdoing can damage trust and responsibility; inherited status is no substitute for holiness and self-control.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 35:22 names Reuben's involvement with Bilhah; 1 Chronicles 5:1 connects that offense with loss of birthright.",
+    "reviewFlags": []
+  },
+  "Genesis 49:5": {
+    "explanation": "Simeon and Levi are addressed together and associated with instruments of cruelty. The shared judgment recalls their combined violence rather than merely their biological brotherhood. Jacob does not praise revenge as family loyalty, and their relationship does not excuse the manner in which they acted.",
+    "context": "The next two verses reject their violent counsel and pronounce division and scattering.",
+    "references": "Genesis 34:25; Genesis 34:30",
+    "application": "Refuse to excuse cruelty because it is committed by relatives or presented as defense of family honor.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 34:25 identifies Simeon and Levi as the men who attacked Shechem after the deception surrounding circumcision.",
+    "reviewFlags": []
+  },
+  "Genesis 49:6": {
+    "explanation": "Jacob dissociates himself from Simeon and Levi's secret counsel and assembly because their anger and self-will produced violence. The KJV also speaks of digging down a wall. The main moral thrust is rejection of their destructive action; uncertain details should not displace that clear condemnation.",
+    "context": "This expands the charge of cruelty and prepares for the curse on their anger in the next verse.",
+    "references": "Genesis 34:25; Genesis 34:29",
+    "application": "Keep your conscience clear of plans that turn anger into deliberate harm, even under pressure to join your own group.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 34:25-29 supplies the narrative setting of killing and plunder; the precise wall allusion is not explained there.",
+    "reviewFlags": [
+      "The wall allusion and detailed relation to the Shechem episode require human textual review; do not replace KJV wording with speculation."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 49:7": {
+    "explanation": "Jacob curses the fierceness of their anger and the cruelty of their wrath, then declares division and scattering within Israel. The explicit target is their destructive anger. Later tribal arrangements should be examined through Scripture rather than treated as proof that every descendant inherits an identical moral character.",
+    "context": "The pronouncement concludes the joint address to Simeon and Levi before Jacob turns to Judah.",
+    "references": "Joshua 19:1; Joshua 21:3",
+    "application": "Turn away from cruel anger and collective retaliation; do not use ancestry to pronounce guilt on people who did not commit the offense.",
+    "reviewStatus": "pending",
+    "historicalContext": "Joshua 19:1 places Simeon's inheritance within Judah's, while Joshua 21:3 describes cities assigned to the Levites.",
+    "reviewFlags": []
+  },
+  "Genesis 49:8": {
+    "explanation": "Judah is promised praise from his brothers, victory over enemies, and the bowing of his father's children. The saying assigns prominence within the family and looks beyond Judah's immediate personal history. Its royal associations develop in Scripture, rather than being grounds for a modern claim of ethnic superiority.",
+    "context": "This begins the extended Judah saying after the rebukes of the first three sons.",
+    "references": "1 Chronicles 5:2; 2 Samuel 5:3",
+    "application": "Read promises of leadership as responsibilities within God's purposes, not as permission for pride or contempt.",
+    "reviewStatus": "pending",
+    "historicalContext": "1 Chronicles 5:2 later connects Judah's prominence with the chief ruler, and 2 Samuel 5:3 records David's kingship.",
+    "reviewFlags": []
+  },
+  "Genesis 49:9": {
+    "explanation": "Judah is pictured as a lion that has risen from prey and rests with strength that others hesitate to disturb. The imagery communicates power and security. It is poetic description, not zoological instruction or a command for the tribe to imitate every behavior of a predator.",
+    "context": "The lion image stands between the promise of Judah's prominence and the saying about the sceptre.",
+    "references": "Genesis 49:8; Revelation 5:5",
+    "application": "Interpret biblical imagery through its literary purpose and later Scripture rather than inventing hidden meanings in every detail.",
+    "reviewStatus": "pending",
+    "historicalContext": "Revelation 5:5 later uses the title Lion of the tribe of Juda for Christ, giving a clear later biblical connection to the image.",
+    "reviewFlags": []
+  },
+  "Genesis 49:10": {
+    "explanation": "The sceptre and lawgiver imagery associates rule with Judah, followed by the coming of Shiloh and the gathering of peoples. Christian reading relates Judah's royal line to Christ, but the precise meaning of Shiloh and the timing implied by until require careful review rather than a speculative chronological system.",
+    "context": "The verse develops Judah's leadership and lion imagery within the patriarch's blessing.",
+    "references": "Hebrews 7:14; Revelation 5:5; Luke 1:32",
+    "application": "Look to Christ through clear biblical testimony while withholding disputed linguistic or chronological claims from settled teaching.",
+    "reviewStatus": "pending",
+    "historicalContext": "Hebrews 7:14 identifies the Lord's descent from Judah, while Revelation 5:5 connects Christ with Judah and David.",
+    "reviewFlags": [
+      "Meaning of Shiloh and detailed messianic chronology require authorized human doctrinal review before publication."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 49:11": {
+    "explanation": "The picture of a foal tied to a vine and garments washed in wine conveys extraordinary abundance through poetic language. Wine and the blood of grapes belong to the vineyard image. The verse should not be turned into a literal instruction to waste crops or an invented prediction about a particular garment.",
+    "context": "This abundance imagery follows the saying about Judah's rule and continues in the next verse.",
+    "references": "Deuteronomy 32:14; Genesis 49:12",
+    "application": "Respect poetic speech and avoid making an imaginative devotional association into an asserted historical fulfillment.",
+    "reviewStatus": "pending",
+    "historicalContext": "Deuteronomy 32:14 also uses blood of the grape for wine; the connection illustrates biblical imagery without proving every proposed typology.",
+    "reviewFlags": [
+      "Proposed typological links involving the foal or wine require human review; no speculative fulfillment is asserted."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 49:12": {
+    "explanation": "Judah's eyes and teeth are described with images of wine and milk, continuing the language of plentiful provision. The saying is part of a poetic blessing, not a command to become intoxicated. The verse supplies no medical diagnosis or independent description of a future individual's physical appearance.",
+    "context": "It completes the Judah pronouncement before Jacob turns to Zebulun.",
+    "references": "Genesis 49:11; Proverbs 23:31",
+    "application": "Do not use an image of abundance to cancel Scripture's clear calls to sober and righteous living.",
+    "reviewStatus": "pending",
+    "historicalContext": "The wine image connects directly with Genesis 49:11; Proverbs 23:29-35 separately warns of the harms of drunkenness.",
+    "reviewFlags": []
+  },
+  "Genesis 49:13": {
+    "explanation": "Zebulun is associated with a haven by the sea, ships, and a border toward Zidon. The saying looks to the tribe's setting and activity, but the relation to later territorial descriptions requires careful geographical study. An exact coastline or trade route should not be invented from this verse alone.",
+    "context": "The chapter moves from Judah's extended blessing to a shorter saying about Zebulun.",
+    "references": "Joshua 19:10; Deuteronomy 33:18; Deuteronomy 33:19",
+    "application": "Compare related passages before drawing precise geographical conclusions from compact prophetic poetry.",
+    "reviewStatus": "pending",
+    "historicalContext": "Joshua 19:10-16 records Zebulun's later allotment, and Deuteronomy 33:18-19 also connects Zebulun with going out and the seas.",
+    "reviewFlags": [
+      "Relationship between the maritime saying and later allotment requires human geographical review; no speculative boundary map is supplied."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 49:14": {
+    "explanation": "Issachar is likened to a strong ass resting between two burdens. The image introduces capacity for labor together with rest, and the following verse explains bearing a burden and tribute. It should not be used as an insulting statement about the personal worth of all members of the tribe.",
+    "context": "This is the opening half of the Issachar saying, completed by Genesis 49:15.",
+    "references": "Genesis 49:15; Deuteronomy 33:18",
+    "application": "Handle scriptural comparisons respectfully and read the complete saying before assigning a moral lesson to one image.",
+    "reviewStatus": "pending",
+    "historicalContext": "The KJV uses a work animal as a poetic comparison; the verse does not provide a literal description of an individual's body or intelligence.",
+    "reviewFlags": []
+  },
+  "Genesis 49:15": {
+    "explanation": "Issachar sees the pleasant land and goodness of rest, then bows his shoulder to bear a burden and becomes subject to tribute. The saying brings benefit and obligation together. Whether a more specific moral rebuke or historical fulfillment is intended should not be settled through invented tribal history.",
+    "context": "It explains the strong work-animal image in the preceding verse and closes Issachar's short pronouncement.",
+    "references": "Genesis 49:14; Joshua 19:17",
+    "application": "Consider the responsibilities attached to comfort and security without claiming a lesson beyond what the passage establishes.",
+    "reviewStatus": "pending",
+    "historicalContext": "Joshua 19:17-23 records Issachar's territory, but does not by itself supply the full circumstances of this tribute saying.",
+    "reviewFlags": [
+      "Precise historical fulfillment and moral force of Issachar's tribute require human review."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 49:16": {
+    "explanation": "Dan is promised a role in judging his people as one of Israel's tribes. The saying affirms his place within the tribal family, despite the differences among their individual pronouncements. It does not by itself identify a particular judge or explain every feature of the next serpent image.",
+    "context": "Dan's recognized place introduces a two-verse saying followed by Jacob's prayer for salvation.",
+    "references": "Genesis 30:6; Judges 13:2",
+    "application": "Recognize the contribution of each part of God's people without assuming that every passage has only one later individual in view.",
+    "reviewStatus": "pending",
+    "historicalContext": "Judges 13:2 later locates Samson's family among the Danites; that connection does not exhaust the meaning of the tribal statement.",
+    "reviewFlags": []
+  },
+  "Genesis 49:17": {
+    "explanation": "Dan is pictured as a serpent striking a horse's heels so that the rider falls. The image describes a small attacker overcoming a stronger opponent through a sudden strike. It is not a command to practice deceit, nor does the verse name an end-time enemy or identify Dan with the devil.",
+    "context": "This completes the Dan saying before Jacob turns directly to the LORD in prayer.",
+    "references": "Genesis 49:16; Genesis 49:18",
+    "application": "Avoid turning a vivid image into an unsupported accusation against an entire tribe or a speculative end-time figure.",
+    "reviewStatus": "pending",
+    "historicalContext": "The text gives the picture without naming a battle; no unrecorded military episode is supplied as its definitive fulfillment.",
+    "reviewFlags": [
+      "Detailed fulfillment and symbolic claims about Dan require human doctrinal review; exclude speculative Antichrist identifications."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 49:18": {
+    "explanation": "Jacob declares that he has waited for the LORD's salvation. In the middle of the tribal sayings, this brief prayer turns attention from human strength and danger to divine deliverance. The verse does not specify a modern timetable or make salvation the achievement of a particular tribe.",
+    "context": "The prayer follows the Dan imagery and precedes the saying about Gad.",
+    "references": "Psalms 130:5; Psalms 130:7",
+    "application": "Wait on the Lord with faith and obedience, especially when human plans and strength cannot secure deliverance.",
+    "reviewStatus": "pending",
+    "historicalContext": "Psalm 130:5-7 similarly connects waiting, God's Word, and hope in the LORD's redemption, providing a thematic comparison.",
+    "reviewFlags": []
+  },
+  "Genesis 49:19": {
+    "explanation": "Gad is pictured as pressed by a troop yet ultimately overcoming. The compact saying combines conflict and reversal rather than promising an untroubled life. It concerns the tribe in Jacob's pronouncement and should not be treated as a guarantee that every individual believer will win every earthly contest.",
+    "context": "Gad's saying follows the prayer for salvation and precedes the blessings of Asher and Naphtali.",
+    "references": "Deuteronomy 33:20; Deuteronomy 33:21",
+    "application": "Persevere through opposition without converting a particular tribal saying into an unconditional promise of personal success.",
+    "reviewStatus": "pending",
+    "historicalContext": "Deuteronomy 33:20-21 also describes Gad with martial imagery; the passages do not identify a single definitive battle here.",
+    "reviewFlags": []
+  },
+  "Genesis 49:20": {
+    "explanation": "Asher is associated with rich food and produce suitable for royalty. The saying portrays abundance and the quality of what the tribe yields. It does not provide a detailed agricultural inventory or teach that bodily wealth establishes greater spiritual acceptance than the circumstances of other tribes.",
+    "context": "This brief blessing stands between the sayings about Gad and Naphtali.",
+    "references": "Deuteronomy 33:24; Genesis 49:19",
+    "application": "Receive provision gratefully and use what is good to serve others without treating prosperity as a measure of holiness.",
+    "reviewStatus": "pending",
+    "historicalContext": "Deuteronomy 33:24 also uses abundance imagery for Asher, describing his foot dipped in oil; no crop totals are supplied.",
+    "reviewFlags": []
+  },
+  "Genesis 49:21": {
+    "explanation": "Naphtali is described as a hind let loose and as giving goodly words. The poetic images suggest freedom of movement and pleasing speech, but the verse does not identify the exact event or speaker to which each image applies. An invented biography would go beyond the saying.",
+    "context": "This closes the shorter sayings before Jacob's extended blessing of Joseph.",
+    "references": "Deuteronomy 33:23; Genesis 49:22",
+    "application": "Value gracious speech while resisting the urge to make a compressed poetic blessing answer questions it does not address.",
+    "reviewStatus": "pending",
+    "historicalContext": "Deuteronomy 33:23 later describes Naphtali as satisfied with favor; the comparison does not establish a detailed fulfillment for every image here.",
+    "reviewFlags": []
+  },
+  "Genesis 49:22": {
+    "explanation": "Joseph is pictured as a fruitful branch beside a well, extending over a wall. The image joins nourishment, growth, and abundance beyond a narrow boundary. It recalls the family's experience of fruitfulness through Joseph, while remaining poetry rather than a promise about every detail of a modern reader's possessions.",
+    "context": "The fruitful image introduces Joseph's blessing before the mention of hostility from archers.",
+    "references": "Genesis 41:52; Psalms 1:3",
+    "application": "Seek fruitfulness rooted in dependence on God rather than using the image as a formula for material expansion.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 41:52 connects Ephraim's name with Joseph's acknowledgment of fruitfulness in affliction; Psalm 1:3 provides a thematic tree-and-water comparison.",
+    "reviewFlags": []
+  },
+  "Genesis 49:23": {
+    "explanation": "Joseph is described as attacked and hated by archers. The poetic hostility recalls the suffering surrounding his life, but the verse does not name each attacker or say that his brothers literally fired arrows at him. The picture prepares for the account of strength supplied by God.",
+    "context": "It contrasts with the fruitful branch and leads to the bow remaining strong in the next verse.",
+    "references": "Genesis 37:4; Psalms 105:18",
+    "application": "Admit the reality of unjust opposition without embellishing what happened or defining your whole life by injury.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 37:4 records his brothers' hatred, and Psalm 105:17-19 recalls his suffering before elevation; those are narrative comparisons, not literal identifications of archers.",
+    "reviewFlags": []
+  },
+  "Genesis 49:24": {
+    "explanation": "Joseph's bow remains strong because the mighty God of Jacob strengthens his arms. The verse directs the source of endurance beyond Joseph's own resources and uses shepherd and stone language for Israel. The precise relation of those titles within the sentence deserves careful interpretation, not speculative certainty.",
+    "context": "This answers the hostility of the archers and introduces the fuller invocation of divine blessing in the following verse.",
+    "references": "Psalms 105:19; Psalms 105:21; Genesis 49:25",
+    "application": "Depend on God for faithful endurance rather than crediting personal strength alone for surviving adversity.",
+    "reviewStatus": "pending",
+    "historicalContext": "Psalm 105:19-22 describes Joseph's testing and elevation; the titles in this verse are retained without an invented original-language explanation.",
+    "reviewFlags": [
+      "Referents and theological use of shepherd and stone language require authorized human review before a disputed interpretation is published."
+    ],
+    "publicationHold": true
+  },
+  "Genesis 49:25": {
+    "explanation": "The God of Jacob and the Almighty are invoked as the source of help and abundant blessing, including heaven, the deep, and family fruitfulness. The imagery encompasses life-sustaining provision. It is a particular blessing over Joseph, not a formula promising every believer fertility or uninterrupted material prosperity.",
+    "context": "This continues the explanation of Joseph's strength and expands the blessing begun in the preceding verse.",
+    "references": "Deuteronomy 33:13; Deuteronomy 33:16",
+    "application": "Ask God for provision with gratitude while refusing to judge the faith of those who experience infertility or material hardship.",
+    "reviewStatus": "pending",
+    "historicalContext": "Deuteronomy 33:13-16 similarly describes Joseph's blessing through gifts of heaven, the deep, and the earth.",
+    "reviewFlags": []
+  },
+  "Genesis 49:26": {
+    "explanation": "Jacob describes the surpassing extent of his blessings and places them upon Joseph, who has been separated from his brothers. The language of enduring hills conveys magnitude and permanence within the blessing. It should not be converted into an exact map or a promise of limitless personal possessions for every reader.",
+    "context": "This closes the extended Joseph saying before the final address to Benjamin.",
+    "references": "Genesis 37:28; Deuteronomy 33:16",
+    "application": "Remember God's mercy after separation and suffering without assuming that later blessing makes the earlier wrongdoing acceptable.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 37:28 records Joseph's separation through being sold, while Deuteronomy 33:16 again uses the description of separation from his brethren.",
+    "reviewFlags": []
+  },
+  "Genesis 49:27": {
+    "explanation": "Benjamin is compared with a wolf that takes prey and divides spoil from morning to night. The imagery portrays force and success in conflict, but it does not command believers to behave like predators. Nor does it declare every Benjaminite morally violent by birth.",
+    "context": "This is the last individual tribal saying before the chapter summarizes Jacob's address to all twelve.",
+    "references": "Judges 20:15; Judges 20:16",
+    "application": "Avoid using tribal imagery to excuse cruelty or to attach inherited guilt to individuals.",
+    "reviewStatus": "pending",
+    "historicalContext": "Judges 20:15-16 later describes Benjaminite fighting strength; the later narrative should not be treated as the only possible referent of every poetic detail.",
+    "reviewFlags": []
+  },
+  "Genesis 49:28": {
+    "explanation": "The narrator identifies the recipients as the twelve tribes and summarizes Jacob's words as a blessing to each according to his blessing. The summary includes warnings and rebukes as well as promises. Blessing in this setting therefore must not be reduced to uniformly pleasant predictions about every son.",
+    "context": "This closes the tribal pronouncements and leads back to Jacob's direct burial instructions.",
+    "references": "Genesis 49:4; Genesis 49:7",
+    "application": "Receive truthful correction as something that may accompany a serious concern for a family's future.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 49:4 and 49:7 contain severe words within the same address, showing the range covered by the summary.",
+    "reviewFlags": []
+  },
+  "Genesis 49:29": {
+    "explanation": "Jacob says he is to be gathered to his people and instructs his sons to bury him with his fathers in the cave in Ephron's field. His impending death brings a concrete family obligation into focus. The verse should not be expanded into a complete account of the unseen state of the dead.",
+    "context": "The next verses identify the burial property and those already buried there.",
+    "references": "Genesis 23:17; Genesis 47:30",
+    "application": "Address final responsibilities clearly and honor the dignity of the dying without adding speculative claims to their words.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 23 records Abraham's purchase from Ephron; Jacob's request uses the family's established burial place rather than naming an unknown site.",
+    "reviewFlags": []
+  },
+  "Genesis 49:30": {
+    "explanation": "Jacob identifies the cave of Machpelah before Mamre in Canaan and recalls Abraham's purchase of the field from Ephron. The specificity grounds his request in a known family possession. Present residence in Egypt has not removed his attachment to the burial place associated with God's earlier promises.",
+    "context": "This explains the location named in the previous verse before the list of family members buried there.",
+    "references": "Genesis 23:17; Genesis 23:19; Genesis 23:20",
+    "application": "Give clear, reliable information when entrusting others with responsibilities they must carry out after your death.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 23:17-20 supplies the purchase narrative; this note makes no claim about the present accessibility or exact modern site.",
+    "reviewFlags": []
+  },
+  "Genesis 49:31": {
+    "explanation": "Jacob names Abraham and Sarah, Isaac and Rebekah, and Leah as those buried in the family place. The list connects generations through a shared burial property. Rachel's different burial has already been acknowledged, so her absence here should not be turned into a claim that Jacob had forgotten her.",
+    "context": "This completes the personal family explanation of the requested burial site.",
+    "references": "Genesis 23:19; Genesis 25:9; Genesis 48:7",
+    "application": "Remember family history accurately and avoid creating judgments about affection from the location of a grave alone.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 48:7 recalls Rachel's burial near Bethlehem, while Genesis 23:19 and 25:9 record Sarah's and Abraham's burials.",
+    "reviewFlags": []
+  },
+  "Genesis 49:32": {
+    "explanation": "The purchase of the field and cave from the children of Heth is reiterated. This closing detail emphasizes an acquired burial possession rather than a vague claim to any convenient land. The narrative has already supplied the transaction, so no additional deed terms or legal practices need to be invented.",
+    "context": "The property summary concludes Jacob's instructions immediately before his death.",
+    "references": "Genesis 23:16; Genesis 23:20",
+    "application": "Respect established agreements and property responsibilities rather than relying on assumptions when carrying out family duties.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 23:16-20 records the payment and confirmation of the field as a burial possession.",
+    "reviewFlags": []
+  },
+  "Genesis 49:33": {
+    "explanation": "After completing his instructions, Jacob draws his feet into the bed, dies, and is gathered to his people. The sequence marks the end of his earthly speech and life. The phrase yielded up the ghost describes death here; it does not license a speculative reconstruction of his final bodily sensations.",
+    "context": "The next chapter opens with Joseph's grief and the arrangements to carry out Jacob's commands.",
+    "references": "Genesis 47:28; Genesis 50:1",
+    "application": "Prepare faithfully for death through truthful responsibilities and trust in God, while allowing those who remain to mourn.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 47:28 gives Jacob's age as 147, and Genesis 50:1 records Joseph's immediate response.",
+    "reviewFlags": []
+  },
+  "Genesis 50:1": {
+    "explanation": "Joseph falls upon his father's face, weeps, and kisses him after Jacob's death. The scene gives grief a visible and affectionate expression. Joseph's faith and public responsibilities do not eliminate mourning, and the narrative does not rebuke him for responding personally to the loss.",
+    "context": "The chapter moves from Jacob's final instructions to mourning, preparation, and burial.",
+    "references": "Genesis 49:33; John 11:35",
+    "application": "Allow sincere mourning and compassionate presence rather than demanding that faith suppress every expression of sorrow.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 49:33 records the death immediately before this response; no additional deathbed words are supplied.",
+    "reviewFlags": []
+  },
+  "Genesis 50:2": {
+    "explanation": "Joseph directs his physician servants to embalm Jacob, and they carry out the work. The verse describes a bodily preparation within the Egyptian setting. It does not specify the method, assert that Jacob embraced Egyptian worship, or command Christians to adopt the same funeral practice.",
+    "context": "The preparation precedes the stated period of mourning and the request to take Jacob to Canaan.",
+    "references": "Genesis 50:3; Genesis 50:13",
+    "application": "Distinguish respectful care for the dead from unsupported assumptions about a person's religious allegiance.",
+    "reviewStatus": "pending",
+    "historicalContext": "The text identifies physicians as those responsible but provides no embalming recipe or account of associated ceremonies.",
+    "reviewFlags": []
+  },
+  "Genesis 50:3": {
+    "explanation": "The account assigns forty days to the embalming and seventy days to the Egyptians' mourning. These numbers convey an extended public response to Jacob's death. The verse does not explain whether every part of the two periods is consecutive, so their sum should not automatically be reported as the funeral's total duration.",
+    "context": "Once mourning is past, Joseph approaches Pharaoh's household about the promised burial journey.",
+    "references": "Genesis 50:2; Genesis 50:4",
+    "application": "Report time periods accurately and avoid claiming a precise combined chronology when the text does not establish it.",
+    "reviewStatus": "pending",
+    "historicalContext": "Both figures come directly from the KJV; no external rule about all Egyptian funerals is asserted.",
+    "reviewFlags": []
+  },
+  "Genesis 50:4": {
+    "explanation": "After mourning, Joseph asks Pharaoh's household to convey his request to the ruler. He seeks permission through the people addressed rather than departing without notice. The verse does not state why he uses intermediaries, so explanations involving a particular court taboo must not be presented as fact.",
+    "context": "The next verse gives the content of the request: fulfilling Jacob's burial oath and then returning.",
+    "references": "Genesis 50:5; Genesis 50:6",
+    "application": "Communicate obligations responsibly with those affected, while distinguishing known reasons from plausible but unverified explanations.",
+    "reviewStatus": "pending",
+    "historicalContext": "The narrative records the communication route but supplies no general description of Egyptian court protocol for mourners.",
+    "reviewFlags": []
+  },
+  "Genesis 50:5": {
+    "explanation": "Joseph explains that Jacob bound him by oath to bury him in Canaan and asks leave to fulfill it, promising to return. His request honors both a family commitment and his continuing responsibility in Egypt. The reported grave preparation should not be expanded into an invented construction history.",
+    "context": "This states the reason for the journey and leads to Pharaoh's consent.",
+    "references": "Genesis 47:30; Genesis 47:31; Genesis 49:30",
+    "application": "Keep solemn promises and communicate how you will fulfill them without neglecting other entrusted duties.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 47:29-31 records the oath, while Genesis 49:29-32 identifies the purchased family burial property.",
+    "reviewFlags": []
+  },
+  "Genesis 50:6": {
+    "explanation": "Pharaoh grants Joseph permission to go and bury his father according to the oath. The response recognizes the stated obligation and permits its fulfillment. The verse records cooperation in this circumstance, not a claim that every ruler will always accommodate a believer's family or religious responsibilities.",
+    "context": "The permission is followed by the large company that accompanies the burial journey.",
+    "references": "Genesis 50:5; Genesis 50:14",
+    "application": "Honor legitimate commitments and, where possible, make room for others to fulfill serious family responsibilities.",
+    "reviewStatus": "pending",
+    "historicalContext": "Joseph's request in Genesis 50:5 includes returning to Egypt; the later narrative records that return.",
+    "reviewFlags": []
+  },
+  "Genesis 50:7": {
+    "explanation": "Joseph travels to bury Jacob accompanied by Pharaoh's servants, household elders, and the elders of Egypt. The delegation gives the burial public weight beyond Joseph's private family grief. The verse does not name the officials or supply independent diplomatic purposes for their attendance.",
+    "context": "This begins the description of those who accompany the permitted burial journey.",
+    "references": "Genesis 50:8; Genesis 50:9",
+    "application": "Recognize that support for the bereaved may include practical accompaniment as well as spoken sympathy.",
+    "reviewStatus": "pending",
+    "historicalContext": "The next two verses add family members and a military-style escort, showing the size of the procession within the narrative.",
+    "reviewFlags": []
+  },
+  "Genesis 50:8": {
+    "explanation": "Joseph's household, brothers, and father's household accompany the burial, while the little ones, flocks, and herds remain in Goshen. The journey therefore does not constitute the family's permanent departure from Egypt. Its arrangements also distinguish those traveling from dependents and possessions remaining behind.",
+    "context": "This qualifies the procession description and anticipates the group's return after burial.",
+    "references": "Genesis 50:14; Genesis 47:27",
+    "application": "Arrange necessary journeys with care for the people and responsibilities that remain at home.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 50:14 explicitly records the return to Egypt; this journey must not be confused with the later Exodus.",
+    "reviewFlags": []
+  },
+  "Genesis 50:9": {
+    "explanation": "Chariots and horsemen accompany the travelers, making a very large company. The detail adds to the account of public honor and the scale of the journey. It does not describe a battle or authorize constructing an otherwise unrecorded military campaign around Jacob's funeral.",
+    "context": "The verse completes the procession description before the mourning at Atad.",
+    "references": "Genesis 50:7; Genesis 50:10",
+    "application": "Preserve the distinction between what a narrative reports and dramatic details that readers might imagine around it.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 50:7-8 lists officials and family members, providing the immediate explanation for the large company.",
+    "reviewFlags": []
+  },
+  "Genesis 50:10": {
+    "explanation": "At the threshingfloor of Atad, described as beyond Jordan, the company makes a very grievous lamentation and Joseph mourns for seven days. The additional mourning shows the depth of the farewell. The passage supplies a place description but does not reconstruct the full itinerary from Egypt.",
+    "context": "The mourning attracts local attention before the sons complete Jacob's burial in Canaan.",
+    "references": "Genesis 50:11; Genesis 50:13",
+    "application": "Give grief appropriate time while remaining faithful to the responsibilities that accompany a funeral.",
+    "reviewStatus": "pending",
+    "historicalContext": "The KJV explicitly gives seven days here; the exact modern location and route are not established by this note.",
+    "reviewFlags": []
+  },
+  "Genesis 50:11": {
+    "explanation": "The Canaanite observers interpret the great mourning at Atad as an Egyptian mourning, and the location receives the name Abel-mizraim. The verse explains the name through the event. The observers' description does not change Jacob's ancestry or mean that the covenant family has ceased to be Israel.",
+    "context": "This records the local response to the mourning before returning to the sons' fulfillment of Jacob's commands.",
+    "references": "Genesis 50:10; Genesis 50:12",
+    "application": "Distinguish how outside observers describe an event from the full history known within the biblical narrative.",
+    "reviewStatus": "pending",
+    "historicalContext": "The place-name explanation comes from the KJV itself; no additional Hebrew etymology or precise archaeological identification is asserted.",
+    "reviewFlags": []
+  },
+  "Genesis 50:12": {
+    "explanation": "Jacob's sons do as he commanded them, giving a concise statement of faithful execution. The specific action is supplied in the following verse: carrying and burying him at Machpelah. Their obedience here is practical, requiring a journey rather than merely a declaration of affection for their father.",
+    "context": "The summary transitions from public mourning to the actual burial that fulfills Jacob's final instructions.",
+    "references": "Genesis 49:29; Genesis 50:13",
+    "application": "Let respect for another person's legitimate wishes be expressed through reliable action, especially after they can no longer remind you.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 49:29-32 records those instructions, allowing the reader to compare promise and performance directly.",
+    "reviewFlags": []
+  },
+  "Genesis 50:13": {
+    "explanation": "The sons carry Jacob into Canaan and bury him in the cave at Machpelah, the purchased family burial place before Mamre. The burial fulfills his expressed desire and Joseph's oath. It preserves the family's connection to Canaan while their daily residence continues in Egypt.",
+    "context": "This is the culmination of the burial journey and is followed by the return of the party to Egypt.",
+    "references": "Genesis 23:19; Genesis 49:30; Genesis 47:31",
+    "application": "Fulfill entrusted promises accurately rather than substituting a more convenient action after the person has died.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 23:17-20 supplies the purchase account; Genesis 49:30 repeats the location in Jacob's final instructions.",
+    "reviewFlags": []
+  },
+  "Genesis 50:14": {
+    "explanation": "Joseph, his brothers, and the accompanying company return to Egypt after the burial. Joseph fulfills the assurance he gave when asking permission to leave. The family has honored Jacob's burial wish without claiming that the promised national return to Canaan has now been accomplished.",
+    "context": "The burial episode closes and the narrative turns to the brothers' fear after their father's death.",
+    "references": "Genesis 50:5; Genesis 50:24",
+    "application": "Keep commitments made in obtaining assistance or permission, including after the immediate family duty has been completed.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 50:5 records Joseph's promise to return, and Genesis 50:24 locates the hoped-for national departure in the future.",
+    "reviewFlags": []
+  },
+  "Genesis 50:15": {
+    "explanation": "After Jacob dies, Joseph's brothers fear that he may hate them and repay their wrongdoing. Their anxiety reveals that past reconciliation has not fully removed their fear of retaliation. The verse reports their suspicion; it does not say that Joseph has secretly planned revenge while his father lived.",
+    "context": "This begins the final reconciliation scene, in which Joseph again reassures them.",
+    "references": "Genesis 45:5; Genesis 45:15",
+    "application": "Past wrongdoing can leave deep fear; seek truthful reassurance without assuming another person's hidden hostility as fact.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 45:4-15 records Joseph's earlier welcome, providing a contrast with their continued fear.",
+    "reviewFlags": []
+  },
+  "Genesis 50:16": {
+    "explanation": "The brothers send a message reporting that Jacob gave a command before his death. The narrative presents their claim but does not separately record that command in the earlier deathbed scene. It would be unwarranted either to assert that the message is fabricated or to add unrecorded details to it.",
+    "context": "The next verse supplies the reported request for forgiveness and records Joseph's tears.",
+    "references": "Genesis 50:15; Genesis 50:17",
+    "application": "Distinguish a reported statement from independent confirmation, and avoid declaring deception where the text does not establish it.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 49:29-32 records burial instructions; it does not independently confirm or deny the additional message reported here.",
+    "reviewFlags": []
+  },
+  "Genesis 50:17": {
+    "explanation": "The message asks Joseph to forgive his brothers' trespass and sin, expressly admitting that they did evil. Joseph weeps at the appeal. The verse names wrongdoing rather than excusing it, while the tears are reported without an exhaustive explanation of every feeling behind them.",
+    "context": "The appeal is followed by the brothers' personal appearance and Joseph's assurance against revenge.",
+    "references": "Genesis 37:28; Genesis 42:21",
+    "application": "Confess wrong plainly and seek forgiveness without minimizing the injury done to another person.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 37:27-28 records the sale of Joseph; the message's language of sin accords with that narrative harm.",
+    "reviewFlags": []
+  },
+  "Genesis 50:18": {
+    "explanation": "The brothers come and fall before Joseph, offering themselves as his servants. Their gesture shows fear and vulnerability before the brother who holds power. The narrative recalls earlier bowing in the Joseph story, but the immediate question is how Joseph will respond to their appeal after Jacob's death.",
+    "context": "Joseph answers in the next verse by rejecting the place of ultimate judgment and telling them not to fear.",
+    "references": "Genesis 37:7; Genesis 42:6; Genesis 50:19",
+    "application": "Use a position of strength to answer vulnerability with truth and mercy rather than humiliation.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 37:7-10 records the dreams, and Genesis 42:6 records earlier bowing in Egypt; the connections arise from Scripture itself.",
+    "reviewFlags": []
+  },
+  "Genesis 50:19": {
+    "explanation": "Joseph tells his brothers not to fear and asks whether he is in God's place. He refuses to make his power a platform for personal vengeance. The statement does not deny every role of lawful human judgment; it addresses his own response to those who fear his retaliation.",
+    "context": "This introduces the distinction between their evil intention and God's preserving purpose in the next verse.",
+    "references": "Romans 12:19; Genesis 50:20",
+    "application": "Leave ultimate judgment to God and refuse to turn personal injury into a claim to retaliatory authority.",
+    "reviewStatus": "pending",
+    "historicalContext": "Romans 12:19 similarly warns against personal vengeance, offering a thematic comparison rather than changing the narrative's immediate setting.",
+    "reviewFlags": []
+  },
+  "Genesis 50:20": {
+    "explanation": "Joseph distinguishes his brothers' evil intention from God's good purpose in preserving many lives. The same history contains human wrongdoing and divine preservation, but the good outcome does not make the evil act righteous. The verse is not permission to harm others in hope that God will produce benefit.",
+    "context": "It explains Joseph's refusal of revenge and recalls his earlier interpretation of events during the famine.",
+    "references": "Genesis 45:5; Genesis 45:7; Romans 12:21",
+    "application": "Trust God's ability to bring good through suffering while continuing to name, resist, and repent of wrongdoing.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 45:5-8 links Joseph's position in Egypt with the preservation of the family through famine.",
+    "reviewFlags": []
+  },
+  "Genesis 50:21": {
+    "explanation": "Joseph reassures the brothers and promises to nourish them and their little ones. His comfort takes the form of both kind speech and continuing provision. He does not require their children to suffer for their fathers' past crime, and he makes practical care part of the renewed assurance.",
+    "context": "This closes the reconciliation scene with the same concern for preservation expressed in the preceding verse.",
+    "references": "Genesis 45:11; Genesis 50:20",
+    "application": "Let forgiveness be expressed through truthful, appropriate conduct, while refusing to transfer blame to innocent dependents.",
+    "reviewStatus": "pending",
+    "historicalContext": "Genesis 45:11 contains Joseph's earlier promise to nourish the family during famine, linking his words here with demonstrated provision.",
+    "reviewFlags": []
+  },
+  "Genesis 50:22": {
+    "explanation": "Joseph remains in Egypt with his father's household and lives to 110 years. The verse carries the story beyond the burial and reconciliation scenes into the close of Joseph's life. It does not claim that longevity is an automatic reward guaranteed to every faithful servant.",
+    "context": "The following verse records descendants Joseph lives to see before his final statements about God's promise.",
+    "references": "Genesis 50:23; Genesis 50:26",
+    "application": "Receive the years God grants with gratitude without using length of life to rank another person's faithfulness.",
+    "reviewStatus": "pending",
+    "historicalContext": "The age is explicitly supplied by the KJV; no external royal chronology is required to state it.",
+    "reviewFlags": []
+  },
+  "Genesis 50:23": {
+    "explanation": "Joseph lives to see later generations in Ephraim's line, and descendants of Machir in Manasseh's line are brought up upon his knees. The picture emphasizes family continuity and close involvement. It does not provide enough information for an exact birth chronology of every descendant or a complete legal theory of adoption.",
+    "context": "This shows the family's growth before Joseph's death and his assurance that God will bring Israel out of Egypt.",
+    "references": "Genesis 41:51; Numbers 26:29",
+    "application": "Value opportunities to care for later generations without pretending that a brief family notice supplies a full biography.",
+    "reviewStatus": "pending",
+    "historicalContext": "Numbers 26:29 later names Machir and Gilead within Manasseh's families; the connection confirms the family line without specifying every age.",
+    "reviewFlags": []
+  },
+  "Genesis 50:24": {
+    "explanation": "Joseph acknowledges his coming death but assures his brethren that God will visit them and bring them to the land promised to Abraham, Isaac, and Jacob. Hope is placed in God's sworn commitment beyond Joseph's lifetime. His own death does not mark the end of the family's covenant future.",
+    "context": "The assurance leads to his request that his bones be carried out when God fulfills the promised departure.",
+    "references": "Genesis 48:21; Exodus 3:16; Exodus 3:17",
+    "application": "Pass on confidence in God's Word rather than making another generation's hope depend on your continued presence.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 3:16-17 later joins divine visitation with bringing Israel out of Egypt, and Genesis 48:21 records Jacob's similar assurance.",
+    "reviewFlags": []
+  },
+  "Genesis 50:25": {
+    "explanation": "Joseph requires an oath that Israel will carry his bones from Egypt when God visits them. The request makes his burial remains a witness to confidence in future deliverance. It is a particular instruction rooted in the promised departure, not a universal command about transporting every believer's remains.",
+    "context": "The oath follows the promise of return and precedes the account of Joseph's embalming and coffin in Egypt.",
+    "references": "Exodus 13:19; Hebrews 11:22; Joshua 24:32",
+    "application": "Express trust in God's promises through faithful commitments, while distinguishing particular covenant instructions from universal funeral requirements.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 13:19 explicitly records Moses taking Joseph's bones, and Hebrews 11:22 identifies the instruction as an act of faith.",
+    "reviewFlags": []
+  },
+  "Genesis 50:26": {
+    "explanation": "Joseph dies at 110, is embalmed, and is placed in a coffin in Egypt. Genesis ends with death outside the promised land, yet the preceding oath points beyond the coffin to God's future visitation. The closing note holds mortality and hope together rather than claiming the whole promise is already fulfilled.",
+    "context": "Exodus continues the story of the growing family and eventual deliverance; later Scripture records the transport and burial of Joseph's bones.",
+    "references": "Exodus 13:19; Joshua 24:32; Hebrews 11:22",
+    "application": "Face mortality honestly while grounding enduring hope in God's faithfulness rather than in earthly status or permanence.",
+    "reviewStatus": "pending",
+    "historicalContext": "Exodus 13:19 and Joshua 24:32 supply the later stages; no additional embalming method or archaeological claim is added here.",
+    "reviewFlags": []
+  },
   "Genesis 6:1": {
     "explanation": "Human families increase across the earth, setting the scene for the moral crisis described in the following verses.",
     "context": "The chapter opens after the genealogies of Genesis 5 and moves from family succession to conditions in the wider human community.",
