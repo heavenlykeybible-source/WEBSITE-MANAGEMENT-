@@ -2,16 +2,16 @@ name = "heavenly-key-social-management"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 
-# Account 10: create these resources in Cloudflare, then uncomment
-# and replace placeholder IDs with the real values from Account 10.
+# Account 10: D1 and R2 resources verified in Cloudflare on 2026-10-29.
+# Apply only through the approved deployment pipeline after schema and secret checks.
 [[d1_databases]]
 binding = "DB"
 database_name = "heavenlykey-social-management-db"
 database_id = "96001ae8-d057-40d1-ba8a-167d8eab63cc"
 
-# [[r2_buckets]]
-# binding = "MEDIA_BUCKET"
-# bucket_name = "heavenlykey-social-management-storage"
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "heavenlykey-social-management-storage"
 
 # [[kv_namespaces]]
 # binding = "APP_KV"
@@ -22,7 +22,7 @@ database_id = "96001ae8-d057-40d1-ba8a-167d8eab63cc"
 # queue = "heavenlykey-social-management-queue"
 
 # Set ADMIN_TOKEN and GEMINI_API_KEY as Worker secrets, never here.
-# Uncomment D1 binding after provisioning; API requires DB at runtime.
+# D1 and R2 are configured here but still require a verified Worker deployment.
 
 [assets]
 directory = "./public"
