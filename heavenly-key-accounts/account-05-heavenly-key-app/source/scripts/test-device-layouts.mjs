@@ -67,8 +67,10 @@ try{
      // Catch buttons that look correct but cannot be clicked on a small phone.
      for(const appId of Object.keys(catalogue)){
       const button=page.locator('[data-download-app="'+appId+'"]');
-      if(await button.count()!==1)throw Error('Missing or duplicate app chooser: '+appId);
-      await button.click({timeout:5000});
+      if(await button.count()<1)throw Error('Missing app chooser: '+appId);
+      // All-in-One appears in both the hero and device section by design.
+      // Test the visible primary control without treating the second entry as an error.
+      await button.first().click({timeout:5000});
       const dialog=page.locator('dialog.hk-install-dialog');
       await dialog.waitFor({state:'visible',timeout:5000});
       const expectedName=catalogue[appId].name;
