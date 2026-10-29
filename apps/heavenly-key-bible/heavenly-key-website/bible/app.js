@@ -61,7 +61,7 @@ async function getCuratedReferences(){
      if(!Array.isArray(targets))continue;
      const sourceRef=sourceBook+" "+ch+":"+verse;
      for(const ref of targets){
-      const match=typeof ref==="string"&&/^(.+?) (\\d+):(\\d+)$/.exec(ref);
+      const match=typeof ref==="string"&&/^(.+?) (\d+):(\d+)$/.exec(ref);
       if(!match)continue;
       const index=books.findIndex(b=>b[0]===match[1]&&Number(match[2])>=1&&Number(match[2])<=b[1]);
       if(index<0||Number(match[3])<1)continue;
@@ -134,7 +134,7 @@ function renderPlan(){
  el("plan-passages").replaceChildren();
  for(const passage of plan.days[planDay]){
   const button=document.createElement("button");button.type="button";button.textContent=passage.book+" "+passage.chapter;
-  button.addEventListener("click",()=>{book.value=passage.book;chapters(passage.chapter);loadChapter().then(loaded=>{if(!loaded)return;const target=el("verses").querySelector('[data-verse="'+Number(verse.number)+'"]');(target||el("reader")).scrollIntoView({behavior:"smooth",block:"center"});});});
+  button.addEventListener("click",()=>{book.value=passage.book;chapters(passage.chapter);loadChapter().then(loaded=>{if(!loaded)return;el("reader").scrollIntoView({behavior:"smooth",block:"start"});});});
   el("plan-passages").append(button);
  }
  message("plan-day","Day "+(planDay+1)+" of "+plan.days.length);
