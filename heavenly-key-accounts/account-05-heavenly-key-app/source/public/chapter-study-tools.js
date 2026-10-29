@@ -50,7 +50,7 @@ tools?.addEventListener('click',async e=>{
      const reference=dictionaryReferences[word];
      if(reference){const verse=el('span',reference);verse.style.cssText='color:#722039;font-weight:600;font-size:.9rem';actions.append(verse);}
      const copy=el('button','Copy');copy.type='button';copy.setAttribute('aria-label','Copy definition of '+word);copy.style.cssText='border:1px solid #722039;border-radius:7px;background:white;color:#722039;padding:6px 12px;cursor:pointer';
-     copy.addEventListener('click',async()=>{const content=word[0].toUpperCase()+word.slice(1)+' — '+definition+(reference?'\\n'+reference:'');try{await navigator.clipboard.writeText(content);copy.textContent='Copied';}catch{const area=el('textarea');area.value=content;area.style.position='fixed';area.style.left='-9999px';document.body.append(area);area.select();const ok=document.execCommand('copy');area.remove();copy.textContent=ok?'Copied':'Select and copy';}});
+     copy.addEventListener('click',async()=>{const content=word[0].toUpperCase()+word.slice(1)+' — '+definition+(reference?'\n'+reference:'');try{await navigator.clipboard.writeText(content);copy.textContent='Copied';}catch{const area=el('textarea');area.value=content;area.style.position='fixed';area.style.left='-9999px';document.body.append(area);area.select();const ok=document.execCommand('copy');area.remove();copy.textContent=ok?'Copied':'Select and copy';}});
      actions.append(copy);card.append(summary,meaning,actions);results.append(card);
     }
    };
