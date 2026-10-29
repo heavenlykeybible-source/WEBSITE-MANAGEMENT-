@@ -49,8 +49,8 @@ function renderDictionary(){
  $('dict-count').textContent=`${matches.length} matching entries · page ${dictionaryPage+1} of ${totalPages}`;
  $('dict-results').replaceChildren();
  for(const e of matches.slice(start,start+pageSize)){
-   const card=document.createElement('details');card.className='result';
-   const title=document.createElement('summary');title.textContent=e.term;card.append(title);
+   const card=document.createElement('article');card.className='result';
+   const title=document.createElement('h3');title.className='dict-entry-title';title.textContent=e.term;card.append(title);
    const meaning=document.createElement('div');meaning.textContent=e.meaning;card.append(meaning);
    if(e.explanation){const explanation=document.createElement('p');explanation.textContent=e.explanation;card.append(explanation);}
    const actions=document.createElement('div');actions.className='dict-actions';
