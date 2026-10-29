@@ -9,6 +9,19 @@
   const heading = document.querySelector('h1');
   const platform = location.pathname.split('/')[2] || 'your device';
   let promptEvent = null;
+  // A scan is a navigation to this device guide. Start a real attachment download
+  // only after HEAD verifies a signed and scanned package is published.
+  // Never trigger a package for a different type of device.
+  const agent = navigator.userAgent || '';
+  function matchesDevice() {
+    const isIPad = /iPad/i.test(agent) || (/Macintosh/i.test(agent) && navigator.maxTouchPoints > 1);
+    if (platform === 'android') return /Android/i.test(agent);
+    if (platform === 'iphone') return /iPhone|iPod/i.test(agent);
+    if (platform === 'ipad') return isIPad;
+    if (platform === 'windows') return /Windows NT/i.test(agent);
+    if (platform === 'mac') return /Macintosh|Mac OS X/i.test(agent) && !isIPad;
+    return false;
+  }
   function status(message) {
     if (info) { info.textContent = message; info.setAttribute('role', 'status'); info.setAttribute('aria-live', 'polite'); }
   }
@@ -87,10 +100,19 @@
           const digest = available.headers.get('x-release-sha256') || '';
           nativeAvailable = available.ok && contentType.includes(expectedTypes[platform]) && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
           nativeLink.hidden = !nativeAvailable;
+          if (nativeAvailable && matchesDevice()) {
+            status('Your verified ' + platform + ' app download is starting. If your browser does not start it, use the Download button.');
+            // Navigate to the official attachment response; do not silently
+            // install software or fake an app-store/native download.
+            window.location.assign(nativeLink.href);
+            return;
+          }
           if (nativeAvailable && platform === 'android') status('A native Android APK is available without a Heavenly Key account. Use Download Android APK or open the web app. Android may ask you to approve installation outside the Play Store.');
         } catch { nativeLink.hidden = true; }
       }
-      if (platform === 'iphone' || platform === 'ipad') {
+      if (!matchesDevice()) {
+        status('This QR code is for a different device. Choose the installation guide for your own phone or computer, or use Open App above.');
+      } else if (platform === 'iphone' || platform === 'ipad') {
         status('Open this app in Safari, tap Share, then Add to Home Screen. Native App Store installation is not available here.');
       } else if (nativeAvailable) {
         status('A verified native installation package is available. No Heavenly Key sign-in is required to download it. Choose Download above or open the web app.');
