@@ -1,0 +1,24 @@
+name: Test Account 5 native Windows app
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/native/windows/**'
+      - '.github/workflows/test-account5-windows.yml'
+permissions:
+  contents: read
+jobs:
+  windows-build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore pinned WebView2 dependencies
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
+        run: dotnet restore HeavenlyKeyWindows.csproj
+      - name: Compile native Windows application
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/windows
+        run: dotnet build HeavenlyKeyWindows.csproj --no-restore -c Release
