@@ -40,8 +40,8 @@ jobs:
           printf '%s' "$HKEM_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/account5-release.keystore"
           test -s "$RUNNER_TEMP/account5-release.keystore"
           echo "HKEM_ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/account5-release.keystore" >> "$GITHUB_ENV"
-      - name: Build and lint signed production APK
-        run: gradle :app:assembleRelease :app:lintRelease --no-daemon
+      - name: Build signed APK and Google Play App Bundle
+        run: gradle :app:assembleRelease :app:bundleRelease :app:lintRelease --no-daemon
       - name: Verify package signature and checksum
         shell: bash
         run: |
@@ -53,6 +53,10 @@ jobs:
           "$apksigner" verify --verbose "$apk"
           sha256sum "$apk" > "$apk.sha256"
           cat "$apk.sha256"
+          aab=app/build/outputs/bundle/release/app-release.aab
+          test -s "$aab"
+          jarsigner -verify "$aab"
+          sha256sum "$aab" > "$aab.sha256"
       - name: Install malware scanner and update signatures
         shell: bash
         run: |
@@ -79,6 +83,8 @@ jobs:
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk.sha256
             heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/apk/release/app-release.apk.security.txt
+            heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/bundle/release/app-release.aab
+            heavenly-key-accounts/account-05-heavenly-key-app/native/android/app/build/outputs/bundle/release/app-release.aab.sha256
           retention-days: 30
           if-no-files-found: error
       - name: Remove keystore from runner
