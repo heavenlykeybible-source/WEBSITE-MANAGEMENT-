@@ -1,0 +1,12 @@
+{
+  "status": "quarantined-pending-review",
+  "sourceArchive": "heavenly-key-REVELATION-AUDITED-QUARANTINE.zip",
+  "expectedDataFiles": 44,
+  "commentaryChapters": 22,
+  "concordanceChapters": 22,
+  "commentaryRecords": 405,
+  "concordanceRecords": 405,
+  "reviewStatus": "pending",
+  "warning": "Source data files are not yet uploaded to this branch. Do not import or publish. Archive does not cover the whole Bible and has repeated generalized content.",
+  "integrationApproved": false
+}
