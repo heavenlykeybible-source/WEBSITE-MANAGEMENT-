@@ -484,6 +484,13 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const result=await env.DB.prepare('SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts ORDER BY created_at DESC LIMIT 100').all();
   return reply({items:result.results,publishingConnected:false});
  }
+ if(u.pathname==='/api/posts'&&req.method==='DELETE'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(typeof data?.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id))return reply({error:'Valid draft id required'},400);
+  const result=await env.DB.prepare("DELETE FROM social_posts WHERE id=? AND status='draft'").bind(data.id).run();
+  if(!result.meta?.changes)return reply({error:'Draft not found or not deletable'},404);
+  return reply({id:data.id,deleted:true,published:false});
+ }
  if(u.pathname==='/api/posts'&&req.method==='PATCH'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(typeof data?.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id))return reply({error:'Valid draft id required'},400);
