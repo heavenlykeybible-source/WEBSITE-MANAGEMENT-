@@ -4,19 +4,19 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const root='apps/heavenly-key-bible/heavenly-key-website/bible/concordance/';
-const files=['genesis-1-04-18.json','genesis-1-19-31.json','genesis-2-3.json','genesis-4-5.json','genesis-6.json','genesis-7.json','genesis-8.json','genesis-9.json','genesis-10.json'];
+const files=['genesis-1-04-18.json','genesis-1-19-31.json','genesis-2-3.json','genesis-4-5.json','genesis-6.json','genesis-7.json','genesis-8.json','genesis-9.json','genesis-10.json','genesis-11.json'];
 const entries=files.flatMap(f=>JSON.parse(fs.readFileSync(root+'drafts/'+f,'utf8')));
 const problems=[];const refs=new Set(), explanations=new Map();
 for(const e of entries){
  if(refs.has(e.ref))problems.push('duplicate verse '+e.ref);refs.add(e.ref);
- if(!/^Genesis [1-10]:[1-9][0-9]*$/.test(e.ref))problems.push('unexpected reference '+e.ref);
+ if(!/^Genesis (?:[1-9]|10|11):[1-9][0-9]*$/.test(e.ref))problems.push('unexpected reference '+e.ref);
  for(const field of ['explanation','context','application'])if(typeof e[field]!=='string'||!e[field].trim())problems.push(e.ref+': missing '+field);
  if(!Array.isArray(e.crossReferences)||!e.crossReferences.length||e.crossReferences.some(r=>typeof r!=='string'||!r.trim()))problems.push(e.ref+': missing cross-references');
  if(e.reviewStatus!=='pending')problems.push(e.ref+': review status changed without documented approval');
  const norm=String(e.explanation||'').trim().toLowerCase().replace(/\\s+/g,' ');
  if(explanations.has(norm))problems.push('identical explanations: '+e.ref+' and '+explanations.get(norm));explanations.set(norm,e.ref);
 }
-if(entries.length!==264)problems.push('expected 264 saved Genesis drafts, found '+entries.length);
+if(entries.length!==296)problems.push('expected 296 saved Genesis drafts, found '+entries.length);
 const registered={};const sandbox={window:{registerConcordanceStudyNotes:notes=>Object.assign(registered,notes)}};
 vm.runInNewContext(fs.readFileSync(root+'study-notes-genesis-drafts.js','utf8'),sandbox,{timeout:2000});
 if(Object.keys(registered).length!==entries.length)problems.push('browser bundle record count differs');
