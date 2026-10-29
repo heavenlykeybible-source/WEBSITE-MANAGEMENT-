@@ -43,7 +43,8 @@ setupDictionaryLetters();
 function renderDictionary(){
  if(!state.dictionary)return;
  const query=$('dict').value.trim().toLocaleLowerCase(),letter=$('letter').value;
- const matches=state.dictionary.filter(e=>(!letter||e.term[0].toUpperCase()===letter)&&(!query||[e.term,e.meaning,e.explanation,...(state.originalGuide||[]).filter(w=>w.english.toLocaleLowerCase()===e.term.toLocaleLowerCase()).flatMap(w=>[w.original,w.transliteration,w.strong,w.meaning])].some(v=>String(v||'').toLocaleLowerCase().includes(query))));
+ const languageIndex=new Map();for(const item of state.originalGuide||[]){const key=String(item.english||'').trim().toLocaleLowerCase();if(!languageIndex.has(key))languageIndex.set(key,[]);languageIndex.get(key).push(item);}
+ const matches=state.dictionary.filter(e=>(!letter||e.term[0].toUpperCase()===letter)&&(!query||[e.term,e.meaning,e.explanation,...(languageIndex.get(e.term.trim().toLocaleLowerCase())||[]).flatMap(w=>[w.original,w.transliteration,w.strong,w.meaning])].some(v=>String(v||'').toLocaleLowerCase().includes(query))));
  const pageSize=25,totalPages=Math.max(1,Math.ceil(matches.length/pageSize));dictionaryPage=Math.max(0,Math.min(dictionaryPage,totalPages-1));
  const start=dictionaryPage*pageSize;
  $('dict-count').textContent=`${matches.length} matching entries · page ${dictionaryPage+1} of ${totalPages}`;
@@ -87,7 +88,7 @@ function renderDictionary(){
     });
     actions.append(concordanceButton);
    }
-   const languageEntries=(state.originalGuide||[]).filter(item=>String(item.english).trim().toLocaleLowerCase()===String(e.term).trim().toLocaleLowerCase());
+   const languageEntries=languageIndex.get(e.term.trim().toLocaleLowerCase())||[];
    const languageButtons=document.createElement('div');languageButtons.className='dict-language-buttons';languageButtons.setAttribute('aria-label','Original-language meanings for '+e.term);
    for(const language of ['Hebrew','Greek']){
     const button=document.createElement('button');button.type='button';button.className='dict-language-button';button.textContent=language+' ▾';button.setAttribute('aria-expanded','false');
