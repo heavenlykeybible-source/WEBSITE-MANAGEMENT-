@@ -43,7 +43,7 @@ public final class MainActivity extends Activity {
     if (!"https".equalsIgnoreCase(target.getScheme()) ||
         !"apps.heavenlykey.org".equalsIgnoreCase(target.getHost()) ||
         target.getUserInfo()!=null ||
-        !target.getPath().matches("^/api/native-download/[a-z0-9-]{1,64}/(android|windows|mac)$")) return;
+        !target.getPath().matches("^/api/native-download/[a-z0-9-]{1,64}/android$")) return;
     startActivity(new Intent(Intent.ACTION_VIEW,target).addCategory(Intent.CATEGORY_BROWSABLE));
    } catch(Exception ignored) { }
   });
