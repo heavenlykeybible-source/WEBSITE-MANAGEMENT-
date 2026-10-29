@@ -4,19 +4,19 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const root='apps/heavenly-key-bible/heavenly-key-website/bible/concordance/';
-const files=['genesis-1-04-18.json','genesis-1-19-31.json','genesis-2-3.json','genesis-4-5.json','genesis-6.json','genesis-7.json','genesis-8.json','genesis-9.json','genesis-10.json','genesis-11.json','genesis-12.json','genesis-13.json','genesis-14.json','genesis-15.json','genesis-16.json','genesis-17.json','genesis-18.json','genesis-19.json','genesis-20.json','genesis-21.json','genesis-22.json','genesis-23.json','genesis-24.json','genesis-25.json','genesis-26.json','genesis-27.json','genesis-28.json','genesis-29.json','genesis-30.json','genesis-31.json','genesis-32.json','genesis-33.json','genesis-34.json','genesis-35.json','genesis-36.json','genesis-37.json','genesis-38.json','genesis-39.json','genesis-40.json'];
+const files=['genesis-1-04-18.json','genesis-1-19-31.json','genesis-2-3.json','genesis-4-5.json','genesis-6.json','genesis-7.json','genesis-8.json','genesis-9.json','genesis-10.json','genesis-11.json','genesis-12.json','genesis-13.json','genesis-14.json','genesis-15.json','genesis-16.json','genesis-17.json','genesis-18.json','genesis-19.json','genesis-20.json','genesis-21.json','genesis-22.json','genesis-23.json','genesis-24.json','genesis-25.json','genesis-26.json','genesis-27.json','genesis-28.json','genesis-29.json','genesis-30.json','genesis-31.json','genesis-32.json','genesis-33.json','genesis-34.json','genesis-35.json','genesis-36.json','genesis-37.json','genesis-38.json','genesis-39.json','genesis-40.json','genesis-41.json'];
 const entries=files.flatMap(f=>JSON.parse(fs.readFileSync(root+'drafts/'+f,'utf8')));
 const problems=[];const refs=new Set(), explanations=new Map();
 for(const e of entries){
  if(refs.has(e.ref))problems.push('duplicate verse '+e.ref);refs.add(e.ref);
- if(!/^Genesis (?:[1-9]|[1-3][0-9]|40):[1-9][0-9]*$/.test(e.ref))problems.push('unexpected reference '+e.ref);
+ if(!/^Genesis (?:[1-9]|[1-3][0-9]|4[01]):[1-9][0-9]*$/.test(e.ref))problems.push('unexpected reference '+e.ref);
  for(const field of ['explanation','context','application'])if(typeof e[field]!=='string'||!e[field].trim())problems.push(e.ref+': missing '+field);
  if(!Array.isArray(e.crossReferences)||!e.crossReferences.length||e.crossReferences.some(r=>typeof r!=='string'||!r.trim()))problems.push(e.ref+': missing cross-references');
  if(e.reviewStatus!=='pending')problems.push(e.ref+': review status changed without documented approval');
  const norm=String(e.explanation||'').trim().toLowerCase().replace(/\\s+/g,' ');
  if(explanations.has(norm))problems.push('identical explanations: '+e.ref+' and '+explanations.get(norm));explanations.set(norm,e.ref);
 }
-if(entries.length!==1193)problems.push('expected 1193 saved Genesis drafts, found '+entries.length);
+if(entries.length!==1250)problems.push('expected 1250 saved Genesis drafts, found '+entries.length);
 const registered={};const sandbox={window:{registerConcordanceStudyNotes:notes=>Object.assign(registered,notes)}};
 vm.runInNewContext(fs.readFileSync(root+'study-notes-genesis-drafts.js','utf8'),sandbox,{timeout:2000});
 if(Object.keys(registered).length!==entries.length)problems.push('browser bundle record count differs');
