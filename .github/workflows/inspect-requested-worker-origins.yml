@@ -21,7 +21,7 @@ jobs:
           if(!token){console.log('NO SAVED TOKEN');process.exit(0)}
           const headers={authorization:'Bearer '+token};
           async function api(path){const r=await fetch('https://api.cloudflare.com/client/v4'+path,{headers,signal:AbortSignal.timeout(15000)}),d=await r.json();if(!r.ok||!d.success){console.log('READ DENIED',path,r.status,JSON.stringify(d.errors?.map(x=>x.code)));return null}return d.result}
-          for(const account of ['c26cc139515e4f56b9fc7010bd98d1b5','6401a8f41a41f5325ba5bd4d006b4ff5']){
+          for(const account of ['a160ba9fc74911bd4b3005eac86eefcb','c26cc139515e4f56b9fc7010bd98d1b5','6401a8f41a41f5325ba5bd4d006b4ff5']){
             const sub=await api('/accounts/'+account+'/workers/subdomain');
             if(sub)console.log('VERIFIED SUBDOMAIN',account,JSON.stringify(sub));
           }
