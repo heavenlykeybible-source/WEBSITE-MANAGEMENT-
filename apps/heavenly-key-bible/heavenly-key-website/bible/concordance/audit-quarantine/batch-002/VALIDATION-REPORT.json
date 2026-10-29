@@ -1,0 +1,18 @@
+{
+  "status": "QUARANTINED_NOT_FOR_IMPORT",
+  "filesExamined": 11,
+  "uniqueVerses": 5,
+  "commentaryRecords": 5,
+  "concordanceRecords": 5,
+  "duplicateCommentaryReferences": 0,
+  "correctionsMade": 5,
+  "correction": "Removed unsupported Strong identifiers from five quarantined lexical records; retained original archive unchanged",
+  "issues": [
+    "All five explanations share boilerplate",
+    "Historical context inadequate",
+    "Five concordance entries are not word-level concordances",
+    "Application compatibility not verified",
+    "Full verse coverage absent"
+  ],
+  "reviewStatus": "pending"
+}
