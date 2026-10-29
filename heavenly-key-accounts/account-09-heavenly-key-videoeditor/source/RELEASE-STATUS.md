@@ -1,3 +1,25 @@
+# Account 9 verification — 29 October 2026
+
+Launch readiness remains unconfirmed. Do not advertise this as a verified global release.
+
+Verified against Website Management main source:
+- Account 9 preflight and 49/49 backend integration checks passed (local SQLite and mocked media/AI services).
+- Frontend wiring/security checks and offline lifecycle/cache-refresh behavior passed.
+- Canonical Worker build, source/asset matching, packaged health/authentication boundaries and release replacement policy passed.
+- Repository `node tests/run.mjs` passed.
+
+Fixed the obsolete frontend assertion that required the previous background-refresh implementation. The current service worker waits for fresh online assets and falls back to the saved working asset on temporary failure; the behavior suite verifies this. No application runtime code changed in this verification.
+
+Unverified and blocked:
+- The live request to https://mediaeditor.heavenlykey.org/ returned an Envoy 503 with an upstream connection failure from this execution environment. This is not proof that the origin itself is unavailable.
+- Account 9 is saved connection ID 8. Worker deployment metadata could not be read: Control Room returned “No active maintenance permission for this agent and account”. No permission-request tool is exposed in this connection.
+- Real browser audio/video export and mobile compatibility could not run: Chromium is absent and its download returned invalid/truncated archives.
+- Real Cloudflare authentication, media storage, AI transcription/provider configuration and owner/admin sign-in remain unverified.
+
+No deployment was attempted and no production database, bucket, binding, credential or owner record was changed. The existing Worker remains `heavenlykey-studio`. The historical staging notes below describe earlier checks and may not describe the latest implementation.
+
+---
+
 # Account 9 release status — 23 October 2026
 
 **Engineering disposition: staging candidate, NOT production release.**
