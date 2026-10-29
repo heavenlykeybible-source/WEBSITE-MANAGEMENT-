@@ -38,3 +38,10 @@ test('draft deletion cannot remove posts outside draft status', () => {
   assert.match(source, /DELETE FROM social_posts WHERE id=\? AND status='draft'/);
   assert.match(source, /Draft not found or not deletable/);
 });
+
+test('post media references must exist privately before saving drafts', () => {
+  assert.match(source, /MEDIA_BUCKET\.head\('account10\/uploads\/'\+data\.mediaId\)/);
+  assert.match(source, /Attached media was not found/);
+  assert.match(source, /media_id=CASE WHEN \? THEN \? ELSE media_id END/);
+  assert.match(source, /INSERT INTO social_posts\(id,body,platform,status,scheduled_at,media_id\)/);
+});
