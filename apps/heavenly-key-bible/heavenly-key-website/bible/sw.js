@@ -1,5 +1,5 @@
 "use strict";
-const SHELL = "hk-bible-shell-v46";
+const SHELL = "hk-bible-shell-v47";
 const SCRIPTURE = "hk-bible-kjv-ae1f46af-v1";
 const PREFIX = new URL("./", self.location.href).pathname;
 const SHELL_ASSETS = ["./index.html", "./ministry-logo.jpeg", "./style.css", "./reader-design.css", "./reader-design.js", "./shared/hk-standard-footer.css", "./fonts/NimbusRoman-Regular.otf", "./fonts/NimbusRoman-Bold.otf", "./fonts/NimbusRoman-Italic.otf", "./fonts/NimbusRoman-BoldItalic.otf", "./app.js", "./study-tools.js", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png", "./data/hymns.json", "./study-extensions.html", "./study-extensions.js", "./dictionary.json", "./daily-topics.json", "./daily-lessons.json", "./original-language-guide.json", "./read-pray-reminder.js", "./read-pray-push.js", "./kingdom-quest.html", "./kingdom-quest.css", "./kingdom-quest.js", "./kingdom-quest-questions.json", "./data/annotations/GEN.json", "./data/annotations/EXO.json", "./data/annotations/MAT.json", "./data/annotations/MAR.json", "./data/annotations/JOH.json", "./data/annotations/center-references.json", "./shared/app-update.js", "./shared/hk-standard-footer.js", "./family-navigation.js", "./install/index.html", "./install/ipad/index.html", "./install/android/index.html", "./install/iphone/index.html", "./install/mac/index.html", "./install/windows/index.html", "./install/ipad/install.js", "./install/android/install.js", "./install/iphone/install.js", "./install/mac/install.js", "./install/windows/install.js"];
@@ -57,7 +57,16 @@ self.addEventListener("message", event=>{
     return response.json();
    });
    if(manifest.translation!=="KJV"||manifest.books?.length!==66||manifest.totalVerses!==31102||new Set(manifest.books.map(book=>book.code)).size!==66)throw new Error("Invalid scripture manifest");
-   const cache=await caches.open(SCRIPTURE);let count=0;
+   const cache=await caches.open(SCRIPTURE);
+   const cachedManifest=await cache.match(new URL("data/kjv/manifest.json",self.location.href));
+   if(cachedManifest){
+    let allPresent=true;
+    for(const book of manifest.books){
+     if(!(await cache.match(new URL("data/kjv/"+book.code+".json",self.location.href)))){allPresent=false;break;}
+    }
+    if(allPresent){port?.postMessage({type:"already-cached",count:66});return;}
+   }
+   let count=0;
    for(const book of manifest.books){
     if(!/^[A-Z0-9]{3}$/.test(book.code)||!/^[a-f0-9]{64}$/.test(book.sha256))throw new Error("Invalid book metadata");
     const url=new URL("data/kjv/"+book.code+".json",self.location.href);
