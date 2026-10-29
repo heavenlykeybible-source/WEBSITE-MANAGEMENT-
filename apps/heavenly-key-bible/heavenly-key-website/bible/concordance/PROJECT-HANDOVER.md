@@ -56,3 +56,6 @@ For each verse: unique reference, original specific explanation, biblical contex
 - Verified by connector inspection only: Genesis JSON has 136 distinct drafts, no empty required fields or identical explanation strings, all pending review. Node audit script has not been run; no claims of test pass.
 - New verse explanations this continuation: 0; 136 new Genesis drafts remain. No production deployment.
 - NEXT: execute audit scripts and browser tests, verify reference validity against all 31,102 KJV verses, ensure correct deep links, create comprehensive dictionary/topic entries, expand verse-specific commentary in reviewed batches, update this handover after each successful commit.
+
+## Owner correction: concordance and commentary ONLY
+The existing Bible Dictionary is a separate, completed resource. Do not rebuild or integrate it in this workstream. Earlier plans mentioning dictionary integration are superseded. The duplicate dictionary section was removed from the combined page (commit 267fe05c670448546bab549b5b365f5a444344c2) and the duplicate dictionary.js deleted (commit 25b6c82f7ea34ea054bd6884828eb1ab442de65b). Continue exclusively with KJV Concordance word/topic indexing and verse-specific Commentary, tests, review and coverage. Preserve the independent Bible Dictionary. No deployment without owner approval.
