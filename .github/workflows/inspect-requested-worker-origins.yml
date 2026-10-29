@@ -1,0 +1,30 @@
+name: Read requested application Worker origins
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/inspect-requested-worker-origins.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Resolve existing SocialPlus and MeetingSpace Worker origins
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          const token=process.env.CF_TOKEN;
+          if(!token){console.log('NO SAVED TOKEN');process.exit(0)}
+          const headers={authorization:'Bearer '+token};
+          async function api(path){const r=await fetch('https://api.cloudflare.com/client/v4'+path,{headers,signal:AbortSignal.timeout(15000)}),d=await r.json();if(!r.ok||!d.success){console.log('READ DENIED',path,r.status,JSON.stringify(d.errors?.map(x=>x.code)));return null}return d.result}
+          const accounts=await api('/accounts?per_page=50');
+          for(const account of accounts||[]){
+           const scripts=await api('/accounts/'+account.id+'/workers/scripts');
+           const matching=(scripts||[]).filter(x=>['heavenly-key-social-management','heavenly-key-meetingspace'].includes(x.id));
+           if(matching.length){const sub=await api('/accounts/'+account.id+'/workers/subdomain');console.log('VERIFIED WORKERS',JSON.stringify({account:account.id,workers:matching.map(x=>x.id),subdomain:sub?.subdomain}));}
+          }
+          JS
