@@ -38,11 +38,34 @@ tools?.addEventListener('click',async e=>{
   if(request!==latestRequest||book.value+':'+chapter.value!==key)return;
   host.replaceChildren(el('h3',heading));
   if(kind==='dictionary'){
-   host.append(el('p','Search the reviewed biblical-term glossary. Definitions are brief study aids; read each term in its Scripture context.'));
-   const search=el('input');search.type='search';search.placeholder='Enter a Bible term';search.setAttribute('aria-label','Search Bible dictionary');
-   const result=el('div');
-   const show=()=>{const q=search.value.trim().toLowerCase();result.replaceChildren();if(!q){result.append(el('p','Enter a term to search.'));return;}const matches=Object.entries(dictionary).filter(([word])=>word.includes(q));if(!matches.length){result.append(el('p','No reviewed definition found for this term.'));return;}for(const [word,definition] of matches)result.append(el('p',word+' — '+definition));};
-   search.addEventListener('input',show);host.append(search,result);show();
+   host.replaceChildren();
+   const shell=el('section');shell.className='hk-dictionary-app';
+   shell.style.cssText='background:#e7f6df;border:3px solid #722039;border-radius:18px;padding:clamp(12px,3vw,24px);color:#243b26;max-width:850px;margin:12px auto;box-sizing:border-box';
+   const title=el('h2','Bible Dictionary');title.style.cssText='color:#722039;margin:0 0 16px;font-size:clamp(1.35rem,3vw,1.8rem)';
+   const search=el('input');search.type='search';search.placeholder='Search biblical words…';search.setAttribute('aria-label','Search Bible Dictionary');search.style.cssText='width:100%;box-sizing:border-box;padding:13px 15px;border:1.5px solid #722039;border-radius:12px;background:white;color:#243b26;font:inherit;margin-bottom:12px';
+   const alphabet=el('nav');alphabet.setAttribute('aria-label','Dictionary alphabetical navigation');alphabet.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px';
+   const results=el('div');results.setAttribute('aria-live','polite');results.style.cssText='display:grid;gap:9px';
+   let active='All';
+   const show=()=>{
+    results.replaceChildren();
+    const q=search.value.trim().toLowerCase();
+    const matches=Object.entries(dictionary).filter(([word,definition])=>(active==='All'||word[0].toUpperCase()===active)&&(!q||word.includes(q)||definition.toLowerCase().includes(q))).sort(([a],[b])=>a.localeCompare(b));
+    if(!matches.length){results.append(el('p','No matching dictionary entries.'));return;}
+    for(const [word,definition] of matches){
+     const card=el('details');card.style.cssText='background:#f9fff6;border:1px solid #722039;border-radius:11px;padding:12px 14px';
+     const summary=el('summary',word[0].toUpperCase()+word.slice(1));summary.style.cssText='cursor:pointer;color:#722039;font-weight:700;font-size:1.05rem';
+     const meaning=el('p',definition);meaning.style.cssText='margin:10px 0 0;line-height:1.6';
+     card.append(summary,meaning);results.append(card);
+    }
+   };
+   for(const letter of ['All',...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']){
+    const button=el('button',letter);button.type='button';button.style.cssText='border:1px solid #722039;border-radius:7px;padding:5px 8px;background:white;color:#722039;cursor:pointer;font-weight:600;min-width:29px';
+    button.addEventListener('click',()=>{active=letter;for(const b of alphabet.children){b.style.background=b===button?'#722039':'white';b.style.color=b===button?'white':'#722039';}show();});
+    alphabet.append(button);
+   }
+   alphabet.firstChild.style.background='#722039';alphabet.firstChild.style.color='white';
+   search.addEventListener('input',show);
+   shell.append(title,search,alphabet,results);host.append(shell);show();
   }else if(kind==='definitions'){
    const words=Object.entries(dictionary).filter(([w])=>verses.some(v=>new RegExp('\\b'+w+'\\b','i').test(v)));
    if(!words.length)host.append(el('p','No matching terms in the reviewed glossary. Read the chapter above; the glossary is not exhaustive.'));
