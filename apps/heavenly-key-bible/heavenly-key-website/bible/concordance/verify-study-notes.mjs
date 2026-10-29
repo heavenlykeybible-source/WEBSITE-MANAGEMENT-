@@ -32,13 +32,16 @@ for(const filename of files){
  catch(e){errors.push(filename+': '+e.message)}
 }
 function validReference(ref){
- const m=/^(.+?) (\d+):(\d+)(?:[–-](\d+))?$/.exec(ref);
+ const m=/^(.+?) (\d+)(?::(\d+))?(?:[–-](\d+))?$/.exec(ref);
  if(!m)return false;
  const b=bookByName.get(m[1]);if(!b)return false;
  let book=cache.get(b.code);
  if(!book){const file=join(bible,'data/kjv',b.code+'.json');if(!existsSync(file))return false;book=JSON.parse(readFileSync(file,'utf8'));cache.set(b.code,book)}
- const verses=book.chapters[m[2]];
- return !!verses&&verses.some(v=>v.number===Number(m[3]))&&(!m[4]||verses.some(v=>v.number===Number(m[4])&&Number(m[4])>=Number(m[3])));
+ const chapter=m[3]?m[2]:'1';
+ const first=m[3]?Number(m[3]):Number(m[2]);
+ if(!m[3]&&b.chapters!==1)return false;
+ const verses=book.chapters[chapter];
+ return !!verses&&verses.some(v=>v.number===first)&&(!m[4]||verses.some(v=>v.number===Number(m[4])&&Number(m[4])>=first));
 }
 let count=0,shortExplanations=0,shortContexts=0;
 for(const group of registered){
