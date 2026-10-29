@@ -484,6 +484,15 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const result=await env.DB.prepare('SELECT id,body,platform,status,scheduled_at,created_at FROM social_posts ORDER BY created_at DESC LIMIT 100').all();
   return reply({items:result.results,publishingConnected:false});
  }
+ if(u.pathname==='/api/posts'&&req.method==='PATCH'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(typeof data?.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id))return reply({error:'Valid draft id required'},400);
+  const platforms=['facebook_page','instagram_professional','youtube','tiktok'];
+  if(typeof data.body!=='string'||!data.body.trim()||data.body.length>5000||!platforms.includes(data.platform))return reply({error:'Provide valid post text and destination'},400);
+  const result=await env.DB.prepare("UPDATE social_posts SET body=?,platform=? WHERE id=? AND status='draft'").bind(data.body.trim(),data.platform,data.id).run();
+  if(!result.meta?.changes)return reply({error:'Draft not found or not editable'},404);
+  return reply({id:data.id,status:'draft',updated:true,published:false});
+ }
  if(u.pathname==='/api/posts/queue'&&req.method==='PUT'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(typeof data?.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id))return reply({error:'Valid draft id required'},400);
