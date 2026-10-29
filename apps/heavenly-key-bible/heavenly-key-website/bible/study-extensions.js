@@ -93,7 +93,7 @@ function renderDictionary(){
     const button=document.createElement('button');button.type='button';button.className='dict-language-button';button.textContent=language+' ▾';button.setAttribute('aria-expanded','false');
     const panel=document.createElement('div');panel.className='dict-language-panel';panel.hidden=true;
     const words=languageEntries.filter(item=>item.language===language);
-    if(!words.length){button.disabled=true;button.title='No verified '+language+' entry available for this word yet';}
+    if(!words.length){const note=document.createElement('p');note.textContent='A verified '+language+' equivalent has not yet been established for this English entry. Some English Bible terms do not have a direct one-word equivalent in both original languages. No translation is supplied rather than displaying an inaccurate one.';panel.append(note);}
     else for(const item of words){
      const heading=document.createElement('h4');heading.textContent=item.original+' — '+item.transliteration;
      const strong=document.createElement('p');strong.textContent='Strong’s number: '+item.strong;
@@ -102,7 +102,7 @@ function renderDictionary(){
      const caution=document.createElement('p');caution.textContent=item.caution||'Meanings depend on biblical context.';
      panel.append(heading,strong,meaning,reference,caution);
     }
-    button.addEventListener('click',()=>{const show=panel.hidden;for(const other of languageButtons.querySelectorAll('.dict-language-panel'))other.hidden=true;for(const other of languageButtons.querySelectorAll('.dict-language-button'))other.setAttribute('aria-expanded','false');panel.hidden=!show;button.setAttribute('aria-expanded',String(show));button.textContent=language+(show?' ▴':' ▾');});
+    button.addEventListener('click',()=>{const show=panel.hidden;for(const other of languageButtons.querySelectorAll('.dict-language-panel'))other.hidden=true;for(const other of languageButtons.querySelectorAll('.dict-language-button'))other.setAttribute('aria-expanded','false');panel.hidden=!show;button.setAttribute('aria-expanded',String(show));for(const other of languageButtons.querySelectorAll('.dict-language-button'))other.textContent=other.textContent.replace(' ▴',' ▾');button.textContent=language+(show?' ▴':' ▾');});
     const group=document.createElement('div');group.className='dict-language-group';group.append(button,panel);languageButtons.append(group);
    }
    card.append(languageButtons);
