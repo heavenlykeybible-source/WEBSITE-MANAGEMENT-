@@ -13,6 +13,17 @@ const errors=[],warnings=[],seen=new Map(),registered=[];
 const page=readFileSync(join(dir,'index.html'),'utf8');
 const files=[...page.matchAll(/<script\s+src="\.\/(study-notes-[^"]+\.js)"/g)].map(m=>m[1]);
 const context=vm.createContext({window:{registerConcordanceStudyNotes(notes){registered.push(notes)}},Object,Array});
+const legacy=readFileSync(join(dir,'concordance.js'),'utf8');
+const cutoff=legacy.indexOf('const studyNotes=');
+if(cutoff<0)errors.push('Legacy note boundary missing in concordance.js');
+else{
+ try{
+  const legacyContext=vm.createContext({});
+  vm.runInContext(legacy.slice(0,cutoff),legacyContext,{timeout:3000});
+  registered.push(vm.runInContext('notes',legacyContext));
+ }catch(e){errors.push('Could not audit inline study notes: '+e.message)}
+}
+
 for(const filename of files){
  const path=join(dir,filename);
  if(!existsSync(path)){errors.push('Missing script '+filename);continue}
