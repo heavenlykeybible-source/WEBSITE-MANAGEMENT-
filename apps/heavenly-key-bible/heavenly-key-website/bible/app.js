@@ -426,41 +426,18 @@ el("memory-toggle").addEventListener("click",()=>{el("selected-text").hidden=!el
 el("scripture-search").addEventListener("submit",searchScripture);
 el("scripture-image").addEventListener("click",scriptureImage);
 async function setupOffline(){
- const button=el("offline-download");
- if(!("serviceWorker" in navigator)){message("offline-status","Offline download is unavailable in this browser.");button.disabled=true;return;}
+ if(!("serviceWorker" in navigator))return;
  try{
-  await navigator.serviceWorker.register("./sw.js",{scope:"./"});
-  let readyTimer;
-  const registration=await Promise.race([
-   navigator.serviceWorker.ready,
-   new Promise((_,reject)=>{readyTimer=setTimeout(()=>reject(new Error("Offline setup timed out")),20000);})
-  ]).finally(()=>clearTimeout(readyTimer));button.disabled=false;
-  message("offline-status","Download all 66 books for reading without internet. Hymn and gospel recordings still need internet.");
-  button.addEventListener("click",()=>{
-   const worker=registration.active;
-   if(!worker){message("offline-status","Offline setup is not ready. Reload the page and try again.");return;}
-   button.disabled=true;const channel=new MessageChannel();message("offline-status","Downloading the Bible for offline reading…");
-   channel.port1.onmessage=event=>{
-    const data=event.data;
-    if(data.type==="progress")message("offline-status","Downloaded "+data.count+" of "+data.total+" books…");
-    if(["complete","error","busy"].includes(data.type)){
-     button.disabled=false;channel.port1.close();
-     message("offline-status",data.type==="complete"?"All 66 books saved for offline reading in this browser. Browser storage must remain available.":data.type==="busy"?"A Bible download is already running in another tab.":data.message);
-    }
-   };
-   worker.postMessage({type:"SAVE_BIBLE_OFFLINE"},[channel.port2]);
-  });
- }catch{message("offline-status","Offline setup failed. You can continue reading online.");button.disabled=true;}
+  const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
+  const ready=await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>setTimeout(()=>reject(Error("Service worker timeout")),20000))]);
+  const worker=ready.active||registration.active;
+  if(!worker)return;
+  const channel=new MessageChannel();
+  channel.port1.onmessage=event=>{
+   if(["complete","error","busy","already-cached"].includes(event.data?.type))channel.port1.close();
+  };
+  worker.postMessage({type:"SAVE_BIBLE_OFFLINE"},[channel.port2]);
+ }catch(error){console.warn("Automatic offline Bible setup unavailable",error);}
 }
 setupOffline();
-setupPlans();
-el("export-backup").addEventListener("click",downloadBackup);
-el("import-backup").addEventListener("click",importBackup);
-window.addEventListener("storage",event=>{
- if(event.key==="hk-bible-study")renderStudy();
- if(event.key==="hk-bible-plan-progress")renderPlan();
- if(event.key==="hk-bible-favorite-tracks")renderTracks();
-});
-renderStudy(); loadChapter(); loadPortal();
 })();
-
