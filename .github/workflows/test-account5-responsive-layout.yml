@@ -1,0 +1,46 @@
+name: Test Account 5 Mobile Tablet and Desktop Layouts
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/public/**'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/test-device-layouts.mjs'
+      - '.github/workflows/test-account5-responsive-layout.yml'
+permissions:
+  contents: read
+jobs:
+  browser-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless browser for device layout tests
+        run: |
+          npm install --no-save --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test app pages on mobile tablet and desktop layouts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory public > /tmp/account5-static-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8765/downloads.html -o /dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/test-device-layouts.mjs
+      - name: Save device screenshots and failures for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: account5-mobile-tablet-desktop-layout-screenshots
+          path: /tmp/account5-ui-screenshots/
+          retention-days: 14
+          if-no-files-found: warn
