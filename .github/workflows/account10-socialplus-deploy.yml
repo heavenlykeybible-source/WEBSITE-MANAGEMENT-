@@ -1,0 +1,42 @@
+name: Account 10 SocialPlus approved deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: socialplus-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: socialplus-production
+    defaults:
+      run:
+        working-directory: account10-social-management
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT10_CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT10_CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm required deployment credentials
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "Missing Cloudflare API token"; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "Missing Cloudflare account ID"; exit 1; }
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate source before production deployment
+        run: npm run verify:local
+      - name: Deploy approved Worker with configured D1, R2 and assets
+        run: npx wrangler deploy
+      - name: Verify public health endpoint (not a launch-readiness claim)
+        run: |
+          curl --fail --show-error --silent --retry 3 --retry-delay 2 https://socialplus.heavenlykey.org/health > health.json
+          node -e "const f=require('fs');const d=JSON.parse(f.readFileSync('health.json','utf8'));if(d.account!==10)process.exit(1)"
