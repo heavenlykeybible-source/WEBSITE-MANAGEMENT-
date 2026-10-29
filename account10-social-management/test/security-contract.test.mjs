@@ -21,3 +21,14 @@ test('Worker configuration does not contain literal authentication secrets', () 
 test('Public health response does not claim readiness', () => {
   assert.match(source, /status:'setup_required'/);
 });
+
+test('private media routes require authentication and validate image signatures', () => {
+  const auth = source.indexOf("if(provided!==`Bearer ${env.ADMIN_TOKEN}`)");
+  const upload = source.indexOf("if(u.pathname==='/api/media'&&req.method==='POST')");
+  const retrieval = source.indexOf("if(u.pathname==='/api/media'&&req.method==='GET')");
+  assert.ok(auth >= 0 && upload > auth && retrieval > auth, 'media endpoints must follow admin authentication');
+  assert.match(source, /env\.MEDIA_BUCKET\.put\(/);
+  assert.match(source, /env\.MEDIA_BUCKET\.get\(/);
+  assert.match(source, /Media content does not match declared format/);
+  assert.match(source, /content-disposition':'attachment/);
+});
