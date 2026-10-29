@@ -11,8 +11,8 @@ async function showDailyScripture(reference){
  const target=$('daily-scripture');if(!target)return;
  const sequence=++readingSequence;
  target.textContent='Loading today’s KJV reading…';
- const match=/^(.+?) (\d+):(\d+)$/.exec(reference);
- const book=state.manifest?.books?.find(b=>b.name===match?.[1]);
+ const match=/^(.+?) (\d+):(\d+)$/.exec(String(reference||'').trim());
+ const book=match&&state.manifest?.books?.find(b=>b.name.toLocaleLowerCase()===match[1].toLocaleLowerCase());
  if(!book){target.textContent='Reading reference unavailable; open the Bible reader to search manually.';return;}
  const chapter=Number(match[2]),verse=Number(match[3]);
  try{
@@ -20,7 +20,7 @@ async function showDailyScripture(reference){
   if(!chapterCache.has(key))chapterCache.set(key,fetch('./data/kjv/'+encodeURIComponent(book.code)+'.json').then(r=>{if(!r.ok)throw Error('Bible text unavailable');return r.json();}).catch(e=>{chapterCache.delete(key);throw e;}));
   const data=await chapterCache.get(key);
   if(sequence!==readingSequence)return;
-  const entry=(data.chapters?.[String(chapter)]||[]).find(v=>Number(v.number)===verse);
+  const chapterData=data.chapters?.[String(chapter)];const verses=Array.isArray(chapterData)?chapterData:(Array.isArray(chapterData?.verses)?chapterData.verses:[]);const entry=verses.find(v=>Number(v.number)===verse);
   if(!entry)throw Error('Verse not found');
   target.replaceChildren();
   const title=document.createElement('strong');title.textContent=reference+' (KJV)';
