@@ -108,3 +108,11 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - The new generator has NOT been executed in a local Node checkout. Verify compatibility with all 66 book JSONs before reporting packet output as completed.
 - Verified previous total remains 264 saved new Genesis drafts through chapter 10. A Genesis 11 draft create attempt encountered GitHub 409 and was not saved. Retry from a fresh repository head, preserving concurrent changes.
 - NEXT: run queue generator and validators; author real reviewed-quality verse-specific commentary in large work packets; avoid fabricated progress. Only Concordance and Commentary; separate Bible Dictionary untouched. Do not deploy without owner approval.
+
+## Latest checkpoint — Genesis 11 and large-batch processing
+- Successfully saved drafts/genesis-11.json: 32 original verse-specific drafts for Genesis 11:1–32, all pending doctrinal review. Commit 5332e18db12d7dbae01bd28048ecbe31cdaa031b. This resolves the earlier failed 409 create attempt without overwriting a file.
+- Regenerated study-notes-genesis-drafts.js from ten draft files to register 296 drafts, commit edd7227b0e8655fd9a1f2010a5cd94819057480f.
+- Updated scripts/concordance-draft-check.mjs for 296 records and Genesis 11, commit c333ae3fcdda83bca790cfcb8ea14e6b518b6200.
+- Connector-side structural inspection: 296 unique Genesis verse references present in saved KJV GEN.json, no identical explanation text and no missing required text fields. This does not validate historical or doctrinal correctness or cross-references in other books. Node/browser tests still unexecuted.
+- Mass preparation tool scripts/concordance-prepare-queue.mjs saved earlier, designed to create up to 1,000 verse-text packets and a manifest; it has NOT been executed or verified across all books. This is queue infrastructure, not 31,102 written explanations.
+- NEXT: validate canonical mapping and all KJV book files; run actual Node scripts, fix findings, continue original content from Genesis 12; expand topical Concordance. Keep Bible Dictionary separate and untouched. No deployment.
