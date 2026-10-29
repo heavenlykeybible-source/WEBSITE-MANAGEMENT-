@@ -62,15 +62,15 @@ function renderDictionary(){
   let passage=card.querySelector('.dict-verse-text');
   if(passage){passage.remove();return;}
   passage=document.createElement('p');passage.className='dict-verse-text';passage.textContent='Loading KJV verse…';card.append(passage);
-  const match=/^(.+?) (\d+):(\d+)$/.exec(e.reference);
-  const book=allBooks().find(book=>book.name===match?.[1]);
+  const match=/^(.+?) (\d+):(\d+)$/.exec(String(e.reference||'').trim());
+  const book=match&&allBooks().find(book=>book.name.toLocaleLowerCase()===match[1].toLocaleLowerCase());
   if(!book){passage.textContent='Reference unavailable in the included KJV.';return;}
   try{
     let promise=chapterCache.get(book.code);
     if(!promise){promise=fetch('./data/kjv/'+encodeURIComponent(book.code)+'.json').then(r=>{if(!r.ok)throw Error('KJV text unavailable');return r.json();}).catch(error=>{chapterCache.delete(book.code);throw error;});chapterCache.set(book.code,promise);}
     const data=await promise;
     if(!passage.isConnected)return;
-    const verse=(data.chapters?.[match[2]]||[]).find(v=>String(v.number)===match[3]);
+    const chapter=data.chapters?.[match[2]];const verses=Array.isArray(chapter)?chapter:(Array.isArray(chapter?.verses)?chapter.verses:[]);const verse=verses.find(v=>String(v.number)===match[3]);
     passage.textContent=verse?.text||'Verse unavailable.';
   }catch{if(passage.isConnected)passage.textContent='Unable to open KJV verse. Check offline downloads or reconnect.';}
  });actions.append(ref);
