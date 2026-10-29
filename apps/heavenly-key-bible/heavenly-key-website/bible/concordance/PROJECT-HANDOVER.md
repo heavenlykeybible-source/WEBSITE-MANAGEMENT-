@@ -242,3 +242,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Browser bundle now contains 958 Genesis draft entries, commit 8021103341b35c27dbff449b2b6689470ff80434.
 - Validator includes Genesis 32 and expects 958, commit 8a8f532bdf735647bda82ea2b57ef770f10f3f47.
 - Next Genesis 33. Node/browser QA and batch generator remain unexecuted in this checkpoint; cross-references require full KJV verification. Human doctrinal review outstanding. No deployment; Bible Dictionary unchanged.
+
+## Latest checkpoint — Genesis 33
+- Added 20 original pending-review Genesis 33:1–20 verse-specific drafts, commit 6e242a00d94e5f0eda10e7b6468d7dfbcea9a421.
+- Browser bundle now contains 978 Genesis draft entries, commit c9385b9a59655e0ae6a305dddd2ebaa4274bf2f1.
+- Validator includes Genesis 33 and expects 978, commit d33a476610e7acdaefa74380616865febfd9ef6f.
+- Next Genesis 34. Node/browser QA and batch generator remain unexecuted in this checkpoint; cross-references require complete KJV validation. Human doctrinal review outstanding. No deployment; Bible Dictionary unchanged.
