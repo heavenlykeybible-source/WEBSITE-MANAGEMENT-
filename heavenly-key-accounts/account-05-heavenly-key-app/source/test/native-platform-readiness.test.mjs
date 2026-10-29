@@ -67,9 +67,9 @@ test('Windows signed release candidate is gated and never publicly deployed',()=
  assert.match(workflow,/HKEM_WINDOWS_PFX_PASSWORD/);
  assert.match(workflow,/signtool verify \/pa/);
  assert.match(workflow,/Get-AuthenticodeSignature/);
- assert.match(workflow,/HeavenlyKeyWindows\\.msix/);
- assert.match(workflow,/package-msix\\.ps1/);
- assert.doesNotMatch(workflow,/signed-candidate\/HeavenlyKeyWindows\\.exe\\.sha256/);
+ assert.match(workflow,/HeavenlyKeyWindows\.msix/);
+ assert.match(workflow,/package-msix\.ps1/);
+ assert.doesNotMatch(workflow,/signed-candidate\/HeavenlyKeyWindows\.exe\.sha256/);
  assert.doesNotMatch(workflow,/wrangler deploy|actions\/create-release|cloudflare\/pages-action/);
 });
 
