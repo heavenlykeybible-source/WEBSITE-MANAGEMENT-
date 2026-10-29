@@ -134,3 +134,9 @@ The existing Bible Dictionary is a separate, completed resource. Do not rebuild 
 - Regenerated browser notes to 358 draft entries, commit 76808c4de70d5f34ea743d159eb15dc35a61bdec.
 - Updated draft validation script to expect 358 and include Genesis 14, commit b451860a1291d7cad8651f0816904cc312ce21e2.
 - Next: Genesis 15, systematic full-canon cross-reference checks and actual execution of Node scripts. Batch queue infrastructure exists but has not yet been run. All drafts pending doctrinal review. No deployment or Bible Dictionary changes.
+
+## Latest checkpoint — Genesis 15
+- Saved 21 original verse-specific Genesis 15:1–21 commentary drafts, all pending doctrinal review. Commit 2b8f7d862b2e3455ae3f0ccc88c13c36327a5d80.
+- Updated browser study notes to 379 draft entries, commit 9aa93adbbae92c36d954470797ed311387273426.
+- Updated draft checker to include Genesis 15 and expect 379, commit a3c4e33e8898d7e8d4147bca7fe999a965dd1d5f.
+- Node/browser test execution, full-canon cross-reference verification and human doctrinal review remain outstanding. No deployment. Next: Genesis 16, scale reliable batch ingestion, and run actual tests. Bible Dictionary remains separate.
