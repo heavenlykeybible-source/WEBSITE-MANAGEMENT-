@@ -5,7 +5,8 @@
 const panel=document.getElementById('detail');
 const bookSelector=document.getElementById('book');
 if(!panel||!bookSelector)return;
-const pattern=/^(.+?) (\d+):(\d+)(?:[–-](\d+))?$/;
+const pattern=/^(.+?) (\d+)(?::(\d+))?(?:[–-](\d+))?$/;
+const oneChapter=new Set(['Obadiah','Philemon','2 John','3 John','Jude']);
 function enhance(){
  const selected=document.querySelector('[data-tab="references"][aria-selected="true"]');
  if(!selected)return;
@@ -18,11 +19,13 @@ function enhance(){
  let linked=0;
  for(const part of parts){
   const match=part.trim().match(pattern);
-  const option=match?Array.from(bookSelector.options).find(o=>o.text===match[1]):null;
+  const bookName=match?.[1]==='Psalm'?'Psalms':match?.[1];
+  const option=match?Array.from(bookSelector.options).find(o=>o.text===bookName):null;
+  if(match&&!match[3]&&!oneChapter.has(bookName)){fragment.append(document.createTextNode(part));continue}
   if(!option){fragment.append(document.createTextNode(part));continue}
   const url=new URL(location.href);
   url.searchParams.set('book',option.value);
-  url.searchParams.set('chapter',match[2]);url.searchParams.set('verse',match[3]);
+  url.searchParams.set('chapter',match[3]?match[2]:'1');url.searchParams.set('verse',match[3]||match[2]);
   url.hash='commentary-heading';
   const a=document.createElement('a');a.href=url.href;a.textContent=part.trim();
   fragment.append(a);linked++;
