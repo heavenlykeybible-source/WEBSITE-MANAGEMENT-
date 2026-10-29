@@ -1,0 +1,23 @@
+{
+  "batch": "004",
+  "status": "quarantined-not-integrated",
+  "sourceArchive": "heavenly-key-bible-batch-004.zip",
+  "auditArchive": "heavenly-key-batch-004-audit-quarantine.zip",
+  "filesExamined": 51,
+  "commentaryRecords": 250,
+  "uniqueVerseReferences": 250,
+  "duplicateVerseReferences": 0,
+  "concordanceFiles": 25,
+  "invalidJsonFiles": 0,
+  "verifiedContentCorrections": 0,
+  "issues": [
+    "Generic repeated commentary",
+    "Incomplete chapter verse coverage",
+    "Incomplete concordance",
+    "Unverified lexical and doctrinal claims",
+    "Application compatibility and repository overlap not yet verified"
+  ],
+  "sourceFilesUploaded": false,
+  "reviewStatus": "pending",
+  "deploymentAllowed": false
+}
