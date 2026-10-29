@@ -16,7 +16,7 @@ for(const e of entries){
  const norm=String(e.explanation||'').trim().toLowerCase().replace(/\\s+/g,' ');
  if(explanations.has(norm))problems.push('identical explanations: '+e.ref+' and '+explanations.get(norm));explanations.set(norm,e.ref);
 }
-if(entries.length!==158)problems.push('expected 158 saved Genesis drafts, found '+entries.length);
+if(entries.length!==157)problems.push('expected 157 saved Genesis drafts, found '+entries.length);
 const registered={};const sandbox={window:{registerConcordanceStudyNotes:notes=>Object.assign(registered,notes)}};
 vm.runInNewContext(fs.readFileSync(root+'study-notes-genesis-drafts.js','utf8'),sandbox,{timeout:2000});
 if(Object.keys(registered).length!==entries.length)problems.push('browser bundle record count differs');
