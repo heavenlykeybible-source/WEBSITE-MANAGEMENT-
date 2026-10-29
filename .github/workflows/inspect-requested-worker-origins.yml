@@ -21,10 +21,8 @@ jobs:
           if(!token){console.log('NO SAVED TOKEN');process.exit(0)}
           const headers={authorization:'Bearer '+token};
           async function api(path){const r=await fetch('https://api.cloudflare.com/client/v4'+path,{headers,signal:AbortSignal.timeout(15000)}),d=await r.json();if(!r.ok||!d.success){console.log('READ DENIED',path,r.status,JSON.stringify(d.errors?.map(x=>x.code)));return null}return d.result}
-          const accounts=await api('/accounts?per_page=50');
-          for(const account of accounts||[]){
-           const scripts=await api('/accounts/'+account.id+'/workers/scripts');
-           const matching=(scripts||[]).filter(x=>['heavenly-key-social-management','heavenly-key-meetingspace'].includes(x.id));
-           if(matching.length){const sub=await api('/accounts/'+account.id+'/workers/subdomain');console.log('VERIFIED WORKERS',JSON.stringify({account:account.id,workers:matching.map(x=>x.id),subdomain:sub?.subdomain}));}
+          for(const account of ['c26cc139515e4f56b9fc7010bd98d1b5','6401a8f41a41f5325ba5bd4d006b4ff5']){
+            const sub=await api('/accounts/'+account+'/workers/subdomain');
+            if(sub)console.log('VERIFIED SUBDOMAIN',account,JSON.stringify(sub));
           }
           JS
