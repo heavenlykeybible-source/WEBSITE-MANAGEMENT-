@@ -17,13 +17,13 @@ document.addEventListener('DOMContentLoaded',function(){
  const grid=study.querySelector('.study-tools-grid');
  const featureNames=['Search','Reading Plans','Bookmarks','Notes','Topical Bible'];
  const quickNames=['summary','lessons','characters','important','references'];
- const quickButtons=[...document.querySelectorAll('button[data-tool]')];
+ const quickButtons=[...document.querySelectorAll('.reader-sidebar button[data-tool]')];
  const quick=quickNames.map(n=>quickButtons.find(b=>b.dataset.tool===n)).filter(Boolean);
  const labels=['Bible Summary','Key Lessons','Main Characters','Important Verses','Cross References'];
  quick.forEach((b,i)=>{let label=b.querySelector('span:not(.quick-icon):not(.chevron)');if(label)label.textContent=labels[i];grid.appendChild(b)});
  featureNames.forEach(name=>{const card=[...explore.querySelectorAll('a.feature-card')].find(a=>a.querySelector('strong')?.textContent.trim()===name);if(card){if(name==='Reading Plans'){card.href='#bible-one-year';card.querySelector('strong').textContent='Read the Bible in One Year'}grid.appendChild(card)}});
  const launcher=explore.querySelector('.feature-0');
- launcher?.addEventListener('click',function(){study.open=true});
+ launcher?.addEventListener('click',function(e){e.preventDefault();study.open=true;study.scrollIntoView({block:'start',behavior:'smooth'});});
 });
 </script><details class="panel" id="reader-options"><summary>Reading settings</summary><form id="reader-form"><label>Book<select id="book"></select></label><label>Chapter<select id="chapter"></select></label><button type="submit">Open chapter</button></form><div class="toolbar"><label>Text size <output id="text-size-value" for="text-size">20 px</output><input id="text-size" max="32" min="16" type="range" value="20"/></label></div><p class="edition-label">Authorised King James Version (KJV)</p><div hidden id="bible-audio-unavailable"><audio aria-label="Bible chapter recording" controls="" hidden="" id="chapter-audio" preload="none"></audio><button disabled="" id="narrate" type="button">Read aloud with device voice</button><p id="audio-status" role="status"></p></div></details>
 <section class="panel" id="offline"><p class="eyebrow">THE WORD WITH YOU</p><h2>Read offline</h2><p>Save the Bible in this browser for times when you have no internet connection.</p><button disabled="" id="offline-download" type="button">Download Bible for offline reading</button><p aria-live="polite" id="offline-status" role="status"></p></section><section class="panel" id="scripture-search-panel"><p class="eyebrow">SEARCH THE SCRIPTURES</p><h2>Find a verse</h2><form id="scripture-search"><label>Word or phrase<input id="scripture-query" maxlength="120" minlength="3" placeholder="For God so loved the world" required="" type="search"/></label><label>Search in<select id="scripture-scope"><option value="current">Selected book</option><option value="all">Whole Bible</option></select></label><button type="submit">Search scripture</button></form><p aria-live="polite" id="scripture-search-status" role="status"></p><div id="scripture-results"></div></section>
