@@ -102,6 +102,23 @@ try{
      }
      console.log('PASS all-in-one interactive mobile navigation and browser Back');
     }
+    if(id==='all-in-one' && size.name==='small-phone'){
+      const screens=['home','grow','community','live','bible','prayer','settings','messages','groups','profile'];
+      for(const screen of screens){
+        await page.goto(base+'/experience.html#'+screen,{waitUntil:'domcontentloaded',timeout:10000});
+        const state=await page.evaluate(()=>{
+          const views=[...document.querySelectorAll('main .view')];
+          return {visible:views.filter(el=>!el.hidden).map(el=>el.id),
+            headings:views.filter(el=>!el.hidden).map(el=>el.querySelector('h1')?.textContent?.trim()||''),
+            navigation:document.querySelector('.tabbar button[aria-current="page"]')?.dataset.screen};
+        });
+        if(state.visible.length!==1 || state.visible[0]!==screen || !state.headings[0]){
+          throw Error('All-in-one deep link renders wrong screen '+screen+': '+JSON.stringify(state));
+        }
+        console.log('PASS all-in-one screen',screen,'on small phone');
+      }
+      await page.goto(base+'/experience.html',{waitUntil:'domcontentloaded'});
+    }
     if(['directory','all-in-one'].includes(id)){
      await page.screenshot({path:path.join(screenshots,id+'-'+size.name+'.png'),fullPage:true,timeout:20000});
     }
