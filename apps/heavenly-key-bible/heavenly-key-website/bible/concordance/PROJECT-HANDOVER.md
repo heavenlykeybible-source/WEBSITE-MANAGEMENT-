@@ -42,3 +42,9 @@ For each verse: unique reference, original specific explanation, biblical contex
 - Added scripts/concordance-draft-check.mjs for structural and bundle consistency checks. Commit: 40c2b0474ed95bbf8504db3ba28a06f5075a1adc. Not yet executed; tests not claimed passed.
 - 136 Genesis drafts still pending doctrinal review; zero newly authored verses this session.
 - Next: run tests, validate references against canonical KJV, add topical concordance and dictionary links, expand commentary, test browser. No deployment.
+
+## Continuation checkpoint — topical index
+- Read-only connector inspection of the four Genesis draft JSON files: 136 records, 136 distinct verse references, no missing required text fields, no identical explanation strings, all reviewStatus=pending; browser bundle contains all 136 reference strings. This is NOT an executed Node audit or full browser test.
+- New topics.js: 15 curated starter topics with 75 listed Scripture references and verse deep links. Source commits 6ad0fa0282f8469821448c025b37b4d7f5be198c and 07ef7400fbfeea133c2f01c0f0e7c1d450da2b7c. Integrated into index.html in commit 25d044b21266d0107138334b42fa98dfa6aab919.
+- Topical index is explicitly partial; Scripture reference validity and runtime navigation are not yet verified. New verse explanations this continuation: zero. Total Genesis drafts remains 136, all unreviewed.
+- NEXT: Execute Node and browser smoke tests, validate references against complete KJV canon, link dictionary terms, and implement further original commentary batches with accurate coverage reporting. Preserve manual deployment approval.
