@@ -37,6 +37,7 @@ test('native production publishing never substitutes test binaries for signed re
  const release=readWorkflow('release-account5-android.yml');
  const distribution=readFileSync(new URL('source/src/native-downloads.js',sourceRoot),'utf8');
  assert.match(release,/workflow_dispatch/);
+ assert.match(release,/environment: production-release/);
  assert.match(release,/HKEM_ANDROID_KEYSTORE_BASE64/);
  assert.match(release,/apksigner/);
  assert.match(release,/clamscan/);
