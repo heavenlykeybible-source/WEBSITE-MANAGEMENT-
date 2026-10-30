@@ -61,6 +61,7 @@ jobs:
           node tests/account4-ai-conversation-guard.mjs
           node tests/account4-chat-fast-path.mjs
           node tests/account4-provider-reconnect.mjs
+          node tests/account4-provider-health.mjs
           node tests/account4-github-import-ux.mjs
           node tests/account4-preview-device-toggle.mjs
           node tests/account4-github-preflight.mjs
