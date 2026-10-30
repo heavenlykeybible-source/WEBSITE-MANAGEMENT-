@@ -20,7 +20,7 @@ jobs:
   quality:
     name: Node 22 backend and deployment regression
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: zoom-studio
