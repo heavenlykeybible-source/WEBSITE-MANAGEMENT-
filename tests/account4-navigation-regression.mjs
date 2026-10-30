@@ -13,4 +13,7 @@ for(const [label,fragment] of [['Home',"item('Home'"],['AI Chat',"item('AI Chat'
 }
 assert.ok(nav.includes("if(!M&&lv()>=2)item('AI Chat'"),'AI Chat requires appropriate non-member role');
 assert.ok(nav.includes("if(!M&&lv()>=4)item('Connections'"),'Connections requires privileged role');
+assert.ok(nav.includes("if(own())"),'owner-only navigation entries must remain gated');
+assert.ok(nav.includes("item('Identity'"),'identity access must remain available');
+assert.ok(nav.includes("item('Sites'"),'site management navigation must remain available');
 console.log('PASS Account 4 quick navigation ordering, uniqueness and role checks');
