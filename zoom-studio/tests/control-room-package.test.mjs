@@ -513,3 +513,24 @@ test('late disconnect of an old host cannot end a new host session',async()=>{
  s.room.webSocketClose(replacement);
  assert.equal(viewer.readyState,3);
 });
+
+test('expired host cannot block authorized replacement before scheduled alarm',async()=>{
+ const s=await openRoom(),oldHost=s.host,viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:oldHost.d.room,key:s.key,aud:true,name:'Viewer'});
+ oldHost.d.until=Date.now()-1;
+ const replacement=s.add();
+ await message(s.room,replacement,{t:'host',token:roomToken()});
+ assert.equal(oldHost.readyState,3);
+ assert.equal(viewer.readyState,3);
+ assert.equal(replacement.readyState,1);
+ assert.equal(replacement.d.role,'host');
+ assert.equal(replacement.messages.at(-1).t,'created');
+ assert.equal(s.room.host(),replacement);
+});
+test('unexpired host is not replaced by another valid host token',async()=>{
+ const s=await openRoom(),replacement=s.add();
+ await message(s.room,replacement,{t:'host',token:roomToken()});
+ assert.equal(replacement.readyState,3);
+ assert.equal(s.host.readyState,1);
+ assert.equal(s.room.host(),s.host);
+});
