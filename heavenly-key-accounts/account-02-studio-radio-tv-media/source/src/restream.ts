@@ -113,9 +113,12 @@ async function enabledUrls(env:Env){
 async function callLiveKit(env:any,method:string,body:unknown){
  if(!['StartEgress','StopEgress','ListEgress'].includes(method))throw new Error('Unsupported LiveKit operation.');
  const config=await resolveLiveKitConfig(env);if(!config)throw new Error('LiveKit connection is not configured.');
+ let base:URL;
+ try{base=new URL(config.LIVEKIT_URL);}catch{throw new Error('LiveKit project URL is invalid.');}
+ // Match the Cloud-only policy enforced when credentials are saved.
+ // Never transmit a signed LiveKit token to an arbitrary environment URL.
+ if(base.protocol!=='wss:'||base.username||base.password||base.hash||base.search||base.pathname!=='/'||base.port||!/^[-a-z0-9]+\.livekit\.cloud$/i.test(base.hostname))throw new Error('LiveKit must use a secure LiveKit Cloud project URL.');
  const token=await signLiveKitGrant(config,{roomRecord:true});
- const base=new URL(config.LIVEKIT_URL);
- if(base.protocol!=='wss:'||base.username||base.password||base.hash||base.search||base.pathname!=='/'||!base.hostname)throw new Error('LiveKit must use a secure WSS endpoint without a custom path.');
  const endpoint='https://'+base.host+'/twirp/livekit.Egress/'+method;
  const r=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(15000)});
  // Enforce the response limit while reading, not after buffering it.
