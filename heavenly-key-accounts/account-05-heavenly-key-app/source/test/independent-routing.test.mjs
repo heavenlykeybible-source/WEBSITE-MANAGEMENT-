@@ -17,3 +17,16 @@ test('prototype-inherited paths never become independent application routes',asy
   assert.equal(await routeIndependentApp(request(path),env),null,'Unexpected route: '+path);
  }
 });
+
+test('gateway errors cannot be framed or interpreted as executable HTML',async()=>{
+ const routes=['/walk-offline.html','/creation-to-eternity.html','/bible.html'];
+ for(const path of routes){
+  const response=await routeIndependentApp(request(path),{INDEPENDENT_APPS_ENABLED:'true'});
+  assert.equal(response.status,503);
+  assert.equal(response.headers.get('x-content-type-options'),'nosniff');
+  assert.equal(response.headers.get('x-frame-options'),'DENY');
+  assert.equal(response.headers.get('referrer-policy'),'no-referrer');
+  assert.match(response.headers.get('content-security-policy'),/default-src 'none'/);
+  assert.equal(response.headers.get('cache-control'),'no-store');
+ }
+});
