@@ -16,6 +16,7 @@ if (!timeline.includes('Estimated timeline:')) throw Error('Timeline duration di
 if ((timeline.match(/Enter both clip start and end times/g)||[]).length!==2) throw Error('Timeline empty timing validation missing');
 if (!timeline.includes('let completedSeconds=0') || !timeline.includes("+'% complete.'")) throw Error('Timeline progress indicator missing');
 if (!timeline.includes('c.end<=86400')) throw Error('Restored timeline timestamp safety limit missing');
+if (!timeline.includes('const validSourceRange=()=>ready()&&v.duration<=86400') || (timeline.match(/validSourceRange\(\)/g)||[]).length<5) throw Error('Timeline source duration limit missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
 for (const id of ['clipAddFull','clipClear','clipFirst','clipLast']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
 if (!timeline.includes('JSON.stringify({clips,selected:chosen()})') || !timeline.includes('paint(previous.selected)') || !timeline.includes('paint(next.selected)')) throw Error('Timeline undo/redo selection persistence missing');
