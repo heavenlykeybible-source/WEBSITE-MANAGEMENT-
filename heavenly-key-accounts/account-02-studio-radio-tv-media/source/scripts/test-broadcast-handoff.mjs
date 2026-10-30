@@ -15,7 +15,7 @@ assert.match(source,/if\(r\.status>=300&&r\.status<400\)/,'Provider redirects mu
 assert.match(source,/host==='localhost'/,'Local broadcast source hostnames must be blocked');
 assert.match(source,/host\.startsWith\('\['\)/,'IP-literal source hostnames must be blocked');
 assert.match(source,/u\.protocol==='rtmps:'/,'Legacy destinations must be checked at broadcast time');
-assert.ok(start.indexOf('LIVE_STATUS_KV.put(ACTIVE_KEY') < start.indexOf("callLiveKit(env,'StopEgress'"),'Replacement state must be stored before old stream stops');
+assert.ok(start.indexOf('writeActiveState(env,replacementState)') < start.indexOf("callLiveKit(env,'StopEgress'"),'Replacement state must be stored before old stream stops');
 assert.ok(reconcile.includes('if(!terminal)return {active:'),'Unknown provider status must preserve active state');
 assert.ok(source.includes('size>limit') && source.includes('reader.cancel()'), 'Provider response reads must have a size limit');
 assert.ok(source.includes("base.protocol!=='wss:'"),'LiveKit endpoint must use secure WSS');
@@ -33,4 +33,7 @@ const stop=source.slice(source.indexOf('export async function stopRestream'),sou
 assert.ok(stop.includes('return withBroadcastLock(env,async()=>{'), 'Broadcast stop must hold D1 lock');
 assert.ok(start.includes("previous.active?.providerStatus==='UNKNOWN'"),'Unconfirmed current broadcast must block a replacement');
 assert.ok(!reconcile.includes('LIVE_STATUS_KV.delete(ACTIVE_KEY)'), 'Status polling must not delete a newer broadcast state');
+assert.ok(source.includes('SELECT payload FROM restream_active_state'),'Active state must be read from D1');
+assert.ok(source.includes('INSERT INTO restream_active_state'),'Active state must be persisted to D1');
+assert.ok(!source.includes('LIVE_STATUS_KV.get(ACTIVE_KEY)'),'Active broadcast decisions must not read eventually consistent KV');
 console.log('Account 2 broadcast handoff safety checks passed');
