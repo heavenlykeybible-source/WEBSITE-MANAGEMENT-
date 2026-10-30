@@ -10,7 +10,7 @@ TAKING CHRIST TO THE NATIONS OF THE WORLD.
 
 This project lives inside the main Heavenly Key repository. Website assets: `heavenly-key-website/bible/`. Dedicated Bible Worker: `bible/worker.js`, configured by `bible/wrangler.toml`, Worker name `heavenly-key-bible`. Deploy only to the owner's verified Bible account, not another ministry account. The latest account map assigns the Bible to Account 6 (heavenlykeybible@gmail.com), with Account 4 coordinating administration. Verify that Cloudflare account identity and the existing Worker before deployment.
 
-The reader ships its own validated KJV text. Its public media proxy reuses approved hymns, Bible audio and gospel-music APIs from the existing ministry service. It forwards no cookies, authorization headers or administrator routes and does not bind or change ministry databases.
+The reader ships its own validated KJV text. Its public media proxy reuses approved Bible audio and gospel-music APIs from the existing ministry service. It forwards no cookies, authorization headers or administrator routes and does not bind or change ministry databases.
 
 ## Implemented website features
 
@@ -22,7 +22,7 @@ The reader ships its own validated KJV text. Its public media proxy reuses appro
 - Two seven-day reading plans and a 365-day whole-Bible plan, with saved progress.
 - Downloadable study backups and canonical KJV restoration; existing notes are preserved on duplicate imports.
 - 1080 × 1920 scripture image downloads.
-- Searchable Hymn & Gospel Portal with three sourced classic hymn texts, existing approved media APIs, saved-title controls and saved-title filtering.
+- Text-only hymn reader uses the canonical `heavenly-key-website/bible/data/hymns.json` catalogue: 201 entries, including 200 historical hymns with lyrics and one title pending text-rights verification. Search, hymn navigation and saved favourites are available; hymn audio and video are not supported.
 - Installable web app metadata and an explicit full-Bible offline download with SHA-256 checks.
 
 ## Verification
@@ -33,7 +33,7 @@ See `SOURCE.md` for scripture provenance and reproducible import instructions. N
 
 ## Release blockers and pending capabilities
 
-Deployment is deferred at the owner's request while development continues. No successful live Bible deployment is verified. Cloudflare sign-in is required before publication. The existing ministry hymn and gospel APIs returned empty collections during the check; approved recordings must be published before a populated media launch. Three historical public-domain hymn texts are bundled. Live browser/device testing, native Android/iPhone builds, cross-device notes, church group studies and hosted AI integrations are not yet complete. Do not represent these as globally ready.
+Deployment is deferred at the owner's request while development continues. No successful live Bible deployment is verified. Cloudflare sign-in is required before publication. The hymn reader uses the first-party 201-entry text catalogue; old hymn media APIs and historical three-hymn reports are superseded. Live hymn rendering still requires release verification. Live browser/device testing, native Android/iPhone builds, cross-device notes, church group studies and hosted AI integrations are not yet complete. Do not represent these as globally ready.
 
 ## KJV and offline maintenance
 
