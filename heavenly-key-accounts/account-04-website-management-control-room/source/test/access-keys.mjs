@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {webcrypto} from 'node:crypto';
+import {runInNewContext} from 'node:vm';
+import ts from 'typescript';
+
+const root=fileURLToPath(new URL('../',import.meta.url));
+const src=readFileSync(resolve(root,'src/index.ts'),'utf8');
+const first=src.indexOf('const accessPublicKeys=');
+const last=src.indexOf('function b64url(',first);
+assert.ok(first>=0&&last>first,'Access verification key cache must exist');
+const js=ts.transpileModule(src.slice(first,last),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+const keys=await webcrypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
+const jwk=await webcrypto.subtle.exportKey('jwk',keys.publicKey);
+const domain='example.cloudflareaccess.com';
+let calls=0;
+const fetchMock=async url=>{
+ calls++;
+ assert.equal(url,'https://'+domain+'/cdn-cgi/access/certs');
+ return {ok:true,headers:new Headers(),text:async()=>JSON.stringify({keys:[{...jwk,kid:'key-1',alg:'RS256'},{...jwk,kid:'key-2',alg:'RS256'}]})};
+};
+const context={Map,Date,JSON,Array,Number,RegExp,Headers,AbortSignal,crypto:webcrypto,fetch:fetchMock};
+const verifyKey=runInNewContext(js+';accessVerificationKey',context);
+assert.ok(await verifyKey(domain,'key-1'),'Recognized key should import');
+assert.ok(await verifyKey(domain,'key-1'),'Repeated key must remain valid');
+assert.equal(calls,1,'Cached verification must not refetch on each login');
+assert.ok(await verifyKey(domain,'key-2'),'New rotation key must be fetched');
+assert.equal(calls,2,'New kid must refresh certificates');
+assert.equal(await verifyKey(domain,'invalid/key'),null,'Malformed kid must be rejected');
+assert.equal(calls,2);
+assert.equal(await verifyKey(domain,'unknown'),null,'Unknown signing key must be rejected');
+assert.equal(calls,3,'Unknown kid must not be accepted from stale cache');
+console.log('Cloudflare Access key cache and rotation security checks passed');
