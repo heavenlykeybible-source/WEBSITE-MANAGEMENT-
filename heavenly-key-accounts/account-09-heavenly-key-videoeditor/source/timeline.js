@@ -9,7 +9,7 @@ const save=()=>{invalidateExport();undo.push(JSON.stringify(clips));if(undo.leng
 const chosen=()=>{const i=Number($('clipList').value);return $('clipList').value===''?-1:i};
 function paint(selected=0){const list=$('clipList');list.replaceChildren();clips.forEach((c,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=(i+1)+'. '+c.start.toFixed(2)+'–'+c.end.toFixed(2)+'s / '+c.speed+'×';list.append(o)});if(clips.length)list.value=String(Math.min(clips.length-1,Math.max(0,selected)));else list.value='';const selectedClip=clips[chosen()];if(selectedClip){$('clipStart').value=String(selectedClip.start);$('clipEnd').value=String(selectedClip.end);$('clipSpeed').value=String(selectedClip.speed)}const seconds=clips.reduce((sum,c)=>sum+(c.end-c.start)/c.speed,0);info(clips.length+' clip(s) ready. Estimated timeline: '+(Number.isFinite(seconds)?seconds.toFixed(2):'invalid')+' seconds.');}
 const ready=()=>Number.isFinite(v.duration)&&v.duration>0;
-const seek=t=>new Promise((resolve,reject)=>{if(!ready())return reject(Error('Load a video first.'));t=Math.min(v.duration,Math.max(0,t));if(Math.abs(v.currentTime-t)<.02)return resolve();let timer;const cleanup=()=>{clearTimeout(timer);v.removeEventListener('seeked',done);v.removeEventListener('error',fail)};const done=()=>{cleanup();resolve()};const fail=()=>{cleanup();reject(Error('Video seeking failed. Check the selected media file.'))};timer=setTimeout(()=>{cleanup();reject(Error('Video seeking timed out.'))},10000);v.addEventListener('seeked',done);v.addEventListener('error',fail);try{v.currentTime=t}catch(e){cleanup();reject(e)}});
+const seek=(t,state)=>new Promise((resolve,reject)=>{if(!ready())return reject(Error('Load a video first.'));if(state?.cancelled)return reject(Error('Timeline operation stopped.'));t=Math.min(v.duration,Math.max(0,t));if(Math.abs(v.currentTime-t)<.02)return resolve();let timer;const cleanup=()=>{clearTimeout(timer);v.removeEventListener('seeked',done);v.removeEventListener('error',fail);if(state?.abortSeek===abort)state.abortSeek=null};const done=()=>{cleanup();resolve()};const fail=()=>{cleanup();reject(Error('Video seeking failed. Check the selected media file.'))};const abort=()=>{cleanup();reject(Error('Timeline operation stopped.'))};if(state)state.abortSeek=abort;timer=setTimeout(()=>{cleanup();reject(Error('Video seeking timed out.'))},10000);v.addEventListener('seeked',done);v.addEventListener('error',fail);try{v.currentTime=t}catch(e){cleanup();reject(e)}});
 function setBusy(b){for(const id of ['vf','vexp','clipExport','clipPlay','clipAdd','clipSplit','clipTrimIn','clipTrimOut','clipUpdate','clipDuplicate','clipRemove','clipUp','clipDown','clipUndo','clipRedo','clipList','clipStart','clipEnd','clipSpeed'])$(id).disabled=b;$('clipCancel').disabled=!b}
 v.addEventListener('loadedmetadata',()=>{invalidateExport();const restoring=pendingProjectMedia;pendingProjectMedia=false;if(!restoring)clips=[];undo=[];redo=[];paint();$('clipStart').value='0';$('clipEnd').value=Number.isFinite(v.duration)?v.duration.toFixed(2):'0';info(restoring?'Project timeline retained. Check that the selected video matches the saved project.':'Video ready. Add a clip. Previous source clips were cleared.')});
 $('clipAdd').onclick=()=>{const start=Number($('clipStart').value),end=Number($('clipEnd').value);if(clips.length>=200)return info('Timeline limit is 200 clips.');if(!ready()||!Number.isFinite(start)||!Number.isFinite(end)||start<0||Math.min(end,v.duration)<=start||end>v.duration+.02)return info('Choose valid start and end times.');const speed=Number($('clipSpeed').value);if(!Number.isFinite(speed)||speed<.25||speed>4)return info('Choose a valid playback speed.');save();clips.push({start,end:Math.min(end,v.duration),speed});paint(clips.length-1)};
@@ -52,7 +52,7 @@ async function runTimeline(record){
   }
   for(let i=0;i<clips.length;i++){
    if(state.cancelled)break;
-   const c=clips[i];v.pause();if(rec&&rec.state==='recording')rec.pause();await seek(c.start);v.playbackRate=c.speed;
+   const c=clips[i];v.pause();if(rec&&rec.state==='recording')rec.pause();await seek(c.start,state);v.playbackRate=c.speed;
    if(state.cancelled)break;
    if(rec&&rec.state==='inactive')rec.start(250);
    info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length);
@@ -76,7 +76,7 @@ async function runTimeline(record){
    $('clipDownload').href=exportUrl;$('clipDownload').download='heavenly-key-timeline.'+(mime.startsWith('video/mp4')?'mp4':'webm');$('clipDownload').hidden=false;
    info((stream.getAudioTracks().length?'':'Warning: this browser exported video without audio. ')+'Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
   }else info('Timeline preview complete.');
- }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}info('Timeline failed: '+e.message)}
+ }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}info(state.cancelled?'Timeline operation stopped.':'Timeline failed: '+e.message)}
  finally{v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration);if(stream)stream.getTracks().forEach(t=>t.stop());if(sourceStream)sourceStream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
 }
 window.hkTimeline={
