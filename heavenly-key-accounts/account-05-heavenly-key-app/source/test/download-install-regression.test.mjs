@@ -13,7 +13,7 @@ test('Android guide has only one install prompt controller', () => {
 test('device guide only advertises native download when the server confirms its availability', () => {
   const js = publicFile('app-device-guide.js');
   assert.match(js, /method:'HEAD'/);
-  assert.match(js, /nativeLink\.hidden = !nativeAvailable/);
+  assert.match(js, /nativeLink\.hidden = !nativeAvailable \|\| !matchesDevice\(\)/);
   assert.match(js, /nativeLink\.hidden = true/);
   assert.match(js, /\/api\/native-download\//);
 });
@@ -117,7 +117,7 @@ test('public app directory and device chooser do not require registration before
 test('native install guide never automatically starts executable downloads',()=>{
  const js=publicFile('app-device-guide.js');
  assert.match(js,/function matchesDevice\(\)/);
- assert.match(js,/nativeLink\.hidden = !nativeAvailable/);
+ assert.match(js,/nativeLink\.hidden = !nativeAvailable \|\| !matchesDevice\(\)/);
  assert.doesNotMatch(js,/window\.location\.assign\(nativeLink\.href\)/);
  assert.match(js,/nativeLink\.href = '\/api\/native-download\//);
  assert.match(js,/different device/i);
