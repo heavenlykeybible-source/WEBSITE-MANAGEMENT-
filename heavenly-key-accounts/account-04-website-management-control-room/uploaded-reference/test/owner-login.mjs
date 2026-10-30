@@ -56,6 +56,9 @@ assert.ok(js.includes("fetch('/api/owner/session'"),'Login page must reuse exist
 const ownerHost='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
 assert.ok(activeIndex.includes('https://'+ownerHost+'/login.html'),'Owner link must use the supported authentication hostname');
 assert.ok(activeServer.includes("u.hostname==='"+ownerHost+"'"),'Owner auth host must match the public sign-in link');
+assert.ok(activeServer.includes("OWNER_ACCESS_EMAIL?.trim()"),'Access administrators must not be allowed to reset owner passwords without verified owner identity');
+assert.ok(activeServer.includes("ownerHost?'owner':'administrator'"),'Owner and administrator roles must be clearly distinguished');
+assert.ok(activeServer.includes("Verified owner access is required to change the owner password."),'Unauthorized password changes must return a clear denial');
 for(const file of ['public/login.html','public/owner-login.js','public/control.css','src/owner-auth.ts']){
  assert.ok(readFileSync(resolve(activeRoot,file),'utf8').length>200,'Active Control Room missing '+file);
 }
