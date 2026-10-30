@@ -15,6 +15,15 @@ async function scenario(mode){
  assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:1,speed:1},'Duplicate preserves clip timing and speed');
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips().length,1,'Undo restores timeline after duplication');
+ video.currentTime=.4;node('clipTrimIn').onclick();
+ assert.equal(window.hkTimeline.getClips()[0].start,.4,'Trim start uses the playhead');
+ node('clipUndo').onclick();
+ assert.equal(window.hkTimeline.getClips()[0].start,0,'Undo restores trimmed start');
+ video.currentTime=.6;node('clipTrimOut').onclick();
+ assert.equal(window.hkTimeline.getClips()[0].end,.6,'Trim end uses the playhead');
+ node('clipUndo').onclick();
+ assert.equal(window.hkTimeline.getClips()[0].end,1,'Undo restores trimmed end');
+ video.currentTime=0;
  await node('clipExport').onclick();
  assert.equal(node('vf').disabled,false,'Source must unlock after '+mode);
  assert.equal(node('clipCancel').disabled,true,'Cancel must reset after '+mode);
