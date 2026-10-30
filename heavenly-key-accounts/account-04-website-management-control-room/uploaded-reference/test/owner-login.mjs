@@ -60,6 +60,21 @@ const ownerHost='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
 assert.ok(activeIndex.includes('https://'+ownerHost+'/login.html'),'Owner link must use the supported authentication hostname');
 assert.ok(activeServer.includes("u.hostname==='"+ownerHost+"'"),'Owner auth host must match the public sign-in link');
 assert.ok(activeServer.includes("OWNER_ACCESS_EMAIL?.trim()"),'Access administrators must not be allowed to reset owner passwords without verified owner identity');
+
+// Evaluate the exact owner identity predicate used by the active server against
+// owner, admin and unauthenticated combinations; reject an unset owner mapping.
+const identityLine=activeServer.split('\n').find(line=>line.includes(' const verifiedOwner='));
+assert.ok(identityLine,'Verified owner identity predicate must exist');
+const identify=(actor,ownerHost,accessActor,ownerEmail)=>runInNewContext(
+ identityLine+';verifiedOwner',
+ {actor,ownerHost,accessActor,env:{OWNER_ACCESS_EMAIL:ownerEmail}}
+);
+assert.equal(identify('owner',true,null,undefined),true);
+assert.equal(identify(null,true,null,undefined),false);
+assert.equal(identify('admin@example.org',false,'admin@example.org','owner@example.org'),false);
+assert.equal(identify('owner@example.org',false,'owner@example.org','owner@example.org'),true);
+assert.equal(identify('owner@example.org',false,'owner@example.org',undefined),false);
+assert.equal(identify('OWNER@example.org',false,'OWNER@example.org','owner@example.org'),true);
 assert.ok(activeServer.includes("role:verifiedOwner?'owner':'administrator'"),'Owner and administrator roles must be based on verified identity');
 assert.ok(activeServer.includes("if(!verifiedOwner)return fail('Verified owner approval is required to publish.',403)"),'Only verified owners may publish content');
 assert.ok(activeServer.includes("if(!verifiedOwner)return fail('Verified owner access is required to change the owner password.',403)"),'Only verified owners may rotate the owner password');
