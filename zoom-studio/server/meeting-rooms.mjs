@@ -39,7 +39,7 @@ export class MeetingRooms {
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(url.protocol!=='https:'||request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
   // Validate the room path inside the Durable Object as well as in the outer Worker router.
-  if(!/^\/meeting\/[a-f0-9-]{36}\/room$/.test(url.pathname))return new Response('Invalid meeting route',{status:404});
+  if(!/^\/meeting\/[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}\/room$/.test(url.pathname))return new Response('Invalid meeting route',{status:404});
   // Expired unauthenticated handshakes should not block legitimate visitors while waiting for the next alarm.
   const now=Date.now();
   for(const ws of this.sockets()){
