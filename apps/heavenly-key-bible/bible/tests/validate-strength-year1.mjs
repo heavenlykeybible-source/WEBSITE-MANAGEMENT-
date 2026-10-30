@@ -39,6 +39,13 @@ const normalize=value=>value.trim().toLowerCase().replace(/\s+/g,' ');
 const uniqueReflections=new Set(all.map(t=>normalize(t.reflection))).size;
 const uniquePrayers=new Set(all.map(t=>normalize(t.prayer))).size;
 console.log('CONTENT QUALITY REPORT:',JSON.stringify({totalTopicEntries:all.length,uniqueReflections,duplicateReflectionEntries:all.length-uniqueReflections,uniquePrayers,duplicatePrayerEntries:all.length-uniquePrayers}));
+const year3=entries.filter(e=>e.date>='2028-10-30'&&e.date<='2029-10-29');
+assert.equal(year3.length,365,'Year 3 must contain exactly 365 daily entries');
+assert(year3.every(e=>e.status==='draft-not-published'),'Year 3 must remain in editorial hold');
+const year3Topics=year3.flatMap(e=>e.topics);
+assert.equal(new Set(year3Topics.map(t=>normalize(t.reflection))).size,year3Topics.length,'Repeated Year 3 reflections require correction');
+assert.equal(new Set(year3Topics.map(t=>normalize(t.prayer))).size,year3Topics.length,'Repeated Year 3 prayers require correction');
+console.log('YEAR 3 DRAFT AUDIT:',year3.length,'days;',year3Topics.length,'topic entries; zero exact duplicate reflections/prayers. Editorial approval still required.');
 const approved=entries.filter(e=>e.status==='approved-for-publication');
 for(let j=0;j<12;j++){const reflections=new Set(),prayers=new Set();for(const e of approved){const r=e.topics[j].reflection.trim().toLowerCase(),p=e.topics[j].prayer.trim().toLowerCase();assert(!reflections.has(r),'Repeated approved reflection '+e.date);assert(!prayers.has(p),'Repeated approved prayer '+e.date);reflections.add(r);prayers.add(p);}}
 console.log('APPROVED DAYS:',approved.length,'EDITORIAL HOLD:',entries.length-approved.length);
