@@ -38,6 +38,7 @@ async function loadDailyDrafts(){
   return library.entries;
  }));
  dailyDrafts.clear();
+ const rejectedDates=new Set();
  let available=0;
  for(const result of loaded){
   if(result.status!=='fulfilled')continue;
@@ -45,7 +46,8 @@ async function loadDailyDrafts(){
   for(const entry of result.value){
    if(!entry||!/^\d{4}-\d{2}-\d{2}$/.test(entry.date)||!Array.isArray(entry.topics)||entry.topics.length!==12)continue;
    if(!entry.topics.every((t,i)=>t&&t.topic===originalItems[i][0]&&typeof t.reference==='string'&&typeof t.bibleText==='string'&&typeof t.reflection==='string'&&typeof t.prayer==='string'))continue;
-   if(dailyDrafts.has(entry.date)){dailyDrafts.delete(entry.date);continue;}
+   if(rejectedDates.has(entry.date))continue;
+   if(dailyDrafts.has(entry.date)){dailyDrafts.delete(entry.date);rejectedDates.add(entry.date);continue;}
    dailyDrafts.set(entry.date,entry);
   }
  }
