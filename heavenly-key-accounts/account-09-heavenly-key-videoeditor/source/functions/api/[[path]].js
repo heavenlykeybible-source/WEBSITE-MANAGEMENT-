@@ -198,6 +198,8 @@ export async function onRequest({ request: req, env, params }) {
       const res=await fetch('https://api.elevenlabs.io/v1/text-to-speech/'+encodeURIComponent(env.VOICE_TTS_VOICE_ID),{method:'POST',headers:{'xi-api-key':env.VOICE_TTS_API_KEY,'content-type':'application/json','accept':'audio/mpeg'},body:JSON.stringify({text:b.text,model_id:'eleven_multilingual_v2'}),signal:AbortSignal.timeout(45000)});
       if(!res.ok)return J({error:'Voice provider unavailable or quota reached.'},503);
       const audio=await readBoundedMedia(res, 5e6);if(!audio)return J({error:'Audio too large.'},413);
+      const frame=new Uint8Array(audio);const mp3=frame.length>=4&&((frame[0]===73&&frame[1]===68&&frame[2]===51)||(frame[0]===255&&(frame[1]&224)===224));
+      if(!mp3)return J({error:'Voice provider returned invalid MP3 audio.'},502);
       await log(env,u.id,'voice_synthesize');
       return new Response(audio,{headers:{'content-type':'audio/mpeg','cache-control':'no-store','x-content-type-options':'nosniff'}});
     }
