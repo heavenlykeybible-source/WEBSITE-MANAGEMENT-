@@ -29,6 +29,7 @@ async function runTimeline(record){
  const validClips=clips.every(c=>c&&Number.isFinite(c.start)&&Number.isFinite(c.end)&&Number.isFinite(c.speed)&&c.start>=0&&c.end>c.start&&c.speed>=.25&&c.speed<=4);if(!validClips)return info('Timeline contains invalid clip timing or speed.');
  if(clips.some(c=>c.end>v.duration+.02))return info('A clip exceeds the current video duration. Reload the original source or correct the clips.');
  const totalSeconds=clips.reduce((n,c)=>n+(c.end-c.start)/c.speed,0);
+ if(!Number.isFinite(totalSeconds)||totalSeconds<=0)return info('Timeline duration is invalid. Check clip times and speeds.');
  if(record&&totalSeconds>600)return info('Browser export is limited to ten minutes. Shorten the timeline.');
  if(record&&(!canvas.captureStream||!window.MediaRecorder||typeof MediaRecorder.isTypeSupported!=='function'))return info('Video export is unavailable in this browser.');
  const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
