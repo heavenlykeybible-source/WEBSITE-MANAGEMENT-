@@ -96,3 +96,14 @@ test('old operator requests cannot populate a new authenticated view', () => {
   assert.match(html, /if\(epoch!==authEpoch\)return/);
   assert.match(html, /if\(selected!==targetConversation\|\|authEpoch!==epoch\)return/);
 });
+
+test('switching conversations hides the previous customer message before loading', () => {
+  assert.match(html, /async function openChat\(id\)\{selected=id;const epoch=authEpoch;\$\('messages'\)\.replaceChildren\(\)/);
+  assert.match(html, /\$\('draftText'\)\.value='';\$\('takeover'\)\.disabled=true/);
+});
+
+test('WhatsApp send refresh stays in the originating conversation', () => {
+  assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=selected/);
+  assert.match(html, /if\(selected===currentConversation\)\{status\(result\.sent/);
+  assert.match(html, /await openChat\(currentConversation\)/);
+});
