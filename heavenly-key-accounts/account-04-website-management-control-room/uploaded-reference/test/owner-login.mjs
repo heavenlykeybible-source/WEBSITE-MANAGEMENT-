@@ -23,7 +23,7 @@ let request;
 let response={ok:true,status:200,json:async()=>({ok:true})};
 const location={assigned:null,assign(path){this.assigned=path}};
 runInNewContext(js,{
- document:{querySelector:q=>nodes[q]??null},fetch:async(url,options)=>{request={url,options};return response},
+ document:{querySelector:q=>nodes[q]??null},fetch:async(url,options)=>{if(url==='/api/owner/session')return {ok:true,json:async()=>({signedIn:false})};request={url,options};return response},
  location,AbortController,clearTimeout,setTimeout,JSON,Error
 });
 assert.equal(typeof handlers.submit,'function');
@@ -51,6 +51,8 @@ assert.match(server,/DELETE FROM cms_owner_sessions/,'Password resets must revok
 const activeRoot=resolve(root,'../source');
 const activeIndex=readFileSync(resolve(activeRoot,'public/index.html'),'utf8');
 const activeServer=readFileSync(resolve(activeRoot,'src/index.ts'),'utf8');
+assert.ok(activeServer.includes("u.pathname==='/api/owner/session'&&request.method==='GET'"),'Session check must be GET only and limited to owner host');
+assert.ok(js.includes("fetch('/api/owner/session'"),'Login page must reuse existing owner sessions');
 const ownerHost='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
 assert.ok(activeIndex.includes('https://'+ownerHost+'/login.html'),'Owner link must use the supported authentication hostname');
 assert.ok(activeServer.includes("u.hostname==='"+ownerHost+"'"),'Owner auth host must match the public sign-in link');
