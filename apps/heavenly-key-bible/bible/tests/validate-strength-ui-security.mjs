@@ -20,5 +20,10 @@ assert(html.includes('const DEVOTIONAL_BATCHES='),'Devotional batch list missing
 assert(html.includes('expectedDays'),'Devotional dates must be checked for completeness');
 assert(sw.includes('SHELL_PRECACHE'),'Offline cache partitioning missing');
 assert(sw.includes('SHELL_ASSETS.filter'),'Unpublished batches must not slow initial installation');
+assert(sw.includes('CORE_OFFLINE'),'Critical pages must be required for offline install');
+assert(sw.includes('await Promise.all(CORE_OFFLINE.map(asset=>cache.add(asset)))'),'Core assets must be fetched atomically before install success');
+assert(sw.includes('await caches.delete(SHELL)'),'Failed core installs must clean partial caches');
+assert(sw.includes('new Set(SHELL_ASSETS.filter'),'Cache assets must be deduplicated');
+assert(sw.includes('OPTIONAL_OFFLINE.map(asset=>cache.add(asset))'),'Optional files must remain best effort');
 console.log('PASS: source-level devotional UI, publication gate, accessibility and cache checks');
 console.log('NOTE: static checks do not replace browser testing, accessibility audit or penetration testing.');
