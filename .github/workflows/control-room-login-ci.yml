@@ -8,6 +8,7 @@ on:
       - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/owner-login.js'
       - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/test/owner-login.mjs'
       - '.github/workflows/control-room-login-ci.yml'
+      - 'heavenly-key-accounts/account-04-website-management-control-room/source/**'
   pull_request:
     paths:
       - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/login.html'
@@ -28,6 +29,12 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
+      - name: Install active Control Room dependencies
+        run: npm ci --no-audit --no-fund
+        working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
+      - name: Type-check active Control Room authentication
+        run: npm run check
+        working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
       - name: Validate owner login JavaScript
         run: node --check heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/owner-login.js
       - name: Owner login regression tests
