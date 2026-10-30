@@ -23,6 +23,7 @@ if (!timeline.includes('if(record)invalidateExport();')) throw Error('Stale time
 if (!timeline.includes('session.abortSeek?.()') || !timeline.includes('await seek(c.start,state)')) throw Error('Timeline seek cancellation safeguard missing');
 if (!timeline.includes('session.abortPlayback?.()') || !timeline.includes('state.abortPlayback=()=>finish()')) throw Error('Timeline playback cancellation safeguard missing');
 if (!timeline.includes('session.abortStart?.()') || !timeline.includes('Video playback did not start within 15 seconds.')) throw Error('Timeline playback startup cancellation safeguard missing');
+if (!timeline.includes('session.abortEncoder?.()') || !timeline.includes('state.abortEncoder=abort')) throw Error('Timeline encoder cancellation safeguard missing');
 if (!timeline.includes('if(finished&&session===state)v.pause()')) throw Error('Timeline session isolation safeguard missing');
 if (!timeline.includes("$('clipList').onkeydown=") || !timeline.includes("key==='delete'") || !timeline.includes("key==='z'")) throw Error('Timeline keyboard shortcuts missing');
 const html=readFileSync('public/index.html','utf8');
