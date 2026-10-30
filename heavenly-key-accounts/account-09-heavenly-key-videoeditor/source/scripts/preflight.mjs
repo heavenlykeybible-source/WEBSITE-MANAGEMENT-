@@ -17,6 +17,7 @@ if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDupli
 for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="'+control+'"') || !timeline.includes("$('"+control+"').onclick=")) throw Error('Timeline playhead trim control missing: '+control);
 if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
 if (!timeline.includes('session.abortSeek?.()') || !timeline.includes('await seek(c.start,state)')) throw Error('Timeline seek cancellation safeguard missing');
+if (!timeline.includes('session.abortPlayback?.()') || !timeline.includes('state.abortPlayback=()=>finish()')) throw Error('Timeline playback cancellation safeguard missing');
 const html=readFileSync('public/index.html','utf8');
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) if (!html.includes('src="/'+name+'"')) throw Error('Script not loaded: '+name);
 if (html !== readFileSync('index.html','utf8')) throw Error('Public page not synchronized with editor source');
