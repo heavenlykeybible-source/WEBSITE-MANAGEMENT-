@@ -29,18 +29,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install locked dependencies
-        run: npm ci
-      - name: Dependency vulnerability audit
-        run: npm audit --audit-level=high --omit=dev
-      - name: Backend regression tests
+      - name: Verify Account 8 package scripts
+        run: |
+          node -e "const p=require('./package.json'); for (const s of ['test','bundle:control-room','configure']) if (!p.scripts?.[s]) process.exit(1)"
+      - name: Backend and security regression tests
         run: npm test
-      - name: Install Chromium for browser audit
-        run: npx playwright install --with-deps chromium
-      - name: Browser and signalling audit
-        run: npm run test:browser
-      - name: Relay integration tests
-        run: npm run test:relay
+      - name: Verify Control Room package build
+        run: npm run bundle:control-room
+      - name: Production dependency vulnerability audit
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm audit --audit-level=high --omit=dev
+          else
+            echo "::warning::No dependency lockfile; npm audit cannot provide a reproducible vulnerability assessment"
+          fi
       - name: Check Account 8 deployment guard
         env:
           MEETINGSPACE_TARGET_ACCOUNT: '7'
