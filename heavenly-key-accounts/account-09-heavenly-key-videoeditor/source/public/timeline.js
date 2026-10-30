@@ -27,7 +27,7 @@ function move(dir){const i=chosen(),j=i+dir;if(i<0||j<0||j>=clips.length)return;
 $('clipUp').onclick=()=>move(-1);$('clipDown').onclick=()=>move(1);
 $('clipUndo').onclick=()=>{if(!undo.length)return;invalidateExport();redo.push(JSON.stringify(clips));clips=JSON.parse(undo.pop());paint()};
 $('clipRedo').onclick=()=>{if(!redo.length)return;invalidateExport();undo.push(JSON.stringify(clips));clips=JSON.parse(redo.pop());paint()};
-$('clipCancel').onclick=()=>{if(session){session.cancelled=true;session.abortSeek?.();session.abortPlayback?.();session.abortStart?.()}v.pause()};
+$('clipCancel').onclick=()=>{if(session){session.cancelled=true;session.abortSeek?.();session.abortPlayback?.();session.abortStart?.();session.abortEncoder?.()}v.pause()};
 async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
  if($('vexp').disabled)return info('Another video export or media change is in progress.');
@@ -74,7 +74,7 @@ async function runTimeline(record){
    completedSeconds+=(c.end-c.start)/c.speed;
   }
   v.pause();
-  if(rec&&rec.state!=='inactive'){rec.stop();await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Timeline encoder did not finish within 15 seconds')),15000);finished.then(()=>{clearTimeout(timeout);resolve()})})}if(encoderError)throw encoderError;
+  if(rec&&rec.state!=='inactive'){rec.stop();await new Promise((resolve,reject)=>{let settled=false;const cleanup=()=>{clearTimeout(timeout);if(state.abortEncoder===abort)state.abortEncoder=null};const done=(error)=>{if(settled)return;settled=true;cleanup();error?reject(error):resolve()};const abort=()=>done();state.abortEncoder=abort;const timeout=setTimeout(()=>done(Error('Timeline encoder did not finish within 15 seconds')),15000);finished.then(()=>done());if(state.cancelled)abort()})}if(encoderError)throw encoderError;
   if(state.cancelled)return info('Timeline operation stopped.');
   if(record){
    const blob=new Blob(fragments,{type:mime});if(!blob.size)throw Error('Encoder generated an empty video.');
