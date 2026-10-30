@@ -69,7 +69,8 @@ export class MeetingRooms {
   const d=this.data(ws),now=Date.now();
   if(now-(d.stampAt||0)>=3000){d.stampAt=now;d.stampN=0;}
   // ICE candidates may arrive in bursts; chat has its own tighter limit below.
-  if((d.stampN||0)>=100)return this.close(ws,{t:'error',msg:'Too many messages. Please reconnect.'});
+  // Pending sockets only need a single host or join handshake; cap repeated authentication attempts.
+  if((d.stampN||0)>=(d.role?100:10))return this.close(ws,{t:'error',msg:'Too many messages. Please reconnect.'});
   d.stampN=(d.stampN||0)+1;this.save(ws,d);
   let m;try{m=JSON.parse(raw);}catch{return;}
   if(!m||typeof m!=='object'||Array.isArray(m))return;
