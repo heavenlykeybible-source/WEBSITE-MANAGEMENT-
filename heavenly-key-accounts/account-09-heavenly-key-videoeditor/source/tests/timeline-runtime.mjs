@@ -19,9 +19,11 @@ async function scenario(mode){
  node('clipList').value='1';
  node('clipFirst').onclick();
  assert.equal(node('clipList').value,'0','Move-to-first selects the moved clip');
+ assert.equal(window.hkTimeline.getClips()[0].end,2,'Move-to-first actually moves the full-source clip');
  assert.equal(window.hkTimeline.getClips().length,2,'Move-to-first preserves all clips');
  node('clipLast').onclick();
  assert.equal(node('clipList').value,'1','Move-to-last selects the moved clip');
+ assert.equal(window.hkTimeline.getClips()[1].end,2,'Move-to-last actually moves the full-source clip');
  node('clipUndo').onclick();
  assert.equal(node('clipList').value,'0','Undo restores position after move-to-last');
  node('clipRedo').onclick();
