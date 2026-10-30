@@ -1,0 +1,16 @@
+# Standalone optional TURN service for an existing Linux host.
+services:
+  turn:
+    image: ${COTURN_IMAGE:?Set an approved coturn/coturn image tag or digest}
+    restart: unless-stopped
+    network_mode: host
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./turnserver.private.conf:/etc/coturn/turnserver.conf:ro
+    command: ["-c", "/etc/coturn/turnserver.conf"]
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

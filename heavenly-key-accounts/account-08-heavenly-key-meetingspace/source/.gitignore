@@ -13,3 +13,5 @@ test-results/
 server/deploy/.env
 server/deploy/*secret*
 !server/deploy/.env.example
+
+server/deploy/turnserver.private.conf
