@@ -133,3 +133,20 @@ test('download is rejected when installer metadata belongs to another app or dev
  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
  assert.equal(calls.writes,0);
 });
+
+test('native download and private admin responses carry defensive security headers',async()=>{
+ const {env}=environment();
+ const responses=[
+  await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env),
+  await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env),
+  await handleNativeDownloads(request('/api/admin/download-counts'),env)
+ ];
+ for(const response of responses){
+  assert.equal(response.headers.get('x-content-type-options'),'nosniff');
+  assert.equal(response.headers.get('cross-origin-resource-policy'),'same-origin');
+  assert.equal(response.headers.get('x-frame-options'),'DENY');
+  assert.match(response.headers.get('content-security-policy'),/default-src 'none'/);
+  assert.equal(response.headers.get('cache-control'),'no-store');
+  assert.equal(response.headers.get('referrer-policy'),'no-referrer');
+ }
+});
