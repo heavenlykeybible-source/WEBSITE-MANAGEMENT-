@@ -107,10 +107,17 @@ export async function onRequest({ request: req, env, params }) {
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return J({ error: 'Enter a valid email address.' }, 400);
       if (pw.length < 12 || pw.length > 200) return J({ error: 'Password must be at least 12 characters.' }, 400);
       if (['emmanuelmeta247@gmail.com'].includes(email)) return J({ error: 'This address requires owner provisioning.' }, 403);
+      const signupIp = req.headers.get('cf-connecting-ip');
+      const signupIpKey = signupIp ? 'ip:' + await sha(signupIp) : null;
+      if (signupIpKey) {
+        const recentSignups = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='register_ip' AND at>?").bind(signupIpKey, Date.now()-3600000).first()).c;
+        if (recentSignups >= 10) return J({ error: 'Too many registrations. Try again later.' }, 429);
+      }
       if (await env.DB.prepare('SELECT 1 x FROM users WHERE email=?').bind(email).first()) return J({ error: 'That email is already registered.' }, 409);
       const id = rnd(16), salt = rnd(16);
       await env.DB.prepare('INSERT INTO users(id,email,pass_hash,salt,created_at) VALUES(?,?,?,?,?)').bind(id, email, await pbkdf2(pw, salt), salt, Date.now()).run();
       await log(env, id, 'register');
+      if (signupIpKey) await log(env, signupIpKey, 'register_ip');
       return J({ ok: true });
     }
     if (a === 'login' && m === 'POST') {
