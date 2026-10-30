@@ -19,4 +19,6 @@ assert.ok(start.indexOf('LIVE_STATUS_KV.put(ACTIVE_KEY') < start.indexOf("callLi
 assert.ok(reconcile.includes('if(!terminal)return {active:'),'Unknown provider status must preserve active state');
 assert.ok(source.includes('size>limit') && source.includes('reader.cancel()'), 'Provider response reads must have a size limit');
 assert.ok(source.includes("base.protocol!=='wss:'"),'LiveKit endpoint must use secure WSS');
+assert.ok(source.includes("['StartEgress','StopEgress','ListEgress'].includes(method)"),'LiveKit operations must be allowlisted');
+assert.ok(source.includes("base.pathname!=='/'"),'LiveKit endpoint path must be restricted');
 console.log('Account 2 broadcast handoff safety checks passed');
