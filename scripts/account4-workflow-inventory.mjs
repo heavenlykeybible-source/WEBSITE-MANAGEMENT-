@@ -12,5 +12,5 @@ for(const name of files){
  const manualMainGate=s.includes("github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'");
  const classification=!hasDeploy?'checks-only':dryRunOnly?'validation-dry-run':manualMainGate?'explicit-manual-production':'review-deployment-guard';
  console.log(JSON.stringify({file:name,name:title,pull_request:isPR,classification}));
- if(isPR&&classification==='review-deployment-guard')console.log('CROSS_ACCOUNT_REVIEW: inspect workflow '+name+' for an owner-reviewed deployment condition');
+ if(isPR&&classification==='review-deployment-guard')throw Error('PR workflow contains deployment commands without recognized manual-only gate: '+name+'. Block release until reviewed.');
 }
