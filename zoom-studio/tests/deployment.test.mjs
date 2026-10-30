@@ -109,3 +109,18 @@ test('case-insensitive Cloudflare ID matches do not cause false deployment confl
  assert.equal(r.status,0);
  assert.equal(r.config.account_id,account.toUpperCase());
 });
+
+test('deployment refuses to start without explicit owner approval',()=>{
+ const env={...process.env,MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN:'https://meetingspace.heavenlykey.org'};
+ delete env.MEETINGSPACE_OWNER_DEPLOY_APPROVED;
+ const run=spawnSync(process.execPath,[new URL('../scripts/deploy.mjs',import.meta.url).pathname],{env,encoding:'utf8'});
+ assert.notEqual(run.status,0);
+ assert.match(run.stderr,/explicit owner approval required/);
+ assert.doesNotMatch(run.stdout,/MeetingSpace configuration prepared|snapshot/);
+});
+test('deployment rejects an invalid owner approval marker',()=>{
+ const env={...process.env,MEETINGSPACE_TARGET_ACCOUNT:'8',MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN:'https://meetingspace.heavenlykey.org',MEETINGSPACE_OWNER_DEPLOY_APPROVED:'yes'};
+ const run=spawnSync(process.execPath,[new URL('../scripts/deploy.mjs',import.meta.url).pathname],{env,encoding:'utf8'});
+ assert.notEqual(run.status,0);
+ assert.match(run.stderr,/explicit owner approval required/);
+});
