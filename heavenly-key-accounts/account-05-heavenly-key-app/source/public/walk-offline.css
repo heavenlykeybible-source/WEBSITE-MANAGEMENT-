@@ -18,3 +18,15 @@
 .walk-feature-grid span{font-size:13px;color:#56647a}
 @media(max-width:430px){.walk-feature-grid{gap:9px}.walk-feature-grid a{padding:12px;min-height:108px}.walk-feature-grid strong{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.walk-feature-grid a:hover{transform:none}}
+
+.walk-champion{border:1px solid #b8cdee;background:linear-gradient(140deg,#f5f9ff,#fffdf3)}
+.walk-champion-actions,.walk-growth-footer-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.walk-champion-actions a,.walk-growth-footer-actions a,.walk-growth-footer-actions button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;border:2px solid #163f82;border-radius:12px;padding:11px 17px;font-weight:750;text-decoration:none;background:#fff;color:#163f82}
+.walk-champion-actions .walk-champion-primary,.walk-growth-footer-actions .primary{background:#163f82;color:#fff}
+.walk-growth-footer{margin:32px 0 12px;padding:26px clamp(16px,4vw,36px);border-radius:20px;background:#102f65;color:#fff;text-align:center}
+.walk-growth-footer h2{font-size:clamp(20px,3vw,28px);color:#fff}
+.walk-growth-footer p{max-width:740px;margin:9px auto}
+.walk-growth-footer-actions{justify-content:center;margin:20px 0}
+.walk-growth-footer-actions a,.walk-growth-footer-actions button{border-color:#ffdc78}
+.walk-growth-footer-actions button{font:inherit;cursor:pointer}
+.walk-growth-footer-actions button:focus-visible,.walk-growth-footer-actions a:focus-visible{outline:3px solid #ffdc78;outline-offset:4px}
