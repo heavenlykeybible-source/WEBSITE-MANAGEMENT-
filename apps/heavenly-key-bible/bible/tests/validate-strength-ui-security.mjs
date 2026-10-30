@@ -28,5 +28,10 @@ assert(sw.includes('OPTIONAL_OFFLINE.map(asset=>cache.add(asset))'),'Optional fi
 assert(sw.includes('url.search===""'),'Query-specific responses must not be persisted');
 assert(sw.includes('headers.has("Authorization")'),'Authenticated responses must not be cached');
 assert(sw.includes('Cache-Control'),'Private or no-store responses must not be cached');
+assert(sw.includes('isDevotionalDraftLibrary'),'Devotional cache classification missing');
+assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved content must never be cached');
+assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
+assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
+assert(sw.includes('hk-bible-shell-v58'),'Service-worker cache version must retire older draft caches');
 console.log('PASS: source-level devotional UI, publication gate, accessibility and cache checks');
 console.log('NOTE: static checks do not replace browser testing, accessibility audit or penetration testing.');
