@@ -10,11 +10,11 @@ assert.ok(start.indexOf("callLiveKit(env,'StartEgress'") < start.indexOf("callLi
 assert.match(start,/const newEgressId=String\(result\.egress_id\?\?result\.egressId\?\?''\)/);
 assert.match(reconcile,/if\(!item\)return \{active:/,'Unconfirmed provider response must preserve live state');
 assert.doesNotMatch(source,/throw new Error\(data\?\.msg\|\|data\?\.message/,'Provider errors must not be passed through verbatim');
-assert.match(source,/u\.protocol!=='rtmps:'/,'Streaming destinations must require encrypted RTMPS');
+assert.ok(source.includes("url.protocol!=='rtmps:'"),'Streaming destinations must require encrypted RTMPS');
 assert.match(source,/if\(r\.status>=300&&r\.status<400\)/,'Provider redirects must be rejected');
 assert.match(source,/host==='localhost'/,'Local broadcast source hostnames must be blocked');
 assert.match(source,/host\.startsWith\('\['\)/,'IP-literal source hostnames must be blocked');
-assert.match(source,/u\.protocol==='rtmps:'/,'Legacy destinations must be checked at broadcast time');
+assert.ok(source.includes('return validStreamingOutput(v.url)'), 'Legacy destinations must be validated at broadcast time');
 assert.ok(start.indexOf('writeActiveState(env,replacementState)') < start.indexOf("callLiveKit(env,'StopEgress'"),'Replacement state must be stored before old stream stops');
 assert.ok(reconcile.includes('if(!terminal)return {active:'),'Unknown provider status must preserve active state');
 assert.ok(source.includes('size>limit') && source.includes('reader.cancel()'), 'Provider response reads must have a size limit');
@@ -41,4 +41,6 @@ assert.ok(source.includes('await writeActiveState(env,null)'), 'Clearing state m
 assert.ok(source.includes('Broadcast state migration could not be verified.'),'Legacy adoption must verify the D1 record');
 assert.ok(start.includes('The replacement stream may still be active'),'Rollback must identify a possibly active replacement');
 assert.ok(start.indexOf("catch{throw new Error('Broadcast handoff is incomplete.") < start.lastIndexOf('writeActiveState(env,previous.active)'), 'Rollback must not restore old state after replacement stop failure');
+assert.ok(source.includes("host==='localhost'"),'Streaming targets must reject localhost');
+assert.ok(source.includes('validStreamingOutput(u.href)'),'New streaming targets must use shared security validator');
 console.log('Account 2 broadcast handoff safety checks passed');
