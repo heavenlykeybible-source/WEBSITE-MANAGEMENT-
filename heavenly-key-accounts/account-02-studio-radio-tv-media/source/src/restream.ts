@@ -160,7 +160,8 @@ async function reconcileActive(env:any){
   if(item&&egressStillActive(item.status))return {active:{...active,providerStatus:item.status,providerUpdatedAt:item.updated_at||item.updatedAt||null},last:null};
   const terminal=typeof item.status==='number'?[3,4,5,6].includes(item.status):['EGRESS_COMPLETE','EGRESS_FAILED','EGRESS_ABORTED','EGRESS_LIMIT_REACHED'].includes(String(item.status||'').toUpperCase());
   if(!terminal)return {active:{...active,providerStatus:'UNKNOWN'},last:null};
-  await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);
+  // Status reads must never erase a new broadcast's state during handoff.
+  // A subsequent locked start or stop replaces/clears this terminal record.
   return {active:null,last:item?{egressId:active.egressId,status:item.status,error:item.error||item.details?'Provider reported a broadcast failure':null}:null};
  }catch{
   return {active:{...active,providerStatus:'UNKNOWN'},last:null};
@@ -169,7 +170,7 @@ async function reconcileActive(env:any){
 export async function stopRestream(env:any){
  return withBroadcastLock(env,async()=>{
  const reconciled=await reconcileActive(env),active=reconciled.active;
- if(!active?.egressId)return {ok:true,active:false};
+ if(!active?.egressId){await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);return {ok:true,active:false};}
  await callLiveKit(env,'StopEgress',{egress_id:active.egressId});
  await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);return {ok:true,active:false};
  });
