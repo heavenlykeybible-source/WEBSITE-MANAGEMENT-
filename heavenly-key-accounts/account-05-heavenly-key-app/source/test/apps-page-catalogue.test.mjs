@@ -61,3 +61,9 @@ test('catalogue install destinations use trusted Heavenly Key HTTPS hosts only',
  const guide=readFileSync(new URL('app-device-guide.js',base),'utf8');
  assert.match(guide,/trustedHosts\.has\(destination\.hostname\)/);
 });
+
+test('install guide never attaches a selected-app manifest outside its true scope',()=>{
+ const guide=readFileSync(new URL('app-device-guide.js',base),'utf8');
+ assert.doesNotMatch(guide,/document\.createElement\('link'\)[\s\S]*?manifest\.rel\s*=\s*'manifest'/);
+ assert.match(guide,/Installation belongs to the selected app/);
+});
