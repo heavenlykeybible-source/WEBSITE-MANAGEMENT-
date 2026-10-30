@@ -63,10 +63,11 @@ async function enabledUrls(env:Env){
  }).map(([destination,v])=>({destination,url:v.url}));
 }
 async function callLiveKit(env:any,method:string,body:unknown){
+ if(!['StartEgress','StopEgress','ListEgress'].includes(method))throw new Error('Unsupported LiveKit operation.');
  const config=await resolveLiveKitConfig(env);if(!config)throw new Error('LiveKit connection is not configured.');
  const token=await signLiveKitGrant(config,{roomRecord:true});
  const base=new URL(config.LIVEKIT_URL);
- if(base.protocol!=='wss:'||base.username||base.password||base.hash||base.search)throw new Error('LiveKit must use a secure WSS endpoint.');
+ if(base.protocol!=='wss:'||base.username||base.password||base.hash||base.search||base.pathname!=='/'||!base.hostname)throw new Error('LiveKit must use a secure WSS endpoint without a custom path.');
  const endpoint='https://'+base.host+'/twirp/livekit.Egress/'+method;
  const r=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(15000)});
  // Enforce the response limit while reading, not after buffering it.
