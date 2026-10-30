@@ -58,7 +58,7 @@ self.addEventListener("fetch", event => {
       safeToCache=Array.isArray(library.entries)&&library.entries.length>0&&library.entries.every(entry=>entry.status==='approved-for-publication'&&Array.isArray(entry.topics)&&entry.topics.length===12&&entry.topics.every(topic=>topic.reviewStatus==='approved'));
      }catch{safeToCache=false;}
     }
-    if(safeToCache)await cache.put(event.request,response.clone());
+    if(safeToCache){try{await cache.put(event.request,response.clone());}catch(cacheError){console.warn('Optional offline cache write failed; serving network response',cacheError);}}
    }
    if(!response.ok&&cached)return cached;
    return response;
