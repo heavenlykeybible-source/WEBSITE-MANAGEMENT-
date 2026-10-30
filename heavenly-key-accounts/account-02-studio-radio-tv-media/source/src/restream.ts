@@ -154,6 +154,9 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
   // A public hostname alone cannot prevent DNS rebinding or redirect-based SSRF.
   const approved=['heavenlykey.alldaywow247.workers.dev',...String(env.STUDIO_247_ALLOWED_HOSTS??'').split(',').map((value:string)=>value.trim().toLowerCase()).filter(Boolean)];
   if(!approved.includes(host)||u.port&&u.port!=='443')throw new Error('24/7 programme source hostname is not approved for broadcasting.');
+  // The built-in programme origin can render only the known radio/video pages.
+  // Reject unexpected routes and query parameters that could trigger navigation.
+  if(host==='heavenlykey.alldaywow247.workers.dev'&&(!['/pages/radio.html','/pages/video.html'].includes(u.pathname)||u.search!=='?egress=1'))throw new Error('24/7 programme source must use the approved radio or video broadcast page.');
   body={web:{url:u.href,await_start_signal:false},preset,outputs:[{stream:{protocol:'RTMP',urls:outputs.map(x=>x.url)}}]};
  }
  // Check all inputs before ending an existing on-air egress. An invalid
