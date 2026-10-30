@@ -4,7 +4,7 @@ import {runInNewContext} from 'node:vm';
 async function scenario(mode){
  const nodes=new Map();
  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,hidden:true,textContent:'',style:{},append(){},replaceChildren(){},removeAttribute(){},addEventListener(){},removeEventListener(){}});return nodes.get(id)};
- const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){},async play(){this.currentTime=1}});
+ const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){},async play(){this.currentTime=mode==='cancel-play'?0:1}});
  const track={stop(){}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
  class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode!=='timeout'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
  const window={MediaRecorder:Recorder};
@@ -27,6 +27,7 @@ async function scenario(mode){
  assert.equal(window.hkTimeline.getClips()[0].end,1,'Undo restores trimmed end');
  video.currentTime=mode==='cancel-seek'?.7:0;
  if(mode==='cancel-seek'){const operation=node('clipExport').onclick();node('clipCancel').onclick();await operation}
+ else if(mode==='cancel-play'){const operation=node('clipExport').onclick();await new Promise(resolve=>setTimeout(resolve,0));node('clipCancel').onclick();await operation}
  else await node('clipExport').onclick();
  assert.equal(node('vf').disabled,false,'Source must unlock after '+mode);
  assert.equal(node('clipCancel').disabled,true,'Cancel must reset after '+mode);
@@ -35,8 +36,8 @@ async function scenario(mode){
  if(mode==='error')assert.match(status,/Encoder broke/);
  if(mode==='premature')assert.match(status,/stopped before timeline finished/);
  if(mode==='oversize')assert.match(status,/exceeded the 256 MB browser memory limit/);
- if(mode==='cancel-seek')assert.match(status,/Timeline operation stopped/);
+ if(mode==='cancel-seek'||mode==='cancel-play')assert.match(status,/Timeline operation stopped/);
  if(mode==='success'){assert.match(status,/without audio/);assert.equal(node('clipDownload').hidden,false)}
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play'])await scenario(mode);
