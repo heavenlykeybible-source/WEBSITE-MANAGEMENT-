@@ -329,34 +329,25 @@ function renderTracks() {
  message("portal-status",visible.length ? visible.length+" item(s)" : items.length ? savedOnly?"No saved titles match your search in this collection.":"No titles match your search." : "No approved items have been published in this collection yet.");
 }
 async function openTrack(item) {
- const token = ++detailRequest; stop("song-audio"); stop("song-video"); el("track-detail").hidden = false;
+ const token=++detailRequest;stop("song-audio");stop("song-video");el("track-detail").hidden=false;
  currentTrackKey=studyTools.trackKey(item);el("save-track").disabled=!currentTrackKey;
  el("save-track").textContent=studyTools.favoriteKeys(read("hk-bible-favorite-tracks")).includes(currentTrackKey)?"Remove from saved titles":"Save this title";
- message("track-save-status","");
- message("track-title",item.title||"Recording"); message("track-credit",item.author||item.source||item.speaker||""); el("lyrics").replaceChildren();
- let selected = item;
- if(item.hymnId) { try { const data = await api("/api/hymns/"+item.hymnId); if(token!==detailRequest)return; selected = data.hymn;
- } catch { if(token===detailRequest)message("track-credit","This hymn could not be opened. Please try again."); return; } }
+ message("track-save-status","");message("track-title",item.title||"Hymn");message("track-credit",item.author||item.source||item.speaker||"");el("lyrics").replaceChildren();
  if(token!==detailRequest)return;
- if(typeof selected.lyrics==="string") { const p=document.createElement("p"); p.className="lyrics"; p.textContent=selected.lyrics; el("lyrics").append(p); }
- if(selected.sourceUrl){try{const url=new URL(selected.sourceUrl);if(["hymnary.org","en.wikisource.org"].includes(url.hostname)&&url.protocol==="https:"){const link=document.createElement("a");link.href=url.href;link.textContent="Historical hymn text source";link.rel="noopener noreferrer";el("lyrics").append(link);}}catch{}}
- const path=approvedPath(selected.playbackUrl);
- if(path && ["audio","video"].includes(selected.mediaType)) { const player=el(selected.mediaType==="video"?"song-video":"song-audio"); player.src=path; player.hidden=false; }
- else { const p=document.createElement("p"); p.textContent="An approved recording has not been attached to this item yet."; el("lyrics").append(p); }
+ if(typeof item.lyrics==="string"&&item.lyrics.trim()){const p=document.createElement("p");p.className="lyrics";p.textContent=item.lyrics;el("lyrics").append(p);}
+ else{const p=document.createElement("p");p.textContent="Lyrics pending source and rights verification.";el("lyrics").append(p);}
+ if(item.sourceUrl){try{const url=new URL(item.sourceUrl);if(["hymnary.org","en.wikisource.org"].includes(url.hostname)&&url.protocol==="https:"){const link=document.createElement("a");link.href=url.href;link.textContent="Historical hymn text source";link.rel="noopener noreferrer";el("lyrics").append(link);}}catch{}}
 }
 async function loadPortal() {
- const token=++portalRequest; ++detailRequest; stop("song-audio"); stop("song-video"); el("track-detail").hidden=true;
- currentTrackKey=null;el("save-track").disabled=true;
- items=[]; el("tracks").replaceChildren(); message("portal-status","Loading collection…");
- const hymns=el("collection").value==="hymns";
- if(el("collection").value==="classics"){
-  try{const response=await fetch("./data/hymns.json");if(!response.ok)throw Error("Unavailable");
-   const data=await response.json();if(token!==portalRequest)return;items=(data.items||[]).filter(x=>x.copyrightStatus==="public_domain"&&typeof x.lyrics==="string");renderTracks();
-  }catch{if(token===portalRequest)message("portal-status","Classic hymn lyrics could not be loaded. Press Refresh to try again.");}return;
- }
- try { const data=await api(hymns?"/api/hymns":"/api/media?topic=gospel-music"); if(token!==portalRequest)return;
- items=(Array.isArray(data.items)?data.items:[]).map(x=>hymns?x:{...x,mediaType:x.file_type,playbackUrl:"/api/media/"+x.media_id+"/object"}).filter(x=>hymns||(["audio","video"].includes(x.mediaType)&&approvedPath(x.playbackUrl)));
- renderTracks(); } catch { if(token===portalRequest)message("portal-status","Collection could not be loaded. Check your connection and press Refresh."); }
+ const token=++portalRequest;++detailRequest;stop("song-audio");stop("song-video");el("track-detail").hidden=true;
+ currentTrackKey=null;el("save-track").disabled=true;items=[];el("tracks").replaceChildren();message("portal-status","Loading hymns…");
+ try{
+  const response=await fetch("./data/hymns.json");if(!response.ok)throw Error("Unavailable");
+  const data=await response.json();if(token!==portalRequest)return;
+  if(!Array.isArray(data.items)||data.items.length!==201)throw Error("Incomplete catalogue");
+  items=data.items.map((h,i)=>({...h,hymnNumber:h.hymnNumber||i+1}));
+  renderTracks();
+ }catch{if(token===portalRequest)message("portal-status","Hymn catalogue could not be loaded. Press Refresh to try again.");}
 }
 for(const [name] of books)book.add(new Option(name,name));
 const savedLocation=read("hk-bible-reader-location"),urlParams=new URLSearchParams(window.location.search),requestedBook=urlParams.get("book"),requestedChapter=Number(urlParams.get("chapter")),requested=books.find(x=>x[0]===requestedBook);const initialBook=requested&&Number.isInteger(requestedChapter)&&requestedChapter>=1&&requestedChapter<=requested[1]?requestedBook:null;book.value=initialBook||(Array.isArray(savedLocation)&&books.some(x=>x[0]===savedLocation[0])?savedLocation[0]:"Genesis");chapters(initialBook?requestedChapter:(Array.isArray(savedLocation)?savedLocation[1]:1));
