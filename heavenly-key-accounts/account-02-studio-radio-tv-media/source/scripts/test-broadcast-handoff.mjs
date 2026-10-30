@@ -43,4 +43,6 @@ assert.ok(start.includes('The replacement stream may still be active'),'Rollback
 assert.ok(start.indexOf("catch{throw new Error('Broadcast handoff is incomplete.") < start.lastIndexOf('writeActiveState(env,previous.active)'), 'Rollback must not restore old state after replacement stop failure');
 assert.ok(source.includes("host==='localhost'"),'Streaming targets must reject localhost');
 assert.ok(source.includes('validStreamingOutput(u.href)'),'New streaming targets must use shared security validator');
+assert.ok(source.includes('livekit\\.cloud'), 'LiveKit endpoint must be limited to LiveKit Cloud hosts');
+assert.ok(source.indexOf('const token=await signLiveKitGrant(config,{roomRecord:true});') > source.indexOf("base.protocol!=='wss:'"), 'Validate the LiveKit project URL before signing a provider token');
 console.log('Account 2 broadcast handoff safety checks passed');
