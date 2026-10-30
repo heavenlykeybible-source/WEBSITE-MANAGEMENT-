@@ -18,7 +18,7 @@ const changes=[
   ["accounts=h('div',{class:'permission-grid'})",
    "accounts=h('details',{class:'permission-grid',open:true},h('summary',{},'Connected Cloudflare accounts — expand or collapse'))"],
   ["else if(P.kind==='github'){var G=d.github;kids.push(",
-   "else if(P.kind==='github'){var G=d.github;var entryHtml=G.files.find(function(f){return !f.deleted&&/\\\\.html?$/i.test(f.path)&&/^(?:index|home)\\\\.html?$/i.test(f.path.split('/').pop());})||G.files.find(function(f){return !f.deleted&&/\\\\.html?$/i.test(f.path);});if(entryHtml)kids.push(h('h3',{},'Website preview — try before approval'),h('p',{class:'tag'},'Isolated sandbox preview. External assets and full server features may need a staging environment.'),frame(entryHtml.after));kids.push("],
+   "else if(P.kind==='github'){var G=d.github;var entryHtml=G.files.find(function(f){return !f.deleted&&(f.path.toLowerCase().endsWith('.html')||f.path.toLowerCase().endsWith('.htm'))&&['index.html','index.htm','home.html','home.htm'].includes(f.path.split('/').pop().toLowerCase());})||G.files.find(function(f){return !f.deleted&&(f.path.toLowerCase().endsWith('.html')||f.path.toLowerCase().endsWith('.htm'));});if(entryHtml)kids.push(h('h3',{},'Website preview — try before approval'),h('p',{class:'tag'},'Isolated sandbox preview. External assets and full server features may need a staging environment.'),frame(entryHtml.after));kids.push("],
   ["h('h4',{},'Authorized Cloudflare deployment proposals')",
    "h('h4',{},'Choose authorized accounts in one place')"],
   ["'Select the accounts AI may prepare changes for. Cloudflare token permissions and external provider verification still apply. Agent maintenance access is managed separately under Cloudflare connections.'",
