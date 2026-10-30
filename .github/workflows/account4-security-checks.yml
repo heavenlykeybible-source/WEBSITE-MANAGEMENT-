@@ -68,6 +68,7 @@ jobs:
           node tests/account4-claude-secret-health.mjs
           node tests/account4-github-import-ux.mjs
           node tests/account4-preview-device-toggle.mjs
+          node tests/account4-large-upload.mjs
           node tests/account4-github-preflight.mjs
           node tests/account4-fast-chat-init.mjs
       - name: Generate release provenance and checksum
