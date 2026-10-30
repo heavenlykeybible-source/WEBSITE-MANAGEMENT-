@@ -26,6 +26,7 @@ if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline exp
 if (!timeline.includes('if(record)invalidateExport();')) throw Error('Stale timeline download invalidation missing');
 if (!timeline.includes('session.abortSeek?.()') || !timeline.includes('await seek(c.start,state)')) throw Error('Timeline seek cancellation safeguard missing');
 if (!timeline.includes("v.addEventListener('loadedmetadata',()=>{if(session){session.sourceChanged=true;session.cancelled=true") || !timeline.includes('if(!state.sourceChanged){v.pause();v.playbackRate=rate;')) throw Error('Timeline source switch isolation safeguard missing');
+if (!timeline.includes('if(!state.sourceChanged)info(state.cancelled?')) throw Error('Stale export status isolation missing');
 if (!timeline.includes('session.abortPlayback?.()') || !timeline.includes('state.abortPlayback=()=>finish()')) throw Error('Timeline playback cancellation safeguard missing');
 if (!timeline.includes('Source video ended before the clip finished.') || !timeline.includes('if(v.ended)return finish(Error(')) throw Error('Premature source-end validation missing');
 if (!timeline.includes('session.abortStart?.()') || !timeline.includes('Video playback did not start within 15 seconds.')) throw Error('Timeline playback startup cancellation safeguard missing');
