@@ -1,4 +1,4 @@
-name: Account 4 release safety checks
+name: Account 4 release and import acceptance
 
 on:
   pull_request:
@@ -7,21 +7,49 @@ on:
       - '.github/workflows/account4-release-safety.yml'
       - 'scripts/deploy-account4-existing.mjs'
       - 'tests/account4-release-safety-regression.mjs'
+      - 'tests/native-imports.mjs'
+      - 'tests/native-imports-browser.mjs'
+      - 'tests/account4-permission-ui.mjs'
+      - 'tests/account4-studio-menu.mjs'
+      - 'control-room-worker.js'
+      - 'schema.sql'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'heavenly-key-accounts/account-04-website-management-control-room/**'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: account4-acceptance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  verify-account4-release-safety:
+  verify-account4:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - name: Check deployment code syntax
-        run: node --check scripts/deploy-account4-existing.mjs
-      - name: Run Account 4 release safety tests
-        run: node tests/account4-release-safety-regression.mjs
+          node-version: '24'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check syntax and release protections
+        run: |
+          node --check scripts/deploy-account4-existing.mjs
+          node --check control-room-worker.js
+          node tests/account4-release-safety-regression.mjs
+      - name: Test owner permissions and application imports
+        run: |
+          node tests/account4-permission-ui.mjs
+          node tests/account4-studio-menu.mjs
+          node tests/native-imports.mjs
+      - name: Install isolated browser for real preview tests
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test imported website as interactive mobile preview
+        run: node tests/native-imports-browser.mjs
