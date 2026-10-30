@@ -45,6 +45,7 @@ export class MeetingRooms {
  async alarm(){
   const host=this.host(),h=host&&this.data(host),now=Date.now();
   if(h&&h.until<=now)this.end('The meeting time has ended.');
+  else if(!host&&this.guests().length)this.end('The host is no longer connected.');
   for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});}
   if(this.sockets().length)await this.state.storage.setAlarm(now+60000);
  }
