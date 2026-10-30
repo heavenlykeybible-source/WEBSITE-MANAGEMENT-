@@ -36,7 +36,9 @@ async function scenario(mode){
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips().length,2,'Clear command is undoable');
  node('clipUndo').onclick();
- assert.equal(window.hkTimeline.getClips().length,1,'Undo restores initial timeline for existing scenarios');
+ node('clipUndo').onclick();
+ node('clipUndo').onclick();
+ assert.equal(window.hkTimeline.getClips().length,1,'Undo restores initial timeline through prior reordering operations');
  const hotkey=(key,opts={})=>node('clipList').onkeydown({key,preventDefault(){},...opts});
  hotkey('d',{ctrlKey:true});
  assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+D duplicates selected clip');
