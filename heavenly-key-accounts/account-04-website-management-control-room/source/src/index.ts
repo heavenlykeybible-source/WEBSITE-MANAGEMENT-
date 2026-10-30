@@ -45,18 +45,27 @@ async function accessVerificationKey(domain:string,kid:string):Promise<CryptoKey
  return key;
 }
 function b64url(s:string){const p=s.replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from(atob(p+"=".repeat((4-p.length%4)%4)),c=>c.charCodeAt(0))}
+function validAccessClaims(header:any,claims:any,aud:string,issuer:string,now:number):boolean{
+ if(!header||typeof header!=='object'||header.alg!=='RS256'||typeof header.kid!=='string'||!header.kid)return false;
+ if(!claims||typeof claims!=='object'||Array.isArray(claims))return false;
+ if(!Array.isArray(claims.aud)||!claims.aud.includes(aud)||claims.iss!==issuer)return false;
+ if(typeof claims.exp!=='number'||!Number.isSafeInteger(claims.exp)||claims.exp<=now)return false;
+ if(typeof claims.iat!=='number'||!Number.isSafeInteger(claims.iat)||claims.iat>now+60||claims.iat>claims.exp)return false;
+ if(claims.nbf!==undefined&&(typeof claims.nbf!=='number'||!Number.isSafeInteger(claims.nbf)||claims.nbf>now+60))return false;
+ return typeof claims.email==='string'&&claims.email.length>3&&claims.email.length<=320&&claims.email.includes('@');
+}
 async function authenticate(request:Request,env:Env):Promise<string|null>{
  const token=request.headers.get("Cf-Access-Jwt-Assertion");if(!token||!env.ACCESS_AUD||!env.ACCESS_TEAM_DOMAIN||env.ACCESS_AUD.startsWith("REPLACE_"))return null;
  const parts=token.split(".");if(parts.length!==3)return null;
  try{
  const header=JSON.parse(new TextDecoder().decode(b64url(parts[0]))),claims=JSON.parse(new TextDecoder().decode(b64url(parts[1])));
- if(header.alg!=="RS256"||!header.kid||!Array.isArray(claims.aud)||!claims.aud.includes(env.ACCESS_AUD)||claims.exp<=Date.now()/1000||(typeof claims.nbf==="number"&&claims.nbf>Date.now()/1000))return null;
  const domain=env.ACCESS_TEAM_DOMAIN.replace(/^https?:\/\//,"").replace(/\/$/,"");
- if(!/^[a-z0-9.-]+\.cloudflareaccess\.com$/i.test(domain)||claims.iss!=="https://"+domain)return null;
+ if(!/^[a-z0-9.-]+\.cloudflareaccess\.com$/i.test(domain))return null;
+ if(!validAccessClaims(header,claims,env.ACCESS_AUD,"https://"+domain,Math.floor(Date.now()/1000)))return null;
  const cryptoKey=await accessVerificationKey(domain,header.kid);
  if(!cryptoKey)return null;
  if(!await crypto.subtle.verify("RSASSA-PKCS1-v1_5",cryptoKey,b64url(parts[2]),new TextEncoder().encode(parts[0]+"."+parts[1])))return null;
- return String(claims.email||claims.sub||"unknown");
+ return claims.email;
  }catch{return null}
 }
 
