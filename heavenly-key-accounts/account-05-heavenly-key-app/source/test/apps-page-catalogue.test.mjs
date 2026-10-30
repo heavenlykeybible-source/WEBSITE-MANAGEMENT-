@@ -25,3 +25,9 @@ test('install UI gracefully handles missing elements and QR image failures',()=>
  assert.match(script,/if\(help&&/);
  assert.match(script,/QR unavailable/);
 });
+
+test('install QR code does not disclose install links to a third-party QR service',()=>{
+ const script=readFileSync(new URL('app-pages.js',base),'utf8');
+ assert.doesNotMatch(script,/api\.qrserver\.com/);
+ assert.match(script,/img\.src='\/qr\/app-'/);
+});
