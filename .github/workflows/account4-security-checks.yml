@@ -53,6 +53,7 @@ jobs:
           node tests/account4-navigation-regression.mjs
           node tests/account4-unified-permissions-preview.mjs
           node tests/account4-agent-permissions.mjs
+          node scripts/account4-precise-ai-intent.mjs
           node tests/account4-ai-conversation-guard.mjs
           node tests/account4-provider-reconnect.mjs
           node tests/account4-github-import-ux.mjs
