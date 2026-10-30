@@ -463,3 +463,23 @@ test('host cannot admit an expired waiting-room guest before alarm cleanup',asyn
  assert.ok(expired.messages.some(m=>m.t==='error'&&/Waiting room expired/.test(m.msg)));
  assert.equal(s.host.messages.some(m=>m.t==='joined'&&m.gid===expired.d.id),false);
 });
+
+test('stage invitations expire after two minutes and require a fresh host promotion',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ await message(s.room,s.host,{t:'promote',gid:viewer.d.id});
+ assert.equal(viewer.d.invited,true);
+ assert.ok(viewer.d.invitedUntil>Date.now());
+ viewer.d.invitedUntil=Date.now()-1;
+ await message(s.room,viewer,{t:'ready',ao:true});
+ assert.equal(viewer.d.stage,false);
+ assert.equal(viewer.d.aud,true);
+ assert.equal(viewer.d.invited,false);
+ assert.equal(viewer.d.invitedUntil,0);
+ assert.ok(viewer.messages.some(m=>m.t==='note'&&/invitation has expired/.test(m.text)));
+ await message(s.room,s.host,{t:'promote',gid:viewer.d.id});
+ await message(s.room,viewer,{t:'ready',ao:true});
+ assert.equal(viewer.d.stage,true);
+ assert.equal(viewer.d.invited,false);
+ assert.equal(viewer.d.invitedUntil,0);
+});
