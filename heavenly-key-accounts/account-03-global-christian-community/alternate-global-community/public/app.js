@@ -69,7 +69,8 @@ msgBtn.addEventListener("click",()=>hymnFrame.contentWindow.postMessage({type:"h
 externalBtn.addEventListener("click",()=>hymnFrame.contentWindow.postMessage({type:"hk-hymn-command",action:"share"},"https://apps.heavenlykey.org"));
 window.addEventListener("message",async event=>{if(event.origin!=="https://apps.heavenlykey.org"||event.source!==hymnFrame.contentWindow||event.data?.type!=="hk-hymn-share")return;
 const payload=event.data;selectedHymn={title:String(payload.title||"Gospel Hymn"),text:String(payload.text||"").slice(0,10000)};
-if(payload.action==="post"){if(!session){status(hymnStatus,"Sign in to share this hymn on the community.");return;}const composer=stream.querySelector(".composer-card");if(!composer){status(hymnStatus,"Open the Home feed to publish this hymn.");return;}window.dispatchEvent(new CustomEvent("hk-hymn-compose",{detail:selectedHymn}));status(hymnStatus,"Hymn loaded into the post editor. Review and publish it.");}
+if(payload.action==="copy"){try{await navigator.clipboard.writeText(selectedHymn.text);status(hymnStatus,"Selected hymn copied.");}catch{status(hymnStatus,"Copy blocked by browser. Use the Copy Hymn button inside the reader.");}}
+else if(payload.action==="post"){if(!session){status(hymnStatus,"Sign in to share this hymn on the community.");return;}const composer=stream.querySelector(".composer-card");if(!composer){status(hymnStatus,"Open the Home feed to publish this hymn.");return;}window.dispatchEvent(new CustomEvent("hk-hymn-compose",{detail:selectedHymn}));status(hymnStatus,"Hymn loaded into the post editor. Review and publish it.");}
 else if(payload.action==="message"){try{await navigator.clipboard.writeText(selectedHymn.text);status(hymnStatus,"Hymn copied. Open Messages, choose a member and paste to send.");}catch{status(hymnStatus,"Use Copy Hymn, then open Messages to send it.");}}
 });
 hymnActions.append(copyBtn,postBtn,msgBtn,externalBtn);
