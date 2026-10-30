@@ -4,6 +4,8 @@
 const headers = {'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','cross-origin-resource-policy':'same-origin','x-frame-options':'DENY','content-security-policy':"default-src 'none'; sandbox",'x-robots-tag':'noindex, nofollow'};
 const platforms = {android:{extension:'apk',type:'application/vnd.android.package-archive'},windows:{extension:'msix',type:'application/msix'},mac:{extension:'dmg',type:'application/x-apple-diskimage'}};
 const idPattern = /^[a-z0-9-]{1,64}$/;
+// Bound release size before serving a binary or disclosing it as available.
+const MAX_NATIVE_RELEASE_BYTES = 2 * 1024 * 1024 * 1024;
 const reply = (data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...headers,'content-type':'application/json; charset=utf-8'}});
 function authorized(request,env) {
   const expected = env.DOWNLOAD_ADMIN_TOKEN;
@@ -47,7 +49,8 @@ export async function handleNativeDownloads(request,env) {
   const key=appId+'/'+platform+'/release.'+meta.extension;
   try {
     const object=request.method==='HEAD' ? await env.NATIVE_RELEASES.head(key) : await env.NATIVE_RELEASES.get(key);
-    if(!object || !object.size) return reply({error:'Native installation package not available for this app and device'},404);
+    if(!object) return reply({error:'Native installation package not available for this app and device'},404);
+    if(!Number.isSafeInteger(object.size) || object.size < 1 || object.size > MAX_NATIVE_RELEASE_BYTES) return reply({error:'Invalid native package size'},403);
     // A release is publishable only after the trusted release pipeline records its SHA-256.
     // This metadata is set by the publisher after malware scanning and signing checks.
     const sha256=object.customMetadata?.sha256;
