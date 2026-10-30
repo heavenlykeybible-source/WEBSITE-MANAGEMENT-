@@ -46,5 +46,9 @@ assert(html.includes('new AbortController()'),'Member API requests need cancella
 assert(html.includes('15000'),'Member API requests need bounded timeouts');
 assert(html.includes("Unexpected member service response"),'Member API must validate JSON responses');
 assert(html.includes("Invalid member request"),'Member API requires an endpoint allowlist');
+assert(html.includes("path==='/api/messages/requests'"),'Member message request endpoint must be explicit');
+assert(html.includes("path==='/api/me'"),'Member identity endpoint must be explicit');
+assert(html.includes('method===\'GET\'')&&html.includes('method===\'POST\''),'Member endpoints must enforce the HTTP method');
+assert(html.includes('[a-f0-9]{8}-[a-f0-9]{4}'),'Conversation UUID route must be constrained');
 console.log('PASS: source-level devotional UI, publication gate, accessibility and cache checks');
 console.log('NOTE: static checks do not replace browser testing, accessibility audit or penetration testing.');
