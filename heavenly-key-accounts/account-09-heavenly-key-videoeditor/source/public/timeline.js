@@ -25,7 +25,7 @@ function move(dir){const i=chosen(),j=i+dir;if(i<0||j<0||j>=clips.length)return;
 $('clipUp').onclick=()=>move(-1);$('clipDown').onclick=()=>move(1);
 $('clipUndo').onclick=()=>{if(!undo.length)return;invalidateExport();redo.push(JSON.stringify(clips));clips=JSON.parse(undo.pop());paint()};
 $('clipRedo').onclick=()=>{if(!redo.length)return;invalidateExport();undo.push(JSON.stringify(clips));clips=JSON.parse(redo.pop());paint()};
-$('clipCancel').onclick=()=>{if(session){session.cancelled=true;session.abortSeek?.();session.abortPlayback?.()}v.pause()};
+$('clipCancel').onclick=()=>{if(session){session.cancelled=true;session.abortSeek?.();session.abortPlayback?.();session.abortStart?.()}v.pause()};
 async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
  if($('vexp').disabled)return info('Another video export or media change is in progress.');
@@ -56,7 +56,7 @@ async function runTimeline(record){
    if(state.cancelled)break;
    if(rec&&rec.state==='inactive')rec.start(250);
    info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length);
-   await v.play();
+   await new Promise((resolve,reject)=>{let finished=false;const cleanup=()=>{clearTimeout(timer);if(state.abortStart===abort)state.abortStart=null};const complete=(error)=>{if(finished)return;finished=true;cleanup();error?reject(error):resolve()};const abort=()=>complete(Error('Timeline operation stopped.'));state.abortStart=abort;const timer=setTimeout(()=>complete(Error('Video playback did not start within 15 seconds.')),15000);Promise.resolve().then(()=>v.play()).then(()=>complete(),e=>complete(e));if(state.cancelled)abort()});
    if(state.cancelled){v.pause();break;}
    if(rec&&rec.state==='paused')rec.resume();
    await new Promise((resolve,reject)=>{
