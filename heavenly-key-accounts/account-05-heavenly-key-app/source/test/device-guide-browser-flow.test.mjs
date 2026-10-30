@@ -31,7 +31,7 @@ async function simulate({device='android',userAgent='Mozilla/5.0 (Linux; Android
    ok:true,async json(){return {'all-in-one':{name:'All-in-One',url:origin+'/experience.html'},'walk-with-god':{name:'Walk With God',url:origin+'/walk-offline.html'}}}
   };
   if(url==='/api/native-download/'+app+'/'+device){
-   return {ok:available,headers:new Headers(available?{
+   return {ok:available,status:available?200:404,headers:new Headers(available?{
     'content-type':device==='android'?'application/vnd.android.package-archive':device==='mac'?'application/x-apple-diskimage':'application/msix',
     'content-length':'12345','x-release-sha256':sha
    }:{})};
