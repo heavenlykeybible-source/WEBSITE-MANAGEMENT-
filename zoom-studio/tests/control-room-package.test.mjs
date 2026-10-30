@@ -636,3 +636,18 @@ test('room alarm tracks stage invitation expiry before the sixty-second heartbea
  assert.ok(scheduled>Date.now()+7000&&scheduled<Date.now()+11000);
  assert.equal(viewer.d.invited,true);
 });
+
+test('new host closes orphaned guests from a disconnected previous host',async()=>{
+ const s=await openRoom(),old=s.host,viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:old.d.room,key:s.key,aud:true,name:'Old viewer'});
+ old.readyState=3; // host closed, but its close event has not fired yet
+ const next=s.add();
+ await message(s.room,next,{t:'host',token:roomToken()});
+ assert.equal(next.d.role,'host');
+ assert.equal(next.readyState,1);
+ assert.equal(viewer.readyState,3);
+ assert.ok(viewer.messages.some(m=>m.t==='closed'&&/previous meeting/.test(m.why)));
+ const fresh=s.add();
+ await message(s.room,fresh,{t:'join',room:next.d.room,key:next.messages.at(-1).key,aud:true,name:'New viewer'});
+ assert.equal(fresh.readyState,1);
+});
