@@ -44,6 +44,7 @@ async function loadDailyDrafts(){const date=previewDate||lagosDayKey(),token=++d
  }
  if(!published){
   if(token!==devotionalLoadToken)return;
+  dailyDrafts.clear();pendingDevotionals.clear();
   const found=showDatedDraft(date);
   render(current);
   $('status').textContent=found?'Approved devotional loaded.':'Dated devotionals are awaiting editorial approval; showing the existing topic selections.';
