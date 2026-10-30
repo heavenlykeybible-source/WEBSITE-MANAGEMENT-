@@ -2,6 +2,7 @@
 import {spawnSync} from 'node:child_process';
 const target=process.env.MEETINGSPACE_TARGET_ACCOUNT || '8';
 if(target!=='8') throw Error('MeetingSpace deploys only Account 8; Account 7 is Heavenly Key Radio');
+if(process.env.MEETINGSPACE_OWNER_DEPLOY_APPROVED!=='1') throw Error('Account 8 deployment stopped: explicit owner approval required (MEETINGSPACE_OWNER_DEPLOY_APPROVED=1)');
 const worker='heavenly-key-meetingspace';
 const origin=process.env.MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN;
 if(!origin || !/^https:\/\/[a-z0-9.-]+\/?$/i.test(origin)) throw Error('Set MEETINGSPACE_ACCOUNT8_RELEASE_ORIGIN to the confirmed HTTPS URL for Account 8');
