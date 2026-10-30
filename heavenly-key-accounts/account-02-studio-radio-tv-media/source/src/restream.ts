@@ -101,16 +101,22 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  const result=await callLiveKit(env,'StartEgress',body);
  const newEgressId=String(result.egress_id??result.egressId??'');
  if(!newEgressId)throw new Error('LiveKit did not return an egress ID.');
+ // Persist the replacement before retiring the old stream, so an interrupted
+ // handoff does not leave the only active stream untracked.
+ const replacementState={egressId:newEgressId,source:input.source,sessionId:input.source==='live'?input.sessionId:undefined,channel:input.source==='247'?(input.channel??'video'):undefined,format,quality:input.quality??'balanced',destinations:outputs.map(x=>x.destination),startedAt:new Date().toISOString()};
+ try{await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify(replacementState));}
+ catch(error){try{await callLiveKit(env,'StopEgress',{egress_id:newEgressId});}catch{}throw error;}
  if(replacedEgressId){
   try{
    await callLiveKit(env,'StopEgress',{egress_id:replacedEgressId});
   }catch(error){
    // Avoid leaving two simultaneous broadcasts when the handoff fails.
    try{await callLiveKit(env,'StopEgress',{egress_id:newEgressId});}catch{}
+   try{await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify(previous.active));}catch{}
    throw error;
   }
  }
- await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify({egressId:newEgressId,source:input.source,sessionId:input.source==='live'?input.sessionId:undefined,channel:input.source==='247'?(input.channel??'video'):undefined,format,quality:input.quality??'balanced',destinations:outputs.map(x=>x.destination),startedAt:new Date().toISOString()}));
+
  return {ok:true,egressId:newEgressId,source:input.source,destinations:outputs.map(x=>x.destination),replacedEgressId};
 }
 function egressStillActive(status:unknown){
