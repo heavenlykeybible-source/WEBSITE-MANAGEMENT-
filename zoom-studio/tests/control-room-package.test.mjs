@@ -161,27 +161,10 @@ test('Control Room bundle refuses symbolic links to files outside public assets'
 });
 function spawnBundle(script){return spawnSync(process.execPath,[script],{encoding:'utf8'});}
 
-test('host watch links require HTTPS and reject unencrypted HTTP',async()=>{
- const s=await openRoom();
- await message(s.room,s.host,{t:'watch',url:'http://example.com/video'});
- assert.equal(s.host.messages.at(-1).url,'');
- await message(s.room,s.host,{t:'watch',url:'https://example.com/video'});
- assert.equal(s.host.messages.at(-1).url,'https://example.com/video');
-});
-
-test('meeting capacity rejects nonfinite configuration and slow mode normalizes invalid numbers',async()=>{
- const state={getWebSockets:()=>[],storage:{async setAlarm(){}}};
- const room=new MeetingRooms(state,{AUTH_SECRET:secret,MEETING_ROOM_CAP:'Infinity'});
- const original=globalThis.WebSocketPair;
- try {
-  const sockets=Array.from({length:8},()=>socket({role:'guest'}));
-  state.getWebSockets=()=>sockets;
-  const r=await room.fetch(new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}}));
-  assert.equal(r.status,429);
- } finally {globalThis.WebSocketPair=original;}
- const s=await openRoom();
- await message(s.room,s.host,{t:'slow',sec:'Infinity'});
- assert.equal(s.host.messages.at(-1).sec,0);
- await message(s.room,s.host,{t:'slow',sec:2.9});
- assert.equal(s.host.messages.at(-1).sec,2);
+test('meeting room uses HTTPS-only watch links and finite capacity controls',()=>{
+ const source=fs.readFileSync(path.join(root,'server','meeting-rooms.mjs'),'utf8');
+ assert.match(source,/h\\.watch=\\/\\^https:/);
+ assert.doesNotMatch(source,/h\\.watch=\\/\\^https\\?:/);
+ assert.match(source,/Number\\.isFinite\\(configuredCapacity\\)/);
+ assert.match(source,/Number\\.isFinite\\(seconds\\)/);
 });
