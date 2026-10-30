@@ -59,7 +59,7 @@ async function runTimeline(record){
    if(state.cancelled)break;
    if(rec&&rec.state==='inactive')rec.start(250);
    info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length);
-   await new Promise((resolve,reject)=>{let finished=false;const cleanup=()=>{clearTimeout(timer);if(state.abortStart===abort)state.abortStart=null};const complete=(error)=>{if(finished)return;finished=true;cleanup();error?reject(error):resolve()};const abort=()=>complete(Error('Timeline operation stopped.'));state.abortStart=abort;const timer=setTimeout(()=>complete(Error('Video playback did not start within 15 seconds.')),15000);Promise.resolve().then(()=>{if(state.cancelled)throw Error('Timeline operation stopped.');return v.play()}).then(()=>{if(finished)v.pause();complete()},e=>complete(e));if(state.cancelled)abort()});
+   await new Promise((resolve,reject)=>{let finished=false;const cleanup=()=>{clearTimeout(timer);if(state.abortStart===abort)state.abortStart=null};const complete=(error)=>{if(finished)return;finished=true;cleanup();error?reject(error):resolve()};const abort=()=>complete(Error('Timeline operation stopped.'));state.abortStart=abort;const timer=setTimeout(()=>complete(Error('Video playback did not start within 15 seconds.')),15000);Promise.resolve().then(()=>{if(state.cancelled)throw Error('Timeline operation stopped.');return v.play()}).then(()=>{if(finished&&session===state)v.pause();complete()},e=>complete(e));if(state.cancelled)abort()});
    if(state.cancelled){v.pause();break;}
    if(rec&&rec.state==='paused')rec.resume();
    await new Promise((resolve,reject)=>{
