@@ -33,7 +33,7 @@ export async function listDestinations(env:Env){
 export async function saveDestination(env:Env,destination:string,urlValue:string,enabled:boolean){
  if(!allowed.has(destination))throw new Error('Unsupported destination.');
  let u:URL;try{u=new URL(urlValue.trim());}catch{throw new Error('Enter the platform RTMP or RTMPS server URL including its stream key.');}
- if(!['rtmp:','rtmps:'].includes(u.protocol)||!u.hostname||u.username||u.password)throw new Error('Use a valid RTMP or RTMPS streaming URL.');
+ if(u.protocol!=='rtmps:'||!u.hostname||u.username||u.password||u.hash)throw new Error('Use a secure RTMPS streaming URL without embedded credentials or fragments.');
  if(u.href.length>2048)throw new Error('Streaming URL is too long.');
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
  store[destination]={url:u.href,enabled,updatedAt:new Date().toISOString()};
