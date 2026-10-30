@@ -64,8 +64,10 @@ async function user(req, env) {
 const log = (env, uid, a) => env.DB.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').bind(uid, a, Date.now()).run();
 const body = async req => {
   try {
+    const declared = req.headers.get('content-length');
+    if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > 1100000)) return null;
     const raw = await req.text();
-    if (raw.length > 1100000) return null;
+    if (enc.encode(raw).byteLength > 1100000) return null;
     return JSON.parse(raw);
   } catch { return null; }
 };
