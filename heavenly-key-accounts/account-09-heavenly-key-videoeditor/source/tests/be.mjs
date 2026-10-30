@@ -165,6 +165,25 @@ const noVoice = await request('voice-config', { cookie: login.cookie });
 check('Voice configuration reports unavailable without secrets', noVoice.status === 200 && noVoice.data?.available === false);
 const noVoiceRequest = await request('voice-synthesize', { method: 'POST', cookie: login.cookie, body: { text: 'Hello world', consentConfirmed: true } });
 check('Unconfigured voice service returns 503', noVoiceRequest.status === 503);
+const originalFetch=globalThis.fetch;
+try {
+  globalThis.fetch=async()=>new Response(new ReadableStream({
+    start(controller) {
+      for(let i=0;i<6;i++) controller.enqueue(new Uint8Array(1024*1024));
+      controller.close();
+    }
+  }),{status:200});
+  const tooLargeVoice=await onRequest({
+    request:new Request('https://studio.example/api/voice-synthesize',{
+      method:'POST',
+      headers:{cookie:login.cookie,'content-type':'application/json','x-requested-with':'hk'},
+      body:JSON.stringify({text:'Authorized test text',consentConfirmed:true})
+    }),
+    env:{...env,VOICE_TTS_API_KEY:'test-only',VOICE_TTS_VOICE_ID:'test-voice'},
+    params:{path:['voice-synthesize']}
+  });
+  check('Oversized synthesized audio is rejected while streaming',tooLargeVoice.status===413);
+} finally { globalThis.fetch=originalFetch; }
 const anonymousVoice = await request('voice-config');
 check('Anonymous voice configuration forbidden', anonymousVoice.status === 401);
 
