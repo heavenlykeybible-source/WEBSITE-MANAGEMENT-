@@ -24,6 +24,7 @@ assert(sw.includes('async function cachePublicOfflineAsset(cache,asset)'),'Preca
 assert(sw.includes('credentials:"omit"'),'Offline shell fetch must omit member cookies');
 assert(sw.includes('redirect:"error"'),'Offline shell fetch must reject redirects');
 assert(sw.includes('Sensitive asset excluded from offline storage'),'Private pages must not be precached');
+assert(sw.includes('if(response.headers.has("Set-Cookie"))throw Error("Cookie-setting asset excluded from public offline shell")'),"Offline installer must reject cookie-setting responses");
 assert(sw.includes('CORE_OFFLINE'),'Critical pages must be required for offline install');
 assert(sw.includes('await Promise.all(CORE_OFFLINE.map(asset=>cachePublicOfflineAsset(cache,asset)))'),'Core assets must be fetched atomically before install success');
 assert(sw.includes('await caches.delete(SHELL)'),'Failed core installs must clean partial caches');
@@ -62,7 +63,7 @@ assert(sw.includes('isDevotionalDraftLibrary'),'Devotional cache classification 
 assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved content must never be cached');
 assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
 assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
-assert(sw.includes('hk-bible-shell-v66'),'Service-worker cache version must retire older draft caches');
+assert(sw.includes('hk-bible-shell-v67'),'Service-worker cache version must retire older draft caches');
 assert(html.includes("redirect:'error'"),'Member API requests must not follow redirects');
 assert(html.includes("cache:'no-store'"),'Member API requests must bypass response caching');
 assert(html.includes('new AbortController()'),'Member API requests need cancellation');
