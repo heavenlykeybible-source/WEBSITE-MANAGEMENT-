@@ -86,6 +86,19 @@ async function scenario(mode){
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips()[0].end,1,'Undo restores trimmed end');
  video.currentTime=mode==='cancel-seek'||mode==='source-switch'?.7:0;
+ if(mode==='pending-seek'){
+   video.seeking=true;
+   video.currentTime=0;
+   const operation=node('clipExport').onclick();
+   const seekHandler=videoEvents.get('seeked');
+   assert.equal(typeof seekHandler,'function','Pending same-position seek waits for seeked event');
+   video.seeking=false;
+   seekHandler();
+   await operation;
+   assert.equal(node('clipCancel').disabled,true,'Pending seek operation releases controls');
+   console.log('PASS timeline encoder '+mode);
+   return;
+ }
  if(mode==='source-switch'){
    const operation=node('clipExport').onclick();
    const metadata=videoEvents.get('loadedmetadata');
@@ -143,4 +156,4 @@ async function scenario(mode){
  }
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek'])await scenario(mode);
