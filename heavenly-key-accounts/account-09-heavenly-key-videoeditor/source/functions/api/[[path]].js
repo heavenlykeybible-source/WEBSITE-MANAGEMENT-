@@ -266,6 +266,10 @@ export async function onRequest({ request: req, env, params }) {
         if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
         const payload = await req.arrayBuffer();
         const size = payload.byteLength;
+        const bytes = new Uint8Array(payload,0,Math.min(size,16));
+        const ascii = (at,s) => [...s].every((c,i)=>bytes[at+i]===c.charCodeAt(0));
+        const imageValid = type==='image/png' ? bytes[0]===137&&ascii(1,'PNG')&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10 : type==='image/jpeg' ? bytes[0]===255&&bytes[1]===216&&bytes[2]===255 : type==='image/gif' ? (ascii(0,'GIF87a')||ascii(0,'GIF89a')) : type==='image/webp' ? ascii(0,'RIFF')&&ascii(8,'WEBP') : true;
+        if (!imageValid) return J({ error: 'Image file contents do not match the declared format.' }, 415);
         if (size <= 0 || size > MAXFILE || (announced !== null && Number(announced) !== size)) return J({ error: 'File size is invalid or exceeds 50 MB.' }, 413);
         const reservation = await env.DB.prepare('UPDATE users SET storage_used=storage_used+? WHERE id=? AND storage_used+?<=?').bind(size,u.id,size,QUOTA).run();
         if (!reservation.meta.changes) return J({ error: 'Storage allowance is full.' }, 413);
