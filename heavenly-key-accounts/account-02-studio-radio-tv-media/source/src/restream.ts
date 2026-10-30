@@ -67,8 +67,11 @@ async function callLiveKit(env:any,method:string,body:unknown){
  const token=await signLiveKitGrant(config,{roomRecord:true});
  const endpoint=config.LIVEKIT_URL.replace('wss:','https:')+'/twirp/livekit.Egress/'+method;
  const r=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(15000)});
- // Limit provider response size before parsing to avoid oversized responses.
- const text=await r.text();if(text.length>262144)throw new Error('LiveKit provider response exceeded the safe size limit.');
+ // Enforce the response limit while reading, not after buffering it.
+ const limit=262144;const reader=r.body?.getReader();const chunks:Uint8Array[]=[];let size=0;
+ if(reader){try{while(true){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>limit){await reader.cancel();throw new Error('LiveKit provider response exceeded the safe size limit.');}chunks.push(part.value);}}finally{reader.releaseLock();}}
+ const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+ const text=new TextDecoder().decode(bytes);
  let data:any={};try{data=text?JSON.parse(text):{};}catch{}
  if(r.status>=300&&r.status<400)throw new Error('LiveKit Egress endpoint redirected; verify the configured project URL.');
  if(!r.ok)throw new Error('LiveKit Egress '+method+' failed (HTTP '+r.status+'). Check provider logs.');
