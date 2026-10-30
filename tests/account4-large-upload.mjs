@@ -25,4 +25,20 @@ assert.ok(r.includes("req.headers.get('content-type')"),'Parts must use binary c
 assert.ok(s.includes('const multipart=await account4MultipartRoutes(req,env,user,sub,m);if(multipart)return multipart;'),'Owner API must route to staging');
 assert.ok(r.includes("status:'staged'"),'Status must distinguish staged-only private files');
 assert.ok(!r.includes('await finalizeUnlocked('),'Large uploads must not bypass Waiting Room');
+const importStart=s.indexOf('async function nativeImports()'),importEnd=s.indexOf('var PROVIDER_SEEN=',importStart);
+assert.ok(importStart>=0&&importEnd>importStart,'Importer UI missing');
+const ui=s.slice(importStart,importEnd);
+const client=s.slice(s.indexOf('function largeUploads(){'),importStart);
+for(const [label,fragment] of [
+ ['visible large upload entry',"'Upload large file (up to 1 GiB)'"],
+ ['owner-only binary upload endpoint',"'multipart/'+state.id+'/part/'"],
+ ['binary type',"'application/octet-stream'"],
+ ['CSRF protection',"'x-cr':'1'"],
+ ['resume via persisted server state',"'multipart/'+state.id+'/status'"],
+ ['pause button',"'Pause'"],
+ ['resume button',"'Resume'"],
+ ['abort endpoint',"'multipart/'+state.id+'/abort'"],
+ ['no automatic deployment',"'This is private storage staging only.'"]
+])assert.ok(ui.includes(fragment)||client.includes(fragment),'Missing '+label);
+assert.ok(client.includes("'/api/owner/multipart/'"),'Binary upload must use authenticated owner route');
 console.log('PASS owner-authorized resumable R2 private upload staging and integrity boundaries');
