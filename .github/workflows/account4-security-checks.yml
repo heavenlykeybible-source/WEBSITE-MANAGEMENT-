@@ -35,6 +35,8 @@ jobs:
           npm test
       - name: Verify navigation dry-run before applying changes
         run: npm run check:account4-navigation
+      - name: Dry-run Cloudflare verification and website preview fix
+        run: npm run check:account4-permissions-preview
       - name: Verify navigation upgrade after repository patch tests
         run: |
           npm run prepare:account4-release
