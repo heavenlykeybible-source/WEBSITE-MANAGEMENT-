@@ -292,3 +292,13 @@ test('meeting security controls require booleans rather than truthy strings',asy
  await message(s.room,guest,{t:'hand',on:true});
  assert.equal(s.host.messages.at(-1).t,'hand');
 });
+
+test('WebRTC signalling forwards only allowlisted session and ICE fields',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,name:'Participant'});
+ await message(s.room,s.host,{t:'admit',gid:guest.d.id});
+ await message(s.room,guest,{t:'sig',data:{sdp:{type:'offer',sdp:'v=0',secret:'remove'},unexpected:'remove'}});
+ assert.deepEqual(s.host.messages.at(-1).data,{sdp:{type:'offer',sdp:'v=0'}});
+ await message(s.room,s.host,{t:'sig',to:guest.d.id,data:{c:{candidate:'candidate:1',sdpMid:'0',sdpMLineIndex:0,usernameFragment:'abc',secret:'remove'},extra:'remove'}});
+ assert.deepEqual(guest.messages.at(-1).data,{c:{candidate:'candidate:1',sdpMid:'0',sdpMLineIndex:0,usernameFragment:'abc'}});
+});
