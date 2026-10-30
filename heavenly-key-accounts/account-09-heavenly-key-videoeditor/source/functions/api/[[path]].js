@@ -352,21 +352,26 @@ export async function onRequest({ request: req, env, params }) {
         const jpegDimensionsOk = type==='image/jpeg' && (() => {
           const data=new Uint8Array(payload);
           if(data.length<12||data[0]!==255||data[1]!==216)return false;
-          let at=2;
+          let at=2,frameOk=false;
           while(at+4<data.length){
             if(data[at++]!==255)return false;
             while(at<data.length&&data[at]===255)at++;
             if(at>=data.length)return false;
             const marker=data[at++];
-            if(marker===218||marker===217)return false;
+            if(marker===217)return false;
             if(marker===1||marker>=208&&marker<=215)continue;
             if(at+2>data.length)return false;
             const segmentLength=data[at]*256+data[at+1];
             if(segmentLength<2||at+segmentLength>data.length)return false;
+            if(marker===218){
+              return frameOk&&segmentLength>=6&&data.length>=at+segmentLength+2&&
+                data[data.length-2]===255&&data[data.length-1]===217;
+            }
             if(marker>=192&&marker<=207&&![196,200,204].includes(marker)){
               if(segmentLength<8)return false;
               const height=data[at+3]*256+data[at+4],width=data[at+5]*256+data[at+6];
-              return width>0&&height>0&&width<=16384&&height<=16384&&width*height<=50000000;
+              frameOk=width>0&&height>0&&width<=16384&&height<=16384&&width*height<=50000000;
+              if(!frameOk)return false;
             }
             at+=segmentLength;
           }
