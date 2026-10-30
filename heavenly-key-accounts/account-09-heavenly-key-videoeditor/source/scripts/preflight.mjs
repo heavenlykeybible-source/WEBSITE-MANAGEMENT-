@@ -27,6 +27,7 @@ for (const asset of ['logo-256.png','logo-512.png','favicon.png']) if (!existsSy
 for (const x of ['id="vexp"','id="vdl"','id="autocap"']) if (!html.includes(x)) throw Error(`Missing client control ${x}`);
 const api=readFileSync('functions/api/[[path]].js','utf8');
 if (!api.includes(".trim().toLowerCase() !== 'application/json'")) throw Error('API JSON content type safeguard missing');
+if (!api.includes('Number(declared) !== payload.byteLength')) throw Error('JSON Content-Length mismatch safeguard missing');
 if (!api.includes("Voice provider returned invalid MP3 audio.") || !api.includes('const mp3=frame.length>=4')) throw Error('Synthesized MP3 signature validation missing');
 if (!api.includes('readBoundedMedia(response, 1024*1024)')) throw Error('AI provider response-size limit missing');
 for (const x of ['const ROLES','content-security-policy','await env.MEDIA.delete(key)']) if (!api.includes(x)) throw Error(`Missing server safeguard ${x}`);
