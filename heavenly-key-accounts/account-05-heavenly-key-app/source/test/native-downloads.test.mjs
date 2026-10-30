@@ -5,7 +5,7 @@ import {handleNativeDownloads} from '../src/native-downloads.js';
 const origin='https://apps.heavenlykey.org';
 function environment({packageExists=true,db=true,token='a'.repeat(40)}={}) {
  const calls={writes:0,reads:0,objects:0};
- const verified={size:4,customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true',scannedSha256:'b'.repeat(64),appId:'all-in-one',platform:'android'}};
+ const verified={size:4,checksums:{sha256:new Uint8Array(32).fill(0xbb).buffer},customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true',scannedSha256:'b'.repeat(64),appId:'all-in-one',platform:'android'}};
  const env={
   DOWNLOAD_ADMIN_TOKEN:token,
   ASSETS:{fetch:async()=>new Response(JSON.stringify({'all-in-one':{name:'All-in-One',url:origin+'/experience.html'}}),{status:200})},
@@ -95,7 +95,7 @@ test('reject release whose scanned digest differs from published digest',async()
 
 test('missing release file body cannot be counted or served',async()=>{
  const {env,calls}=environment();
- env.NATIVE_RELEASES.get=async()=>({size:4,customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true',scannedSha256:'b'.repeat(64),appId:'all-in-one',platform:'android'}});
+ env.NATIVE_RELEASES.get=async()=>({size:4,checksums:{sha256:new Uint8Array(32).fill(0xbb).buffer},customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true',scannedSha256:'b'.repeat(64),appId:'all-in-one',platform:'android'}});
  const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env);
  assert.equal(response.status,503);
  assert.equal(calls.writes,0);
@@ -149,4 +149,21 @@ test('native download and private admin responses carry defensive security heade
   assert.equal(response.headers.get('cache-control'),'no-store');
   assert.equal(response.headers.get('referrer-policy'),'no-referrer');
  }
+});
+
+test('R2-stored SHA-256 must be present and agree with publisher metadata',async()=>{
+ const {env,calls}=environment();
+ const valid={size:4,body:new Uint8Array([1,2,3,4]),customMetadata:{
+  sha256:'b'.repeat(64),scannedSha256:'b'.repeat(64),
+  malwareScan:'passed',signatureVerified:'true',appId:'all-in-one',platform:'android'
+ }};
+ env.NATIVE_RELEASES.head=async()=>valid;
+ env.NATIVE_RELEASES.get=async()=>valid;
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env)).status,403);
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
+ valid.checksums={sha256:new Uint8Array(32).fill(0xcc).buffer};
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
+ assert.equal(calls.writes,0);
+ valid.checksums={sha256:new Uint8Array(32).fill(0xbb).buffer};
+ assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env)).status,200);
 });
