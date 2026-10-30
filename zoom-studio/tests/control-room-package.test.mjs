@@ -151,6 +151,12 @@ test('Control Room bundle refuses symbolic links to files outside public assets'
   assert.notEqual(result.status,0);
   assert.match(result.stderr,/Unsafe public asset entry rejected: secret.js/);
   assert.equal(fs.existsSync(path.join(tmp,'build','meeting-worker.mjs')),false);
+  fs.unlinkSync(path.join(tmp,'site','secret.js'));
+  fs.writeFileSync(path.join(tmp,'site','oversize.png'),Buffer.alloc(10*1024*1024+1));
+  const oversized=spawnBundle(path.join(tmp,'scripts','bundle-control-room.mjs'));
+  assert.notEqual(oversized.status,0);
+  assert.match(oversized.stderr,/Public asset exceeds 10 MiB safety limit/);
+  assert.equal(fs.existsSync(path.join(tmp,'build','meeting-worker.mjs')),false);
  } finally {fs.rmSync(tmp,{recursive:true,force:true});}
 });
 function spawnBundle(script){return spawnSync(process.execPath,[script],{encoding:'utf8'});}
