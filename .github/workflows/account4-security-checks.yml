@@ -39,12 +39,15 @@ jobs:
         run: npm run check:account4-permissions-preview
       - name: Check individual AI grants before release
         run: npm run check:account4-agent-permissions
+      - name: Check AI conversation proposal guard
+        run: npm run check:account4-ai-conversation
       - name: Verify navigation upgrade after repository patch tests
         run: |
           npm run prepare:account4-release
           node tests/account4-navigation-regression.mjs
           node tests/account4-unified-permissions-preview.mjs
           node tests/account4-agent-permissions.mjs
+          node tests/account4-ai-conversation-guard.mjs
       - name: Generate release provenance and checksum
         run: node scripts/account4-release-integrity.mjs
       - name: Independently verify staged release checksum
