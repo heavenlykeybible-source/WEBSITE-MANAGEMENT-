@@ -1,0 +1,24 @@
+// Run: node apps/heavenly-key-bible/bible/tests/validate-strength-ui-security.mjs
+import {readFileSync} from 'node:fs';
+import {resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import assert from 'node:assert/strict';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../heavenly-key-website/bible');
+const html=readFileSync(resolve(root,'strength-for-today.html'),'utf8');
+const sw=readFileSync(resolve(root,'sw.js'),'utf8');
+assert(!/\.innerHTML\s*=/.test(html),'Avoid innerHTML DOM assignment sinks');
+assert(!/\beval\s*\(/.test(html),'Avoid eval');
+assert(html.includes("entry.status!=='approved-for-publication'"),'Do not display unapproved dated content');
+assert(html.includes("t.reviewStatus==='approved'"),'Topic-level approval required');
+assert(html.includes('prefers-reduced-motion:reduce'),'Reduced-motion accessibility missing');
+assert(html.includes(':focus-visible'),'Keyboard focus indicator missing');
+assert(html.includes("archiveContainer.id='strength-archive'"),'Archive missing');
+assert(html.includes("memberFind.id='find-members'"),'Member search missing');
+assert(html.includes("memberSend.id='send-selected'"),'Member share missing');
+assert(html.includes("memberClose.id='close-selector'"),'Member dialog close missing');
+assert(html.includes('const DEVOTIONAL_BATCHES='),'Devotional batch list missing');
+assert(html.includes('expectedDays'),'Devotional dates must be checked for completeness');
+assert(sw.includes('SHELL_PRECACHE'),'Offline cache partitioning missing');
+assert(sw.includes('SHELL_ASSETS.filter'),'Unpublished batches must not slow initial installation');
+console.log('PASS: source-level devotional UI, publication gate, accessibility and cache checks');
+console.log('NOTE: static checks do not replace browser testing, accessibility audit or penetration testing.');
