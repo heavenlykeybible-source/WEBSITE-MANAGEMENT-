@@ -24,6 +24,8 @@ jobs:
         run: node tests/account4-cross-account-ci-guards.mjs
       - name: Verify security guard presence
         run: node tests/account4-launch-guards.mjs
+      - name: Verify production release uses approved and tested Worker
+        run: node tests/account4-production-review-parity.mjs
       - name: Validate protected deployment settings and CI permissions
         run: node tests/account4-config-security.mjs
       - name: Check for unresolved conflict markers
