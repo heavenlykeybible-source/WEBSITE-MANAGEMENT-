@@ -496,3 +496,20 @@ test('alarm proactively revokes stale stage invitations without removing audienc
  assert.equal(viewer.d.invitedUntil,0);
  assert.ok(viewer.messages.some(m=>m.t==='note'&&/invitation has expired/.test(m.text)));
 });
+
+test('late disconnect of an old host cannot end a new host session',async()=>{
+ const s=await openRoom(),oldHost=s.host;
+ oldHost.readyState=3;
+ const replacement=s.add();
+ await message(s.room,replacement,{t:'host',token:roomToken()});
+ assert.equal(replacement.d.role,'host');
+ const viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:replacement.d.room,key:replacement.messages.at(-1).key,aud:true,name:'Viewer'});
+ assert.equal(viewer.readyState,1);
+ s.room.webSocketClose(oldHost);
+ assert.equal(replacement.readyState,1);
+ assert.equal(viewer.readyState,1);
+ assert.equal(viewer.messages.some(m=>m.t==='closed'),false);
+ s.room.webSocketClose(replacement);
+ assert.equal(viewer.readyState,3);
+});
