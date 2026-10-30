@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Apply Account 4 navigation upgrade in CI workspace
+        run: node scripts/account4-quick-navigation.mjs
       - name: Verify syntax
         run: node --check control-room-worker.js
       - name: Verify security guard presence
