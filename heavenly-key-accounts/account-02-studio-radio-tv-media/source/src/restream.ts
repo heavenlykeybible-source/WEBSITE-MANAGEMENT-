@@ -88,14 +88,21 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  }
  // Check all inputs before ending an existing on-air egress. An invalid
  // replacement must never silence the currently running programme.
- const previous=await reconcileActive(env);let replacedEgressId:string|null=null;
- if(previous.active?.egressId){
-  replacedEgressId=String(previous.active.egressId);
-  await callLiveKit(env,'StopEgress',{egress_id:replacedEgressId});
-  await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);
- }
+ const previous=await reconcileActive(env);
+ const replacedEgressId=previous.active?.egressId?String(previous.active.egressId):null;
+ // Establish the replacement before touching the existing broadcast.
+ // A failed StartEgress must not take the current programme off air.
  const result=await callLiveKit(env,'StartEgress',body);
  if(!result.egress_id)throw new Error('LiveKit did not return an egress ID.');
+ if(replacedEgressId){
+  try{
+   await callLiveKit(env,'StopEgress',{egress_id:replacedEgressId});
+  }catch(error){
+   // Avoid leaving two simultaneous broadcasts when the handoff fails.
+   try{await callLiveKit(env,'StopEgress',{egress_id:result.egress_id});}catch{}
+   throw error;
+  }
+ }
  await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify({egressId:result.egress_id,source:input.source,sessionId:input.source==='live'?input.sessionId:undefined,channel:input.source==='247'?(input.channel??'video'):undefined,format,quality:input.quality??'balanced',destinations:outputs.map(x=>x.destination),startedAt:new Date().toISOString()}));
  return {ok:true,egressId:result.egress_id,source:input.source,destinations:outputs.map(x=>x.destination),replacedEgressId};
 }
