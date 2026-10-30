@@ -15,7 +15,7 @@ async function loadHistoricalTexts(){
  try{const response=await fetch(verifiedTextUrl,{cache:"default"});if(!response.ok)throw Error("Hymn data unavailable");
  const data=await response.json();let changed=0;
 
- if(data.items?.length===200){
+ if(data.items?.length>=200){
   songs.splice(0,songs.length,...data.items.map((h,i)=>{const parsed=parseHistoricalLyrics(h.lyrics);return {id:i+1,title:h.title,subject:h.theme||"Historical Scripture Hymns",writer:h.author||"Isaac Watts",composer:"Historical tune varies",verses:parsed.verses,chorus:parsed.chorus,sourceUrl:h.sourceUrl,year:h.year,completeness:h.textCompleteness}}));
   changed=songs.length;
  }else{throw Error("The locally hosted 200-hymn collection is incomplete")}
