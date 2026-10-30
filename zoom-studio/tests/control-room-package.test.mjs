@@ -356,3 +356,19 @@ test('meeting chat and display names remove invisible and bidirectional spoofing
  await message(s.room,s.host,{t:'chat',text:'Family 👨\\u200d👩\\u200d👧'});
  assert.equal(s.host.messages.at(-1).text,'Family 👨\\u200d👩\\u200d👧');
 });
+
+test('reusing a previously admitted client pass cannot bypass the waiting room',async()=>{
+ const s=await openRoom(),first=s.add();
+ await message(s.room,first,{t:'join',room:s.host.d.room,key:s.key,name:'Original',pass:'shared-client-value'});
+ assert.equal(first.d.ok,false);
+ await message(s.room,s.host,{t:'admit',gid:first.d.id});
+ assert.equal(first.d.ok,true);
+ const replay=s.add();
+ await message(s.room,replay,{t:'join',room:s.host.d.room,key:s.key,name:'Impersonator',pass:'shared-client-value'});
+ assert.equal(replay.d.ok,false);
+ assert.equal(replay.d.stage,false);
+ assert.equal(Object.hasOwn(replay.d,'pass'),false);
+ assert.ok(s.host.messages.some(m=>m.t==='waiting'&&m.gid===replay.d.id));
+ await message(s.room,replay,{t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}});
+ assert.ok(!s.host.messages.some(m=>m.t==='sig'&&m.from===replay.d.id));
+});
