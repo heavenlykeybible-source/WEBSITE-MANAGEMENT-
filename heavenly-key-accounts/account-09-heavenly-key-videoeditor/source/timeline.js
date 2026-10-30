@@ -68,11 +68,11 @@ async function runTimeline(record){
    if(rec&&rec.state==='paused')rec.resume();
    await new Promise((resolve,reject)=>{
     let completed=false,timer;const finish=(err)=>{if(completed)return;completed=true;clearInterval(timer);state.abortPlayback=null;v.removeEventListener('ended',end);v.removeEventListener('error',error);err?reject(err):resolve()};
-    const end=()=>finish(),error=()=>finish(Error('Video playback failed'));
+    const end=()=>finish(v.currentTime<c.end-.05?Error('Source video ended before the clip finished. Check the media and timeline.'):null),error=()=>finish(Error('Video playback failed'));
     state.abortPlayback=()=>finish();
     v.addEventListener('ended',end);v.addEventListener('error',error);
     const started=Date.now(),maxMs=Math.max(15000,((c.end-c.start)/c.speed+12)*1000);let lastPercent=-1;
-    timer=setInterval(()=>{const progress=Math.max(0,Math.min(1,(v.currentTime-c.start)/(c.end-c.start))),percent=Math.floor(Math.max(0,Math.min(100,(completedSeconds+progress*(c.end-c.start)/c.speed)/totalSeconds*100)));if(percent!==lastPercent){lastPercent=percent;info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length+' — '+percent+'% complete.')}if(encoderError)return finish(encoderError);if(rec&&rec.state==='inactive')return finish(Error('Video encoder stopped before timeline finished'));if(state.cancelled||v.currentTime>=c.end-.03||v.ended)return finish();if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
+    timer=setInterval(()=>{const progress=Math.max(0,Math.min(1,(v.currentTime-c.start)/(c.end-c.start))),percent=Math.floor(Math.max(0,Math.min(100,(completedSeconds+progress*(c.end-c.start)/c.speed)/totalSeconds*100)));if(percent!==lastPercent){lastPercent=percent;info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length+' — '+percent+'% complete.')}if(encoderError)return finish(encoderError);if(rec&&rec.state==='inactive')return finish(Error('Video encoder stopped before timeline finished'));if(state.cancelled||v.currentTime>=c.end-.03)return finish();if(v.ended)return finish(Error('Source video ended before the clip finished. Check the media and timeline.'));if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
    });
    completedSeconds+=(c.end-c.start)/c.speed;
   }
