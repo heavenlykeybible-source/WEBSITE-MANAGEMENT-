@@ -42,6 +42,9 @@ async function scenario(mode){
  assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:2,speed:1},'Full-source clip covers complete video');
  node('clipClear').onclick();
  assert.equal(window.hkTimeline.getClips().length,0,'Clear command removes all clips');
+ assert.equal(node('clipStart').value,'0','Clearing the timeline resets clip start input');
+ assert.equal(node('clipEnd').value,'2','Clearing the timeline resets clip end to source duration');
+ assert.equal(node('clipSpeed').value,'1','Clearing the timeline resets speed to normal');
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips().length,2,'Clear command is undoable');
  node('clipUndo').onclick();
