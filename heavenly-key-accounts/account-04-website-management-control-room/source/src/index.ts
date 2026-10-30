@@ -19,6 +19,31 @@ async function secureAsset(request:Request,env:Env):Promise<Response>{
  if((response.headers.get('content-type')||'').includes('text/html')||new URL(request.url).hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev')response.headers.set('Cache-Control','no-store');
  return response;
 }
+// Cache only public Access verification keys per Worker isolate for five minutes.
+// Never cache identities or bearer tokens; unknown kids always trigger a fresh lookup.
+const accessPublicKeys=new Map<string,{key:CryptoKey;expiresAt:number}>();
+async function accessVerificationKey(domain:string,kid:string):Promise<CryptoKey|null>{
+ if(!/^[a-zA-Z0-9_-]{1,160}$/.test(kid))return null;
+ const cacheKey=domain+'|'+kid,now=Date.now();
+ const cached=accessPublicKeys.get(cacheKey);
+ if(cached&&cached.expiresAt>now)return cached.key;
+ const response=await fetch('https://'+domain+'/cdn-cgi/access/certs',{
+  redirect:'error',signal:AbortSignal.timeout(5000),
+  headers:{Accept:'application/json'}
+ });
+ if(!response.ok)return null;
+ if(Number(response.headers.get('content-length')||0)>65536)return null;
+ const raw=await response.text();
+ if(raw.length>65536)return null;
+ const keys=(JSON.parse(raw) as {keys?:JsonWebKey[]}).keys;
+ if(!Array.isArray(keys))return null;
+ const jwk=keys.find(k=>(k as JsonWebKey&{kid?:string}).kid===kid&&k.kty==='RSA'&&k.alg==='RS256');
+ if(!jwk)return null;
+ const key=await crypto.subtle.importKey('jwk',jwk,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);
+ if(accessPublicKeys.size>=20)accessPublicKeys.clear();
+ accessPublicKeys.set(cacheKey,{key,expiresAt:Date.now()+300000});
+ return key;
+}
 function b64url(s:string){const p=s.replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from(atob(p+"=".repeat((4-p.length%4)%4)),c=>c.charCodeAt(0))}
 async function authenticate(request:Request,env:Env):Promise<string|null>{
  const token=request.headers.get("Cf-Access-Jwt-Assertion");if(!token||!env.ACCESS_AUD||!env.ACCESS_TEAM_DOMAIN||env.ACCESS_AUD.startsWith("REPLACE_"))return null;
@@ -28,9 +53,8 @@ async function authenticate(request:Request,env:Env):Promise<string|null>{
  if(header.alg!=="RS256"||!header.kid||!Array.isArray(claims.aud)||!claims.aud.includes(env.ACCESS_AUD)||claims.exp<=Date.now()/1000||(typeof claims.nbf==="number"&&claims.nbf>Date.now()/1000))return null;
  const domain=env.ACCESS_TEAM_DOMAIN.replace(/^https?:\/\//,"").replace(/\/$/,"");
  if(!/^[a-z0-9.-]+\.cloudflareaccess\.com$/i.test(domain)||claims.iss!=="https://"+domain)return null;
- const jwks=await fetch("https://"+domain+"/cdn-cgi/access/certs");if(!jwks.ok)return null;
- const keys=(await jwks.json() as {keys:JsonWebKey[]}).keys;const key=keys.find(k=>(k as JsonWebKey & {kid?:string}).kid===header.kid);if(!key)return null;
- const cryptoKey=await crypto.subtle.importKey("jwk",key,{name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},false,["verify"]);
+ const cryptoKey=await accessVerificationKey(domain,header.kid);
+ if(!cryptoKey)return null;
  if(!await crypto.subtle.verify("RSASSA-PKCS1-v1_5",cryptoKey,b64url(parts[2]),new TextEncoder().encode(parts[0]+"."+parts[1])))return null;
  return String(claims.email||claims.sub||"unknown");
  }catch{return null}
