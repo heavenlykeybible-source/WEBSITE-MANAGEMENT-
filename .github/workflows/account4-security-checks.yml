@@ -37,11 +37,14 @@ jobs:
         run: npm run check:account4-navigation
       - name: Dry-run Cloudflare verification and website preview fix
         run: npm run check:account4-permissions-preview
+      - name: Check individual AI grants before release
+        run: npm run check:account4-agent-permissions
       - name: Verify navigation upgrade after repository patch tests
         run: |
           npm run prepare:account4-release
           node tests/account4-navigation-regression.mjs
           node tests/account4-unified-permissions-preview.mjs
+          node tests/account4-agent-permissions.mjs
       - name: Generate release provenance and checksum
         run: node scripts/account4-release-integrity.mjs
       - name: Independently verify staged release checksum
