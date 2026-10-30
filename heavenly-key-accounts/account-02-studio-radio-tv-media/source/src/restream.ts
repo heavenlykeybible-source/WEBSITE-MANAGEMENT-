@@ -116,6 +116,7 @@ async function reconcileActive(env:any){
  try{
   const listed=await callLiveKit(env,'ListEgress',{egress_id:active.egressId});
   const item=(listed?.items||[]).find((x:any)=>String(x.egress_id||x.egressId||'')===String(active.egressId));
+  if(!item)return {active:{...active,providerStatus:'UNKNOWN'},last:null};
   if(item&&egressStillActive(item.status))return {active:{...active,providerStatus:item.status,providerUpdatedAt:item.updated_at||item.updatedAt||null},last:null};
   await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);
   return {active:null,last:item?{egressId:active.egressId,status:item.status,error:item.error||item.details||null}:null};
