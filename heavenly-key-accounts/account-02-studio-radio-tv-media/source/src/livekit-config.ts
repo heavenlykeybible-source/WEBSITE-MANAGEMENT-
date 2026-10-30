@@ -27,7 +27,7 @@ export async function saveLiveKitConnection(env:ConfigEnv,config:LiveKitConfig){
 
 const STATUS_KEY='livekit-connection-status-v1';
 export async function liveKitConnectionStatus(env:ConfigEnv){
- const meta=JSON.parse(await env.LIVE_STATUS_KV.get(STATUS_KEY)||'{}');
+ let meta:any={};try{meta=JSON.parse(await env.LIVE_STATUS_KV.get(STATUS_KEY)||'{}');}catch{meta={};}
  try{const config=await resolveLiveKitConfig(env);return {configured:!!config,state:config?(meta.state||'saved'):(meta.state==='reset'?'reset':env.LIVEKIT_API_KEY||env.LIVEKIT_API_SECRET||env.LIVEKIT_URL?'incomplete':'not_configured'),url:meta.state==='reset'?null:config?.LIVEKIT_URL??env.LIVEKIT_URL??null,keyMasked:config?'••••'+(config.LIVEKIT_API_KEY.length>4?config.LIVEKIT_API_KEY.slice(-4):''):null,secretSaved:!!config,verifiedAt:meta.verifiedAt??null,checkedAt:meta.checkedAt??null,errorCode:meta.errorCode??null,source:await env.LIVE_STATUS_KV.get(CONFIG_KEY)?'dashboard':'environment'};}catch{return {configured:false,state:'unreadable',url:null,keyMasked:null,secretSaved:false,verifiedAt:meta.verifiedAt??null,errorCode:'connection_unreadable'};}
 }
 export async function recordLiveKitVerification(env:ConfigEnv,ok:boolean,errorCode?:string){const old=JSON.parse(await env.LIVE_STATUS_KV.get(STATUS_KEY)||'{}'),now=new Date().toISOString();await env.LIVE_STATUS_KV.put(STATUS_KEY,JSON.stringify({state:ok?'connected':'attention',verifiedAt:ok?now:old.verifiedAt??null,checkedAt:now,errorCode:ok?null:errorCode||'connection_check_failed'}));}
