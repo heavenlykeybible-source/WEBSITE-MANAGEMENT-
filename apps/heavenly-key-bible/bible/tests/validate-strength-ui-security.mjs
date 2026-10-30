@@ -56,7 +56,11 @@ for(const [cc,vary,expected] of [
 
 assert(sw.includes('if(sensitive){cached=undefined;try{await cache.delete(event.request);}') ,'Sensitive previously cached responses must be evicted');
 assert(sw.includes('&&!sensitive&&!setsCookie&&anonymousRequest&&'),'Sensitive and credentialed responses must not be newly stored');
-assert(sw.includes('event.request.credentials==="omit"'),'Only credential-free runtime requests may be cached');
+assert(sw.includes('networkRequest.credentials==="omit"'),'Only credential-free network responses may be cached');
+assert(sw.includes('const publicDevotionalRequest=isDevotionalDraftLibrary'),'Anonymous fetch must apply only to devotional library');
+assert(sw.includes('new Request(event.request,{credentials:"omit"})'),'Public dated devotionals must load without member cookies');
+assert(sw.includes('fetch(networkRequest,{cache:"no-cache"})'),'Network must use sanitized request');
+
 assert(sw.includes('response.headers.has("Set-Cookie")'),'Set-Cookie responses cannot enter public Cache API');
 
 assert(sw.includes('const expectsJson=(isScripture||isDevotionalDraftLibrary)'), 'Bible JSON resources must use MIME validation');
@@ -67,7 +71,7 @@ assert(sw.includes('isDevotionalDraftLibrary'),'Devotional cache classification 
 assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved content must never be cached');
 assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
 assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
-assert(sw.includes('hk-bible-shell-v68'),'Service-worker cache version must retire older draft caches');
+assert(sw.includes('hk-bible-shell-v69'),'Service-worker cache version must retire older draft caches');
 assert(html.includes("redirect:'error'"),'Member API requests must not follow redirects');
 assert(html.includes("cache:'no-store'"),'Member API requests must bypass response caching');
 assert(html.includes('new AbortController()'),'Member API requests need cancellation');
