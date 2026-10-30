@@ -18,8 +18,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply Account 4 navigation upgrade in CI workspace
-        run: node scripts/account4-quick-navigation.mjs
       - name: Verify syntax
         run: node --check control-room-worker.js
       - name: Verify security guard presence
@@ -34,4 +32,9 @@ jobs:
         run: |
           npm ci
           npm test
+      - name: Verify navigation upgrade after repository patch tests
+        run: |
+          node scripts/account4-quick-navigation.mjs
+          node --check control-room-worker.js
+          node tests/account4-launch-guards.mjs
 # This workflow intentionally does not publish, deploy or access production secrets.
