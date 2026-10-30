@@ -35,7 +35,7 @@ for(let i=0;i<entries.length;i++){
 }
 const all=entries.flatMap(e=>e.topics);
 console.log('First two years structurally valid:',entries.length,'days',all.length,'topic entries');
-const normalize=value=>value.trim().toLowerCase().replace(/\\s+/g,' ');
+const normalize=value=>value.trim().toLowerCase().replace(/\s+/g,' ');
 const uniqueReflections=new Set(all.map(t=>normalize(t.reflection))).size;
 const uniquePrayers=new Set(all.map(t=>normalize(t.prayer))).size;
 console.log('CONTENT QUALITY REPORT:',JSON.stringify({totalTopicEntries:all.length,uniqueReflections,duplicateReflectionEntries:all.length-uniqueReflections,uniquePrayers,duplicatePrayerEntries:all.length-uniquePrayers}));
