@@ -20,11 +20,15 @@ assert(html.includes('const DEVOTIONAL_BATCHES='),'Devotional batch list missing
 assert(html.includes('expectedDays'),'Devotional dates must be checked for completeness');
 assert(sw.includes('SHELL_PRECACHE'),'Offline cache partitioning missing');
 assert(sw.includes('SHELL_ASSETS.filter'),'Unpublished batches must not slow initial installation');
+assert(sw.includes('async function cachePublicOfflineAsset(cache,asset)'),'Precache must validate asset cacheability');
+assert(sw.includes('credentials:"omit"'),'Offline shell fetch must omit member cookies');
+assert(sw.includes('redirect:"error"'),'Offline shell fetch must reject redirects');
+assert(sw.includes('Sensitive asset excluded from offline storage'),'Private pages must not be precached');
 assert(sw.includes('CORE_OFFLINE'),'Critical pages must be required for offline install');
-assert(sw.includes('await Promise.all(CORE_OFFLINE.map(asset=>cache.add(asset)))'),'Core assets must be fetched atomically before install success');
+assert(sw.includes('await Promise.all(CORE_OFFLINE.map(asset=>cachePublicOfflineAsset(cache,asset)))'),'Core assets must be fetched atomically before install success');
 assert(sw.includes('await caches.delete(SHELL)'),'Failed core installs must clean partial caches');
 assert(sw.includes('new Set(SHELL_ASSETS.filter'),'Cache assets must be deduplicated');
-assert(sw.includes('OPTIONAL_OFFLINE.map(asset=>cache.add(asset))'),'Optional files must remain best effort');
+assert(sw.includes('OPTIONAL_OFFLINE.map(asset=>cachePublicOfflineAsset(cache,asset))'),'Optional files must remain best effort');
 assert(sw.includes('url.search===""'),'Query-specific responses must not be persisted');
 assert(sw.includes('headers.has("Authorization")'),'Authenticated responses must not be cached');
 assert(sw.includes('Cache-Control'),'Private or no-store responses must not be cached');
@@ -44,7 +48,7 @@ assert(sw.includes('isDevotionalDraftLibrary'),'Devotional cache classification 
 assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved content must never be cached');
 assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
 assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
-assert(sw.includes('hk-bible-shell-v63'),'Service-worker cache version must retire older draft caches');
+assert(sw.includes('hk-bible-shell-v64'),'Service-worker cache version must retire older draft caches');
 assert(html.includes("redirect:'error'"),'Member API requests must not follow redirects');
 assert(html.includes("cache:'no-store'"),'Member API requests must bypass response caching');
 assert(html.includes('new AbortController()'),'Member API requests need cancellation');
