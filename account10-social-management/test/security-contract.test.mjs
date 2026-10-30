@@ -94,3 +94,13 @@ test('Gemini quota exhaustion routes to human review without automatic retry', (
   assert.ok(handler.includes("action:'human_review'"));
   assert.ok(handler.includes("automaticRetry:false"));
 });
+
+test('WhatsApp free-form send requires a real recent inbound timestamp, not a future-dated message', () => {
+  const start=source.indexOf("if(u.pathname==='/api/whatsapp/send-approved'");
+  const end=source.indexOf("if(u.pathname==='/api/whatsapp/connection-check'",start);
+  assert.ok(start>=0 && end>start);
+  const handler=source.slice(start,end);
+  assert.match(handler, /datetime\(created_at\)>=datetime\('now','-24 hours'\)/);
+  assert.match(handler, /datetime\(created_at\)<=datetime\('now'\)/);
+  assert.match(handler, /AND id GLOB 'wa_msg_\*'/);
+});
