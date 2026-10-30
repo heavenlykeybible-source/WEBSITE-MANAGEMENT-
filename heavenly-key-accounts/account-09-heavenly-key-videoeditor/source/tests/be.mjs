@@ -177,6 +177,20 @@ const excessiveDimensions=await onRequest({
 });
 check('PNG decompression bomb dimensions rejected before storage',excessiveDimensions.status===415);
 
+let uploadChunks=0;
+const unboundedUpload = new ReadableStream({
+  pull(controller) {
+    if (uploadChunks++ < 51) controller.enqueue(new Uint8Array(1024 * 1024));
+    else controller.close();
+  }
+});
+const rejectedOversize = await onRequest({
+  request:new Request('https://studio.example/api/media?name=oversize.png',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
+    body:unboundedUpload,duplex:'half'
+  }),env,params:{path:['media']}
+});
+check('Unknown-length upload exceeding 50 MB is rejected while streaming',rejectedOversize.status===413);
 const mediaCreated = await noLengthUpload.json();
 const otherMediaRead = await request('media/'+mediaCreated.id,{cookie:secondLogin.cookie});
 check('Members cannot read another member media',otherMediaRead.status===404);
