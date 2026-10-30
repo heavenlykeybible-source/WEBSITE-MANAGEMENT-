@@ -554,3 +554,20 @@ test('blank and malformed chat contents cannot produce empty broadcasts',async()
  await message(s.room,viewer,{t:'chat',text:'Valid message'});
  assert.equal(s.host.messages.at(-1).text,'Valid message');
 });
+
+test('expired host takeover requires the same original owner identity',async()=>{
+ const s=await openRoom(),oldHost=s.host,viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:oldHost.d.room,key:s.key,aud:true,name:'Viewer'});
+ oldHost.d.until=Date.now()-1;
+ const differentOwner=s.add();
+ await message(s.room,differentOwner,{t:'host',token:roomToken({u:'other-owner@test.local'})});
+ assert.equal(differentOwner.readyState,3);
+ assert.ok(differentOwner.messages.some(m=>m.t==='error'&&/another host/.test(m.msg)));
+ assert.equal(oldHost.readyState,1);
+ assert.equal(viewer.readyState,1);
+ const owner=s.add();
+ await message(s.room,owner,{t:'host',token:roomToken()});
+ assert.equal(owner.d.role,'host');
+ assert.equal(oldHost.readyState,3);
+ assert.equal(viewer.readyState,3);
+});
