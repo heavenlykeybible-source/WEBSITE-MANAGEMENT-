@@ -42,10 +42,9 @@ assert(sw.includes('if(digest!==book.sha256)'),'Cached KJV checksum mismatch mus
 assert(sw.includes("if(!approved){cached=undefined;try{await cache.delete(event.request);}")||sw.includes("if(!approved){cached=undefined;try{await cache.delete(event.request);"),'Withdrawn devotionals must be evicted and never served as cached fallback');
 assert(sw.includes('const varies=response.headers.get("Vary")'),'Responses varying by cookies or authorization must be classified');
 assert(sw.includes('const sensitive='),'Sensitive caching must be evaluated before writes');
-assert(sw.includes('const sensitive=/(?:^|,)\\s*')===false,'Security regex must not contain escaped literal backslashes');
-assert(sw.includes('const sensitive=/(?:^|,)\\s*')===false,'Reject malformed sensitive policy detection');
-assert(sw.includes('const sensitive=/(?:^|,)\s*'),'Cache-Control must parse whitespace correctly');
-assert(sw.includes('(?:cookie|authorization|\*)'),'Vary header must recognize literal wildcard');
+assert(!sw.includes(String.raw`const sensitive=/(?:^|,)\\s*`),'Malformed double-escaped security regex');
+assert(sw.includes(String.raw`const sensitive=/(?:^|,)\s*`),'Correct whitespace detection required');
+assert(sw.includes(String.raw`(?:cookie|authorization|\*)`),'Vary wildcard recognition required');
 const cachePolicySensitive=(cc,vary)=>/(?:^|,)\s*(?:private|no-store)(?:\s*(?:,|$)|\s*;)/i.test(cc)
  ||/(?:^|,)\s*(?:cookie|authorization|\*)(?:\s*,|\s*$)/i.test(vary);
 for(const [cc,vary,expected] of [
