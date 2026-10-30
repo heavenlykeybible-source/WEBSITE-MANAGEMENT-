@@ -18,7 +18,7 @@ async function seal(env:Env,value:unknown){
 }
 async function open<T>(env:Env,stored:string|null):Promise<T|null>{
  if(!stored)return null;
- try{const {iv,data}=JSON.parse(stored);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Uint8Array.from(iv)},await key(env),Uint8Array.from(data));return JSON.parse(new TextDecoder().decode(plain)) as T;}catch{return null;}
+ try{const {iv,data}=JSON.parse(stored);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Uint8Array.from(iv)},await key(env),Uint8Array.from(data));return JSON.parse(new TextDecoder().decode(plain)) as T;}catch{throw new Error('Stored streaming destinations cannot be decrypted. Restore the encryption secret or recover the destination configuration.');}
 }
 type Destination={url:string;enabled:boolean;updatedAt:string};
 type Store=Record<string,Destination>;
