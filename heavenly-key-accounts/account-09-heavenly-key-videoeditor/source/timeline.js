@@ -78,14 +78,14 @@ async function runTimeline(record){
   }
   v.pause();
   if(rec&&rec.state!=='inactive'){rec.stop();await new Promise((resolve,reject)=>{let settled=false;const cleanup=()=>{clearTimeout(timeout);if(state.abortEncoder===abort)state.abortEncoder=null};const done=(error)=>{if(settled)return;settled=true;cleanup();error?reject(error):resolve()};const abort=()=>done();state.abortEncoder=abort;const timeout=setTimeout(()=>done(Error('Timeline encoder did not finish within 15 seconds')),15000);finished.then(()=>done());if(state.cancelled)abort()})}if(encoderError)throw encoderError;
-  if(state.cancelled)return info('Timeline operation stopped.');
+  if(state.cancelled)return state.sourceChanged?undefined:info('Timeline operation stopped.');
   if(record){
    const blob=new Blob(fragments,{type:mime});if(!blob.size)throw Error('Encoder generated an empty video.');
    if(exportUrl)URL.revokeObjectURL(exportUrl);exportUrl=URL.createObjectURL(blob);
    $('clipDownload').href=exportUrl;$('clipDownload').download='heavenly-key-timeline.'+(mime.startsWith('video/mp4')?'mp4':'webm');$('clipDownload').hidden=false;
    info((stream.getAudioTracks().length?'':'Warning: this browser exported video without audio. ')+'Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
   }else info('Timeline preview complete.');
- }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}info(state.cancelled?'Timeline operation stopped.':'Timeline failed: '+e.message)}
+ }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}if(!state.sourceChanged)info(state.cancelled?'Timeline operation stopped.':'Timeline failed: '+e.message)}
  finally{if(!state.sourceChanged){v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration)}if(stream)stream.getTracks().forEach(t=>t.stop());if(sourceStream)sourceStream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
 }
 window.hkTimeline={
