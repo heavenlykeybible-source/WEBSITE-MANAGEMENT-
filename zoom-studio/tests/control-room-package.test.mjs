@@ -161,6 +161,19 @@ test('Control Room bundle refuses symbolic links to files outside public assets'
 });
 function spawnBundle(script){return spawnSync(process.execPath,[script],{encoding:'utf8'});}
 
+test('locked meeting rejects new audience viewers as well as regular guests',async()=>{
+ const s=await openRoom();
+ await message(s.room,s.host,{t:'lock',on:true});
+ const audience=s.add();
+ await message(s.room,audience,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Late audience'});
+ assert.equal(audience.readyState,3);
+ assert.ok(audience.messages.some(m=>m.t==='error'&&/locked/.test(m.msg)));
+ const stageGuest=s.add();
+ await message(s.room,stageGuest,{t:'join',room:s.host.d.room,key:s.key,aud:false,name:'Late participant'});
+ assert.equal(stageGuest.readyState,3);
+ assert.ok(stageGuest.messages.some(m=>m.t==='error'&&/locked/.test(m.msg)));
+});
+
 test('meeting room uses HTTPS-only watch links and finite capacity controls',()=>{
  const source=fs.readFileSync(path.join(root,'server','meeting-rooms.mjs'),'utf8');
  assert.match(source,/h\\.watch=\\/\\^https:/);
