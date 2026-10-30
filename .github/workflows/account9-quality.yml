@@ -1,0 +1,29 @@
+name: Account 9 quality checks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: account9-quality-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Preflight and regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-09-heavenly-key-videoeditor/source
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run full Account 9 checks
+        run: npm run check
