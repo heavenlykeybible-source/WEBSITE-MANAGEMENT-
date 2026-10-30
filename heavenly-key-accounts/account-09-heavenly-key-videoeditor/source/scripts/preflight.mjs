@@ -26,6 +26,7 @@ if (html !== readFileSync('index.html','utf8')) throw Error('Public page not syn
 for (const asset of ['logo-256.png','logo-512.png','favicon.png']) if (!existsSync('public/assets/'+asset)) throw Error('Public asset missing: '+asset);
 for (const x of ['id="vexp"','id="vdl"','id="autocap"']) if (!html.includes(x)) throw Error(`Missing client control ${x}`);
 const api=readFileSync('functions/api/[[path]].js','utf8');
+if (!api.includes(".trim().toLowerCase() !== 'application/json'")) throw Error('API JSON content type safeguard missing');
 for (const x of ['const ROLES','content-security-policy','await env.MEDIA.delete(key)']) if (!api.includes(x)) throw Error(`Missing server safeguard ${x}`);
 for (const guard of ['const validWav = wavHeader','wavHeader.getUint32(4,true) === wave.length - 8','wavHeader.getUint32(40,true) === wave.length - 44']) if (!api.includes(guard)) throw Error('PCM WAV validation safeguard missing: '+guard);
 console.log('Account 9 preflight: source, route, editor controls and Cloudflare bindings present.');
