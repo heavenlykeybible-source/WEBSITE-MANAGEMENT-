@@ -196,7 +196,7 @@ export async function onRequest({ request: req, env, params }) {
       if(count.c>=10)return J({error:'Daily synthesis limit reached.'},429);
       const res=await fetch('https://api.elevenlabs.io/v1/text-to-speech/'+encodeURIComponent(env.VOICE_TTS_VOICE_ID),{method:'POST',headers:{'xi-api-key':env.VOICE_TTS_API_KEY,'content-type':'application/json','accept':'audio/mpeg'},body:JSON.stringify({text:b.text,model_id:'eleven_multilingual_v2'}),signal:AbortSignal.timeout(45000)});
       if(!res.ok)return J({error:'Voice provider unavailable or quota reached.'},503);
-      const audio=await res.arrayBuffer();if(audio.byteLength>5e6)return J({error:'Audio too large.'},413);
+      const audio=await readBoundedMedia(res, 5e6);if(!audio)return J({error:'Audio too large.'},413);
       await log(env,u.id,'voice_synthesize');
       return new Response(audio,{headers:{'content-type':'audio/mpeg','cache-control':'no-store','x-content-type-options':'nosniff'}});
     }
