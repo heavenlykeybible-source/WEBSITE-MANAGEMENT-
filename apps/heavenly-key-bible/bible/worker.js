@@ -90,7 +90,7 @@ export default {
   }
   // Extensionless public URLs mapped to the original, unchanged static assets.
   if(request.method==="GET"||request.method==="HEAD"){
-   const routes={"/":"/index.html","/install":"/install/index.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html"};
+   const routes={"/":"/index.html","/install":"/install/index.html","/dictionary":"/study-extensions.html","/concordance":"/study-extensions.html","/study":"/study-extensions.html","/daily-routine":"/study-extensions.html","/old-time-gospel-revival-hymn-book":"/old-time-gospel-revival-hymn-book.html"};
    const pathname=url.pathname.replace(/\/$/,"")||"/";
    if(routes[pathname]){
     const assetUrl=new URL(routes[pathname],url.origin);
