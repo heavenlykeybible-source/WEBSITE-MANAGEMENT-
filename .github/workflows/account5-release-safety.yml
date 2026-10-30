@@ -23,6 +23,8 @@ jobs:
           node-version: '22'
       - name: Check validator syntax
         run: node --check scripts/validate-account5-releases.mjs
+      - name: Check Bible Champions curriculum validator syntax
+        run: node --check heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/verify-bible-champions-curriculum.mjs
       - name: Test Account 5 source
         run: npm test --prefix heavenly-key-accounts/account-05-heavenly-key-app/source
       - name: Build-check Account 5 source
@@ -46,5 +48,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Require 24 complete, verified 30-question Bible Champions courses
+        run: node heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/verify-bible-champions-curriculum.mjs
       - name: Require real inventory and verified packages
         run: node scripts/validate-account5-releases.mjs account5-release-manifest.json
