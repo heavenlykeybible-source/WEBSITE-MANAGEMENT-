@@ -1,0 +1,46 @@
+name: Account 10 SocialPlus security and build verification
+
+on:
+  push:
+    paths:
+      - 'account10-social-management/**'
+      - '.github/workflows/account10-verify.yml'
+  pull_request:
+    paths:
+      - 'account10-social-management/**'
+      - '.github/workflows/account10-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: account10-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, test security, and dry-run build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: account10-social-management
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: account10-social-management/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Verify source, tests and bundle
+        run: npm run verify:local
+      - name: Confirm no Cloudflare deploy credentials are needed
+        run: |
+          echo 'Verification only; no production deployment, migrations or secret access.'
