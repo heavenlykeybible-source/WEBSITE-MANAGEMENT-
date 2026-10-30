@@ -393,3 +393,21 @@ test('reusing a previously admitted client pass cannot bypass the waiting room',
  await message(s.room,replay,{t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}});
  assert.ok(!s.host.messages.some(m=>m.t==='sig'&&m.from===replay.d.id));
 });
+
+test('kicked and disconnected participants cannot send queued chat or signalling',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,name:'Visitor'});
+ await message(s.room,s.host,{t:'admit',gid:guest.d.id});
+ await message(s.room,s.host,{t:'kick',gid:guest.d.id});
+ assert.equal(guest.readyState,3);
+ const before=s.host.messages.length;
+ await message(s.room,guest,{t:'chat',text:'after kick'});
+ await message(s.room,guest,{t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}});
+ await message(s.room,guest,{t:'hand',on:true});
+ assert.equal(s.host.messages.length,before);
+ const closedHost=await openRoom();
+ closedHost.host.readyState=3;
+ const count=closedHost.host.messages.length;
+ await message(closedHost.room,closedHost.host,{t:'watch',url:'https://example.com'});
+ assert.equal(closedHost.host.messages.length,count);
+});
