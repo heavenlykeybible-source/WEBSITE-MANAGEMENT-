@@ -32,7 +32,7 @@ async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
  if($('vexp').disabled)return info('Another video export or media change is in progress.');
  if(!ready()||!clips.length)return info('Load a video and add timeline clips.');
- const validClips=clips.every(c=>c&&Number.isFinite(c.start)&&Number.isFinite(c.end)&&Number.isFinite(c.speed)&&c.start>=0&&c.end>c.start&&c.speed>=.25&&c.speed<=4);if(!validClips)return info('Timeline contains invalid clip timing or speed.');
+ const validClips=clips.every(c=>c&&Number.isFinite(c.start)&&Number.isFinite(c.end)&&Number.isFinite(c.speed)&&c.start>=0&&c.end>c.start&&c.end<=86400&&c.speed>=.25&&c.speed<=4);if(!validClips)return info('Timeline contains invalid clip timing or speed.');
  if(clips.some(c=>c.start>=v.duration||c.end>v.duration+.02))return info('A clip exceeds the current video duration. Reload the original source or correct the clips.');
  const totalSeconds=clips.reduce((n,c)=>n+(c.end-c.start)/c.speed,0);
  if(!Number.isFinite(totalSeconds)||totalSeconds<=0)return info('Timeline duration is invalid. Check clip times and speeds.');
