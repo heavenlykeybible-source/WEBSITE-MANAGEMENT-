@@ -160,3 +160,11 @@ test('Control Room bundle refuses symbolic links to files outside public assets'
  } finally {fs.rmSync(tmp,{recursive:true,force:true});}
 });
 function spawnBundle(script){return spawnSync(process.execPath,[script],{encoding:'utf8'});}
+
+test('host watch links require HTTPS and reject unencrypted HTTP',async()=>{
+ const s=await openRoom();
+ await message(s.room,s.host,{t:'watch',url:'http://example.com/video'});
+ assert.equal(s.host.messages.at(-1).url,'');
+ await message(s.room,s.host,{t:'watch',url:'https://example.com/video'});
+ assert.equal(s.host.messages.at(-1).url,'https://example.com/video');
+});
