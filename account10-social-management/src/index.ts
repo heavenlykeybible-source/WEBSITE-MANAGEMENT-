@@ -73,13 +73,14 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(req.method==='OPTIONS')return reply({error:'Cross-origin API access is disabled'},403);
  const type=req.headers.get('content-type')||'';
  if(['POST','PUT','PATCH'].includes(req.method)&&!type.toLowerCase().startsWith('application/json'))return reply({error:'JSON content type required'},415);
- const size=Number(req.headers.get('content-length')||0);
- if(size>1048576)return reply({error:'Request exceeds 1 MiB limit'},413);
+ const declaredLength=req.headers.get('content-length');
+ if(declaredLength!==null&&(!/^[0-9]+$/.test(declaredLength)||!Number.isSafeInteger(Number(declaredLength))))return reply({error:'Invalid Content-Length'},400);
+ if(declaredLength!==null&&Number(declaredLength)>1048576)return reply({error:'Request exceeds 1 MiB limit'},413);
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
  const provided=req.headers.get('authorization')||'';
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
- if(req.method==='POST'){
+ if(['POST','PUT','PATCH'].includes(req.method)){
   const contentType=req.headers.get('content-type')||'';
   if(!/^application\/json(?:\s*;|\s*$)/i.test(contentType))return reply({error:'Content-Type must be application/json'},415);
   const declared=req.headers.get('content-length');
