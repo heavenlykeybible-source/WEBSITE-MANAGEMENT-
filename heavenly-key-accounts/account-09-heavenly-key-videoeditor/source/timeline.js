@@ -30,7 +30,7 @@ async function runTimeline(record){
  if(clips.some(c=>c.end>v.duration+.02))return info('A clip exceeds the current video duration. Reload the original source or correct the clips.');
  const totalSeconds=clips.reduce((n,c)=>n+(c.end-c.start)/c.speed,0);
  if(record&&totalSeconds>600)return info('Browser export is limited to ten minutes. Shorten the timeline.');
- if(record&&(!canvas.captureStream||!window.MediaRecorder))return info('WebM export is unavailable in this browser.');
+ if(record&&(!canvas.captureStream||!window.MediaRecorder||typeof MediaRecorder.isTypeSupported!=='function'))return info('Video export is unavailable in this browser.');
  const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
  if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
  const state={cancelled:false};session=state;setBusy(true);
