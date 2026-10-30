@@ -420,18 +420,36 @@ el("memory-toggle").addEventListener("click",()=>{el("selected-text").hidden=!el
 el("scripture-search").addEventListener("submit",searchScripture);
 el("scripture-image").addEventListener("click",scriptureImage);
 async function setupOffline(){
- if(!("serviceWorker" in navigator))return;
+ const status=el("bible-offline-status"),button=el("bible-offline-download"),progress=el("bible-offline-progress");
+ const report=text=>{if(status)status.textContent=text;};
+ if(!("serviceWorker" in navigator)){report("This browser does not support offline app storage.");if(button)button.disabled=true;return;}
+ let worker=null,active=false;
+ async function downloadOffline(){
+  if(!worker||active)return;
+  active=true;if(button)button.disabled=true;
+  report("Saving the complete KJV Bible for offline reading…");if(progress){progress.hidden=false;progress.value=0;}
+  const channel=new MessageChannel();
+  channel.port1.onmessage=event=>{
+   const data=event.data||{};
+   if(data.type==="progress"){if(progress)progress.value=data.count||0;report("Saved "+data.count+" of 66 Bible books for offline reading…");return;}
+   if(data.type==="complete"||data.type==="already-cached"){report("All 66 Bible books are saved. You can read the Bible without mobile data on this device.");if(progress)progress.value=66;}
+   else if(data.type==="busy"){report("Offline Bible download is already in progress.");}
+   else{report(data.message||"Offline download was interrupted. Reconnect and retry.");}
+   active=false;if(button)button.disabled=false;channel.port1.close();
+  };
+  try{worker.postMessage({type:"SAVE_BIBLE_OFFLINE"},[channel.port2]);}
+  catch(error){active=false;if(button)button.disabled=false;report("Offline download could not start. Try again.");channel.port1.close();}
+ }
+ if(button){button.disabled=true;button.addEventListener("click",downloadOffline);}
  try{
   const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
   const ready=await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>setTimeout(()=>reject(Error("Service worker timeout")),20000))]);
-  const worker=ready.active||registration.active;
-  if(!worker)return;
-  const channel=new MessageChannel();
-  channel.port1.onmessage=event=>{
-   if(["complete","error","busy","already-cached"].includes(event.data?.type))channel.port1.close();
-  };
-  worker.postMessage({type:"SAVE_BIBLE_OFFLINE"},[channel.port2]);
- }catch(error){console.warn("Automatic offline Bible setup unavailable",error);}
+  worker=ready.active||registration.active;
+  if(!worker){report("Offline storage is preparing. Reload this page and try again.");return;}
+  if(button)button.disabled=false;
+  if(navigator.onLine===false){report("Offline mode: saved books are available without data.");return;}
+  await downloadOffline();
+ }catch(error){report("Offline setup unavailable. Reload the page while connected and try again.");console.warn("Bible offline setup unavailable",error);}
 }
 setupOffline();
 })();
