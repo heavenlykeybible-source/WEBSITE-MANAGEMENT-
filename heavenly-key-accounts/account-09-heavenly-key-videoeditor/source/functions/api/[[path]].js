@@ -70,7 +70,7 @@ const body = async req => {
     const declared = req.headers.get('content-length');
     if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > 1100000)) return null;
     const payload = await readBoundedMedia(req, 1100000);
-    if (!payload) return null;
+    if (!payload || (declared !== null && Number(declared) !== payload.byteLength)) return null;
     const raw = new TextDecoder('utf-8', { fatal: true }).decode(payload);
     return JSON.parse(raw);
   } catch { return null; }
