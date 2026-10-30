@@ -20,8 +20,10 @@ for(const entry of data.entries){
   assert(topic.reflection?.trim() && topic.reflection.length<=280,entry.date+' reflection '+i);
   assert(topic.prayer?.trim() && topic.prayer.length<=160,entry.date+' prayer '+i);
   assert(topic.reviewStatus?.startsWith('draft-'),entry.date+' approval status '+i);
+  assert(topic.bibleText?.trim(),'Missing KJV text: '+entry.date+' topic '+i);
+  assert(!topic.bibleText.includes('undefined'),'Invalid KJV text: '+entry.date+' topic '+i);
  });
 }
 console.log('PASS: '+data.entries.length+' dated entries, '+data.entries.length*12+' short topic drafts, matching Scripture references.');
-const missing=data.entries.flatMap(e=>e.topics.filter(t=>!t.bibleText?.trim()));
-console.log('NOT READY: '+missing.length+' KJV text fields missing. Publication must remain blocked until verified.');
+const drafts=data.entries.flatMap(e=>e.topics.filter(t=>t.reviewStatus?.startsWith('draft-')));
+console.log('EDITORIAL HOLD: '+drafts.length+' drafts still require approval; this test does not authorize publication.');
