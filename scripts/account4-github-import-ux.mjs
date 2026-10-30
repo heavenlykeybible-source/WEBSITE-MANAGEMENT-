@@ -2,6 +2,8 @@ import fs from 'node:fs';
 const target=new URL('../control-room-worker.js',import.meta.url);
 let s=fs.readFileSync(target,'utf8');
 const changes=[
+["var scanButton=h('button',{onclick:async function()",
+"worker.onchange=function(){stage.disabled=!scan||!dest.value||!worker.value;};var scanButton=h('button',{onclick:async function()"],
 ["project.appendChild(h('option',{value:''},'Choose built website or Worker'));listing.candidates.forEach(function(c,i){project.appendChild(h('option',{value:i},(c.kind==='static'?'Website · ':'Worker · ')+c.path));});",
 "project.appendChild(h('option',{value:''},'Choose built website or Worker'));listing.candidates.forEach(function(c,i){project.appendChild(h('option',{value:i},(c.kind==='static'?'Website · ':'Worker · ')+c.path));});if(listing.candidates.length===1){project.value='0';project.onchange();}"],
 ["source.appendChild(h('option',{value:''},'Choose connected GitHub repository'));data.sources.forEach(function(s){source.appendChild(h('option',{value:s.id},s.label+' · '+s.repo+' · '+s.branch));});",
