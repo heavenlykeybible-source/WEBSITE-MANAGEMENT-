@@ -10,6 +10,15 @@ async function scenario(mode){
  const window={MediaRecorder:Recorder};
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
+ const hotkey=(key,opts={})=>node('clipList').onkeydown({key,preventDefault(){},...opts});
+ hotkey('d',{ctrlKey:true});
+ assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+D duplicates selected clip');
+ hotkey('z',{ctrlKey:true});
+ assert.equal(window.hkTimeline.getClips().length,1,'Ctrl+Z undoes duplicate');
+ hotkey('z',{ctrlKey:true,shiftKey:true});
+ assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+Shift+Z redoes duplicate');
+ hotkey('Delete');
+ assert.equal(window.hkTimeline.getClips().length,1,'Delete removes selected clip');
  node('clipDuplicate').onclick();
  assert.equal(window.hkTimeline.getClips().length,2,'Duplicate inserts a second clip');
  assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:1,speed:1},'Duplicate preserves clip timing and speed');
