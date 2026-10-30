@@ -50,4 +50,15 @@ jobs:
         run: |
           npm run prepare:account4-release
           node tests/account4-navigation-regression.mjs
+      - name: Record reviewed Worker checksum
+        run: sha256sum control-room-worker.js > account4-reviewed-worker.sha256
+      - name: Store tested Worker for owner review (no deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: account4-reviewed-worker
+          path: |
+            control-room-worker.js
+            account4-reviewed-worker.sha256
+          if-no-files-found: error
+          retention-days: 7
 # This workflow intentionally does not publish, deploy or access production secrets.
