@@ -15,6 +15,7 @@ for (const speed of ['.25','.5','.75','1','1.25','1.5','2','3','4']) if (!timeli
 if (!timeline.includes('Estimated timeline:')) throw Error('Timeline duration display missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
 for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="'+control+'"') || !timeline.includes("$('"+control+"').onclick=")) throw Error('Timeline playhead trim control missing: '+control);
+if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
 const html=readFileSync('public/index.html','utf8');
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) if (!html.includes('src="/'+name+'"')) throw Error('Script not loaded: '+name);
 if (html !== readFileSync('index.html','utf8')) throw Error('Public page not synchronized with editor source');
