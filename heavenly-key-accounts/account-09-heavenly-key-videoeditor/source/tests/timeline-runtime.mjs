@@ -7,7 +7,7 @@ async function scenario(mode){
  const statuses=[];const statusNode=node('clipStatus');let statusText='';Object.defineProperty(statusNode,'textContent',{get(){return statusText},set(value){statusText=value;statuses.push(String(value))}});
  const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='overlap'){this.playCount=(this.playCount||0)+1;if(this.playCount===1)return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=0;return}if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));this.currentTime=mode==='cancel-play'?0:1}});
  const track={stop(){}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
- class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode!=='timeout'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
+ class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode==='cancel-encoder')setTimeout(()=>node('clipCancel').onclick(),0);if(mode!=='timeout'&&mode!=='cancel-encoder'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
  const window={MediaRecorder:Recorder};
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
@@ -69,6 +69,7 @@ async function scenario(mode){
  assert.equal(node('clipCancel').disabled,true,'Cancel must reset after '+mode);
  const status=node('clipStatus').textContent;
  if(mode==='timeout')assert.match(status,/did not finish within 15 seconds/);
+ if(mode==='cancel-encoder')assert.match(status,/Timeline operation stopped/);
  if(mode==='error')assert.match(status,/Encoder broke/);
  if(mode==='premature')assert.match(status,/stopped before timeline finished/);
  if(mode==='oversize')assert.match(status,/exceeded the 256 MB browser memory limit/);
@@ -89,4 +90,4 @@ async function scenario(mode){
  }
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder'])await scenario(mode);
