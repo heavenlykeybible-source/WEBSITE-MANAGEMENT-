@@ -268,3 +268,27 @@ test('signalling relays valid WebRTC descriptions and rejects malformed payloads
  await message(s.room,s.host,{t:'sig',to:guest.d.id,data:{c:{candidate:'candidate:1 1 udp 1 127.0.0.1 1234 typ host'}}});
  assert.equal(guest.messages.at(-1).data.c.candidate.startsWith('candidate:'),true);
 });
+
+test('meeting security controls require booleans rather than truthy strings',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,name:'Viewer',aud:true});
+ assert.equal(s.host.d.locked,false);
+ await message(s.room,s.host,{t:'lock',on:'true'});
+ assert.equal(s.host.d.locked,false);
+ await message(s.room,s.host,{t:'lock',on:true});
+ assert.equal(s.host.d.locked,true);
+ await message(s.room,s.host,{t:'lock',on:'false'});
+ assert.equal(s.host.d.locked,true);
+ await message(s.room,s.host,{t:'lock',on:false});
+ assert.equal(s.host.d.locked,false);
+ await message(s.room,s.host,{t:'audchat',on:false});
+ assert.equal(s.host.d.audChat,false);
+ await message(s.room,s.host,{t:'audchat',on:'true'});
+ assert.equal(s.host.d.audChat,false);
+ await message(s.room,s.host,{t:'mute',gid:guest.d.id,on:'false'});
+ assert.equal(guest.messages.some(m=>m.t==='mute'),false);
+ await message(s.room,guest,{t:'hand',on:'yes'});
+ assert.equal(s.host.messages.some(m=>m.t==='hand'),false);
+ await message(s.room,guest,{t:'hand',on:true});
+ assert.equal(s.host.messages.at(-1).t,'hand');
+});
