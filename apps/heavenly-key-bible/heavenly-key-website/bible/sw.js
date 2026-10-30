@@ -1,5 +1,5 @@
 "use strict";
-const SHELL = "hk-bible-shell-v66";
+const SHELL = "hk-bible-shell-v67";
 const SCRIPTURE = "hk-bible-kjv-ae1f46af-v1";
 const PREFIX = new URL("./", self.location.href).pathname;
 const SHELL_ASSETS = ["./index.html", "./strength-for-today.html", "./strength-devotionals-2026.json", "./strength-devotionals-2027-batch01.json", "./strength-devotionals-year1-batch02.json", "./strength-devotionals-year1-batch03.json", "./strength-devotionals-year1-batch04.json", "./strength-devotionals-year2-batch01.json", "./strength-devotionals-year2-batch02.json", "./strength-devotionals-year2-batch03.json", "./strength-devotionals-year2-batch04.json", "./strength-share-studio.js", "./ministry-logo.jpeg", "./style.css", "./reader-design.css", "./reader-design.js", "./shared/hk-standard-footer.css", "./fonts/NimbusRoman-Regular.otf", "./fonts/NimbusRoman-Bold.otf", "./fonts/NimbusRoman-Italic.otf", "./fonts/NimbusRoman-BoldItalic.otf", "./app.js", "./study-tools.js", "./strength-for-today.html", "./strength-share-studio.js", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png", "./data/hymns.json", "./study-extensions.html", "./study-extensions.js", "./dictionary.json", "./daily-topics.json", "./daily-lessons.json", "./original-language-guide.json", "./read-pray-reminder.js", "./read-pray-push.js", "./data/annotations/GEN.json", "./data/annotations/EXO.json", "./data/annotations/MAT.json", "./data/annotations/MAR.json", "./data/annotations/JOH.json", "./data/annotations/center-references.json", "./shared/app-update.js", "./shared/hk-standard-footer.js", "./family-navigation.js", "./install/index.html", "./install/ipad/index.html", "./install/android/index.html", "./install/iphone/index.html", "./install/mac/index.html", "./install/windows/index.html", "./install/ipad/install.js", "./install/android/install.js", "./install/iphone/install.js", "./install/mac/install.js", "./install/windows/install.js"];
@@ -15,6 +15,7 @@ async function cachePublicOfflineAsset(cache,asset){
  const directives=response.headers.get("Cache-Control")||"";
  const varies=response.headers.get("Vary")||"";
  if(/(?:^|,)\s*(?:private|no-store)(?:\s*(?:,|$)|\s*;)/i.test(directives)||/(?:^|,)\s*(?:cookie|authorization|\*)(?:\s*,|\s*$)/i.test(varies))throw Error("Sensitive asset excluded from offline storage");
+ if(response.headers.has("Set-Cookie"))throw Error("Cookie-setting asset excluded from public offline shell");
  await cache.put(url,response);
 }
 self.addEventListener("install", event => {
