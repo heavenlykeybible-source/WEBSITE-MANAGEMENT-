@@ -10,12 +10,16 @@ const refs=['Psalm 85:6','1 Peter 1:16','Psalm 46:1','1 Thessalonians 5:17','Act
 assert.deepEqual(data.topics,expected);
 assert.equal(data.timezone,'Africa/Lagos');
 const seen=new Set();
+const publicationReady=[];
+const editorialHolds=[];
 for(const entry of data.entries){
  assert.match(entry.date,/^\d{4}-\d{2}-\d{2}$/);
  assert(!seen.has(entry.date),'Duplicate date: '+entry.date);seen.add(entry.date);
  assert.equal(entry.topics.length,12,'Wrong topic count: '+entry.date);
  assert(['draft-not-published','approved-for-publication'].includes(entry.status),'Invalid publication status: '+entry.date);
  if(entry.status==='approved-for-publication')assert(entry.topics.every(t=>t.reviewStatus==='approved'),'Unapproved topic in published day: '+entry.date);
+ if(entry.status==='approved-for-publication')publicationReady.push(entry.date);
+ else editorialHolds.push(entry.date);
  entry.topics.forEach((topic,i)=>{
   assert.equal(topic.topic,expected[i],entry.date+' topic '+i);
   assert.equal(topic.reference,refs[i],entry.date+' reference '+i);
@@ -28,4 +32,6 @@ for(const entry of data.entries){
 }
 console.log('PASS: '+data.entries.length+' dated entries, '+data.entries.length*12+' short topic drafts, matching Scripture references.');
 const drafts=data.entries.flatMap(e=>e.topics.filter(t=>t.reviewStatus?.startsWith('draft-')));
-console.log('EDITORIAL HOLD: '+drafts.length+' drafts still require approval; this test does not authorize publication.');
+console.log('APPROVED DATES: '+publicationReady.length+'; EDITORIAL HOLD DATES: '+editorialHolds.length+'.');
+console.log('EDITORIAL HOLD TOPICS: '+drafts.length+'. Test validation does not constitute editorial approval.');
+if(publicationReady.length===0)console.warn('NOT LAUNCH READY: No approved dated devotionals.');
