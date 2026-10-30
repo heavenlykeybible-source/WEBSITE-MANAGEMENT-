@@ -186,10 +186,22 @@ test('locked meeting rejects new audience viewers as well as regular guests',asy
  assert.ok(stageGuest.messages.some(m=>m.t==='error'&&/locked/.test(m.msg)));
 });
 
-test('meeting room uses HTTPS-only watch links and finite capacity controls',()=>{
- const source=fs.readFileSync(path.join(root,'server','meeting-rooms.mjs'),'utf8');
- assert.match(source,/h\\.watch=\\/\\^https:/);
- assert.doesNotMatch(source,/h\\.watch=\\/\\^https\\?:/);
- assert.match(source,/Number\\.isFinite\\(configuredCapacity\\)/);
- assert.match(source,/Number\\.isFinite\\(seconds\\)/);
+test('meeting watch links only allow HTTPS and reject HTTP',async()=>{
+ const s=await openRoom();
+ await message(s.room,s.host,{t:'watch',url:'http://example.com/video'});
+ assert.equal(s.host.messages.at(-1).url,'');
+ await message(s.room,s.host,{t:'watch',url:'https://example.com/video'});
+ assert.equal(s.host.messages.at(-1).url,'https://example.com/video');
+});
+test('nonfinite room capacity remains bounded and slow mode normalizes invalid inputs',async()=>{
+ const s=meeting();
+ s.room.env.MEETING_ROOM_CAP='Infinity';
+ for(let i=0;i<8;i++)s.add();
+ const request=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
+ assert.equal((await s.room.fetch(request)).status,429);
+ const active=await openRoom();
+ await message(active.room,active.host,{t:'slow',sec:'Infinity'});
+ assert.equal(active.host.messages.at(-1).sec,0);
+ await message(active.room,active.host,{t:'slow',sec:2.9});
+ assert.equal(active.host.messages.at(-1).sec,2);
 });
