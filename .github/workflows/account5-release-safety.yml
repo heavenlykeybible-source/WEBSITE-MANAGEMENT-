@@ -25,6 +25,8 @@ jobs:
         run: node --check scripts/validate-account5-releases.mjs
       - name: Test Account 5 source
         run: npm test --prefix heavenly-key-accounts/account-05-heavenly-key-app/source
+      - name: Build-check Account 5 source
+        run: npm run build --prefix heavenly-key-accounts/account-05-heavenly-key-app/source
       - name: Ensure missing manifest blocks release
         shell: bash
         run: |
@@ -33,6 +35,7 @@ jobs:
             exit 1
           fi
   release-gate:
+    if: github.event_name == 'workflow_dispatch'
     needs: validator-tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
