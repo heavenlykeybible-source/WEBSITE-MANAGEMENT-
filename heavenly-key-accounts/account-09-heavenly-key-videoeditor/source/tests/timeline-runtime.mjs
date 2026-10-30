@@ -10,6 +10,15 @@ async function scenario(mode){
  const window={MediaRecorder:Recorder};
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
+ node('clipAddFull').onclick();
+ assert.equal(window.hkTimeline.getClips().length,2,'Full-source command appends one clip');
+ assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:2,speed:1},'Full-source clip covers complete video');
+ node('clipClear').onclick();
+ assert.equal(window.hkTimeline.getClips().length,0,'Clear command removes all clips');
+ node('clipUndo').onclick();
+ assert.equal(window.hkTimeline.getClips().length,2,'Clear command is undoable');
+ node('clipUndo').onclick();
+ assert.equal(window.hkTimeline.getClips().length,1,'Undo restores initial timeline for existing scenarios');
  const hotkey=(key,opts={})=>node('clipList').onkeydown({key,preventDefault(){},...opts});
  hotkey('d',{ctrlKey:true});
  assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+D duplicates selected clip');
