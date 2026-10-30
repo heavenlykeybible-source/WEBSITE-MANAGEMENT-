@@ -23,8 +23,10 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
-      - name: Verify 731-day draft structure
+      - name: Verify five-year devotional draft structure
         run: node apps/heavenly-key-bible/bible/tests/validate-strength-year1.mjs
+      - name: Audit all five years for duplication, doctrine coverage and publication state
+        run: node apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs
       - name: Verify devotional UI and offline cache safeguards
         run: node apps/heavenly-key-bible/bible/tests/validate-strength-ui-security.mjs
       - name: Verify explicitly approved devotional batch allowlist
