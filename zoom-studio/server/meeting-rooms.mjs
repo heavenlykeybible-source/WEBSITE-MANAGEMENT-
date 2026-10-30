@@ -107,7 +107,7 @@ export class MeetingRooms {
    }
   }else if(d.ok){
    if(m.t==='sig'&&d.stage){const data=safeSignal(m.data);if(data)this.send(host,{t:'sig',from:d.id,data});}
-   else if(m.t==='ready'&&d.invited&&this.stage().length<6){d.invited=false;d.aud=false;d.stage=true;d.ao=m.ao===true;this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
+   else if(m.t==='ready'&&d.invited&&d.aud&&this.stage().length<6){d.invited=false;d.aud=false;d.stage=true;d.ao=m.ao===true;this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
