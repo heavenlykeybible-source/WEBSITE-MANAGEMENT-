@@ -2,6 +2,9 @@ name: Account 10 SocialPlus approved deployment
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/account10-socialplus-deploy.yml']
 
 permissions:
   contents: read
@@ -12,6 +15,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Authorize one SocialPlus deployment 20261030'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: socialplus-production
