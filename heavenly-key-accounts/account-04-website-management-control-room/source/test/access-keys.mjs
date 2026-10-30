@@ -32,4 +32,23 @@ assert.equal(await verifyKey(domain,'invalid/key'),null,'Malformed kid must be r
 assert.equal(calls,2);
 assert.equal(await verifyKey(domain,'unknown'),null,'Unknown signing key must be rejected');
 assert.equal(calls,3,'Unknown kid must not be accepted from stale cache');
+const startClaims=src.indexOf('function validAccessClaims(');
+const endClaims=src.indexOf('async function authenticate(',startClaims);
+assert.ok(startClaims>=0&&endClaims>startClaims,'Access JWT claim validator must exist');
+const claimsJs=ts.transpileModule(src.slice(startClaims,endClaims),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+const validClaims=runInNewContext(claimsJs+';validAccessClaims',{Number,Array});
+const now=1782900000,aud='test-aud',issuer='https://example.cloudflareaccess.com';
+const header={alg:'RS256',kid:'key-1'};
+const claims={aud:[aud],iss:issuer,exp:now+3600,iat:now-30,email:'owner@example.org'};
+assert.equal(validClaims(header,claims,aud,issuer,now),true);
+for(const changes of [
+ {exp:undefined},{exp:'9999999999'},{exp:null},{exp:now-1},
+ {iat:undefined},{iat:'0'},{iat:now+1000},{iat:now+7200},
+ {nbf:'invalid'},{nbf:now+1000},
+ {email:undefined},{email:'not-an-email'},{email:''},
+ {iss:'https://untrusted.example.org'},{aud:['other-audience']}
+]){
+ assert.equal(validClaims(header,{...claims,...changes},aud,issuer,now),false,'Malformed Access claims must be rejected: '+JSON.stringify(changes));
+}
+assert.equal(validClaims({alg:'none',kid:'key-1'},claims,aud,issuer,now),false);
 console.log('Cloudflare Access key cache and rotation security checks passed');
