@@ -542,3 +542,15 @@ test('unexpired host is not replaced by another valid host token',async()=>{
  assert.equal(s.host.readyState,1);
  assert.equal(s.room.host(),s.host);
 });
+
+test('blank and malformed chat contents cannot produce empty broadcasts',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ const before=s.host.messages.length;
+ for(const text of [null,{},[],12,'','   ','\\u202e\\u200b']){
+  await message(s.room,viewer,{t:'chat',text});
+ }
+ assert.equal(s.host.messages.length,before);
+ await message(s.room,viewer,{t:'chat',text:'Valid message'});
+ assert.equal(s.host.messages.at(-1).text,'Valid message');
+});
