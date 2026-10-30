@@ -14,8 +14,11 @@ const ROUTES={
 };
 export async function routeIndependentApp(request,env){
  if(env.INDEPENDENT_APPS_ENABLED!=='true')return null;
- const url=new URL(request.url),route=ROUTES[url.pathname];if(!route)return null;
- const [binding,id]=route,headers={'Cache-Control':'no-store','X-HK-App-Service':id,'Content-Type':'text/plain; charset=utf-8'};
+ const url=new URL(request.url);
+ // Never let inherited Object.prototype keys masquerade as registered routes.
+ if(!Object.hasOwn(ROUTES,url.pathname))return null;
+ const route=ROUTES[url.pathname];
+ const [binding,id]=route,headers={'Cache-Control':'no-store','X-HK-App-Service':id,'Content-Type':'text/plain; charset=utf-8','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY','Content-Security-Policy':"default-src 'none'; frame-ancestors 'none'"};
  if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405,headers});
  if(!env[binding]?.fetch)return new Response('This application service is unavailable.',{status:503,headers});
  const path=binding==='ETERNITY_APP'?'/eternity-in-view/':url.pathname;

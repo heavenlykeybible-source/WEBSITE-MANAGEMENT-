@@ -1,9 +1,11 @@
 // Native release distribution: signed packages must be uploaded to private R2.
 // No download is counted unless a real package exists and is returned.
 // Aggregate counts are private and require a configured admin bearer token.
-const headers = {'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'};
+const headers = {'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','cross-origin-resource-policy':'same-origin','x-frame-options':'DENY','content-security-policy':"default-src 'none'; sandbox",'x-robots-tag':'noindex, nofollow'};
 const platforms = {android:{extension:'apk',type:'application/vnd.android.package-archive'},windows:{extension:'msix',type:'application/msix'},mac:{extension:'dmg',type:'application/x-apple-diskimage'}};
 const idPattern = /^[a-z0-9-]{1,64}$/;
+// Bound release size before serving a binary or disclosing it as available.
+const MAX_NATIVE_RELEASE_BYTES = 2 * 1024 * 1024 * 1024;
 const reply = (data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...headers,'content-type':'application/json; charset=utf-8'}});
 function authorized(request,env) {
   const expected = env.DOWNLOAD_ADMIN_TOKEN;
@@ -19,6 +21,8 @@ export async function handleNativeDownloads(request,env) {
   const url=new URL(request.url);
   if(url.pathname==='/api/admin/download-counts') {
     if(request.method!=='GET') return reply({error:'Method not allowed'},405);
+    // Secrets and admin commands must never be supplied in a shareable URL.
+    if(url.search) return reply({error:'Query parameters not accepted'},400);
     if(!authorized(request,env)) return reply({error:'Unauthorized'},401);
     if(!env.DOWNLOAD_DB) return reply({error:'Download statistics database not configured'},503);
     try {
@@ -45,7 +49,8 @@ export async function handleNativeDownloads(request,env) {
   const key=appId+'/'+platform+'/release.'+meta.extension;
   try {
     const object=request.method==='HEAD' ? await env.NATIVE_RELEASES.head(key) : await env.NATIVE_RELEASES.get(key);
-    if(!object || !object.size) return reply({error:'Native installation package not available for this app and device'},404);
+    if(!object) return reply({error:'Native installation package not available for this app and device'},404);
+    if(!Number.isSafeInteger(object.size) || object.size < 1 || object.size > MAX_NATIVE_RELEASE_BYTES) return reply({error:'Invalid native package size'},403);
     // A release is publishable only after the trusted release pipeline records its SHA-256.
     // This metadata is set by the publisher after malware scanning and signing checks.
     const sha256=object.customMetadata?.sha256;
@@ -58,6 +63,13 @@ export async function handleNativeDownloads(request,env) {
     const releaseAppId=object.customMetadata?.appId;
     const releasePlatform=object.customMetadata?.platform;
     if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true' || scannedDigest!==sha256 || releaseAppId!==appId || releasePlatform!==platform) return reply({error:'Release has not passed security verification'},403);
+    // Require R2's independently stored SHA-256 checksum, supplied and checked
+    // during upload, to agree with the release-publisher's security attestation.
+    // Custom metadata alone is not proof of the stored binary's integrity.
+    const storedDigest=object.checksums?.sha256;
+    if(!(storedDigest instanceof ArrayBuffer) || storedDigest.byteLength!==32) return reply({error:'Release checksum is missing'},403);
+    const storedHex=Array.from(new Uint8Array(storedDigest),b=>b.toString(16).padStart(2,'0')).join('');
+    if(storedHex!==sha256.toLowerCase()) return reply({error:'Release checksum mismatch'},403);
     if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size),'x-release-sha256':sha256}});
     // A valid object header alone does not prove R2 returned a readable package body.
     // Reject missing bodies before recording an initiated download.

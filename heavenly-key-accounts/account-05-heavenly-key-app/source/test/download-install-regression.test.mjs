@@ -13,15 +13,15 @@ test('Android guide has only one install prompt controller', () => {
 test('device guide only advertises native download when the server confirms its availability', () => {
   const js = publicFile('app-device-guide.js');
   assert.match(js, /method:'HEAD'/);
-  assert.match(js, /nativeLink\.hidden = !nativeAvailable/);
+  assert.match(js, /nativeLink\.hidden = !nativeAvailable \|\| !matchesDevice\(\)/);
   assert.match(js, /nativeLink\.hidden = true/);
   assert.match(js, /\/api\/native-download\//);
 });
 
-test('download guide restricts app destinations to secure HTTPS or local development', () => {
+test('download guide restricts app destinations to trusted HTTPS hosts', () => {
   const js = publicFile('app-device-guide.js');
   assert.match(js, /destination\.protocol !== 'https:'/);
-  assert.match(js, /destination\.protocol === 'http:' && destination\.hostname === 'localhost'/);
+  assert.match(js, /trustedHosts\.has\(destination\.hostname\)/);
 });
 
 test('every published app in catalogue has a download control in directory', () => {
@@ -42,7 +42,7 @@ test('every device guide has exactly one installation event controller', () => {
 
 test('native package status remains visible after browser install guidance updates', () => {
   const js = publicFile('app-device-guide.js');
-  assert.match(js, /nativeAvailable = available\.ok/);
+  assert.match(js, /nativeAvailable = available\.status === 200/);
   assert.match(js, /else if \(nativeAvailable\)/);
 });
 
@@ -65,7 +65,7 @@ test('native download button requires a security digest and a positive package l
  const js = publicFile('app-device-guide.js');
  assert.match(js, /x-release-sha256/);
  assert.match(js, /Number\.isSafeInteger\(size\) && size > 0/);
- assert.match(js, /nativeAvailable = available\.ok/);
+ assert.match(js, /nativeAvailable = available\.status === 200/);
 });
 
 test('device guide never offers an installation prompt for the wrong app scope', () => {
@@ -108,19 +108,23 @@ test('public app directory and device chooser do not require registration before
   assert.match(html,/data-download-app="all-in-one"/);
  }
  const chooser=publicFile('app-pages.js');
- assert.match(chooser,/No Heavenly Key sign-in required/);
+ assert.match(chooser,/No Heavenly Key account is needed to download or install/);
  assert.match(chooser,/Some member-only features require sign-in after opening the app/);
  const guide=publicFile('app-device-guide.js');
  assert.match(guide,/No Heavenly Key sign-in is required to download it/);
 });
 
-test('scanned native install guides start verified package download for matching device only',()=>{
+test('native install guide never automatically starts executable downloads',()=>{
  const js=publicFile('app-device-guide.js');
  assert.match(js,/function matchesDevice\(\)/);
- assert.match(js,/nativeAvailable && matchesDevice\(\)/);
- assert.match(js,/window\.location\.assign\(nativeLink\.href\)/);
- assert.match(js,/nativeLink\.hidden = !nativeAvailable/);
- assert.match(js,/download is starting/i);
+ assert.match(js,/nativeLink\.hidden = !nativeAvailable \|\| !matchesDevice\(\)/);
+ assert.doesNotMatch(js,/window\.location\.assign\(nativeLink\.href\)/);
+ assert.match(js,/nativeLink\.href = '\/api\/native-download\//);
  assert.match(js,/different device/i);
- assert.doesNotMatch(js,/window\.location\.assign\(destination\.href\)/);
+});
+
+test('native availability requires exact media type and a complete 200 response',()=>{
+ const js=publicFile('app-device-guide.js');
+ assert.match(js,/contentType\.split\(';',1\)\[0\]\.trim\(\) === expectedTypes\[platform\]/);
+ assert.match(js,/size <= 2 \* 1024 \* 1024 \* 1024/);
 });

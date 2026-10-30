@@ -1,0 +1,54 @@
+name: Account 5 release safety
+on:
+  push:
+    branches: [account5-download-readiness-20261030]
+    paths:
+      - 'scripts/validate-account5-releases.mjs'
+      - 'account5-release-manifest.json'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/**'
+      - '.github/workflows/account5-release-safety.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check validator syntax
+        run: node --check scripts/validate-account5-releases.mjs
+      - name: Check Bible Champions curriculum validator syntax
+        run: node --check heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/verify-bible-champions-curriculum.mjs
+      - name: Test Account 5 source
+        run: npm test --prefix heavenly-key-accounts/account-05-heavenly-key-app/source
+      - name: Build-check Account 5 source
+        run: npm run build --prefix heavenly-key-accounts/account-05-heavenly-key-app/source
+      - name: Ensure missing manifest blocks release
+        shell: bash
+        run: |
+          if node scripts/validate-account5-releases.mjs /tmp/account5-missing-manifest.json; then
+            echo "ERROR: missing manifest was accepted"
+            exit 1
+          fi
+  release-gate:
+    if: github.event_name == 'workflow_dispatch'
+    needs: validator-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require 24 complete, verified 30-question Bible Champions courses
+        run: node heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/verify-bible-champions-curriculum.mjs
+      - name: Require real inventory and verified packages
+        run: node scripts/validate-account5-releases.mjs account5-release-manifest.json

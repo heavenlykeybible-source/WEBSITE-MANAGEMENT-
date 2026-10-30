@@ -101,10 +101,10 @@
   {
     "id": "bible-reader",
     "name": "KJV Bible Reader",
-    "url": "https://apps.heavenlykey.org/bible.html",
+    "url": "https://onlinebible.heavenlykey.org/",
     "qr": "/qr/app-bible-reader.svg",
     "kind": "app",
-    "sha256": "b519ce0a6c46cd32e403b89cf896c30f75840efa3004f7ef0ef1ff8c6fb6dde4"
+    "sha256": "a452b6bbdc08e6d467038f4b96a25a46c2bed216b47a1b29ba1bc57ff4dc6ce6"
   },
   {
     "id": "daily-reading",
@@ -608,5 +608,58 @@
     "url": "https://apps.heavenlykey.org/download/mac/?app=all-in-one",
     "qr": "/qr/app-all-in-one-mac.svg",
     "sha256": "04334690c63a77fbc99368f35f20ee6deece6071f303c82a791672ab40ab8ffb"
+  },
+  {
+    "id": "old-time-gospel-revival-hymn-book",
+    "name": "Old Time Gospel Revival Hymn Book",
+    "url": "https://apps.heavenlykey.org/old-time-gospel-revival-hymn-book.html",
+    "qr": "/qr/app-old-time-gospel-revival-hymn-book.svg",
+    "kind": "app",
+    "sha256": "f1cb89764f40829b9d9ee0d66b22cecbb585c1b6aff2841757ee7b57b148ff81"
+  },
+  {
+    "id": "old-time-gospel-revival-hymn-book-android",
+    "app": "old-time-gospel-revival-hymn-book",
+    "device": "android",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/android/?app=old-time-gospel-revival-hymn-book",
+    "qr": "/qr/app-old-time-gospel-revival-hymn-book-android.svg",
+    "sha256": "f0fa700ad64f6ec37c3c77e54a1b8be6ba5649e1a95b7e6764b4cb5d7db2d074"
+  },
+  {
+    "id": "old-time-gospel-revival-hymn-book-iphone",
+    "app": "old-time-gospel-revival-hymn-book",
+    "device": "iphone",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/iphone/?app=old-time-gospel-revival-hymn-book",
+    "qr": "/qr/app-old-time-gospel-revival-hymn-book-iphone.svg",
+    "sha256": "abd2a2f26cb0ab0df761909e968f14ec948be94855c2f7fc48a9514916e7ee26"
+  },
+  {
+    "id": "old-time-gospel-revival-hymn-book-ipad",
+    "app": "old-time-gospel-revival-hymn-book",
+    "device": "ipad",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/ipad/?app=old-time-gospel-revival-hymn-book",
+    "qr": "/qr/app-old-time-gospel-revival-hymn-book-ipad.svg",
+    "sha256": "3a76b27802f85fc30cfd4492210d92c4428a4da9b1752a31578c955b7f7644f1"
+  },
+  {
+    "id": "old-time-gospel-revival-hymn-book-windows",
+    "app": "old-time-gospel-revival-hymn-book",
+    "device": "windows",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/windows/?app=old-time-gospel-revival-hymn-book",
+    "qr": "/qr/app-old-time-gospel-revival-hymn-book-windows.svg",
+    "sha256": "99f931ff20b558dee2dfa99f12095590f7f57ec22d0a294b6f4aacf46448239d"
+  },
+  {
+    "id": "old-time-gospel-revival-hymn-book-mac",
+    "app": "old-time-gospel-revival-hymn-book",
+    "device": "mac",
+    "kind": "app-device",
+    "url": "https://apps.heavenlykey.org/download/mac/?app=old-time-gospel-revival-hymn-book",
+    "qr": "/qr/app-old-time-gospel-revival-hymn-book-mac.svg",
+    "sha256": "d7d35469a05fb6cdeefe7d21f7a3cd95c9e382a900d453285bf1633346f95b41"
   }
 ]

@@ -9,8 +9,8 @@
   const heading = document.querySelector('h1');
   const platform = location.pathname.split('/')[2] || 'your device';
   let promptEvent = null;
-  // A scan is a navigation to this device guide. Start a real attachment download
-  // only after HEAD verifies a signed and scanned package is published.
+  // A scan opens this guide only. Native packages require an explicit user click,
+  // even after a HEAD request confirms that a reviewed package is available.
   // Never trigger a package for a different type of device.
   const agent = navigator.userAgent || '';
   function matchesDevice() {
@@ -65,7 +65,9 @@
       if (!Object.prototype.hasOwnProperty.call(apps, appId)) throw new Error('Unknown app');
       const app = apps[appId];
       const destination = new URL(app.url, location.origin);
-      if (destination.protocol !== 'https:' && !(destination.protocol === 'http:' && destination.hostname === 'localhost')) throw new Error('Invalid app URL');
+      const trustedHosts = new Set(['apps.heavenlykey.org','onlinebible.heavenlykey.org','global.heavenlykey.org','radio.heavenlykey.org','meeting.heavenlykey.org']);
+      if (typeof app.name !== 'string' || !app.name.trim() || typeof app.url !== 'string') throw new Error('Invalid catalogue entry');
+      if (destination.protocol !== 'https:' || !trustedHosts.has(destination.hostname) || destination.username || destination.password || destination.port) throw new Error('Untrusted app destination');
       if (open) {
         open.href = destination.href;
         open.textContent = 'Open ' + app.name + ' Now';
@@ -73,15 +75,8 @@
       if (heading) heading.textContent = app.name + ' for ' + platform;
       document.title = app.name + ' — Installation for ' + platform;
       const sameOrigin = destination.origin === location.origin;
-      if (sameOrigin) {
-        const manifest = document.createElement('link');
-        manifest.rel = 'manifest';
-        manifest.href = '/manifests/' + encodeURIComponent(appId) + '.webmanifest';
-        document.head.append(manifest);
-        // Browser install prompts are only valid on the app's own origin and scope.
-        // A prompt received on this guide must not be presented as an install of another app.
-        // The guide URL is never the selected application's installation scope.
-      }
+      // Installation belongs to the selected app's page and manifest, not this guide.
+      // Never attach an unrelated app manifest to the installation-guide document.
       let nativeAvailable = false;
       if (/^(android|windows|mac)$/.test(platform)) {
         const nativeLink = document.createElement('a');
@@ -98,15 +93,8 @@
           const expectedTypes = {android:'application/vnd.android.package-archive',windows:'application/msix',mac:'application/x-apple-diskimage'};
           const size = Number(available.headers.get('content-length'));
           const digest = available.headers.get('x-release-sha256') || '';
-          nativeAvailable = available.ok && contentType.includes(expectedTypes[platform]) && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
-          nativeLink.hidden = !nativeAvailable;
-          if (nativeAvailable && matchesDevice()) {
-            status('Your verified ' + platform + ' app download is starting. If your browser does not start it, use the Download button.');
-            // Navigate to the official attachment response; do not silently
-            // install software or fake an app-store/native download.
-            window.location.assign(nativeLink.href);
-            return;
-          }
+          nativeAvailable = available.status === 200 && contentType.split(';',1)[0].trim() === expectedTypes[platform] && Number.isSafeInteger(size) && size > 0 && size <= 2 * 1024 * 1024 * 1024 && /^[a-f0-9]{64}$/i.test(digest);
+          nativeLink.hidden = !nativeAvailable || !matchesDevice();
           if (nativeAvailable && platform === 'android') status('A native Android APK is available without a Heavenly Key account. Use Download Android APK or open the web app. Android may ask you to approve installation outside the Play Store.');
         } catch { nativeLink.hidden = true; }
       }

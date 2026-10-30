@@ -78,9 +78,10 @@ test('sign-in hides welcome immediately, member render retains ACTIVE, and sign-
 test('home loads current welcome assets and CSS makes guest/member sections mutually exclusive',()=>{
  const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
  assert(html.includes('app.js?v=20261028-network'));
- assert(html.includes('approved-home-layout.js?v=20261021-welcome3'));
+ assert(html.includes('approved-home-layout.js?v=20261028-network-unified'));
  assert(html.includes('global-social-current.css?v=20261028-network'));
- assert.equal((html.match(/rel="stylesheet"/g)||[]).length,1);
+ assert.match(html,/href="global-social-current.css/);
+ assert.match(html,/href="social-bible-champions-layout.css/);
  const css=readFileSync(new URL('../public/approved-home-layout.css',import.meta.url),'utf8');
  assert(css.includes('.gc-approved-member .gc-visitor-banner{display:none!important}'));
  assert(css.includes('.gc-approved-guest .gc-active-section{display:none!important}'));

@@ -31,7 +31,7 @@ async function simulate({device='android',userAgent='Mozilla/5.0 (Linux; Android
    ok:true,async json(){return {'all-in-one':{name:'All-in-One',url:origin+'/experience.html'},'walk-with-god':{name:'Walk With God',url:origin+'/walk-offline.html'}}}
   };
   if(url==='/api/native-download/'+app+'/'+device){
-   return {ok:available,headers:new Headers(available?{
+   return {ok:available,status:available?200:404,headers:new Headers(available?{
     'content-type':device==='android'?'application/vnd.android.package-archive':device==='mac'?'application/x-apple-diskimage':'application/msix',
     'content-length':'12345','x-release-sha256':sha
    }:{})};
@@ -44,20 +44,22 @@ async function simulate({device='android',userAgent='Mozilla/5.0 (Linux; Android
  return {downloads,status:info.textContent,open,links,requests,heading};
 }
 
-test('verified Android APK starts automatically on Android and links to correct app',async()=>{
+test('verified Android APK requires user click and links to correct app',async()=>{
  const r=await simulate();
- assert.deepEqual(r.downloads,['/api/native-download/all-in-one/android']);
+ assert.deepEqual(r.downloads,[]);
  assert.equal(r.open.href,'https://apps.heavenlykey.org/experience.html');
- assert.equal(r.links.find(x=>x.href===r.downloads[0])?.hidden,false);
+ assert.equal(r.links.find(x=>x.href==='/api/native-download/all-in-one/android')?.hidden,false);
 });
-test('verified app-specific APK downloads the selected app only',async()=>{
+test('verified app-specific APK link targets only the selected app',async()=>{
  const r=await simulate({app:'walk-with-god'});
- assert.deepEqual(r.downloads,['/api/native-download/walk-with-god/android']);
+ assert.deepEqual(r.downloads,[]);
+ assert.equal(r.links.find(x=>x.href==='/api/native-download/walk-with-god/android')?.hidden,false);
  assert.equal(r.open.href,'https://apps.heavenlykey.org/walk-offline.html');
 });
 test('the same Android QR on iPhone never triggers an Android installer',async()=>{
  const r=await simulate({userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'});
  assert.equal(r.downloads.length,0);
+ assert.equal(r.links[0]?.hidden,true);
  assert.match(r.status,/different device/i);
 });
 test('unpublished or unverified package never initiates a native download',async()=>{
@@ -72,15 +74,22 @@ test('iPhone guide offers web app rather than pretending an IPA download exists'
  assert.equal(r.open.href,'https://apps.heavenlykey.org/experience.html');
 });
 
-test('verified Windows MSIX starts on Windows without changing selected app',async()=>{
+test('verified Windows MSIX is available without automatic download',async()=>{
  const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',app:'walk-with-god'});
- assert.deepEqual(r.downloads,['/api/native-download/walk-with-god/windows']);
+ assert.deepEqual(r.downloads,[]);
+ assert.equal(r.links.find(x=>x.href==='/api/native-download/walk-with-god/windows')?.hidden,false);
  assert.equal(r.open.href,'https://apps.heavenlykey.org/walk-offline.html');
  assert.equal(r.links[0]?.hidden,false);
 });
-test('verified macOS DMG starts on a Mac desktop only',async()=>{
+test('verified macOS DMG is available without automatic download',async()=>{
  const r=await simulate({device:'mac',userAgent:'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)'});
- assert.deepEqual(r.downloads,['/api/native-download/all-in-one/mac']);
+ assert.deepEqual(r.downloads,[]);
+ assert.equal(r.links.find(x=>x.href==='/api/native-download/all-in-one/mac')?.hidden,false);
+});
+test('Windows installer link is hidden on Android even if Windows package exists',async()=>{
+ const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Linux; Android 13)',available:true});
+ assert.equal(r.links[0]?.hidden,true);
+ assert.equal(r.downloads.length,0);
 });
 test('Windows native package cannot auto-start from Android QR scan',async()=>{
  const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Linux; Android 13)'});
