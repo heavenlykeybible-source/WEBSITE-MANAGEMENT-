@@ -234,6 +234,20 @@ const noLengthWav = await onRequest({
   }),env,params:{path:['transcribe']}
 });
 check('Transcription supports absent content length',noLengthWav.status===200);
+let wavChunkCount=0;
+const oversizedWavStream=new ReadableStream({
+  pull(controller){
+    if(wavChunkCount++<4) controller.enqueue(new Uint8Array(1024*1024));
+    else controller.close();
+  }
+});
+const oversizedTranscription=await onRequest({
+  request:new Request('https://studio.example/api/transcribe',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},
+    body:oversizedWavStream,duplex:'half'
+  }),env,params:{path:['transcribe']}
+});
+check('Oversized WAV with no Content-Length rejected while streaming',oversizedTranscription.status===413);
 const brokenWav=await onRequest({
   request:new Request('https://studio.example/api/transcribe',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},body:new Uint8Array([1,2,3,4,5])
