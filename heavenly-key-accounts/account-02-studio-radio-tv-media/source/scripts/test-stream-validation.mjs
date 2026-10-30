@@ -42,4 +42,18 @@ const rejected=[
 ];
 for(const value of accepted)assert.equal(validate(value),true,'Expected approved RTMPS destination: '+value);
 for(const value of rejected)assert.equal(validate(value),false,'Expected RTMPS destination to be rejected: '+value);
-console.log('Account 2 live RTMPS URL validation tests passed');
+
+// Execute the production active-state parser to ensure corrupt D1/KV rows
+// cannot be interpreted as an idle broadcaster.
+const parserStart=source.indexOf('function parseActivePayload(');
+const parserEnd=source.indexOf('// Authoritative D1 state:',parserStart);
+assert.ok(parserStart>=0&&parserEnd>parserStart,'Production active-state parser must be present');
+const parserJs=ts.transpileModule(source.slice(parserStart,parserEnd),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+const parseActive=runInNewContext(parserJs+';parseActivePayload',{JSON,Error,Array});
+assert.equal(parseActive('null'),null);
+assert.equal(parseActive('{"egressId":"safe-egress"}').egressId,'safe-egress');
+for(const value of ['','{}','false','123','[]','{"egressId":null}','{"egressId":3}','{"egressId":""}','{"egressId":"   "}','{"egressId":"'+('x'.repeat(257))+'"}','{broken']){
+ assert.throws(()=>parseActive(value),/Stored broadcast state is invalid/,'Invalid active state must block stream replacement: '+value);
+}
+
+console.log('Account 2 live RTMPS URL and active-state integrity tests passed');
