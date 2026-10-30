@@ -450,6 +450,21 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const conversation=await env.DB.prepare('SELECT id,human_paused,requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{id:string;human_paused:number;requested_human:number}>();
   if(!conversation)return reply({error:'Conversation not found'},404);
   if(conversation.human_paused||conversation.requested_human)return reply({action:'human_review',suggestion:null,sent:false,reason:'Human takeover active'});
+  // Reserve usage in D1 before contacting Gemini. Each atomic UPSERT prevents
+  // concurrent requests from bypassing limits, even across Worker isolates.
+  const seconds=Math.floor(Date.now()/1000);
+  const limits:[string,'minute'|'hour',number,number][]=[
+   ['conversation:'+data.conversationId,'minute',Math.floor(seconds/60),8],
+   ['conversation:'+data.conversationId,'hour',Math.floor(seconds/3600),40],
+   ['account10','hour',Math.floor(seconds/3600),300]
+  ];
+  for(const [scope,kind,windowStart,maxRequests] of limits){
+   let reserved;
+   try{
+    reserved=await env.DB.prepare("INSERT INTO ai_rate_limits(scope,window_kind,window_start,request_count) VALUES(?,?,?,1) ON CONFLICT(scope,window_kind,window_start) DO UPDATE SET request_count=request_count+1 WHERE request_count<?").bind(scope,kind,windowStart,maxRequests).run();
+   }catch{return reply({action:'human_review',error:'AI usage protection unavailable; apply migration 0008',sent:false,automaticRetry:false},503)}
+   if(!reserved.meta?.changes)return reply({action:'human_review',error:'AI suggestion rate limit reached; use human operator response',sent:false,automaticRetry:false,retryAfterSeconds:kind==='minute'?60-seconds%60:3600-seconds%3600},429);
+  }
   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
   try{
    const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
