@@ -27,5 +27,7 @@ jobs:
         run: node apps/heavenly-key-bible/bible/tests/validate-strength-year1.mjs
       - name: Verify devotional UI and offline cache safeguards
         run: node apps/heavenly-key-bible/bible/tests/validate-strength-ui-security.mjs
+      - name: Verify explicitly approved devotional batch allowlist
+        run: node apps/heavenly-key-bible/bible/tests/validate-strength-publication-status.mjs
       - name: Gate publication of unapproved or repeated devotionals
         run: node apps/heavenly-key-bible/bible/tests/strength-publication-gate.mjs
