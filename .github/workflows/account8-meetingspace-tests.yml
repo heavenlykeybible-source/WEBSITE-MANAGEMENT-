@@ -29,7 +29,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm test
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Backend regression tests
+        run: npm test
+      - name: Install Chromium for browser audit
+        run: npx playwright install --with-deps chromium
+      - name: Browser and signalling audit
+        run: npm run test:browser
+      - name: Relay integration tests
+        run: npm run test:relay
       - name: Check Account 8 deployment guard
         env:
           MEETINGSPACE_TARGET_ACCOUNT: '7'
