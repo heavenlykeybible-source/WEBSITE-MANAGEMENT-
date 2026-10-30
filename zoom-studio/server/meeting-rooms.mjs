@@ -95,7 +95,7 @@ export class MeetingRooms {
    if(m.t==='host'){
     if(typeof m.token!=='string'||m.token.length>4096)return this.close(ws,{t:'error',msg:'Invalid meeting authorization.'});
     const a=await check(this.env.AUTH_SECRET,m.token);
-    if(!a||a.k!=='meeting'||a.r!==d.room||!a.u||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
+    if(!a||a.k!=='meeting'||a.r!==d.room||typeof a.u!=='string'||!a.u.trim()||a.u.length>128||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
     const currentHost=this.host();
     if(currentHost){
      const old=this.data(currentHost);
