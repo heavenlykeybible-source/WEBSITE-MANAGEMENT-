@@ -3784,7 +3784,7 @@ async function openMeetingStudioOwner(){
     var matches=items.filter(function(x){return x.account_id==='6401a8f41a41f5325ba5bd4d006b4ff5'&&/^Account 8(?:$|\s)/i.test(String(x.label||''));});
     if(matches.length!==1)throw Error('Account 8 Meeting Studio connection is missing or ambiguous');
     var conn=matches[0];
-    var r=await api('connections/'+conn.id+'/meeting-launch','POST',{});
+    var r=await api('connections/'+conn.id+'/meeting-launch','POST',{worker:'heavenly-key-meetingspace'});
     const launchUrl=new URL(r.url||'');
     if(launchUrl.protocol!=='https:'||!/^[a-z0-9.-]+$/.test(launchUrl.hostname)||launchUrl.pathname!=='/api/control-login'||launchUrl.username||launchUrl.password||launchUrl.port||launchUrl.search||launchUrl.hash||!r.ticket)throw Error('Invalid Studio launch response');
     var form=h('form',{method:'POST',action:r.url,target:'_blank'});
