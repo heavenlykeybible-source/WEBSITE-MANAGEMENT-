@@ -10,10 +10,17 @@ const allowed=new Set(['youtube','facebook','tiktok','instagram','linkedin','x']
 async function readActiveState(env:any):Promise<any|null>{
  const row=await env.DB.prepare("SELECT payload FROM restream_active_state WHERE state_key='active'").first() as {payload:string}|null;
  if(!row){
-  // Never start a replacement over a broadcast left in the legacy KV state.
-  // Finish the old broadcast before migrating this account to D1.
-  if(await env.LIVE_STATUS_KV.get(ACTIVE_KEY))throw new Error('Legacy broadcast state requires a controlled cutover before streaming can resume.');
-  return null;
+  // Preserve an existing on-air broadcast when upgrading from the legacy KV
+  // storage. The INSERT is atomic, so parallel readers cannot overwrite D1.
+  const legacy=await env.LIVE_STATUS_KV.get(ACTIVE_KEY);
+  if(!legacy)return null;
+  let parsed:any;
+  try{parsed=JSON.parse(legacy);}catch{throw new Error('Legacy broadcast state is invalid. Manual recovery is required.');}
+  if(!parsed||typeof parsed.egressId!=='string'||!parsed.egressId.trim())throw new Error('Legacy broadcast state is invalid. Manual recovery is required.');
+  await env.DB.prepare("INSERT INTO restream_active_state (state_key,payload,updated_at) VALUES ('active',?,unixepoch()) ON CONFLICT(state_key) DO NOTHING").bind(JSON.stringify(parsed)).run();
+  const adopted=await env.DB.prepare("SELECT payload FROM restream_active_state WHERE state_key='active'").first() as {payload:string}|null;
+  if(!adopted)throw new Error('Broadcast state migration could not be verified.');
+  try{return JSON.parse(adopted.payload);}catch{throw new Error('Stored broadcast state is invalid. Manual recovery is required.');}
  }
  try{return JSON.parse(row.payload);}catch{throw new Error('Stored broadcast state is invalid. Manual recovery is required.');}
 }
@@ -21,7 +28,8 @@ async function writeActiveState(env:any,state:unknown){
  await env.DB.prepare("INSERT INTO restream_active_state (state_key,payload,updated_at) VALUES ('active',?,unixepoch()) ON CONFLICT(state_key) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at").bind(JSON.stringify(state)).run();
 }
 async function clearActiveState(env:any){
- await env.DB.prepare("DELETE FROM restream_active_state WHERE state_key='active'").run();
+ // Keep an explicit null tombstone so stale legacy KV can never be imported again.
+ await writeActiveState(env,null);
 }
 
 // D1's unique primary key serializes commands across Worker isolates.
