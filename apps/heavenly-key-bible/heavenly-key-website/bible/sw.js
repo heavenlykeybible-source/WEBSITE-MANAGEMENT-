@@ -1,5 +1,5 @@
 "use strict";
-const SHELL = "hk-bible-shell-v63";
+const SHELL = "hk-bible-shell-v64";
 const SCRIPTURE = "hk-bible-kjv-ae1f46af-v1";
 const PREFIX = new URL("./", self.location.href).pathname;
 const SHELL_ASSETS = ["./index.html", "./strength-for-today.html", "./strength-devotionals-2026.json", "./strength-devotionals-2027-batch01.json", "./strength-devotionals-year1-batch02.json", "./strength-devotionals-year1-batch03.json", "./strength-devotionals-year1-batch04.json", "./strength-devotionals-year2-batch01.json", "./strength-devotionals-year2-batch02.json", "./strength-devotionals-year2-batch03.json", "./strength-devotionals-year2-batch04.json", "./strength-share-studio.js", "./ministry-logo.jpeg", "./style.css", "./reader-design.css", "./reader-design.js", "./shared/hk-standard-footer.css", "./fonts/NimbusRoman-Regular.otf", "./fonts/NimbusRoman-Bold.otf", "./fonts/NimbusRoman-Italic.otf", "./fonts/NimbusRoman-BoldItalic.otf", "./app.js", "./study-tools.js", "./strength-for-today.html", "./strength-share-studio.js", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png", "./data/hymns.json", "./study-extensions.html", "./study-extensions.js", "./dictionary.json", "./daily-topics.json", "./daily-lessons.json", "./original-language-guide.json", "./read-pray-reminder.js", "./read-pray-push.js", "./data/annotations/GEN.json", "./data/annotations/EXO.json", "./data/annotations/MAT.json", "./data/annotations/MAR.json", "./data/annotations/JOH.json", "./data/annotations/center-references.json", "./shared/app-update.js", "./shared/hk-standard-footer.js", "./family-navigation.js", "./install/index.html", "./install/ipad/index.html", "./install/android/index.html", "./install/iphone/index.html", "./install/mac/index.html", "./install/windows/index.html", "./install/ipad/install.js", "./install/android/install.js", "./install/iphone/install.js", "./install/mac/install.js", "./install/windows/install.js"];
@@ -8,16 +8,25 @@ const SHELL_PRECACHE = [...new Set(SHELL_ASSETS.filter(asset=>!/^\.\/strength-de
 const CORE_OFFLINE = ["./index.html","./strength-for-today.html","./app.js","./style.css"];
 const OPTIONAL_OFFLINE = SHELL_PRECACHE.filter(asset=>!CORE_OFFLINE.includes(asset));
 const SHELL_PATHS = new Set([PREFIX,...SHELL_ASSETS.map(path=>new URL(path,self.location.href).pathname)]);
+async function cachePublicOfflineAsset(cache,asset){
+ const url=new URL(asset,self.location.href);
+ const response=await fetch(url,{cache:"no-cache",credentials:"omit",redirect:"error"});
+ if(!response.ok||response.type==="opaque")throw Error("Public offline asset unavailable");
+ const directives=response.headers.get("Cache-Control")||"";
+ const varies=response.headers.get("Vary")||"";
+ if(/(?:^|,)\s*(?:private|no-store)(?:\s*(?:,|$)|\s*;)/i.test(directives)||/(?:^|,)\s*(?:cookie|authorization|\*)(?:\s*,|\s*$)/i.test(varies))throw Error("Sensitive asset excluded from offline storage");
+ await cache.put(url,response);
+}
 self.addEventListener("install", event => {
  event.waitUntil((async()=>{
   const cache=await caches.open(SHELL);
   try{
-   await Promise.all(CORE_OFFLINE.map(asset=>cache.add(asset)));
+   await Promise.all(CORE_OFFLINE.map(asset=>cachePublicOfflineAsset(cache,asset)));
   }catch(error){
    await caches.delete(SHELL);
    throw new Error("Core Bible pages could not be cached for offline use", {cause:error});
   }
-  const results=await Promise.allSettled(OPTIONAL_OFFLINE.map(asset=>cache.add(asset)));
+  const results=await Promise.allSettled(OPTIONAL_OFFLINE.map(asset=>cachePublicOfflineAsset(cache,asset)));
   const failed=results.filter(result=>result.status==="rejected");
   if(failed.length)console.warn("Some optional Bible offline resources were not cached:",failed.length);
  })());
