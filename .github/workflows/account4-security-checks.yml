@@ -43,6 +43,8 @@ jobs:
         run: npm run check:account4-ai-conversation
       - name: Validate Gemini and OpenAI reconnection UI
         run: npm run check:account4-provider-reconnect
+      - name: Verify connected GitHub importer before release
+        run: npm run check:account4-github-import
       - name: Verify navigation upgrade after repository patch tests
         run: |
           npm run prepare:account4-release
@@ -51,6 +53,7 @@ jobs:
           node tests/account4-agent-permissions.mjs
           node tests/account4-ai-conversation-guard.mjs
           node tests/account4-provider-reconnect.mjs
+          node tests/account4-github-import-ux.mjs
       - name: Generate release provenance and checksum
         run: node scripts/account4-release-integrity.mjs
       - name: Independently verify staged release checksum
