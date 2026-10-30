@@ -10,6 +10,11 @@ async function scenario(mode){
  const window={MediaRecorder:Recorder};
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
+ node('clipDuplicate').onclick();
+ assert.equal(window.hkTimeline.getClips().length,2,'Duplicate inserts a second clip');
+ assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:1,speed:1},'Duplicate preserves clip timing and speed');
+ node('clipUndo').onclick();
+ assert.equal(window.hkTimeline.getClips().length,1,'Undo restores timeline after duplication');
  await node('clipExport').onclick();
  assert.equal(node('vf').disabled,false,'Source must unlock after '+mode);
  assert.equal(node('clipCancel').disabled,true,'Cancel must reset after '+mode);
