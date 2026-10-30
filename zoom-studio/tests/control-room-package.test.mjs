@@ -451,3 +451,15 @@ test('unadmitted waiting-room guests expire and admitted guests remain connected
  assert.equal(accepted.readyState,1);
  assert.equal(s.host.readyState,1);
 });
+
+test('host cannot admit an expired waiting-room guest before alarm cleanup',async()=>{
+ const s=await openRoom(),expired=s.add();
+ await message(s.room,expired,{t:'join',room:s.host.d.room,key:s.key,name:'Expired guest'});
+ assert.equal(expired.d.ok,false);
+ expired.d.waitingUntil=Date.now()-1;
+ await message(s.room,s.host,{t:'admit',gid:expired.d.id});
+ assert.equal(expired.readyState,3);
+ assert.equal(expired.d.ok,false);
+ assert.ok(expired.messages.some(m=>m.t==='error'&&/Waiting room expired/.test(m.msg)));
+ assert.equal(s.host.messages.some(m=>m.t==='joined'&&m.gid===expired.d.id),false);
+});
