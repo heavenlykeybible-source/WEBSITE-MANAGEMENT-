@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/validate-account5-releases.mjs'
       - 'account5-release-manifest.json'
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/**'
       - '.github/workflows/account5-release-safety.yml'
   workflow_dispatch:
 permissions:
@@ -22,6 +23,8 @@ jobs:
           node-version: '22'
       - name: Check validator syntax
         run: node --check scripts/validate-account5-releases.mjs
+      - name: Test Account 5 source
+        run: npm test --prefix heavenly-key-accounts/account-05-heavenly-key-app/source
       - name: Ensure missing manifest blocks release
         shell: bash
         run: |
