@@ -72,6 +72,31 @@ const body = async req => {
   } catch { return null; }
 };
 
+async function readBoundedMedia(req, maxBytes) {
+  if (!req.body) return new ArrayBuffer(0);
+  const reader = req.body.getReader();
+  const pieces = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      pieces.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const result = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of pieces) { result.set(chunk, offset); offset += chunk.byteLength; }
+  return result.buffer;
+}
+
 export async function onRequest({ request: req, env, params }) {
   const p = [].concat(params.path || []), m = req.method, a = p[0];
   if (!['GET', 'HEAD', 'OPTIONS'].includes(m)) {
@@ -280,7 +305,8 @@ export async function onRequest({ request: req, env, params }) {
         if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
         const announced = req.headers.get('content-length');
         if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
-        const payload = await req.arrayBuffer();
+        const payload = await readBoundedMedia(req, MAXFILE);
+        if (!payload) return J({ error: 'File exceeds 50 MB.' }, 413);
         const size = payload.byteLength;
         const bytes = new Uint8Array(payload,0,Math.min(size,32));
         const ascii = (at,s) => [...s].every((c,i)=>bytes[at+i]===c.charCodeAt(0));
