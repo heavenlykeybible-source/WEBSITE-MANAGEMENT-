@@ -28,6 +28,12 @@ export class MeetingRooms {
  count(){this.send(this.host(),{t:'count',n:this.guests().filter(w=>this.data(w).aud).length});}
  close(w,m){this.send(w,m);try{w.close(1000,'Meeting closed');}catch{}}
  end(why){for(const w of this.sockets())this.close(w,{t:'closed',why});}
+ async scheduleHandshakeAlarm(){
+  // A burst of new connections must not postpone an earlier cleanup alarm.
+  const due=Date.now()+16000;
+  const existing=await this.state.storage.getAlarm?.();
+  if(existing==null||existing>due)await this.state.storage.setAlarm(due);
+ }
  async fetch(request){
   const url=new URL(request.url);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
@@ -47,7 +53,7 @@ export class MeetingRooms {
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
   this.save(server,{role:'',room:url.pathname.split('/')[2],until:Date.now()+15000});
-  await this.state.storage.setAlarm(Date.now()+16000);
+  await this.scheduleHandshakeAlarm();
   return new Response(null,{status:101,webSocket:client});
  }
  async alarm(){
