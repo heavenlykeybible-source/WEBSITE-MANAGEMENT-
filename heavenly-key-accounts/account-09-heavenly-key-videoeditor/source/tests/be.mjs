@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
+import { createHash } from 'node:crypto';
 import { onRequest } from '../functions/api/[[path]].js';
 
 const db = new DatabaseSync(':memory:');
@@ -80,6 +81,11 @@ check('Invalid registration rejected', invalid.status === 400);
 const malformedRegistration=await request('register',{method:'POST',body:{email:'malformed@example.com',password:{value:'not-a-password'}}});
 check('Registration rejects non-string passwords',malformedRegistration.status===400);
 
+const signupKey='ip:'+createHash('sha256').update('203.0.113.9').digest('hex');
+for(let i=0;i<10;i++) db.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').run(signupKey,'register_ip',Date.now());
+const rateLimitedSignup=await request('register',{method:'POST',headers:{'cf-connecting-ip':'203.0.113.9'},body:{email:'blocked@example.com',password:'correct horse battery'}});
+check('Registration velocity limit blocks excess signups from one IP',rateLimitedSignup.status===429);
+check('Rate-limited registration does not create a member',!db.prepare('SELECT 1 FROM users WHERE email=?').get('blocked@example.com'));
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Account registration succeeds', created.status === 200);
 const login = await request('login', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
