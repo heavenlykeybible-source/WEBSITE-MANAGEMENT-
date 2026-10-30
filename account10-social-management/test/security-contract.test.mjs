@@ -113,3 +113,20 @@ test('HTML dashboard responses disable caching to prevent stale operator UI', ()
   assert.match(staticHandler, /headers\.get\('content-type'\)\?\.toLowerCase\(\)\.includes\('text\/html'\)/);
   assert.match(staticHandler, /headers\.set\('cache-control','no-store'\)/);
 });
+
+test('Gemini suggestions enforce atomic per-conversation and account-wide usage limits', () => {
+  const start=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'");
+  const end=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'",start);
+  assert.ok(start>=0 && end>start);
+  const handler=source.slice(start,end);
+  assert.match(handler, /\['conversation:'\+data\.conversationId,'minute',Math\.floor\(seconds\/60\),8\]/);
+  assert.match(handler, /\['conversation:'\+data\.conversationId,'hour',Math\.floor\(seconds\/3600\),40\]/);
+  assert.match(handler, /\['account10','hour',Math\.floor\(seconds\/3600\),300\]/);
+  assert.match(handler, /ON CONFLICT\(scope,window_kind,window_start\) DO UPDATE SET request_count=request_count\+1 WHERE request_count<\?/);
+  assert.match(handler, /if\(!reserved\.meta\?\.changes\)return reply\(/);
+  const limiter=handler.indexOf('INSERT INTO ai_rate_limits');
+  const provider=handler.indexOf("await fetch('https://generativelanguage.googleapis.com");
+  assert.ok(limiter>=0 && provider>limiter,'rate limits must run before contacting Gemini');
+  assert.match(handler, /AI usage protection unavailable; apply migration 0008/);
+  assert.match(handler, /automaticRetry:false,retryAfterSeconds/);
+});
