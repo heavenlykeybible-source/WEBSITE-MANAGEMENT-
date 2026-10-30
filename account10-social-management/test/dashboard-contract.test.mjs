@@ -115,3 +115,10 @@ test('dashboard has an explicit sign-out that clears authorization and private s
   assert.match(html, /\$\('messages'\)\.replaceChildren\(\)/);
   assert.match(html, /status\('Signed out\. Private conversation data cleared from the dashboard\.'\)/);
 });
+
+test('operator credential changes and sign-out abort in-flight dashboard requests', () => {
+  assert.match(html, /sessionController=new AbortController\(\)/);
+  assert.match(html, /signal:sessionController\.signal/);
+  assert.match(html, /\$\('connect'\)\.onclick=\(\)=>\{sessionController\.abort\(\);sessionController=new AbortController\(\)/);
+  assert.match(html, /\$\('logout'\)\.onclick=\(\)=>\{sessionController\.abort\(\);sessionController=new AbortController\(\)/);
+});
