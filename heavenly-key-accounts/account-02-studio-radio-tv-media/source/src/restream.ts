@@ -11,11 +11,11 @@ const allowed=new Set(['youtube','facebook','tiktok','instagram','linkedin','x']
 async function withBroadcastLock<T>(env:any,operation:()=>Promise<T>):Promise<T>{
  const owner=crypto.randomUUID();
  const acquired=await env.DB.prepare(
-  "INSERT INTO restream_operation_lock (lock_name,owner,expires_at) VALUES ('social-distribution',?,unixepoch()+180) ON CONFLICT(lock_name) DO UPDATE SET owner=excluded.owner,expires_at=excluded.expires_at WHERE restream_operation_lock.expires_at < unixepoch()"
+  "INSERT INTO restream_operation_lock (lock_name,owner,expires_at) VALUES ('social-distribution',?,unixepoch()+180) ON CONFLICT(lock_name) DO UPDATE SET owner=excluded.owner,expires_at=excluded.expires_at WHERE restream_operation_lock.expires_at <= unixepoch()"
  ).bind(owner).run();
  if(!acquired.meta?.changes)throw new Error('Another broadcast operation is in progress. Try again shortly.');
  try{return await operation();}
- finally{await env.DB.prepare("DELETE FROM restream_operation_lock WHERE lock_name='social-distribution' AND owner=?").bind(owner).run();}
+ finally{try{await env.DB.prepare("DELETE FROM restream_operation_lock WHERE lock_name='social-distribution' AND owner=?").bind(owner).run();}catch{/* Lock automatically expires if release fails. */}}
 }
 
 async function key(env:Env){
@@ -120,6 +120,7 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  // Check all inputs before ending an existing on-air egress. An invalid
  // replacement must never silence the currently running programme.
  const previous=await reconcileActive(env);
+ if(previous.active?.providerStatus==='UNKNOWN')throw new Error('Current broadcast status is unconfirmed. Verify the provider before replacing this programme.');
  const replacedEgressId=previous.active?.egressId?String(previous.active.egressId):null;
  // Establish the replacement before touching the existing broadcast.
  // A failed StartEgress must not take the current programme off air.
