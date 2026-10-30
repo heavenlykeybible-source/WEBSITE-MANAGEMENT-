@@ -9,6 +9,8 @@ for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhan
   for (const file of [name,'public/'+name]) { if (!existsSync(file)) throw Error('Missing '+file); execFileSync(process.execPath,['--check',file],{stdio:'inherit'}); }
   if (readFileSync(name,'utf8') !== readFileSync('public/'+name,'utf8')) throw Error('Out-of-sync browser script: '+name);
 }
+const timeline=readFileSync('public/timeline.js','utf8');
+if ((timeline.match(/Math\.min\(end,v\.duration\)<=start/g)||[]).length!==2 || !timeline.includes('c.start>=v.duration||c.end>v.duration+.02')) throw Error('Timeline clip boundary safeguards missing');
 const html=readFileSync('public/index.html','utf8');
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) if (!html.includes('src="/'+name+'"')) throw Error('Script not loaded: '+name);
 if (html !== readFileSync('index.html','utf8')) throw Error('Public page not synchronized with editor source');
