@@ -130,6 +130,8 @@ export class MeetingRooms {
   }
   const host=this.host(),h=host&&this.data(host);
   if(!h||h.until<=now){this.end('The meeting has ended.');return;}
+  // Only the current host socket may run moderator actions, even after a stale callback.
+  if(d.role==='host'&&host!==ws)return this.close(ws,{t:'error',msg:'Host session is no longer active.'});
   if(d.role==='guest'&&d.session!==h.key)return this.close(ws,{t:'closed',why:'The previous meeting has ended.'});
   const chat=()=>{const text=roomClean(m.text,300);if(!text||now-(d.last||0)<800)return;d.last=now;this.save(ws,d);this.broadcast({t:'chat',from:d.id,name:d.role==='host'?'Host':d.name,text});};
   if(d.role==='host'){
