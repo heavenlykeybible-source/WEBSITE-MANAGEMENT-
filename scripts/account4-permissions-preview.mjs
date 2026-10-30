@@ -2,6 +2,16 @@ import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
 const target=new URL('../control-room-worker.js',import.meta.url);
 let source=fs.readFileSync(target,'utf8');
+// Prefer a real scoped API check to sending the owner to an unrelated dashboard page.
+const verifiedConnectionPatch=[
+  ["if(b.provider==='cloudflare')await connById(env,b.connection);else if(b.provider==='github')",
+   "if(b.provider==='cloudflare'){const saved=await connById(env,b.connection);try{await cf(env,saved,'GET','/workers/scripts');return {connection_verified:true,provider:'cloudflare',connection:String(b.connection),notice:'The saved Cloudflare token can list Workers. This does not prove DNS edit, route write or other privileged scopes; those are checked by the corresponding operation. No browser sign-in is required for this read check.'};}catch(error){return {connection_verified:false,provider:'cloudflare',connection:String(b.connection),notice:'The saved Cloudflare API token could not complete the read check. Update the token scopes in Account 4 Connections; opening the Cloudflare dashboard will not authenticate this API connection.'};}}else if(b.provider==='github')"]
+];
+for(const [before,after] of verifiedConnectionPatch){
+ if(source.includes(after))continue;
+ if(!source.includes(before))throw Error('Existing provider verification handler changed; refusing unsafe patch');
+ source=source.replace(before,after);
+}
 const changes=[
   ["h('a',{class:'btn',href:r.url,target:'_blank',rel:'noopener noreferrer'},'Open official '+r.provider+' verification')",
    "h('button',{class:'sm',onclick:async function(){this.disabled=true;try{var result=await api('verification/resolve','POST',{id:r.id,action:'recheck'});status.textContent=result.notice;await verificationPanel(mount);}catch(e){status.textContent='Saved connection check failed: '+e.message;}finally{this.disabled=false;}}},'Test saved '+r.provider+' connection')"],
