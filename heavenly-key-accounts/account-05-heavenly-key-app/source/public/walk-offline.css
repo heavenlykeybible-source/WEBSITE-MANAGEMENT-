@@ -3,3 +3,18 @@
 
 .offline-feature-eyebrow{color:#e7eafa}.offline-banner{padding:12px;background:#eef2fb;border-radius:10px;margin-top:16px}
 
+
+/* My Walk with God: accessible spiritual-growth dashboard */
+.walk-hero{text-align:center;background:linear-gradient(135deg,#123c87,#112e65);color:#fff;padding:clamp(24px,5vw,48px) 20px;border-radius:22px}
+.walk-hero h1{margin:0;color:#fff;font-size:clamp(32px,5vw,50px)}
+.walk-hero p{max-width:740px;margin:10px auto}
+.walk-subtitle{font-weight:800;color:#ffe39c;font-size:clamp(18px,2.8vw,25px)}
+.walk-mission{font-weight:700}
+.walk-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0}
+.walk-feature-grid a{display:flex;flex-direction:column;gap:4px;min-height:98px;padding:16px;background:#fff;border:1px solid #cdd8eb;border-radius:14px;text-decoration:none;color:#173762;box-shadow:0 4px 14px #132f5910}
+.walk-feature-grid a:hover{border-color:#153e8b;transform:translateY(-2px)}
+.walk-feature-grid a:focus-visible{outline:3px solid #c9962b;outline-offset:3px}
+.walk-feature-grid strong{font-size:17px}
+.walk-feature-grid span{font-size:13px;color:#56647a}
+@media(max-width:430px){.walk-feature-grid{gap:9px}.walk-feature-grid a{padding:12px;min-height:108px}.walk-feature-grid strong{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.walk-feature-grid a:hover{transform:none}}
