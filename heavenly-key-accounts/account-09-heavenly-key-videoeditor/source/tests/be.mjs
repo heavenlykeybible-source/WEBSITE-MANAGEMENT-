@@ -201,6 +201,16 @@ try {
     params:{path:['voice-synthesize']}
   });
   check('Oversized synthesized audio is rejected while streaming',tooLargeVoice.status===413);
+  globalThis.fetch=async()=>new Response(new TextEncoder().encode('<html>fake audio response</html>'),{status:200,headers:{'content-type':'audio/mpeg'}});
+  const invalidVoice=await onRequest({
+    request:new Request('https://studio.example/api/voice-synthesize',{
+      method:'POST',headers:{cookie:login.cookie,'content-type':'application/json','x-requested-with':'hk'},
+      body:JSON.stringify({text:'Authorized test text',consentConfirmed:true})
+    }),
+    env:{...env,VOICE_TTS_API_KEY:'test-only',VOICE_TTS_VOICE_ID:'test-voice'},
+    params:{path:['voice-synthesize']}
+  });
+  check('Voice provider HTML masquerading as MP3 is rejected',invalidVoice.status===502);
 } finally { globalThis.fetch=originalFetch; }
 const anonymousVoice = await request('voice-config');
 check('Anonymous voice configuration forbidden', anonymousVoice.status === 401);
