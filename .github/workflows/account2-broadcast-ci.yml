@@ -28,6 +28,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Broadcast safety checks
         run: npm run test:broadcast
+      - name: D1 concurrency and state integrity tests
+        run: npm run test:d1
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
