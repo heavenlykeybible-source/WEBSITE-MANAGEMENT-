@@ -45,3 +45,10 @@ test('post media references must exist privately before saving drafts', () => {
   assert.match(source, /media_id=CASE WHEN \? THEN \? ELSE media_id END/);
   assert.match(source, /INSERT INTO social_posts\(id,body,platform,status,scheduled_at,media_id\)/);
 });
+
+test('All JSON write methods reject oversized or malformed content-length and enforce streamed byte limits', () => {
+  assert.match(source, /\['POST','PUT','PATCH'\]\.includes\(req\.method\)/);
+  assert.match(source, /Number\.isSafeInteger\(Number\(declaredLength\)\)/);
+  assert.match(source, /if\(received>1048576\)/);
+  assert.match(source, /reader\.cancel\(\)/);
+});
