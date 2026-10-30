@@ -5,7 +5,7 @@ wrap.innerHTML='<h2>Multi-Clip Timeline</h2><p class="muted">Edit clips from the
 let clips=[],undo=[],redo=[],session=null,exportUrl=null,pendingProjectMedia=false;
 const info=t=>$('clipStatus').textContent=t;
 const invalidateExport=()=>{if(exportUrl){URL.revokeObjectURL(exportUrl);exportUrl=null;}$('clipDownload').removeAttribute('href');$('clipDownload').hidden=true};
-const save=()=>{invalidateExport();undo.push(JSON.stringify(clips));if(undo.length>40)undo.shift();redo=[]};
+const save=()=>{invalidateExport();undo.push(JSON.stringify({clips,selected:chosen()}));if(undo.length>40)undo.shift();redo=[]};
 const chosen=()=>{const i=Number($('clipList').value);return $('clipList').value===''?-1:i};
 function paint(selected=0){const list=$('clipList');list.replaceChildren();clips.forEach((c,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=(i+1)+'. '+c.start.toFixed(2)+'–'+c.end.toFixed(2)+'s / '+c.speed+'×';list.append(o)});if(clips.length)list.value=String(Math.min(clips.length-1,Math.max(0,selected)));else list.value='';const selectedClip=clips[chosen()];if(selectedClip){$('clipStart').value=String(selectedClip.start);$('clipEnd').value=String(selectedClip.end);$('clipSpeed').value=String(selectedClip.speed)}const seconds=clips.reduce((sum,c)=>sum+(c.end-c.start)/c.speed,0);info(clips.length+' clip(s) ready. Estimated timeline: '+(Number.isFinite(seconds)?seconds.toFixed(2):'invalid')+' seconds.');}
 const ready=()=>Number.isFinite(v.duration)&&v.duration>0;
@@ -27,8 +27,8 @@ function move(dir){const i=chosen(),j=i+dir;if(i<0||j<0||j>=clips.length)return;
 $('clipUp').onclick=()=>move(-1);$('clipDown').onclick=()=>move(1);
 function moveTo(edge){const i=chosen();if(i<0||i>=clips.length)return info('Select a clip to move.');const j=edge==='first'?0:clips.length-1;if(i===j)return;save();clips.splice(j,0,clips.splice(i,1)[0]);paint(j)}
 $('clipFirst').onclick=()=>moveTo('first');$('clipLast').onclick=()=>moveTo('last');
-$('clipUndo').onclick=()=>{if(!undo.length)return;invalidateExport();redo.push(JSON.stringify(clips));clips=JSON.parse(undo.pop());paint()};
-$('clipRedo').onclick=()=>{if(!redo.length)return;invalidateExport();undo.push(JSON.stringify(clips));clips=JSON.parse(redo.pop());paint()};
+$('clipUndo').onclick=()=>{if(!undo.length)return;invalidateExport();redo.push(JSON.stringify({clips,selected:chosen()}));const previous=JSON.parse(undo.pop());clips=previous.clips;paint(previous.selected)};
+$('clipRedo').onclick=()=>{if(!redo.length)return;invalidateExport();undo.push(JSON.stringify({clips,selected:chosen()}));const next=JSON.parse(redo.pop());clips=next.clips;paint(next.selected)};
 $('clipCancel').onclick=()=>{if(session){session.cancelled=true;session.abortSeek?.();session.abortPlayback?.();session.abortStart?.();session.abortEncoder?.()}v.pause()};
 async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
