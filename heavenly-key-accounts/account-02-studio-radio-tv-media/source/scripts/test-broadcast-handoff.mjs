@@ -36,5 +36,7 @@ assert.ok(!reconcile.includes('LIVE_STATUS_KV.delete(ACTIVE_KEY)'), 'Status poll
 assert.ok(source.includes('SELECT payload FROM restream_active_state'),'Active state must be read from D1');
 assert.ok(source.includes('INSERT INTO restream_active_state'),'Active state must be persisted to D1');
 assert.ok(!reconcile.includes('LIVE_STATUS_KV.get(ACTIVE_KEY)'),'Broadcast status reconciliation must not read eventually consistent KV');
-assert.ok(source.includes('Legacy broadcast state requires a controlled cutover'),'Legacy KV state must block unsafe migration');
+assert.ok(source.includes('ON CONFLICT(state_key) DO NOTHING'),'Legacy broadcast adoption must not replace an existing D1 record');
+assert.ok(source.includes('await writeActiveState(env,null)'), 'Clearing state must retain a tombstone against stale KV resurrection');
+assert.ok(source.includes('Broadcast state migration could not be verified.'),'Legacy adoption must verify the D1 record');
 console.log('Account 2 broadcast handoff safety checks passed');
