@@ -47,6 +47,22 @@ jobs:
           node -e "const fs=require('fs');const raw=fs.readFileSync('worker-secrets.json','utf8');const list=JSON.parse(raw);if(!Array.isArray(list)||!list.some(x=>x.name==='ADMIN_TOKEN')){console.error('Missing Worker ADMIN_TOKEN secret');process.exit(1)}"
       - name: Deploy approved Worker with configured D1, R2 and assets
         run: npx wrangler deploy
+      - name: Validate existing portal routing repair
+        working-directory: .
+        run: node --test tests/socialplus-router-repair.mjs
+      - name: Connect SocialPlus domain to the deployed Account 10 Worker
+        working-directory: .
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT10_CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT10_CLOUDFLARE_API_TOKEN }}
+        run: node scripts/repair-socialplus-router.mjs
+      - name: Preserve router rollback snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: socialplus-router-before
+          path: socialplus-router-before.json
+          if-no-files-found: ignore
       - name: Verify public health endpoint (not a launch-readiness claim)
         run: |
           curl --fail --show-error --silent --retry 3 --retry-delay 2 https://socialplus.heavenlykey.org/health > health.json
