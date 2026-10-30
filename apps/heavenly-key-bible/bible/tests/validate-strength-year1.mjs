@@ -3,14 +3,14 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../heavenly-key-website/bible');
-const names=['strength-devotionals-2026.json','strength-devotionals-2027-batch01.json','strength-devotionals-year1-batch02.json','strength-devotionals-year1-batch03.json','strength-devotionals-year1-batch04.json','strength-devotionals-year2-batch01.json','strength-devotionals-year2-batch02.json','strength-devotionals-year2-batch03.json','strength-devotionals-year2-batch04.json'];
+const names=['strength-devotionals-2026.json','strength-devotionals-2027-batch01.json','strength-devotionals-year1-batch02.json','strength-devotionals-year1-batch03.json','strength-devotionals-year1-batch04.json','strength-devotionals-year2-batch01.json','strength-devotionals-year2-batch02.json','strength-devotionals-year2-batch03.json','strength-devotionals-year2-batch04.json','strength-devotionals-year3-batch01.json','strength-devotionals-year3-batch02.json','strength-devotionals-year3-batch03.json','strength-devotionals-year3-batch04.json'];
 const docs=names.map(n=>JSON.parse(readFileSync(resolve(root,n),'utf8')));
 for(const doc of docs){assert.equal(doc.timezone,'Africa/Lagos');assert.deepEqual(doc.topics,docs[0].topics)}
 const entries=docs.flatMap(d=>d.entries).sort((a,b)=>a.date.localeCompare(b.date));
 assert.equal(new Set(entries.map(e=>e.date)).size,entries.length,'Duplicate dates');
-assert.equal(entries.length,731);
+assert.equal(entries.length,1096);
 assert.equal(entries[0].date,'2026-10-30');
-assert.equal(entries.at(-1).date,'2028-10-29');
+assert.equal(entries.at(-1).date,'2029-10-29');
 for(let i=0;i<entries.length;i++){
  const e=entries[i];
  assert.match(e.date,/^\d{4}-\d{2}-\d{2}$/);
@@ -34,7 +34,7 @@ for(let i=0;i<entries.length;i++){
  }
 }
 const all=entries.flatMap(e=>e.topics);
-console.log('First two years structurally valid:',entries.length,'days',all.length,'topic entries');
+console.log('First three years structurally valid:',entries.length,'days',all.length,'topic entries');
 const normalize=value=>value.trim().toLowerCase().replace(/\s+/g,' ');
 const uniqueReflections=new Set(all.map(t=>normalize(t.reflection))).size;
 const uniquePrayers=new Set(all.map(t=>normalize(t.prayer))).size;
