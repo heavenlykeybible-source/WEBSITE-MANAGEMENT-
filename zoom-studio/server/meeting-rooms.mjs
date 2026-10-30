@@ -20,7 +20,8 @@ export class MeetingRooms {
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
-  const capacity=Math.max(2,Math.min(12,Number(this.env.MEETING_ROOM_CAP)||8));
+  const configuredCapacity=Number(this.env.MEETING_ROOM_CAP);
+  const capacity=Number.isFinite(configuredCapacity)&&configuredCapacity>0?Math.max(2,Math.min(12,Math.floor(configuredCapacity))):8;
   if(this.sockets().length>=capacity)return new Response('Room is full',{status:429});
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
@@ -76,7 +77,7 @@ export class MeetingRooms {
    if(m.t==='lock'){h.locked=!!m.on;this.save(host,h);}
    else if(m.t==='watch'){const u=String(m.url||'').trim();h.watch=/^https:\/\/[^\s<>"']{4,200}$/.test(u)?u:'';this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
    else if(m.t==='audchat'){h.audChat=!!m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
-   else if(m.t==='slow'){h.slow=Math.max(0,Math.min(60,Number(m.sec)||0));this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
+   else if(m.t==='slow'){const seconds=Number(m.sec);h.slow=Number.isFinite(seconds)?Math.max(0,Math.min(60,Math.floor(seconds))):0;this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
    else if(m.t==='chat')chat();
    else{
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;const gd=this.data(g);
