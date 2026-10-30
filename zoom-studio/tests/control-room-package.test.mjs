@@ -168,3 +168,20 @@ test('host watch links require HTTPS and reject unencrypted HTTP',async()=>{
  await message(s.room,s.host,{t:'watch',url:'https://example.com/video'});
  assert.equal(s.host.messages.at(-1).url,'https://example.com/video');
 });
+
+test('meeting capacity rejects nonfinite configuration and slow mode normalizes invalid numbers',async()=>{
+ const state={getWebSockets:()=>[],storage:{async setAlarm(){}}};
+ const room=new MeetingRooms(state,{AUTH_SECRET:secret,MEETING_ROOM_CAP:'Infinity'});
+ const original=globalThis.WebSocketPair;
+ try {
+  const sockets=Array.from({length:8},()=>socket({role:'guest'}));
+  state.getWebSockets=()=>sockets;
+  const r=await room.fetch(new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}}));
+  assert.equal(r.status,429);
+ } finally {globalThis.WebSocketPair=original;}
+ const s=await openRoom();
+ await message(s.room,s.host,{t:'slow',sec:'Infinity'});
+ assert.equal(s.host.messages.at(-1).sec,0);
+ await message(s.room,s.host,{t:'slow',sec:2.9});
+ assert.equal(s.host.messages.at(-1).sec,2);
+});
