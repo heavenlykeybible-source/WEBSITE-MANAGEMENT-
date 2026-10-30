@@ -74,7 +74,7 @@ export class MeetingRooms {
   if(d.role==='host'){
    // h and d are separate attachment snapshots. Save room controls through h.
    if(m.t==='lock'){h.locked=!!m.on;this.save(host,h);}
-   else if(m.t==='watch'){const u=String(m.url||'').trim();h.watch=/^https?:\/\/[^\s<>"']{4,200}$/.test(u)?u:'';this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
+   else if(m.t==='watch'){const u=String(m.url||'').trim();h.watch=/^https:\/\/[^\s<>"']{4,200}$/.test(u)?u:'';this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
    else if(m.t==='audchat'){h.audChat=!!m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
    else if(m.t==='slow'){h.slow=Math.max(0,Math.min(60,Number(m.sec)||0));this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
    else if(m.t==='chat')chat();
