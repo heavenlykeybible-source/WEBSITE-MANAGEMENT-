@@ -59,7 +59,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Integrate saved interfaces into active Worker
         run: |
