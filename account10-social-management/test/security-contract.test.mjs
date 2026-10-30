@@ -52,3 +52,14 @@ test('All JSON write methods reject oversized or malformed content-length and en
   assert.match(source, /if\(received>1048576\)/);
   assert.match(source, /reader\.cancel\(\)/);
 });
+
+test('Static dashboard assets enforce browser security headers', () => {
+  const assetStart=source.indexOf("if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)");
+  const assetEnd=source.indexOf("if(req.method==='OPTIONS')",assetStart);
+  assert.ok(assetStart>=0 && assetEnd>assetStart);
+  const handler=source.slice(assetStart,assetEnd);
+  for (const header of ['x-content-type-options','x-frame-options','referrer-policy','strict-transport-security','permissions-policy','content-security-policy']) {
+    assert.ok(handler.includes("headers.set('"+header+"'"), 'Missing asset header: '+header);
+  }
+  assert.match(handler, /frame-ancestors 'none'/);
+});
