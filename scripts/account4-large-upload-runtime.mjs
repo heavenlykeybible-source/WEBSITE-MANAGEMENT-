@@ -17,14 +17,22 @@ async function account4MultipartRoutes(req,env,user,sub,m){
   if(!Number.isSafeInteger(size)||size<1||size>ACCOUNT4_MAX_UPLOAD)fail('Maximum allowed private upload is 1 GiB',413);
   if(!filename||filename.length>180||filename.includes('/')||filename.includes('\\')||Array.from(filename).some(c=>c.charCodeAt(0)<32||c.charCodeAt(0)===127)||filename==='.'||filename==='..')fail('Enter a safe filename');
   const plan=account4PartPlan(size),count=await env.DB.prepare('SELECT key,value_json FROM settings WHERE key LIKE ?').bind('multipart:'+user.id+':%').all();
-  if(count.results.filter(r=>{const v=JSON.parse(r.value_json);return v.status==='uploading'&&v.expires>Date.now();}).length>=3)fail('Finish or cancel an existing large upload before opening another',429);
+  let slots=0;
+  for(const row of count.results){const v=JSON.parse(row.value_json);
+   if(v.expires<=Date.now()){
+    if(v.status==='uploading'){try{await env.FILES.resumeMultipartUpload(v.key,v.uploadId).abort();}catch(_e){/* R2 may already have expired this upload */}}
+    if(v.status==='staged')await env.FILES.delete(v.key);
+    await env.DB.prepare('DELETE FROM settings WHERE key=?').bind(row.key).run();
+   }else if(v.status==='uploading'||v.status==='staged')slots++;
+  }
+  if(slots>=3)fail('Only three active or privately staged large files may be retained. Delete or finish an existing upload first.',429);
   const id=crypto.randomUUID(),key='owner-staging/'+user.id+'/'+id+'/upload',upload=await env.FILES.createMultipartUpload(key);
   const record={id,key,uploadId:upload.uploadId,user:user.id,name:filename,size,parts:plan.parts,received:{},status:'uploading',expires:Date.now()+24*3600000};
   try{await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('multipart:'+user.id+':'+id,JSON.stringify(record)).run();}
   catch(e){await upload.abort();throw e;}
   return json({id,size,part_size:ACCOUNT4_PART_SIZE,parts:plan.parts,expires_at:record.expires,notice:'Private staging only. No publication or website import.'},201);
  }
- const match=endpoint.match(/^([a-f0-9-]{36})(?:\/(status|finish|abort|part\/(\d{1,3})))?$/);
+ const match=endpoint.match(/^([a-f0-9-]{36})(?:\/(status|finish|abort|remove|part\/(\d{1,3})))?$/);
  if(!match||!validId.test(match[1]))fail('Unknown upload operation',404);
  const id=match[1],action=match[2]||'status',dbKey='multipart:'+user.id+':'+id;
  return withOperationLock(env,'multipart:'+user.id+':'+id,async()=>{
@@ -33,6 +41,14 @@ async function account4MultipartRoutes(req,env,user,sub,m){
   const r=JSON.parse(row.value_json);
   if(r.user!==user.id||r.expires<Date.now())fail('Upload session expired or inaccessible',410);
   if(action==='status'&&m==='GET')return json({id:r.id,name:r.name,size:r.size,part_size:ACCOUNT4_PART_SIZE,parts:r.parts,received:Object.keys(r.received).map(Number).sort((a,b)=>a-b),status:r.status,expires_at:r.expires});
+  if(action==='remove'&&m==='POST'){
+   if(r.status==='staged')await env.FILES.delete(r.key);
+   else if(r.status==='uploading')await env.FILES.resumeMultipartUpload(r.key,r.uploadId).abort();
+   else fail('Upload is already closed',409);
+   r.status='deleted';r.received={};
+   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(r),dbKey).run();
+   return json({ok:true,status:'deleted'});
+  }
   if(r.status!=='uploading')fail('Upload is no longer accepting parts',409);
   const upload=env.FILES.resumeMultipartUpload(r.key,r.uploadId);
   if(action.startsWith('part/')&&m==='PUT'){
