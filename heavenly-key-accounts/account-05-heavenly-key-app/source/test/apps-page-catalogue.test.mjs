@@ -67,3 +67,11 @@ test('install guide never attaches a selected-app manifest outside its true scop
  assert.doesNotMatch(guide,/document\.createElement\('link'\)[\s\S]*?manifest\.rel\s*=\s*'manifest'/);
  assert.match(guide,/Installation belongs to the selected app/);
 });
+
+test('installation guide QR links have accurate accessible descriptions',()=>{
+ const script=readFileSync(new URL('app-pages.js',base),'utf8');
+ assert.match(script,/Open installation guide for /);
+ assert.doesNotMatch(script,/View QR code for /);
+ assert.match(script,/img\.loading='lazy'/);
+ assert.match(script,/img\.decoding='async'/);
+});
