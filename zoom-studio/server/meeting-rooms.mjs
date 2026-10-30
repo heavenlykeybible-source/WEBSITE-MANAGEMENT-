@@ -32,6 +32,12 @@ export class MeetingRooms {
   const url=new URL(request.url);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(url.protocol!=='https:'||request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
+  // Expired unauthenticated handshakes should not block legitimate visitors while waiting for the next alarm.
+  const now=Date.now();
+  for(const ws of this.sockets()){
+   const pending=this.data(ws);
+   if(!pending.role&&pending.until<=now)this.close(ws,{t:'error',msg:'Please reconnect.'});
+  }
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
   const configuredCapacity=Number(this.env.MEETING_ROOM_CAP);
   const capacity=Number.isFinite(configuredCapacity)&&configuredCapacity>0?Math.max(2,Math.min(12,Math.floor(configuredCapacity))):8;
