@@ -16,5 +16,5 @@ const guards=[
 ];
 for(const [name,fragment] of guards)assert.ok(code.includes(fragment),'Missing '+name);
 assert.ok(code.indexOf("scoped.some(t=>t.mode==='120000')")<code.indexOf("const pick = all;"),'Unsafe files must be rejected before download');
-assert.ok(!code.includes("&& (t.size || 0) <= MAX_FILE"),'Silently dropping large files would create partial sites');
+assert.ok(code.indexOf('eligible.some(')<code.indexOf('const all = tree.filter('),'Oversized assets must fail before filtering the original file list');
 console.log('PASS GitHub import rejects partial, unsafe or oversized website packages before approval');
