@@ -28,7 +28,7 @@ jobs:
           node-version: '22'
           package-manager-cache: false
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Broadcast safety checks
         run: npm run test:broadcast
       - name: Streaming destination security tests
