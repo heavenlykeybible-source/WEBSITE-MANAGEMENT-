@@ -23,4 +23,6 @@ mustContain(workflow, 'git diff --exit-code HEAD -- control-room-worker.js', 'bu
 mustContain(workflow, 'git ls-files --error-unmatch control-room-worker.js', 'Worker must be tracked');
 mustContain(deployer, "['diff', '--exit-code', 'HEAD', '--', 'control-room-worker.js']", 'direct upload must reject mutated Worker');
 mustContain(deployer, "['ls-files', '--error-unmatch', 'control-room-worker.js']", 'direct upload must reject untracked Worker');
+mustContain(workflow, 'npm ci --no-audit --no-fund', 'production dependencies must use lockfile');
+assert.ok(!workflow.includes('run: npm install --no-audit --no-fund'), 'Unsafe unlocked production install');
 console.log('PASS: Account 4 manual deployment and stale-source regression guards are present.');
