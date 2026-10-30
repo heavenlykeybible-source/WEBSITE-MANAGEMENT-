@@ -39,6 +39,10 @@ jobs:
           node --check scripts/configure.mjs
           node --check scripts/deploy.mjs
           node --check scripts/bundle-control-room.mjs
+          node --check server/meeting-rooms.mjs
+          node --check server/control-room-runtime.mjs
+          node --check tests/control-room-package.test.mjs
+          node --check tests/deployment.test.mjs
       - name: Backend and security regression tests
         run: npm test
       - name: Verify Control Room package build
