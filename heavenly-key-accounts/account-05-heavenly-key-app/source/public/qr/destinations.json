@@ -101,10 +101,10 @@
   {
     "id": "bible-reader",
     "name": "KJV Bible Reader",
-    "url": "https://apps.heavenlykey.org/bible.html",
+    "url": "https://onlinebible.heavenlykey.org/",
     "qr": "/qr/app-bible-reader.svg",
     "kind": "app",
-    "sha256": "b519ce0a6c46cd32e403b89cf896c30f75840efa3004f7ef0ef1ff8c6fb6dde4"
+    "sha256": "a452b6bbdc08e6d467038f4b96a25a46c2bed216b47a1b29ba1bc57ff4dc6ce6"
   },
   {
     "id": "daily-reading",
