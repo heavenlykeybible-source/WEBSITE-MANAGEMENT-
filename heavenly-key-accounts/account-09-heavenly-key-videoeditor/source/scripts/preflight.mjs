@@ -29,6 +29,7 @@ const api=readFileSync('functions/api/[[path]].js','utf8');
 if (!api.includes(".trim().toLowerCase() !== 'application/json'")) throw Error('API JSON content type safeguard missing');
 if (!api.includes('Number(declared) !== payload.byteLength')) throw Error('JSON Content-Length mismatch safeguard missing');
 if (!api.includes('gifDimensionsOk') || !api.includes("type==='image/gif' ? size>=13")) throw Error('GIF image dimension safeguards missing');
+if (!api.includes('const jpegDimensionsOk =') || !api.includes("type==='image/jpeg' ? jpegDimensionsOk")) throw Error('JPEG frame-dimension validation missing');
 if (!api.includes('webpLength===size-8') || !api.includes("type==='image/webp' ? webpValid")) throw Error('WebP RIFF container safeguard missing');
 for (const guard of ['webpChunkFits','webpDimensionsOk','webpLossless','webpLossy','webpExtended']) if (!api.includes(guard)) throw Error('WebP chunk and dimension validation missing: '+guard);
 if (!api.includes("Voice provider returned invalid MP3 audio.") || !api.includes('const mp3=frame.length>=4')) throw Error('Synthesized MP3 signature validation missing');
