@@ -45,9 +45,9 @@ for (let i = 0; i < nums.length; i++) {
   }
 }
 
-if (nums.length !== 6 || nums[nums.length - 1] !== 6) {
+if (nums.length !== 7 || nums[nums.length - 1] !== 7) {
   fail.push(
-    `Expected Media Engine migration 0006 as the current schema tip; found ${
+    `Expected Media Engine migration 0007 as the current schema tip; found ${
       nums.length ? String(nums[nums.length - 1]).padStart(4, "0") : "none"
     }.`
   );
