@@ -284,6 +284,29 @@ for (const [label, payload, expected] of [
     check('WebP test media can be deleted',deleted.status===200);
   }
 }
+const sampleJpeg=Uint8Array.from(Buffer.from('/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAABv/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AJoA2EX/2Q==','base64'));
+const sofIndex=sampleJpeg.findIndex((byte,i)=>byte===255&&sampleJpeg[i+1]===192);
+if(sofIndex<0)throw Error('JPEG regression fixture missing baseline frame');
+const invalidWidth=sampleJpeg.slice();invalidWidth[sofIndex+7]=0;invalidWidth[sofIndex+8]=0;
+const excessiveJpeg=sampleJpeg.slice();for(const i of [sofIndex+5,sofIndex+7]){excessiveJpeg[i]=63;excessiveJpeg[i+1]=255;}
+for(const [label,payload,expected] of [
+  ['Real 1x1 baseline JPEG',sampleJpeg,200],
+  ['Truncated JPEG signature',Uint8Array.from([255,216,255]),415],
+  ['Zero JPEG frame width',invalidWidth,415],
+  ['Oversized JPEG frame dimensions',excessiveJpeg,415]
+]){
+  const response=await onRequest({
+    request:new Request('https://studio.example/api/media?name=image.jpg',{
+      method:'POST',headers:{cookie:login.cookie,'content-type':'image/jpeg','x-requested-with':'hk'},body:payload
+    }),env,params:{path:['media']}
+  });
+  check('JPEG frame validation: '+label,response.status===expected);
+  if(response.status===200){
+    const saved=await response.json();
+    const removed=await request('media/'+saved.id,{method:'DELETE',cookie:login.cookie});
+    check('JPEG test media can be deleted',removed.status===200);
+  }
+}
 const spoofedImage = await onRequest({
   request: new Request('https://studio.example/api/media?name=disguised.png',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
