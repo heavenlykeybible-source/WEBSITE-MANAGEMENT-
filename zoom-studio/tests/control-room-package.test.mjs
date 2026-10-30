@@ -599,3 +599,20 @@ test('valid first-frame authentication still creates a meeting',async()=>{
  assert.equal(s.host.d.role,'host');
  assert.equal(s.host.readyState,1);
 });
+
+test('new WebSocket handshakes do not postpone an earlier cleanup alarm',async()=>{
+ const s=meeting(),calls=[];
+ let alarmAt=Date.now()+5000;
+ s.state.storage.getAlarm=async()=>alarmAt;
+ s.state.storage.setAlarm=async due=>{alarmAt=due;calls.push(due);};
+ await s.room.scheduleHandshakeAlarm();
+ assert.equal(calls.length,0,'an earlier alarm must be preserved');
+ alarmAt=Date.now()+60000;
+ await s.room.scheduleHandshakeAlarm();
+ assert.equal(calls.length,1,'a later alarm should be advanced');
+ assert.ok(alarmAt>Date.now()+14000&&alarmAt<Date.now()+17000);
+ const first=alarmAt;
+ await s.room.scheduleHandshakeAlarm();
+ assert.equal(calls.length,1,'repeated connections must not move cleanup later');
+ assert.equal(alarmAt,first);
+});
