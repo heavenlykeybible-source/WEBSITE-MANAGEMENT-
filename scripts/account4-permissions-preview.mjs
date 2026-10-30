@@ -24,8 +24,8 @@ let updated=0;
 for(const [a,b] of changes){
  if(source.includes(b)){continue;}
  const pieces=source.split(a);
- if(pieces.length!==2)throw Error('Cannot apply permission/preview patch safely: '+a.slice(0,75));
- source=pieces.join(b);updated++;
+ if(pieces.length<2)throw Error('Cannot apply permission/preview patch safely: '+a.slice(0,75));
+ source=source.replace(a,b);updated++;
 }
 if(!process.argv.includes('--check'))fs.writeFileSync(target,source);
 console.log('Account 4 permission and preview patch '+(process.argv.includes('--check')?'validated':'applied')+' ('+updated+' changes)');
