@@ -86,3 +86,21 @@ test('every Bible Champions surface offers the same private, user-initiated resu
   assert.doesNotMatch(source,/location\.search\s*\+/);
  }
 });
+
+test('scoped Cloudflare frame policies detach conflicting inherited headers',()=>{
+ const localHeaders=local('_headers');
+ const socialHeaders=readFileSync(new URL('../../../account-03-global-christian-community/source/public/_headers',import.meta.url),'utf8');
+ const bibleHeaders=readFileSync(new URL('../../../../apps/heavenly-key-bible/heavenly-key-website/bible/_headers',import.meta.url),'utf8');
+ for(const [headers,route] of [[localHeaders,'/bible-quiz.html'],[socialHeaders,'/bible-champions-embed.html'],[bibleHeaders,'/bible-champions-embed.html'],[localHeaders,'/creation-to-eternity.html']]){
+  const block=headers.split('\n'+route+'\n')[1]?.split(/\n\n|\n\//)[0]||'';
+  assert.match(block,/! X-Frame-Options/,'Missing parent X-Frame-Options detachment: '+route);
+  assert.match(block,/! Content-Security-Policy/,'Missing parent CSP detachment: '+route);
+  assert.match(block,/frame-ancestors 'self'/);
+ }
+ const strength=socialHeaders.split('\n/strength-for-today.html\n')[1]?.split(/\n\n|\n\//)[0]||'';
+ assert.match(strength,/! X-Frame-Options/);
+ assert.match(strength,/frame-ancestors 'self' https:\/\/apps\.heavenlykey\.org/);
+ const walk=localHeaders.split('\n/walk-offline.html\n')[1]||'';
+ assert.match(walk,/frame-src 'self' https:\/\/global\.heavenlykey\.org/);
+ assert.match(walk,/frame-ancestors 'none'/);
+});
