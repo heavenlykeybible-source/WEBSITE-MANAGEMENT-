@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
-import {sealNotebook,openNotebook} from '../public/offline-vault.js';import {DAILY,QUESTIONS} from '../public/walk-offline-content.js';
+import {sealNotebook,openNotebook} from '../public/offline-vault.js';import {DAILY} from '../public/walk-offline-content.js';
 const file=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 test('Private notebook round-trip, wrong-passphrase and tamper checks',async()=>{
  const secret={version:1,goals:[{title:'Private study goal',completed:false}],journal:[{title:'A private prayer',text:'My confidential prayer request'}],answers:{b01:1}};
@@ -10,9 +10,10 @@ test('Private notebook round-trip, wrong-passphrase and tamper checks',async()=>
  await assert.rejects(openNotebook({...sealed,iterations:1},'a separate notebook passphrase'));
  await assert.rejects(sealNotebook(secret,'short'));
 });
-test('Offline curriculum retains all 66-book survey questions and valid answer indexes',()=>{
- assert.ok(DAILY.length>=20);const survey=QUESTIONS.filter(q=>q.topic==='Whole Bible Survey');assert.equal(new Set(survey.map(q=>q.book)).size,66);assert.equal(new Set(QUESTIONS.map(q=>q.id)).size,QUESTIONS.length);
- for(const q of QUESTIONS){assert.ok(Number.isInteger(q.correct)&&q.correct>=0&&q.correct<q.options.length);assert.ok(q.reference&&q.explanation)}
+test('Daily reflections remain available after the owner-approved retirement of the old quiz',()=>{
+ assert.ok(DAILY.length>=20);
+ assert.doesNotMatch(file('public/walk-offline-content.js'),/export const QUESTIONS/);
+ assert.doesNotMatch(file('public/walk-offline.html'),/id="quiz-topic"/);
 });
 test('Strict CSP: new learning pages contain no executable inline code or inline styles',()=>{
  for(const path of ['public/walk-offline.html','public/creation-to-eternity.html']){const html=file(path);assert.doesNotMatch(html,/<style|\sstyle=|<script>/i);assert.ok(html.includes('offline-status.js'))}
