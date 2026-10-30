@@ -18,3 +18,10 @@ test('each Apps Page download button has a catalogue entry',()=>{
  assert.ok(ids.length>0);
  for(const id of ids)assert.ok(Object.hasOwn(catalog,id),'Missing download catalogue entry: '+id);
 });
+
+test('install UI gracefully handles missing elements and QR image failures',()=>{
+ const script=readFileSync(new URL('app-pages.js',base),'utf8');
+ assert.match(script,/if\(el\)for\(/);
+ assert.match(script,/if\(help&&/);
+ assert.match(script,/QR unavailable/);
+});
