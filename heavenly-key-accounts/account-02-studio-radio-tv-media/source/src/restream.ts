@@ -120,7 +120,7 @@ async function reconcileActive(env:any){
   if(!item)return {active:{...active,providerStatus:'UNKNOWN'},last:null};
   if(item&&egressStillActive(item.status))return {active:{...active,providerStatus:item.status,providerUpdatedAt:item.updated_at||item.updatedAt||null},last:null};
   await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);
-  return {active:null,last:item?{egressId:active.egressId,status:item.status,error:item.error||item.details||null}:null};
+  return {active:null,last:item?{egressId:active.egressId,status:item.status,error:item.error||item.details?'Provider reported a broadcast failure':null}:null};
  }catch{
   return {active:{...active,providerStatus:'UNKNOWN'},last:null};
  }
