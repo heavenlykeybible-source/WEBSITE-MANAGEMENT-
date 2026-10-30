@@ -16,4 +16,8 @@ assert.ok(nav.includes("if(!M&&lv()>=4)item('Connections'"),'Connections require
 assert.ok(nav.includes("if(own())"),'owner-only navigation entries must remain gated');
 assert.ok(nav.includes("item('Identity'"),'identity access must remain available');
 assert.ok(nav.includes("item('Sites'"),'site management navigation must remain available');
+assert.ok(nav.includes("item('AI permissions'"),'AI permissions management must remain available');
+assert.ok(nav.includes("item('Connect ChatGPT'"),'ChatGPT connection management must remain available');
+assert.ok(nav.includes("item('Import and preview'"),'import and preview navigation must remain available');
+assert.ok(nav.includes("item('Verification'"),'verification navigation must remain available');
 console.log('PASS Account 4 quick navigation ordering, uniqueness and role checks');
