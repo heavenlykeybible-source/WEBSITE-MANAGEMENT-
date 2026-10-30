@@ -17,10 +17,12 @@ function collect(dir,rel=''){
   if(entry.isDirectory()){collect(file,name);continue;}
   const ext=path.extname(name).slice(1);if(!types[ext])throw Error('Unrecognized public file type: '+name);
   const bytes=fs.readFileSync(file);
+  if(bytes.length>10*1024*1024)throw Error('Public asset exceeds 10 MiB safety limit: '+name);
   assets['/'+name]={type:types[ext],hash:createHash('sha256').update(bytes).digest('hex'),data:gzipSync(bytes,{level:9}).toString('base64')};
  }
 }
 collect(path.join(root,'site'));
+if(Object.keys(assets).length>1000)throw Error('Public asset count exceeds deployment safety limit');
 const backend=fs.readFileSync(path.join(root,'site/_worker.js'),'utf8').replace('export default {','const studioApplication = {');
 const schema=fs.readFileSync(path.join(root,'migrations/0001_zoom_studio.sql'),'utf8').split('\n').filter(x=>!x.trim().startsWith('--')).join('\n');
 if(/\b(?:DROP|DELETE|UPDATE|INSERT|ALTER|REPLACE)\b/i.test(schema))throw Error('Only additive CREATE statements may be bundled.');
