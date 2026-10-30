@@ -175,3 +175,16 @@ test('private download statistics reject query strings even with a valid admin t
  assert.equal(calls.reads,0);
  assert.equal(response.headers.get('cache-control'),'no-store');
 });
+
+test('unreasonable or invalid R2 package sizes are rejected before download',async()=>{
+ const {env,calls}=environment();
+ const original=await env.NATIVE_RELEASES.get();
+ for(const size of [0,-1,NaN,Infinity,1.5,2*1024*1024*1024+1,Number.MAX_SAFE_INTEGER]){
+  const invalid={...original,size};
+  env.NATIVE_RELEASES.head=async()=>invalid;
+  env.NATIVE_RELEASES.get=async()=>invalid;
+  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env)).status,403);
+  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
+ }
+ assert.equal(calls.writes,0);
+});
