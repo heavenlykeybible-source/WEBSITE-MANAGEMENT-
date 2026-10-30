@@ -253,6 +253,23 @@ const noLengthWav = await onRequest({
   }),env,params:{path:['transcribe']}
 });
 check('Transcription supports absent content length',noLengthWav.status===200);
+for (const [label, mutate] of [
+  ['RIFF length mismatch', b => new DataView(b.buffer).setUint32(4,999,true)],
+  ['Payload declares more audio than present', b => new DataView(b.buffer).setUint32(40,999,true)],
+  ['Unsupported WAV encoding', b => new DataView(b.buffer).setUint16(20,3,true)],
+  ['Invalid WAV sample rate', b => new DataView(b.buffer).setUint32(24,0,true)],
+  ['Invalid WAV block alignment', b => new DataView(b.buffer).setUint16(32,0,true)]
+]) {
+  const altered = validWav.slice();
+  mutate(altered);
+  const response = await onRequest({
+    request:new Request('https://studio.example/api/transcribe',{
+      method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},
+      body:altered
+    }),env,params:{path:['transcribe']}
+  });
+  check('Malformed WAV rejected: '+label,response.status===415);
+}
 let wavChunkCount=0;
 const oversizedWavStream=new ReadableStream({
   pull(controller){
