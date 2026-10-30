@@ -151,15 +151,17 @@ check('Anonymous voice configuration forbidden', anonymousVoice.status === 401);
 const noLengthUpload = await onRequest({
   request: new Request('https://studio.example/api/media?name=sample.png',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
-    body:(()=>{
-      const wav=new ArrayBuffer(46),view=new DataView(wav),bytes=new Uint8Array(wav);
-      const put=(i,word)=>{for(let n=0;n<word.length;n++)bytes[i+n]=word.charCodeAt(n)};
-      put(0,'RIFF');view.setUint32(4,38,true);put(8,'WAVEfmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,16000,true);view.setUint32(28,32000,true);view.setUint16(32,2,true);view.setUint16(34,16,true);put(36,'data');view.setUint32(40,2,true);
-      return bytes;
-    })()
+    body:new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0])
   }),env,params:{path:['media']}
 });
 check('Media supports absent content length',noLengthUpload.status===200);
+const spoofedImage = await onRequest({
+  request: new Request('https://studio.example/api/media?name=disguised.png',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
+    body:new Uint8Array([82,73,70,70,0,0,0,0,87,65,86,69])
+  }),env,params:{path:['media']}
+});
+check('Rejects WAV data disguised as an image before storage',spoofedImage.status===415);
 const mediaCreated = await noLengthUpload.json();
 const otherMediaRead = await request('media/'+mediaCreated.id,{cookie:secondLogin.cookie});
 check('Members cannot read another member media',otherMediaRead.status===404);
