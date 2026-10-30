@@ -41,3 +41,16 @@ Scanned recursive Git trees of `heavenlykeybible-source/WEBSITE-MANAGEMENT-` (1,
 5. Verify live routes from actual Cloudflare deployment before any claims that the public game works.
 
 No production merge or deployment is authorized by this audit.
+
+
+## Subsequent implementation update — October 30, 2026 (latest branch)
+
+**Current code count: exactly 24 topics × 30 questions = 720 questions.**
+- Three existing overview courses (Complete Bible, Old Testament, New Testament) were completed with individually authored Scripture questions.
+- The remaining 21 doctrinal courses each retain their original three knowledge questions and add 27 Scripture-completion questions using literal excerpts and references from the Bible project's KJV JSON source.
+- Each question has four distinct options and one correct answer. All newly added Scripture-completion answers are checked word-for-word against the referenced KJV text by Account 5's integration tests.
+- The question banks are identical in Bible Account 6, Account 3, and Account 5. A release validator requires 24 topics, 30 unique validated questions per topic, exactly 720 records, and cross-account parity.
+- The previous lower-than-30 practice fallback can remain for future draft topics, but current topics meet the 30-question certificate threshold.
+- The user-approved launch design also includes a discoverable Bible Champions link in My Walk with God, a ministry footer, user-initiated sharing and device-specific installation links.
+- **Open release items:** ministry editorial/doctrinal approval of new questions; cross-device playthroughs; production embedding-header verification; signed native packages and owner-approved deployment.
+- A separate Account 3 Recovery Review workflow includes legacy Strength for Today checks and is not yet fully green. It must not be represented as passed.
