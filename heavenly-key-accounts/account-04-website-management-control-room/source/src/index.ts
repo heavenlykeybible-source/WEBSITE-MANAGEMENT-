@@ -55,6 +55,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
  }
  const accessActor=ownerHost?null:await authenticate(request,env);
  const actor=accessActor||(ownerHost?await ownerSession(request,env.DB):null);
+ const verifiedOwner=!!actor&&(ownerHost?true:!!(accessActor&&env.OWNER_ACCESS_EMAIL?.trim()&&accessActor.toLowerCase()===env.OWNER_ACCESS_EMAIL.trim().toLowerCase()));
  if(!u.pathname.startsWith('/api/')){
   // Never serve the owner dashboard to a signed-out visitor. Static login
   // resources remain available so a new owner can authenticate normally.
@@ -66,7 +67,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
  if(!['GET','HEAD','OPTIONS'].includes(request.method)&&(request.headers.get('Origin')!==u.origin||request.headers.get('Sec-Fetch-Site')==='cross-site'))return fail('Use the Control Room to make this change.',403);
  try{
   const location=()=>keyOf(u);
-  if(u.pathname==='/api/owner/password'&&request.method==='POST'){const ownerVerified=ownerHost?!!(await ownerSession(request,env.DB)):!!(accessActor&&env.OWNER_ACCESS_EMAIL?.trim()&&accessActor.toLowerCase()===env.OWNER_ACCESS_EMAIL.trim().toLowerCase());if(!ownerVerified)return fail('Verified owner access is required to change the owner password.',403);const data=await body(request,4096),password=data.generate===true?generatedPassword():data.password;await setOwnerPassword(env.DB,password,actor);return json({ok:true,password:data.generate===true?password:undefined,signInUrl:'https://heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev/'})}
+  if(u.pathname==='/api/owner/password'&&request.method==='POST'){if(!verifiedOwner)return fail('Verified owner access is required to change the owner password.',403);const data=await body(request,4096),password=data.generate===true?generatedPassword():data.password;await setOwnerPassword(env.DB,password,actor);return json({ok:true,password:data.generate===true?password:undefined,signInUrl:'https://heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev/'})}
   if(u.pathname==='/api/owner/logout'&&request.method==='POST')return new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','cache-control':'no-store','set-cookie':await ownerLogout(request,env.DB)}});
   if(u.pathname==='/api/cloudflare/connections/verify'&&request.method==='POST'){
    const data=await body(request,6000);
@@ -75,7 +76,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    await env.DB.prepare('INSERT INTO cms_audit(actor,action,target) VALUES(?,?,?)').bind(actor,'cloudflare-connection-check',result.ok?'verified':'failed').run();
    return json(result,result.ok?200:400);
   }
-  if(u.pathname==='/api/me')return json({actor,role:ownerHost?'owner':'administrator'});
+  if(u.pathname==='/api/me')return json({actor,role:verifiedOwner?'owner':'administrator'});
   if(u.pathname==='/api/system/health'&&request.method==='GET'){
    let cms='unavailable',publishing='unavailable';
    try{await env.DB.prepare('SELECT 1 FROM cms_entries LIMIT 1').first();cms='ready';await env.DB.prepare('SELECT 1 FROM cms_publications LIMIT 1').first();publishing='ready'}catch{}
@@ -91,7 +92,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
   }
   if(u.pathname==='/api/revisions'&&request.method==='GET'){const {site,kind,key}=location();return json({items:(await env.DB.prepare('SELECT id,version,editor,created_at FROM cms_revisions WHERE site=? AND kind=? AND entry_key=? ORDER BY id DESC LIMIT 30').bind(site,kind,key).all()).results})}
   if(u.pathname==='/api/save'&&request.method==='POST'){const data=await body(request);return json(await saveDraft(env.DB,location(),data.content,data.expectedVersion,actor))}
-  if(u.pathname==='/api/publish'&&request.method==='POST'){const data=await body(request,4096);return json(await publishDraft(env.DB,location(),data.expectedVersion,actor))}
+  if(u.pathname==='/api/publish'&&request.method==='POST'){if(!verifiedOwner)return fail('Verified owner approval is required to publish.',403);const data=await body(request,4096);return json(await publishDraft(env.DB,location(),data.expectedVersion,actor))}
   if(u.pathname==='/api/restore'&&request.method==='POST'){const data=await body(request,4096);if(!Number.isSafeInteger(data.revisionId)||data.revisionId<1)return fail('Choose a revision.');return json({...await restoreDraft(env.DB,location(),data.revisionId,data.expectedVersion,actor),published:false})}
   if(u.pathname==='/api/media'&&request.method==='POST'){
    if(Number(request.headers.get('content-length')||0)>5000000)return fail('Image exceeds 5 MB',413);
