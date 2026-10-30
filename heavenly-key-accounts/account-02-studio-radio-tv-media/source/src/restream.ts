@@ -100,7 +100,7 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
   if(host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test')||host.endsWith('.invalid')||host.endsWith('.example')||/^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))throw new Error('24/7 programme source must use a public DNS hostname.');
   // Restrict browser egress to explicitly approved programme origins.
   // A public hostname alone cannot prevent DNS rebinding or redirect-based SSRF.
-  const approved=String(env.STUDIO_247_ALLOWED_HOSTS??'').split(',').map((value:string)=>value.trim().toLowerCase()).filter(Boolean);
+  const approved=['heavenlykey.alldaywow247.workers.dev',...String(env.STUDIO_247_ALLOWED_HOSTS??'').split(',').map((value:string)=>value.trim().toLowerCase()).filter(Boolean)];
   if(!approved.includes(host)||u.port&&u.port!=='443')throw new Error('24/7 programme source hostname is not approved for broadcasting.');
   body={web:{url:u.href,await_start_signal:false},preset,outputs:[{stream:{protocol:'RTMP',urls:outputs.map(x=>x.url)}}]};
  }
