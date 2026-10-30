@@ -2,6 +2,15 @@ name: Account 9 quality checks
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
+      - '.github/workflows/account9-quality.yml'
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/**'
+      - '.github/workflows/account9-quality.yml'
 
 permissions:
   contents: read
