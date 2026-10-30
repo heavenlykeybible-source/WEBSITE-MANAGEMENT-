@@ -56,4 +56,15 @@ for(const value of ['','{}','false','123','[]','{"egressId":null}','{"egressId":
  assert.throws(()=>parseActive(value),/Stored broadcast state is invalid/,'Invalid active state must block stream replacement: '+value);
 }
 
+// Exercise the production LiveKit status classifier against its public API enum.
+const statusStart=source.indexOf('function egressTerminalStatus(');
+const statusEnd=source.indexOf('function egressStillActive(',statusStart);
+assert.ok(statusStart>=0&&statusEnd>statusStart,'Terminal egress classifier must be present');
+const statusJs=ts.transpileModule(source.slice(statusStart,statusEnd),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+const isTerminal=runInNewContext(statusJs+';egressTerminalStatus',{String});
+for(const status of [3,4,5,6,'EGRESS_COMPLETE','EGRESS_FAILED','EGRESS_ABORTED','EGRESS_LIMIT_REACHED'])
+ assert.equal(isTerminal(status),true,'Terminal provider status must block handoff: '+status);
+for(const status of [0,1,2,'EGRESS_STARTING','EGRESS_ACTIVE','EGRESS_ENDING'])
+ assert.equal(isTerminal(status),false,'Live provider status must not be terminal: '+status);
+
 console.log('Account 2 live RTMPS URL and active-state integrity tests passed');
