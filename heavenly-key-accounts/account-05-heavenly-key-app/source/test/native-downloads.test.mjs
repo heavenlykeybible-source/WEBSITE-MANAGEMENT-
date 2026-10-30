@@ -167,3 +167,11 @@ test('R2-stored SHA-256 must be present and agree with publisher metadata',async
  valid.checksums={sha256:new Uint8Array(32).fill(0xbb).buffer};
  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env)).status,200);
 });
+
+test('private download statistics reject query strings even with a valid admin token',async()=>{
+ const {env,calls}=environment();
+ const response=await handleNativeDownloads(request('/api/admin/download-counts?token=not-a-safe-location',{headers:{authorization:'Bearer '+'a'.repeat(40)}}),env);
+ assert.equal(response.status,400);
+ assert.equal(calls.reads,0);
+ assert.equal(response.headers.get('cache-control'),'no-store');
+});
