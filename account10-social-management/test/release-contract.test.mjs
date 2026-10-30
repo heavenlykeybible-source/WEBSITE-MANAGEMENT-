@@ -43,3 +43,13 @@ test('Local verification includes release and security contract tests', () => {
 test('SocialPlus custom domain is declared for approved Worker deployments', () => {
   assert.match(wrangler, /\[\[routes\]\]\s*pattern\s*=\s*"socialplus\.heavenlykey\.org"\s*custom_domain\s*=\s*true/);
 });
+
+test('Account 10 GitHub workflow performs only verification, never deployment', () => {
+  const workflowPath=resolve(root, '..', '.github', 'workflows', 'account10-verify.yml');
+  assert.ok(existsSync(workflowPath), 'verification workflow missing');
+  const workflow=readFileSync(workflowPath, 'utf8');
+  assert.match(workflow, /npm ci --ignore-scripts/);
+  assert.match(workflow, /npm run verify:local/);
+  assert.match(workflow, /contents: read/);
+  assert.doesNotMatch(workflow, /\bwrangler deploy\b|\bwrangler d1 execute\b|CLOUDFLARE_API_TOKEN|\bnpx wrangler deploy\b/);
+});
