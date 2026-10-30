@@ -104,3 +104,12 @@ test('WhatsApp free-form send requires a real recent inbound timestamp, not a fu
   assert.match(handler, /datetime\(created_at\)<=datetime\('now'\)/);
   assert.match(handler, /AND id GLOB 'wa_msg_\*'/);
 });
+
+test('HTML dashboard responses disable caching to prevent stale operator UI', () => {
+  const staticStart=source.indexOf("if(!u.pathname.startsWith('/api/'))");
+  const apiStart=source.indexOf("if(req.method==='OPTIONS')", staticStart);
+  assert.ok(staticStart>=0 && apiStart>staticStart);
+  const staticHandler=source.slice(staticStart,apiStart);
+  assert.match(staticHandler, /headers\.get\('content-type'\)\?\.toLowerCase\(\)\.includes\('text\/html'\)/);
+  assert.match(staticHandler, /headers\.set\('cache-control','no-store'\)/);
+});
