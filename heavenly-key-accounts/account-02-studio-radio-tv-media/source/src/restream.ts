@@ -57,7 +57,10 @@ export async function setDestinationEnabled(env:Env,destination:string,enabled:b
 }
 async function enabledUrls(env:Env){
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
- return Object.entries(store).filter(([name,v])=>allowed.has(name)&&v.enabled&&v.url).map(([destination,v])=>({destination,url:v.url}));
+ return Object.entries(store).filter(([name,v])=>{
+  if(!allowed.has(name)||!v?.enabled||typeof v.url!=='string')return false;
+  try{const u=new URL(v.url);return u.protocol==='rtmps:'&&!!u.hostname&&!u.username&&!u.password&&!u.hash;}catch{return false;}
+ }).map(([destination,v])=>({destination,url:v.url}));
 }
 async function callLiveKit(env:any,method:string,body:unknown){
  const config=await resolveLiveKitConfig(env);if(!config)throw new Error('LiveKit connection is not configured.');
