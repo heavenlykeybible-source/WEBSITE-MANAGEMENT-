@@ -20,6 +20,8 @@ jobs:
         run: node --check control-room-worker.js
       - name: Audit other account deployment workflow triggers
         run: node scripts/account4-workflow-inventory.mjs
+      - name: Prevent cross-account workflow deployment regressions
+        run: node tests/account4-cross-account-ci-guards.mjs
       - name: Verify security guard presence
         run: node tests/account4-launch-guards.mjs
       - name: Validate protected deployment settings and CI permissions
