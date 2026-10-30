@@ -1,7 +1,7 @@
 // Native release distribution: signed packages must be uploaded to private R2.
 // No download is counted unless a real package exists and is returned.
 // Aggregate counts are private and require a configured admin bearer token.
-const headers = {'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'};
+const headers = {'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','cross-origin-resource-policy':'same-origin','x-frame-options':'DENY','content-security-policy':"default-src 'none'; sandbox",'x-robots-tag':'noindex, nofollow'};
 const platforms = {android:{extension:'apk',type:'application/vnd.android.package-archive'},windows:{extension:'msix',type:'application/msix'},mac:{extension:'dmg',type:'application/x-apple-diskimage'}};
 const idPattern = /^[a-z0-9-]{1,64}$/;
 const reply = (data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...headers,'content-type':'application/json; charset=utf-8'}});
