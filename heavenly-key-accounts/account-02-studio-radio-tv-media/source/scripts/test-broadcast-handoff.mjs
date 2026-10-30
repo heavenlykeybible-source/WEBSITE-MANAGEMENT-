@@ -15,4 +15,5 @@ assert.match(source,/if\(r\.status>=300&&r\.status<400\)/,'Provider redirects mu
 assert.match(source,/host==='localhost'/,'Local broadcast source hostnames must be blocked');
 assert.match(source,/host\.startsWith\('\['\)/,'IP-literal source hostnames must be blocked');
 assert.match(source,/u\.protocol==='rtmps:'/,'Legacy destinations must be checked at broadcast time');
+assert.ok(start.indexOf('LIVE_STATUS_KV.put(ACTIVE_KEY') < start.indexOf("callLiveKit(env,'StopEgress'"),'Replacement state must be stored before old stream stops');
 console.log('Account 2 broadcast handoff safety checks passed');
