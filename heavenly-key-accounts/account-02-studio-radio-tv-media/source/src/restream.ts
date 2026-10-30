@@ -20,6 +20,17 @@ function validStreamingOutput(urlValue:string):boolean{
  }catch{return false;}
 }
 
+function parseActivePayload(payload:string):any|null{
+ let parsed:any;
+ try{parsed=JSON.parse(payload);}catch{throw new Error('Stored broadcast state is invalid. Manual recovery is required.');}
+ // A deliberate null tombstone is the only safe empty state. Do not treat
+ // corrupt or partial data as permission to start another provider egress.
+ if(parsed===null)return null;
+ if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||typeof parsed.egressId!=='string'||!parsed.egressId.trim()||parsed.egressId.length>256)
+  throw new Error('Stored broadcast state is invalid. Manual recovery is required.');
+ return parsed;
+}
+
 // Authoritative D1 state: KV is intentionally not used for broadcast decisions.
 async function readActiveState(env:any):Promise<any|null>{
  const row=await env.DB.prepare("SELECT payload FROM restream_active_state WHERE state_key='active'").first() as {payload:string}|null;
@@ -28,15 +39,14 @@ async function readActiveState(env:any):Promise<any|null>{
   // storage. The INSERT is atomic, so parallel readers cannot overwrite D1.
   const legacy=await env.LIVE_STATUS_KV.get(ACTIVE_KEY);
   if(!legacy)return null;
-  let parsed:any;
-  try{parsed=JSON.parse(legacy);}catch{throw new Error('Legacy broadcast state is invalid. Manual recovery is required.');}
-  if(!parsed||typeof parsed.egressId!=='string'||!parsed.egressId.trim())throw new Error('Legacy broadcast state is invalid. Manual recovery is required.');
+  const parsed=parseActivePayload(legacy);
+  if(!parsed)throw new Error('Legacy broadcast state is invalid. Manual recovery is required.');
   await env.DB.prepare("INSERT INTO restream_active_state (state_key,payload,updated_at) VALUES ('active',?,unixepoch()) ON CONFLICT(state_key) DO NOTHING").bind(JSON.stringify(parsed)).run();
   const adopted=await env.DB.prepare("SELECT payload FROM restream_active_state WHERE state_key='active'").first() as {payload:string}|null;
   if(!adopted)throw new Error('Broadcast state migration could not be verified.');
-  try{return JSON.parse(adopted.payload);}catch{throw new Error('Stored broadcast state is invalid. Manual recovery is required.');}
+  return parseActivePayload(adopted.payload);
  }
- try{return JSON.parse(row.payload);}catch{throw new Error('Stored broadcast state is invalid. Manual recovery is required.');}
+ return parseActivePayload(row.payload);
 }
 async function writeActiveState(env:any,state:unknown){
  await env.DB.prepare("INSERT INTO restream_active_state (state_key,payload,updated_at) VALUES ('active',?,unixepoch()) ON CONFLICT(state_key) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at").bind(JSON.stringify(state)).run();
