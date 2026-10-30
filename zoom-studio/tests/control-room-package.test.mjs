@@ -234,8 +234,9 @@ test('malformed structured WebSocket fields cannot crash meeting handlers',async
  const s=await openRoom();
  await message(s.room,s.host,{t:'watch',url:{toString:null}});
  assert.equal(s.host.messages.at(-1).url,'');
+ const beforeChat=s.host.messages.length;
  await message(s.room,s.host,{t:'chat',text:{toString:null}});
- assert.equal(s.host.messages.at(-1).text,'');
+ assert.equal(s.host.messages.length,beforeChat,'malformed chat must be ignored rather than broadcast');
  const guest=s.add();
  await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,name:{toString:null},aud:true});
  assert.equal(guest.readyState,1);
