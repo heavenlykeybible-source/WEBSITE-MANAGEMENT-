@@ -34,7 +34,7 @@ jobs:
           npm test
       - name: Verify navigation upgrade after repository patch tests
         run: |
-          node scripts/account4-quick-navigation.mjs
+          npm run prepare:account4-navigation
           node --check control-room-worker.js
-          node tests/account4-launch-guards.mjs
+          npm run test:account4-launch
 # This workflow intentionally does not publish, deploy or access production secrets.
