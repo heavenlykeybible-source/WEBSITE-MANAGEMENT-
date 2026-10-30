@@ -42,13 +42,25 @@ assert(sw.includes('if(digest!==book.sha256)'),'Cached KJV checksum mismatch mus
 assert(sw.includes("if(!approved){cached=undefined;try{await cache.delete(event.request);}")||sw.includes("if(!approved){cached=undefined;try{await cache.delete(event.request);"),'Withdrawn devotionals must be evicted and never served as cached fallback');
 assert(sw.includes('const varies=response.headers.get("Vary")'),'Responses varying by cookies or authorization must be classified');
 assert(sw.includes('const sensitive='),'Sensitive caching must be evaluated before writes');
+assert(sw.includes('const sensitive=/(?:^|,)\\s*')===false,'Security regex must not contain escaped literal backslashes');
+assert(sw.includes('const sensitive=/(?:^|,)\\s*')===false,'Reject malformed sensitive policy detection');
+assert(sw.includes('const sensitive=/(?:^|,)\s*'),'Cache-Control must parse whitespace correctly');
+assert(sw.includes('(?:cookie|authorization|\*)'),'Vary header must recognize literal wildcard');
+const cachePolicySensitive=(cc,vary)=>/(?:^|,)\s*(?:private|no-store)(?:\s*(?:,|$)|\s*;)/i.test(cc)
+ ||/(?:^|,)\s*(?:cookie|authorization|\*)(?:\s*,|\s*$)/i.test(vary);
+for(const [cc,vary,expected] of [
+ ['private','',true],['no-store','',true],['public, max-age=300','',false],
+ ['public','Cookie',true],['public','Accept-Encoding, Authorization',true],
+ ['public','*',true],['public','Accept-Encoding',false]
+])assert.equal(cachePolicySensitive(cc,vary),expected,'Sensitive header policy regression');
+
 assert(sw.includes('if(sensitive){cached=undefined;try{await cache.delete(event.request);}') ,'Sensitive previously cached responses must be evicted');
 assert(sw.includes('&&!sensitive&&'),'Sensitive responses must not be newly stored');
 assert(sw.includes('isDevotionalDraftLibrary'),'Devotional cache classification missing');
 assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved content must never be cached');
 assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
 assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
-assert(sw.includes('hk-bible-shell-v64'),'Service-worker cache version must retire older draft caches');
+assert(sw.includes('hk-bible-shell-v65'),'Service-worker cache version must retire older draft caches');
 assert(html.includes("redirect:'error'"),'Member API requests must not follow redirects');
 assert(html.includes("cache:'no-store'"),'Member API requests must bypass response caching');
 assert(html.includes('new AbortController()'),'Member API requests need cancellation');
