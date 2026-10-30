@@ -65,7 +65,17 @@ export class MeetingRooms {
    const d=this.data(guest);
    if(d.invited&&d.invitedUntil&&d.invitedUntil<=now){d.invited=false;d.invitedUntil=0;this.save(guest,d);this.send(guest,{t:'note',text:'The stage invitation has expired. Ask the host to invite you again.'});}
   }
-  if(this.sockets().length)await this.state.storage.setAlarm(now+60000);
+  // Schedule against the earliest known deadline, not a fixed minute that may miss handshakes.
+  const live=this.sockets();
+  if(live.length){
+   let due=now+60000;
+   for(const w of live){
+    const d=this.data(w);
+    const deadlines=d.role==='host'?[d.until]:d.role==='guest'?[d.ok?0:d.waitingUntil,d.invited?d.invitedUntil:0]:[d.until];
+    for(const deadline of deadlines)if(Number.isFinite(deadline)&&deadline>now)due=Math.min(due,deadline);
+   }
+   await this.state.storage.setAlarm(Math.max(now+1000,due));
+  }
  }
  async webSocketMessage(ws,raw){
   // Ignore queued frames from sockets already disconnected or removed by the host.
