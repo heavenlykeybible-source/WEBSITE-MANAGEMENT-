@@ -651,3 +651,14 @@ test('new host closes orphaned guests from a disconnected previous host',async()
  await message(s.room,fresh,{t:'join',room:next.d.room,key:next.messages.at(-1).key,aud:true,name:'New viewer'});
  assert.equal(fresh.readyState,1);
 });
+
+test('signed host token requires a string owner identity',async()=>{
+ for(const u of [null,42,{},[],false,'',' '.repeat(3),'x'.repeat(129)]){
+  const s=meeting(),host=s.add();
+  await message(s.room,host,{t:'host',token:roomToken({u})});
+  assert.equal(host.readyState,3,'invalid host owner identity must be rejected');
+  assert.ok(host.messages.some(m=>m.t==='error'&&/Not allowed/.test(m.msg)));
+ }
+ const s=await openRoom();
+ assert.equal(s.host.d.owner,'owner@test.local');
+});
