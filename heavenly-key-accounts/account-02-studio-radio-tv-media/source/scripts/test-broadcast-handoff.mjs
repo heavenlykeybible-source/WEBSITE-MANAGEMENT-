@@ -21,4 +21,6 @@ assert.ok(source.includes('size>limit') && source.includes('reader.cancel()'), '
 assert.ok(source.includes("base.protocol!=='wss:'"),'LiveKit endpoint must use secure WSS');
 assert.ok(source.includes("['StartEgress','StopEgress','ListEgress'].includes(method)"),'LiveKit operations must be allowlisted');
 assert.ok(source.includes("base.pathname!=='/'"),'LiveKit endpoint path must be restricted');
+assert.ok(source.includes('STUDIO_247_ALLOWED_HOSTS'),'24/7 programme sources must use a configured hostname allowlist');
+assert.ok(source.includes('approved.includes(host)'),'24/7 programme source hostname must be approved');
 console.log('Account 2 broadcast handoff safety checks passed');
