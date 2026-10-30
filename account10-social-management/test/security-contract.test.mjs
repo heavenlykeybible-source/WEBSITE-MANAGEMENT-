@@ -71,3 +71,16 @@ test('Gemini keeps original assistant identity and approval-only behavior', () =
   assert.ok(profile.includes('Evangelist Emmanuel Ogheneochuko Adiohwo'));
   assert.ok(profile.includes('human operator must review and explicitly approve'));
 });
+
+test('Gemini suggestions recheck human takeover after provider response', () => {
+  const start=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'");
+  const end=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'", start);
+  assert.ok(start >= 0 && end > start);
+  const handler=source.slice(start,end);
+  const providerResponse=handler.indexOf('await response.json()');
+  const postResponseTakeover=handler.indexOf("const latest=await env.DB.prepare('SELECT human_paused,requested_human FROM conversations WHERE id=?')");
+  const suggestionReturn=handler.indexOf("action:'suggest_reply'");
+  assert.ok(providerResponse >= 0 && postResponseTakeover > providerResponse && suggestionReturn > postResponseTakeover);
+  assert.match(handler, /if\(!latest\|\|latest\.human_paused\|\|latest\.requested_human\)/);
+  assert.match(handler, /suggestion:null,sent:false/);
+});
