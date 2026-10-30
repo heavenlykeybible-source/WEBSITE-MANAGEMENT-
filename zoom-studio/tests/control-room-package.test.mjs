@@ -91,7 +91,7 @@ test('waiting guests cannot chat or signal until host admission; hibernation kee
  assert.equal(s.host.messages.at(-2)?.t==='waiting'||s.host.messages.some(m=>m.t==='waiting'),true);
  await message(s.room,guest,{t:'chat',text:'blocked'});await message(s.room,guest,{t:'sig',data:{offer:'blocked'}});assert.ok(!s.host.messages.some(m=>m.text==='blocked'||m.data?.offer==='blocked'));
  const restored=new MeetingRooms(s.state,{AUTH_SECRET:secret});await message(restored,s.host,{t:'admit',gid:guest.d.id});assert.equal(guest.d.stage,true);
- await message(restored,guest,{t:'sig',data:{offer:'allowed'}});assert.equal(s.host.messages.at(-1).data.offer,'allowed');
+ await message(restored,guest,{t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}});assert.equal(s.host.messages.at(-1).data.sdp.type,'offer');
  await message(restored,s.host,{t:'lock',on:true});const denied=s.add();await message(restored,denied,{t:'join',room:s.host.d.room,key:s.key});assert.equal(denied.readyState,3);
  await message(restored,s.host,{t:'sig',to:'wrong-room',data:{secret:'private'}});assert.ok(!guest.messages.some(m=>m.data?.secret));
 });
@@ -250,4 +250,21 @@ test('signalling disconnects sustained message flooding',async()=>{
  }
  assert.equal(s.host.readyState,3);
  assert.ok(s.host.messages.some(m=>m.t==='error'&&/Too many messages/.test(m.msg)));
+});
+
+test('signalling relays valid WebRTC descriptions and rejects malformed payloads',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,name:'Test participant'});
+ await message(s.room,s.host,{t:'admit',gid:guest.d.id});
+ const guestCount=guest.messages.length;
+ for(const data of [null,[],{offer:'raw'},{sdp:{type:'invalid',sdp:'v=0'}},{sdp:{type:'offer',sdp:12}},{c:{candidate:12}}]){
+  await message(s.room,s.host,{t:'sig',to:guest.d.id,data});
+ }
+ assert.equal(guest.messages.length,guestCount,'malformed host signalling must not reach guest');
+ const hostCount=s.host.messages.length;
+ await message(s.room,guest,{t:'sig',data:{sdp:{type:'answer',sdp:'v=0'}}});
+ assert.equal(s.host.messages.length,hostCount+1);
+ assert.equal(s.host.messages.at(-1).data.sdp.type,'answer');
+ await message(s.room,s.host,{t:'sig',to:guest.d.id,data:{c:{candidate:'candidate:1 1 udp 1 127.0.0.1 1234 typ host'}}});
+ assert.equal(guest.messages.at(-1).data.c.candidate.startsWith('candidate:'),true);
 });
