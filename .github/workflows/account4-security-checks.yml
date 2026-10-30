@@ -5,6 +5,12 @@ on:
       - 'control-room-worker.js'
       - 'config/heavenly-key-accounts.json'
       - 'tests/**'
+      - 'scripts/account4-quick-navigation.mjs'
+      - 'scripts/apply-reviewed-account4-upgrade.mjs'
+      - 'patches/account4-reviewed-upgrade.json'
+      - 'patches/account4-reviewed-upgrade.patch'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/account4-security-checks.yml'
   workflow_dispatch:
 permissions:
