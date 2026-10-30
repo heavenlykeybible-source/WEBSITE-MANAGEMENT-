@@ -38,6 +38,7 @@ async function runTimeline(record){
  if(record&&(!canvas.captureStream||!window.MediaRecorder||typeof MediaRecorder.isTypeSupported!=='function'))return info('Video export is unavailable in this browser.');
  const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
  if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
+ if(record)invalidateExport();
  const state={cancelled:false};session=state;setBusy(true);
  const before=v.currentTime,rate=v.playbackRate;let rec=null,stream=null,sourceStream=null,encoderError=null;
  try{
