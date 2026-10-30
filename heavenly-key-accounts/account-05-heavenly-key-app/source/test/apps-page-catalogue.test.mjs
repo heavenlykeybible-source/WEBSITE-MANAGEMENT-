@@ -44,3 +44,20 @@ test('native packages require explicit user download, not QR navigation',()=>{
  assert.doesNotMatch(script,/window\.location\.assign\(nativeLink\.href\)/);
  assert.match(script,/nativeLink\.href\s*=\s*'\/api\/native-download\//);
 });
+
+test('catalogue install destinations use trusted Heavenly Key HTTPS hosts only',()=>{
+ const allowed=new Set(['apps.heavenlykey.org','onlinebible.heavenlykey.org','global.heavenlykey.org','radio.heavenlykey.org','meeting.heavenlykey.org']);
+ for(const [id,app] of Object.entries(catalog)){
+   assert.equal(typeof app.name,'string','Missing name: '+id);
+   assert.ok(app.name.trim(),'Empty name: '+id);
+   assert.equal(typeof app.url,'string','Missing URL: '+id);
+   const url=new URL(app.url);
+   assert.equal(url.protocol,'https:','Non-HTTPS URL: '+id);
+   assert.ok(allowed.has(url.hostname),'Untrusted host: '+id);
+   assert.equal(url.username,'','User-info in URL: '+id);
+   assert.equal(url.password,'','Password in URL: '+id);
+   assert.equal(url.port,'','Non-standard port: '+id);
+ }
+ const guide=readFileSync(new URL('app-device-guide.js',base),'utf8');
+ assert.match(guide,/trustedHosts\.has\(destination\.hostname\)/);
+});
