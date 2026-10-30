@@ -28,3 +28,7 @@
 ## Release scope
 
 Canonical source is `apps/heavenly-key-bible`. Existing Account 4 control room and historical recovery trees are not replaced. No database content, production key, or other account deployment configuration is modified.
+
+## Hymn catalogue correction — 30 October 2026
+
+The current Account 6 hymn reader uses `heavenly-key-website/bible/data/hymns.json` as its canonical source: 201 entries, 200 with historical lyrics and one metadata-only title pending text-rights verification. Historical 3-, 5- and 6-hymn counts are obsolete and must not be used for this app. Hymn playback and hymn media APIs are excluded from the text-only hymn reader. This is a source-code audit; live deployment and browser verification remain outstanding.
