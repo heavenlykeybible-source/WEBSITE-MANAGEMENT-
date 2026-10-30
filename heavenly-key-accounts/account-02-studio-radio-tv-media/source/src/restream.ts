@@ -162,9 +162,12 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
   try{
    await callLiveKit(env,'StopEgress',{egress_id:replacedEgressId});
   }catch(error){
-   // Avoid leaving two simultaneous broadcasts when the handoff fails.
-   try{await callLiveKit(env,'StopEgress',{egress_id:newEgressId});}catch{}
-   try{if(previous.active)await writeActiveState(env,previous.active);else await clearActiveState(env);}catch{}
+   // If cancellation of the replacement fails, retain its D1 state so
+   // operators can still identify and stop it. Never restore a stale ID.
+   try{await callLiveKit(env,'StopEgress',{egress_id:newEgressId});}
+   catch{throw new Error('Broadcast handoff is incomplete. The replacement stream may still be active; verify both egress IDs in LiveKit before retrying.');}
+   try{if(previous.active)await writeActiveState(env,previous.active);else await clearActiveState(env);}
+   catch{throw new Error('Broadcast handoff rollback could not restore state. Verify the LiveKit egresses and D1 state before retrying.');}
    throw error;
   }
  }
