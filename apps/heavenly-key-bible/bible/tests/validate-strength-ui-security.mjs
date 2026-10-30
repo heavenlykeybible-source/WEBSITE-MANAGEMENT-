@@ -25,5 +25,8 @@ assert(sw.includes('await Promise.all(CORE_OFFLINE.map(asset=>cache.add(asset)))
 assert(sw.includes('await caches.delete(SHELL)'),'Failed core installs must clean partial caches');
 assert(sw.includes('new Set(SHELL_ASSETS.filter'),'Cache assets must be deduplicated');
 assert(sw.includes('OPTIONAL_OFFLINE.map(asset=>cache.add(asset))'),'Optional files must remain best effort');
+assert(sw.includes('url.search===""'),'Query-specific responses must not be persisted');
+assert(sw.includes('headers.has("Authorization")'),'Authenticated responses must not be cached');
+assert(sw.includes('Cache-Control'),'Private or no-store responses must not be cached');
 console.log('PASS: source-level devotional UI, publication gate, accessibility and cache checks');
 console.log('NOTE: static checks do not replace browser testing, accessibility audit or penetration testing.');
