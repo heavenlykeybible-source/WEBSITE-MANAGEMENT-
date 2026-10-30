@@ -49,3 +49,28 @@ test('game embedding may only be same-origin, not globally enabled',()=>{
  assert.match(localHeaders,/X-Frame-Options: DENY/);
  assert.match(socialHeaders,/X-Frame-Options: DENY/);
 });
+
+test('all new Bible Champions memory questions match an actual KJV verse word-for-word',()=>{
+ const bank=bankFor(local('bible-quiz.js'));
+ const base=new URL('../../../../apps/heavenly-key-bible/heavenly-key-website/bible/data/kjv/',import.meta.url);
+ const manifest=JSON.parse(readFileSync(new URL('manifest.json',base),'utf8'));
+ const codes=new Map(manifest.books.map(book=>[book.name,book.code]));
+ const cache=new Map();
+ let verified=0;
+ for(const [topic,questions] of Object.entries(bank))for(const question of questions){
+  if(!question[0].startsWith('Complete the KJV Scripture ('))continue;
+  const match=/^Complete the KJV Scripture \((.+) (\d+):(\d+)\): “(.+) ____ (.+)”$/s.exec(question[0]);
+  assert.ok(match,'Malformed Scripture-completion prompt: '+topic);
+  const [,name,chapter,verseNum,before,after]=match;
+  const code=codes.get(name);assert.ok(code,'Unrecognized KJV book: '+name);
+  if(!cache.has(code))cache.set(code,JSON.parse(readFileSync(new URL(code+'.json',base),'utf8')));
+  const verse=cache.get(code).chapters[chapter]?.find(v=>v.number===Number(verseNum));
+  assert.ok(verse,'KJV verse not found: '+name+' '+chapter+':'+verseNum);
+  assert.equal(question[3],name+' '+chapter+':'+verseNum);
+  const expected=(before+' '+question[1][question[2]]+' '+after).replace(/\s+/g,' ').trim();
+  const original=verse.text.replace(/\s+/g,' ').trim();
+  assert.ok(original.includes(expected),'Answer does not match KJV: '+name+' '+chapter+':'+verseNum);
+  verified++;
+ }
+ assert.equal(verified,567,'Expected exactly 567 newly KJV-sourced Scripture-completion questions');
+});
