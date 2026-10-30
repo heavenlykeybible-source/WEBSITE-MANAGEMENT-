@@ -6,6 +6,10 @@ on:
       - '.github/workflows/deploy.yml'
       - '.github/workflows/account4-release-safety.yml'
       - 'scripts/deploy-account4-existing.mjs'
+      - 'scripts/apply-reviewed-account4-upgrade.mjs'
+      - 'cms/build.mjs'
+      - 'workspace/**'
+      - 'patches/account4-reviewed-upgrade.json'
       - 'tests/account4-release-safety-regression.mjs'
       - 'tests/native-imports.mjs'
       - 'tests/native-imports-browser.mjs'
@@ -40,6 +44,7 @@ jobs:
       - name: Check syntax and release protections
         run: |
           node --check scripts/deploy-account4-existing.mjs
+          node --check scripts/apply-reviewed-account4-upgrade.mjs
           node --check control-room-worker.js
           node tests/account4-release-safety-regression.mjs
       - name: Ensure CMS build reproduces approved Worker exactly
