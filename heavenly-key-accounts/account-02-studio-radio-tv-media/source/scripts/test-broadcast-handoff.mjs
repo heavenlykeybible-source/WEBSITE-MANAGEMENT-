@@ -14,4 +14,5 @@ assert.match(source,/u\.protocol!=='rtmps:'/,'Streaming destinations must requir
 assert.match(source,/if\(r\.status>=300&&r\.status<400\)/,'Provider redirects must be rejected');
 assert.match(source,/host==='localhost'/,'Local broadcast source hostnames must be blocked');
 assert.match(source,/host\.startsWith\('\['\)/,'IP-literal source hostnames must be blocked');
+assert.match(source,/u\.protocol==='rtmps:'/,'Legacy destinations must be checked at broadcast time');
 console.log('Account 2 broadcast handoff safety checks passed');
