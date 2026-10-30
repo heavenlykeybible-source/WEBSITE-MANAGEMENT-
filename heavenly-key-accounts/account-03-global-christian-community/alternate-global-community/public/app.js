@@ -49,6 +49,7 @@ function socialFeedLayout(title,description){document.body.classList.add("social
 const hymnCard=el("section",null,"card hk-hymn-right-card");
 hymnCard.setAttribute("aria-label","Old Time Gospel Revival Hymn Book interactive reader");
 const hymnMinistry=el("p","HEAVENLY KEY EVANGELISTIC MOVEMENT");hymnMinistry.style.cssText="font-size:12px;font-weight:800;letter-spacing:.04em;text-align:center;color:#123b91;margin:0 0 5px";
+const hymnSlogan=el("p","REVIVAL • HOLINESS • POWER");hymnSlogan.style.cssText="font-size:11px;font-weight:700;letter-spacing:.07em;text-align:center;color:#a12730;margin:0 0 7px";
 const hymnTitle=el("h2","Old Time Gospel Revival Hymn Book");
 const hymnFrame=el("iframe");
 hymnFrame.title="Interactive Old Time Gospel Revival Hymn Book: search, select, read and save hymns";
@@ -76,7 +77,7 @@ else if(payload.action==="message"){try{await navigator.clipboard.writeText(sele
 });
 hymnActions.style.cssText="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;align-items:center;justify-content:center";for(const b of [copyBtn,postBtn,msgBtn,externalBtn]){b.style.cssText="font-size:11px;line-height:1.2;padding:5px 7px;min-height:28px;border-radius:7px;box-shadow:none;flex:0 1 auto";}hymnStatus.style.cssText="font-size:11px;margin:4px 0 0";
 hymnActions.append(copyBtn,postBtn,msgBtn,externalBtn);
-hymnCard.append(hymnMinistry,hymnTitle,hymnFrame,hymnActions,hymnStatus);
+hymnCard.append(hymnMinistry,hymnSlogan,hymnTitle,hymnFrame,hymnActions,hymnStatus);
 aside.prepend(hymnCard);
 return {stream,aside};}
 async function commentThread(post,host){let box=host.querySelector("[data-comments]");if(box){box.remove();return;}box=el("div",null,"card");box.dataset.comments="1";const d=await api("/api/posts/"+post.post_id+"/comments");for(const x of d.items||[]){const p=el("p");p.append(el("strong",(x.display_name||"Member")+": "),document.createTextNode(x.body));const report=el('button','Report reply','btn secondary');report.type='button';report.addEventListener('click',()=>reportPost({post_id:x.comment_id,reportTargetType:'comment'},box));box.append(p,report);}if(session){const f=el("form",null,"stack"),ta=field(f,"Reply","body","textarea",{required:true}),b=el("button","Reply","btn secondary"),st=el("p","", "status");b.type="submit";f.append(b,st);f.addEventListener("submit",async e=>{e.preventDefault();try{await api("/api/posts/"+post.post_id+"/comments","POST",{body:ta.value});ta.value="";box.remove();await commentThread(post,host);}catch(err){status(st,err.message);}});box.append(f);}host.append(box);}
