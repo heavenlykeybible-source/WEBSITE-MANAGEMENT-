@@ -52,6 +52,7 @@ jobs:
           npm run build:cms
           node --check control-room-worker.js
           cp control-room-worker.js /tmp/account4-first-build.js
+          git restore --source=HEAD -- control-room-worker.js
           npm run build:cms
           node --check control-room-worker.js
           cmp -s /tmp/account4-first-build.js control-room-worker.js || { echo '::error::Non-deterministic Worker build'; exit 1; }
