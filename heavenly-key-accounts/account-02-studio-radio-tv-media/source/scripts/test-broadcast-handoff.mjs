@@ -27,4 +27,8 @@ assert.ok(reconcile.includes("[3,4,5,6].includes(item.status)"),'Numeric LiveKit
 assert.ok(reconcile.includes('EGRESS_LIMIT_REACHED'),'Named LiveKit limit-reached status must be terminal');
 assert.ok(source.includes("'heavenlykey.alldaywow247.workers.dev'"),'First-party 24/7 programme source must be permitted');
 assert.ok(source.includes('Stored streaming destinations cannot be decrypted.'),'Corrupt encrypted streaming destinations must fail closed');
+assert.ok(source.includes('async function withBroadcastLock'), 'Broadcast operations must use a shared D1 lock');
+assert.ok(start.includes('return withBroadcastLock(env,async()=>{'), 'Broadcast start must hold D1 lock');
+const stop=source.slice(source.indexOf('export async function stopRestream'),source.indexOf('export async function restreamStatus'));
+assert.ok(stop.includes('return withBroadcastLock(env,async()=>{'), 'Broadcast stop must hold D1 lock');
 console.log('Account 2 broadcast handoff safety checks passed');
