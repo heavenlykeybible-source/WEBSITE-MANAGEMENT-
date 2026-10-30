@@ -161,6 +161,18 @@ test('Control Room bundle refuses symbolic links to files outside public assets'
 });
 function spawnBundle(script){return spawnSync(process.execPath,[script],{encoding:'utf8'});}
 
+test('WebSocket signalling refuses HTTP transport and untrusted origins',async()=>{
+ const s=meeting();
+ for(const [url,origin] of [
+  ['http://meeting/meeting/11111111-1111-4111-8111-111111111111/room','http://meeting'],
+  ['https://meeting/meeting/11111111-1111-4111-8111-111111111111/room','https://untrusted.example']
+ ]){
+  const response=await s.room.fetch(new Request(url,{headers:{upgrade:'websocket',origin}}));
+  assert.equal(response.status,403);
+  assert.equal(s.all.length,0);
+ }
+});
+
 test('locked meeting rejects new audience viewers as well as regular guests',async()=>{
  const s=await openRoom();
  await message(s.room,s.host,{t:'lock',on:true});
