@@ -368,14 +368,14 @@ test('meeting alarm closes orphaned audience sockets when host is absent',async(
 
 test('meeting chat and display names remove invisible and bidirectional spoofing controls',async()=>{
  const s=await openRoom(),viewer=s.add();
- await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Vi\\u202eewer\\u200b'});
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Vi\u202eewer\u200b'});
  assert.equal(viewer.d.name,'Viewer');
- await message(s.room,viewer,{t:'chat',text:'Hello\\u202e world\\u2066!'});
+ await message(s.room,viewer,{t:'chat',text:'Hello\u202e world\u2066!'});
  const broadcast=s.host.messages.at(-1);
  assert.equal(broadcast.t,'chat');
  assert.equal(broadcast.text,'Hello world!');
- await message(s.room,s.host,{t:'chat',text:'Family 👨\\u200d👩\\u200d👧'});
- assert.equal(s.host.messages.at(-1).text,'Family 👨\\u200d👩\\u200d👧');
+ await message(s.room,s.host,{t:'chat',text:'Family 👨\u200d👩\u200d👧'});
+ assert.equal(s.host.messages.at(-1).text,'Family 👨\u200d👩\u200d👧');
 });
 
 test('reusing a previously admitted client pass cannot bypass the waiting room',async()=>{
