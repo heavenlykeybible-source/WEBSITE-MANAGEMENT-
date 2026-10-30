@@ -135,7 +135,7 @@ export async function onRequest({ request: req, env, params }) {
     if (a === 'account' && m === 'DELETE') {
       if (ROLES.has(u.role)) return J({ error: 'Privileged accounts require an administrator-assisted deletion.' }, 403);
       const b = await body(req), row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
-      if (!row || await pbkdf2(String(b?.password || ''), row.salt) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
+      if (!row || !b || typeof b.password !== 'string' || b.password.length > 200 || await pbkdf2(b.password, row.salt) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
       const files = (await env.DB.prepare('SELECT r2_key FROM media WHERE user_id=? AND deleted=0').bind(u.id).all()).results;
       for (const x of files) await env.MEDIA.delete(x.r2_key);
       for (const t of ['media', 'projects', 'sessions']) await env.DB.prepare(`DELETE FROM ${t} WHERE user_id=?`).bind(u.id).run();
