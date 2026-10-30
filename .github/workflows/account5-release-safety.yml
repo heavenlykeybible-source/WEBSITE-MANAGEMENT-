@@ -1,0 +1,39 @@
+name: Account 5 release safety
+on:
+  push:
+    branches: [account5-download-readiness-20261030]
+    paths:
+      - 'scripts/validate-account5-releases.mjs'
+      - 'account5-release-manifest.json'
+      - '.github/workflows/account5-release-safety.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check validator syntax
+        run: node --check scripts/validate-account5-releases.mjs
+      - name: Ensure missing manifest blocks release
+        shell: bash
+        run: |
+          if node scripts/validate-account5-releases.mjs /tmp/account5-missing-manifest.json; then
+            echo "ERROR: missing manifest was accepted"
+            exit 1
+          fi
+      - name: Validate actual inventory when provided
+        shell: bash
+        run: |
+          if test -f account5-release-manifest.json; then
+            node scripts/validate-account5-releases.mjs account5-release-manifest.json
+          else
+            echo "No release inventory yet; production release remains blocked."
+          fi
