@@ -13,6 +13,7 @@ const timeline=readFileSync('public/timeline.js','utf8');
 if ((timeline.match(/Math\.min\(end,v\.duration\)<=start/g)||[]).length!==2 || !timeline.includes('c.start>=v.duration||c.end>v.duration+.02')) throw Error('Timeline clip boundary safeguards missing');
 for (const speed of ['.25','.5','.75','1','1.25','1.5','2','3','4']) if (!timeline.includes('<option value="'+speed+'"')) throw Error('Timeline speed option missing: '+speed);
 if (!timeline.includes('Estimated timeline:')) throw Error('Timeline duration display missing');
+if (!timeline.includes('let completedSeconds=0') || !timeline.includes("+'% complete.'")) throw Error('Timeline progress indicator missing');
 if (!timeline.includes('c.end<=86400')) throw Error('Restored timeline timestamp safety limit missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
 for (const id of ['clipAddFull','clipClear']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
