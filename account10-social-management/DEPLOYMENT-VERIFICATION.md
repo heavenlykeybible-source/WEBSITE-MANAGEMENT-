@@ -4,7 +4,7 @@ This checklist distinguishes repository code from an operational Cloudflare depl
 
 ## Database
 - [ ] Apply `schema.sql` to the Account 10 D1 database.
-- [ ] Apply `migrations/0002_webhook_events.sql`, `0003_conversation_lookup.sql`, and `0004_whatsapp_delivery.sql`, `0005_whatsapp_receipts.sql`, and `0006_whatsapp_receipt_inbox.sql` in order after the base schema.
+- [ ] Apply `migrations/0002_webhook_events.sql`, `0003_conversation_lookup.sql`, and `0004_whatsapp_delivery.sql`, `0005_whatsapp_receipts.sql`, and `0006_whatsapp_receipt_inbox.sql`, and `0007_post_media.sql` in order after the base schema.
 - [ ] Confirm `webhook_events` exists with a unique primary key.
 - [ ] Confirm repeated signed events are stored only once.
 - [ ] Confirm pending event records survive Worker restarts.
