@@ -9,7 +9,12 @@ const allowed=new Set(['youtube','facebook','tiktok','instagram','linkedin','x']
 // Authoritative D1 state: KV is intentionally not used for broadcast decisions.
 async function readActiveState(env:any):Promise<any|null>{
  const row=await env.DB.prepare("SELECT payload FROM restream_active_state WHERE state_key='active'").first() as {payload:string}|null;
- if(!row)return null;
+ if(!row){
+  // Never start a replacement over a broadcast left in the legacy KV state.
+  // Finish the old broadcast before migrating this account to D1.
+  if(await env.LIVE_STATUS_KV.get(ACTIVE_KEY))throw new Error('Legacy broadcast state requires a controlled cutover before streaming can resume.');
+  return null;
+ }
  try{return JSON.parse(row.payload);}catch{throw new Error('Stored broadcast state is invalid. Manual recovery is required.');}
 }
 async function writeActiveState(env:any,state:unknown){
