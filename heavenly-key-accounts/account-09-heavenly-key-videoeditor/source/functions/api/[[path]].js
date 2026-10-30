@@ -125,7 +125,7 @@ export async function onRequest({ request: req, env, params }) {
       const t = rnd(32);
       await env.DB.prepare('INSERT INTO sessions VALUES(?,?,?)').bind(await sha(t), u.id, Date.now() + 30 * DAY).run();
       await log(env, u.id, 'login');
-      await env.DB.prepare("DELETE FROM audit WHERE user_id=? AND action='login_fail'").bind(email).run();
+      await env.DB.prepare("DELETE FROM audit WHERE user_id=? AND action='login_fail' AND at<?").bind(email, Date.now() - 900000).run();
       return J({ ok: true, email: u.email, role: u.role || 'member' }, 200, { 'set-cookie': cookie(t, 30 * 86400) });
     }
     if (a === 'logout' && m === 'POST') {
