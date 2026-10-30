@@ -15,8 +15,13 @@ const changes=[
 ];
 for(const [before,after] of changes){
  if(source.includes(after))continue;
- if(source.split(before).length!==2)throw Error('AI provider health patch anchor missing or duplicated: '+before.slice(0,85));
- source=source.replace(before,after);
+ const isServer=before.includes("if (x[2] === 'test')");
+ const begin=isServer?source.indexOf('async function ownerApiUnlocked('):source.indexOf('async function aiAccounts()');
+ const end=isServer?source.indexOf('// ---------- WordPress and Blogger connections',begin):source.indexOf('function frame(html)',begin);
+ if(begin<0||end<=begin)throw Error('Cannot isolate relevant provider handler');
+ const part=source.slice(begin,end);
+ if(part.split(before).length!==2)throw Error('AI provider health anchor missing within relevant handler: '+before.slice(0,85));
+ source=source.slice(0,begin)+part.replace(before,after)+source.slice(end);
 }
 if(!process.argv.includes('--check'))fs.writeFileSync(target,source);
 console.log('PASS Account 4 AI provider health and response-time diagnostics '+(process.argv.includes('--check')?'checked':'applied'));
