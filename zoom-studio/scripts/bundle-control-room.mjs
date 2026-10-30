@@ -12,6 +12,8 @@ function collect(dir,rel=''){
  for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
   if(entry.name.startsWith('.')||entry.name.startsWith('_'))continue;
   const name=path.posix.join(rel,entry.name),file=path.join(dir,entry.name);
+  if(entry.isSymbolicLink() || (!entry.isDirectory() && !entry.isFile()))
+    throw Error('Unsafe public asset entry rejected: '+name);
   if(entry.isDirectory()){collect(file,name);continue;}
   const ext=path.extname(name).slice(1);if(!types[ext])throw Error('Unrecognized public file type: '+name);
   const bytes=fs.readFileSync(file);
