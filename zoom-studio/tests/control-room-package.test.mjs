@@ -670,3 +670,27 @@ test('signed host token requires a string owner identity',async()=>{
  const s=await openRoom();
  assert.equal(s.host.d.owner,'owner@test.local');
 });
+
+test('stale guest messages and delayed close events cannot affect a replacement meeting',async()=>{
+ const s=await openRoom(),oldHost=s.host,stale=s.add();
+ await message(s.room,stale,{t:'join',room:oldHost.d.room,key:s.key,aud:true,name:'Old viewer'});
+ assert.equal(stale.d.session,s.key);
+ oldHost.readyState=3;
+ const replacement=s.add();
+ await message(s.room,replacement,{t:'host',token:roomToken()});
+ assert.equal(replacement.d.role,'host');
+ const fresh=s.add();
+ const nextKey=replacement.messages.at(-1).key;
+ await message(s.room,fresh,{t:'join',room:replacement.d.room,key:nextKey,aud:true,name:'New viewer'});
+ assert.equal(fresh.d.session,nextKey);
+ const prior=replacement.messages.length;
+ s.room.webSocketClose(stale);
+ assert.equal(replacement.messages.length,prior,'old guest close must not alert the new host');
+ assert.equal(fresh.readyState,1);
+ // Simulate a delayed frame from an old hibernated socket that has not yet closed.
+ stale.readyState=1;
+ await message(s.room,stale,{t:'chat',text:'Old session leak'});
+ assert.equal(stale.readyState,3);
+ assert.equal(replacement.messages.some(m=>m.t==='chat'&&m.text==='Old session leak'),false);
+ assert.equal(fresh.messages.some(m=>m.t==='chat'&&m.text==='Old session leak'),false);
+});
