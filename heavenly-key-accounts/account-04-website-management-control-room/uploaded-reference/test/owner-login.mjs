@@ -55,6 +55,7 @@ assert.ok(activeServer.includes("u.pathname==='/api/owner/session'&&request.meth
 assert.ok(activeServer.includes("ownerHost&&['GET','HEAD'].includes(request.method)&&!actor"),'Signed-out visitors must not receive owner dashboard assets');
 assert.ok(activeServer.includes("'/login.html','/owner-login.js','/control.css'"),'Owner sign-in resources must remain accessible');
 assert.ok(activeServer.includes("Response.redirect(u.origin+'/login.html',302)"),'Signed-out owner visitors must be redirected to login');
+assert.ok(activeServer.includes("new URL(request.url).hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev')response.headers.set('Cache-Control','no-store')"),'Owner dashboard assets must not be stored in browser caches');
 assert.ok(js.includes("fetch('/api/owner/session'"),'Login page must reuse existing owner sessions');
 const ownerHost='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
 assert.ok(activeIndex.includes('https://'+ownerHost+'/login.html'),'Owner link must use the supported authentication hostname');
