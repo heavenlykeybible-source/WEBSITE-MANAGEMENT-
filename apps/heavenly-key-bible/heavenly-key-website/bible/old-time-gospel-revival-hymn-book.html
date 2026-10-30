@@ -14,11 +14,12 @@ function parseHistoricalLyrics(raw){
 async function loadHistoricalTexts(){
  try{const response=await fetch(verifiedTextUrl,{cache:"default"});if(!response.ok)throw Error("Hymn data unavailable");
  const data=await response.json();let changed=0;
- for(const h of data.items||[]){if(h.copyrightStatus!=="public_domain"||!h.lyrics)continue;
- const key=h.title.toLowerCase().replace(/[^a-z0-9]/g,"");
- let song=songs.find(x=>x.title.toLowerCase().replace(/[^a-z0-9]/g,"")===key);
- if(!song){console.info("Verified local hymn text not in the 200-title catalogue:",h.title);continue}
- const parsed=parseHistoricalLyrics(h.lyrics);song.verses=parsed.verses;song.chorus=parsed.chorus;song.writer=h.author||song.writer;song.sourceUrl=h.sourceUrl;song.year=h.year;song.completeness=h.textCompleteness||"historical_text";changed++}
+
+ if(data.items?.length===200){
+  songs.splice(0,songs.length,...data.items.map((h,i)=>{const parsed=parseHistoricalLyrics(h.lyrics);return {id:i+1,title:h.title,subject:h.theme||"Historical Scripture Hymns",writer:h.author||"Isaac Watts",composer:"Historical tune varies",verses:parsed.verses,chorus:parsed.chorus,sourceUrl:h.sourceUrl,year:h.year,completeness:h.textCompleteness}}));
+  changed=songs.length;
+ }else{throw Error("The locally hosted 200-hymn collection is incomplete")}
+
  if(changed){render();console.info("Loaded "+changed+" first-party hymn texts");}
  }catch(error){console.warn("Historical hymn texts could not load",error)}
 }
