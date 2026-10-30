@@ -58,6 +58,13 @@ export async function handleNativeDownloads(request,env) {
     const releaseAppId=object.customMetadata?.appId;
     const releasePlatform=object.customMetadata?.platform;
     if(!/^[a-f0-9]{64}$/i.test(sha256||'') || scanned!=='passed' || signed!=='true' || scannedDigest!==sha256 || releaseAppId!==appId || releasePlatform!==platform) return reply({error:'Release has not passed security verification'},403);
+    // Require R2's independently stored SHA-256 checksum, supplied and checked
+    // during upload, to agree with the release-publisher's security attestation.
+    // Custom metadata alone is not proof of the stored binary's integrity.
+    const storedDigest=object.checksums?.sha256;
+    if(!(storedDigest instanceof ArrayBuffer) || storedDigest.byteLength!==32) return reply({error:'Release checksum is missing'},403);
+    const storedHex=Array.from(new Uint8Array(storedDigest),b=>b.toString(16).padStart(2,'0')).join('');
+    if(storedHex!==sha256.toLowerCase()) return reply({error:'Release checksum mismatch'},403);
     if(request.method==='HEAD') return new Response(null,{status:200,headers:{...headers,'content-type':meta.type,'content-length':String(object.size),'x-release-sha256':sha256}});
     // A valid object header alone does not prove R2 returned a readable package body.
     // Reject missing bodies before recording an initiated download.
