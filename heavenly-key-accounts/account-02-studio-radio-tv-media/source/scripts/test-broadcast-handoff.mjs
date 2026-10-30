@@ -23,4 +23,6 @@ assert.ok(source.includes("['StartEgress','StopEgress','ListEgress'].includes(me
 assert.ok(source.includes("base.pathname!=='/'"),'LiveKit endpoint path must be restricted');
 assert.ok(source.includes('STUDIO_247_ALLOWED_HOSTS'),'24/7 programme sources must use a configured hostname allowlist');
 assert.ok(source.includes('approved.includes(host)'),'24/7 programme source hostname must be approved');
+assert.ok(reconcile.includes("[3,4,5,6].includes(item.status)"),'Numeric LiveKit limit-reached status must be terminal');
+assert.ok(reconcile.includes('EGRESS_LIMIT_REACHED'),'Named LiveKit limit-reached status must be terminal');
 console.log('Account 2 broadcast handoff safety checks passed');
