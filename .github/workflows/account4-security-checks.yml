@@ -43,6 +43,16 @@ jobs:
         run: node scripts/account4-release-integrity.mjs
       - name: Independently verify staged release checksum
         run: node scripts/account4-release-integrity.mjs --verify
+      - name: Reject tampered release metadata
+        run: |
+          cp account4-release-manifest.json account4-release-manifest.json.original
+          node -e "const fs=require('fs');const p='account4-release-manifest.json';const m=JSON.parse(fs.readFileSync(p));m.reviewRequired=false;fs.writeFileSync(p,JSON.stringify(m));"
+          if node scripts/account4-release-integrity.mjs --verify; then
+            echo 'Tampered release manifest unexpectedly verified' >&2
+            exit 1
+          fi
+          mv account4-release-manifest.json.original account4-release-manifest.json
+          node scripts/account4-release-integrity.mjs --verify
       - name: Store tested Worker for owner review (no deployment)
         uses: actions/upload-artifact@v4
         with:
