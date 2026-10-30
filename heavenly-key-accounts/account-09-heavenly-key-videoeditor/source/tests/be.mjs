@@ -179,6 +179,22 @@ const missingConnection = await request('ai-gateway', { method: 'POST', cookie: 
 check('Unconfigured AI accounts cannot run', missingConnection.status === 400);
 const invalidPrompt = await request('ai-gateway', { method: 'POST', cookie: login.cookie, body: { connectionId: 'missing', task: 'chat', prompt: 'X' } });
 check('Short AI prompts rejected', invalidPrompt.status === 400);
+const aiEnv={...env,AI_CONNECTIONS_JSON:JSON.stringify([{id:'test-gateway',name:'Test Gateway',provider:'openai',model:'gpt-4o-mini',apiKey:'test-secret-not-real'}])};
+const aiRequest=()=>new Request('https://studio.example/api/ai-gateway',{
+  method:'POST',headers:{cookie:login.cookie,'x-requested-with':'hk','content-type':'application/json'},
+  body:JSON.stringify({connectionId:'test-gateway',task:'chat',prompt:'Test a safe script'})
+});
+const oldGatewayFetch=globalThis.fetch;
+try {
+  globalThis.fetch=async()=>new Response(new ReadableStream({
+    pull(controller){controller.enqueue(new Uint8Array(500000));}
+  }),{status:200});
+  const oversizedProvider=await onRequest({request:aiRequest(),env:aiEnv,params:{path:['ai-gateway']}});
+  check('Oversized external AI response rejected before JSON decoding',oversizedProvider.status===503);
+  globalThis.fetch=async()=>new Response(JSON.stringify({choices:[{message:{content:'Provider works'}}]}),{status:200,headers:{'content-type':'application/json'}});
+  const normalProvider=await onRequest({request:aiRequest(),env:aiEnv,params:{path:['ai-gateway']}});
+  check('Bounded external AI response still succeeds',normalProvider.status===200&&(await normalProvider.json()).result==='Provider works');
+} finally {globalThis.fetch=oldGatewayFetch;}
 const noVoice = await request('voice-config', { cookie: login.cookie });
 check('Voice configuration reports unavailable without secrets', noVoice.status === 200 && noVoice.data?.available === false);
 const noVoiceRequest = await request('voice-synthesize', { method: 'POST', cookie: login.cookie, body: { text: 'Hello world', consentConfirmed: true } });
