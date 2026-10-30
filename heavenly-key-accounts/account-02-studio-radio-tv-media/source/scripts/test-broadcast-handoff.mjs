@@ -45,4 +45,6 @@ assert.ok(source.includes("host==='localhost'"),'Streaming targets must reject l
 assert.ok(source.includes('validStreamingOutput(u.href)'),'New streaming targets must use shared security validator');
 assert.ok(source.includes('livekit\\.cloud'), 'LiveKit endpoint must be limited to LiveKit Cloud hosts');
 assert.ok(source.indexOf('const token=await signLiveKitGrant(config,{roomRecord:true});') > source.indexOf("base.protocol!=='wss:'"), 'Validate the LiveKit project URL before signing a provider token');
+assert.ok(source.includes("['/pages/radio.html','/pages/video.html'].includes(u.pathname)"),'First-party programme paths must be allowlisted');
+assert.ok(source.includes("u.search!=='?egress=1'"),'First-party programme query must be fixed');
 console.log('Account 2 broadcast handoff safety checks passed');
