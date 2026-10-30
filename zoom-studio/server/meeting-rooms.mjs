@@ -138,7 +138,7 @@ export class MeetingRooms {
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
    }else if(m.t==='hand'&&typeof m.on==='boolean')this.send(host,{t:'hand',from:d.id,name:d.name,on:m.on,aud:d.aud});
-   else if(m.t==='react'&&now-(d.reacted||0)>800){d.reacted=now;this.save(ws,d);this.send(host,{t:'react',from:d.id,emoji:roomClean(m.emoji,4)});}
+   else if(m.t==='react'&&now-(d.reacted||0)>800){const emoji=roomClean(m.emoji,4);if(!emoji)return;d.reacted=now;this.save(ws,d);this.send(host,{t:'react',from:d.id,emoji});}
   }
  }
  webSocketClose(ws){const d=this.data(ws);if(d.role==='host'){const activeHost=this.host();if(!activeHost||activeHost===ws)this.end('The host left.');}else if(d.role==='guest'){this.send(this.host(),{t:'left',gid:d.id});this.count();}}
