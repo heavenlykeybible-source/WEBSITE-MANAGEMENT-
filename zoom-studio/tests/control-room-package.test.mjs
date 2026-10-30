@@ -287,6 +287,14 @@ test('signalling rejects oversized and binary WebSocket messages before processi
  assert.equal(binary.host.readyState,3);
  assert.ok(binary.host.messages.some(m=>m.t==='error'&&m.msg==='Invalid message.'));
 });
+test('malformed and nonobject WebSocket frames count toward flood protection',async()=>{
+ for(const payload of ['{malformed','null','[]','"text"']){
+  const s=await openRoom();
+  for(let i=0;i<101&&s.host.readyState===1;i++)await s.room.webSocketMessage(s.host,payload);
+  assert.equal(s.host.readyState,3,'flooding payload '+payload+' must be disconnected');
+  assert.ok(s.host.messages.some(m=>m.t==='error'&&/Too many messages/.test(m.msg)));
+ }
+});
 test('signalling disconnects sustained message flooding',async()=>{
  const s=await openRoom();
  for(let i=0;i<101&&s.host.readyState===1;i++){
