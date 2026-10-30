@@ -54,7 +54,7 @@ async function pbkdf2(pw, salt) {
   return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: 100000 }, k, 256));
 }
 const ROLES = new Set(['owner', 'admin']);
-const cookie = (t, age) => `hk=${t}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${age}`;
+const cookie = (t, age) => `hk=${t}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
 async function user(req, env) {
   const m = (req.headers.get('cookie') || '').match(/(?:^|; )hk=([a-f0-9]{64})/);
   if (!m) return null;
