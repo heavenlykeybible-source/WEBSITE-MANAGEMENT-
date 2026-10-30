@@ -25,7 +25,7 @@ function move(dir){const i=chosen(),j=i+dir;if(i<0||j<0||j>=clips.length)return;
 $('clipUp').onclick=()=>move(-1);$('clipDown').onclick=()=>move(1);
 $('clipUndo').onclick=()=>{if(!undo.length)return;invalidateExport();redo.push(JSON.stringify(clips));clips=JSON.parse(undo.pop());paint()};
 $('clipRedo').onclick=()=>{if(!redo.length)return;invalidateExport();undo.push(JSON.stringify(clips));clips=JSON.parse(redo.pop());paint()};
-$('clipCancel').onclick=()=>{if(session)session.cancelled=true;v.pause()};
+$('clipCancel').onclick=()=>{if(session){session.cancelled=true;session.abortSeek?.()}v.pause()};
 async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
  if($('vexp').disabled)return info('Another video export or media change is in progress.');
