@@ -455,6 +455,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
     headers:{'content-type':'application/json','x-goog-api-key':env.GEMINI_API_KEY},
     body:JSON.stringify({systemInstruction:{parts:[{text:originalAssistantInstruction}]},contents:[{role:'user',parts:[{text:data.message}]}],generationConfig:{maxOutputTokens:400,temperature:0.5}})
    });
+   if(response.status===429)return reply({action:'human_review',error:'Gemini usage limit reached; use human operator response',providerStatus:429,sent:false,automaticRetry:false},503);
    if(!response.ok)return reply({error:'AI provider request failed',providerStatus:response.status,sent:false},502);
    const result:any=await response.json();const suggestion=(result?.candidates?.[0]?.content?.parts||[]).map((p:any)=>typeof p?.text==='string'?p.text:'').join('').trim().slice(0,3000);
    if(!suggestion)return reply({error:'AI provider returned no usable text',sent:false},502);
