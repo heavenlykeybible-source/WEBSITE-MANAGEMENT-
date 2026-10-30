@@ -94,6 +94,15 @@ test('meeting room rejects excess peers before allocating WebSockets',async()=>{
 function roomToken(extra={}){const p=Buffer.from(JSON.stringify({k:'meeting',u:'owner@test.local',r:'11111111-1111-4111-8111-111111111111',exp:Date.now()+60000,pe:Date.now()+86400000,...extra})).toString('base64url');return p+'.'+createHmac('sha256',secret).update(p).digest('hex');}
 const message=(room,w,m)=>room.webSocketMessage(w,JSON.stringify(m));
 async function openRoom(){const s=meeting(),host=s.add();await message(s.room,host,{t:'host',token:roomToken()});return {...s,host,key:host.messages.at(-1).key};}
+test('meeting authorization rejects structured and oversized tokens without decoder crashes',async()=>{
+ for(const token of [{toString:null},['token'],null,'x'.repeat(4097)]){
+  const s=meeting(),socket=s.add();
+  await message(s.room,socket,{t:'host',token});
+  assert.equal(socket.readyState,3);
+  assert.ok(socket.messages.some(m=>m.t==='error'&&m.msg==='Invalid meeting authorization.'));
+ }
+});
+
 test('meeting host requires purpose, matching room and unexpired signed access',async()=>{
  for(const token of ['bad',roomToken({k:'control-owner'}),roomToken({r:'another'}),roomToken({exp:Date.now()-1}),roomToken({pe:Date.now()-1})]){const s=meeting(),w=s.add();await message(s.room,w,{t:'host',token});assert.equal(w.readyState,3);}
  const s=await openRoom();assert.equal(s.host.messages[0].t,'created');const other=s.add();await message(s.room,other,{t:'host',token:roomToken()});assert.equal(other.readyState,3);
