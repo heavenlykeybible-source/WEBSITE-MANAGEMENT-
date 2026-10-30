@@ -3,6 +3,7 @@
 This checklist distinguishes repository code from an operational Cloudflare deployment.
 
 ## Database
+- [ ] Apply `migrations/0008_ai_rate_limits.sql` after all previous migrations and before enabling Gemini suggestions.
 - [ ] Apply `schema.sql` to the Account 10 D1 database.
 - [ ] Apply `migrations/0002_webhook_events.sql`, `0003_conversation_lookup.sql`, and `0004_whatsapp_delivery.sql`, `0005_whatsapp_receipts.sql`, and `0006_whatsapp_receipt_inbox.sql`, and `0007_post_media.sql` in order after the base schema.
 - [ ] Confirm `webhook_events` exists with a unique primary key.
@@ -67,3 +68,10 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Confirm the official domain, TLS, D1 and R2 bindings, database migrations and dashboard assets on the **deployed** Worker.
 - [ ] Perform independent authenticated penetration testing, incident response, backup recovery, disaster recovery and mobile/desktop accessibility checks.
 - [ ] Preserve manual deployment approval and do not enable provider publishing or autonomous sending before separate authorization and live testing.
+
+## Gemini rate-limit release gate
+- [ ] Apply `migrations/0008_ai_rate_limits.sql` to staging and production before deploying new code. The AI endpoint fails closed (503) until the table exists.
+- [ ] Verify test conversations enforce a maximum of 8 suggestions per minute and 40 per hour, with an account-wide hourly ceiling of 300; do not send high-volume requests to Gemini in tests.
+- [ ] Verify exhausted limits yield 429 and manual human response remains available.
+- [ ] Independently configure Cloudflare edge abuse and authentication throttling; the D1 counter is an AI-specific cost safeguard, not complete site-wide rate limiting.
+- [ ] Establish a retention and cleanup policy for old request counter rows.
