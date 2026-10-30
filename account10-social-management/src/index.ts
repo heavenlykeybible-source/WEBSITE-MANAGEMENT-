@@ -458,6 +458,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    if(!response.ok)return reply({error:'AI provider request failed',providerStatus:response.status,sent:false},502);
    const result:any=await response.json();const suggestion=(result?.candidates?.[0]?.content?.parts||[]).map((p:any)=>typeof p?.text==='string'?p.text:'').join('').trim().slice(0,3000);
    if(!suggestion)return reply({error:'AI provider returned no usable text',sent:false},502);
+   // A human may take over while Gemini is responding. Never show a stale AI suggestion after takeover.
+   const latest=await env.DB.prepare('SELECT human_paused,requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{human_paused:number;requested_human:number}>();
+   if(!latest||latest.human_paused||latest.requested_human)return reply({action:'human_review',suggestion:null,sent:false,reason:'Human takeover active or conversation removed'});
    return reply({action:'suggest_reply',suggestion,provider:'gemini',sent:false,saved:false,requiresOperatorApproval:true});
   }catch{return reply({error:'AI provider timeout or network failure',sent:false},502)}
   finally{clearTimeout(timeout)}
