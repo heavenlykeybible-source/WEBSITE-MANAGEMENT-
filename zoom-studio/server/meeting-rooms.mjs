@@ -48,7 +48,7 @@ export class MeetingRooms {
   const host=this.host(),h=host&&this.data(host),now=Date.now();
   if(h&&h.until<=now)this.end('The meeting time has ended.');
   else if(!host&&this.guests().length)this.end('The host is no longer connected.');
-  for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});}
+  for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});else if(d.role==='guest'&&!d.ok&&d.waitingUntil&&d.waitingUntil<=now)this.close(w,{t:'error',msg:'Waiting room expired. Please rejoin.'});}
   if(this.sockets().length)await this.state.storage.setAlarm(now+60000);
  }
  async webSocketMessage(ws,raw){
@@ -78,7 +78,7 @@ export class MeetingRooms {
     const aud=m.aud===true,guests=this.guests();
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     if(guests.filter(w=>this.data(w).aud===aud).length>=(aud?100:18))return this.close(ws,{t:'error',msg:'This room is full.'});
-    Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),ok:aud,aud,stage:false,invited:false,ao:m.ao===true,last:0});
+    Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),ok:aud,aud,stage:false,invited:false,ao:m.ao===true,last:0,waitingUntil:aud?0:now+30*60*1000});
     // Host authorization is required for each join; client-supplied pass values cannot grant admission.
     this.save(ws,d);this.send(ws,{t:'welcome',ice:roomICE,watch:h.watch,chat:h.audChat,slow:h.slow});
     if(d.ok)this.send(ws,{t:'admitted'});
@@ -102,7 +102,7 @@ export class MeetingRooms {
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;const gd=this.data(g);
     if(m.t==='admit'&&!gd.ok&&!gd.aud){
      if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});
-     gd.ok=true;gd.stage=true;
+     gd.ok=true;gd.stage=true;gd.waitingUntil=0;
      this.save(host,h);this.save(g,gd);this.send(g,{t:'admitted'});this.send(host,{t:'joined',gid:gd.id,name:gd.name,ao:gd.ao});
     }else if(m.t==='deny')this.close(g,{t:'denied'});
     else if(m.t==='kick')this.close(g,{t:'kick'});
