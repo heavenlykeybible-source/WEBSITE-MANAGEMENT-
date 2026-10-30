@@ -2,6 +2,11 @@ name = "heavenly-key-social-management"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 
+# Account 10 official hostname. Activated only upon approved Wrangler deployment.
+[[routes]]
+pattern = "socialplus.heavenlykey.org"
+custom_domain = true
+
 # Account 10: D1 and R2 resources verified in Cloudflare on 2026-10-29.
 # Apply only through the approved deployment pipeline after schema and secret checks.
 [[d1_databases]]
