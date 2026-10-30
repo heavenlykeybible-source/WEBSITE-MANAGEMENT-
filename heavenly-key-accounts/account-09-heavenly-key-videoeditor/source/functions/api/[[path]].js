@@ -339,7 +339,16 @@ export async function onRequest({ request: req, env, params }) {
         const gifHeight = size>=10 ? bytes[8]+(bytes[9]<<8) : 0;
         const gifDimensionsOk = gifWidth>0&&gifHeight>0&&gifWidth<=16384&&gifHeight<=16384&&gifWidth*gifHeight<=50000000;
         const webpLength = size>=12 ? (bytes[4]+(bytes[5]*256)+(bytes[6]*65536)+(bytes[7]*16777216)) : -1;
-        const webpValid = size>=20&&ascii(0,'RIFF')&&ascii(8,'WEBP')&&webpLength===size-8&&(ascii(12,'VP8 ')||ascii(12,'VP8L')||ascii(12,'VP8X'));
+        const webpChunkSize = size>=20 ? (bytes[16]+bytes[17]*256+bytes[18]*65536+bytes[19]*16777216) : -1;
+        const webpChunkFits = webpChunkSize>=0 && 20+webpChunkSize+(webpChunkSize%2)<=size;
+        const webpExtended = ascii(12,'VP8X')&&webpChunkSize===10&&size>=30;
+        const webpLossless = ascii(12,'VP8L')&&webpChunkSize>=5&&size>=25&&bytes[20]===47;
+        const webpLossy = ascii(12,'VP8 ')&&webpChunkSize>=10&&size>=30&&bytes[23]===157&&bytes[24]===1&&bytes[25]===42;
+        const webpCanvas = webpExtended ? {w:1+bytes[24]+bytes[25]*256+bytes[26]*65536,h:1+bytes[27]+bytes[28]*256+bytes[29]*65536} :
+          webpLossless ? {w:1+bytes[21]+((bytes[22]&63)<<8),h:1+(bytes[22]>>6)+(bytes[23]<<2)+((bytes[24]&15)<<10)} :
+          webpLossy ? {w:(bytes[26]+bytes[27]*256)&16383,h:(bytes[28]+bytes[29]*256)&16383} : null;
+        const webpDimensionsOk = webpCanvas && webpCanvas.w>0&&webpCanvas.h>0&&webpCanvas.w<=16384&&webpCanvas.h<=16384&&webpCanvas.w*webpCanvas.h<=50000000;
+        const webpValid = size>=25&&ascii(0,'RIFF')&&ascii(8,'WEBP')&&webpLength===size-8&&webpChunkFits&&!!webpDimensionsOk;
         const imageValid = type==='image/png' ? bytes[0]===137&&ascii(1,'PNG')&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10&&size>=24&&bytes[8]===0&&bytes[9]===0&&bytes[10]===0&&bytes[11]===13&&ascii(12,'IHDR')&&pngWidth>0&&pngHeight>0&&pngWidth<=16384&&pngHeight<=16384&&pngWidth*pngHeight<=50000000 : type==='image/jpeg' ? bytes[0]===255&&bytes[1]===216&&bytes[2]===255 : type==='image/gif' ? size>=13&&gifDimensionsOk&&(ascii(0,'GIF87a')||ascii(0,'GIF89a')) : type==='image/webp' ? webpValid : type==='video/mp4'||type==='audio/mp4'||type==='audio/x-m4a'||type==='video/quicktime' ? ascii(4,'ftyp') : type==='video/webm'||type==='audio/webm' ? bytes[0]===26&&bytes[1]===69&&bytes[2]===223&&bytes[3]===163 : type==='audio/mpeg' ? (ascii(0,'ID3')||(bytes[0]===255&&(bytes[1]&224)===224)) : type==='audio/wav'||type==='audio/x-wav' ? ascii(0,'RIFF')&&ascii(8,'WAVE') : type==='audio/flac' ? ascii(0,'fLaC') : type==='audio/ogg'||type==='video/ogg' ? ascii(0,'OggS') : type==='audio/aac' ? bytes[0]===255&&(bytes[1]&246)===240 : true;
         if (size <= 0 || size > MAXFILE || (announced !== null && Number(announced) !== size)) return J({ error: 'File size is invalid or exceeds 50 MB.' }, 413);
         if (!imageValid) return J({ error: 'Media file contents do not match the declared format.' }, 415);
