@@ -60,3 +60,17 @@ test('post draft editor supports private image attachments', () => {
   assert.match(html, /mediaId:media\.value\.trim\(\)\|\|null/);
   assert.match(html, /mediaId:mediaId\.value\.trim\(\)/);
 });
+
+test('rapid conversation switching cannot display stale Gemini suggestions or history', () => {
+  assert.match(html, /const targetConversation=selected;const message=prompt/);
+  assert.match(html, /conversationId:targetConversation,message:message\.trim\(\)/);
+  assert.match(html, /if\(selected!==targetConversation\)return;if\(result\.suggestion\)/);
+  assert.match(html, /const d=await api\('\/api\/conversation\?id='\+encodeURIComponent\(id\)\);if\(selected!==id\)return/);
+  assert.match(html, /if\(selected!==id\)return;renderMessages\(/);
+});
+
+test('operator notes are saved only to the conversation selected at submission time', () => {
+  assert.match(html, /const targetConversation=selected;const body=\$\('draftText'\)\.value\.trim\(\)/);
+  assert.match(html, /conversationId:targetConversation,body/);
+  assert.match(html, /if\(selected===targetConversation\)\{\$\('draftText'\)\.value=''/);
+});
