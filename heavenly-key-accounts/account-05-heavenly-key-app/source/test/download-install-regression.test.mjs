@@ -42,7 +42,7 @@ test('every device guide has exactly one installation event controller', () => {
 
 test('native package status remains visible after browser install guidance updates', () => {
   const js = publicFile('app-device-guide.js');
-  assert.match(js, /nativeAvailable = available\.ok/);
+  assert.match(js, /nativeAvailable = available\.status === 200/);
   assert.match(js, /else if \(nativeAvailable\)/);
 });
 
@@ -65,7 +65,7 @@ test('native download button requires a security digest and a positive package l
  const js = publicFile('app-device-guide.js');
  assert.match(js, /x-release-sha256/);
  assert.match(js, /Number\.isSafeInteger\(size\) && size > 0/);
- assert.match(js, /nativeAvailable = available\.ok/);
+ assert.match(js, /nativeAvailable = available\.status === 200/);
 });
 
 test('device guide never offers an installation prompt for the wrong app scope', () => {
@@ -121,4 +121,10 @@ test('native install guide never automatically starts executable downloads',()=>
  assert.doesNotMatch(js,/window\.location\.assign\(nativeLink\.href\)/);
  assert.match(js,/nativeLink\.href = '\/api\/native-download\//);
  assert.match(js,/different device/i);
+});
+
+test('native availability requires exact media type and a complete 200 response',()=>{
+ const js=publicFile('app-device-guide.js');
+ assert.match(js,/contentType\.split\(';',1\)\[0\]\.trim\(\) === expectedTypes\[platform\]/);
+ assert.match(js,/size <= 2 \* 1024 \* 1024 \* 1024/);
 });
