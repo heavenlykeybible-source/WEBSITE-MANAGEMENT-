@@ -9,6 +9,7 @@ const expected=['Revival & Spiritual Fire','Holiness & Righteousness','Hope & En
 const refs=['Psalm 85:6','1 Peter 1:16','Psalm 46:1','1 Thessalonians 5:17','Acts 3:19','Hebrews 11:6','Acts 1:8','Mark 16:15','John 13:35','James 1:22','James 1:5','Matthew 24:44'];
 assert.deepEqual(data.topics,expected);
 assert.equal(data.timezone,'Africa/Lagos');
+assert.equal(data.format,'twelve-short-devotionals-per-day-v1');
 const seen=new Set();
 const publicationReady=[];
 const editorialHolds=[];
@@ -27,6 +28,8 @@ for(const entry of data.entries){
   assert(topic.prayer?.trim() && topic.prayer.length<=160,entry.date+' prayer '+i);
   assert(topic.reviewStatus?.startsWith('draft-')||topic.reviewStatus==='approved',entry.date+' approval status '+i);
   assert(topic.bibleText?.trim(),'Missing KJV text: '+entry.date+' topic '+i);
+  assert(topic.reference?.trim(),'Missing Bible reference: '+entry.date+' topic '+i);
+  assert(topic.bibleText.length<=1200,'Unexpectedly long Bible text: '+entry.date+' topic '+i);
   assert(!topic.bibleText.includes('undefined'),'Invalid KJV text: '+entry.date+' topic '+i);
  });
 }
