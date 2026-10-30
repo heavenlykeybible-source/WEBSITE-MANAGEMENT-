@@ -17,5 +17,5 @@ assert.match(source,/host\.startsWith\('\['\)/,'IP-literal source hostnames must
 assert.match(source,/u\.protocol==='rtmps:'/,'Legacy destinations must be checked at broadcast time');
 assert.ok(start.indexOf('LIVE_STATUS_KV.put(ACTIVE_KEY') < start.indexOf("callLiveKit(env,'StopEgress'"),'Replacement state must be stored before old stream stops');
 assert.ok(reconcile.includes('if(!terminal)return {active:'),'Unknown provider status must preserve active state');
-assert.ok(source.includes('text.length>262144'),'Provider response parsing must enforce size limit');
+assert.ok(source.includes('size>limit') && source.includes('reader.cancel()'), 'Provider response reads must have a size limit');
 console.log('Account 2 broadcast handoff safety checks passed');
