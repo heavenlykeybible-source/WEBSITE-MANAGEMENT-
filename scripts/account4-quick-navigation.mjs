@@ -18,5 +18,9 @@ const replacements=[
  ["item('Releases','↗',releaseHistory);item('Identity'","item('Identity'"]
 ];
 for(const [from,to] of replacements){if(s.split(from).length!==2)throw Error('Navigation layout changed; refusing patch: '+from);s=s.replace(from,to);}
-fs.writeFileSync(target,s);
-console.log('Account 4 quick navigation upgraded');
+if(process.argv.includes('--check')){
+ console.log('Account 4 quick navigation patch is applicable');
+}else{
+ fs.writeFileSync(target,s);
+ console.log('Account 4 quick navigation upgraded');
+}
