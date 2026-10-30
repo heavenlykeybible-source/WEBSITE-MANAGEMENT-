@@ -74,3 +74,9 @@ test('operator notes are saved only to the conversation selected at submission t
   assert.match(html, /conversationId:targetConversation,body/);
   assert.match(html, /if\(selected===targetConversation\)\{\$\('draftText'\)\.value=''/);
 });
+
+test('human takeover request preserves its original conversation when operators switch chats', () => {
+  assert.match(html, /const targetConversation=selected;const targetPaused=!paused/);
+  assert.match(html, /conversationId:targetConversation,paused:targetPaused/);
+  assert.match(html, /if\(selected===targetConversation\)\{await openChat\(targetConversation\)/);
+});
