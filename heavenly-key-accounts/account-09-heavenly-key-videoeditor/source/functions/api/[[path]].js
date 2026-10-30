@@ -79,6 +79,7 @@ export async function onRequest({ request: req, env, params }) {
     if (origin && origin !== new URL(req.url).origin) return J({ error: 'Cross-origin request blocked' }, 403);
   }
   if (!['GET','HEAD','POST','PUT','DELETE'].includes(m)) return J({ error: 'Method not allowed' }, 405, { Allow: 'GET, HEAD, POST, PUT, DELETE' });
+  if (m === 'HEAD') return new Response(null, { status: 405, headers: { Allow: 'GET, POST, PUT, DELETE', 'cache-control': 'no-store' } });
   if (m !== 'GET' && m !== 'HEAD' && req.headers.get('x-requested-with') !== 'hk') return J({ error: 'Blocked request' }, 403);
   try {
     // Minimal, read-only readiness probe for verifying real Cloudflare resource
