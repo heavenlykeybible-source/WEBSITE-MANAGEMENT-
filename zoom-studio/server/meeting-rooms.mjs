@@ -55,6 +55,10 @@ export class MeetingRooms {
   if(h&&h.until<=now)this.end('The meeting time has ended.');
   else if(!host&&this.guests().length)this.end('The host is no longer connected.');
   for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});else if(d.role==='guest'&&!d.ok&&d.waitingUntil&&d.waitingUntil<=now)this.close(w,{t:'error',msg:'Waiting room expired. Please rejoin.'});}
+  for(const guest of this.guests()){
+   const d=this.data(guest);
+   if(d.invited&&d.invitedUntil&&d.invitedUntil<=now){d.invited=false;d.invitedUntil=0;this.save(guest,d);this.send(guest,{t:'note',text:'The stage invitation has expired. Ask the host to invite you again.'});}
+  }
   if(this.sockets().length)await this.state.storage.setAlarm(now+60000);
  }
  async webSocketMessage(ws,raw){
