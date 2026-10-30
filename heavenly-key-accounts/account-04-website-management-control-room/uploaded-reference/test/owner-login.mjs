@@ -48,4 +48,14 @@ assert.match(server,/Max-Age=43200/,'Server must issue a 12-hour secure owner co
 assert.match(server,/now\+43200/,'Server session lifetime must match cookie lifetime');
 assert.match(server,/Secure; HttpOnly; SameSite=Strict/,'Owner session cookies must be protected');
 assert.match(server,/DELETE FROM cms_owner_sessions/,'Password resets must revoke existing sessions');
+const activeRoot=resolve(root,'../source');
+const activeIndex=readFileSync(resolve(activeRoot,'public/index.html'),'utf8');
+const activeServer=readFileSync(resolve(activeRoot,'src/index.ts'),'utf8');
+const ownerHost='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
+assert.ok(activeIndex.includes('https://'+ownerHost+'/login.html'),'Owner link must use the supported authentication hostname');
+assert.ok(activeServer.includes("u.hostname==='"+ownerHost+"'"),'Owner auth host must match the public sign-in link');
+for(const file of ['public/login.html','public/owner-login.js','public/control.css','src/owner-auth.ts']){
+ assert.ok(readFileSync(resolve(activeRoot,file),'utf8').length>200,'Active Control Room missing '+file);
+}
+assert.equal(readFileSync(resolve(activeRoot,'src/owner-auth.ts'),'utf8'),server,'Active owner authentication must match tested implementation');
 console.log('Owner login client and server security checks passed');
