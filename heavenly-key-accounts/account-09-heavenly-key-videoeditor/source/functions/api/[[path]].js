@@ -349,7 +349,30 @@ export async function onRequest({ request: req, env, params }) {
           webpLossy ? {w:(bytes[26]+bytes[27]*256)&16383,h:(bytes[28]+bytes[29]*256)&16383} : null;
         const webpDimensionsOk = webpCanvas && webpCanvas.w>0&&webpCanvas.h>0&&webpCanvas.w<=16384&&webpCanvas.h<=16384&&webpCanvas.w*webpCanvas.h<=50000000;
         const webpValid = size>=25&&ascii(0,'RIFF')&&ascii(8,'WEBP')&&webpLength===size-8&&webpChunkFits&&!!webpDimensionsOk;
-        const imageValid = type==='image/png' ? bytes[0]===137&&ascii(1,'PNG')&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10&&size>=24&&bytes[8]===0&&bytes[9]===0&&bytes[10]===0&&bytes[11]===13&&ascii(12,'IHDR')&&pngWidth>0&&pngHeight>0&&pngWidth<=16384&&pngHeight<=16384&&pngWidth*pngHeight<=50000000 : type==='image/jpeg' ? bytes[0]===255&&bytes[1]===216&&bytes[2]===255 : type==='image/gif' ? size>=13&&gifDimensionsOk&&(ascii(0,'GIF87a')||ascii(0,'GIF89a')) : type==='image/webp' ? webpValid : type==='video/mp4'||type==='audio/mp4'||type==='audio/x-m4a'||type==='video/quicktime' ? ascii(4,'ftyp') : type==='video/webm'||type==='audio/webm' ? bytes[0]===26&&bytes[1]===69&&bytes[2]===223&&bytes[3]===163 : type==='audio/mpeg' ? (ascii(0,'ID3')||(bytes[0]===255&&(bytes[1]&224)===224)) : type==='audio/wav'||type==='audio/x-wav' ? ascii(0,'RIFF')&&ascii(8,'WAVE') : type==='audio/flac' ? ascii(0,'fLaC') : type==='audio/ogg'||type==='video/ogg' ? ascii(0,'OggS') : type==='audio/aac' ? bytes[0]===255&&(bytes[1]&246)===240 : true;
+        const jpegDimensionsOk = type==='image/jpeg' && (() => {
+          const data=new Uint8Array(payload);
+          if(data.length<12||data[0]!==255||data[1]!==216)return false;
+          let at=2;
+          while(at+4<data.length){
+            if(data[at++]!==255)return false;
+            while(at<data.length&&data[at]===255)at++;
+            if(at>=data.length)return false;
+            const marker=data[at++];
+            if(marker===218||marker===217)return false;
+            if(marker===1||marker>=208&&marker<=215)continue;
+            if(at+2>data.length)return false;
+            const segmentLength=data[at]*256+data[at+1];
+            if(segmentLength<2||at+segmentLength>data.length)return false;
+            if(marker>=192&&marker<=207&&![196,200,204].includes(marker)){
+              if(segmentLength<8)return false;
+              const height=data[at+3]*256+data[at+4],width=data[at+5]*256+data[at+6];
+              return width>0&&height>0&&width<=16384&&height<=16384&&width*height<=50000000;
+            }
+            at+=segmentLength;
+          }
+          return false;
+        })();
+        const imageValid = type==='image/png' ? bytes[0]===137&&ascii(1,'PNG')&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10&&size>=24&&bytes[8]===0&&bytes[9]===0&&bytes[10]===0&&bytes[11]===13&&ascii(12,'IHDR')&&pngWidth>0&&pngHeight>0&&pngWidth<=16384&&pngHeight<=16384&&pngWidth*pngHeight<=50000000 : type==='image/jpeg' ? jpegDimensionsOk : type==='image/gif' ? size>=13&&gifDimensionsOk&&(ascii(0,'GIF87a')||ascii(0,'GIF89a')) : type==='image/webp' ? webpValid : type==='video/mp4'||type==='audio/mp4'||type==='audio/x-m4a'||type==='video/quicktime' ? ascii(4,'ftyp') : type==='video/webm'||type==='audio/webm' ? bytes[0]===26&&bytes[1]===69&&bytes[2]===223&&bytes[3]===163 : type==='audio/mpeg' ? (ascii(0,'ID3')||(bytes[0]===255&&(bytes[1]&224)===224)) : type==='audio/wav'||type==='audio/x-wav' ? ascii(0,'RIFF')&&ascii(8,'WAVE') : type==='audio/flac' ? ascii(0,'fLaC') : type==='audio/ogg'||type==='video/ogg' ? ascii(0,'OggS') : type==='audio/aac' ? bytes[0]===255&&(bytes[1]&246)===240 : true;
         if (size <= 0 || size > MAXFILE || (announced !== null && Number(announced) !== size)) return J({ error: 'File size is invalid or exceeds 50 MB.' }, 413);
         if (!imageValid) return J({ error: 'Media file contents do not match the declared format.' }, 415);
         const reservation = await env.DB.prepare('UPDATE users SET storage_used=storage_used+? WHERE id=? AND storage_used+?<=?').bind(size,u.id,size,QUOTA).run();
