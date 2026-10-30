@@ -72,7 +72,7 @@ export class MeetingRooms {
     const aud=m.aud===true,guests=this.guests();
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     if(guests.filter(w=>this.data(w).aud===aud).length>=(aud?100:18))return this.close(ws,{t:'error',msg:'This room is full.'});
-    Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),ok:aud,aud,stage:false,invited:false,ao:!!m.ao,last:0});
+    Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),ok:aud,aud,stage:false,invited:false,ao:m.ao===true,last:0});
     if(!aud&&d.pass&&h.admitted.includes(d.pass)&&this.stage().length<6){d.ok=true;d.stage=true;}
     this.save(ws,d);this.send(ws,{t:'welcome',ice:roomICE,watch:h.watch,chat:h.audChat,slow:h.slow});
     if(d.ok)this.send(ws,{t:'admitted'});
@@ -90,7 +90,7 @@ export class MeetingRooms {
    if(m.t==='lock'&&typeof m.on==='boolean'){h.locked=m.on;this.save(host,h);}
    else if(m.t==='watch'){const u=typeof m.url==='string'?m.url.trim():'';let allowed='';if(u.length<=200&&!/[\u0000-\u0020<>"']/.test(u)){try{const parsed=new URL(u);if(parsed.protocol==='https:'&&parsed.hostname&&!parsed.username&&!parsed.password)allowed=parsed.href;}catch{}}h.watch=allowed;this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
    else if(m.t==='audchat'&&typeof m.on==='boolean'){h.audChat=m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
-   else if(m.t==='slow'){const seconds=Number(m.sec);h.slow=Number.isFinite(seconds)?Math.max(0,Math.min(60,Math.floor(seconds))):0;this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
+   else if(m.t==='slow'){const seconds=typeof m.sec==='number'?m.sec:NaN;h.slow=Number.isFinite(seconds)?Math.max(0,Math.min(60,Math.floor(seconds))):0;this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
    else if(m.t==='chat')chat();
    else{
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;const gd=this.data(g);
@@ -107,7 +107,7 @@ export class MeetingRooms {
    }
   }else if(d.ok){
    if(m.t==='sig'&&d.stage){const data=safeSignal(m.data);if(data)this.send(host,{t:'sig',from:d.id,data});}
-   else if(m.t==='ready'&&d.invited&&this.stage().length<6){d.invited=false;d.aud=false;d.stage=true;d.ao=!!m.ao;this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
+   else if(m.t==='ready'&&d.invited&&this.stage().length<6){d.invited=false;d.aud=false;d.stage=true;d.ao=m.ao===true;this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
