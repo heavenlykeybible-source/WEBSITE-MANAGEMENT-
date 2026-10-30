@@ -43,4 +43,5 @@ jobs:
       - name: Verify navigation upgrade after repository patch tests
         run: |
           npm run prepare:account4-release
+          node tests/account4-navigation-regression.mjs
 # This workflow intentionally does not publish, deploy or access production secrets.
