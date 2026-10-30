@@ -49,7 +49,7 @@ function socialFeedLayout(title,description){document.body.classList.add("social
 const hymnCard=el("section",null,"card hk-hymn-right-card");
 hymnCard.setAttribute("aria-label","Old Time Gospel Revival Hymn Book interactive reader");
 const hymnMinistry=el("p","HEAVENLY KEY EVANGELISTIC MOVEMENT");hymnMinistry.style.cssText="font-size:12px;font-weight:800;letter-spacing:.04em;text-align:center;color:#123b91;margin:0 0 5px";
-const hymnSlogan=el("p","REVIVAL • HOLINESS • POWER");hymnSlogan.style.cssText="font-size:11px;font-weight:700;letter-spacing:.07em;text-align:center;color:#a12730;margin:0 0 7px";
+const hymnSlogan=el("p","End-time, Non-denominational, Apostolic & Evangelistic Movement");hymnSlogan.style.cssText="font-size:11px;font-weight:700;letter-spacing:.07em;text-align:center;color:#a12730;margin:0 0 7px";
 const hymnTitle=el("h2","Old Time Gospel Revival Hymn Book");
 const hymnFrame=el("iframe");
 hymnFrame.title="Interactive Old Time Gospel Revival Hymn Book: search, select, read and save hymns";
