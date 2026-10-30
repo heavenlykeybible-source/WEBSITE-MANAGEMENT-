@@ -1,0 +1,27 @@
+name: Account 4 release safety checks
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/account4-release-safety.yml'
+      - 'scripts/deploy-account4-existing.mjs'
+      - 'tests/account4-release-safety-regression.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-account4-release-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check deployment code syntax
+        run: node --check scripts/deploy-account4-existing.mjs
+      - name: Run Account 4 release safety tests
+        run: node tests/account4-release-safety-regression.mjs
