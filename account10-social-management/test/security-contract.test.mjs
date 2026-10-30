@@ -84,3 +84,13 @@ test('Gemini suggestions recheck human takeover after provider response', () => 
   assert.match(handler, /if\(!latest\|\|latest\.human_paused\|\|latest\.requested_human\)/);
   assert.match(handler, /suggestion:null,sent:false/);
 });
+
+test('Gemini quota exhaustion routes to human review without automatic retry', () => {
+  const start=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'");
+  const end=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'", start);
+  const handler=source.slice(start,end);
+  assert.ok(start>=0 && end>start);
+  assert.ok(handler.includes("if(response.status===429)"));
+  assert.ok(handler.includes("action:'human_review'"));
+  assert.ok(handler.includes("automaticRetry:false"));
+});
