@@ -694,3 +694,15 @@ test('stale guest messages and delayed close events cannot affect a replacement 
  assert.equal(replacement.messages.some(m=>m.t==='chat'&&m.text==='Old session leak'),false);
  assert.equal(fresh.messages.some(m=>m.t==='chat'&&m.text==='Old session leak'),false);
 });
+
+test('stale second host socket cannot apply moderator commands to active host',async()=>{
+ const s=await openRoom();
+ const stale=s.add({role:'host',owner:s.host.d.owner,key:s.host.d.key,until:s.host.d.until});
+ await message(s.room,stale,{t:'lock',on:true});
+ assert.equal(stale.readyState,3);
+ assert.ok(stale.messages.some(m=>m.t==='error'&&/no longer active/.test(m.msg)));
+ assert.equal(s.host.d.locked,false,'stale moderator cannot lock active meeting');
+ assert.equal(s.host.readyState,1);
+ await message(s.room,s.host,{t:'lock',on:true});
+ assert.equal(s.host.d.locked,true,'current host retains moderation control');
+});
