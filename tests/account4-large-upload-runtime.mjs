@@ -53,4 +53,8 @@ const another=await dispatch(owner,'multipart/create','POST',{name:'cancel.bin',
 const cancelled=await dispatch(owner,'multipart/'+another.id+'/abort','POST');
 assert.equal(cancelled.status,'aborted');
 assert.equal(objects.size,1);
-console.log('PASS simulated multipart create, authorization, oversize, chunk integrity, resume, finish and abort');
+const deleted=await dispatch(owner,'multipart/'+session.id+'/remove','POST');
+assert.equal(deleted.status,'deleted');
+assert.equal(objects.size,0);
+await assert.rejects(()=>dispatch(owner,'multipart/'+session.id+'/finish','POST'),/no longer accepting/);
+console.log('PASS simulated multipart create, authorization, limits, chunk integrity, resume, finish, delete and abort');
