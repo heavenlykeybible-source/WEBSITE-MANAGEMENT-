@@ -23,8 +23,8 @@ assert.ok(source.includes("['StartEgress','StopEgress','ListEgress'].includes(me
 assert.ok(source.includes("base.pathname!=='/'"),'LiveKit endpoint path must be restricted');
 assert.ok(source.includes('STUDIO_247_ALLOWED_HOSTS'),'24/7 programme sources must use a configured hostname allowlist');
 assert.ok(source.includes('approved.includes(host)'),'24/7 programme source hostname must be approved');
-assert.ok(reconcile.includes("[3,4,5,6].includes(item.status)"),'Numeric LiveKit limit-reached status must be terminal');
-assert.ok(reconcile.includes('EGRESS_LIMIT_REACHED'),'Named LiveKit limit-reached status must be terminal');
+assert.ok(reconcile.includes('egressTerminalStatus(item.status)'),'Reconciliation must use the validated terminal status classification');
+assert.ok(source.includes('EGRESS_LIMIT_REACHED'),'Named LiveKit limit-reached status must be terminal');
 assert.ok(source.includes("'heavenlykey.alldaywow247.workers.dev'"),'First-party 24/7 programme source must be permitted');
 assert.ok(source.includes('Stored streaming destinations cannot be decrypted.'),'Corrupt encrypted streaming destinations must fail closed');
 assert.ok(source.includes('async function withBroadcastLock'), 'Broadcast operations must use a shared D1 lock');
@@ -47,4 +47,5 @@ assert.ok(source.includes('livekit\\.cloud'), 'LiveKit endpoint must be limited 
 assert.ok(source.indexOf('const token=await signLiveKitGrant(config,{roomRecord:true});') > source.indexOf("base.protocol!=='wss:'"), 'Validate the LiveKit project URL before signing a provider token');
 assert.ok(source.includes("['/pages/radio.html','/pages/video.html'].includes(u.pathname)"),'First-party programme paths must be allowlisted');
 assert.ok(source.includes("u.search!=='?egress=1'"),'First-party programme query must be fixed');
+assert.ok(start.indexOf('egressTerminalStatus(result.status)') < start.indexOf('writeActiveState(env,replacementState)'), 'Reject terminal replacement before updating stored state');
 console.log('Account 2 broadcast handoff safety checks passed');
