@@ -53,12 +53,13 @@ async function runTimeline(record){
    rec.ondataavailable=e=>{if(!e.data?.size)return;recordedBytes+=e.data.size;if(recordedBytes>256*1024*1024){encoderError=Error('Timeline export exceeded the 256 MB browser memory limit. Shorten the project or reduce output resolution.');return}fragments.push(e.data)};
    $('clipDownload').hidden=true;
   }
+  let completedSeconds=0;
   for(let i=0;i<clips.length;i++){
    if(state.cancelled)break;
    const c=clips[i];v.pause();if(rec&&rec.state==='recording')rec.pause();await seek(c.start,state);v.playbackRate=c.speed;
    if(state.cancelled)break;
    if(rec&&rec.state==='inactive')rec.start(250);
-   info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length);
+   info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length+' (0% of clip).');
    await new Promise((resolve,reject)=>{let finished=false;const cleanup=()=>{clearTimeout(timer);if(state.abortStart===abort)state.abortStart=null};const complete=(error)=>{if(finished)return;finished=true;cleanup();error?reject(error):resolve()};const abort=()=>complete(Error('Timeline operation stopped.'));state.abortStart=abort;const timer=setTimeout(()=>complete(Error('Video playback did not start within 15 seconds.')),15000);Promise.resolve().then(()=>{if(state.cancelled)throw Error('Timeline operation stopped.');return v.play()}).then(()=>{if(finished&&session===state)v.pause();complete()},e=>complete(e));if(state.cancelled)abort()});
    if(state.cancelled){v.pause();break;}
    if(rec&&rec.state==='paused')rec.resume();
@@ -67,9 +68,10 @@ async function runTimeline(record){
     const end=()=>finish(),error=()=>finish(Error('Video playback failed'));
     state.abortPlayback=()=>finish();
     v.addEventListener('ended',end);v.addEventListener('error',error);
-    const started=Date.now(),maxMs=Math.max(15000,((c.end-c.start)/c.speed+12)*1000);
-    timer=setInterval(()=>{if(encoderError)return finish(encoderError);if(rec&&rec.state==='inactive')return finish(Error('Video encoder stopped before timeline finished'));if(state.cancelled||v.currentTime>=c.end-.03||v.ended)return finish();if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
+    const started=Date.now(),maxMs=Math.max(15000,((c.end-c.start)/c.speed+12)*1000);let lastPercent=-1;
+    timer=setInterval(()=>{const progress=Math.max(0,Math.min(1,(v.currentTime-c.start)/(c.end-c.start))),percent=Math.floor(Math.max(0,Math.min(100,(completedSeconds+progress*(c.end-c.start)/c.speed)/totalSeconds*100)));if(percent!==lastPercent){lastPercent=percent;info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length+' — '+percent+'% complete.')}if(encoderError)return finish(encoderError);if(rec&&rec.state==='inactive')return finish(Error('Video encoder stopped before timeline finished'));if(state.cancelled||v.currentTime>=c.end-.03||v.ended)return finish();if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
    });
+   completedSeconds+=(c.end-c.start)/c.speed;
   }
   v.pause();
   if(rec&&rec.state!=='inactive'){rec.stop();await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Timeline encoder did not finish within 15 seconds')),15000);finished.then(()=>{clearTimeout(timeout);resolve()})})}if(encoderError)throw encoderError;
