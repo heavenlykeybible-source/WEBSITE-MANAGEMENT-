@@ -9,5 +9,7 @@ for(const [feature,fragment] of [
  ['preview does not share authentication', "sandbox:'allow-scripts allow-forms'"],
  ['owner review remains required',"'Approve this version'"]
 ])assert.ok(s.includes(fragment),'Missing '+feature);
+assert.ok(s.includes('connection_verified:true') && s.includes('connection_verified:false'),'Saved Cloudflare verification must return explicit success or failure');
+assert.ok(s.includes('Update the token scopes in Account 4 Connections'),'Failed API access must direct owner to saved token settings');
 assert.ok(!s.includes("sandbox:'allow-scripts allow-same-origin'"),'HTML preview must not share authenticated origin');
 console.log('PASS Account 4 unified connection check and isolated interactive preview');
