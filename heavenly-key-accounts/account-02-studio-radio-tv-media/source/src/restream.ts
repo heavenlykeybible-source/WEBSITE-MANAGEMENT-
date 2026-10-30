@@ -85,6 +85,8 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  }else{
   const page=String(input.programmeUrl??'').trim();let u:URL;try{u=new URL(page);}catch{throw new Error('24/7 programme source URL is invalid.');}
   if(u.protocol!=='https:'||u.username||u.password||u.hash)throw new Error('24/7 programme source must be a safe HTTPS URL.');
+  const host=u.hostname.toLowerCase().replace(/\.$/,'');
+  if(host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test')||host.endsWith('.invalid')||host.endsWith('.example')||/^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))throw new Error('24/7 programme source must use a public DNS hostname.');
   body={web:{url:u.href,await_start_signal:false},preset,outputs:[{stream:{protocol:'RTMP',urls:outputs.map(x=>x.url)}}]};
  }
  // Check all inputs before ending an existing on-air egress. An invalid
