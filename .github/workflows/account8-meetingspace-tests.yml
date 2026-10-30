@@ -32,6 +32,11 @@ jobs:
       - name: Verify Account 8 package scripts
         run: |
           node -e "const p=require('./package.json'); for (const s of ['test','bundle:control-room','configure']) if (!p.scripts?.[s]) process.exit(1)"
+      - name: Verify JavaScript syntax
+        run: |
+          node --check scripts/configure.mjs
+          node --check scripts/deploy.mjs
+          node --check scripts/bundle-control-room.mjs
       - name: Backend and security regression tests
         run: npm test
       - name: Verify Control Room package build
@@ -41,7 +46,8 @@ jobs:
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
             npm audit --audit-level=high --omit=dev
           else
-            echo "::warning::No dependency lockfile; npm audit cannot provide a reproducible vulnerability assessment"
+            node -e "const p=require('./package.json'); if (Object.keys(p.dependencies||{}).length || Object.keys(p.optionalDependencies||{}).length) { console.error('Production dependencies require a lockfile for vulnerability scanning'); process.exit(1) }"
+            echo "::notice::No production npm dependencies declared; dependency audit not applicable"
           fi
       - name: Check Account 8 deployment guard
         env:
