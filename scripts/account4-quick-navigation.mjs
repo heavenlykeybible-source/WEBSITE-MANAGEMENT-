@@ -7,7 +7,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const target=path.join(root,'control-room-worker.js');
 let s=fs.readFileSync(target,'utf8');
 const original="group('Workspace');item('Home','⌂',controlHome);";
-const updated="group('Quick access');item('Home','⌂',controlHome);if(!M&&lv()>=2)item('AI Chat','✦',claude);if(!M&&lv()>=4)item('Connections','▧',projectSources);item('Waiting','◷',waiting,'wb');item('Releases','↗',releaseHistory);group('Workspace');";
+const updated="group('Quick access');item('Home','⌂',controlHome);if(lv()>=2)item('AI Chat','✦',claude);if(!M&&lv()>=4)item('Connections','▧',projectSources);item('Waiting','◷',waiting,'wb');item('Releases','↗',releaseHistory);group('Workspace');";
 if(s.includes(updated)){console.log('Account 4 navigation already upgraded');process.exit(0);}
 if(s.split(original).length!==2)throw Error('Unexpected navigation source; refusing unsafe patch');
 s=s.replace(original,updated);
