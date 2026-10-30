@@ -39,4 +39,6 @@ assert.ok(!reconcile.includes('LIVE_STATUS_KV.get(ACTIVE_KEY)'),'Broadcast statu
 assert.ok(source.includes('ON CONFLICT(state_key) DO NOTHING'),'Legacy broadcast adoption must not replace an existing D1 record');
 assert.ok(source.includes('await writeActiveState(env,null)'), 'Clearing state must retain a tombstone against stale KV resurrection');
 assert.ok(source.includes('Broadcast state migration could not be verified.'),'Legacy adoption must verify the D1 record');
+assert.ok(start.includes('The replacement stream may still be active'),'Rollback must identify a possibly active replacement');
+assert.ok(start.indexOf("catch{throw new Error('Broadcast handoff is incomplete.") < start.lastIndexOf('writeActiveState(env,previous.active)'), 'Rollback must not restore old state after replacement stop failure');
 console.log('Account 2 broadcast handoff safety checks passed');
