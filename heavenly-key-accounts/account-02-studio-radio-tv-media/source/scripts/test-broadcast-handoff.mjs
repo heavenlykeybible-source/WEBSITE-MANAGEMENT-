@@ -32,4 +32,5 @@ assert.ok(start.includes('return withBroadcastLock(env,async()=>{'), 'Broadcast 
 const stop=source.slice(source.indexOf('export async function stopRestream'),source.indexOf('export async function restreamStatus'));
 assert.ok(stop.includes('return withBroadcastLock(env,async()=>{'), 'Broadcast stop must hold D1 lock');
 assert.ok(start.includes("previous.active?.providerStatus==='UNKNOWN'"),'Unconfirmed current broadcast must block a replacement');
+assert.ok(!reconcile.includes('LIVE_STATUS_KV.delete(ACTIVE_KEY)'), 'Status polling must not delete a newer broadcast state');
 console.log('Account 2 broadcast handoff safety checks passed');
