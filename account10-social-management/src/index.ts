@@ -1,3 +1,4 @@
+import { originalAssistantInstruction } from './assistant-profile';
 interface Env { DB: D1Database; MEDIA_BUCKET?: R2Bucket; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
@@ -452,7 +453,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
     method:'POST',signal:controller.signal,
     headers:{'content-type':'application/json','x-goog-api-key':env.GEMINI_API_KEY},
-    body:JSON.stringify({systemInstruction:{parts:[{text:'Draft a concise, respectful suggested customer-service reply. Do not claim to have sent any message or completed any action. Avoid requesting sensitive personal information. A human operator must review this draft.'}]},contents:[{role:'user',parts:[{text:data.message}]}],generationConfig:{maxOutputTokens:400,temperature:0.5}})
+    body:JSON.stringify({systemInstruction:{parts:[{text:originalAssistantInstruction}]},contents:[{role:'user',parts:[{text:data.message}]}],generationConfig:{maxOutputTokens:400,temperature:0.5}})
    });
    if(!response.ok)return reply({error:'AI provider request failed',providerStatus:response.status,sent:false},502);
    const result:any=await response.json();const suggestion=(result?.candidates?.[0]?.content?.parts||[]).map((p:any)=>typeof p?.text==='string'?p.text:'').join('').trim().slice(0,3000);
