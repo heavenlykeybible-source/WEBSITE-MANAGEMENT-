@@ -17,10 +17,12 @@ async function scenario(mode){
  assert.equal(window.hkTimeline.getClips().length,1,'Undo restores timeline after duplication');
  video.currentTime=.4;node('clipTrimIn').onclick();
  assert.equal(window.hkTimeline.getClips()[0].start,.4,'Trim start uses the playhead');
+ assert.equal(node('clipStart').value,'0.4','Trimmed start updates time input');
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips()[0].start,0,'Undo restores trimmed start');
  video.currentTime=.6;node('clipTrimOut').onclick();
  assert.equal(window.hkTimeline.getClips()[0].end,.6,'Trim end uses the playhead');
+ assert.equal(node('clipEnd').value,'0.6','Trimmed end updates time input');
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips()[0].end,1,'Undo restores trimmed end');
  video.currentTime=0;
