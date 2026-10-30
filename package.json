@@ -12,7 +12,7 @@
     "deploy:meetings": "npm run deploy --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source",
     "prepare:account4-navigation": "node scripts/account4-quick-navigation.mjs",
     "test:account4-launch": "node tests/account4-launch-guards.mjs",
-    "prepare:account4-release": "node scripts/apply-reviewed-account4-upgrade.mjs && npm run prepare:account4-navigation && node --check control-room-worker.js && npm run test:account4-launch && node scripts/account4-permissions-preview.mjs && node scripts/account4-agent-permissions.mjs && node scripts/account4-ai-conversation-guard.mjs && node scripts/account4-provider-reconnect.mjs && node scripts/account4-github-import-ux.mjs && node scripts/account4-fast-chat-init.mjs && node scripts/account4-precise-ai-intent.mjs && node scripts/account4-parallel-chat-startup.mjs && node scripts/account4-github-preflight.mjs && node scripts/account4-chat-fast-path.mjs && node scripts/account4-preview-device-toggle.mjs",
+    "prepare:account4-release": "node scripts/apply-reviewed-account4-upgrade.mjs && npm run prepare:account4-navigation && node --check control-room-worker.js && npm run test:account4-launch && node scripts/account4-permissions-preview.mjs && node scripts/account4-agent-permissions.mjs && node scripts/account4-ai-conversation-guard.mjs && node scripts/account4-provider-reconnect.mjs && node scripts/account4-github-import-ux.mjs && node scripts/account4-fast-chat-init.mjs && node scripts/account4-precise-ai-intent.mjs && node scripts/account4-parallel-chat-startup.mjs && node scripts/account4-github-preflight.mjs && node scripts/account4-chat-fast-path.mjs && node scripts/account4-preview-device-toggle.mjs && node scripts/account4-provider-health.mjs",
     "check:account4-navigation": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-quick-navigation.mjs --check",
     "check:account4-permissions-preview": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-permissions-preview.mjs --check",
     "check:account4-agent-permissions": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-agent-permissions.mjs --check",
@@ -23,7 +23,8 @@
     "check:account4-parallel-chat-startup": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-parallel-chat-startup.mjs --check",
     "check:account4-github-preflight": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-github-preflight.mjs --check",
     "check:account4-chat-fast-path": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-chat-fast-path.mjs --check",
-    "check:account4-preview-device-toggle": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-preview-device-toggle.mjs --check"
+    "check:account4-preview-device-toggle": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-preview-device-toggle.mjs --check",
+    "check:account4-provider-health": "node scripts/apply-reviewed-account4-upgrade.mjs && node scripts/account4-provider-health.mjs --check"
   },
   "devDependencies": {
     "@simplewebauthn/server": "13.2.2",
