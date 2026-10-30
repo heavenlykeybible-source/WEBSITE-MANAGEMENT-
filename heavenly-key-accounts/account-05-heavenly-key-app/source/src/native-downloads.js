@@ -19,6 +19,8 @@ export async function handleNativeDownloads(request,env) {
   const url=new URL(request.url);
   if(url.pathname==='/api/admin/download-counts') {
     if(request.method!=='GET') return reply({error:'Method not allowed'},405);
+    // Secrets and admin commands must never be supplied in a shareable URL.
+    if(url.search) return reply({error:'Query parameters not accepted'},400);
     if(!authorized(request,env)) return reply({error:'Unauthorized'},401);
     if(!env.DOWNLOAD_DB) return reply({error:'Download statistics database not configured'},503);
     try {
