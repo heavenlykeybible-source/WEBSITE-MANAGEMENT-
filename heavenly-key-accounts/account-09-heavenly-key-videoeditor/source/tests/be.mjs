@@ -168,6 +168,15 @@ const spoofedImage = await onRequest({
   }),env,params:{path:['media']}
 });
 check('Rejects WAV data disguised as an image before storage',spoofedImage.status===415);
+const hugePng = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+X9uSAAAAAElFTkSuQmCC','base64'));
+hugePng.set([0,0,64,0,0,0,64,0],16);
+const excessiveDimensions=await onRequest({
+  request:new Request('https://studio.example/api/media?name=oversized.png',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},body:hugePng
+  }),env,params:{path:['media']}
+});
+check('PNG decompression bomb dimensions rejected before storage',excessiveDimensions.status===415);
+
 const mediaCreated = await noLengthUpload.json();
 const otherMediaRead = await request('media/'+mediaCreated.id,{cookie:secondLogin.cookie});
 check('Members cannot read another member media',otherMediaRead.status===404);
