@@ -186,6 +186,22 @@ test('locked meeting rejects new audience viewers as well as regular guests',asy
  assert.ok(stageGuest.messages.some(m=>m.t==='error'&&/locked/.test(m.msg)));
 });
 
+test('host watch links reject URL credentials and malformed addresses',async()=>{
+ const s=await openRoom();
+ for(const url of [
+  'https://user:password@example.com/video',
+  'https://user@example.com/video',
+  'https://example.com/video\u000apayload',
+  'https://',
+  'javascript:alert(1)'
+ ]){
+  await message(s.room,s.host,{t:'watch',url});
+  assert.equal(s.host.messages.at(-1).url,'');
+ }
+ await message(s.room,s.host,{t:'watch',url:'https://example.com/video'});
+ assert.equal(s.host.messages.at(-1).url,'https://example.com/video');
+});
+
 test('meeting watch links only allow HTTPS and reject HTTP',async()=>{
  const s=await openRoom();
  await message(s.room,s.host,{t:'watch',url:'http://example.com/video'});
