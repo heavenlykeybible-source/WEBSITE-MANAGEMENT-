@@ -29,7 +29,10 @@ assert(sw.includes('CORE_OFFLINE'),'Critical pages must be required for offline 
 assert(sw.includes('await Promise.all(CORE_OFFLINE.map(asset=>cachePublicOfflineAsset(cache,asset)))'),'Core assets must be fetched atomically before install success');
 assert(sw.includes('await caches.delete(SHELL)'),'Failed core installs must clean partial caches');
 assert(sw.includes('new Set(SHELL_ASSETS.filter'),'Cache assets must be deduplicated');
-assert(sw.includes('OPTIONAL_OFFLINE.map(asset=>cachePublicOfflineAsset(cache,asset))'),'Optional files must remain best effort');
+assert(sw.includes('try{await cachePublicOfflineAsset(cache,asset);}')&&sw.includes('catch{failed++;}'),'Optional files must remain best effort');
+assert(sw.includes('Math.min(4,OPTIONAL_OFFLINE.length)'),'Offline optional downloads must be capped at four concurrent jobs');
+assert(sw.includes('while(nextAsset<OPTIONAL_OFFLINE.length)'),'Offline cache workers must drain the resource queue');
+assert(sw.includes('await Promise.all(Array.from('),'Offline install must wait for bounded workers');
 assert(sw.includes('url.search===""'),'Query-specific responses must not be persisted');
 assert(sw.includes('headers.has("Authorization")'),'Authenticated responses must not be cached');
 assert(sw.includes('Cache-Control'),'Private or no-store responses must not be cached');
@@ -71,7 +74,7 @@ assert(sw.includes('isDevotionalDraftLibrary'),'Devotional cache classification 
 assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved content must never be cached');
 assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
 assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
-assert(sw.includes('hk-bible-shell-v69'),'Service-worker cache version must retire older draft caches');
+assert(sw.includes('hk-bible-shell-v70'),'Service-worker cache version must retire older draft caches');
 assert(html.includes("redirect:'error'"),'Member API requests must not follow redirects');
 assert(html.includes("cache:'no-store'"),'Member API requests must bypass response caching');
 assert(html.includes('new AbortController()'),'Member API requests need cancellation');
