@@ -25,6 +25,7 @@ for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="
 if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
 if (!timeline.includes('if(record)invalidateExport();')) throw Error('Stale timeline download invalidation missing');
 if (!timeline.includes('session.abortSeek?.()') || !timeline.includes('await seek(c.start,state)')) throw Error('Timeline seek cancellation safeguard missing');
+if (!timeline.includes('if(!v.seeking&&Math.abs(v.currentTime-t)<.02)')) throw Error('Pending video seek guard missing');
 if (!timeline.includes("v.addEventListener('loadedmetadata',()=>{if(session){session.sourceChanged=true;session.cancelled=true") || !timeline.includes('if(!state.sourceChanged){v.pause();v.playbackRate=rate;')) throw Error('Timeline source switch isolation safeguard missing');
 if (!timeline.includes('if(!state.sourceChanged)info(state.cancelled?')) throw Error('Stale export status isolation missing');
 if (!timeline.includes('session.abortPlayback?.()') || !timeline.includes('state.abortPlayback=()=>finish()')) throw Error('Timeline playback cancellation safeguard missing');
