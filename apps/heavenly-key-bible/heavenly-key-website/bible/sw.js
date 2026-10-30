@@ -66,7 +66,7 @@ self.addEventListener("fetch", event => {
     if(response.ok&&response.type!=='opaque'){
      try{const library=await response.clone().json();approved=Array.isArray(library.entries)&&library.entries.length>0&&library.entries.every(entry=>entry.status==='approved-for-publication'&&Array.isArray(entry.topics)&&entry.topics.length===12&&entry.topics.every(topic=>topic.reviewStatus==='approved'));}catch{}
     }
-    if(!approved){await cache.delete(event.request);cached=undefined;}
+    if(!approved){cached=undefined;try{await cache.delete(event.request);}catch{console.warn('Unable to remove withdrawn devotional cache entry');}}
    }
    if(!response.ok&&cached)return cached;
    return response;
