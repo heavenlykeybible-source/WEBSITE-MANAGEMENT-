@@ -64,6 +64,7 @@ async function user(req, env) {
 const log = (env, uid, a) => env.DB.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').bind(uid, a, Date.now()).run();
 const body = async req => {
   try {
+    if ((req.headers.get('content-type') || '').split(';')[0].trim().toLowerCase() !== 'application/json') return null;
     const declared = req.headers.get('content-length');
     if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > 1100000)) return null;
     const payload = await readBoundedMedia(req, 1100000);
