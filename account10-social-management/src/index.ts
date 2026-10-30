@@ -69,7 +69,17 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   return reply({received:true,signatureVerified:true,stored:true,duplicate:!newlyStored,processed:false,importQueued:autoProcess,eventEntries:count,eventCategories:[...new Set(types)],sent:false});
  }
  if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false,detail:'Public health response does not verify deployment readiness; run authenticated diagnostics and live provider tests.'});
- if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS)return env.ASSETS.fetch(req);return reply({error:'Not found'},404)}
+ if(!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS){
+  const asset=await env.ASSETS.fetch(req);
+  const headers=new Headers(asset.headers);
+  headers.set('x-content-type-options','nosniff');
+  headers.set('x-frame-options','DENY');
+  headers.set('referrer-policy','no-referrer');
+  headers.set('strict-transport-security','max-age=31536000; includeSubDomains');
+  headers.set('permissions-policy','camera=(), microphone=(), geolocation=()');
+  headers.set('content-security-policy',"frame-ancestors 'none'; base-uri 'self'; object-src 'none'");
+  return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers});
+ }return reply({error:'Not found'},404)}
  if(req.method==='OPTIONS')return reply({error:'Cross-origin API access is disabled'},403);
  const type=req.headers.get('content-type')||'';
  if(['POST','PUT','PATCH'].includes(req.method)&&!type.toLowerCase().startsWith('application/json'))return reply({error:'JSON content type required'},415);
