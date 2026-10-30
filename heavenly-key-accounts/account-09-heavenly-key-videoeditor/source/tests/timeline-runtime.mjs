@@ -16,6 +16,16 @@ async function scenario(mode){
  assert.equal(JSON.stringify(window.hkTimeline.getClips()),originalTimeline,'Reject excessive saved clip timestamps without changing clips');
  assert.match(node('clipStatus').textContent,/invalid clips/,'Oversized restored timeline reports validation failure');
  node('clipAddFull').onclick();
+ node('clipList').value='1';
+ node('clipFirst').onclick();
+ assert.equal(node('clipList').value,'0','Move-to-first selects the moved clip');
+ assert.equal(window.hkTimeline.getClips().length,2,'Move-to-first preserves all clips');
+ node('clipLast').onclick();
+ assert.equal(node('clipList').value,'1','Move-to-last selects the moved clip');
+ node('clipUndo').onclick();
+ assert.equal(node('clipList').value,'0','Undo restores position after move-to-last');
+ node('clipRedo').onclick();
+ assert.equal(node('clipList').value,'1','Redo reapplies position after move-to-last');
  assert.equal(window.hkTimeline.getClips().length,2,'Full-source command appends one clip');
  assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:2,speed:1},'Full-source clip covers complete video');
  node('clipClear').onclick();
