@@ -17,8 +17,16 @@ for(const [before,after] of parts){
  const scopeEnd=before.startsWith('if (sub ===')?s.indexOf('// ---------- WordPress and Blogger connections',scopeStart):s.indexOf('function frame(html)',scopeStart);
  if(scopeStart<0||scopeEnd<=scopeStart)throw Error('Cannot find requested Claude diagnostic scope');
  const section=s.slice(scopeStart,scopeEnd);
- if(section.split(before).length!==2)throw Error('Claude diagnostic source differs: '+before.slice(0,80));
- s=s.slice(0,scopeStart)+section.replace(before,after)+s.slice(scopeEnd);
+ let edited;
+ if(before.startsWith("if(a.id==='secret'){")){
+  const first=section.indexOf("if(a.id==='secret'){"),last=section.indexOf("return;}",first);
+  if(first<0||last<first)throw Error('Cannot isolate secret-backed Claude account card');
+  edited=section.slice(0,first)+after+section.slice(last+8);
+ }else{
+  if(section.split(before).length!==2)throw Error('Claude diagnostic source differs: '+before.slice(0,80));
+  edited=section.replace(before,after);
+ }
+ s=s.slice(0,scopeStart)+edited+s.slice(scopeEnd);
 }
 if(!process.argv.includes('--check'))fs.writeFileSync(target,s);
 console.log('PASS owner-only Claude API secret diagnostic '+(process.argv.includes('--check')?'checked':'applied'));
