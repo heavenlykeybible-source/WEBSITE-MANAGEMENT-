@@ -132,6 +132,6 @@ export class MeetingRooms {
    else if(m.t==='react'&&now-(d.reacted||0)>800){d.reacted=now;this.save(ws,d);this.send(host,{t:'react',from:d.id,emoji:roomClean(m.emoji,4)});}
   }
  }
- webSocketClose(ws){const d=this.data(ws);if(d.role==='host')this.end('The host left.');else if(d.role==='guest'){this.send(this.host(),{t:'left',gid:d.id});this.count();}}
+ webSocketClose(ws){const d=this.data(ws);if(d.role==='host'){const activeHost=this.host();if(!activeHost||activeHost===ws)this.end('The host left.');}else if(d.role==='guest'){this.send(this.host(),{t:'left',gid:d.id});this.count();}}
  webSocketError(ws){try{ws.close(1011,'Connection lost');}catch{}this.webSocketClose(ws);}
 }
