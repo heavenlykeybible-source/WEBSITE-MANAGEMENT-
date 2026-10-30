@@ -302,3 +302,21 @@ test('WebRTC signalling forwards only allowlisted session and ICE fields',async(
  await message(s.room,s.host,{t:'sig',to:guest.d.id,data:{c:{candidate:'candidate:1',sdpMid:'0',sdpMLineIndex:0,usernameFragment:'abc',secret:'remove'},extra:'remove'}});
  assert.deepEqual(guest.messages.at(-1).data,{c:{candidate:'candidate:1',sdpMid:'0',sdpMLineIndex:0,usernameFragment:'abc'}});
 });
+
+test('malformed slow-mode values cannot crash a room or change moderation state',async()=>{
+ const s=await openRoom();
+ await message(s.room,s.host,{t:'slow',sec:15});
+ assert.equal(s.host.d.slow,15);
+ await message(s.room,s.host,{t:'slow',sec:{toString:null}});
+ assert.equal(s.host.readyState,1);
+ assert.equal(s.host.d.slow,0);
+ await message(s.room,s.host,{t:'slow',sec:2});
+ assert.equal(s.host.d.slow,2);
+});
+test('participant audio flags require a literal true value',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,aud:false,ao:'false',name:'Guest'});
+ assert.equal(guest.d.ao,false);
+ await message(s.room,s.host,{t:'admit',gid:guest.d.id});
+ assert.equal(s.host.messages.at(-1).ao,false);
+});
