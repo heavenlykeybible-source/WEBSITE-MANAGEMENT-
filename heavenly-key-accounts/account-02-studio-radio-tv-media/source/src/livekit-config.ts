@@ -6,7 +6,7 @@ const CONFIG_KEY='livekit-connection-v1';
 async function cipherKey(env:ConfigEnv){const seed=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.MEDIA_ENGINE_SHARED_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);const bytes=await crypto.subtle.sign('HMAC',seed,new TextEncoder().encode('heavenlykey-livekit-credential-encryption-v1'));return crypto.subtle.importKey('raw',bytes,'AES-GCM',false,['encrypt','decrypt']);}
 export async function resolveLiveKitConfig(env:ConfigEnv):Promise<LiveKitConfig|null>{
  const stored=await env.LIVE_STATUS_KV?.get(CONFIG_KEY);if(!stored)return env.LIVEKIT_URL&&env.LIVEKIT_API_KEY&&env.LIVEKIT_API_SECRET?{LIVEKIT_URL:env.LIVEKIT_URL,LIVEKIT_API_KEY:env.LIVEKIT_API_KEY,LIVEKIT_API_SECRET:env.LIVEKIT_API_SECRET}:null;
- if(JSON.parse(stored).disabled===true)return null;
+ try{if(JSON.parse(stored).disabled===true)return null;}catch{throw new Error('Stored broadcast connection is invalid. Reconnect it in Settings.');}
  try{const {iv,data}=JSON.parse(stored);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Uint8Array.from(iv)},await cipherKey(env),Uint8Array.from(data));return JSON.parse(new TextDecoder().decode(plain));}catch{throw new Error('Stored broadcast connection cannot be decrypted. Reconnect it in Settings.');}
 }
 export function validateCloudConnection(body:Record<string,unknown>):LiveKitConfig{
