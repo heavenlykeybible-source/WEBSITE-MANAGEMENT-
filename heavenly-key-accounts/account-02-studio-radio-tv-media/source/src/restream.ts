@@ -6,6 +6,18 @@ const CONFIG_KEY='restream-destinations-v1';
 const ACTIVE_KEY='restream-active-egress-v1';
 const allowed=new Set(['youtube','facebook','tiktok','instagram','linkedin','x']);
 
+// D1's unique primary key serializes commands across Worker isolates.
+// Requires migration 0006 before this release is deployed.
+async function withBroadcastLock<T>(env:any,operation:()=>Promise<T>):Promise<T>{
+ const owner=crypto.randomUUID();
+ const acquired=await env.DB.prepare(
+  "INSERT INTO restream_operation_lock (lock_name,owner,expires_at) VALUES ('social-distribution',?,unixepoch()+180) ON CONFLICT(lock_name) DO UPDATE SET owner=excluded.owner,expires_at=excluded.expires_at WHERE restream_operation_lock.expires_at < unixepoch()"
+ ).bind(owner).run();
+ if(!acquired.meta?.changes)throw new Error('Another broadcast operation is in progress. Try again shortly.');
+ try{return await operation();}
+ finally{await env.DB.prepare("DELETE FROM restream_operation_lock WHERE lock_name='social-distribution' AND owner=?").bind(owner).run();}
+}
+
 async function key(env:Env){
  const seed=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.MEDIA_ENGINE_SHARED_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);
  const bytes=await crypto.subtle.sign('HMAC',seed,new TextEncoder().encode('heavenlykey-restream-destination-encryption-v1'));
@@ -81,6 +93,7 @@ async function callLiveKit(env:any,method:string,body:unknown){
  return data;
 }
 export async function startRestream(env:any,input:{source:'live'|'247';sessionId?:number;programmeUrl?:string;format?:string;quality?:string;channel?:'radio'|'video'}){
+ return withBroadcastLock(env,async()=>{
  if(input.source!=='live'&&input.source!=='247')throw new Error('Choose a valid live or 24/7 stream source.');
  const outputs=await enabledUrls(env);if(!outputs.length)throw new Error('Enable at least one connected streaming destination.');
  const format=String(input.format??'landscape-720');
@@ -130,6 +143,7 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  }
 
  return {ok:true,egressId:newEgressId,source:input.source,destinations:outputs.map(x=>x.destination),replacedEgressId};
+ });
 }
 function egressStillActive(status:unknown){
  if(typeof status==='number')return [0,1,2].includes(status);
@@ -152,10 +166,12 @@ async function reconcileActive(env:any){
  }
 }
 export async function stopRestream(env:any){
+ return withBroadcastLock(env,async()=>{
  const reconciled=await reconcileActive(env),active=reconciled.active;
  if(!active?.egressId)return {ok:true,active:false};
  await callLiveKit(env,'StopEgress',{egress_id:active.egressId});
  await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);return {ok:true,active:false};
+ });
 }
 export async function restreamStatus(env:Env){
  const state=await reconcileActive(env as any);
