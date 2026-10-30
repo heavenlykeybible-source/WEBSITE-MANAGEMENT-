@@ -35,5 +35,6 @@ assert.ok(start.includes("previous.active?.providerStatus==='UNKNOWN'"),'Unconfi
 assert.ok(!reconcile.includes('LIVE_STATUS_KV.delete(ACTIVE_KEY)'), 'Status polling must not delete a newer broadcast state');
 assert.ok(source.includes('SELECT payload FROM restream_active_state'),'Active state must be read from D1');
 assert.ok(source.includes('INSERT INTO restream_active_state'),'Active state must be persisted to D1');
-assert.ok(!source.includes('LIVE_STATUS_KV.get(ACTIVE_KEY)'),'Active broadcast decisions must not read eventually consistent KV');
+assert.ok(!reconcile.includes('LIVE_STATUS_KV.get(ACTIVE_KEY)'),'Broadcast status reconciliation must not read eventually consistent KV');
+assert.ok(source.includes('Legacy broadcast state requires a controlled cutover'),'Legacy KV state must block unsafe migration');
 console.log('Account 2 broadcast handoff safety checks passed');
