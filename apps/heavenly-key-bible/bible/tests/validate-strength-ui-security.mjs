@@ -33,5 +33,11 @@ assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved cont
 assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
 assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
 assert(sw.includes('hk-bible-shell-v58'),'Service-worker cache version must retire older draft caches');
+assert(html.includes("redirect:'error'"),'Member API requests must not follow redirects');
+assert(html.includes("cache:'no-store'"),'Member API requests must bypass response caching');
+assert(html.includes('new AbortController()'),'Member API requests need cancellation');
+assert(html.includes('15000'),'Member API requests need bounded timeouts');
+assert(html.includes("Unexpected member service response"),'Member API must validate JSON responses');
+assert(html.includes("Invalid member request"),'Member API requires an endpoint allowlist');
 console.log('PASS: source-level devotional UI, publication gate, accessibility and cache checks');
 console.log('NOTE: static checks do not replace browser testing, accessibility audit or penetration testing.');
