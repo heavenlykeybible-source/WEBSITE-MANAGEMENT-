@@ -143,7 +143,7 @@ async function reconcileActive(env:any){
   const item=(listed?.items||[]).find((x:any)=>String(x.egress_id||x.egressId||'')===String(active.egressId));
   if(!item)return {active:{...active,providerStatus:'UNKNOWN'},last:null};
   if(item&&egressStillActive(item.status))return {active:{...active,providerStatus:item.status,providerUpdatedAt:item.updated_at||item.updatedAt||null},last:null};
-  const terminal=typeof item.status==='number'?[3,4,5].includes(item.status):['EGRESS_COMPLETE','EGRESS_FAILED','EGRESS_ABORTED'].includes(String(item.status||'').toUpperCase());
+  const terminal=typeof item.status==='number'?[3,4,5,6].includes(item.status):['EGRESS_COMPLETE','EGRESS_FAILED','EGRESS_ABORTED','EGRESS_LIMIT_REACHED'].includes(String(item.status||'').toUpperCase());
   if(!terminal)return {active:{...active,providerStatus:'UNKNOWN'},last:null};
   await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);
   return {active:null,last:item?{egressId:active.egressId,status:item.status,error:item.error||item.details?'Provider reported a broadcast failure':null}:null};
