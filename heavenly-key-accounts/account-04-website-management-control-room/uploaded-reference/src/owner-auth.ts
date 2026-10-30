@@ -27,9 +27,11 @@ export async function ownerLogin(request:Request,db:D1Database,password:string){
  const stored=await db.prepare('SELECT password_hash,salt,updated_by FROM cms_owner_password WHERE id=1').first<{password_hash:string;salt:string;updated_by:string}>();
  if(!stored)return {ok:false,status:503,error:'The owner password has not been set up. Use the protected Control Room to create it.'};
  if(typeof password!=='string'||password.length>200||!equal(await passwordHash(password,stored.salt),stored.password_hash))return {ok:false,status:401,error:'Sign-in failed. Check your owner password.'};
+ // A successful login must not count against the next login attempt window.
+ await db.prepare('DELETE FROM cms_ai_limits WHERE bucket_key=?').bind(bucket).run();
  const bytes=crypto.getRandomValues(new Uint8Array(32)),token=hex(bytes.buffer);
- await db.prepare('INSERT INTO cms_owner_sessions(session_hash,actor,expires_at) VALUES(?,?,?)').bind(await digest(token),stored.updated_by,now+28800).run();
- return {ok:true,cookie:cookieName+'='+token+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=28800'};
+ await db.prepare('INSERT INTO cms_owner_sessions(session_hash,actor,expires_at) VALUES(?,?,?)').bind(await digest(token),stored.updated_by,now+43200).run();
+ return {ok:true,cookie:cookieName+'='+token+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=43200'};
 }
 export async function ownerLogout(request:Request,db:D1Database){
  const value=(request.headers.get('Cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(cookieName+'='))?.slice(cookieName.length+1);
