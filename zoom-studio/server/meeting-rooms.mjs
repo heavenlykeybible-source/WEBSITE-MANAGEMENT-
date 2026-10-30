@@ -1,6 +1,6 @@
 // One hibernating Durable Object per meeting. Media stays browser-to-browser;
 // this service carries admission, chat and WebRTC signalling only.
-const roomClean=(s,n)=>typeof s==='string'?s.replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069<>]/g,'').trim().slice(0,n):'';
+const roomClean=(s,n)=>typeof s==='string'?s.replace(/[\u0000-\u001f\u007f\u200b\u200e-\u200f\u202a-\u202e\u2066-\u2069<>]/g,'').trim().slice(0,n):'';
 const roomICE=[{urls:'stun:stun.cloudflare.com:3478'}];
 const safeSignal=data=>{
  if(!data||typeof data!=='object'||Array.isArray(data))return null;
