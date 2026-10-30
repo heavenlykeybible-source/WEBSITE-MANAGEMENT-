@@ -585,3 +585,17 @@ test('empty malformed reactions are ignored and do not consume the reaction cool
  assert.equal(s.host.messages.at(-1).t,'react');
  assert.equal(s.host.messages.at(-1).emoji,'👍');
 });
+
+test('unauthenticated sockets disconnect after ten handshake frames in three seconds',async()=>{
+ const s=meeting(),pending=s.add();
+ for(let i=0;i<10;i++)await message(s.room,pending,{t:'unrecognized'});
+ assert.equal(pending.readyState,1);
+ await message(s.room,pending,{t:'unrecognized'});
+ assert.equal(pending.readyState,3);
+ assert.ok(pending.messages.some(m=>m.t==='error'&&/Too many messages/.test(m.msg)));
+});
+test('valid first-frame authentication still creates a meeting',async()=>{
+ const s=await openRoom();
+ assert.equal(s.host.d.role,'host');
+ assert.equal(s.host.readyState,1);
+});
