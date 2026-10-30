@@ -48,6 +48,7 @@ test('game embedding may only be same-origin, not globally enabled',()=>{
  }
  assert.match(localHeaders,/X-Frame-Options: DENY/);
  assert.match(socialHeaders,/X-Frame-Options: DENY/);
+ assert.match(socialHeaders,/frame-src 'self' /,'Account 3 must permit the first-party game iframe');
 });
 
 test('all new Bible Champions memory questions match an actual KJV verse word-for-word',()=>{
