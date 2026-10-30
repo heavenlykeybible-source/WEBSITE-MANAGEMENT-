@@ -40,6 +40,13 @@ if (process.argv.includes('--check')) {
     throw new Error('Account 4 production deployment blocked: approved commit is not the latest main revision');
   const source = await fs.readFile('control-room-worker.js', 'utf8');
   if (source.length < 10000 || !source.includes('export default')) throw new Error('Worker source missing or incomplete');
+  // Direct uploads must satisfy the same byte-for-byte release attestation as CI.
+  const {createHash} = await import('node:crypto');
+  const integrity = JSON.parse(await fs.readFile('account4-release-manifest.json', 'utf8'));
+  const checksum = await fs.readFile('account4-reviewed-worker.sha256', 'utf8');
+  const sha256 = createHash('sha256').update(source).digest('hex');
+  if (integrity.commit !== approved || integrity.sha256 !== sha256 || integrity.bytes !== Buffer.byteLength(source,'utf8') || integrity.reviewRequired !== true || integrity.deploysAutomatically !== false || checksum !== sha256 + '  control-room-worker.js\n')
+    throw new Error('Account 4 release bytes differ from the owner-reviewed, checksum-verified build. Deployment cancelled.');
   const metadata = {
     main_module: 'control-room-worker.js',
     compatibility_date: settings.compatibility_date || '2026-10-18',
