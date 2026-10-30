@@ -25,7 +25,7 @@ function move(dir){const i=chosen(),j=i+dir;if(i<0||j<0||j>=clips.length)return;
 $('clipUp').onclick=()=>move(-1);$('clipDown').onclick=()=>move(1);
 $('clipUndo').onclick=()=>{if(!undo.length)return;invalidateExport();redo.push(JSON.stringify(clips));clips=JSON.parse(undo.pop());paint()};
 $('clipRedo').onclick=()=>{if(!redo.length)return;invalidateExport();undo.push(JSON.stringify(clips));clips=JSON.parse(redo.pop());paint()};
-$('clipCancel').onclick=()=>{if(session){session.cancelled=true;session.abortSeek?.()}v.pause()};
+$('clipCancel').onclick=()=>{if(session){session.cancelled=true;session.abortSeek?.();session.abortPlayback?.()}v.pause()};
 async function runTimeline(record){
  if(session)return info('A preview or export is already running.');
  if($('vexp').disabled)return info('Another video export or media change is in progress.');
@@ -60,8 +60,9 @@ async function runTimeline(record){
    if(state.cancelled){v.pause();break;}
    if(rec&&rec.state==='paused')rec.resume();
    await new Promise((resolve,reject)=>{
-    let completed=false,timer;const finish=(err)=>{if(completed)return;completed=true;clearInterval(timer);v.removeEventListener('ended',end);v.removeEventListener('error',error);err?reject(err):resolve()};
+    let completed=false,timer;const finish=(err)=>{if(completed)return;completed=true;clearInterval(timer);state.abortPlayback=null;v.removeEventListener('ended',end);v.removeEventListener('error',error);err?reject(err):resolve()};
     const end=()=>finish(),error=()=>finish(Error('Video playback failed'));
+    state.abortPlayback=()=>finish();
     v.addEventListener('ended',end);v.addEventListener('error',error);
     const started=Date.now(),maxMs=Math.max(15000,((c.end-c.start)/c.speed+12)*1000);
     timer=setInterval(()=>{if(encoderError)return finish(encoderError);if(rec&&rec.state==='inactive')return finish(Error('Video encoder stopped before timeline finished'));if(state.cancelled||v.currentTime>=c.end-.03||v.ended)return finish();if(Date.now()-started>maxMs||v.error)return finish(Error('Video playback stalled or timed out'))},40);
