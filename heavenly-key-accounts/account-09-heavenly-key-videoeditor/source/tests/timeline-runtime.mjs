@@ -40,6 +40,16 @@ async function scenario(mode){
  node('clipUndo').onclick();
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips().length,1,'Undo restores initial timeline through prior reordering operations');
+ node('clipStart').value='';
+ node('clipEnd').value='1';
+ const countBeforeEmpty=window.hkTimeline.getClips().length;
+ node('clipAdd').onclick();
+ assert.equal(window.hkTimeline.getClips().length,countBeforeEmpty,'Add clip rejects blank start time');
+ assert.match(node('clipStatus').textContent,/Enter both clip start and end times/,'Add displays missing timing error');
+ node('clipUpdate').onclick();
+ assert.equal(window.hkTimeline.getClips()[0].start,0,'Update clip rejects blank start time');
+ node('clipStart').value='0';
+ node('clipEnd').value='1';
  const hotkey=(key,opts={})=>node('clipList').onkeydown({key,preventDefault(){},...opts});
  hotkey('d',{ctrlKey:true});
  assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+D duplicates selected clip');
