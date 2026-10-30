@@ -14,7 +14,7 @@ Independent Cloudflare Worker, D1 database, and operator dashboard for unified s
 
 ## Cloudflare setup
 1. Review `wrangler.toml`, provision the intended D1 database, and initialize `schema.sql`.
-2. Apply migrations `0002_webhook_events.sql`, `0003_conversation_lookup.sql`, `0004_whatsapp_delivery.sql`, `0005_whatsapp_receipts.sql`, and `0006_whatsapp_receipt_inbox.sql` **in order**. See `npm run db:migrate:remote`.
+2. Apply migrations `0002_webhook_events.sql`, `0003_conversation_lookup.sql`, `0004_whatsapp_delivery.sql`, `0005_whatsapp_receipts.sql`, `0006_whatsapp_receipt_inbox.sql`, and `0007_post_media.sql` **in order**. See `npm run db:migrate:remote`.
 3. Configure `ADMIN_TOKEN`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, and `META_WHATSAPP_ACCESS_TOKEN` as Worker secrets, never in source or browser. `GEMINI_API_KEY` is optional for suggestions.
 4. Register the WhatsApp phone number ID in the dashboard, then verify its access against Meta before sending.
 5. Run `npm run check` and `npm run build:check`; verify signed inbound webhook, delivery attempts, receipts, permissions, and mobile/desktop UX in a real staging deployment.
@@ -26,3 +26,9 @@ Independent Cloudflare Worker, D1 database, and operator dashboard for unified s
 - Full device tests and successful production Cloudflare deployment.
 
 Do not represent a Meta API acceptance response as proof of delivery. Check `DEPLOYMENT-VERIFICATION.md` before launch. No customer data should be imported without authorization.
+
+## Operator conversation isolation safeguards
+- The dashboard binds Gemini suggestions, internal notes and human takeover actions to the conversation selected when each action begins. Switching chats must not display a completed suggestion or an old conversation history in the newly selected chat.
+- Gemini suggestions remain review-only; quota errors return a human-review fallback. This does not mean a WhatsApp message has been sent.
+- Run `npm run verify:local` after every update and verify real messaging and human takeover against an authorized staging deployment before launch.
+- Custom Domain `socialplus.heavenlykey.org` is declared in `wrangler.toml`, but GitHub changes do not activate DNS, secrets or deployed Worker bindings without the owner's authorized deployment.
