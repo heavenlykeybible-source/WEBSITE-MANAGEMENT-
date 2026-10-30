@@ -41,6 +41,7 @@ jobs:
         run: |
           npm run prepare:account4-release
           node tests/account4-navigation-regression.mjs
+          node tests/account4-unified-permissions-preview.mjs
       - name: Generate release provenance and checksum
         run: node scripts/account4-release-integrity.mjs
       - name: Independently verify staged release checksum
