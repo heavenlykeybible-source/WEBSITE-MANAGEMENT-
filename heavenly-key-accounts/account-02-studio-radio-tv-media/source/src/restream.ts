@@ -67,7 +67,9 @@ async function callLiveKit(env:any,method:string,body:unknown){
  const token=await signLiveKitGrant(config,{roomRecord:true});
  const endpoint=config.LIVEKIT_URL.replace('wss:','https:')+'/twirp/livekit.Egress/'+method;
  const r=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(15000)});
- const text=await r.text();let data:any={};try{data=text?JSON.parse(text):{};}catch{}
+ // Limit provider response size before parsing to avoid oversized responses.
+ const text=await r.text();if(text.length>262144)throw new Error('LiveKit provider response exceeded the safe size limit.');
+ let data:any={};try{data=text?JSON.parse(text):{};}catch{}
  if(r.status>=300&&r.status<400)throw new Error('LiveKit Egress endpoint redirected; verify the configured project URL.');
  if(!r.ok)throw new Error('LiveKit Egress '+method+' failed (HTTP '+r.status+'). Check provider logs.');
  return data;
