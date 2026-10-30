@@ -11,6 +11,9 @@ on:
       - 'patches/account4-reviewed-upgrade.patch'
       - 'package.json'
       - 'package-lock.json'
+      - 'wrangler.toml'
+      - 'config/**'
+      - '.github/workflows/**'
       - '.github/workflows/account4-security-checks.yml'
   workflow_dispatch:
 permissions:
