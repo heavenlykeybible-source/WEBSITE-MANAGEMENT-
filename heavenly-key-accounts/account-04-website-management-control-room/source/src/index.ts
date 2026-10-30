@@ -3,7 +3,7 @@ import {SITES,planDeployment} from './deployment-engine.ts';
 import {AI_MODEL,PUBLIC_CMS_ORIGIN,validateDocument} from './cms-schema.ts';
 import {saveDraft,publishDraft,restoreDraft} from './cms-storage.ts';
 import {ownerSession,ownerLogin,ownerLogout,setOwnerPassword,generatedPassword} from './owner-auth.ts';
-interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string}
+interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string;OWNER_ACCESS_EMAIL?:string}
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 const fail=(message:string,status=400)=>json({error:message},status);
 // Harden browser-delivered Control Room pages without changing authentication or cached media.
@@ -62,7 +62,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
  if(!['GET','HEAD','OPTIONS'].includes(request.method)&&(request.headers.get('Origin')!==u.origin||request.headers.get('Sec-Fetch-Site')==='cross-site'))return fail('Use the Control Room to make this change.',403);
  try{
   const location=()=>keyOf(u);
-  if(u.pathname==='/api/owner/password'&&request.method==='POST'){if(!accessActor&&!ownerHost)return fail('Owner sign-in required.',403);const data=await body(request,4096),password=data.generate===true?generatedPassword():data.password;await setOwnerPassword(env.DB,password,actor);return json({ok:true,password:data.generate===true?password:undefined,signInUrl:'https://heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev/'})}
+  if(u.pathname==='/api/owner/password'&&request.method==='POST'){const ownerVerified=ownerHost?!!(await ownerSession(request,env.DB)):!!(accessActor&&env.OWNER_ACCESS_EMAIL?.trim()&&accessActor.toLowerCase()===env.OWNER_ACCESS_EMAIL.trim().toLowerCase());if(!ownerVerified)return fail('Verified owner access is required to change the owner password.',403);const data=await body(request,4096),password=data.generate===true?generatedPassword():data.password;await setOwnerPassword(env.DB,password,actor);return json({ok:true,password:data.generate===true?password:undefined,signInUrl:'https://heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev/'})}
   if(u.pathname==='/api/owner/logout'&&request.method==='POST')return new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','cache-control':'no-store','set-cookie':await ownerLogout(request,env.DB)}});
   if(u.pathname==='/api/cloudflare/connections/verify'&&request.method==='POST'){
    const data=await body(request,6000);
@@ -71,7 +71,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    await env.DB.prepare('INSERT INTO cms_audit(actor,action,target) VALUES(?,?,?)').bind(actor,'cloudflare-connection-check',result.ok?'verified':'failed').run();
    return json(result,result.ok?200:400);
   }
-  if(u.pathname==='/api/me')return json({actor,role:'administrator'});
+  if(u.pathname==='/api/me')return json({actor,role:ownerHost?'owner':'administrator'});
   if(u.pathname==='/api/system/health'&&request.method==='GET'){
    let cms='unavailable',publishing='unavailable';
    try{await env.DB.prepare('SELECT 1 FROM cms_entries LIMIT 1').first();cms='ready';await env.DB.prepare('SELECT 1 FROM cms_publications LIMIT 1').first();publishing='ready'}catch{}
