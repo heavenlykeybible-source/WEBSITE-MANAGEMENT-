@@ -1,0 +1,29 @@
+name: Account 4 non-deploying security checks
+on:
+  pull_request:
+    paths:
+      - 'control-room-worker.js'
+      - 'config/heavenly-key-accounts.json'
+      - 'tests/**'
+      - '.github/workflows/account4-security-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  security-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify syntax
+        run: node --check control-room-worker.js
+      - name: Verify security guard presence
+        run: node tests/account4-launch-guards.mjs
+      - name: Run existing repository tests
+        run: |
+          npm ci
+          npm test
+# This workflow intentionally does not publish, deploy or access production secrets.
