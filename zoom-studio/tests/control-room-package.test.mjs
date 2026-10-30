@@ -205,3 +205,22 @@ test('nonfinite room capacity remains bounded and slow mode normalizes invalid i
  await message(active.room,active.host,{t:'slow',sec:2.9});
  assert.equal(active.host.messages.at(-1).sec,2);
 });
+
+test('signalling rejects oversized and binary WebSocket messages before processing',async()=>{
+ const huge=await openRoom();
+ await huge.room.webSocketMessage(huge.host,'x'.repeat(20001));
+ assert.equal(huge.host.readyState,3);
+ assert.ok(huge.host.messages.some(m=>m.t==='error'&&m.msg==='Invalid message.'));
+ const binary=await openRoom();
+ await binary.room.webSocketMessage(binary.host,new Uint8Array([1,2,3]));
+ assert.equal(binary.host.readyState,3);
+ assert.ok(binary.host.messages.some(m=>m.t==='error'&&m.msg==='Invalid message.'));
+});
+test('signalling disconnects sustained message flooding',async()=>{
+ const s=await openRoom();
+ for(let i=0;i<101&&s.host.readyState===1;i++){
+  await message(s.room,s.host,{t:'hand',on:true});
+ }
+ assert.equal(s.host.readyState,3);
+ assert.ok(s.host.messages.some(m=>m.t==='error'&&/Too many messages/.test(m.msg)));
+});
