@@ -107,3 +107,11 @@ test('WhatsApp send refresh stays in the originating conversation', () => {
   assert.match(html, /if\(selected===currentConversation\)\{status\(result\.sent/);
   assert.match(html, /await openChat\(currentConversation\)/);
 });
+
+test('dashboard has an explicit sign-out that clears authorization and private session state', () => {
+  assert.match(html, /id="logout">Sign out</);
+  assert.match(html, /\$\('logout'\)\.onclick=\(\)=>\{authEpoch\+\+;token='';selected='';paused=false/);
+  assert.match(html, /\$\('managementBody'\)\.replaceChildren\(\)/);
+  assert.match(html, /\$\('messages'\)\.replaceChildren\(\)/);
+  assert.match(html, /status\('Signed out\. Private conversation data cleared from the dashboard\.'\)/);
+});
