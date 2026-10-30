@@ -22,6 +22,12 @@ jobs:
         run: node --check control-room-worker.js
       - name: Verify security guard presence
         run: node tests/account4-launch-guards.mjs
+      - name: Check for unresolved conflict markers
+        run: |
+          if grep -nE '^(<<<<<<< |=======|>>>>>>> )' control-room-worker.js; then
+            echo 'Unresolved merge conflict marker found' >&2
+            exit 1
+          fi
       - name: Run existing repository tests
         run: |
           npm ci
