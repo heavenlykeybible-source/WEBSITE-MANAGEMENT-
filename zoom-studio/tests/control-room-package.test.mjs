@@ -186,6 +186,17 @@ test('locked meeting rejects new audience viewers as well as regular guests',asy
  assert.ok(stageGuest.messages.some(m=>m.t==='error'&&/locked/.test(m.msg)));
 });
 
+test('malformed structured WebSocket fields cannot crash meeting handlers',async()=>{
+ const s=await openRoom();
+ await message(s.room,s.host,{t:'watch',url:{toString:null}});
+ assert.equal(s.host.messages.at(-1).url,'');
+ await message(s.room,s.host,{t:'chat',text:{toString:null}});
+ assert.equal(s.host.messages.at(-1).text,'');
+ const guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,name:{toString:null},aud:true});
+ assert.equal(guest.readyState,1);
+ assert.equal(guest.d.name,'Viewer');
+});
 test('host watch links reject URL credentials and malformed addresses',async()=>{
  const s=await openRoom();
  for(const url of [
