@@ -36,3 +36,10 @@ The Holy Bible remains independently available. Other services may remain on the
 1. Locate Bible Champion original files and inspect its flows, data, scoring, authentication, routes, and mobile behavior; integrate without duplicating account storage.
 2. Test Strength for Today on real devices and browsers, especially cross-origin framing and audio/user-gesture behavior.
 3. Review production controls, accessibility, offline modes, and approved deploy procedures. No live deployment or merge without owner approval.
+
+## Updated Bible Champions implementation
+- Its complete game source was found on the Bible website, inside Account 3, and copied into Account 5. The old notebook quiz is intentionally retired and must not be reintroduced.
+- My Walk with God now links directly to the playable Bible Champions page. The full 24-topic curriculum comprises **720 questions, 30 per topic**.
+- Source validation ensures each topic contains 30 distinct questions, four answer options and a Scripture reference. The 567 new Scripture-completion questions are checked against real KJV Bible chapter files.
+- Account 3's social dashboard retains Bible Champions; HTML embedding is restricted to same-origin game routes, not globally permitted.
+- Human Scripture/doctrinal editorial acceptance, real-device tests and the owner's production deployment approval remain required.
