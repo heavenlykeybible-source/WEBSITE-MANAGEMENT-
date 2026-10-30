@@ -34,7 +34,23 @@ for(const entry of data.entries){
  });
 }
 console.log('PASS: '+data.entries.length+' dated entries, '+data.entries.length*12+' short topic drafts, matching Scripture references.');
+const approvedEntries=data.entries.filter(e=>e.status==='approved-for-publication');
+for(let i=0;i<12;i++){
+ const reflectionSeen=new Set();
+ const prayerSeen=new Set();
+ for(const entry of approvedEntries){
+  const topic=entry.topics[i];
+  const reflection=topic.reflection.trim().toLowerCase();
+  const prayer=topic.prayer.trim().toLowerCase();
+  assert(!reflectionSeen.has(reflection),'Repeated approved reflection for '+topic.topic+' on '+entry.date);
+  assert(!prayerSeen.has(prayer),'Repeated approved prayer for '+topic.topic+' on '+entry.date);
+  reflectionSeen.add(reflection);prayerSeen.add(prayer);
+ }
+}
+const uniqueDraftReflections=new Set(data.entries.flatMap(e=>e.topics.map(t=>t.reflection.trim().toLowerCase()))).size;
 const drafts=data.entries.flatMap(e=>e.topics.filter(t=>t.reviewStatus?.startsWith('draft-')));
 console.log('APPROVED DATES: '+publicationReady.length+'; EDITORIAL HOLD DATES: '+editorialHolds.length+'.');
 console.log('EDITORIAL HOLD TOPICS: '+drafts.length+'. Test validation does not constitute editorial approval.');
 if(publicationReady.length===0)console.warn('NOT LAUNCH READY: No approved dated devotionals.');
+
+console.log('CONTENT QUALITY: '+uniqueDraftReflections+' distinct reflections across '+data.entries.length*12+' topic entries. Approved content must not repeat a topic reflection or prayer across days.');
