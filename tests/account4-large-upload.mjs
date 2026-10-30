@@ -38,9 +38,9 @@ for(const [label,fragment] of [
  ['pause button',"'Pause'"],
  ['resume button',"'Resume'"],
  ['cancel and staged-file removal',"state.done?'remove':'abort'"],
- ['staged file quota',"if(slots>=3)"],
- ['private object removal',"await env.FILES.delete(r.key)"],
  ['no automatic deployment',"This is private storage staging only."]
 ])assert.ok(ui.includes(fragment)||client.includes(fragment),'Missing '+label);
 assert.ok(client.includes("'/api/owner/multipart/'"),'Binary upload must use authenticated owner route');
+assert.ok(r.includes('if(slots>=3)'),'Large upload quota must include completed staged objects');
+assert.ok(r.includes('await env.FILES.delete(r.key)'),'Owner must be able to delete the completed private object');
 console.log('PASS owner-authorized resumable R2 private upload staging and integrity boundaries');
