@@ -42,6 +42,11 @@ jobs:
           node --check scripts/deploy-account4-existing.mjs
           node --check control-room-worker.js
           node tests/account4-release-safety-regression.mjs
+      - name: Ensure CMS build reproduces approved Worker exactly
+        run: |
+          npm run build:cms
+          node --check control-room-worker.js
+          git diff --exit-code HEAD -- control-room-worker.js || { echo '::error::CMS build modified release Worker; commit rebuilt source before approval'; exit 1; }
       - name: Test owner permissions and application imports
         run: |
           node tests/account4-permission-ui.mjs
