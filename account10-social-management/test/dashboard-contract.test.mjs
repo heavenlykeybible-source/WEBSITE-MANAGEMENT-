@@ -80,3 +80,19 @@ test('human takeover request preserves its original conversation when operators 
   assert.match(html, /conversationId:targetConversation,paused:targetPaused/);
   assert.match(html, /if\(selected===targetConversation\)\{await openChat\(targetConversation\)/);
 });
+
+test('changing operator credentials clears private messages and drafts', () => {
+  assert.match(html, /authEpoch\+\+;token=\$\('token'\)\.value\.trim\(\)/);
+  assert.match(html, /\$\('messages'\)\.replaceChildren\(\)/);
+  assert.match(html, /\$\('draftText'\)\.value=''/);
+  assert.match(html, /\$\('takeover'\)\.disabled=true/);
+  assert.match(html, /\$\('suggestReply'\)\.disabled=true/);
+});
+
+test('old operator requests cannot populate a new authenticated view', () => {
+  assert.match(html, /async function openChat\(id\)\{selected=id;const epoch=authEpoch/);
+  assert.match(html, /if\(selected!==id\|\|authEpoch!==epoch\)return/);
+  assert.match(html, /async function load\(\)\{const epoch=authEpoch/);
+  assert.match(html, /if\(epoch!==authEpoch\)return/);
+  assert.match(html, /if\(selected!==targetConversation\|\|authEpoch!==epoch\)return/);
+});
