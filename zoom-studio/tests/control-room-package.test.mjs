@@ -320,3 +320,18 @@ test('participant audio flags require a literal true value',async()=>{
  await message(s.room,s.host,{t:'admit',gid:guest.d.id});
  assert.equal(s.host.messages.at(-1).ao,false);
 });
+
+test('promoted audience must remain an audience member when accepting promotion',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ await message(s.room,s.host,{t:'promote',gid:viewer.d.id});
+ assert.equal(viewer.d.invited,true);
+ viewer.d.aud=false;
+ await message(s.room,viewer,{t:'ready',ao:true});
+ assert.equal(viewer.d.stage,false);
+ assert.equal(viewer.d.invited,true);
+ viewer.d.aud=true;
+ await message(s.room,viewer,{t:'ready',ao:true});
+ assert.equal(viewer.d.stage,true);
+ assert.equal(viewer.d.invited,false);
+});
