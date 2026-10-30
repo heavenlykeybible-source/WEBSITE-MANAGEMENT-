@@ -23,3 +23,15 @@ Only set `verified:true` after obtaining the exact built artifact, matching SHA-
 
 ## Hymn Book
 The Hymn Book must appear as a distinct app **within Account 5 Apps Page**, not as an independently hosted website. Add it to the manifest only when its real source and package are present.
+
+
+## R2 native binary integrity requirement (Android, Windows, macOS)
+
+The Account 5 download Worker now rejects a native release unless its R2 object supplies a stored `checksums.sha256` equal to the published `customMetadata.sha256` and `customMetadata.scannedSha256`. On each approved upload:
+1. Calculate SHA-256 from the final signed binary, after any changes.
+2. Upload the identical binary to the private `NATIVE_RELEASES` R2 bucket with the SHA-256 upload option enabled, so Cloudflare stores and checks the digest.
+3. Set `sha256`, `scannedSha256`, `malwareScan=passed`, `signatureVerified=true`, `appId`, and `platform` metadata only after reviewing the exact binary.
+4. Verify R2 HEAD returns the expected checksum and exact app identity, then verify an actual GET download and installation in staging.
+5. If R2's stored SHA-256 is missing, the binary must be re-uploaded with checksum verification. Do not bypass this gate by editing metadata.
+
+**Status:** the gate is implemented on the development branch; no signed release binary, successful CI execution, physical device test, or launch approval is implied.
