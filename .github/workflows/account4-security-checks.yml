@@ -1,21 +1,9 @@
 name: Account 4 non-deploying security checks
 on:
   pull_request:
-    paths:
-      - 'control-room-worker.js'
-      - 'config/heavenly-key-accounts.json'
-      - 'tests/**'
-      - 'scripts/account4-quick-navigation.mjs'
-      - 'scripts/account4-release-integrity.mjs'
-      - 'scripts/apply-reviewed-account4-upgrade.mjs'
-      - 'patches/account4-reviewed-upgrade.json'
-      - 'patches/account4-reviewed-upgrade.patch'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'wrangler.toml'
-      - 'config/**'
-      - '.github/workflows/**'
-      - '.github/workflows/account4-security-checks.yml'
+  push:
+    branches:
+      - main
   workflow_dispatch:
 permissions:
   contents: read
