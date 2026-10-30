@@ -411,3 +411,20 @@ test('kicked and disconnected participants cannot send queued chat or signalling
  await message(closedHost.room,closedHost.host,{t:'watch',url:'https://example.com'});
  assert.equal(closedHost.host.messages.length,count);
 });
+
+test('unadmitted waiting-room guests expire and admitted guests remain connected',async()=>{
+ const s=await openRoom(),stale=s.add(),accepted=s.add();
+ await message(s.room,stale,{t:'join',room:s.host.d.room,key:s.key,name:'Stale'});
+ await message(s.room,accepted,{t:'join',room:s.host.d.room,key:s.key,name:'Accepted'});
+ assert.equal(stale.d.ok,false);
+ assert.ok(stale.d.waitingUntil>Date.now());
+ await message(s.room,s.host,{t:'admit',gid:accepted.d.id});
+ assert.equal(accepted.d.ok,true);
+ assert.equal(accepted.d.waitingUntil,0);
+ stale.d.waitingUntil=Date.now()-1;
+ await s.room.alarm();
+ assert.equal(stale.readyState,3);
+ assert.ok(stale.messages.some(m=>m.t==='error'&&/Waiting room expired/.test(m.msg)));
+ assert.equal(accepted.readyState,1);
+ assert.equal(s.host.readyState,1);
+});
