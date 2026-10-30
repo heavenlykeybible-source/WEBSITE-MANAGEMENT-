@@ -31,3 +31,6 @@ main>.panel,main>section,footer{position:relative;clear:both;min-width:0;max-wid
 .feature-card,.feature-card strong{min-width:0;white-space:normal;overflow-wrap:anywhere}
 footer{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));overflow-wrap:anywhere}
 @media(max-width:640px){.bible-layout{height:auto}.book-sidebar{height:auto;max-height:220px}#reader{height: min(820px,90dvh);min-height:480px}.reader-bottom{flex-wrap:wrap}.reader-bottom button{min-height:44px;flex:1 1 28%;white-space:normal}.explore-features h2{display:flex;flex-wrap:wrap;gap:10px}.reader-sidebar{width:100%}}
+
+/* Compact per-verse copy and share actions */
+#verses .verse-action{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;min-height:28px;margin:3px 3px 3px 6px;padding:4px 9px;border:1px solid #d4b45c;border-radius:8px;background:#fffaf0;color:#103b81;font-size:12px;font-weight:700;line-height:1.2;cursor:pointer}#verses .verse-action:hover{background:#0e3b80;color:#fff;border-color:#0e3b80}#verses .verse-action:focus-visible{outline:3px solid #e6b840;outline-offset:2px}@media(max-width:600px){#verses .verse-action{font-size:11px;padding:4px 7px;margin-left:4px}}
