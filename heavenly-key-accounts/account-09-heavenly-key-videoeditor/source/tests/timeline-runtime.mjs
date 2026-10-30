@@ -4,6 +4,7 @@ import {runInNewContext} from 'node:vm';
 async function scenario(mode){
  const nodes=new Map();
  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,hidden:true,textContent:'',style:{},append(){},replaceChildren(){},removeAttribute(){},addEventListener(){},removeEventListener(){}});return nodes.get(id)};
+ const statuses=[];const statusNode=node('clipStatus');let statusText='';Object.defineProperty(statusNode,'textContent',{get(){return statusText},set(value){statusText=value;statuses.push(String(value))}});
  const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='overlap'){this.playCount=(this.playCount||0)+1;if(this.playCount===1)return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=0;return}if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));this.currentTime=mode==='cancel-play'?0:1}});
  const track={stop(){}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
  class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode!=='timeout'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
@@ -76,6 +77,7 @@ async function scenario(mode){
  if(mode==='late-play'){const count=video.pauseCount;await new Promise(resolve=>setTimeout(resolve,40));assert.ok(video.pauseCount>count,'Late playback is paused after timeout')}
  if(mode==='success'){
   assert.match(status,/without audio/);
+  assert.ok(statuses.some(text=>/\d+% complete\./.test(text)),'Timeline reports percent progress during export');
   assert.equal(node('clipDownload').hidden,false);
   video.play=async()=>new Promise(()=>{});
   video.currentTime=0;
