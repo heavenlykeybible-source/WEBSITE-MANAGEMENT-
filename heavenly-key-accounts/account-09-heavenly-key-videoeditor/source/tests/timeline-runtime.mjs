@@ -5,7 +5,7 @@ async function scenario(mode){
  const nodes=new Map();
  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,hidden:true,textContent:'',style:{},append(){},replaceChildren(){},removeAttribute(){},addEventListener(){},removeEventListener(){}});return nodes.get(id)};
  const statuses=[];const statusNode=node('clipStatus');let statusText='';Object.defineProperty(statusNode,'textContent',{get(){return statusText},set(value){statusText=value;statuses.push(String(value))}});
- const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='overlap'){this.playCount=(this.playCount||0)+1;if(this.playCount===1)return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=0;return}if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));this.currentTime=mode==='cancel-play'?0:1}});
+ const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='overlap'){this.playCount=(this.playCount||0)+1;if(this.playCount===1)return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=0;return}if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));this.currentTime=mode==='cancel-play'?0:mode==='early-ended'?.1:1;if(mode==='early-ended')this.ended=true}});
  const videoEvents=new Map();video.addEventListener=(type,listener)=>videoEvents.set(type,listener);video.removeEventListener=(type,listener)=>{if(videoEvents.get(type)===listener)videoEvents.delete(type)};
  const track={stop(){}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
  class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode==='cancel-encoder')setTimeout(()=>node('clipCancel').onclick(),0);if(mode!=='timeout'&&mode!=='cancel-encoder'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
@@ -123,6 +123,7 @@ async function scenario(mode){
  if(mode==='cancel-encoder')assert.match(status,/Timeline operation stopped/);
  if(mode==='error')assert.match(status,/Encoder broke/);
  if(mode==='premature')assert.match(status,/stopped before timeline finished/);
+ if(mode==='early-ended')assert.match(status,/Source video ended before the clip finished/);
  if(mode==='oversize')assert.match(status,/exceeded the 256 MB browser memory limit/);
  if(mode==='cancel-seek'||mode==='cancel-play'||mode==='cancel-start')assert.match(status,/Timeline operation stopped/);
  if(mode==='play-timeout'||mode==='late-play')assert.match(status,/Video playback did not start within 15 seconds/);
@@ -141,4 +142,4 @@ async function scenario(mode){
  }
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended'])await scenario(mode);
