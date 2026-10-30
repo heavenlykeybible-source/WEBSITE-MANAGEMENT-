@@ -52,6 +52,8 @@ export class MeetingRooms {
   if(this.sockets().length)await this.state.storage.setAlarm(now+60000);
  }
  async webSocketMessage(ws,raw){
+  // Ignore queued frames from sockets already disconnected or removed by the host.
+  if(ws.readyState!==1)return;
   if(typeof raw!=='string'||raw.length>20000)return this.close(ws,{t:'error',msg:'Invalid message.'});
   let m;try{m=JSON.parse(raw);}catch{return;}
   if(!m||typeof m!=='object'||Array.isArray(m))return;
