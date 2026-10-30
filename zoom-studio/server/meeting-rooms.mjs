@@ -2,6 +2,7 @@
 // this service carries admission, chat and WebRTC signalling only.
 const roomClean=(s,n)=>typeof s==='string'?s.replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n):'';
 const roomICE=[{urls:'stun:stun.cloudflare.com:3478'}];
+const validSignal=data=>!!data&&typeof data==='object'&&!Array.isArray(data)&&((!!data.sdp&&typeof data.sdp==='object'&&!Array.isArray(data.sdp)&&['offer','answer'].includes(data.sdp.type)&&typeof data.sdp.sdp==='string'&&data.sdp.sdp.length<=16000)||(!!data.c&&typeof data.c==='object'&&!Array.isArray(data.c)&&typeof data.c.candidate==='string'&&data.c.candidate.length<=4000));
 export class MeetingRooms {
  constructor(state,env){this.state=state;this.env=env;}
  sockets(){return this.state.getWebSockets().filter(w=>w.readyState===1);}
@@ -88,12 +89,12 @@ export class MeetingRooms {
     }else if(m.t==='deny')this.close(g,{t:'denied'});
     else if(m.t==='kick'){h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.close(g,{t:'kick'});}
     else if(m.t==='mute')this.send(g,{t:'mute',on:!!m.on});
-    else if(m.t==='sig'&&gd.stage)this.send(g,{t:'sig',data:m.data});
+    else if(m.t==='sig'&&gd.stage&&validSignal(m.data))this.send(g,{t:'sig',data:m.data});
     else if(m.t==='promote'&&gd.aud&&gd.ok){if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});gd.invited=true;this.save(g,gd);this.send(g,{t:'promoted'});}
     else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.count();}
    }
   }else if(d.ok){
-   if(m.t==='sig'&&d.stage)this.send(host,{t:'sig',from:d.id,data:m.data});
+   if(m.t==='sig'&&d.stage&&validSignal(m.data))this.send(host,{t:'sig',from:d.id,data:m.data});
    else if(m.t==='ready'&&d.invited&&this.stage().length<6){d.invited=false;d.aud=false;d.stage=true;d.ao=!!m.ao;this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
