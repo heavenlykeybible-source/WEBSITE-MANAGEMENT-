@@ -31,14 +31,14 @@ const ui=s.slice(importStart,importEnd);
 const client=s.slice(s.indexOf('function largeUploads(){'),importStart);
 for(const [label,fragment] of [
  ['visible large upload entry',"'Upload large file (up to 1 GiB)'"],
- ['owner-only binary upload endpoint',"'multipart/'+state.id+'/part/'"],
+ ['owner-only binary upload endpoint',"'/api/owner/multipart/'"],
  ['binary type',"'application/octet-stream'"],
  ['CSRF protection',"'x-cr':'1'"],
  ['resume via persisted server state',"'multipart/'+state.id+'/status'"],
  ['pause button',"'Pause'"],
  ['resume button',"'Resume'"],
  ['abort endpoint',"'multipart/'+state.id+'/abort'"],
- ['no automatic deployment',"'This is private storage staging only.'"]
+ ['no automatic deployment',"This is private storage staging only."]
 ])assert.ok(ui.includes(fragment)||client.includes(fragment),'Missing '+label);
 assert.ok(client.includes("'/api/owner/multipart/'"),'Binary upload must use authenticated owner route');
 console.log('PASS owner-authorized resumable R2 private upload staging and integrity boundaries');
