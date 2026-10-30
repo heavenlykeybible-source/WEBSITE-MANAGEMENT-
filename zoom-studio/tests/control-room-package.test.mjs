@@ -353,4 +353,6 @@ test('meeting chat and display names remove invisible and bidirectional spoofing
  const broadcast=s.host.messages.at(-1);
  assert.equal(broadcast.t,'chat');
  assert.equal(broadcast.text,'Hello world!');
+ await message(s.room,s.viewer||viewer,{t:'chat',text:'Family 👨\\u200d👩\\u200d👧'});
+ assert.equal(s.host.messages.at(-1).text,'Family 👨\\u200d👩\\u200d👧');
 });
