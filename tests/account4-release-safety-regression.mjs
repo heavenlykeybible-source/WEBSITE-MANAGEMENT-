@@ -19,4 +19,8 @@ mustContain(deployer, "latest !== approved", 'direct upload latest main check');
 mustContain(deployer, "finalSha !== approved", 'pre-upload latest main recheck');
 mustContain(deployer, "const after = await api(base + '/settings')", 'verify bindings after upload');
 mustContain(deployer, "signature(bindings) !== signature(after.bindings || [])", 'preserve existing resource bindings');
+mustContain(workflow, 'git diff --exit-code HEAD -- control-room-worker.js', 'built Worker must match approved commit');
+mustContain(workflow, 'git ls-files --error-unmatch control-room-worker.js', 'Worker must be tracked');
+mustContain(deployer, "['diff', '--exit-code', 'HEAD', '--', 'control-room-worker.js']", 'direct upload must reject mutated Worker');
+mustContain(deployer, "['ls-files', '--error-unmatch', 'control-room-worker.js']", 'direct upload must reject untracked Worker');
 console.log('PASS: Account 4 manual deployment and stale-source regression guards are present.');
