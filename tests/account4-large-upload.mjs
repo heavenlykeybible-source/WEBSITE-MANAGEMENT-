@@ -37,7 +37,9 @@ for(const [label,fragment] of [
  ['resume via persisted server state',"'multipart/'+state.id+'/status'"],
  ['pause button',"'Pause'"],
  ['resume button',"'Resume'"],
- ['abort endpoint',"'multipart/'+state.id+'/abort'"],
+ ['cancel and staged-file removal',"state.done?'remove':'abort'"],
+ ['staged file quota',"if(slots>=3)"],
+ ['private object removal',"await env.FILES.delete(r.key)"],
  ['no automatic deployment',"This is private storage staging only."]
 ])assert.ok(ui.includes(fragment)||client.includes(fragment),'Missing '+label);
 assert.ok(client.includes("'/api/owner/multipart/'"),'Binary upload must use authenticated owner route');
