@@ -65,7 +65,9 @@
       if (!Object.prototype.hasOwnProperty.call(apps, appId)) throw new Error('Unknown app');
       const app = apps[appId];
       const destination = new URL(app.url, location.origin);
-      if (destination.protocol !== 'https:' && !(destination.protocol === 'http:' && destination.hostname === 'localhost')) throw new Error('Invalid app URL');
+      const trustedHosts = new Set(['apps.heavenlykey.org','onlinebible.heavenlykey.org','global.heavenlykey.org','radio.heavenlykey.org','meeting.heavenlykey.org']);
+      if (typeof app.name !== 'string' || !app.name.trim() || typeof app.url !== 'string') throw new Error('Invalid catalogue entry');
+      if (destination.protocol !== 'https:' || !trustedHosts.has(destination.hostname) || destination.username || destination.password || destination.port) throw new Error('Untrusted app destination');
       if (open) {
         open.href = destination.href;
         open.textContent = 'Open ' + app.name + ' Now';
