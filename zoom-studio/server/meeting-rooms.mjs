@@ -18,7 +18,7 @@ export class MeetingRooms {
  async fetch(request){
   const url=new URL(request.url);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
-  if(request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
+  if(url.protocol!=='https:'||request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
   const configuredCapacity=Number(this.env.MEETING_ROOM_CAP);
   const capacity=Number.isFinite(configuredCapacity)&&configuredCapacity>0?Math.max(2,Math.min(12,Math.floor(configuredCapacity))):8;
