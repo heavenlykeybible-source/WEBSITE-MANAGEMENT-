@@ -64,7 +64,7 @@ export class MeetingRooms {
     const a=await check(this.env.AUTH_SECRET,m.token);
     if(!a||a.k!=='meeting'||a.r!==d.room||!a.u||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
     if(this.host())return this.close(ws,{t:'error',msg:'This room already has a host.'});
-    Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,now+86400000),locked:false,watch:'',audChat:true,slow:0,admitted:[]});
+    Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,now+86400000),locked:false,watch:'',audChat:true,slow:0});
     this.save(ws,d);return this.send(ws,{t:'created',room:d.room,key:d.key,ice:roomICE});
    }
    if(m.t==='join'){
@@ -74,7 +74,7 @@ export class MeetingRooms {
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     if(guests.filter(w=>this.data(w).aud===aud).length>=(aud?100:18))return this.close(ws,{t:'error',msg:'This room is full.'});
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),ok:aud,aud,stage:false,invited:false,ao:m.ao===true,last:0});
-    if(!aud&&d.pass&&h.admitted.includes(d.pass)&&this.stage().length<6){d.ok=true;d.stage=true;}
+    // Host authorization is required for each join; client-supplied pass values cannot grant admission.
     this.save(ws,d);this.send(ws,{t:'welcome',ice:roomICE,watch:h.watch,chat:h.audChat,slow:h.slow});
     if(d.ok)this.send(ws,{t:'admitted'});
     if(d.stage)this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});
@@ -97,10 +97,10 @@ export class MeetingRooms {
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;const gd=this.data(g);
     if(m.t==='admit'&&!gd.ok&&!gd.aud){
      if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});
-     gd.ok=true;gd.stage=true;if(gd.pass&&!h.admitted.includes(gd.pass))h.admitted=h.admitted.concat(gd.pass).slice(-20);
+     gd.ok=true;gd.stage=true;
      this.save(host,h);this.save(g,gd);this.send(g,{t:'admitted'});this.send(host,{t:'joined',gid:gd.id,name:gd.name,ao:gd.ao});
     }else if(m.t==='deny')this.close(g,{t:'denied'});
-    else if(m.t==='kick'){h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.close(g,{t:'kick'});}
+    else if(m.t==='kick')this.close(g,{t:'kick'});
     else if(m.t==='mute'&&typeof m.on==='boolean')this.send(g,{t:'mute',on:m.on});
     else if(m.t==='sig'&&gd.stage){const data=safeSignal(m.data);if(data)this.send(g,{t:'sig',data});}
     else if(m.t==='promote'&&gd.aud&&gd.ok){if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});gd.invited=true;this.save(g,gd);this.send(g,{t:'promoted'});}
