@@ -16,7 +16,7 @@ if (!timeline.includes('Estimated timeline:')) throw Error('Timeline duration di
 if (!timeline.includes('let completedSeconds=0') || !timeline.includes("+'% complete.'")) throw Error('Timeline progress indicator missing');
 if (!timeline.includes('c.end<=86400')) throw Error('Restored timeline timestamp safety limit missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
-for (const id of ['clipAddFull','clipClear']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
+for (const id of ['clipAddFull','clipClear','clipFirst','clipLast']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
 for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="'+control+'"') || !timeline.includes("$('"+control+"').onclick=")) throw Error('Timeline playhead trim control missing: '+control);
 if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
 if (!timeline.includes('if(record)invalidateExport();')) throw Error('Stale timeline download invalidation missing');
