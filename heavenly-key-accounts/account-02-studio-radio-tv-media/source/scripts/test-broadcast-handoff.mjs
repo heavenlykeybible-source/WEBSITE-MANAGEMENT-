@@ -48,4 +48,6 @@ assert.ok(source.indexOf('const token=await signLiveKitGrant(config,{roomRecord:
 assert.ok(source.includes("['/pages/radio.html','/pages/video.html'].includes(u.pathname)"),'First-party programme paths must be allowlisted');
 assert.ok(source.includes("u.search!=='?egress=1'"),'First-party programme query must be fixed');
 assert.ok(start.indexOf('egressTerminalStatus(result.status)') < start.indexOf('writeActiveState(env,replacementState)'), 'Reject terminal replacement before updating stored state');
+assert.ok(start.includes("if(!preset)throw new Error('Unsupported broadcast format."),'Unknown video presets must not silently fall back');
+assert.ok(start.includes("input.source==='247'&&input.channel!==undefined"),'24/7 radio/video channel must be validated');
 console.log('Account 2 broadcast handoff safety checks passed');
