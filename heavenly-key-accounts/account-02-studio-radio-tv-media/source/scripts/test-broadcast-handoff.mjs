@@ -25,4 +25,5 @@ assert.ok(source.includes('STUDIO_247_ALLOWED_HOSTS'),'24/7 programme sources mu
 assert.ok(source.includes('approved.includes(host)'),'24/7 programme source hostname must be approved');
 assert.ok(reconcile.includes("[3,4,5,6].includes(item.status)"),'Numeric LiveKit limit-reached status must be terminal');
 assert.ok(reconcile.includes('EGRESS_LIMIT_REACHED'),'Named LiveKit limit-reached status must be terminal');
+assert.ok(source.includes("'heavenlykey.alldaywow247.workers.dev'"),'First-party 24/7 programme source must be permitted');
 console.log('Account 2 broadcast handoff safety checks passed');
