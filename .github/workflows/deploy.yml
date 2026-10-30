@@ -79,6 +79,9 @@ jobs:
           node tests/browser-agent.mjs
           node tests/domains.mjs
 
+      - name: Guard against rollback protection regressions
+        run: node tests/account4-release-safety-regression.mjs
+
       - name: Verify Account 4 owner approval interface
         run: node tests/account4-permission-ui.mjs
 
