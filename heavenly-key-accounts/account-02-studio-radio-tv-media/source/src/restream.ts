@@ -6,6 +6,19 @@ const CONFIG_KEY='restream-destinations-v1';
 const ACTIVE_KEY='restream-active-egress-v1';
 const allowed=new Set(['youtube','facebook','tiktok','instagram','linkedin','x']);
 
+// Authoritative D1 state: KV is intentionally not used for broadcast decisions.
+async function readActiveState(env:any):Promise<any|null>{
+ const row=await env.DB.prepare("SELECT payload FROM restream_active_state WHERE state_key='active'").first() as {payload:string}|null;
+ if(!row)return null;
+ try{return JSON.parse(row.payload);}catch{throw new Error('Stored broadcast state is invalid. Manual recovery is required.');}
+}
+async function writeActiveState(env:any,state:unknown){
+ await env.DB.prepare("INSERT INTO restream_active_state (state_key,payload,updated_at) VALUES ('active',?,unixepoch()) ON CONFLICT(state_key) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at").bind(JSON.stringify(state)).run();
+}
+async function clearActiveState(env:any){
+ await env.DB.prepare("DELETE FROM restream_active_state WHERE state_key='active'").run();
+}
+
 // D1's unique primary key serializes commands across Worker isolates.
 // Requires migration 0006 before this release is deployed.
 async function withBroadcastLock<T>(env:any,operation:()=>Promise<T>):Promise<T>{
@@ -130,7 +143,7 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  // Persist the replacement before retiring the old stream, so an interrupted
  // handoff does not leave the only active stream untracked.
  const replacementState={egressId:newEgressId,source:input.source,sessionId:input.source==='live'?input.sessionId:undefined,channel:input.source==='247'?(input.channel??'video'):undefined,format,quality:input.quality??'balanced',destinations:outputs.map(x=>x.destination),startedAt:new Date().toISOString()};
- try{await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify(replacementState));}
+ try{await writeActiveState(env,replacementState);}
  catch(error){try{await callLiveKit(env,'StopEgress',{egress_id:newEgressId});}catch{}throw error;}
  if(replacedEgressId){
   try{
@@ -138,7 +151,7 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
   }catch(error){
    // Avoid leaving two simultaneous broadcasts when the handoff fails.
    try{await callLiveKit(env,'StopEgress',{egress_id:newEgressId});}catch{}
-   try{await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify(previous.active));}catch{}
+   try{if(previous.active)await writeActiveState(env,previous.active);else await clearActiveState(env);}catch{}
    throw error;
   }
  }
@@ -151,7 +164,7 @@ function egressStillActive(status:unknown){
  return ['EGRESS_STARTING','EGRESS_ACTIVE','EGRESS_ENDING'].includes(String(status||'').toUpperCase());
 }
 async function reconcileActive(env:any){
- const raw=await env.LIVE_STATUS_KV.get(ACTIVE_KEY);let active:any=null;try{active=raw?JSON.parse(raw):null;}catch{}
+ const active=await readActiveState(env);
  if(!active?.egressId)return {active:null,last:null};
  try{
   const listed=await callLiveKit(env,'ListEgress',{egress_id:active.egressId});
@@ -170,9 +183,9 @@ async function reconcileActive(env:any){
 export async function stopRestream(env:any){
  return withBroadcastLock(env,async()=>{
  const reconciled=await reconcileActive(env),active=reconciled.active;
- if(!active?.egressId){await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);return {ok:true,active:false};}
+ if(!active?.egressId){await clearActiveState(env);return {ok:true,active:false};}
  await callLiveKit(env,'StopEgress',{egress_id:active.egressId});
- await env.LIVE_STATUS_KV.delete(ACTIVE_KEY);return {ok:true,active:false};
+ await clearActiveState(env);return {ok:true,active:false};
  });
 }
 export async function restreamStatus(env:Env){
