@@ -6,12 +6,12 @@ assert.ok(start>=0,'navigation function must exist');
 const end=source.indexOf("group('Administration');",start);
 assert.ok(end>start,'administration navigation must exist');
 const nav=source.slice(start,end);
-const quick="group('Quick access');item('Home','⌂',controlHome);if(!M&&lv()>=2)item('AI Chat','✦',claude);if(!M&&lv()>=4)item('Connections','▧',projectSources);item('Waiting','◷',waiting,'wb');item('Releases','↗',releaseHistory);group('Workspace');";
+const quick="group('Quick access');item('Home','⌂',controlHome);if(lv()>=2)item('AI Chat','✦',claude);if(!M&&lv()>=4)item('Connections','▧',projectSources);item('Waiting','◷',waiting,'wb');item('Releases','↗',releaseHistory);group('Workspace');";
 assert.ok(nav.includes(quick),'quick access navigation must be present with role checks');
 for(const [label,fragment] of [['Home',"item('Home'"],['AI Chat',"item('AI Chat'"],['Connections',"item('Connections'"],['Waiting',"item('Waiting'"],['Releases',"item('Releases'"]]){
  assert.equal(nav.split(fragment).length-1,1,label+' navigation item must occur exactly once');
 }
-assert.ok(nav.includes("if(!M&&lv()>=2)item('AI Chat'"),'AI Chat requires appropriate non-member role');
+assert.ok(nav.includes("if(lv()>=2)item('AI Chat'"),'AI Chat must retain original role-level access, including members');
 assert.ok(nav.includes("if(!M&&lv()>=4)item('Connections'"),'Connections requires privileged role');
 assert.ok(nav.includes("if(own())"),'owner-only navigation entries must remain gated');
 assert.ok(nav.includes("item('Identity'"),'identity access must remain available');
