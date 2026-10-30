@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
+import os from 'node:os';
 import {DatabaseSync} from 'node:sqlite';
 import {createHmac} from 'node:crypto';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -130,3 +131,26 @@ test('fresh Control Room owner launch permits one private password setup and inv
  assert.equal((await app.fetch(new Request('https://meeting/api/me',{headers:{authorization:'Bearer '+auth}}),env,{})).status,401);
  const signIn=await app.fetch(new Request('https://meeting/api/login',{method:'POST',headers:{origin:'https://meeting','content-type':'application/json'},body:JSON.stringify({email:'owner',password})}),env,{});assert.equal(signIn.status,200);d.raw.close();
 });
+
+
+test('Control Room bundle refuses symbolic links to files outside public assets',()=>{
+ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'meeting-bundle-'));
+ try {
+  fs.mkdirSync(path.join(tmp,'site'));
+  fs.mkdirSync(path.join(tmp,'scripts'));
+  fs.mkdirSync(path.join(tmp,'server'));
+  fs.mkdirSync(path.join(tmp,'migrations'));
+  fs.writeFileSync(path.join(tmp,'site','_worker.js'),'export default { fetch() {} };');
+  fs.writeFileSync(path.join(tmp,'server','control-room-runtime.mjs'),'');
+  fs.writeFileSync(path.join(tmp,'server','meeting-rooms.mjs'),'');
+  fs.writeFileSync(path.join(tmp,'migrations','0001_zoom_studio.sql'),'CREATE TABLE sample(id TEXT);');
+  fs.writeFileSync(path.join(tmp,'secret.txt'),'DO NOT PACKAGE');
+  fs.symlinkSync(path.join(tmp,'secret.txt'),path.join(tmp,'site','secret.js'));
+  fs.copyFileSync(path.join(root,'scripts','bundle-control-room.mjs'),path.join(tmp,'scripts','bundle-control-room.mjs'));
+  const result=spawnBundle(path.join(tmp,'scripts','bundle-control-room.mjs'));
+  assert.notEqual(result.status,0);
+  assert.match(result.stderr,/Unsafe public asset entry rejected: secret.js/);
+  assert.equal(fs.existsSync(path.join(tmp,'build','meeting-worker.mjs')),false);
+ } finally {fs.rmSync(tmp,{recursive:true,force:true});}
+});
+function spawnBundle(script){return spawnSync(process.execPath,[script],{encoding:'utf8'});}
