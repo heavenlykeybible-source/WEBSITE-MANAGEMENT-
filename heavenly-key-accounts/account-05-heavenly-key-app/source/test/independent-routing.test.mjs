@@ -10,3 +10,10 @@ test('Every public app failure stays within its own Worker route',async()=>{
  assert.equal(await routeIndependentApp(request('/api/member/login'),env),null);assert.equal(await routeIndependentApp(request('/index.html'),env),null);
  }
 });
+
+test('prototype-inherited paths never become independent application routes',async()=>{
+ const env={INDEPENDENT_APPS_ENABLED:'true'};
+ for(const path of ['/constructor','/__proto__','/toString','/valueOf','/hasOwnProperty']){
+  assert.equal(await routeIndependentApp(request(path),env),null,'Unexpected route: '+path);
+ }
+});
