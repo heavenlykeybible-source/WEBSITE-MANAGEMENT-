@@ -16,6 +16,14 @@ async function scenario(mode){
  window.hkTimeline.restoreClips([{start:0,end:1000000,speed:1}]);
  assert.equal(JSON.stringify(window.hkTimeline.getClips()),originalTimeline,'Reject excessive saved clip timestamps without changing clips');
  assert.match(node('clipStatus').textContent,/invalid clips/,'Oversized restored timeline reports validation failure');
+ video.duration=86401;
+ node('clipAddFull').onclick();
+ assert.equal(window.hkTimeline.getClips().length,1,'Reject full-source insertion when source is over 24 hours');
+ assert.match(node('clipStatus').textContent,/under 24 hours/,'Long-source validation has an explanation');
+ node('clipStart').value='0';node('clipEnd').value='1';
+ node('clipAdd').onclick();
+ assert.equal(window.hkTimeline.getClips().length,1,'Reject manual clip insertion from overlong source');
+ video.duration=2;
  node('clipAddFull').onclick();
  node('clipList').value='1';
  node('clipFirst').onclick();
