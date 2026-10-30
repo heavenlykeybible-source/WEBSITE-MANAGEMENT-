@@ -37,6 +37,8 @@ async function invokeAIConnection(c,task,prompt,env){
   const response=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify(payload),signal:AbortSignal.timeout(45000)});
   if(response.status===429)throw Error('AI quota or rate limit reached.');
   if(!response.ok)throw Error('AI provider unavailable');
+  const providerType=(response.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
+  if(providerType && providerType!=='application/json')throw Error('Invalid AI provider response type');
   const bytes=await readBoundedMedia(response, 1024*1024);
   if(!bytes)throw Error('AI provider response too large');
   let data;try{data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch{throw Error('Invalid AI provider response')}
