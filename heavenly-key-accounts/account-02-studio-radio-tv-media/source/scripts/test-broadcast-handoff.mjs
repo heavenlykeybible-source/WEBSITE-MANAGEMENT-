@@ -12,4 +12,6 @@ assert.match(reconcile,/if\(!item\)return \{active:/,'Unconfirmed provider respo
 assert.doesNotMatch(source,/throw new Error\(data\?\.msg\|\|data\?\.message/,'Provider errors must not be passed through verbatim');
 assert.match(source,/u\.protocol!=='rtmps:'/,'Streaming destinations must require encrypted RTMPS');
 assert.match(source,/if\(r\.status>=300&&r\.status<400\)/,'Provider redirects must be rejected');
+assert.match(source,/host==='localhost'/,'Local broadcast source hostnames must be blocked');
+assert.match(source,/host\.startsWith\('\['\)/,'IP-literal source hostnames must be blocked');
 console.log('Account 2 broadcast handoff safety checks passed');
