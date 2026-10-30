@@ -200,6 +200,9 @@ try {
   }),{status:200});
   const oversizedProvider=await onRequest({request:aiRequest(),env:aiEnv,params:{path:['ai-gateway']}});
   check('Oversized external AI response rejected before JSON decoding',oversizedProvider.status===503);
+  globalThis.fetch=async()=>new Response(JSON.stringify({choices:[{message:{content:'Disguised result'}}]}),{status:200,headers:{'content-type':'text/html'}});
+  const wrongProviderType=await onRequest({request:aiRequest(),env:aiEnv,params:{path:['ai-gateway']}});
+  check('Successful AI provider response with HTML MIME is rejected',wrongProviderType.status===503);
   globalThis.fetch=async()=>new Response(JSON.stringify({choices:[{message:{content:'Provider works'}}]}),{status:200,headers:{'content-type':'application/json'}});
   const normalProvider=await onRequest({request:aiRequest(),env:aiEnv,params:{path:['ai-gateway']}});
   check('Bounded external AI response still succeeds',normalProvider.status===200&&(await normalProvider.json()).result==='Provider works');
