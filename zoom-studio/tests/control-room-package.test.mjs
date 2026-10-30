@@ -706,3 +706,19 @@ test('stale second host socket cannot apply moderator commands to active host',a
  await message(s.room,s.host,{t:'lock',on:true});
  assert.equal(s.host.d.locked,true,'current host retains moderation control');
 });
+
+test('room broadcasts and audience counts exclude guests from a previous meeting generation',async()=>{
+ const s=await openRoom(),stale=s.add(),current=s.add();
+ await message(s.room,stale,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Old'});
+ await message(s.room,current,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Current'});
+ // Simulate an orphaned guest attachment from an earlier host generation.
+ stale.d.session='previous-session-key';
+ const oldMessages=stale.messages.length;
+ const currentMessages=current.messages.length;
+ await message(s.room,s.host,{t:'audchat',on:false});
+ assert.equal(stale.messages.length,oldMessages,'old guest must not receive room broadcasts');
+ assert.ok(current.messages.length>currentMessages,'current guest must receive broadcasts');
+ s.room.count();
+ assert.equal(s.host.messages.at(-1).t,'count');
+ assert.equal(s.host.messages.at(-1).n,1,'old guest must not count as current audience');
+});
