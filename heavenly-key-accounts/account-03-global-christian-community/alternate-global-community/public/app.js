@@ -73,6 +73,7 @@ if(payload.action==="copy"){try{await navigator.clipboard.writeText(selectedHymn
 else if(payload.action==="post"){if(!session){status(hymnStatus,"Sign in to share this hymn on the community.");return;}const composer=stream.querySelector(".composer-card");if(!composer){status(hymnStatus,"Open the Home feed to publish this hymn.");return;}window.dispatchEvent(new CustomEvent("hk-hymn-compose",{detail:selectedHymn}));status(hymnStatus,"Hymn loaded into the post editor. Review and publish it.");}
 else if(payload.action==="message"){try{await navigator.clipboard.writeText(selectedHymn.text);status(hymnStatus,"Hymn copied. Open Messages, choose a member and paste to send.");}catch{status(hymnStatus,"Use Copy Hymn, then open Messages to send it.");}}
 });
+hymnActions.style.cssText="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;align-items:center;justify-content:center";for(const b of [copyBtn,postBtn,msgBtn,externalBtn]){b.style.cssText="font-size:11px;line-height:1.2;padding:5px 7px;min-height:28px;border-radius:7px;box-shadow:none;flex:0 1 auto";}hymnStatus.style.cssText="font-size:11px;margin:4px 0 0";
 hymnActions.append(copyBtn,postBtn,msgBtn,externalBtn);
 hymnCard.append(hymnTitle,hymnFrame,hymnActions,hymnStatus);
 aside.prepend(hymnCard);
