@@ -13,6 +13,7 @@ const timeline=readFileSync('public/timeline.js','utf8');
 if ((timeline.match(/Math\.min\(end,v\.duration\)<=start/g)||[]).length!==2 || !timeline.includes('c.start>=v.duration||c.end>v.duration+.02')) throw Error('Timeline clip boundary safeguards missing');
 for (const speed of ['.25','.5','.75','1','1.25','1.5','2','3','4']) if (!timeline.includes('<option value="'+speed+'"')) throw Error('Timeline speed option missing: '+speed);
 if (!timeline.includes('Estimated timeline:')) throw Error('Timeline duration display missing');
+if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
 const html=readFileSync('public/index.html','utf8');
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) if (!html.includes('src="/'+name+'"')) throw Error('Script not loaded: '+name);
 if (html !== readFileSync('index.html','utf8')) throw Error('Public page not synchronized with editor source');
