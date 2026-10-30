@@ -35,6 +35,8 @@ jobs:
         run: npm run test:stream-validation
       - name: D1 concurrency and state integrity tests
         run: npm run test:d1
+      - name: Administrator capability authentication security tests
+        run: npm run test:capability-auth
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
