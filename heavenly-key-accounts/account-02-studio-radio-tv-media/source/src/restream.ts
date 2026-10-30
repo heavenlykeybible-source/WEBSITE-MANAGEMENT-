@@ -11,6 +11,10 @@ function validStreamingOutput(urlValue:string):boolean{
   if(url.protocol!=='rtmps:'||!url.hostname||url.username||url.password||url.hash||url.href.length>2048)return false;
   const host=url.hostname.toLowerCase().replace(/\.$/,'');
   // RTMPS alone does not make an arbitrary local network target safe.
+  // RTMPS is a non-special URL scheme: its parser can leave numeric IP shorthand unchanged.
+  // Require a domain with an alphabetic TLD, rejecting decimal/hex/octal IP shortcuts.
+  const tld=host.split('.').at(-1)??'';
+  if(!host.includes('.')||!/[a-z]/i.test(tld))return false;
   if(host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test')||host.endsWith('.invalid')||host.endsWith('.example')||/^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))return false;
   return true;
  }catch{return false;}
