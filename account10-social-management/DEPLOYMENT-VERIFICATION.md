@@ -57,3 +57,13 @@ Do not announce production readiness until the above checks pass on a deployed W
 - Latest GitHub source hardens operator credential-switch privacy, asynchronous chat switching, and Gemini suggestion/human-takeover isolation. Dashboard JavaScript parsing and specific source assertions passed; full local Node tests and end-to-end provider testing were not run.
 - Preserve owner-approved manual deployment. Do not deploy source-only Worker code without its full static dashboard assets and D1/R2 bindings.
 - **Release remains blocked** until authenticating operators individually, database migration verification, Cloudflare asset/binding checks, live WhatsApp opt-in delivery receipts, Gemini tests, and security/device verification.
+
+## Production security gates (OWASP ASVS 5.0 / Cloudflare guidance)
+- [ ] Replace shared `ADMIN_TOKEN` with individual operator identities, short-lived sessions, server-side session invalidation on logout, least-privilege roles, and auditable access changes.
+- [ ] Enable Cloudflare edge rate limiting on authenticated APIs and Gemini suggestion requests, and an appropriately scoped failed-authentication rule, with safeguards against blocking real operators.
+- [ ] Verify `ADMIN_TOKEN`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `META_WHATSAPP_ACCESS_TOKEN` and `GEMINI_API_KEY` are configured as encrypted Cloudflare secrets rather than Wrangler plaintext variables.
+- [ ] Verify the operator dashboard returns `Cache-Control: no-store` for HTML, and private JSON API responses are never cached by a CDN.
+- [ ] Verify stale session responses cannot repopulate other operators' conversations, and live tests cover sign-out during an outstanding Gemini call.
+- [ ] Confirm the official domain, TLS, D1 and R2 bindings, database migrations and dashboard assets on the **deployed** Worker.
+- [ ] Perform independent authenticated penetration testing, incident response, backup recovery, disaster recovery and mobile/desktop accessibility checks.
+- [ ] Preserve manual deployment approval and do not enable provider publishing or autonomous sending before separate authorization and live testing.
