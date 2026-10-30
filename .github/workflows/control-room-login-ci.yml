@@ -35,6 +35,9 @@ jobs:
       - name: Type-check active Control Room authentication
         run: npm run check
         working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
+      - name: Cloudflare Access JWT key cache and rotation tests
+        run: node test/access-keys.mjs
+        working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
       - name: Validate owner login JavaScript
         run: node --check heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/owner-login.js
       - name: Owner login regression tests
