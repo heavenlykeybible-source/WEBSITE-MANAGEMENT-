@@ -39,3 +39,7 @@ test('Local verification includes release and security contract tests', () => {
   assert.match(packageJson.scripts['verify:local'], /test:security/);
   assert.match(packageJson.scripts['verify:local'], /test:release/);
 });
+
+test('SocialPlus custom domain is declared for approved Worker deployments', () => {
+  assert.match(wrangler, /\[\[routes\]\]\s*pattern\s*=\s*"socialplus\.heavenlykey\.org"\s*custom_domain\s*=\s*true/);
+});
