@@ -30,17 +30,17 @@ export async function verifyCloudflareConnection(
   token: string,
   accountId: string,
 ): Promise<ConnectionCheck> {
-  if (!ACCOUNT_ID.test(accountId)) return { ok: false, tokenActive: false, error: 'Invalid account ID.' };
+  if (!ACCOUNT_ID.test(accountId)) return { ok: false, tokenActive: false, capabilities: {}, error: 'Invalid account ID.' };
   if (typeof token !== 'string' || token.length < 20 || token.length > 4096 || /\s/.test(token)) {
-    return { ok: false, tokenActive: false, error: 'Invalid token format.' };
+    return { ok: false, tokenActive: false, capabilities: {}, error: 'Invalid token format.' };
   }
   try {
     const verify = await cfGet('/user/tokens/verify', token);
     const tokenActive = verify.success === true && verify.result?.status === 'active';
-    if (!tokenActive) return { ok: false, tokenActive: false, error: 'Token is not active or verification was denied.' };
+    if (!tokenActive) return { ok: false, tokenActive: false, capabilities: {}, error: 'Token is not active or verification was denied.' };
     const account = await cfGet('/accounts/' + accountId, token);
     if (!account.success || account.result?.id !== accountId) {
-      return { ok: false, tokenActive: true, error: 'Token cannot read the selected account.' };
+      return { ok: false, tokenActive: true, capabilities: {}, error: 'Token cannot read the selected account.' };
     }
     // Endpoint probes check READ capability only; they do not claim edit permission.
     const checks = await Promise.allSettled([
@@ -54,7 +54,7 @@ export async function verifyCloudflareConnection(
     checks.forEach((r, i) => { capabilities[names[i]] = r.status === 'fulfilled' && r.value.success === true; });
     return { ok: true, tokenActive: true, accountId, accountName: String(account.result.name || ''), capabilities };
   } catch {
-    return { ok: false, tokenActive: false, error: 'Cloudflare connection check failed.' };
+    return { ok: false, tokenActive: false, capabilities: {}, error: 'Cloudflare connection check failed.' };
   }
 }
 
