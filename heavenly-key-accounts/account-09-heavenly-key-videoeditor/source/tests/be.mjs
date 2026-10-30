@@ -157,7 +157,7 @@ check('Anonymous voice configuration forbidden', anonymousVoice.status === 401);
 const noLengthUpload = await onRequest({
   request: new Request('https://studio.example/api/media?name=sample.png',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
-    body:new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0])
+    body:Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+X9uSAAAAAElFTkSuQmCC','base64'))
   }),env,params:{path:['media']}
 });
 check('Media supports absent content length',noLengthUpload.status===200);
