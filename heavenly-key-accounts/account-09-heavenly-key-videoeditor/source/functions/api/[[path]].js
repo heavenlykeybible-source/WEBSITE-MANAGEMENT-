@@ -115,7 +115,7 @@ export async function onRequest({ request: req, env, params }) {
     }
     if (a === 'login' && m === 'POST') {
       const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid login data.' }, 400);
-      const email = String(b.email || '').trim().toLowerCase();
+      const email = typeof b.email === 'string' ? b.email.trim().toLowerCase() : '';
       if (!email || email.length > 200 || typeof b.password !== 'string' || b.password.length > 200) return J({ error: 'Wrong email or password.' }, 401);
       const fails = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='login_fail' AND at>?").bind(email, Date.now() - 900000).first()).c;
       if (fails >= 10) return J({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
