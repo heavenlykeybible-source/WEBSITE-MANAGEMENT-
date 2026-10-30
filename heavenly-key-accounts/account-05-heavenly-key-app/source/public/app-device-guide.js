@@ -93,7 +93,7 @@
           const expectedTypes = {android:'application/vnd.android.package-archive',windows:'application/msix',mac:'application/x-apple-diskimage'};
           const size = Number(available.headers.get('content-length'));
           const digest = available.headers.get('x-release-sha256') || '';
-          nativeAvailable = available.ok && contentType.includes(expectedTypes[platform]) && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
+          nativeAvailable = available.status === 200 && contentType.split(';',1)[0].trim() === expectedTypes[platform] && Number.isSafeInteger(size) && size > 0 && size <= 2 * 1024 * 1024 * 1024 && /^[a-f0-9]{64}$/i.test(digest);
           nativeLink.hidden = !nativeAvailable || !matchesDevice();
           if (nativeAvailable && platform === 'android') status('A native Android APK is available without a Heavenly Key account. Use Download Android APK or open the web app. Android may ask you to approve installation outside the Play Store.');
         } catch { nativeLink.hidden = true; }
