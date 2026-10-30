@@ -31,3 +31,10 @@ test('install QR code does not disclose install links to a third-party QR servic
  assert.doesNotMatch(script,/api\.qrserver\.com/);
  assert.match(script,/img\.src='\/qr\/app-'/);
 });
+
+test('Hymn Book install options do not mislabel another app QR code',()=>{
+ const script=readFileSync(new URL('app-pages.js',base),'utf8');
+ assert.match(script,/id==='old-time-gospel-revival-hymn-book'/);
+ assert.match(script,/Use the installation link below/);
+ assert.doesNotMatch(script,/id==='old-time-gospel-revival-hymn-book'\?'\/qr\/app-all-in-one/);
+});
