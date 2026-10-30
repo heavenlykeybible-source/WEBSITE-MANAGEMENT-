@@ -63,7 +63,8 @@ jobs:
 
       - name: Integrate saved interfaces into active Worker
         run: |
-          npm run build:cms
+          npm run prepare:account4-release
+          node scripts/account4-release-integrity.mjs
           node --check control-room-worker.js
           grep -q 'Cloudflare API tokens' control-room-worker.js
           grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
@@ -101,6 +102,9 @@ jobs:
           test "$(git rev-parse HEAD)" = "${{ inputs.approved_commit }}" || { echo '::error::Checked-out release changed'; exit 1; }
           test -f control-room-worker.js || { echo '::error::Missing Control Room Worker'; exit 1; }
           node --check control-room-worker.js
+
+      - name: Verify precisely tested Worker and immutable release manifest
+        run: node scripts/account4-release-integrity.mjs --verify
 
       - name: Block superseded releases
         env:
