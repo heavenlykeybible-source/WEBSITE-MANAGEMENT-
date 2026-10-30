@@ -5,6 +5,16 @@ type Env={LIVE_STATUS_KV:KVNamespace;MEDIA_ENGINE_SHARED_SECRET:string};
 const CONFIG_KEY='restream-destinations-v1';
 const ACTIVE_KEY='restream-active-egress-v1';
 const allowed=new Set(['youtube','facebook','tiktok','instagram','linkedin','x']);
+function validStreamingOutput(urlValue:string):boolean{
+ try{
+  const url=new URL(urlValue);
+  if(url.protocol!=='rtmps:'||!url.hostname||url.username||url.password||url.hash||url.href.length>2048)return false;
+  const host=url.hostname.toLowerCase().replace(/\.$/,'');
+  // RTMPS alone does not make an arbitrary local network target safe.
+  if(host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test')||host.endsWith('.invalid')||host.endsWith('.example')||/^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))return false;
+  return true;
+ }catch{return false;}
+}
 
 // Authoritative D1 state: KV is intentionally not used for broadcast decisions.
 async function readActiveState(env:any):Promise<any|null>{
@@ -71,7 +81,7 @@ export async function listDestinations(env:Env){
 export async function saveDestination(env:Env,destination:string,urlValue:string,enabled:boolean){
  if(!allowed.has(destination))throw new Error('Unsupported destination.');
  let u:URL;try{u=new URL(urlValue.trim());}catch{throw new Error('Enter the platform RTMP or RTMPS server URL including its stream key.');}
- if(u.protocol!=='rtmps:'||!u.hostname||u.username||u.password||u.hash)throw new Error('Use a secure RTMPS streaming URL without embedded credentials or fragments.');
+ if(!validStreamingOutput(u.href))throw new Error('Use a secure public-hostname RTMPS URL without embedded credentials or fragments.');
  if(u.href.length>2048)throw new Error('Streaming URL is too long.');
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
  store[destination]={url:u.href,enabled,updatedAt:new Date().toISOString()};
@@ -97,7 +107,7 @@ async function enabledUrls(env:Env){
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
  return Object.entries(store).filter(([name,v])=>{
   if(!allowed.has(name)||!v?.enabled||typeof v.url!=='string')return false;
-  try{const u=new URL(v.url);return u.protocol==='rtmps:'&&!!u.hostname&&!u.username&&!u.password&&!u.hash;}catch{return false;}
+  return validStreamingOutput(v.url);
  }).map(([destination,v])=>({destination,url:v.url}));
 }
 async function callLiveKit(env:any,method:string,body:unknown){
