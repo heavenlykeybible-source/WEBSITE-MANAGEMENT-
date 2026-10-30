@@ -63,3 +63,11 @@ test('Static dashboard assets enforce browser security headers', () => {
   }
   assert.match(handler, /frame-ancestors 'none'/);
 });
+
+test('Gemini keeps original assistant identity and approval-only behavior', () => {
+  const profile = readFileSync(new URL('../src/assistant-profile.ts', import.meta.url), 'utf8');
+  assert.ok(source.includes("from './assistant-profile'"));
+  assert.ok(source.includes('text:originalAssistantInstruction'));
+  assert.ok(profile.includes('Evangelist Emmanuel Ogheneochuko Adiohwo'));
+  assert.ok(profile.includes('human operator must review and explicitly approve'));
+});
