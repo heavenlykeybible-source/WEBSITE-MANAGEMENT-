@@ -1,5 +1,10 @@
 const loginForm=document.querySelector('#owner-login');
 if(loginForm){
+  // Keep the current session when opening a new tab or returning to sign in.
+  fetch('/api/owner/session',{credentials:'same-origin',cache:'no-store',redirect:'error'})
+    .then(response=>response.ok?response.json():null)
+    .then(data=>{if(data?.signedIn===true)location.assign('/');})
+    .catch(()=>{});
   const toggle=document.querySelector('#show-password');
   toggle?.addEventListener('change',()=>{document.querySelector('#password').type=toggle.checked?'text':'password';});
   loginForm.addEventListener('submit',async event=>{
