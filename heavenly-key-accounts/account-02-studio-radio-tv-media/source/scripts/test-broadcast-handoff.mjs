@@ -18,4 +18,5 @@ assert.match(source,/u\.protocol==='rtmps:'/,'Legacy destinations must be checke
 assert.ok(start.indexOf('LIVE_STATUS_KV.put(ACTIVE_KEY') < start.indexOf("callLiveKit(env,'StopEgress'"),'Replacement state must be stored before old stream stops');
 assert.ok(reconcile.includes('if(!terminal)return {active:'),'Unknown provider status must preserve active state');
 assert.ok(source.includes('size>limit') && source.includes('reader.cancel()'), 'Provider response reads must have a size limit');
+assert.ok(source.includes("base.protocol!=='wss:'"),'LiveKit endpoint must use secure WSS');
 console.log('Account 2 broadcast handoff safety checks passed');
