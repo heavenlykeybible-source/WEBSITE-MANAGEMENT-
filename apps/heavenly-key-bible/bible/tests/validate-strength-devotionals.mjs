@@ -14,12 +14,14 @@ for(const entry of data.entries){
  assert.match(entry.date,/^\d{4}-\d{2}-\d{2}$/);
  assert(!seen.has(entry.date),'Duplicate date: '+entry.date);seen.add(entry.date);
  assert.equal(entry.topics.length,12,'Wrong topic count: '+entry.date);
+ assert(['draft-not-published','approved-for-publication'].includes(entry.status),'Invalid publication status: '+entry.date);
+ if(entry.status==='approved-for-publication')assert(entry.topics.every(t=>t.reviewStatus==='approved'),'Unapproved topic in published day: '+entry.date);
  entry.topics.forEach((topic,i)=>{
   assert.equal(topic.topic,expected[i],entry.date+' topic '+i);
   assert.equal(topic.reference,refs[i],entry.date+' reference '+i);
   assert(topic.reflection?.trim() && topic.reflection.length<=280,entry.date+' reflection '+i);
   assert(topic.prayer?.trim() && topic.prayer.length<=160,entry.date+' prayer '+i);
-  assert(topic.reviewStatus?.startsWith('draft-'),entry.date+' approval status '+i);
+  assert(topic.reviewStatus?.startsWith('draft-')||topic.reviewStatus==='approved',entry.date+' approval status '+i);
   assert(topic.bibleText?.trim(),'Missing KJV text: '+entry.date+' topic '+i);
   assert(!topic.bibleText.includes('undefined'),'Invalid KJV text: '+entry.date+' topic '+i);
  });
