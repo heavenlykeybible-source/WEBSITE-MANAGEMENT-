@@ -26,6 +26,36 @@
       "sourceUrl": "https://hymnary.org/hymn/HFCH1928/3",
       "copyrightStatus": "public_domain",
       "lyrics": "1 Holy, holy, holy, Lord God Almighty!\nEarly in the morning our song shall rise to Thee;\nHoly, holy, holy, merciful and mighty!\nGod in three persons, blessed Trinity!\n\n2 Holy, holy, holy, all the saints adore Thee,\nCasting down their golden crowns around the glassy sea;\nCherubim and seraphim falling down before Thee,\nWhich wert, and art, and evermore shalt be.\n\n3 Holy, holy, holy! though the darkness hide Thee,\nThough the eye of sinful man Thy glory may not see;\nOnly Thou art holy; there is none beside Thee,\nPerfect in power, in love and purity.\n\n4 Holy, holy, holy, Lord God Almighty!\nAll Thy works shall praise Thy name, in earth and sky and sea;\nHoly, holy, holy, merciful and mighty!\nGod in three persons, blessed Trinity!"
+    },
+    {
+      "title": "Rock of Ages",
+      "author": "Augustus M. Toplady",
+      "theme": "Salvation and refuge",
+      "year": 1776,
+      "lyrics": "1 Rock of ages, cleft for me,\nLet me hide myself in Thee;\nLet the water and the blood,\nFrom Thy riven side which flowed,\nBe of sin the double cure,\nSave me, Lord, and make me pure.",
+      "copyrightStatus": "public_domain",
+      "textCompleteness": "partial_historical_stanza",
+      "sourceNote": "Existing Heavenly Key repository faith-content.js"
+    },
+    {
+      "title": "All Hail the Power of Jesus' Name",
+      "author": "Edward Perronet",
+      "theme": "Praise and worship",
+      "year": 1779,
+      "lyrics": "1 All hail the power of Jesus' name!\nLet angels prostrate fall;\nBring forth the royal diadem,\nAnd crown Him Lord of all.",
+      "copyrightStatus": "public_domain",
+      "textCompleteness": "partial_historical_stanza",
+      "sourceNote": "Existing Heavenly Key repository faith-content.js"
+    },
+    {
+      "title": "Nearer, My God, to Thee",
+      "author": "Sarah Flower Adams",
+      "theme": "Holiness and consecration",
+      "year": 1841,
+      "lyrics": "1 Nearer, my God, to Thee,\nNearer to Thee!\nE'en though it be a cross\nThat raiseth me;\nStill all my song shall be,\nNearer, my God, to Thee,\nNearer to Thee.",
+      "copyrightStatus": "public_domain",
+      "textCompleteness": "partial_historical_stanza",
+      "sourceNote": "Existing Heavenly Key repository faith-content.js"
     }
   ]
 }
