@@ -59,6 +59,7 @@ test('verified app-specific APK link targets only the selected app',async()=>{
 test('the same Android QR on iPhone never triggers an Android installer',async()=>{
  const r=await simulate({userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'});
  assert.equal(r.downloads.length,0);
+ assert.equal(r.links[0]?.hidden,true);
  assert.match(r.status,/different device/i);
 });
 test('unpublished or unverified package never initiates a native download',async()=>{
@@ -84,6 +85,11 @@ test('verified macOS DMG is available without automatic download',async()=>{
  const r=await simulate({device:'mac',userAgent:'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)'});
  assert.deepEqual(r.downloads,[]);
  assert.equal(r.links.find(x=>x.href==='/api/native-download/all-in-one/mac')?.hidden,false);
+});
+test('Windows installer link is hidden on Android even if Windows package exists',async()=>{
+ const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Linux; Android 13)',available:true});
+ assert.equal(r.links[0]?.hidden,true);
+ assert.equal(r.downloads.length,0);
 });
 test('Windows native package cannot auto-start from Android QR scan',async()=>{
  const r=await simulate({device:'windows',userAgent:'Mozilla/5.0 (Linux; Android 13)'});
