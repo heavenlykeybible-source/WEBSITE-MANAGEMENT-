@@ -36,6 +36,8 @@ export class MeetingRooms {
   const configuredCapacity=Number(this.env.MEETING_ROOM_CAP);
   const capacity=Number.isFinite(configuredCapacity)&&configuredCapacity>0?Math.max(2,Math.min(12,Math.floor(configuredCapacity))):8;
   if(this.sockets().length>=capacity)return new Response('Room is full',{status:429});
+  // Limit unauthenticated pending connections separately so they cannot exhaust meeting capacity.
+  if(this.sockets().filter(w=>!this.data(w).role).length>=2)return new Response('Too many pending connections',{status:429});
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
   this.save(server,{role:'',room:url.pathname.split('/')[2],until:Date.now()+15000});
