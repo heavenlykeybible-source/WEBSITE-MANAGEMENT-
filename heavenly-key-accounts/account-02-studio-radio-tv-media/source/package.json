@@ -5,7 +5,8 @@
     "check": "tsc --noEmit",
     "deploy": "wrangler deploy",
     "preflight": "node scripts/preflight.mjs",
-    "test:broadcast": "node scripts/test-broadcast-handoff.mjs"
+    "test:broadcast": "node scripts/test-broadcast-handoff.mjs",
+    "test:d1": "node --experimental-sqlite scripts/test-broadcast-d1.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
