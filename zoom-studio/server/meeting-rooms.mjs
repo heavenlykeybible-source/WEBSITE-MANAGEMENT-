@@ -75,9 +75,9 @@ export class MeetingRooms {
   const chat=()=>{if(now-(d.last||0)<800)return;d.last=now;this.save(ws,d);this.broadcast({t:'chat',from:d.id,name:d.role==='host'?'Host':d.name,text:roomClean(m.text,300)});};
   if(d.role==='host'){
    // h and d are separate attachment snapshots. Save room controls through h.
-   if(m.t==='lock'){h.locked=!!m.on;this.save(host,h);}
+   if(m.t==='lock'&&typeof m.on==='boolean'){h.locked=m.on;this.save(host,h);}
    else if(m.t==='watch'){const u=typeof m.url==='string'?m.url.trim():'';let allowed='';if(u.length<=200&&!/[\u0000-\u0020<>"']/.test(u)){try{const parsed=new URL(u);if(parsed.protocol==='https:'&&parsed.hostname&&!parsed.username&&!parsed.password)allowed=parsed.href;}catch{}}h.watch=allowed;this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
-   else if(m.t==='audchat'){h.audChat=!!m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
+   else if(m.t==='audchat'&&typeof m.on==='boolean'){h.audChat=m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
    else if(m.t==='slow'){const seconds=Number(m.sec);h.slow=Number.isFinite(seconds)?Math.max(0,Math.min(60,Math.floor(seconds))):0;this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
    else if(m.t==='chat')chat();
    else{
@@ -88,7 +88,7 @@ export class MeetingRooms {
      this.save(host,h);this.save(g,gd);this.send(g,{t:'admitted'});this.send(host,{t:'joined',gid:gd.id,name:gd.name,ao:gd.ao});
     }else if(m.t==='deny')this.close(g,{t:'denied'});
     else if(m.t==='kick'){h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.close(g,{t:'kick'});}
-    else if(m.t==='mute')this.send(g,{t:'mute',on:!!m.on});
+    else if(m.t==='mute'&&typeof m.on==='boolean')this.send(g,{t:'mute',on:m.on});
     else if(m.t==='sig'&&gd.stage&&validSignal(m.data))this.send(g,{t:'sig',data:m.data});
     else if(m.t==='promote'&&gd.aud&&gd.ok){if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});gd.invited=true;this.save(g,gd);this.send(g,{t:'promoted'});}
     else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.count();}
@@ -99,7 +99,7 @@ export class MeetingRooms {
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
-   }else if(m.t==='hand')this.send(host,{t:'hand',from:d.id,name:d.name,on:!!m.on,aud:d.aud});
+   }else if(m.t==='hand'&&typeof m.on==='boolean')this.send(host,{t:'hand',from:d.id,name:d.name,on:m.on,aud:d.aud});
    else if(m.t==='react'&&now-(d.reacted||0)>800){d.reacted=now;this.save(ws,d);this.send(host,{t:'react',from:d.id,emoji:roomClean(m.emoji,4)});}
   }
  }
