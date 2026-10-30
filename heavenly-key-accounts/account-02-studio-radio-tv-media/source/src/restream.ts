@@ -183,6 +183,9 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  const result=await callLiveKit(env,'StartEgress',body);
  const newEgressId=String(result.egress_id??result.egressId??'');
  if(!newEgressId)throw new Error('LiveKit did not return an egress ID.');
+ // The provider can return an egress that already failed or hit its limit.
+ // Never replace a healthy broadcast with an already terminal egress.
+ if(egressTerminalStatus(result.status))throw new Error('LiveKit reported a failed or completed replacement. The current broadcast was preserved.');
  // Persist the replacement before retiring the old stream, so an interrupted
  // handoff does not leave the only active stream untracked.
  const replacementState={egressId:newEgressId,source:input.source,sessionId:input.source==='live'?input.sessionId:undefined,channel:input.source==='247'?(input.channel??'video'):undefined,format,quality:input.quality??'balanced',destinations:outputs.map(x=>x.destination),startedAt:new Date().toISOString()};
@@ -205,6 +208,10 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  return {ok:true,egressId:newEgressId,source:input.source,destinations:outputs.map(x=>x.destination),replacedEgressId};
  });
 }
+function egressTerminalStatus(status:unknown){
+ if(typeof status==='number')return [3,4,5,6].includes(status);
+ return ['EGRESS_COMPLETE','EGRESS_FAILED','EGRESS_ABORTED','EGRESS_LIMIT_REACHED'].includes(String(status??'').toUpperCase());
+}
 function egressStillActive(status:unknown){
  if(typeof status==='number')return [0,1,2].includes(status);
  return ['EGRESS_STARTING','EGRESS_ACTIVE','EGRESS_ENDING'].includes(String(status||'').toUpperCase());
@@ -217,7 +224,7 @@ async function reconcileActive(env:any){
   const item=(listed?.items||[]).find((x:any)=>String(x.egress_id||x.egressId||'')===String(active.egressId));
   if(!item)return {active:{...active,providerStatus:'UNKNOWN'},last:null};
   if(item&&egressStillActive(item.status))return {active:{...active,providerStatus:item.status,providerUpdatedAt:item.updated_at||item.updatedAt||null},last:null};
-  const terminal=typeof item.status==='number'?[3,4,5,6].includes(item.status):['EGRESS_COMPLETE','EGRESS_FAILED','EGRESS_ABORTED','EGRESS_LIMIT_REACHED'].includes(String(item.status||'').toUpperCase());
+  const terminal=egressTerminalStatus(item.status);
   if(!terminal)return {active:{...active,providerStatus:'UNKNOWN'},last:null};
   // Status reads must never erase a new broadcast's state during handoff.
   // A subsequent locked start or stop replaces/clears this terminal record.
