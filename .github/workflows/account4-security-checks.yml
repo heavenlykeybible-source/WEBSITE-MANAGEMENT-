@@ -18,6 +18,8 @@ jobs:
           node-version: '22'
       - name: Verify syntax
         run: node --check control-room-worker.js
+      - name: Audit other account deployment workflow triggers
+        run: node scripts/account4-workflow-inventory.mjs
       - name: Verify security guard presence
         run: node tests/account4-launch-guards.mjs
       - name: Validate protected deployment settings and CI permissions
