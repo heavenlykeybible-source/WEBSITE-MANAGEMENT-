@@ -483,3 +483,16 @@ test('stage invitations expire after two minutes and require a fresh host promot
  assert.equal(viewer.d.invited,false);
  assert.equal(viewer.d.invitedUntil,0);
 });
+
+test('alarm proactively revokes stale stage invitations without removing audience',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ await message(s.room,s.host,{t:'promote',gid:viewer.d.id});
+ viewer.d.invitedUntil=Date.now()-1;
+ await s.room.alarm();
+ assert.equal(viewer.readyState,1);
+ assert.equal(viewer.d.aud,true);
+ assert.equal(viewer.d.invited,false);
+ assert.equal(viewer.d.invitedUntil,0);
+ assert.ok(viewer.messages.some(m=>m.t==='note'&&/invitation has expired/.test(m.text)));
+});
