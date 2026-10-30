@@ -29,7 +29,7 @@ test('install UI gracefully handles missing elements and QR image failures',()=>
 test('install QR code does not disclose install links to a third-party QR service',()=>{
  const script=readFileSync(new URL('app-pages.js',base),'utf8');
  assert.doesNotMatch(script,/api\.qrserver\.com/);
- assert.match(script,/img\.src='\/qr\/app-'/);
+ assert.match(script,/\/qr\/app-/);
 });
 
 test('Hymn Book install options do not mislabel another app QR code',()=>{
@@ -37,4 +37,10 @@ test('Hymn Book install options do not mislabel another app QR code',()=>{
  assert.match(script,/id==='old-time-gospel-revival-hymn-book'/);
  assert.match(script,/Use the installation link below/);
  assert.doesNotMatch(script,/id==='old-time-gospel-revival-hymn-book'\?'\/qr\/app-all-in-one/);
+});
+
+test('native packages require explicit user download, not QR navigation',()=>{
+ const script=readFileSync(new URL('app-device-guide.js',base),'utf8');
+ assert.doesNotMatch(script,/window\.location\.assign\(nativeLink\.href\)/);
+ assert.match(script,/nativeLink\.href\s*=\s*'\/api\/native-download\//);
 });
