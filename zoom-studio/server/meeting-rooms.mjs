@@ -118,7 +118,7 @@ export class MeetingRooms {
     const aud=m.aud===true,guests=this.guests();
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     if(guests.filter(w=>this.data(w).aud===aud).length>=(aud?100:18))return this.close(ws,{t:'error',msg:'This room is full.'});
-    Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),ok:aud,aud,stage:false,invited:false,ao:m.ao===true,last:0,waitingUntil:aud?0:now+30*60*1000});
+    Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),ok:aud,aud,session:h.key,stage:false,invited:false,ao:m.ao===true,last:0,waitingUntil:aud?0:now+30*60*1000});
     // Host authorization is required for each join; client-supplied pass values cannot grant admission.
     this.save(ws,d);this.send(ws,{t:'welcome',ice:roomICE,watch:h.watch,chat:h.audChat,slow:h.slow});
     if(d.ok)this.send(ws,{t:'admitted'});
@@ -130,6 +130,7 @@ export class MeetingRooms {
   }
   const host=this.host(),h=host&&this.data(host);
   if(!h||h.until<=now){this.end('The meeting has ended.');return;}
+  if(d.role==='guest'&&d.session!==h.key)return this.close(ws,{t:'closed',why:'The previous meeting has ended.'});
   const chat=()=>{const text=roomClean(m.text,300);if(!text||now-(d.last||0)<800)return;d.last=now;this.save(ws,d);this.broadcast({t:'chat',from:d.id,name:d.role==='host'?'Host':d.name,text});};
   if(d.role==='host'){
    // h and d are separate attachment snapshots. Save room controls through h.
@@ -162,6 +163,6 @@ export class MeetingRooms {
    else if(m.t==='react'&&now-(d.reacted||0)>800){const emoji=roomClean(m.emoji,4);if(!emoji)return;d.reacted=now;this.save(ws,d);this.send(host,{t:'react',from:d.id,emoji});}
   }
  }
- webSocketClose(ws){const d=this.data(ws);if(d.role==='host'){const activeHost=this.host();if(!activeHost||activeHost===ws)this.end('The host left.');}else if(d.role==='guest'){this.send(this.host(),{t:'left',gid:d.id});this.count();}}
+ webSocketClose(ws){const d=this.data(ws);if(d.role==='host'){const activeHost=this.host();if(!activeHost||activeHost===ws)this.end('The host left.');}else if(d.role==='guest'){const host=this.host();if(host&&this.data(host).key===d.session){this.send(host,{t:'left',gid:d.id});this.count();}}}
  webSocketError(ws){try{ws.close(1011,'Connection lost');}catch{}this.webSocketClose(ws);}
 }
