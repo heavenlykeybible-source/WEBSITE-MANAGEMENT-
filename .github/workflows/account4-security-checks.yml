@@ -47,6 +47,8 @@ jobs:
         run: npm run check:account4-github-import
       - name: Validate concurrent AI chat destination loading
         run: npm run check:account4-fast-chat
+      - name: Check concurrent AI startup patch
+        run: node scripts/account4-parallel-chat-startup.mjs --check
       - name: Verify navigation upgrade after repository patch tests
         run: |
           npm run prepare:account4-release
