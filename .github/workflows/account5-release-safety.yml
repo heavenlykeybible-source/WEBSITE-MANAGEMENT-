@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 jobs:
-  release-gate:
+  validator-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -29,11 +29,16 @@ jobs:
             echo "ERROR: missing manifest was accepted"
             exit 1
           fi
-      - name: Validate actual inventory when provided
-        shell: bash
-        run: |
-          if test -f account5-release-manifest.json; then
-            node scripts/validate-account5-releases.mjs account5-release-manifest.json
-          else
-            echo "No release inventory yet; production release remains blocked."
-          fi
+  release-gate:
+    needs: validator-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require real inventory and verified packages
+        run: node scripts/validate-account5-releases.mjs account5-release-manifest.json
