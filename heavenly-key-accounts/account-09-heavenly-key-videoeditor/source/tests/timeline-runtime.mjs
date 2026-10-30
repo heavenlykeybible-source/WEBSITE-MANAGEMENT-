@@ -28,6 +28,7 @@ async function scenario(mode){
  assert.equal(node('clipList').value,'0','Undo restores position after move-to-last');
  node('clipRedo').onclick();
  assert.equal(node('clipList').value,'1','Redo reapplies position after move-to-last');
+ assert.equal(window.hkTimeline.getClips()[1].end,2,'Redo restores the moved clip and selection together');
  assert.equal(window.hkTimeline.getClips().length,2,'Full-source command appends one clip');
  assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:2,speed:1},'Full-source clip covers complete video');
  node('clipClear').onclick();
