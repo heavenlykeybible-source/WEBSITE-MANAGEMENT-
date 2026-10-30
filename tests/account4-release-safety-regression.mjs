@@ -25,4 +25,14 @@ mustContain(deployer, "['diff', '--exit-code', 'HEAD', '--', 'control-room-worke
 mustContain(deployer, "['ls-files', '--error-unmatch', 'control-room-worker.js']", 'direct upload must reject untracked Worker');
 mustContain(workflow, 'npm ci --no-audit --no-fund', 'production dependencies must use lockfile');
 assert.ok(!workflow.includes('run: npm install --no-audit --no-fund'), 'Unsafe unlocked production install');
+const acceptance = readFileSync('.github/workflows/account4-release-safety.yml', 'utf8');
+for (const [command, label] of [
+  ['npm ci --no-audit --no-fund', 'locked acceptance dependencies'],
+  ['node tests/native-imports.mjs', 'native import acceptance'],
+  ['node tests/native-imports-browser.mjs', 'interactive mobile site preview acceptance'],
+  ['node tests/account4-permission-ui.mjs', 'owner approval interface acceptance'],
+  ['node tests/account4-studio-menu.mjs', 'owner Studio navigation acceptance'],
+  ['node tests/account4-release-safety-regression.mjs', 'release safety self-check']
+]) mustContain(acceptance, command, label);
+assert.ok(!acceptance.includes('CLOUDFLARE_API_TOKEN:'), 'Unapproved acceptance tests must not consume production Cloudflare credentials');
 console.log('PASS: Account 4 manual deployment and stale-source regression guards are present.');
