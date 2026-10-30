@@ -258,7 +258,8 @@ export async function onRequest({ request: req, env, params }) {
       if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > 3 * 1024 * 1024)) return J({ error: 'Audio chunk too large.' }, 413);
       const n = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe' AND at>?").bind(u.id, Date.now() - DAY).first()).c;
       if (n >= 120) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' }, 429);
-      const audio = await req.arrayBuffer();
+      const audio = await readBoundedMedia(req, 3 * 1024 * 1024);
+      if (!audio) return J({ error: 'Audio chunk too large.' }, 413);
       if (!audio.byteLength || audio.byteLength > 3 * 1024 * 1024 || (announced !== null && Number(announced) !== audio.byteLength)) return J({ error: 'Audio size mismatch or chunk too large.' }, 413);
       const wave = new Uint8Array(audio);
       const waveText = (offset,text) => [...text].every((char,i)=>wave[offset+i]===char.charCodeAt(0));
