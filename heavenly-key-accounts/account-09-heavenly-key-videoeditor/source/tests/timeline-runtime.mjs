@@ -10,6 +10,10 @@ async function scenario(mode){
  const window={MediaRecorder:Recorder};
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
+ const originalTimeline=JSON.stringify(window.hkTimeline.getClips());
+ window.hkTimeline.restoreClips([{start:0,end:1000000,speed:1}]);
+ assert.equal(JSON.stringify(window.hkTimeline.getClips()),originalTimeline,'Reject excessive saved clip timestamps without changing clips');
+ assert.match(node('clipStatus').textContent,/invalid clips/,'Oversized restored timeline reports validation failure');
  node('clipAddFull').onclick();
  assert.equal(window.hkTimeline.getClips().length,2,'Full-source command appends one clip');
  assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:2,speed:1},'Full-source clip covers complete video');
