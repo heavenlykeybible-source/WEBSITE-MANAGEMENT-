@@ -15,11 +15,26 @@ const ADMIN_ROLES = new Set(['Administrator','Super Administrator','Deputy Super
 const json = (body: unknown, status=200, headers?: HeadersInit) => Response.json(body,{status,headers});
 function fromHex(value:string):Uint8Array { if(!/^[0-9a-f]{64}$/i.test(value)) throw new Error('Invalid signature'); const o=new Uint8Array(32); for(let i=0;i<32;i++)o[i]=parseInt(value.slice(i*2,i*2+2),16); return o; }
 async function verifyCapability(token:string, secret:string):Promise<Capability|null>{
-  const [encoded,signature]=token.split('.'); if(!encoded||!signature)return null;
-  let p:Capability; try{p=JSON.parse(atob(encoded)) as Capability;}catch{return null;}
-  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
-  let valid=false; try{valid=await crypto.subtle.verify('HMAC',key,fromHex(signature) as unknown as BufferSource,new TextEncoder().encode(encoded));}catch{return null;}
-  const now=Math.floor(Date.now()/1000); if(!valid||!p.sub||!p.nonce||!Number.isInteger(p.exp)||p.exp<now||p.iat>now+30||!ADMIN_ROLES.has(p.role))return null; return p;
+  // Reject malformed or oversized inputs before parsing and allocating crypto keys.
+  if(typeof token!=='string'||token.length>4096||typeof secret!=='string'||!secret)return null;
+  const parts=token.split('.'); if(parts.length!==2)return null;
+  const [encoded,signature]=parts;
+  if(!encoded||encoded.length>3000||!signature||!/^[a-f0-9]{64}$/i.test(signature))return null;
+  let p:Capability;
+  try{p=JSON.parse(atob(encoded)) as Capability;}catch{return null;}
+  // JSON null, arrays and non-numeric timestamps must fail closed, not throw.
+  if(!p||typeof p!=='object'||Array.isArray(p))return null;
+  const now=Math.floor(Date.now()/1000);
+  if(typeof p.sub!=='string'||!p.sub.trim()||p.sub.length>256||
+     typeof p.nonce!=='string'||!p.nonce.trim()||p.nonce.length>256||
+     !Number.isSafeInteger(p.iat)||p.iat<=0||p.iat>now+30||
+     !Number.isSafeInteger(p.exp)||p.exp<=now||p.exp<=p.iat||
+     !ADMIN_ROLES.has(p.role))return null;
+  try{
+    const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
+    const valid=await crypto.subtle.verify('HMAC',key,fromHex(signature) as unknown as BufferSource,new TextEncoder().encode(encoded));
+    return valid?p:null;
+  }catch{return null;}
 }
 function audit(env:Env, cap:Capability, action:string, type:string, id?:string){ return env.DB.prepare('INSERT INTO audit_events(actor_id,action,resource_type,resource_id) VALUES(?,?,?,?)').bind(cap.sub,action,type,id??null).run(); }
 async function requireJson(request:Request){ try{return await request.json() as Record<string,unknown>}catch{return null;} }
