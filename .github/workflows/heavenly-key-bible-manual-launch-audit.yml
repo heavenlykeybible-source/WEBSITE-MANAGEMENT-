@@ -1,0 +1,31 @@
+name: Heavenly Key Bible manual launch audit
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: heavenly-key-bible-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Verify Bible source and editorial release gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify 731-day draft structure
+        run: node apps/heavenly-key-bible/bible/tests/validate-strength-year1.mjs
+      - name: Verify devotional UI and offline cache safeguards
+        run: node apps/heavenly-key-bible/bible/tests/validate-strength-ui-security.mjs
+      - name: Gate publication of unapproved or repeated devotionals
+        run: node apps/heavenly-key-bible/bible/tests/strength-publication-gate.mjs
