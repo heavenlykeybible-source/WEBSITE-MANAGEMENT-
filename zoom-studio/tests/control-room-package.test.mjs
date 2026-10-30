@@ -616,3 +616,23 @@ test('new WebSocket handshakes do not postpone an earlier cleanup alarm',async()
  assert.equal(calls.length,1,'repeated connections must not move cleanup later');
  assert.equal(alarmAt,first);
 });
+
+test('room alarm tracks earliest pending deadline instead of delaying cleanup for a minute',async()=>{
+ const s=await openRoom(),pending=s.add({until:Date.now()+5000});
+ let scheduled=0;
+ s.state.storage.setAlarm=async due=>{scheduled=due;};
+ await s.room.alarm();
+ assert.equal(pending.readyState,1);
+ assert.ok(scheduled>Date.now()+3000&&scheduled<Date.now()+8000,'pending handshake deadline should drive cleanup');
+});
+test('room alarm tracks stage invitation expiry before the sixty-second heartbeat',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ await message(s.room,s.host,{t:'promote',gid:viewer.d.id});
+ viewer.d.invitedUntil=Date.now()+9000;
+ let scheduled=0;
+ s.state.storage.setAlarm=async due=>{scheduled=due;};
+ await s.room.alarm();
+ assert.ok(scheduled>Date.now()+7000&&scheduled<Date.now()+11000);
+ assert.equal(viewer.d.invited,true);
+});
