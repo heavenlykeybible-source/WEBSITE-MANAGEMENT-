@@ -77,7 +77,8 @@ test('Account 8 Cloudflare D1 identity verification is read-only and fail-closed
   const env={
     MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:'0123456789abcdef0123456789abcdef',
     STUDIO_D1_DATABASE_ID:'f47b2e3f-f937-4d6e-8891-f08d8bc4f6b8',
-    CLOUDFLARE_API_TOKEN:'fixture-only'
+    CLOUDFLARE_API_TOKEN:'fixture-only',
+    MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'
   };
   let called=0;
   const good=async (url, options)=>{
@@ -90,5 +91,8 @@ test('Account 8 Cloudflare D1 identity verification is read-only and fail-closed
   assert.equal(called,1);
   await assert.rejects(verifyAccount8(env,async()=>({ok:true,json:async()=>({success:true,result:{uuid:env.STUDIO_D1_DATABASE_ID,name:'wrong-db'}})})),/identity mismatch/);
   await assert.rejects(verifyAccount8({...env,CLOUDFLARE_ACCOUNT_ID:'ffffffffffffffffffffffffffffffff'},good),/Conflicting/);
+  await assert.rejects(verifyAccount8({...env,CF_ACCOUNT_ID:'ffffffffffffffffffffffffffffffff'},good),/Conflicting/);
+  await assert.rejects(verifyAccount8({...env,MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'0'},good),/confirmation required/);
+  await assert.rejects(verifyAccount8({...env,STUDIO_D1_DATABASE_ID:'f47b2e3f-f937-4d6e-8891-f08d8bc4f6bz'},good),/preflight needs/);
   await assert.rejects(verifyAccount8({...env,STUDIO_D1_DATABASE_ID:'9549fc74-f6a8-4cf8-a066-7cb965c59b91'},good),/cannot reuse an existing shared production database/);
 });
