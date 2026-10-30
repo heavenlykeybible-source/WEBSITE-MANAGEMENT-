@@ -335,3 +335,12 @@ test('promoted audience must remain an audience member when accepting promotion'
  assert.equal(viewer.d.stage,true);
  assert.equal(viewer.d.invited,false);
 });
+
+test('meeting alarm closes orphaned audience sockets when host is absent',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ s.host.readyState=3;
+ await s.room.alarm();
+ assert.equal(viewer.readyState,3);
+ assert.ok(viewer.messages.some(m=>m.t==='closed'&&/host is no longer connected/i.test(m.why)));
+});
