@@ -25,8 +25,9 @@ async function scenario(mode){
  assert.equal(node('clipEnd').value,'0.6','Trimmed end updates time input');
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips()[0].end,1,'Undo restores trimmed end');
- video.currentTime=0;
- await node('clipExport').onclick();
+ video.currentTime=mode==='cancel-seek'?.7:0;
+ if(mode==='cancel-seek'){const operation=node('clipExport').onclick();node('clipCancel').onclick();await operation}
+ else await node('clipExport').onclick();
  assert.equal(node('vf').disabled,false,'Source must unlock after '+mode);
  assert.equal(node('clipCancel').disabled,true,'Cancel must reset after '+mode);
  const status=node('clipStatus').textContent;
@@ -34,7 +35,8 @@ async function scenario(mode){
  if(mode==='error')assert.match(status,/Encoder broke/);
  if(mode==='premature')assert.match(status,/stopped before timeline finished/);
  if(mode==='oversize')assert.match(status,/exceeded the 256 MB browser memory limit/);
+ if(mode==='cancel-seek')assert.match(status,/Timeline operation stopped/);
  if(mode==='success'){assert.match(status,/without audio/);assert.equal(node('clipDownload').hidden,false)}
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek'])await scenario(mode);
