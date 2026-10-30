@@ -73,25 +73,27 @@ test('missing database yields a clear setup failure while public template still 
 const {MeetingRooms}=await import(pathToFileURL(path.join(root,'build/meeting-worker.mjs')));
 function socket(data){return {readyState:1,messages:[],serializeAttachment(d){assert.ok(Buffer.byteLength(JSON.stringify(d))<=2048,'hibernation attachment fits platform limit');this.d=structuredClone(d)},deserializeAttachment(){return structuredClone(this.d)},send(m){this.messages.push(JSON.parse(m))},close(){this.readyState=3},d:structuredClone(data)};}
 function meeting(){const all=[],state={getWebSockets(){return all},storage:{async setAlarm(){}}};return {all,state,room:new MeetingRooms(state,{AUTH_SECRET:secret}),add(data={}){const w=socket({role:'',room:'11111111-1111-4111-8111-111111111111',until:Date.now()+15000,...data});all.push(w);return w}};}
-test('expired pending connections are reclaimed before applying room limits',async()=>{
+test('expired pending connections are closed before the unauthenticated-slot limit',async()=>{
  const s=meeting();
  const expired=s.add({until:Date.now()-1000});
- const current=s.add();
+ s.add();
+ s.add();
  const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
  const result=await s.room.fetch(req);
+ assert.equal(result.status,429);
+ assert.equal(await result.text(),'Too many pending connections');
  assert.equal(expired.readyState,3);
- assert.equal(current.readyState,1);
- assert.equal(result.status,101);
  assert.equal(s.state.getWebSockets().filter(w=>w.readyState===1).length,2);
 });
-test('expired pending connections are reclaimed before checking total room capacity',async()=>{
+test('expired pending sockets are closed even when a room is full',async()=>{
  const s=meeting();
- for(let i=0;i<7;i++)s.add({role:'guest'});
+ for(let i=0;i<8;i++)s.add({role:'guest'});
  const expired=s.add({until:Date.now()-1000});
  const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
  const result=await s.room.fetch(req);
  assert.equal(expired.readyState,3);
- assert.equal(result.status,101);
+ assert.equal(result.status,429);
+ assert.equal(await result.text(),'Room is full');
 });
 
 test('meeting transport limits unauthenticated pending WebSocket slots',async()=>{
