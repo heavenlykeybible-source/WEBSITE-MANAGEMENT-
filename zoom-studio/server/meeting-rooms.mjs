@@ -24,8 +24,8 @@ export class MeetingRooms {
  host(){return this.sockets().find(w=>this.data(w).role==='host');}
  guests(){return this.sockets().filter(w=>this.data(w).role==='guest');}
  stage(){return this.guests().filter(w=>this.data(w).stage);}
- broadcast(m){for(const w of this.sockets()){const d=this.data(w);if(d.role==='host'||d.ok)this.send(w,m);}}
- count(){this.send(this.host(),{t:'count',n:this.guests().filter(w=>this.data(w).aud).length});}
+ broadcast(m){const host=this.host(),key=host&&this.data(host).key;for(const w of this.sockets()){const d=this.data(w);if(w===host||(d.role==='guest'&&d.ok&&d.session===key))this.send(w,m);}}
+ count(){const host=this.host();if(!host)return;const key=this.data(host).key;this.send(host,{t:'count',n:this.guests().filter(w=>{const d=this.data(w);return d.aud&&d.session===key;}).length});}
  close(w,m){this.send(w,m);try{w.close(1000,'Meeting closed');}catch{}}
  end(why){for(const w of this.sockets())this.close(w,{t:'closed',why});}
  async scheduleHandshakeAlarm(){
