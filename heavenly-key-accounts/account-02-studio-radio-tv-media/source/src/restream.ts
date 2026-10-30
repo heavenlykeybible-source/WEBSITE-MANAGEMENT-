@@ -65,7 +65,7 @@ async function callLiveKit(env:any,method:string,body:unknown){
  const endpoint=config.LIVEKIT_URL.replace('wss:','https:')+'/twirp/livekit.Egress/'+method;
  const r=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(15000)});
  const text=await r.text();let data:any={};try{data=text?JSON.parse(text):{};}catch{}
- if(!r.ok)throw new Error(data?.msg||data?.message||('LiveKit Egress returned HTTP '+r.status));
+ if(!r.ok)throw new Error('LiveKit Egress '+method+' failed (HTTP '+r.status+'). Check provider logs.');
  return data;
 }
 export async function startRestream(env:any,input:{source:'live'|'247';sessionId?:number;programmeUrl?:string;format?:string;quality?:string;channel?:'radio'|'video'}){
@@ -93,18 +93,19 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  // Establish the replacement before touching the existing broadcast.
  // A failed StartEgress must not take the current programme off air.
  const result=await callLiveKit(env,'StartEgress',body);
- if(!result.egress_id)throw new Error('LiveKit did not return an egress ID.');
+ const newEgressId=String(result.egress_id??result.egressId??'');
+ if(!newEgressId)throw new Error('LiveKit did not return an egress ID.');
  if(replacedEgressId){
   try{
    await callLiveKit(env,'StopEgress',{egress_id:replacedEgressId});
   }catch(error){
    // Avoid leaving two simultaneous broadcasts when the handoff fails.
-   try{await callLiveKit(env,'StopEgress',{egress_id:result.egress_id});}catch{}
+   try{await callLiveKit(env,'StopEgress',{egress_id:newEgressId});}catch{}
    throw error;
   }
  }
- await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify({egressId:result.egress_id,source:input.source,sessionId:input.source==='live'?input.sessionId:undefined,channel:input.source==='247'?(input.channel??'video'):undefined,format,quality:input.quality??'balanced',destinations:outputs.map(x=>x.destination),startedAt:new Date().toISOString()}));
- return {ok:true,egressId:result.egress_id,source:input.source,destinations:outputs.map(x=>x.destination),replacedEgressId};
+ await env.LIVE_STATUS_KV.put(ACTIVE_KEY,JSON.stringify({egressId:newEgressId,source:input.source,sessionId:input.source==='live'?input.sessionId:undefined,channel:input.source==='247'?(input.channel??'video'):undefined,format,quality:input.quality??'balanced',destinations:outputs.map(x=>x.destination),startedAt:new Date().toISOString()}));
+ return {ok:true,egressId:newEgressId,source:input.source,destinations:outputs.map(x=>x.destination),replacedEgressId};
 }
 function egressStillActive(status:unknown){
  if(typeof status==='number')return [0,1,2].includes(status);
