@@ -1,0 +1,34 @@
+name: Control Room Owner Login Checks
+on:
+  push:
+    branches:
+      - 'fix/account2-*'
+    paths:
+      - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/login.html'
+      - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/owner-login.js'
+      - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/test/owner-login.mjs'
+      - '.github/workflows/control-room-login-ci.yml'
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/login.html'
+      - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/owner-login.js'
+      - 'heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/test/owner-login.mjs'
+      - '.github/workflows/control-room-login-ci.yml'
+permissions:
+  contents: read
+jobs:
+  login-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Validate owner login JavaScript
+        run: node --check heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/public/owner-login.js
+      - name: Owner login regression tests
+        run: node heavenly-key-accounts/account-04-website-management-control-room/uploaded-reference/test/owner-login.mjs
