@@ -4,7 +4,7 @@ import {runInNewContext} from 'node:vm';
 async function scenario(mode){
  const nodes=new Map();
  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,hidden:true,textContent:'',style:{},append(){},replaceChildren(){},removeAttribute(){},addEventListener(){},removeEventListener(){}});return nodes.get(id)};
- const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));this.currentTime=mode==='cancel-play'?0:1}});
+ const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='overlap'){this.playCount=(this.playCount||0)+1;if(this.playCount===1)return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=0;return}if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));this.currentTime=mode==='cancel-play'?0:1}});
  const track={stop(){}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
  class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode!=='timeout'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
  const window={MediaRecorder:Recorder};
@@ -44,6 +44,19 @@ async function scenario(mode){
  node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips()[0].end,1,'Undo restores trimmed end');
  video.currentTime=mode==='cancel-seek'?.7:0;
+ if(mode==='overlap'){
+   await node('clipExport').onclick();
+   const second=node('clipExport').onclick();
+   await new Promise(resolve=>setTimeout(resolve,0));
+   const pauses=video.pauseCount;
+   await new Promise(resolve=>setTimeout(resolve,30));
+   assert.equal(video.pauseCount,pauses,'Old export playback completion cannot pause newer export');
+   node('clipCancel').onclick();
+   await second;
+   assert.equal(node('clipCancel').disabled,true,'Overlapping export cancellation unlocks controls');
+   console.log('PASS timeline encoder '+mode);
+   return;
+ }
  if(mode==='cancel-seek'){const operation=node('clipExport').onclick();node('clipCancel').onclick();await operation}
  else if(mode==='cancel-play'||mode==='cancel-start'){const operation=node('clipExport').onclick();await new Promise(resolve=>setTimeout(resolve,0));node('clipCancel').onclick();await operation}
  else await node('clipExport').onclick();
@@ -70,4 +83,4 @@ async function scenario(mode){
  }
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap'])await scenario(mode);
