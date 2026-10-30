@@ -56,6 +56,10 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
  const accessActor=ownerHost?null:await authenticate(request,env);
  const actor=accessActor||(ownerHost?await ownerSession(request,env.DB):null);
  if(!u.pathname.startsWith('/api/')){
+  // Never serve the owner dashboard to a signed-out visitor. Static login
+  // resources remain available so a new owner can authenticate normally.
+  if(ownerHost&&['GET','HEAD'].includes(request.method)&&['/','/index.html'].includes(u.pathname)&&!actor)
+   return Response.redirect(u.origin+'/login.html',302);
   return secureAsset(request,env);
  }
  if(!actor)return fail('Administrator sign-in required',401);
