@@ -262,6 +262,25 @@ for (const [label, payload] of [
   });
   check('Invalid GIF rejected: '+label,gifResponse.status===415);
 }
+const sampleWebP=Uint8Array.from([82,73,70,70,12,0,0,0,87,69,66,80,86,80,56,88,0,0,0,0]);
+for (const [label, payload, expected] of [
+  ['Valid WebP container',sampleWebP,200],
+  ['Truncated WebP header',sampleWebP.slice(0,12),415],
+  ['Incorrect WebP RIFF size',Uint8Array.from(sampleWebP.map((n,i)=>i===4?13:n)),415],
+  ['Unsupported WebP chunk',Uint8Array.from(sampleWebP.map((n,i)=>i===12?88:n)),415]
+]) {
+  const response=await onRequest({
+    request:new Request('https://studio.example/api/media?name=example.webp',{
+      method:'POST',headers:{cookie:login.cookie,'content-type':'image/webp','x-requested-with':'hk'},body:payload
+    }),env,params:{path:['media']}
+  });
+  check('WebP container validation: '+label,response.status===expected);
+  if(response.status===200){
+    const saved=await response.json();
+    const deleted=await request('media/'+saved.id,{method:'DELETE',cookie:login.cookie});
+    check('WebP test media can be deleted',deleted.status===200);
+  }
+}
 const spoofedImage = await onRequest({
   request: new Request('https://studio.example/api/media?name=disguised.png',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
