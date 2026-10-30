@@ -76,6 +76,20 @@ const uninitializedSchema = await onRequest({
 });
 check('Health detects uninitialized or missing D1 schema without leaking errors',uninitializedSchema.status===503&&(await uninitializedSchema.json()).status==='degraded');
 
+let jsonChunks = 0;
+const oversizedJsonStream = new ReadableStream({
+  pull(controller) {
+    if (jsonChunks++ < 3) controller.enqueue(new Uint8Array(450000).fill(65));
+    else controller.close();
+  }
+});
+const oversizedJsonResponse=await onRequest({
+  request:new Request('https://studio.example/api/register',{
+    method:'POST',headers:{'content-type':'application/json','x-requested-with':'hk'},
+    body:oversizedJsonStream,duplex:'half'
+  }),env,params:{path:['register']}
+});
+check('Oversized unknown-length JSON is rejected before parsing',oversizedJsonResponse.status===400);
 const invalid = await request('register', { method: 'POST', body: { email: 'invalid', password: 'long enough password' } });
 check('Invalid registration rejected', invalid.status === 400);
 const malformedRegistration=await request('register',{method:'POST',body:{email:'malformed@example.com',password:{value:'not-a-password'}}});
