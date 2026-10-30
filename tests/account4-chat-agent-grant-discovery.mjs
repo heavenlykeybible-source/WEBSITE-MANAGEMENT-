@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const s=fs.readFileSync(new URL('../control-room-worker.js',import.meta.url),'utf8');
+const b=s.indexOf('async function aiPermissionRoutes('),e=s.indexOf('function aiChunk(',b);
+assert.ok(b>=0&&e>b,'AI permission route not found');
+const body=s.slice(b,e);
+assert.equal(body.split("token_hash LIKE 'user:ai:%'").length-1,2,'Agent discovery and grant validation must both include chat assistants');
+assert.ok(body.includes("(token_hash NOT LIKE 'user:%' OR token_hash LIKE 'user:ai:%')"),'Exclude ordinary user tokens but include AI chat identities');
+assert.ok(body.includes("token_hash!='owner-internal'"),'Internal owner agent cannot receive a normal AI grant');
+assert.ok(body.includes("status='active'"),'Only active agents can receive grants');
+assert.ok(s.includes("const th = 'user:ai:' + (ow || 0) + ':' + acct.id"),'Chat AI identities use the user:ai namespace');
+assert.ok(body.includes('await reauthenticate(env,user,b.password)'),'Owner must reauthenticate to issue a grant');
+assert.ok(body.includes("await connById(env,id)"),'Grant account IDs must be validated');
+console.log('PASS individual AI grant picker exposes Claude/Gemini/OpenAI chat agents and preserves owner authentication');
