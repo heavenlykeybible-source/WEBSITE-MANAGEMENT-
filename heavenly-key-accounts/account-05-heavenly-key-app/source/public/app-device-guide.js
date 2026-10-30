@@ -9,8 +9,8 @@
   const heading = document.querySelector('h1');
   const platform = location.pathname.split('/')[2] || 'your device';
   let promptEvent = null;
-  // A scan is a navigation to this device guide. Start a real attachment download
-  // only after HEAD verifies a signed and scanned package is published.
+  // A scan opens this guide only. Native packages require an explicit user click,
+  // even after a HEAD request confirms that a reviewed package is available.
   // Never trigger a package for a different type of device.
   const agent = navigator.userAgent || '';
   function matchesDevice() {
@@ -100,13 +100,6 @@
           const digest = available.headers.get('x-release-sha256') || '';
           nativeAvailable = available.ok && contentType.includes(expectedTypes[platform]) && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
           nativeLink.hidden = !nativeAvailable;
-          if (nativeAvailable && matchesDevice()) {
-            status('Your verified ' + platform + ' app download is starting. If your browser does not start it, use the Download button.');
-            // Navigate to the official attachment response; do not silently
-            // install software or fake an app-store/native download.
-            window.location.assign(nativeLink.href);
-            return;
-          }
           if (nativeAvailable && platform === 'android') status('A native Android APK is available without a Heavenly Key account. Use Download Android APK or open the web app. Android may ask you to approve installation outside the Play Store.');
         } catch { nativeLink.hidden = true; }
       }
