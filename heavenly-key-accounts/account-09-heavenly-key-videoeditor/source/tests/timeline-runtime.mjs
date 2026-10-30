@@ -96,6 +96,7 @@ async function scenario(mode){
    assert.equal(video.currentTime,.25,'Old export does not rewind newly loaded media');
    assert.equal(video.playbackRate,1.5,'Old export does not reset newly loaded media playback speed');
    assert.equal(window.hkTimeline.getClips().length,0,'Changing video clears previous clips');
+   assert.match(node('clipStatus').textContent,/Video ready\. Add a clip\./,'Old export does not overwrite new media status');
    assert.equal(node('clipCancel').disabled,true,'Source replacement releases busy timeline controls');
    console.log('PASS timeline encoder '+mode);
    return;
