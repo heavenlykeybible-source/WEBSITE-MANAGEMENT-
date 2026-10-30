@@ -572,3 +572,16 @@ test('expired host takeover requires the same original owner identity',async()=>
  assert.equal(oldHost.readyState,3);
  assert.equal(viewer.readyState,3);
 });
+
+test('empty malformed reactions are ignored and do not consume the reaction cooldown',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ const before=s.host.messages.length;
+ for(const emoji of [null,{},[],42,'','   ','\u202e']){
+  await message(s.room,viewer,{t:'react',emoji});
+ }
+ assert.equal(s.host.messages.length,before);
+ await message(s.room,viewer,{t:'react',emoji:'👍'});
+ assert.equal(s.host.messages.at(-1).t,'react');
+ assert.equal(s.host.messages.at(-1).emoji,'👍');
+});
