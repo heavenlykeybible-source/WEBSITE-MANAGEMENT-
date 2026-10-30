@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const sourceRoot=new URL('../',import.meta.url);
 const files=[
  new URL('public/bible-quiz.js',sourceRoot),
- new URL('../../../../apps/heavenly-key-bible/heavenly-key-website/bible/social-bible-champions.js',sourceRoot),
- new URL('../../../account-03-global-christian-community/source/public/social-bible-champions.js',sourceRoot)
+ new URL('../../../apps/heavenly-key-bible/heavenly-key-website/bible/social-bible-champions.js',sourceRoot),
+ new URL('../../account-03-global-christian-community/source/public/social-bible-champions.js',sourceRoot)
 ];
 function extractBank(text){const marker='const BANK=',start=text.indexOf(marker);if(start<0)throw Error('Missing Bible Champions BANK');const s=text.slice(start+marker.length);let depth=0,inString=false,escaped=false;for(let i=0;i<s.length;i++){const ch=s[i];if(inString){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch==='"')inString=false;continue;}if(ch==='"'){inString=true;continue;}if(ch==='{')depth++;if(ch==='}'&&--depth===0)return JSON.parse(s.slice(0,i+1));}throw Error('Unclosed BANK');}
 const banks=files.map(file=>extractBank(readFileSync(file,'utf8')));
