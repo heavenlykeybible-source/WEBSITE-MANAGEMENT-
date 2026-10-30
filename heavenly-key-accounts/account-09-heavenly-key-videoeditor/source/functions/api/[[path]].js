@@ -117,11 +117,15 @@ export async function onRequest({ request: req, env, params }) {
       const b = await body(req); if (!b || typeof b !== 'object') return J({ error: 'Invalid login data.' }, 400);
       const email = typeof b.email === 'string' ? b.email.trim().toLowerCase() : '';
       if (!email || email.length > 200 || typeof b.password !== 'string' || b.password.length > 200) return J({ error: 'Wrong email or password.' }, 401);
-      const fails = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='login_fail' AND at>?").bind(email, Date.now() - 900000).first()).c;
-      if (fails >= 10) return J({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
+      const clientIp = req.headers.get('cf-connecting-ip');
+      const ipKey = clientIp ? 'ip:' + await sha(clientIp) : null;
+      const windowStart = Date.now() - 900000;
+      const fails = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='login_fail' AND at>?").bind(email, windowStart).first()).c;
+      const ipFails = ipKey ? (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='login_fail_ip' AND at>?").bind(ipKey, windowStart).first()).c : 0;
+      if (fails >= 10 || ipFails >= 50) return J({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
       const u = await env.DB.prepare('SELECT * FROM users WHERE email=?').bind(email).first();
       const h = await pbkdf2(String(b?.password || ''), u ? u.salt : '0'.repeat(32));
-      if (!u || h !== u.pass_hash) { await log(env, email, 'login_fail'); return J({ error: 'Wrong email or password.' }, 401); }
+      if (!u || h !== u.pass_hash) { await log(env, email, 'login_fail'); if (ipKey) await log(env, ipKey, 'login_fail_ip'); return J({ error: 'Wrong email or password.' }, 401); }
       const t = rnd(32);
       await env.DB.prepare('INSERT INTO sessions VALUES(?,?,?)').bind(await sha(t), u.id, Date.now() + 30 * DAY).run();
       await log(env, u.id, 'login');
