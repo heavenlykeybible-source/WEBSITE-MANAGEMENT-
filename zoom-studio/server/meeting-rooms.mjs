@@ -1,6 +1,6 @@
 // One hibernating Durable Object per meeting. Media stays browser-to-browser;
 // this service carries admission, chat and WebRTC signalling only.
-const roomClean=(s,n)=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n);
+const roomClean=(s,n)=>typeof s==='string'?s.replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n):'';
 const roomICE=[{urls:'stun:stun.cloudflare.com:3478'}];
 export class MeetingRooms {
  constructor(state,env){this.state=state;this.env=env;}
@@ -75,7 +75,7 @@ export class MeetingRooms {
   if(d.role==='host'){
    // h and d are separate attachment snapshots. Save room controls through h.
    if(m.t==='lock'){h.locked=!!m.on;this.save(host,h);}
-   else if(m.t==='watch'){const u=String(m.url||'').trim();let allowed='';if(u.length<=200&&!/[\u0000-\u0020<>"']/.test(u)){try{const parsed=new URL(u);if(parsed.protocol==='https:'&&parsed.hostname&&!parsed.username&&!parsed.password)allowed=parsed.href;}catch{}}h.watch=allowed;this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
+   else if(m.t==='watch'){const u=typeof m.url==='string'?m.url.trim():'';let allowed='';if(u.length<=200&&!/[\u0000-\u0020<>"']/.test(u)){try{const parsed=new URL(u);if(parsed.protocol==='https:'&&parsed.hostname&&!parsed.username&&!parsed.password)allowed=parsed.href;}catch{}}h.watch=allowed;this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
    else if(m.t==='audchat'){h.audChat=!!m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
    else if(m.t==='slow'){const seconds=Number(m.sec);h.slow=Number.isFinite(seconds)?Math.max(0,Math.min(60,Math.floor(seconds))):0;this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
    else if(m.t==='chat')chat();
