@@ -80,7 +80,8 @@ test('home loads current welcome assets and CSS makes guest/member sections mutu
  assert(html.includes('app.js?v=20261028-network'));
  assert(html.includes('approved-home-layout.js?v=20261028-network-unified'));
  assert(html.includes('global-social-current.css?v=20261028-network'));
- assert.match(html,/href="global-social-current.css/);\n assert.match(html,/href="social-bible-champions-layout.css/);
+ assert.match(html,/href="global-social-current.css/);
+ assert.match(html,/href="social-bible-champions-layout.css/);
  const css=readFileSync(new URL('../public/approved-home-layout.css',import.meta.url),'utf8');
  assert(css.includes('.gc-approved-member .gc-visitor-banner{display:none!important}'));
  assert(css.includes('.gc-approved-guest .gc-active-section{display:none!important}'));
