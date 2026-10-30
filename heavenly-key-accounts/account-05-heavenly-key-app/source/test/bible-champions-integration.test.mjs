@@ -10,6 +10,11 @@ test('all three game surfaces share the reviewed Bible Champions question bank',
  const main=bankFor(bible),app=bankFor(local('bible-quiz.js')),community=bankFor(social);
  assert.deepEqual(app,main);assert.deepEqual(community,main);
  assert.equal(Object.keys(main).length,24);
+ assert.equal(Object.values(main).reduce((n,questions)=>n+questions.length,0),720);
+ for(const [topic,questions] of Object.entries(main)){
+  assert.equal(questions.length,30,topic+' needs 30 questions');
+  assert.equal(new Set(questions.map(q=>q[0].toLowerCase().replace(/[^a-z0-9]/g,''))).size,30,topic+' repeats a question');
+ }
  for(const questions of Object.values(main))for(const q of questions){
   assert.equal(q.length,4);assert.equal(q[1].length,4);
   assert.ok(Number.isInteger(q[2])&&q[2]>=0&&q[2]<4);
