@@ -93,3 +93,19 @@ test('same tenant cannot reuse legacy shared database IDs',()=>{
  assert.match(r.stderr,/requires a dedicated D1 database/);
  }
 });
+
+test('shared database IDs are rejected even in a different Cloudflare account',()=>{
+ const account='0123456789abcdef0123456789abcdef';
+ for(const legacyDb of ['9549fc74-f6a8-4cf8-a066-7cb965c59b91','c0fe5ca1-cb39-4fbb-bad0-e6b2fa8c825a']){
+  const r=configure({MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:account,STUDIO_D1_DATABASE_ID:legacyDb,MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'});
+  assert.notEqual(r.status,0);
+  assert.equal(r.config,null);
+  assert.match(r.stderr,/requires a dedicated D1 database/);
+ }
+});
+test('case-insensitive Cloudflare ID matches do not cause false deployment conflicts',()=>{
+ const account='abcdef0123456789abcdef0123456789';
+ const r=configure({MEETINGSPACE_ACCOUNT8_CLOUDFLARE_ID:account.toUpperCase(),CLOUDFLARE_ACCOUNT_ID:account,MEETINGSPACE_ACCOUNT8_DATABASE_CONFIRMED:'1'});
+ assert.equal(r.status,0);
+ assert.equal(r.config.account_id,account.toUpperCase());
+});
