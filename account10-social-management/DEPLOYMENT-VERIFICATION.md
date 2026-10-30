@@ -49,3 +49,11 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Keep Gemini suggestions under operator approval until automated outbound messages have verified opt-in, human takeover and provider testing.
 - [ ] Replace the shared admin bearer token with individual operator authentication and audited role permissions before a multi-user launch.
 - [ ] Require owner approval before deploying Account 10; verify D1 and R2 bindings against the deployed Worker and test rollback.
+
+## Runtime check — 2026-10-31
+- Read-only Cloudflare Account 10 connection verifies that D1 `heavenlykey-social-management-db` exists with the configured database ID, and R2 bucket `heavenlykey-social-management-storage` exists.
+- These inventory checks **do not prove** either resource is bound to the deployed Worker or that migrations have been applied.
+- Worker maintenance status returned `No active maintenance permission for this agent and account`; deployment state, configured Gemini secret and active custom-domain route remain unverified.
+- Latest GitHub source hardens operator credential-switch privacy, asynchronous chat switching, and Gemini suggestion/human-takeover isolation. Dashboard JavaScript parsing and specific source assertions passed; full local Node tests and end-to-end provider testing were not run.
+- Preserve owner-approved manual deployment. Do not deploy source-only Worker code without its full static dashboard assets and D1/R2 bindings.
+- **Release remains blocked** until authenticating operators individually, database migration verification, Cloudflare asset/binding checks, live WhatsApp opt-in delivery receipts, Gemini tests, and security/device verification.
