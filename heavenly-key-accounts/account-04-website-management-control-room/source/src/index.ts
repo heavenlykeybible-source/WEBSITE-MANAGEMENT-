@@ -58,7 +58,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
  if(!u.pathname.startsWith('/api/')){
   // Never serve the owner dashboard to a signed-out visitor. Static login
   // resources remain available so a new owner can authenticate normally.
-  if(ownerHost&&['GET','HEAD'].includes(request.method)&&['/','/index.html'].includes(u.pathname)&&!actor)
+  if(ownerHost&&['GET','HEAD'].includes(request.method)&&!actor&&!['/login.html','/owner-login.js','/control.css'].includes(u.pathname))
    return Response.redirect(u.origin+'/login.html',302);
   return secureAsset(request,env);
  }
