@@ -11,7 +11,8 @@
     "build:meetings": "npm run bundle:control-room --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source",
     "deploy:meetings": "npm run deploy --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source",
     "prepare:account4-navigation": "node scripts/account4-quick-navigation.mjs",
-    "test:account4-launch": "node tests/account4-launch-guards.mjs"
+    "test:account4-launch": "node tests/account4-launch-guards.mjs",
+    "prepare:account4-release": "node scripts/apply-reviewed-account4-upgrade.mjs && npm run prepare:account4-navigation && node --check control-room-worker.js && npm run test:account4-launch"
   },
   "devDependencies": {
     "@simplewebauthn/server": "13.2.2",
