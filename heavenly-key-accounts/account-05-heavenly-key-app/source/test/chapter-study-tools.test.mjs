@@ -2,16 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../public/'+p,import.meta.url),'utf8');
-test('all six study buttons are present once inside the collapsible Bible study panel',()=>{
+test('Bible gateway points to official Bible platform instead of duplicating local study UI',()=>{
  const html=read('bible.html');
- for(const key of ['summary','lessons','characters','important','cross','definitions']){
-  assert.equal((html.match(new RegExp('data-study-tool="'+key+'"','g'))||[]).length,1,key);
- }
- assert.match(html,/<details id="bible-study-tools"/);
- assert.ok(html.includes('Lessons &amp; Guides'));
- assert.ok(html.includes('/walk-offline.html#walk-bible-study'));
- assert.ok(html.includes('Bible Tools'));
- assert.ok(html.includes('chapter-study-tools.js'));
+ assert.match(html,/rel="canonical" href="https:\/\/onlinebible\.heavenlykey\.org\//);
+ assert.match(html,/location\.replace\("https:\/\/onlinebible\.heavenlykey\.org\//);
+ assert.match(html,/Authorised King James Version/);
 });
 test('chapter study actions load controls on demand and guard failed or stale requests',()=>{
  const js=read('chapter-study-tools.js');
@@ -31,16 +26,12 @@ test('cross references link to the KJV reader and chapter switches invalidate re
  assert.ok(js.includes("book.value+':'+chapter.value!==key"));
 });
 
-test('only supported Quick Bible Tools are visible and uniquely wired',()=>{
+test('retained local study scripts do not silently claim active tools on gateway',()=>{
  const html=read('bible.html');
- const original=['summary','lessons','characters','important','cross','definitions'];
- const additional=['search','notes','timeline','topical','promises'];
- for(const id of original)assert.equal((html.match(new RegExp('data-study-tool="'+id+'"','g'))||[]).length,1,id);
- for(const id of additional)assert.equal((html.match(new RegExp('data-extra-tool="'+id+'"','g'))||[]).length,1,id);
- for(const id of ['maps','verse-image','memory'])assert.ok(!html.includes('data-extra-tool="'+id+'"'),id+' must remain hidden until implemented');
- assert.ok(html.includes('href="/walk-offline.html#walk-bible-study"'));
- assert.ok(html.includes('src="/extra-bible-tools.js"'));
- assert.ok(html.includes('Quick Bible Tools'));
+ assert.doesNotMatch(html,/data-study-tool=|data-extra-tool=/);
+ assert.match(html,/onlinebible\.heavenlykey\.org/);
+ const extra=read('extra-bible-tools.js');
+ assert.ok(extra.includes('activeToolRequest++'));
 });
 test('study links and async cancellations are guarded',()=>{
  const core=read('chapter-study-tools.js'),extra=read('extra-bible-tools.js');
