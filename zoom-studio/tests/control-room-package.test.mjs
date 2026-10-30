@@ -205,6 +205,14 @@ test('Control Room bundle refuses symbolic links to files outside public assets'
 });
 function spawnBundle(script){return spawnSync(process.execPath,[script],{encoding:'utf8'});}
 
+test('Durable Object rejects non-meeting routes even with a trusted WebSocket origin',async()=>{
+ const s=meeting();
+ for(const pathname of ['/meeting/invalid/room','/meeting/11111111-1111-4111-8111-111111111111/extra','/meeting/11111111-1111-4111-8111-111111111111/room/extra']){
+  const r=await s.room.fetch(new Request('https://meeting'+pathname,{headers:{upgrade:'websocket',origin:'https://meeting'}}));
+  assert.equal(r.status,404);
+  assert.equal(s.all.length,0);
+ }
+});
 test('WebSocket signalling refuses HTTP transport and untrusted origins',async()=>{
  const s=meeting();
  for(const [url,origin] of [
