@@ -10,7 +10,105 @@
       "scripture": "Revelation 2:4-5",
       "reflection": "The Lord calls His people to remember, repent, and return. Spiritual activity cannot replace wholehearted devotion to Christ. Examine the place prayer, obedience, and love occupy in your life today.",
       "prayer": "Lord Jesus, restore my first love and teach me to obey Your Word.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "The Lord calls His people to remember, repent, and return.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-10-31",
@@ -18,7 +116,105 @@
       "scripture": "1 Peter 1:15-16",
       "reflection": "God calls His children to holy conduct in every area of life. Holiness grows as we submit our thoughts, speech, relationships, and decisions to the truth of Scripture.",
       "prayer": "Father, cleanse my heart and strengthen me to live in holiness.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "God calls His children to holy conduct in every area of life.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-01",
@@ -26,7 +222,105 @@
       "scripture": "Luke 18:1",
       "reflection": "Jesus taught His disciples to pray and not lose heart. Bring your needs before God faithfully, but also listen, give thanks, and submit to His will.",
       "prayer": "Lord, establish steadfast prayer in my daily life.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Jesus taught His disciples to pray and not lose heart.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-02",
@@ -34,7 +328,105 @@
       "scripture": "Acts 4:12",
       "reflection": "The apostles proclaimed that salvation is found in Jesus Christ. Our confidence is not in personal achievement but in the Saviour who calls us to repentance and faith.",
       "prayer": "Lord Jesus, help me trust You and proclaim Your saving grace.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "The apostles proclaimed that salvation is found in Jesus Christ.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-03",
@@ -42,7 +434,105 @@
       "scripture": "Acts 1:8",
       "reflection": "The Holy Spirit empowers believers to witness for Christ. Seek His guidance so that courage, truth, love, and holy character accompany your testimony.",
       "prayer": "Holy Spirit, guide my words and actions as I witness for Christ.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "The Holy Spirit empowers believers to witness for Christ.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-04",
@@ -50,7 +540,105 @@
       "scripture": "1 John 1:7",
       "reflection": "Walking in the light means living openly before God and responding to His truth. Refuse secret compromise, practise honesty, and seek forgiveness where you have fallen short.",
       "prayer": "Father, keep my steps in Your light and truth.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Walking in the light means living openly before God and responding to His truth.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-05",
@@ -58,7 +646,105 @@
       "scripture": "Psalm 119:11",
       "reflection": "Scripture shapes the heart when it is received, remembered, and obeyed. Make room for careful reading and meditation rather than treating the Bible as a hurried routine.",
       "prayer": "Lord, plant Your Word deeply in my heart.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Scripture shapes the heart when it is received, remembered, and obeyed.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-06",
@@ -66,7 +752,105 @@
       "scripture": "James 1:22",
       "reflection": "Hearing the Word is a beginning, not the end. Let today's reading change a practical decision: speak truthfully, forgive someone, serve faithfully, or turn away from sin.",
       "prayer": "Father, make me a doer of Your Word.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Hearing the Word is a beginning, not the end.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-07",
@@ -74,7 +858,105 @@
       "scripture": "John 13:34-35",
       "reflection": "Jesus taught His disciples to love one another. Christian love is expressed in patience, honesty, service, and care for people who may be overlooked.",
       "prayer": "Lord, help me show Christlike love in my relationships.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Jesus taught His disciples to love one another.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-08",
@@ -82,7 +964,105 @@
       "scripture": "Romans 1:16",
       "reflection": "The gospel is the power of God unto salvation. Do not be ashamed of Christ; speak with humility, clarity, and compassion when an opportunity arises.",
       "prayer": "Lord, grant me boldness and wisdom to share the gospel.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "The gospel is the power of God unto salvation.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-09",
@@ -90,7 +1070,105 @@
       "scripture": "Ephesians 4:32",
       "reflection": "Forgiveness reflects the kindness God has shown us in Christ. It does not mean ignoring wrongdoing, but it does call us to reject bitterness and seek peace wisely.",
       "prayer": "Father, teach me to forgive and pursue what is right.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Forgiveness reflects the kindness God has shown us in Christ.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-10",
@@ -98,7 +1176,105 @@
       "scripture": "Matthew 24:44",
       "reflection": "Christ's call to readiness should produce faithful living rather than speculation. Use today to follow Him, serve others, and keep your conscience clear before God.",
       "prayer": "Lord, help me live faithfully with eternity in view.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Christ's call to readiness should produce faithful living rather than speculation.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-11",
@@ -106,7 +1282,105 @@
       "scripture": "James 1:2-4",
       "reflection": "Difficult seasons can test perseverance. Ask God for wisdom, remain rooted in His promises, and seek help from trusted believers when burdens feel heavy.",
       "prayer": "Father, sustain my faith and grow patience in me.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Difficult seasons can test perseverance.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Choose what is pure and pleasing to God in today's decisions.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     },
     {
       "date": "2026-11-12",
@@ -114,7 +1388,121 @@
       "scripture": "Psalm 85:6",
       "reflection": "True revival begins with renewed attention to God. Turn from spiritual indifference, treasure Scripture, and pray that your life may reflect Christ's character.",
       "prayer": "Lord, revive my heart and use me for Your glory.",
-      "status": "draft-original-awaiting-editorial-approval"
+      "status": "draft-not-published",
+      "topics": [
+        {
+          "topic": "Revival & Spiritual Fire",
+          "reference": "1 Peter 1:16",
+          "bibleText": "",
+          "reflection": "Ask God to renew your love for Him and strengthen your service.",
+          "prayer": "Lord, revive my heart today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Holiness & Righteousness",
+          "reference": "Psalm 46:1",
+          "bibleText": "",
+          "reflection": "True revival begins with renewed attention to God.",
+          "prayer": "Father, help me walk in holiness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Hope & Encouragement",
+          "reference": "1 Thessalonians 5:17",
+          "bibleText": "",
+          "reflection": "God remains your refuge. Trust Him with today's concerns.",
+          "prayer": "Lord, strengthen my hope in You.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Prayer & Intercession",
+          "reference": "Acts 3:19",
+          "bibleText": "",
+          "reflection": "Bring your needs to God and remember others in prayer.",
+          "prayer": "Father, teach me to pray faithfully.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Salvation & Repentance",
+          "reference": "Hebrews 11:6",
+          "bibleText": "",
+          "reflection": "Turn to Christ with a sincere heart and receive His mercy.",
+          "prayer": "Lord Jesus, guide me in repentance and faith.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Faith & Trust",
+          "reference": "Acts 1:8",
+          "bibleText": "",
+          "reflection": "Believe God's Word and obey Him even when the path is unclear.",
+          "prayer": "Father, increase my faith and obedience.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Holy Spirit",
+          "reference": "Mark 16:15",
+          "bibleText": "",
+          "reflection": "Depend on the Spirit for power to live and witness for Christ.",
+          "prayer": "Holy Spirit, empower my walk with Christ.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Evangelism & Soul Winning",
+          "reference": "John 13:35",
+          "bibleText": "",
+          "reflection": "Share the good news of Jesus with kindness and courage.",
+          "prayer": "Lord, make me a faithful witness.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Love & Christian Unity",
+          "reference": "James 1:22",
+          "bibleText": "",
+          "reflection": "Let your words and actions show Christ's love to others.",
+          "prayer": "Father, fill my heart with Your love.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "The Word & Obedience",
+          "reference": "James 1:5",
+          "bibleText": "",
+          "reflection": "Put one truth from Scripture into practice today.",
+          "prayer": "Lord, help me obey Your Word.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "Wisdom & Discernment",
+          "reference": "Matthew 24:44",
+          "bibleText": "",
+          "reflection": "Ask God for wisdom before making important choices.",
+          "prayer": "Father, give me wisdom today.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        },
+        {
+          "topic": "End-time & Rapture Readiness",
+          "reference": "Psalm 85:6",
+          "bibleText": "",
+          "reflection": "Stay faithful to Christ and live with eternity in view.",
+          "prayer": "Lord Jesus, keep me watchful and faithful.",
+          "reviewStatus": "draft-needs-KJV-text-and-doctrinal-review"
+        }
+      ]
     }
+  ],
+  "format": "twelve-short-devotionals-per-day-v1",
+  "description": "Twelve short, original devotional drafts for each date. Each topic requires a verified KJV Bible text before publication.",
+  "topics": [
+    "Revival & Spiritual Fire",
+    "Holiness & Righteousness",
+    "Hope & Encouragement",
+    "Prayer & Intercession",
+    "Salvation & Repentance",
+    "Faith & Trust",
+    "The Holy Spirit",
+    "Evangelism & Soul Winning",
+    "Love & Christian Unity",
+    "The Word & Obedience",
+    "Wisdom & Discernment",
+    "End-time & Rapture Readiness"
   ]
 }
