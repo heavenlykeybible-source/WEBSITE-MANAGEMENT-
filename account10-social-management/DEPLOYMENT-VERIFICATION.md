@@ -43,3 +43,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - R2 `heavenlykey-social-management-storage` exists. It is not currently bound to the Worker; repository R2 binding remains commented out.
 - Cloudflare Workers Builds configuration access was denied; token may require Workers Builds Configuration: Edit for the correct account. No deployment or configuration mutation performed.
 - NEXT: confirm token and Worker deployment permissions; configure bindings and static assets from canonical source with owner approval, validate D1 schema/migrations, run tests and staging provider checks before production cutover.
+
+## Release controls
+- [ ] Run `npm run verify:local` and record the passing output for the exact commit proposed for release.
+- [ ] Keep Gemini suggestions under operator approval until automated outbound messages have verified opt-in, human takeover and provider testing.
+- [ ] Replace the shared admin bearer token with individual operator authentication and audited role permissions before a multi-user launch.
+- [ ] Require owner approval before deploying Account 10; verify D1 and R2 bindings against the deployed Worker and test rollback.
