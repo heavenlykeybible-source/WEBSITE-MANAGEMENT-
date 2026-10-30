@@ -107,6 +107,7 @@ export class MeetingRooms {
    else{
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;const gd=this.data(g);
     if(m.t==='admit'&&!gd.ok&&!gd.aud){
+     if(gd.waitingUntil&&gd.waitingUntil<=now)return this.close(g,{t:'error',msg:'Waiting room expired. Please rejoin.'});
      if(this.stage().length>=6)return this.send(host,{t:'note',text:'The stage is full (6).'});
      gd.ok=true;gd.stage=true;gd.waitingUntil=0;
      this.save(host,h);this.save(g,gd);this.send(g,{t:'admitted'});this.send(host,{t:'joined',gid:gd.id,name:gd.name,ao:gd.ao});
