@@ -25,6 +25,9 @@ for(let i=0;i<entries.length;i++){
   assert.equal(t.reference,docs[0].entries[0].topics[j].reference);
   assert(typeof t.bibleText==='string'&&t.bibleText.trim());
   assert(t.bibleText.length<=1200);
+  assert.equal(t.bibleText,docs[0].entries[0].topics[j].bibleText,'Inconsistent Scripture quotation '+e.date+' topic '+j);
+  assert(typeof t.reflection==='string'&&t.reflection.trim().length>=30,'Empty or too-short reflection '+e.date);
+  assert(typeof t.prayer==='string'&&t.prayer.trim().length>=15,'Empty or too-short prayer '+e.date);
   if(e.status==='approved-for-publication')assert.equal(t.reviewStatus,'approved','Unreviewed approved topic '+e.date);else assert.equal(t.reviewStatus,'draft-original-editorial-and-doctrinal-approval-pending','Unexpected draft review status '+e.date);
   assert(t.reference&&t.bibleText&&t.reflection&&t.prayer);
   assert(t.reflection.length<=280&&t.prayer.length<=160);
@@ -32,8 +35,12 @@ for(let i=0;i<entries.length;i++){
 }
 const all=entries.flatMap(e=>e.topics);
 console.log('First two years structurally valid:',entries.length,'days',all.length,'topic entries');
-console.log('Distinct reflections:',new Set(all.map(t=>t.reflection)).size,'distinct prayers:',new Set(all.map(t=>t.prayer)).size);
+const normalize=value=>value.trim().toLowerCase().replace(/\\s+/g,' ');
+const uniqueReflections=new Set(all.map(t=>normalize(t.reflection))).size;
+const uniquePrayers=new Set(all.map(t=>normalize(t.prayer))).size;
+console.log('CONTENT QUALITY REPORT:',JSON.stringify({totalTopicEntries:all.length,uniqueReflections,duplicateReflectionEntries:all.length-uniqueReflections,uniquePrayers,duplicatePrayerEntries:all.length-uniquePrayers}));
 const approved=entries.filter(e=>e.status==='approved-for-publication');
 for(let j=0;j<12;j++){const reflections=new Set(),prayers=new Set();for(const e of approved){const r=e.topics[j].reflection.trim().toLowerCase(),p=e.topics[j].prayer.trim().toLowerCase();assert(!reflections.has(r),'Repeated approved reflection '+e.date);assert(!prayers.has(p),'Repeated approved prayer '+e.date);reflections.add(r);prayers.add(p);}}
 console.log('APPROVED DAYS:',approved.length,'EDITORIAL HOLD:',entries.length-approved.length);
-if(approved.length<entries.length)console.warn('NOT READY: Editorial approval outstanding.');
+if(approved.length<entries.length||uniqueReflections<all.length||uniquePrayers<all.length)console.warn('NOT READY: Editorial approval and originality editing outstanding.');
+// Identical draft passages are reported as editorial blockers, not automatically approved or silently rewritten.
