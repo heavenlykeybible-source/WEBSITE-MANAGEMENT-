@@ -90,6 +90,15 @@ const oversizedJsonResponse=await onRequest({
   }),env,params:{path:['register']}
 });
 check('Oversized unknown-length JSON is rejected before parsing',oversizedJsonResponse.status===400);
+const mismatchedJsonLength = await onRequest({
+  request:new Request('https://studio.example/api/register',{
+    method:'POST',
+    headers:{'x-requested-with':'hk','content-type':'application/json','content-length':'200'},
+    body:JSON.stringify({email:'mismatch@example.com',password:'long enough password'})
+  }),env,params:{path:['register']}
+});
+check('Declared JSON Content-Length mismatch is rejected',mismatchedJsonLength.status===400);
+check('Mismatched JSON length does not create user',!db.prepare('SELECT 1 FROM users WHERE email=?').get('mismatch@example.com'));
 const wrongTypeRegister = await onRequest({
   request: new Request('https://studio.example/api/register',{
     method:'POST',
