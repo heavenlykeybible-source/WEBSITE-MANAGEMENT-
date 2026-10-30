@@ -59,6 +59,7 @@ jobs:
           node tests/account4-agent-permissions.mjs
           node scripts/account4-precise-ai-intent.mjs
           node tests/account4-ai-conversation-guard.mjs
+          node tests/account4-chat-fast-path.mjs
           node tests/account4-provider-reconnect.mjs
           node tests/account4-github-import-ux.mjs
           node tests/account4-github-preflight.mjs
