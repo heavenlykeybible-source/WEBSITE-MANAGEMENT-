@@ -250,6 +250,18 @@ const noLengthUpload = await onRequest({
   }),env,params:{path:['media']}
 });
 check('Media supports absent content length',noLengthUpload.status===200);
+for (const [label, payload] of [
+  ['Truncated GIF header',new TextEncoder().encode('GIF89a')],
+  ['Zero-width GIF',Uint8Array.from([71,73,70,56,57,97,0,0,1,0,128,0,0])],
+  ['Excessive GIF dimensions',Uint8Array.from([71,73,70,56,57,97,255,255,255,255,128,0,0])]
+]) {
+  const gifResponse=await onRequest({
+    request:new Request('https://studio.example/api/media?name=invalid.gif',{
+      method:'POST',headers:{cookie:login.cookie,'content-type':'image/gif','x-requested-with':'hk'},body:payload
+    }),env,params:{path:['media']}
+  });
+  check('Invalid GIF rejected: '+label,gifResponse.status===415);
+}
 const spoofedImage = await onRequest({
   request: new Request('https://studio.example/api/media?name=disguised.png',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
