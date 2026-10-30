@@ -3,14 +3,14 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../heavenly-key-website/bible');
-const names=['strength-devotionals-2026.json','strength-devotionals-2027-batch01.json','strength-devotionals-year1-batch02.json','strength-devotionals-year1-batch03.json','strength-devotionals-year1-batch04.json','strength-devotionals-year2-batch01.json','strength-devotionals-year2-batch02.json','strength-devotionals-year2-batch03.json','strength-devotionals-year2-batch04.json','strength-devotionals-year3-batch01.json','strength-devotionals-year3-batch02.json','strength-devotionals-year3-batch03.json','strength-devotionals-year3-batch04.json','strength-devotionals-year4-batch01.json','strength-devotionals-year4-batch02.json','strength-devotionals-year4-batch03.json','strength-devotionals-year4-batch04.json'];
+const names=['strength-devotionals-2026.json','strength-devotionals-2027-batch01.json','strength-devotionals-year1-batch02.json','strength-devotionals-year1-batch03.json','strength-devotionals-year1-batch04.json','strength-devotionals-year2-batch01.json','strength-devotionals-year2-batch02.json','strength-devotionals-year2-batch03.json','strength-devotionals-year2-batch04.json','strength-devotionals-year3-batch01.json','strength-devotionals-year3-batch02.json','strength-devotionals-year3-batch03.json','strength-devotionals-year3-batch04.json','strength-devotionals-year4-batch01.json','strength-devotionals-year4-batch02.json','strength-devotionals-year4-batch03.json','strength-devotionals-year4-batch04.json','strength-devotionals-year5-batch01.json','strength-devotionals-year5-batch02.json','strength-devotionals-year5-batch03.json','strength-devotionals-year5-batch04.json'];
 const docs=names.map(n=>JSON.parse(readFileSync(resolve(root,n),'utf8')));
 for(const doc of docs){assert.equal(doc.timezone,'Africa/Lagos');assert.deepEqual(doc.topics,docs[0].topics)}
 const entries=docs.flatMap(d=>d.entries).sort((a,b)=>a.date.localeCompare(b.date));
 assert.equal(new Set(entries.map(e=>e.date)).size,entries.length,'Duplicate dates');
-assert.equal(entries.length,1461);
+assert.equal(entries.length,1826);
 assert.equal(entries[0].date,'2026-10-30');
-assert.equal(entries.at(-1).date,'2030-10-29');
+assert.equal(entries.at(-1).date,'2031-10-29');
 for(let i=0;i<entries.length;i++){
  const e=entries[i];
  assert.match(e.date,/^\d{4}-\d{2}-\d{2}$/);
@@ -34,7 +34,7 @@ for(let i=0;i<entries.length;i++){
  }
 }
 const all=entries.flatMap(e=>e.topics);
-console.log('First four years structurally valid:',entries.length,'days',all.length,'topic entries');
+console.log('First five years structurally valid:',entries.length,'days',all.length,'topic entries');
 const normalize=value=>value.trim().toLowerCase().replace(/\s+/g,' ');
 const uniqueReflections=new Set(all.map(t=>normalize(t.reflection))).size;
 const uniquePrayers=new Set(all.map(t=>normalize(t.prayer))).size;
@@ -53,6 +53,13 @@ const year4Topics=year4.flatMap(e=>e.topics);
 assert.equal(new Set(year4Topics.map(t=>normalize(t.reflection))).size,year4Topics.length,'Year 4 repeated reflections');
 assert.equal(new Set(year4Topics.map(t=>normalize(t.prayer))).size,year4Topics.length,'Year 4 repeated prayers');
 console.log('YEAR 4 DRAFT AUDIT:',year4.length,'days; exact reflections and prayers unique; editorial approval pending.');
+const year5=entries.filter(e=>e.date>='2030-10-30'&&e.date<='2031-10-29');
+assert.equal(year5.length,365,'Year 5 must contain exactly 365 dates');
+assert(year5.every(e=>e.status==='draft-not-published'),'Year 5 must remain in editorial hold');
+const year5Topics=year5.flatMap(e=>e.topics);
+assert.equal(new Set(year5Topics.map(t=>normalize(t.reflection))).size,year5Topics.length,'Repeated Year 5 reflections');
+assert.equal(new Set(year5Topics.map(t=>normalize(t.prayer))).size,year5Topics.length,'Repeated Year 5 prayers');
+console.log('YEAR 5 DRAFT AUDIT:',year5.length,'days; duplicate-free exact reflection/prayer strings; editorial review required.');
 const approved=entries.filter(e=>e.status==='approved-for-publication');
 for(let j=0;j<12;j++){const reflections=new Set(),prayers=new Set();for(const e of approved){const r=e.topics[j].reflection.trim().toLowerCase(),p=e.topics[j].prayer.trim().toLowerCase();assert(!reflections.has(r),'Repeated approved reflection '+e.date);assert(!prayers.has(p),'Repeated approved prayer '+e.date);reflections.add(r);prayers.add(p);}}
 console.log('APPROVED DAYS:',approved.length,'EDITORIAL HOLD:',entries.length-approved.length);
