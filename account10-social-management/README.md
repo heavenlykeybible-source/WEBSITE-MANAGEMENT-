@@ -32,3 +32,6 @@ Do not represent a Meta API acceptance response as proof of delivery. Check `DEP
 - Gemini suggestions remain review-only; quota errors return a human-review fallback. This does not mean a WhatsApp message has been sent.
 - Run `npm run verify:local` after every update and verify real messaging and human takeover against an authorized staging deployment before launch.
 - Custom Domain `socialplus.heavenlykey.org` is declared in `wrangler.toml`, but GitHub changes do not activate DNS, secrets or deployed Worker bindings without the owner's authorized deployment.
+
+## Continuous integration (no automatic deployment)
+GitHub Actions workflow `.github/workflows/account10-verify.yml` runs `npm run verify:local` when Account 10 source changes, on related pull requests, and by manual dispatch. It only checks source, tests and dry-run packaging, with read-only repository permissions. No Cloudflare production token or deploy step is configured in this workflow. A green result is a code-build check, **not** a guarantee that production secrets, database migrations, WhatsApp delivery, Gemini quotas or DNS are working. Production remains owner-approved and requires the documented launch checklist.
