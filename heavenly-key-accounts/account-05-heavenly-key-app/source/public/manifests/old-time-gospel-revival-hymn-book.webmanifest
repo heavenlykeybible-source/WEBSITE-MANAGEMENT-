@@ -1,0 +1,30 @@
+{
+  "name": "Old Time Gospel Revival Hymn Book",
+  "short_name": "Revival Hymns",
+  "description": "Old Time Gospel Revival Hymn Book — Heavenly Key Evangelistic Movement",
+  "id": "/installed/old-time-gospel-revival-hymn-book",
+  "start_url": "/old-time-gospel-revival-hymn-book.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff7e8",
+  "theme_color": "#79051b",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "education",
+    "books"
+  ],
+  "lang": "en"
+}
