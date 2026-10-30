@@ -15,7 +15,7 @@ async function account4MultipartRoutes(req,env,user,sub,m){
  if(endpoint==='create'&&m==='POST'){
   const b=await body(req),size=Number(b.size),filename=String(b.name||'').trim();
   if(!Number.isSafeInteger(size)||size<1||size>ACCOUNT4_MAX_UPLOAD)fail('Maximum allowed private upload is 1 GiB',413);
-  if(!filename||filename.length>180||/[\\/\\x00-\\x1f\\x7f]/.test(filename)||filename==='.'||filename==='..')fail('Enter a safe filename');
+  if(!filename||filename.length>180||filename.includes('/')||filename.includes('\\')||Array.from(filename).some(c=>c.charCodeAt(0)<32||c.charCodeAt(0)===127)||filename==='.'||filename==='..')fail('Enter a safe filename');
   const plan=account4PartPlan(size),count=await env.DB.prepare('SELECT key,value_json FROM settings WHERE key LIKE ?').bind('multipart:'+user.id+':%').all();
   if(count.results.filter(r=>{const v=JSON.parse(r.value_json);return v.status==='uploading'&&v.expires>Date.now();}).length>=3)fail('Finish or cancel an existing large upload before opening another',429);
   const id=crypto.randomUUID(),key='owner-staging/'+user.id+'/'+id+'/upload',upload=await env.FILES.createMultipartUpload(key);
