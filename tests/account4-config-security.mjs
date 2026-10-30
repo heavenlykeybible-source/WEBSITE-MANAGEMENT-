@@ -9,6 +9,7 @@ must(/^main\s*=\s*"control-room-worker\.js"\s*$/m.test(config),'Deployment entry
 must(/^SIGNUP_OPEN\s*=\s*"false"\s*$/m.test(config),'Public signup must remain closed until intentional owner approval');
 must(/^PROTECTED_WORKERS\s*=\s*"website-management"\s*$/m.test(config),'Control Room Worker must remain protected');
 for(const binding of ['DB','FILES','AI'])must(new RegExp('binding\\s*=\\s*"'+binding+'"').test(config),'Missing binding '+binding);
+must(/^on:\s*\n\s+pull_request:\s*\n\s+push:\s*\n\s+branches:\s*\n\s+- main\s*$/m.test(workflow),'Security checks must run on every PR and main push');
 must(/^permissions:\s*\n\s+contents:\s*read\s*$/m.test(workflow),'Security workflow must use read-only repository permissions');
 must(!/\b(?:wrangler deploy|npm run deploy|cloudflare\/wrangler-action)\b/i.test(workflow),'Security workflow must not deploy');
 must(!/^\s*(?:id-token|actions|deployments|packages):\s*write\b/m.test(workflow),'Security workflow cannot request write permissions');
