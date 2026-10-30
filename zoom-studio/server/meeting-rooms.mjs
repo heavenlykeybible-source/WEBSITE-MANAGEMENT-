@@ -65,13 +65,14 @@ export class MeetingRooms {
   // Ignore queued frames from sockets already disconnected or removed by the host.
   if(ws.readyState!==1)return;
   if(typeof raw!=='string'||raw.length>20000)return this.close(ws,{t:'error',msg:'Invalid message.'});
-  let m;try{m=JSON.parse(raw);}catch{return;}
-  if(!m||typeof m!=='object'||Array.isArray(m))return;
+  // Count all frames, including malformed JSON, before parsing to prevent rate-limit bypass.
   const d=this.data(ws),now=Date.now();
   if(now-(d.stampAt||0)>=3000){d.stampAt=now;d.stampN=0;}
   // ICE candidates may arrive in bursts; chat has its own tighter limit below.
   if((d.stampN||0)>=100)return this.close(ws,{t:'error',msg:'Too many messages. Please reconnect.'});
   d.stampN=(d.stampN||0)+1;this.save(ws,d);
+  let m;try{m=JSON.parse(raw);}catch{return;}
+  if(!m||typeof m!=='object'||Array.isArray(m))return;
   if(!d.role){
    if(now>d.until)return this.close(ws,{t:'error',msg:'Please reconnect.'});
    if(m.t==='host'){
