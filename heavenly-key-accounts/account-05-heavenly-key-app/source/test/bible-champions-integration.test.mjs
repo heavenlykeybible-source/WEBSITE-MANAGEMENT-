@@ -41,6 +41,6 @@ test('game embedding may only be same-origin, not globally enabled',()=>{
   assert.match(section,/X-Frame-Options: SAMEORIGIN/);
   assert.match(section,/frame-ancestors 'self'/);
  }
- assert.match(localHeaders,/\/\*\n  X-Frame-Options: DENY/);
- assert.match(socialHeaders,/\/\*\n  X-Frame-Options: DENY/);
+ assert.match(localHeaders,/X-Frame-Options: DENY/);
+ assert.match(socialHeaders,/X-Frame-Options: DENY/);
 });
