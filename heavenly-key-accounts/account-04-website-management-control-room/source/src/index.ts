@@ -16,7 +16,7 @@ async function secureAsset(request:Request,env:Env):Promise<Response>{
  response.headers.set('Content-Security-Policy',"frame-ancestors 'none'; object-src 'none'; base-uri 'self'");
  response.headers.set('Permissions-Policy','camera=(), microphone=(), geolocation=()');
  response.headers.set('Strict-Transport-Security','max-age=31536000; includeSubDomains');
- if((response.headers.get('content-type')||'').includes('text/html'))response.headers.set('Cache-Control','no-store');
+ if((response.headers.get('content-type')||'').includes('text/html')||new URL(request.url).hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev')response.headers.set('Cache-Control','no-store');
  return response;
 }
 function b64url(s:string){const p=s.replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from(atob(p+"=".repeat((4-p.length%4)%4)),c=>c.charCodeAt(0))}
