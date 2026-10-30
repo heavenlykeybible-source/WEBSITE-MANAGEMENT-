@@ -69,8 +69,11 @@ async function scenario(mode){
    const operation=node('clipExport').onclick();
    const metadata=videoEvents.get('loadedmetadata');
    assert.equal(typeof metadata,'function','New video metadata handler is registered');
+   video.currentTime=.25;video.playbackRate=1.5;
    metadata();
    await operation;
+   assert.equal(video.currentTime,.25,'Old export does not rewind newly loaded media');
+   assert.equal(video.playbackRate,1.5,'Old export does not reset newly loaded media playback speed');
    assert.equal(window.hkTimeline.getClips().length,0,'Changing video clears previous clips');
    assert.equal(node('clipCancel').disabled,true,'Source replacement releases busy timeline controls');
    console.log('PASS timeline encoder '+mode);
