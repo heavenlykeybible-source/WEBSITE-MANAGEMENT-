@@ -262,12 +262,15 @@ for (const [label, payload] of [
   });
   check('Invalid GIF rejected: '+label,gifResponse.status===415);
 }
-const sampleWebP=Uint8Array.from([82,73,70,70,12,0,0,0,87,69,66,80,86,80,56,88,0,0,0,0]);
+const sampleWebP=Uint8Array.from(Buffer.from('UklGRjwAAABXRUJQVlA4IDAAAADQAQCdASoBAAEAAkA4JaACdLoB+AADsAD+8JtD/yC0rlvAH/8SF+JC/Ehf+LmAAAA=','base64'));
 for (const [label, payload, expected] of [
   ['Valid WebP container',sampleWebP,200],
   ['Truncated WebP header',sampleWebP.slice(0,12),415],
   ['Incorrect WebP RIFF size',Uint8Array.from(sampleWebP.map((n,i)=>i===4?13:n)),415],
-  ['Unsupported WebP chunk',Uint8Array.from(sampleWebP.map((n,i)=>i===12?88:n)),415]
+  ['Unsupported WebP chunk',Uint8Array.from(sampleWebP.map((n,i)=>i===12?88:n)),415],
+  ['WebP chunk exceeding file',Uint8Array.from(sampleWebP.map((n,i)=>i===16?240:n)),415],
+  ['WebP frame signature mismatch',Uint8Array.from(sampleWebP.map((n,i)=>i===23?0:n)),415],
+  ['Zero WebP image width',Uint8Array.from(sampleWebP.map((n,i)=>i===26||i===27?0:n)),415]
 ]) {
   const response=await onRequest({
     request:new Request('https://studio.example/api/media?name=example.webp',{
