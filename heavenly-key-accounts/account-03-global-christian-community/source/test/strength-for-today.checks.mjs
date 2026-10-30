@@ -4,7 +4,7 @@ test('external devotional script parses under a self-only script policy',()=>{co
 test('premium feed publishing uses a single supported posting handler',()=>{const html=(read('strength-for-today.html')+read('strength-for-today-page.js')),studio=read('strength-share-studio.js');assert.equal((html.match(/\$\('feed'\)\.onclick/g)||[]).length,0);assert.equal((studio.match(/\$\('feed'\)\.onclick/g)||[]).length,1);for(const token of ["request('/api/posts','POST'","postFormat:format","visibility:'public'"])assert.ok(studio.includes(token),token);});
 test('member messages require an accepted request',()=>{const html=(read('strength-for-today.html')+read('strength-for-today-page.js'));for(const token of ["request('/api/discover?q='","request('/api/messages/requests','POST'","convo.status==='accepted'","convo.status==='requested'","clientRequestId:crypto.randomUUID()","id===selfId"])assert.ok(html.includes(token),token);});
 test('single image studio preserves archive and favorites and avoids upload',()=>{const html=(read('strength-for-today.html')+read('strength-for-today-page.js')),studio=read('strength-share-studio.js');for(const token of ['Devotional Topic Library','archiveList.append','id="favorite"','function readFavorites()'])assert.ok(html.includes(token),token);for(const token of ['canvas.toBlob','URL.createObjectURL','URL.revokeObjectURL','navigator.share'])assert.ok(studio.includes(token),token);assert.ok(!studio.includes("fetch('/api/media/upload'"));assert.equal((html.match(/\$\('download'\)\.onclick/g)||[]).length,0);assert.equal((studio.match(/\$\('download'\)\.onclick/g)||[]).length,1);});
-test('past daily selections are date-addressable and honestly labeled as rotating content',()=>{const html=(read('strength-for-today.html')+read('strength-for-today-page.js'));for(const token of ['Past Daily Selections','These are repeated selections','historyDate.type=\'date\'','historyOpen.onclick=','date.getUTCFullYear()'])assert.ok(html.includes(token),token);});
+test('past daily selections are date-addressable and honestly labeled as rotating content',()=>{const html=(read('strength-for-today.html')+read('strength-for-today-page.js'));for(const token of ['Past Daily Selections','Dates without approved content show the existing topic selections.','historyDate.type=\'date\'','historyOpen.onclick=','date.getUTCFullYear()'])assert.ok(html.includes(token),token);});
 
 test('on-device audio narration offers accessible playback without microphone or upload',()=>{const html=(read('strength-for-today.html')+read('strength-for-today-page.js'));for(const id of ['listen-strength','pause-strength','stop-strength','audio-status'])assert.ok(html.includes('id="'+id+'"'),id);for(const token of ['SpeechSynthesisUtterance','speechSynthesis.speak','speechSynthesis.cancel','speechSynthesis.pause','speechSynthesis.resume','selected[1]','selected[2]'])assert.ok(html.includes(token),token);});
 
@@ -45,7 +45,7 @@ test('all 24 topic and portrait-size combinations generate branded PNGs',async()
 
 test('right-sidebar authorised KJV Bible has premium inline reading, reference styling and share controls',()=>{
  const sidebar=read('global-social-sidebar.js'),reader=read('social-mini-bible.js'),css=read('global-social-current.css');
- assert.ok(sidebar.includes("aside.append(bible)"));
+ assert.ok(sidebar.includes("resources.append(bible)"));
  assert.ok(sidebar.includes("import('./social-mini-bible.js')"));
  for(const value of ['Authorised King James Version','Psalms', 'loadBook(23,1)','Bible Dictionary','Concordance','Copy Verse','Other Networks','Post to Network','Send to Member','/api/posts','/api/me'])assert.ok(reader.includes(value),value);
  assert.ok(css.includes('gc-bible-reference')&&css.includes('#791c39'));
@@ -85,7 +85,7 @@ test('Daily Manna lives in My Walk with God, not Bible main reader',()=>{
 });
 test('sidebar lifecycle avoids duplicate daily devotional links',()=>{
  const script=read('global-social-sidebar.js');
- assert.ok(script.includes("document.querySelectorAll('.gc-strength-for-today-link').forEach(x=>x.remove())"));
+ assert.ok(script.includes("document.querySelectorAll('.gc-strength-for-today-link,.gc-bible-one-year,.gc-bible-champions-link').forEach(x=>x.remove())"));
 });
 
 test('sidebar full Bible remote KJV data is permitted by content security policy',()=>{
