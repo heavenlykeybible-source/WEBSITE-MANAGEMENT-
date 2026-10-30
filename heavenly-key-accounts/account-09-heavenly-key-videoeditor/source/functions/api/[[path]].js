@@ -263,7 +263,20 @@ export async function onRequest({ request: req, env, params }) {
       if (!audio.byteLength || audio.byteLength > 3 * 1024 * 1024 || (announced !== null && Number(announced) !== audio.byteLength)) return J({ error: 'Audio size mismatch or chunk too large.' }, 413);
       const wave = new Uint8Array(audio);
       const waveText = (offset,text) => [...text].every((char,i)=>wave[offset+i]===char.charCodeAt(0));
-      if (wave.length < 44 || !waveText(0,'RIFF') || !waveText(8,'WAVE') || !waveText(12,'fmt ') || !waveText(36,'data')) return J({error:'Invalid WAV audio.'},415);
+      const wavHeader = wave.length >= 44 ? new DataView(audio) : null;
+      const validWav = wavHeader && waveText(0,'RIFF') && waveText(8,'WAVE') && waveText(12,'fmt ') && waveText(36,'data') &&
+        wavHeader.getUint32(4,true) === wave.length - 8 &&
+        wavHeader.getUint32(16,true) === 16 &&
+        wavHeader.getUint16(20,true) === 1 &&
+        wavHeader.getUint16(22,true) >= 1 && wavHeader.getUint16(22,true) <= 2 &&
+        wavHeader.getUint32(24,true) >= 8000 && wavHeader.getUint32(24,true) <= 48000 &&
+        wavHeader.getUint16(34,true) === 16 &&
+        wavHeader.getUint16(32,true) === wavHeader.getUint16(22,true) * 2 &&
+        wavHeader.getUint32(28,true) === wavHeader.getUint32(24,true) * wavHeader.getUint16(32,true) &&
+        wavHeader.getUint32(40,true) > 0 &&
+        wavHeader.getUint32(40,true) % wavHeader.getUint16(32,true) === 0 &&
+        wavHeader.getUint32(40,true) === wave.length - 44;
+      if (!validWav) return J({error:'Invalid or unsupported PCM WAV audio.'},415);
       const r = await env.AI.run('@cf/openai/whisper', { audio: [...new Uint8Array(audio)] });
       await log(env, u.id, 'transcribe');
       return J({ text: r.text || '', words: (r.words || []).map(w => ({ word: String(w.word), start: +w.start, end: +w.end })) });
