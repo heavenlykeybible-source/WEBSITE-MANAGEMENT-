@@ -32,11 +32,12 @@ test('install QR code does not disclose install links to a third-party QR servic
  assert.match(script,/\/qr\/app-/);
 });
 
-test('Hymn Book install options do not mislabel another app QR code',()=>{
+test('Hymn Book QR assets are registered without reusing another app code',()=>{
  const script=readFileSync(new URL('app-pages.js',base),'utf8');
- assert.match(script,/id==='old-time-gospel-revival-hymn-book'/);
- assert.match(script,/Use the installation link below/);
+ assert.match(script,/img\.src='\/qr\/app-'\+id/);
  assert.doesNotMatch(script,/id==='old-time-gospel-revival-hymn-book'\?'\/qr\/app-all-in-one/);
+ const entries=JSON.parse(readFileSync(new URL('qr/destinations.json',base),'utf8'));
+ assert.equal(entries.filter(e=>e.id===hymn||e.app===hymn).length,6);
 });
 
 test('native packages require explicit user download, not QR navigation',()=>{
