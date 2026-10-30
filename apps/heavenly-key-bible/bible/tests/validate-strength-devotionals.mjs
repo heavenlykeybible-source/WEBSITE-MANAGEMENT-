@@ -15,7 +15,10 @@ const publicationReady=[];
 const editorialHolds=[];
 for(const entry of data.entries){
  assert.match(entry.date,/^\d{4}-\d{2}-\d{2}$/);
+ const parsedDate=new Date(entry.date+'T00:00:00Z');
+ assert(!Number.isNaN(parsedDate.getTime())&&parsedDate.toISOString().slice(0,10)===entry.date,'Invalid calendar date: '+entry.date);
  assert(!seen.has(entry.date),'Duplicate date: '+entry.date);seen.add(entry.date);
+ assert(entry.date>='2026-10-30','Unexpected date before editorial start: '+entry.date);
  assert.equal(entry.topics.length,12,'Wrong topic count: '+entry.date);
  assert(['draft-not-published','approved-for-publication'].includes(entry.status),'Invalid publication status: '+entry.date);
  if(entry.status==='approved-for-publication')assert(entry.topics.every(t=>t.reviewStatus==='approved'),'Unapproved topic in published day: '+entry.date);
