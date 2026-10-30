@@ -105,6 +105,11 @@ jobs:
           test -f control-room-worker.js || { echo '::error::Missing Control Room Worker'; exit 1; }
           node --check control-room-worker.js
 
+      - name: Ensure deployable Worker matches approved commit
+        run: |
+          git diff --exit-code HEAD -- control-room-worker.js || { echo '::error::Worker differs from approved commit after build'; exit 1; }
+          git ls-files --error-unmatch control-room-worker.js >/dev/null || { echo '::error::Worker is not tracked by approved commit'; exit 1; }
+
       - name: Block superseded releases
         env:
           APPROVED_COMMIT: ${{ inputs.approved_commit }}
