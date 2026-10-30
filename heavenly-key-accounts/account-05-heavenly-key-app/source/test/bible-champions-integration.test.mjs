@@ -74,3 +74,14 @@ test('all new Bible Champions memory questions match an actual KJV verse word-fo
  }
  assert.equal(verified,567,'Expected exactly 567 newly KJV-sourced Scripture-completion questions');
 });
+
+test('every Bible Champions surface offers the same private, user-initiated result sharing',()=>{
+ for(const source of [bible,social,local('bible-quiz.js')]){
+  assert.match(source,/async function shareBibleResult\(\)/);
+  assert.match(source,/Share my learning result/);
+  assert.match(source,/navigator\.share/);
+  assert.match(source,/navigator\.clipboard\?\.writeText/);
+  assert.match(source,/new URL\(location\.pathname,location\.origin\)/);
+  assert.doesNotMatch(source,/location\.search\s*\+/);
+ }
+});
