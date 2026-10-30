@@ -48,7 +48,17 @@ async function scenario(mode){
  if(mode==='cancel-seek'||mode==='cancel-play'||mode==='cancel-start')assert.match(status,/Timeline operation stopped/);
  if(mode==='play-timeout'||mode==='late-play')assert.match(status,/Video playback did not start within 15 seconds/);
  if(mode==='late-play'){const count=video.pauseCount;await new Promise(resolve=>setTimeout(resolve,40));assert.ok(video.pauseCount>count,'Late playback is paused after timeout')}
- if(mode==='success'){assert.match(status,/without audio/);assert.equal(node('clipDownload').hidden,false)}
+ if(mode==='success'){
+  assert.match(status,/without audio/);
+  assert.equal(node('clipDownload').hidden,false);
+  video.play=async()=>new Promise(()=>{});
+  video.currentTime=0;
+  const nextExport=node('clipExport').onclick();
+  assert.equal(node('clipDownload').hidden,true,'Starting a fresh export hides the previous download');
+  node('clipCancel').onclick();
+  await nextExport;
+  assert.equal(node('clipDownload').hidden,true,'Cancellation does not restore an outdated export');
+ }
  console.log('PASS timeline encoder '+mode);
 }
 for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play'])await scenario(mode);
