@@ -1,0 +1,99 @@
+name: Account 4 non-deploying security checks
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  security-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify syntax
+        run: node --check control-room-worker.js
+      - name: Audit other account deployment workflow triggers
+        run: node scripts/account4-workflow-inventory.mjs
+      - name: Prevent cross-account workflow deployment regressions
+        run: node tests/account4-cross-account-ci-guards.mjs
+      - name: Verify security guard presence
+        run: node tests/account4-launch-guards.mjs
+      - name: Verify production release uses approved and tested Worker
+        run: node tests/account4-production-review-parity.mjs
+      - name: Validate protected deployment settings and CI permissions
+        run: node tests/account4-config-security.mjs
+      - name: Check for unresolved conflict markers
+        run: |
+          if grep -nE '^(<<<<<<< |=======|>>>>>>> )' control-room-worker.js; then
+            echo 'Unresolved merge conflict marker found' >&2
+            exit 1
+          fi
+      - name: Run existing repository tests
+        run: |
+          npm ci
+          npm audit --audit-level=high
+          npm test
+      - name: Verify navigation dry-run before applying changes
+        run: npm run check:account4-navigation
+      - name: Dry-run Cloudflare verification and website preview fix
+        run: npm run check:account4-permissions-preview
+      - name: Check individual AI grants before release
+        run: npm run check:account4-agent-permissions
+      - name: Check AI conversation proposal guard
+        run: npm run check:account4-ai-conversation
+      - name: Validate Gemini and OpenAI reconnection UI
+        run: npm run check:account4-provider-reconnect
+      - name: Verify connected GitHub importer before release
+        run: npm run check:account4-github-import
+      - name: Validate concurrent AI chat destination loading
+        run: npm run check:account4-fast-chat
+      - name: Verify navigation upgrade after repository patch tests
+        run: |
+          npm run prepare:account4-release
+          node tests/account4-navigation-regression.mjs
+          node tests/account4-unified-permissions-preview.mjs
+          node tests/account4-agent-permissions.mjs
+          node tests/account4-chat-agent-grant-discovery.mjs
+          node scripts/account4-precise-ai-intent.mjs
+          node tests/account4-ai-conversation-guard.mjs
+          node tests/account4-chat-fast-path.mjs
+          node tests/account4-provider-reconnect.mjs
+          node tests/account4-provider-health.mjs
+          node tests/account4-claude-secret-health.mjs
+          node tests/account4-github-import-ux.mjs
+          node tests/account4-preview-device-toggle.mjs
+          node tests/account4-large-upload.mjs
+          node tests/account4-large-upload-runtime.mjs
+          node tests/account4-github-preflight.mjs
+          node tests/account4-fast-chat-init.mjs
+      - name: Generate release provenance and checksum
+        run: node scripts/account4-release-integrity.mjs
+      - name: Independently verify staged release checksum
+        run: node scripts/account4-release-integrity.mjs --verify
+      - name: Reject tampered release metadata
+        run: |
+          cp account4-release-manifest.json account4-release-manifest.json.original
+          node -e "const fs=require('fs');const p='account4-release-manifest.json';const m=JSON.parse(fs.readFileSync(p));m.reviewRequired=false;fs.writeFileSync(p,JSON.stringify(m));"
+          if node scripts/account4-release-integrity.mjs --verify; then
+            echo 'Tampered release manifest unexpectedly verified' >&2
+            exit 1
+          fi
+          mv account4-release-manifest.json.original account4-release-manifest.json
+          node scripts/account4-release-integrity.mjs --verify
+      - name: Store tested Worker for owner review (no deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: account4-reviewed-worker
+          path: |
+            control-room-worker.js
+            account4-reviewed-worker.sha256
+            account4-release-manifest.json
+          if-no-files-found: error
+          retention-days: 7
+# This workflow intentionally does not publish, deploy or access production secrets.

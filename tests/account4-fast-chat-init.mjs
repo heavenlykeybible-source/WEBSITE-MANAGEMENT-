@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../control-room-worker.js',import.meta.url),'utf8');
+const a=source.indexOf('async function claude()'),b=source.indexOf('async function aiAccounts()',a);
+assert.ok(a>=0&&b>a,'AI chat client is missing');
+const chat=source.slice(a,b);
+assert.ok(chat.includes("Promise.allSettled([api('ai/history'),own()?api('connections'):Promise.resolve({connections:[]}),ME.kind!=='member'?api('sites'):Promise.resolve({sites:[]}),api('github'),api('remote')])"),'History and account destinations must start together');
+assert.ok(chat.includes("initial[0].status==='fulfilled'"),'History failures must be isolated');
+assert.ok(chat.includes("initial[4].status==='fulfilled'"),'Remote site failures must be isolated');
+assert.ok(chat.includes("initial[1].status==='fulfilled'"),'Cloudflare account lookup failures must be isolated');
+assert.ok(chat.includes('destinations.sites.forEach'),'Managed website destinations must still load');
+assert.ok(chat.includes('ghTargets.sites.forEach'),'GitHub destinations must still load');
+assert.ok(chat.includes('blogTargets.sites.filter'),'Remote blog destinations must still load');
+assert.ok(!chat.includes("var ghTargets=await api('github'),blogTargets=await api('remote')"),'Old sequential lookup must not return');
+console.log('PASS AI chat destination lists load concurrently while preserving all target types');

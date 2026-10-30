@@ -1,9 +1,9 @@
 name: Account 8 MeetingSpace checks and deployment
 on:
   push:
-    paths: ['heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/**', 'scripts/existing-worker-release.mjs', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
+    paths: ['heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/**', 'scripts/existing-worker-release.mjs', '.github/workflows/zoom-studio.yml']
   pull_request:
-    paths: ['heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/**', 'scripts/existing-worker-release.mjs', 'tests/**', 'control-room-worker.js', '.github/workflows/zoom-studio.yml']
+    paths: ['heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/**', 'scripts/existing-worker-release.mjs', '.github/workflows/zoom-studio.yml']
   workflow_dispatch:
     inputs:
       approved_commit:
