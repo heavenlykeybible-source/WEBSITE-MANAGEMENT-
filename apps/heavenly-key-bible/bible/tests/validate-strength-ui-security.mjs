@@ -35,11 +35,12 @@ assert(sw.includes('previous.books.length===manifest.books.length'),'Cached KJV 
 assert(sw.includes('book.sha256===previous.books[i]?.sha256'),'Cached manifest checksum must match current book checksum');
 assert(sw.includes('await cachedBook.arrayBuffer()'),'Previously cached KJV book bytes must be rechecked');
 assert(sw.includes('if(digest!==book.sha256)'),'Cached KJV checksum mismatch must force refresh');
+assert(sw.includes("if(!approved){cached=undefined;try{await cache.delete(event.request);}")||sw.includes("if(!approved){cached=undefined;try{await cache.delete(event.request);"),'Withdrawn devotionals must be evicted and never served as cached fallback');
 assert(sw.includes('isDevotionalDraftLibrary'),'Devotional cache classification missing');
 assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved content must never be cached');
 assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
 assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
-assert(sw.includes('hk-bible-shell-v61'),'Service-worker cache version must retire older draft caches');
+assert(sw.includes('hk-bible-shell-v62'),'Service-worker cache version must retire older draft caches');
 assert(html.includes("redirect:'error'"),'Member API requests must not follow redirects');
 assert(html.includes("cache:'no-store'"),'Member API requests must bypass response caching');
 assert(html.includes('new AbortController()'),'Member API requests need cancellation');
