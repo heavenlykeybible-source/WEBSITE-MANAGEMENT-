@@ -292,6 +292,8 @@ const excessiveJpeg=sampleJpeg.slice();for(const i of [sofIndex+5,sofIndex+7]){e
 for(const [label,payload,expected] of [
   ['Real 1x1 baseline JPEG',sampleJpeg,200],
   ['Truncated JPEG signature',Uint8Array.from([255,216,255]),415],
+  ['JPEG cut off after frame header',sampleJpeg.slice(0,sofIndex+12),415],
+  ['JPEG missing end-of-image marker',sampleJpeg.slice(0,-2),415],
   ['Zero JPEG frame width',invalidWidth,415],
   ['Oversized JPEG frame dimensions',excessiveJpeg,415]
 ]){
