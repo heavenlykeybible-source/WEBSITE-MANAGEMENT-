@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 const source=readFileSync(new URL('../control-room-worker.js',import.meta.url),'utf8');
 assert.match(source,/function openMeetingStudioOwner\(\)/);
 // The menu is generated dynamically; verify the label rather than a brittle formatting pattern.
-assert.match(source,/MeetingSpace · Account 8/);
+const publicHome=readFileSync(new URL('../heavenly-key-accounts/account-04-website-management-control-room/source/public/index.html',import.meta.url),'utf8');
+assert.match(publicHome,/https:\/\/meeting\.heavenlykey\.org\//,'Public Control Room must link to MeetingSpace');
 assert.match(source,/api\('connections\/\'\+conn\.id\+'\/meeting-launch','POST'/);
 assert.match(source,/if \(user\.kind !== 'staff' \|\| user\.role !== 'owner'\) fail\('Only the owner can open this app as owner\.'/);
 console.log('PASS: Studio menu is owner-only and uses existing authenticated launch');
