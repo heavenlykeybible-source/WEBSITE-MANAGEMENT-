@@ -32,6 +32,8 @@ jobs:
         run: |
           npm ci
           npm test
+      - name: Verify navigation dry-run before applying changes
+        run: npm run check:account4-navigation
       - name: Verify navigation upgrade after repository patch tests
         run: |
           npm run prepare:account4-release
