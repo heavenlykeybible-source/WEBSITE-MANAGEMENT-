@@ -59,6 +59,20 @@ jobs:
           if ! git diff --quiet HEAD -- control-room-worker.js; then
             echo '::notice::Generated Worker differs from committed source. Production workflow will refuse deployment until generated Worker is reviewed and committed.'
           fi
+      - name: Package generated Worker for owner review only
+        run: |
+          sha256sum control-room-worker.js > account4-generated-worker.sha256
+          printf '%s\\n' "${GITHUB_SHA}" > account4-generated-from-commit.txt
+      - name: Retain generated Worker candidate (never deploy from PR)
+        uses: actions/upload-artifact@v4
+        with:
+          name: account4-generated-worker-${{ github.sha }}
+          path: |
+            control-room-worker.js
+            account4-generated-worker.sha256
+            account4-generated-from-commit.txt
+          retention-days: 7
+          if-no-files-found: error
       - name: Test owner permissions and application imports
         run: |
           node tests/account4-permission-ui.mjs
