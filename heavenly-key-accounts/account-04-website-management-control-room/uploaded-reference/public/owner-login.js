@@ -1,5 +1,7 @@
 const loginForm=document.querySelector('#owner-login');
 if(loginForm){
+  const toggle=document.querySelector('#show-password');
+  toggle?.addEventListener('change',()=>{document.querySelector('#password').type=toggle.checked?'text':'password';});
   loginForm.addEventListener('submit',async event=>{
     event.preventDefault();
     const status=document.querySelector('#login-status');
