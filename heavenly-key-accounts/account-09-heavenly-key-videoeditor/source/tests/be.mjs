@@ -90,6 +90,24 @@ const oversizedJsonResponse=await onRequest({
   }),env,params:{path:['register']}
 });
 check('Oversized unknown-length JSON is rejected before parsing',oversizedJsonResponse.status===400);
+const wrongTypeRegister = await onRequest({
+  request: new Request('https://studio.example/api/register',{
+    method:'POST',
+    headers:{'x-requested-with':'hk','content-type':'text/plain'},
+    body:JSON.stringify({email:'wrong-type@example.com',password:'long enough password'})
+  }),
+  env,params:{path:['register']}
+});
+check('Reject JSON-shaped registration sent as text/plain',wrongTypeRegister.status===400);
+const unsupportedJsonBytes = await onRequest({
+  request: new Request('https://studio.example/api/register',{
+    method:'POST',
+    headers:{'x-requested-with':'hk','content-type':'application/json'},
+    body:new Uint8Array([0xff,0xfe,0xff,0xfe])
+  }),
+  env,params:{path:['register']}
+});
+check('Reject invalid UTF-8 JSON input',unsupportedJsonBytes.status===400);
 const invalid = await request('register', { method: 'POST', body: { email: 'invalid', password: 'long enough password' } });
 check('Invalid registration rejected', invalid.status === 400);
 const malformedRegistration=await request('register',{method:'POST',body:{email:'malformed@example.com',password:{value:'not-a-password'}}});
