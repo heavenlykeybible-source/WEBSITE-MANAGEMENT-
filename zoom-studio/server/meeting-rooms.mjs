@@ -78,7 +78,14 @@ export class MeetingRooms {
     if(typeof m.token!=='string'||m.token.length>4096)return this.close(ws,{t:'error',msg:'Invalid meeting authorization.'});
     const a=await check(this.env.AUTH_SECRET,m.token);
     if(!a||a.k!=='meeting'||a.r!==d.room||!a.u||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
-    if(this.host())return this.close(ws,{t:'error',msg:'This room already has a host.'});
+    const currentHost=this.host();
+    if(currentHost){
+     const old=this.data(currentHost);
+     if(old.until>now)return this.close(ws,{t:'error',msg:'This room already has a host.'});
+     // A timed-out host must not prevent an authorized new host from reopening the meeting.
+     this.close(currentHost,{t:'closed',why:'The meeting time has ended.'});
+     for(const guest of this.guests())this.close(guest,{t:'closed',why:'The meeting time has ended.'});
+    }
     Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,now+86400000),locked:false,watch:'',audChat:true,slow:0});
     this.save(ws,d);return this.send(ws,{t:'created',room:d.room,key:d.key,ice:roomICE});
    }
