@@ -11,7 +11,7 @@ assert.match(html,/aria-live="polite"/);
 assert.ok(html.includes('href="#main-content"'));
 assert.ok(html.includes('id="section-title" tabindex="-1"'));
 assert.ok(html.includes('button:focus-visible'));
-for(const id of ['menu','content','section-number','section-title','prev','next','progress','copy-section','copy-all','share','status']){
+for(const id of ['menu','content','section-number','section-title','prev','next','progress','copy-section','copy-all','share','status','font-smaller','font-larger','print']){
  assert.ok(html.includes('id="'+id+'"'),'Missing preview control '+id);
 }
 for(const name of ["Today's Topic",'Bible Reading','Hymn of the Day','Bible Story','Life Stories Around the World','Eternity in View','Destiny Decision & Action','Warfare Prayer','Prophetic Prayer','Health & Wellness Prayer','Salvation Prayer','12 Kingdom Challenges for Today']){
