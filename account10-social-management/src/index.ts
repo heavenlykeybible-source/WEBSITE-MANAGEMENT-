@@ -635,8 +635,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(u.pathname==='/api/takeover'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.paused!=='boolean')return reply({error:'Invalid takeover request'},400);
-  const result=await env.DB.prepare('UPDATE conversations SET human_paused=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(data.paused?1:0,data.conversationId).run();
-  if(!result.meta.changes)return reply({error:'Conversation not found'},404);return reply({saved:true,automationPaused:data.paused,providerEnforced:false});
+  const result=await env.DB.prepare('UPDATE conversations SET human_paused=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND (?=1 OR requested_human=0)').bind(data.paused?1:0,data.conversationId,data.paused?1:0).run();
+  if(!result.meta.changes){const existing=await env.DB.prepare('SELECT requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{requested_human:number}>();if(!existing)return reply({error:'Conversation not found'},404);return reply({error:'A human assistance request remains pending; resolve it explicitly before resuming Gemini',automationPaused:true},409)}
+  return reply({saved:true,automationPaused:data.paused,providerEnforced:false});
  }
  return reply({error:'Not found'},404);
 }};export default app;
