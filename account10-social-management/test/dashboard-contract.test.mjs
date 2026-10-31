@@ -224,7 +224,7 @@ test('human takeover action cannot repaint stale sessions or reenable read-only 
 });
 
 test('operator note failures never update another chat or signed-out session', () => {
- assert.match(html, /catch\(err\)\{if\(selected===targetConversation&&authEpoch===epoch\)status\(err\.message\)\}\};\$\('suggestReply'\)\.onclick/);
+ assert.match(html, /catch\(err\)\{if\(selected===targetConversation&&authEpoch===epoch\)status\(err\.message\)\}finally\{if\(selected===targetConversation&&authEpoch===epoch\)saveButton\.disabled=operatorAccessRole==='viewer'\}\};\$\('suggestReply'\)\.onclick/);
 });
 
 test('async chat refresh cannot post stale operator success messages after switching sessions', () => {
