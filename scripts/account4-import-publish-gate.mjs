@@ -2,7 +2,7 @@
 // A database row is not a scanner: only a trusted backend scanner integration
 // may write the attestation; owner approval must come from a separate workflow.
 export async function assertPrivateImportPublishable(db, bucket, actor, id) {
-  if (actor?.authenticated !== true || actor?.canPublish !== true ||
+  if (actor?.authenticated !== true || actor?.canPublish !== true || actor?.role !== 'owner' ||
       !Number.isSafeInteger(actor.id) || actor.id < 1)
     throw new Error('Publication permission required');
   if (typeof id !== 'string' ||
@@ -24,7 +24,7 @@ export async function assertPrivateImportPublishable(db, bucket, actor, id) {
       typeof row.scanned_sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(row.scanned_sha256) ||
       row.approved_sha256 !== row.scanned_sha256 ||
       typeof row.scanned_version !== 'string' || !/^[a-zA-Z0-9_-]{8,256}$/.test(row.scanned_version) ||
-      !Number.isSafeInteger(row.approved_by) || row.approved_by < 1 ||
+      !Number.isSafeInteger(row.approved_by) || row.approved_by !== actor.id ||
       typeof row.scanned_at !== 'string' || !row.scanned_at ||
       typeof row.approved_at !== 'string' || !row.approved_at ||
       !Number.isFinite(Date.parse(row.scanned_at)) ||
