@@ -19,6 +19,13 @@ const headers=txt('_headers');
 assert(headers.includes("Content-Security-Policy: default-src 'self'"));
 assert(headers.includes("script-src 'self'"),'CSP must restrict scripts to same-origin files');
 assert(headers.includes('https://api.qrserver.com'),'CSP must allow the install guide QR image provider');
+assert(headers.includes('X-Frame-Options: SAMEORIGIN'));
+assert(headers.includes('Strict-Transport-Security: max-age=31536000'));
+assert(headers.includes("frame-ancestors 'self'"));
+const workerSecurity=fs.readFileSync('bible/worker.js','utf8');
+assert(workerSecurity.includes('withSecurityHeaders'),'Worker-generated responses must receive security headers');
+assert(workerSecurity.includes('X-Content-Type-Options'));
+assert(workerSecurity.includes('Strict-Transport-Security'));
 const cspPages=[
  'index.html','study-extensions.html','strength-for-today.html',
  'old-time-gospel-revival-hymn-book.html','404.html','bible-champions-embed.html','bible-study-tools.html',
