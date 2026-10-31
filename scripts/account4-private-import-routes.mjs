@@ -52,7 +52,8 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
     const input=await jsonBody(request);
     if(typeof input.name!=='string'||!Number.isSafeInteger(input.size))problem('Provide a filename and an integer byte size');
     const create=async()=>{
-      const active=await env.DB.prepare("SELECT COUNT(*) AS count FROM account4_import_sessions WHERE owner_id=? AND state IN ('uploading','completing')").bind(actor.id).first();
+      await env.DB.prepare("UPDATE account4_import_sessions SET state='expired' WHERE owner_id=? AND state IN ('uploading','completing') AND expires_at_ms<=?").bind(actor.id,Date.now()).run();
+      const active=await env.DB.prepare("SELECT COUNT(*) AS count FROM account4_import_sessions WHERE owner_id=? AND state IN ('uploading','completing') AND expires_at_ms>?").bind(actor.id,Date.now()).first();
       if((active?.count||0)>=3)problem('You already have three active uploads. Complete or reconcile one first.',429);
       return startPersistedPrivateImport(env.FILES,env.DB,actor,{name:input.name,size:input.size});
     };
