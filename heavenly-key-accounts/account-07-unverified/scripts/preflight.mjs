@@ -32,7 +32,7 @@ check(worker.includes("new Headers({ \"X-Heavenly-Key-Internal\": PUBLIC_MARKER"
 check(worker.includes("access-control-allow-origin"), "CORS response-header stripping missing.");
 check(wrangler.includes('name = "heavenlykeyradio"'), "Wrong Cloudflare Worker name.");
 check(wrangler.includes('run_worker_first = ["/api/*"]'), "API Worker-first route configuration missing.");
-for (const entry of ["_worker.js", "_headers", "wrangler.toml", "*.map"]) check(assetsIgnore.split(/\\r?\\n/).map(x => x.trim()).includes(entry), "Static asset ignore list must exclude " + entry + ".");
+for (const entry of ["_worker.js", "_headers", "wrangler.toml", "*.map"]) check(assetsIgnore.split("\n").map(x => x.trim()).includes(entry), "Static asset ignore list must exclude " + entry + ".");
 check(!/MEDIA_ENGINE_SHARED_SECRET|LIVEKIT_API_SECRET|Authorization:\s*Bearer/.test(worker + wrangler), "Backend credentials must never be committed to Account 7.");
 check(player.includes("/api/broadcast/programme?channel=radio"), "Player does not call the same-origin programme endpoint.");
 check(css.includes("prefers-reduced-motion"), "Reduced-motion support missing.");
