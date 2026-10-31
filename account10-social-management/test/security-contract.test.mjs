@@ -187,3 +187,16 @@ test('social account and post routes do not publish without verified provider au
   assert.match(source, /published:false,note:'Saved for review/);
   assert.match(source, /providerPublishing:false/);
 });
+
+test('explicit human requests bypass all keyword-based automation before any draft creation', () => {
+  const start=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'");
+  const end=source.indexOf("if(u.pathname==='/api/automation/evaluate'",start);
+  assert.ok(start>=0 && end>start, 'automation draft route must exist');
+  const handler=source.slice(start,end);
+  const handover=handler.indexOf('if(requestsHumanMinistryContact(data.message))');
+  const rules=handler.indexOf("SELECT id,keyword,reply FROM automation_rules");
+  const insert=handler.indexOf("INSERT OR IGNORE INTO messages");
+  assert.ok(handover>=0 && rules>handover && insert>handover, 'human takeover must precede rules and draft writes');
+  assert.match(handler, /UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=\?/);
+  assert.match(handler, /humanRequested:true,automationPaused:true,draftCreated:false,sent:false,externalNotificationsSent:false/);
+});
