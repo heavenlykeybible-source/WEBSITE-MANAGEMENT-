@@ -159,6 +159,17 @@ check('Malformed login passwords are rejected safely',malformedPassword.status==
 
 const recoveredLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
 check('Legitimate members can log in after an incorrect attempt',recoveredLogin.status===200&&recoveredLogin.cookie.length>5);
+const sessionTestUser=db.prepare('SELECT id FROM users WHERE email=?').get('smoke@example.com').id;
+const extraSession=db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)');
+for(let i=0;i<25;i++)extraSession.run('old-device-session-'+i,sessionTestUser,Date.now()+3600000);
+const boundedLogin=await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
+const sessionCount=db.prepare('SELECT COUNT(*) c FROM sessions WHERE user_id=?').get(sessionTestUser).c;
+check('Member sessions capped at twenty after login',boundedLogin.status===200&&sessionCount===20);
+const originalSessionAfterPrune=await request('me',{cookie:login.cookie});
+const newSessionAfterPrune=await request('me',{cookie:boundedLogin.cookie});
+check('Session cap preserves original and newest real sessions',originalSessionAfterPrune.status===200&&newSessionAfterPrune.status===200);
+check('Oldest device sessions removed after session cap',!db.prepare('SELECT 1 FROM sessions WHERE token_hash=?').get('old-device-session-0'));
+
 
 const me = await request('me', { cookie: login.cookie });
 check('Authenticated identity returned', me.status === 200 && me.data?.email === 'smoke@example.com');
