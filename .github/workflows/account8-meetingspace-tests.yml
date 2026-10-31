@@ -6,11 +6,13 @@ on:
       - feature/account8-meetingspace-hardening-20261025
     paths:
       - 'zoom-studio/**'
+      - 'heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/**'
       - 'scripts/existing-worker-release.mjs'
       - '.github/workflows/account8-meetingspace-tests.yml'
   pull_request:
     paths:
       - 'zoom-studio/**'
+      - 'heavenly-key-accounts/account-08-heavenly-key-meetingspace/source/**'
       - '.github/workflows/account8-meetingspace-tests.yml'
   workflow_dispatch:
 permissions:
@@ -43,6 +45,8 @@ jobs:
           node --check server/control-room-runtime.mjs
           node --check tests/control-room-package.test.mjs
           node --check tests/deployment.test.mjs
+          node --check tests/worker.test.mjs
+          node --check tests/security-regression.test.mjs
       - name: Backend and security regression tests
         run: npm test
       - name: Verify Control Room package build
