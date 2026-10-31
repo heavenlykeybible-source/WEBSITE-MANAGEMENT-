@@ -1,5 +1,5 @@
-import {beginPrivateImport} from './account4-r2-multipart.mjs';
-import {saveImportSession} from './account4-import-d1.mjs';
+import {beginPrivateImport, uploadPrivatePart} from './account4-r2-multipart.mjs';
+import {saveImportSession, loadImportSession, recordImportPart} from './account4-import-d1.mjs';
 
 // Staging-only orchestration. Never exposes objects publicly or deploys code.
 // The durable D1 record must exist before the session identifier is returned.
@@ -19,4 +19,13 @@ export async function startPersistedPrivateImport(bucket, db, actor, file) {
     }
     throw error;
   }
+}
+
+// A chunk is acknowledged only after its R2 receipt is durably recorded in D1.
+// The session is always reloaded with the authenticated owner's identity.
+export async function uploadPersistedPrivatePart(bucket, db, actor, id, partNumber, bytes) {
+  const session = await loadImportSession(db, actor, id);
+  const receipt = await uploadPrivatePart(bucket, actor, session, partNumber, bytes);
+  await recordImportPart(db, actor, id, receipt);
+  return {partNumber:receipt.partNumber, stored:true};
 }
