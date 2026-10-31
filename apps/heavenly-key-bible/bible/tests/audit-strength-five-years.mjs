@@ -92,6 +92,9 @@ for(let i=0;i<entries.length;i++){
  }
 }
 const requestedDayTarget=1828;
+// Calendar target must agree with the declared inclusive date range.
+const expectedCalendarDays=Math.round((Date.parse('2031-10-31')-Date.parse('2026-10-30'))/86400000)+1;
+if(expectedCalendarDays!==requestedDayTarget)flag('GLOBAL','CALENDAR_TARGET_MISMATCH','Target '+requestedDayTarget+' vs inclusive dates '+expectedCalendarDays);
 const expectedStartDate='2026-10-30';
 const expectedEndDate='2031-10-31';
 if(entries[0]?.date!==expectedStartDate)flag('GLOBAL','DATE_RANGE','Expected start '+expectedStartDate);
@@ -105,7 +108,7 @@ const qualityBlockingCodes=new Set([
  'INCOMPLETE_DAILY_ENTRY','MISSING_DAY_TITLE','MISSING_DAY_REFLECTION',
  'MISSING_DAY_PRAYER','DUPLICATE_DAY_TITLE','DUPLICATE_DAY_REFLECTION','DUPLICATE_DAY_PRAYER',
  'EXACT_DUPLICATE_REFLECTION','EXACT_DUPLICATE_PRAYER','REPEATED_REFLECTION_OPENING',
- 'INCONSISTENT_VERSE_TEXT','INVALID_DATE','DATE_RANGE','CONSECUTIVE_REUSED_THEME',
+ 'INCONSISTENT_VERSE_TEXT','INVALID_DATE','DATE_RANGE','CALENDAR_TARGET_MISMATCH','CONSECUTIVE_REUSED_THEME',
  'UNSUPPORTED_PROMISE','END_TIME_DATE_SETTING',
  'PUBLICATION_STATUS','REVIEW_STATUS','LENGTH_LIMIT',
  'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','MECHANICAL_REFLECTION_FORMULA','INCONSISTENT_PRAYER_PERSON','RELEASE_GATE'
