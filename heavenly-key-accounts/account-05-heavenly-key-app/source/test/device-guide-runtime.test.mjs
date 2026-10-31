@@ -30,7 +30,7 @@ function createHarness(search,headStatus=200,headType='application/vnd.android.p
   }};
  };
  runInNewContext(source,{document,location,navigator,window,fetch,URL,URLSearchParams});
- return {calls,open,status,flush:()=>new Promise(resolve=>setImmediate(resolve))};
+ return {calls,open,status,flush:async()=>{await new Promise(resolve=>setImmediate(resolve));await new Promise(resolve=>setImmediate(resolve));}};
 }
 
 test('explicitly empty or duplicate app identifiers fail closed before catalogue requests',async()=>{
