@@ -33,7 +33,7 @@ for(const value of [null,[],false,42,{},'hello',{...healthy,iat:null},{...health
  assert.equal(await verifier(token(value),secret),null,'Reject unauthorized or malformed token payload '+JSON.stringify(value));
 }
 for(const malformed of ['', 'aaa','a.b.c','x.'.repeat(3000),'@@@.'+'a'.repeat(64),
- token(healthy)+'extra',token(healthy).replace(/.$/,'a')]){
+ token(healthy)+'extra',token(healthy).slice(0,-1)+(token(healthy).endsWith('a')?'b':'a')]){
  assert.equal(await verifier(malformed,secret),null,'Malformed token must fail closed');
 }
 assert.equal(await verifier(token(healthy),'wrong-secret'),null,'Incorrect signing key must be rejected');
