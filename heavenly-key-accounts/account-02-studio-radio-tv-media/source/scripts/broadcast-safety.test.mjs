@@ -76,4 +76,9 @@ assert.match(entry, /recording\.delete/, 'Recording deletions must create audit 
 assert.match(entry, /Recording deleted by administrator/, 'Deletion must cancel outstanding distribution jobs');
 assert.match(entry, /status IN \('pending','processing','failed'\)/, 'Pending and failed distribution jobs must be cancellable');
 
+// Public LiveKit viewer-token errors must not expose provider or secret details.
+assert.match(entry, /Viewer token issuance failed/, 'Internal failure must be logged without exposing its message');
+assert.match(entry, /return json\(\{error:'Live transport unavailable'\},503\)/, 'Return a generic viewer error');
+assert.doesNotMatch(entry, /error:e instanceof Error\?e\.message:'Live transport unavailable'/, 'Never return raw provider exception messages');
+
 console.log('Account 2 broadcast safety regression checks passed');
