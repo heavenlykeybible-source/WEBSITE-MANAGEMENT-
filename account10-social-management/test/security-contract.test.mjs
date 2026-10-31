@@ -214,3 +214,17 @@ test('Gemini ministry post suggestions do not publish or save automatically', ()
   assert.match(handler, /INSERT INTO ai_rate_limits/);
   assert.doesNotMatch(handler, /graph\.facebook\.com|youtube\/v3\/videos|api\.tiktok|api\.x\.com/);
 });
+
+test('Gemini live connection check is authenticated, rate-limited and never sends messages', () => {
+  const auth=source.indexOf("if(provided!==`Bearer ${env.ADMIN_TOKEN}`)");
+  const start=source.indexOf("if(u.pathname==='/api/ai/connection-check'");
+  const end=source.indexOf("if(u.pathname==='/api/ai/suggest-post'",start);
+  assert.ok(start>auth && end>start,'smoke-test route must be behind operator authentication');
+  const handler=source.slice(start,end);
+  assert.match(handler,/scope,window_kind,window_start,request_count/);
+  assert.match(handler,/request_count<5/);
+  assert.match(handler,/text:originalAssistantInstruction/);
+  assert.match(handler,/kjvSmokeTestPassed/);
+  assert.match(handler,/outboundMessagesSent:false,socialPostsPublished:false/);
+  assert.doesNotMatch(handler,/\/messages['"]|videos\.insert|published:true/);
+});
