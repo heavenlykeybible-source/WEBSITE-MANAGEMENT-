@@ -20,11 +20,12 @@ function isSafePublicResponse(response){
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
   const core=['/index.html','/app.js','/styles.css','/manifest.webmanifest'];
+  // A release must not activate with an incomplete essential offline shell.
+  // Preserve the previous working service worker if any core asset fails.
   for(const path of core){
-   try{
-    const response=await fetch(path,{cache:'no-store',credentials:'omit'});
-    if(isSafePublicResponse(response)) await cache.put(path,response);
-   }catch{}
+   const response=await fetch(path,{cache:'no-store',credentials:'omit'});
+   if(!isSafePublicResponse(response)) throw new Error('Essential app shell unavailable: '+path);
+   await cache.put(path,response);
   }
   // Fetch optional public assets with bounded concurrency instead of a long
   // serial queue. Optional failures never block the essential app shell.
