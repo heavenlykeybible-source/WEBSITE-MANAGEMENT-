@@ -27,6 +27,7 @@ if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline exp
 if (!timeline.includes('state.abortPlayback?.();state.abortStart?.();return') || !timeline.includes('if(encoderError)throw encoderError;')) throw Error('Oversized encoder stream early-abort safeguard missing');
 if (!timeline.includes('canvas.width>4096||canvas.height>4096') || !timeline.includes('canvas.width*canvas.height>8847360') || !timeline.includes('Invalid export canvas size.')) throw Error('Canvas export dimension safeguard missing');
 if (!timeline.includes('if(record)invalidateExport();')) throw Error('Stale timeline download invalidation missing');
+if (!timeline.includes("window.addEventListener?.('pagehide',invalidateExport)")) throw Error('Export object URL pagehide cleanup missing');
 if (!timeline.includes('session.abortSeek?.()') || !timeline.includes('await seek(c.start,state)')) throw Error('Timeline seek cancellation safeguard missing');
 if (!timeline.includes('if(!v.seeking&&Math.abs(v.currentTime-t)<.02)')) throw Error('Pending video seek guard missing');
 if (!timeline.includes("v.addEventListener('loadedmetadata',()=>{if(session){session.sourceChanged=true;session.cancelled=true") || !timeline.includes('if(!state.sourceChanged){v.pause();v.playbackRate=rate;')) throw Error('Timeline source switch isolation safeguard missing');
