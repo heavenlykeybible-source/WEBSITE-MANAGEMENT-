@@ -73,3 +73,12 @@ Verification boundary:
 - Malware scanning remains absent and is a release blocker.
 
 **Release decision: NOT launch-certified.** Do not publish a global launch claim until the blockers in `AUDIT.md` have been completed and recorded with evidence. No deployment was made.
+
+
+## Password storage security update — 31 October 2026
+
+- New user registration and Owner/Admin provisioning now use PBKDF2-HMAC-SHA-256 with 600,000 iterations.
+- Existing databases receive `migrations/0005_password_hash_iterations.sql` after backup. Existing hashes are tagged with their legacy 100,000 iteration count and are transparently re-hashed with a fresh salt and 600,000 iterations after the next successful login.
+- Account deletion and logout-all password confirmation verify using the account's recorded iteration count, preserving legacy account access until migration by login.
+- Backend regression coverage was added for new-account hash strength and legacy-login upgrade. Preflight checks enforce schema, migration and provisioning consistency.
+- These source-level changes have not yet been executed through the complete test suite or against live Cloudflare D1. Apply migration 0005 only to an existing pre-update database; do not apply it to a fresh database created from the updated `schema.sql`.
