@@ -282,3 +282,15 @@ test('expired meeting closes sockets without rearming the room alarm', async()=>
   assert.equal(h.guest.readyState,3);
   assert.equal(alarms,0);
 });
+
+test('host rejects malformed or oversized tokens before authentication', async()=>{
+  for(const token of [null,42,'','x'.repeat(4097)]){
+    const h=setup();
+    const incoming=h.add();let checks=0;
+    h.context.check=async()=>{checks++;return null;};
+    await h.r.webSocketMessage(incoming,JSON.stringify({t:'host',token}));
+    assert.equal(incoming.readyState,3);
+    assert.equal(checks,0);
+    assert.match(incoming.messages.at(-1).msg,/invalid meeting token/i);
+  }
+});
