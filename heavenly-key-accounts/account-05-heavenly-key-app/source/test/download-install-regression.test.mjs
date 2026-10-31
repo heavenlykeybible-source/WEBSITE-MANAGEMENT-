@@ -197,7 +197,7 @@ test('precache and runtime share a single safe public-response cache policy', ()
  const sw=publicFile('sw.js');
  assert.match(sw,/function isSafePublicResponse\(response\)/);
  assert.equal((sw.match(/if\(isSafePublicResponse\(response\)\)/g)||[]).length,1);
- assert.match(sw,/!response\.ok/);
+ assert.match(sw,/response\.status!==200/);
  assert.match(sw,/response\.redirected/);
  assert.match(sw,/no-store\|no-cache/);
  assert.match(sw,/cookie\|authorization/);
@@ -259,4 +259,12 @@ test('install dialog does not claim unaudited native packages are verified', () 
  assert.doesNotMatch(js,/verified native packages appear only after release security checks/i);
  assert.doesNotMatch(js,/Verified native install if available/);
  assert.match(js,/Native option if available/);
+});
+
+test('offline runtime excludes partial responses and byte-range requests', () => {
+ const sw=publicFile('sw.js');
+ assert.match(sw,/response\.status!==200/);
+ assert.match(sw,/response\.headers\.get\('content-range'\)/);
+ assert.match(sw,/request\.headers\.has\('Range'\)/);
+ assert.match(sw,/request\.headers\.has\('If-Range'\)/);
 });
