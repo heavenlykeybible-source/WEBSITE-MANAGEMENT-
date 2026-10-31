@@ -114,3 +114,22 @@ test('conditional static app responses preserve HTTP 304 without redirecting',as
  assert.equal(response.headers.get('etag'),'"reviewed-release"');
  assert.equal(await response.text(),'');
 });
+
+test('service binding subrequests disable automatic redirect following and credentials',async()=>{
+ let upstreamRequest;
+ const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+  fetch:async request=>{
+   upstreamRequest=request;
+   return new Response('Public page',{status:200,headers:{'X-HK-App-Service':'bible-reader','Content-Type':'text/html'}});
+  }
+ }};
+ const response=await routeIndependentApp(new Request('https://apps.heavenlykey.org/bible.html',{
+  headers:{Cookie:'__Host-hk_session=private',Authorization:'Bearer private',Accept:'text/html'}
+ }),env);
+ assert.equal(response.status,200);
+ assert.equal(upstreamRequest.redirect,'manual');
+ assert.equal(upstreamRequest.credentials,'omit');
+ assert.equal(upstreamRequest.headers.get('cookie'),null);
+ assert.equal(upstreamRequest.headers.get('authorization'),null);
+ assert.equal(upstreamRequest.headers.get('accept'),'text/html');
+});
