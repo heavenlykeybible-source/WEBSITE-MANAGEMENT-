@@ -497,7 +497,8 @@ test('API JSON media type validation is anchored', () => {
 
 test('dashboard content policy keeps safe navigation defaults', () => {
  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
- assert.ok(source.includes("form-action 'self'; upgrade-insecure-requests"));
+ assert.ok(source.includes("form-action 'self'; script-src 'self'"));
+ assert.ok(source.includes('upgrade-insecure-requests'));
 });
 
 test('static dashboard isolates cross-origin resources and removes server disclosure headers', () => {
@@ -612,8 +613,8 @@ test('authentication throttling fails closed until migration 0013 is installed',
 test('launch diagnostics explicitly block shared-owner authentication without MFA', () => {
   assert.match(source,/name:'owner_mfa',ok:false/);
   assert.match(source,/individual owner identity, MFA and short-lived revocable sessions are not implemented/);
-  assert.match(source,/table_auth_rate_limits/);
-  assert.match(source,/table_operator_credentials/);
+  assert.match(source,/\['auth_rate_limits','SELECT COUNT\(\*\) AS total FROM auth_rate_limits'\]/);
+  assert.match(source,/\['operator_credentials','SELECT COUNT\(\*\) AS total FROM operator_credentials'\]/);
 });
 
 
@@ -633,7 +634,7 @@ test('Account 10 dashboard uses an external same-origin application script with 
 
 test('Gemini API key remains server-side and is never embedded in dashboard assets', () => {
  const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
- assert.match(source,/GEMINI_API_KEY\?:string/);
+ assert.match(source,/GEMINI_API_KEY\?:\s*string/);
  assert.match(source,/x-goog-api-key/);
  assert.doesNotMatch(app,/GEMINI_API_KEY|x-goog-api-key|generativelanguage\.googleapis\.com/);
 });
