@@ -53,4 +53,19 @@ await check(today,'editorial-hold',404);
  assert.equal(response.status,404);
  assert.equal(await response.text(),'');
 }
+// Malformed publication manifests and malformed batches must fail closed.
+for(const scenario of [
+ {label:'missing allowlist',manifest:{schemaVersion:1,publicationStatus:'published'},data:null},
+ {label:'unapproved file',manifest:{schemaVersion:1,publicationStatus:'published',publishedBatchFiles:[]},data:null},
+ {label:'invalid batch',manifest:{schemaVersion:1,publicationStatus:'published',publishedBatchFiles:[filename]},data:{entries:[]}},
+ {label:'malformed JSON',manifest:{schemaVersion:1,publicationStatus:'published',publishedBatchFiles:[filename]},malformed:true}
+]){
+ const env={ASSETS:{fetch:async request=>{
+  if(new URL(request.url).pathname==='/strength-publication-status.json')return Response.json(scenario.manifest);
+  return scenario.malformed?new Response('{bad json',{headers:{'Content-Type':'application/json'}}):Response.json(scenario.data);
+ }}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename),env);
+ assert.equal(response.status,404,scenario.label);
+ assert.equal(response.headers.get('Cache-Control'),'no-store, private',scenario.label);
+}
 console.log('Devotional embargo regression: future approved entries blocked; current approved allowed; editorial hold blocked.');
