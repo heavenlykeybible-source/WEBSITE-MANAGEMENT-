@@ -88,7 +88,7 @@ export default {
   const isDevotionalPath=url.pathname.startsWith("/strength-devotionals-");
   const draftMatch=url.pathname.match(/^\/(strength-devotionals-(?:2026|2027|year[1-5])(?:-batch\d+)?\.json)$/);
   if(isDevotionalPath){
-   const deny=()=>new Response(null,{status:404,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff"}});
+   const deny=()=>new Response(null,{status:404,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex, noarchive"}});
    // Reject unexpected filenames instead of passing them to the public asset layer.
    if(!draftMatch)return deny();
    try{
