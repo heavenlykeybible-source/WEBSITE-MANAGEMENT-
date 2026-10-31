@@ -20,14 +20,16 @@
 | Webhook authenticity (ASVS V13) | Meta HMAC-SHA256 signature check before storing webhook event; payload size bound | Source-level test; signed provider staging test still required |
 | Content Security Policy (ASVS V14) | Same-origin script policy, no script attributes, frame ancestors denied | Script policy hardened; inline styles remain permitted for existing dashboard styling and need a separate removal/audit |
 | Data lifecycle (ASVS V8) | No complete production retention, deletion, export or restore evidence | **BLOCKER** — retention and backup-recovery verification required |
+| Runtime observability (Cloudflare operations) | 10% sampled Worker logs and Cloudflare Worker Issues enabled in Wrangler; source maps uploaded for server-side stack traces | Configuration is in source; production ingestion, alert routing and retention still require live verification |
 | Supply chain (NIST SSDF) | Locked dependencies, typecheck, contract tests and dry-run build in CI | CI passed on recorded PR head; independent dependency/SBOM and provenance review still required |
 
 ## Verified code checks
 
-On commit `32bf4aa4e567bdc7d5dae6c3a7b150f8015d847b`:
+On commit `67b439dc45d9d04ff9cf2196a64384c7bff803f6`:
 - Account 10 `verify` workflow: passed.
 - Account 10 `Typecheck, test security, and dry-run build` workflow: passed.
-- These runs include locked dependency installation, source/test/bundle checks, preflight, security/dashboard/release contract tests, TypeScript and dry-run build.
+- These runs include locked dependency installation, source/test/bundle checks, preflight, security/dashboard/release contract tests (66 security, 48 dashboard, 17 release), TypeScript and dry-run build.
+- Wrangler is configured with compatibility date `2026-10-31`, 10% sampled Worker observability and Cloudflare Worker Issues; the production telemetry pipeline has not yet been exercised.
 - A Cloudflare Pages check in the same repository failed for the separate GlobalCommunity project; it is not an Account 10 deployment result.
 - A Workers Builds check for the repository completed successfully; this does not prove Account 10 production resources are configured or deployed.
 
@@ -39,7 +41,7 @@ On commit `32bf4aa4e567bdc7d5dae6c3a7b150f8015d847b`:
 4. Back up D1, inspect the live schema, record applied migrations and apply only missing migrations to staging one at a time. Never replay the full migration chain blindly.
 5. Verify the target Worker has the correct D1, R2, ASSETS and encrypted secret bindings; deploy only through owner-approved release procedure.
 6. Perform authenticated staging and production smoke tests for Gemini, Meta signed webhooks, WhatsApp consent/handover/delivery receipts, and social provider OAuth. Keep outbound sends disabled until separately approved.
-7. Verify backup restoration, data retention/deletion, monitoring/alerting, incident response and rollback.
+7. Verify backup restoration, data retention/deletion, production log ingestion, alert routing, incident response and rollback.
 8. Run independent authenticated penetration testing, dependency/SBOM review, and Android/iOS/desktop browser and accessibility acceptance.
 9. Remove inline styles if feasible and tighten `style-src` after regression testing.
 
