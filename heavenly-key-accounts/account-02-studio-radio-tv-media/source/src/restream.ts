@@ -30,10 +30,22 @@ export async function listDestinations(env:Env){
   return {destination,configured:!!row?.url,enabled:!!row?.enabled,host,updatedAt:row?.updatedAt??null};
  });
 }
+function unsafeStreamHost(hostname:string):boolean{
+ const host=hostname.toLowerCase().replace(/^\\[|\\]$/g,'');
+ if(host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test'))return true;
+ if(host.includes(':'))return host==='::1'||host==='::'||host.startsWith('fc')||host.startsWith('fd')||host.startsWith('fe8')||host.startsWith('fe9')||host.startsWith('fea')||host.startsWith('feb')||host.startsWith('::ffff:');
+ const ip=host.match(/^(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)$/);
+ if(ip){
+  const [a,b]=ip.slice(1).map(Number);
+  return a===0||a===10||a===127||a>=224||(a===169&&b===254)||(a===172&&b>=16&&b<=31)||(a===192&&b===168)||(a===100&&b>=64&&b<=127)||(a===192&&b===0)||(a===198&&(b===18||b===19));
+ }
+ return false;
+}
+
 export async function saveDestination(env:Env,destination:string,urlValue:string,enabled:boolean){
  if(!allowed.has(destination))throw new Error('Unsupported destination.');
  let u:URL;try{u=new URL(urlValue.trim());}catch{throw new Error('Enter the platform RTMP or RTMPS server URL including its stream key.');}
- if(!['rtmp:','rtmps:'].includes(u.protocol)||!u.hostname||u.username||u.password)throw new Error('Use a valid RTMP or RTMPS streaming URL.');
+ if(!['rtmp:','rtmps:'].includes(u.protocol)||!u.hostname||unsafeStreamHost(u.hostname)||u.username||u.password)throw new Error('Use a valid RTMP or RTMPS streaming URL.');
  if(u.href.length>2048)throw new Error('Streaming URL is too long.');
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
  store[destination]={url:u.href,enabled,updatedAt:new Date().toISOString()};
