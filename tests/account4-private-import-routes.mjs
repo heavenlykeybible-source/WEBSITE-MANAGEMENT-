@@ -3,6 +3,10 @@ import {readFileSync} from 'node:fs';
 import {account4PrivateImportRoutes} from '../scripts/account4-private-import-routes.mjs';
 
 const workerSource=readFileSync(new URL('../control-room-worker.js',import.meta.url),'utf8');
+const deploySource=readFileSync(new URL('../scripts/deploy-account4-existing.mjs',import.meta.url),'utf8');
+const wranglerSource=readFileSync(new URL('../wrangler.toml',import.meta.url),'utf8');
+assert.ok(deploySource.includes("['PRIVATE_IMPORTS', 'r2_bucket']"),'Deployment preflight must require the dedicated private R2 bucket');
+assert.ok(wranglerSource.includes('binding = "PRIVATE_IMPORTS"'),'Worker configuration must bind the dedicated private R2 bucket');
 assert.ok(workerSource.includes('function privateImportForm()'),'Resumable upload UI must be mounted');
 assert.ok(workerSource.includes('selected.name'),'UI must validate selected ZIP filenames');
 assert.ok(workerSource.includes('10*1024*1024'),'UI must upload in bounded 10 MiB parts');
