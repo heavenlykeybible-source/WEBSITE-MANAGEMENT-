@@ -81,11 +81,25 @@ for(let i=0;i<entries.length;i++){
 const requestedDayTarget=1828;
 const daysNeededToMeetRequest=Math.max(0,requestedDayTarget-entries.length);
 
+
+// Publication quality gate: automate completeness and originality checks without claiming theological approval.
+const qualityBlockingCodes=new Set([
+ 'DUPLICATE_DATE','DATE_GAP','INCOMPLETE','TOPIC_COUNT','TOPIC_ORDER',
+ 'INCOMPLETE_DAILY_ENTRY','MISSING_DAY_TITLE','MISSING_DAY_REFLECTION',
+ 'MISSING_DAY_PRAYER','DUPLICATE_DAY_REFLECTION','DUPLICATE_DAY_PRAYER',
+ 'EXACT_DUPLICATE_REFLECTION','EXACT_DUPLICATE_PRAYER',
+ 'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','RELEASE_GATE'
+]);
+const qualityBlockingFlags=flags.filter(f=>qualityBlockingCodes.has(f.code));
+const automatedQualityPassed=qualityBlockingFlags.length===0 &&
+ entries.length===requestedDayTarget &&
+ topicCount===requestedDayTarget*12;
+
 const result={
  title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
- files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
+ files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:manifest.publishedBatchFiles.length,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
@@ -101,4 +115,7 @@ const result={
  publicationReady:false
 };
 console.log(JSON.stringify(result,null,2));
-if(entries.length!==1826||topicCount!==21912||flags.some(f=>['DUPLICATE_DATE','DATE_GAP','INCOMPLETE','TOPIC_COUNT','RELEASE_GATE'].includes(f.code)))process.exitCode=1;
+if(!automatedQualityPassed) {
+ console.error('EDITORIAL QUALITY BLOCKED: unresolved duplicates, templated copy, incomplete data or missing requested dates. Human doctrinal and KJV approval still required.');
+ process.exitCode=1;
+}
