@@ -864,3 +864,10 @@ test('meeting signalling rejects multibyte SDP and ICE beyond their byte budgets
  await message(s.room,s.host,{t:'sig',gid:guest.d.id,data:{c:{candidate:'candidate:1 1 udp 2122260223 192.0.2.1 5000 typ host'}}});
  assert.equal(guest.messages.at(-1).t,'sig','ordinary ICE candidates must still be relayed');
 });
+
+test('existing host expiration is checked after asynchronous token verification',()=>{
+ const source=fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8');
+ assert.match(source,/const verifiedAt=Date\.now\(\)/);
+ assert.match(source,/if\(old\.until>verifiedAt\)return this\.close/,'old host expiry should use the verified time, not the stale message time');
+ assert.doesNotMatch(source,/if\(old\.until>now\)return this\.close/);
+});
