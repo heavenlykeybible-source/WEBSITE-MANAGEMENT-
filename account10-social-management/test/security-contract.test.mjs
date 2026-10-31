@@ -200,3 +200,17 @@ test('explicit human requests bypass all keyword-based automation before any dra
   assert.match(handler, /UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=\?/);
   assert.match(handler, /humanRequested:true,automationPaused:true,draftCreated:false,sent:false,externalNotificationsSent:false/);
 });
+
+test('Gemini ministry post suggestions do not publish or save automatically', () => {
+  const begin=source.indexOf("if(u.pathname==='/api/ai/suggest-post'");
+  const end=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'",begin);
+  assert.ok(begin>=0 && end>begin,'ministry social caption route should exist');
+  const handler=source.slice(begin,end);
+  for(const platform of ['facebook_page','instagram_professional','youtube','tiktok']) assert.ok(handler.includes("'"+platform+"'"),platform+' omitted');
+  assert.match(handler, /text:originalAssistantInstruction/);
+  assert.match(handler, /requiresOperatorApproval:true/);
+  assert.match(handler, /sent:false,published:false,saved:false/);
+  assert.match(handler, /\['account10','hour',Math\.floor\(seconds\/3600\),300\]/);
+  assert.match(handler, /INSERT INTO ai_rate_limits/);
+  assert.doesNotMatch(handler, /graph\.facebook\.com|youtube\/v3\/videos|api\.tiktok|api\.x\.com/);
+});
