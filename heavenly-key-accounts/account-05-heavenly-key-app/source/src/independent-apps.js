@@ -33,8 +33,10 @@ export async function routeIndependentApp(request,env){
   'access-control-allow-origin','access-control-allow-credentials',
   'access-control-allow-headers','access-control-allow-methods',
   'access-control-expose-headers','access-control-max-age'])safe.delete(name);
- // Do not let delegated services advertise browser/shared caching for this gateway.
- safe.set('cache-control','no-store');
+ // Preserve reviewed offline public assets for anonymous visitors, but never
+ // cache delegated content requested in an authenticated browser context.
+ if(request.headers.has('cookie') || request.headers.has('authorization'))
+  safe.set('cache-control','no-store');
  safe.set('x-content-type-options','nosniff');
  safe.set('referrer-policy','no-referrer');
  const noBody=request.method==='HEAD'||[204,205,304].includes(response.status);
