@@ -84,4 +84,12 @@ for(const scenario of [
  assert.equal(response.status,404);
  assert.equal(response.headers.get('Content-Range'),null);
 }
+// Calendar validation must reject impossible dates even in approved batches.
+for(const invalidDate of ['2026-02-30','2026-13-01','2027-02-29']){
+ const manifest={schemaVersion:1,publicationStatus:'published',publishedBatchFiles:[filename]};
+ const data={timezone:'Africa/Lagos',entries:[{date:invalidDate,status:'approved-for-publication',topics}]};
+ const env={ASSETS:{fetch:async request=>new URL(request.url).pathname==='/strength-publication-status.json'?Response.json(manifest):Response.json(data)}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename),env);
+ assert.equal(response.status,404,invalidDate);
+}
 console.log('Devotional embargo regression: future approved entries blocked; current approved allowed; editorial hold blocked.');
