@@ -10,7 +10,11 @@ export async function saveImportSession(db, actor, session) {
       typeof session.name !== 'string' || !session.name ||
       !Number.isSafeInteger(session.size) || session.size < 1 || session.size > 1073741824 ||
       !Number.isSafeInteger(session.partCount) ||
-      session.partCount !== Math.ceil(session.size / (10 * 1024 * 1024)) ||\n      typeof session.key !== 'string' ||\n      !session.key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`) ||\n      typeof session.uploadId !== 'string' || !session.uploadId ||\n      !Number.isSafeInteger(session.expiresAt) || session.expiresAt <= Date.now())
+      session.partCount !== Math.ceil(session.size / (10 * 1024 * 1024)) ||
+      typeof session.key !== 'string' ||
+      !session.key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`) ||
+      typeof session.uploadId !== 'string' || !session.uploadId ||
+      !Number.isSafeInteger(session.expiresAt) || session.expiresAt <= Date.now())
     throw new Error('Invalid import owner or state');
   const id = crypto.randomUUID();
   await db.prepare('INSERT INTO account4_import_sessions (id,owner_id,object_key,upload_id,filename,size_bytes,part_count,state,expires_at_ms) VALUES (?,?,?,?,?,?,?,?,?)')
@@ -24,7 +28,8 @@ export async function loadImportSession(db, actor, id) {
   const row = await db.prepare('SELECT * FROM account4_import_sessions WHERE id=? AND owner_id=?')
     .bind(id,actor.id).first();
   if (!row || row.owner_id !== actor.id || row.state !== 'uploading' ||
-      row.expires_at_ms <= Date.now() ||\n      !row.object_key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`))
+      row.expires_at_ms <= Date.now() ||
+      !row.object_key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`))
     throw new Error('Import session unavailable');
   const {results} = await db.prepare('SELECT part_number,etag FROM account4_import_parts WHERE session_id=? ORDER BY part_number')
     .bind(id).all();
