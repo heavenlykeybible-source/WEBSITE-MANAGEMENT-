@@ -117,7 +117,7 @@ export class MeetingRooms {
     const currentHost=this.host();
     if(currentHost){
      const old=this.data(currentHost);
-     if(old.until>now)return this.close(ws,{t:'error',msg:'This room already has a host.'});
+     if(old.until>verifiedAt)return this.close(ws,{t:'error',msg:'This room already has a host.'});
      if(old.owner!==a.u)return this.close(ws,{t:'error',msg:'This room belongs to another host.'});
      // A timed-out host must not prevent an authorized new host from reopening the meeting.
      this.close(currentHost,{t:'closed',why:'The meeting time has ended.'});
