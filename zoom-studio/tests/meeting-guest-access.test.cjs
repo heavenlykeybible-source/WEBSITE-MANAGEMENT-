@@ -525,3 +525,13 @@ test('moderator mute accepts only boolean states',async()=>{
  await h.r.webSocketMessage(h.host,JSON.stringify({t:'mute',gid:h.guest.attachment.id,on:true}));
  assert.equal(h.guest.messages.filter(m=>m.t==='mute').length,before+1);
 });
+
+test('oversized verified identity is not attached to a meeting socket',async()=>{
+ const h=setup();
+ h.context.check=async()=>({e:'x'.repeat(255),t:2,exp:Date.now()+60000});
+ h.context.getUser=async()=>({tv:2,banned:false,role:'user'});
+ await h.join('valid');
+ assert.equal(h.guest.attachment.identity,null);
+ assert.equal(h.guest.attachment.aud,true);
+ assert.equal(await h.r.stageAllowed({identity:{email:'x'.repeat(255),version:2,expires:Date.now()+60000}},Date.now()),false);
+});
