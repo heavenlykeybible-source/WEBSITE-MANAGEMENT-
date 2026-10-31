@@ -1,5 +1,5 @@
 import {beginPrivateImport, uploadPrivatePart, completePrivateImport} from './account4-r2-multipart.mjs';
-import {saveImportSession, loadImportSession, recordImportPart, transitionImportSession} from './account4-import-d1.mjs';
+import {saveImportSession, loadImportSession, recordImportPart, transitionImportSession, claimImportCompletion} from './account4-import-d1.mjs';
 
 // Staging-only orchestration. Never exposes objects publicly or deploys code.
 // The durable D1 record must exist before the session identifier is returned.
@@ -37,9 +37,11 @@ export async function uploadPersistedPrivatePart(bucket, db, actor, id, partNumb
 export async function finishPersistedPrivateImport(bucket, db, actor, id) {
   const session = await loadImportSession(db, actor, id);
   const parts = Object.entries(session.parts).map(([partNumber,etag]) => ({partNumber:Number(partNumber),etag}));
+  // Acquire the exclusive D1 state before the irreversible R2 completion.
+  await claimImportCompletion(db, actor, id);
   const completed = await completePrivateImport(bucket, actor, session, parts);
   try {
-    await transitionImportSession(db, actor, id, 'uploading', 'private-awaiting-review');
+    await transitionImportSession(db, actor, id, 'completing', 'private-awaiting-review');
   } catch (error) {
     throw new Error('Private import completion requires operator reconciliation; object was not deleted', {cause:error});
   }
