@@ -2,9 +2,12 @@
 import { readFileSync,existsSync } from 'node:fs';
 import { resolve,dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Script } from 'node:vm';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>readFileSync(resolve(root,p),'utf8');
 const config=read('wrangler.toml');
+// Parse the dashboard bundle without executing it; strict CSP forbids inline scripts.
+new Script(read('public/app.js'),{filename:'public/app.js'});
 const pkg=JSON.parse(read('package.json'));
 const fail=[];
 const requireMatch=(name,re)=>{if(!re.test(config))fail.push(name)};
