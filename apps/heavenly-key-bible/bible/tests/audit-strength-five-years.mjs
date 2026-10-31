@@ -33,7 +33,7 @@ for(let i=0;i<entries.length;i++){
  for(let j=0;j<12;j++){
   const t=e.topics[j];topicCount++;
   if(t.topic!==topicNames[j])flag(e.date,'TOPIC_ORDER',String(j));
-  if(!t.reference||!t.bibleText||!t.reflection||!t.prayer)flag(e.date,'INCOMPLETE',t.topic);
+  if(![t.reference,t.bibleText,t.reflection,t.prayer].every(v=>typeof v==='string'&&v.trim()))flag(e.date,'INCOMPLETE',t.topic);
   references[j].add(t.reference);
   const keyRef=norm(t.reference);
   const keyVerse=norm(t.bibleText);
@@ -80,7 +80,7 @@ for(let i=0;i<entries.length;i++){
  keepFirst(titleOccurrences,e.title,e,'DAY_TITLE');
  keepFirst(dailyReflections,e.reflection,e,'DAY_REFLECTION');
  keepFirst(dailyPrayers,e.prayer,e,'DAY_PRAYER');
- if(!e.scripture||!e.title||!e.reflection||!e.prayer)flag(e.date,'INCOMPLETE_DAILY_ENTRY',e._file);
+ if(![e.scripture,e.title,e.reflection,e.prayer].every(v=>typeof v==='string'&&v.trim()))flag(e.date,'INCOMPLETE_DAILY_ENTRY',e._file);
  if(norm(e.reflection).split(' ').length<16)flag(e.date,'THIN_DAILY_REFLECTION',e._file);
  if(i&&e.title===entries[i-1].title&&e.scripture===entries[i-1].scripture)
   flag(e.date,'CONSECUTIVE_REUSED_THEME',e.title);
