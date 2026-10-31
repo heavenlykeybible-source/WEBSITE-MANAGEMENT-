@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
-const temp=new URL('./workspace-test-worker.mjs',import.meta.url);fs.writeFileSync(temp,fs.readFileSync('control-room-worker.js','utf8')+'\nexport {requestAIWorkspaceAccess,aiWorkspaceRoutes,aiPolicy,ownerApprovalSession,UI};');
+const temp=new URL('./workspace-test-worker.mjs',import.meta.url);fs.writeFileSync(temp,fs.readFileSync('control-room-worker.js','utf8')+'\nexport {requestAIWorkspaceAccess,aiWorkspaceRoutes,aiPolicy,ownerApprovalSession,aiPermissionRoutes,UI};');
 try{
-const {requestAIWorkspaceAccess,aiWorkspaceRoutes,aiPolicy,ownerApprovalSession,UI}=await import(temp.href);
+const {requestAIWorkspaceAccess,aiWorkspaceRoutes,aiPolicy,ownerApprovalSession,aiPermissionRoutes,UI}=await import(temp.href);
 const db=new DatabaseSync(':memory:');db.exec(fs.readFileSync('schema.sql','utf8'));db.exec("INSERT INTO users(id,username,role,status,kind)VALUES(1,'owner','owner','active','staff'),(2,'admin','admin','active','staff');INSERT INTO cf_connections(id,label,account_id,token_enc)VALUES(4,'Account 4','account4','encrypted'),(7,'Account 7','account7','encrypted')");
 const DB={prepare(sql){const q=db.prepare(sql);let v=[];return {bind(...a){v=a;return this},async first(){return q.get(...v)||null},async all(){return {results:q.all(...v)}},async run(){const r=q.run(...v);return {meta:{changes:r.changes,last_row_id:r.lastInsertRowid}}}}}};
 const env={DB,ADMIN_PASS:'fixture-password'},user={id:1,username:'owner',role:'owner',kind:'staff'},actor={chatUserId:1,agentId:1,a:{can_read:1},aiPolicy:{max_tools:12},chatConversationId:crypto.randomUUID()};
@@ -27,6 +27,15 @@ const denied=await requestAIWorkspaceAccess(env,actor,{connections:[4],hours:1,r
 await assert.rejects(api('ai/access-requests/decide',{id:denied.permission_request.id,decision:'approve',approval_proof:'approval-session:invalid'}),e=>e.status===403);
 const deniedStatus=(await api('ai/access-requests')).requests.find(r=>r.id===denied.permission_request.id);
 assert.equal(deniedStatus.status,'pending');
+const permissionPost=body=>aiPermissionRoutes(new Request('https://room.example/api/owner/ai/permissions',{method:'POST',body:JSON.stringify(body)}),env,user,'ai/permissions','POST');
+const settingsSaved=await (await permissionPost({mode:'work',max_tools:12,connections:[4],hours:1,approval_proof:proof})).json();
+assert.equal(settingsSaved.ok,true);
+assert.deepEqual(settingsSaved.policy.connections,[4]);
+await assert.rejects(permissionPost({mode:'work',max_tools:12,connections:[7],hours:1,approval_proof:'approval-session:invalid'}),e=>e.status===403);
+assert.deepEqual((await aiPolicy(env,user)).connections,[4]);
+const settingsRevoked=await (await permissionPost({mode:'chat',max_tools:4,connections:[],hours:1,approval_proof:proof})).json();
+assert.equal(settingsRevoked.policy.mode,'chat');
+assert.deepEqual(settingsRevoked.policy.connections,[]);
 const chat=crypto.randomUUID();db.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').run('ai:context:1:cloudflare:'+chat,JSON.stringify({title:'Owner history',messages:[{role:'user',content:'Private owner task'}]}));assert.equal((await api('ai/history')).conversations.length,1);assert.equal((await api('ai/history',null,{...user,id:2,role:'admin'})).conversations.length,0);
 assert.ok(UI.includes('Review and approve'));assert.ok(UI.includes('AI requests your permission'));assert.ok(UI.includes('Saved AI conversations'));assert.ok(UI.includes('Choose target account'));assert.ok(UI.includes('Register Face ID / passkey'));assert.ok(UI.includes('permission-grid'));
 db.close();console.log('PASS chat access: no self-grant, password verification, exact account, expiry, approve/decline, replay denial, owner-only grants and private per-AI histories');
