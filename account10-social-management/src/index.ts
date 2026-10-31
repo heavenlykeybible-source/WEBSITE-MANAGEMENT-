@@ -465,7 +465,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    if(!response.ok)return reply({geminiConnected:false,kjvSmokeTestPassed:false,providerStatus:response.status,error:'Gemini provider request failed; check key, model and quota'},502);
    const result:any=await response.json();
    const answer=(result?.candidates?.[0]?.content?.parts||[]).map((p:any)=>typeof p?.text==='string'?p.text:'').join('').trim();
-   const kjvSmokeTestPassed=/\\bJohn\\s+11\\s*:\\s*35\\b/i.test(answer);
+   const kjvSmokeTestPassed=/\bJohn\s+11\s*:\s*35\b/i.test(answer);
    return reply({geminiConnected:true,kjvSmokeTestPassed,provider:'gemini',model:'gemini-2.5-flash',outboundMessagesSent:false,socialPostsPublished:false,note:kjvSmokeTestPassed?'Gemini answered the KJV reference correctly; full doctrine remains unverified.':'Gemini responded, but the KJV reference check needs human review.'});
   }catch{return reply({geminiConnected:false,kjvSmokeTestPassed:false,error:'Gemini provider network failure or timeout'},502)}
   finally{clearTimeout(timeout)}
