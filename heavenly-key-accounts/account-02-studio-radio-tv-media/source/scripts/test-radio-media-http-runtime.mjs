@@ -8,7 +8,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const read=p=>readFileSync(resolve(root,p),'utf8');
 const compile=p=>ts.transpileModule(read(p).replace(/^import .*;\s*$/gm,'').replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 const combined=['src/radio-byte-range.ts','src/radio-http-validators.ts','src/public-broadcast.ts'].map(compile).join('\n');
-const runtime=runInNewContext(combined+';({serveBroadcastMedia})',{Response,Request,Headers,URL,console});
+const runtime=runInNewContext(combined+';({serveBroadcastMedia})',{Response,Request,Headers,URL,console,TV_LOCKED:true,TV_LOCK_MESSAGE:'Television locked'});
 const media={media_id:11,object_key:'radio/approved.mp3',media_type:'audio',mime_type:'audio/mpeg',status:'published'};
 let current=media,reads=0,heads=0;
 const bytes=new Uint8Array(100).map((_,i)=>i);
