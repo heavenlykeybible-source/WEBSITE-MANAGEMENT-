@@ -58,7 +58,7 @@ async function runTimeline(record){
    stream=canvas.captureStream(30);
    try{if(v.captureStream){sourceStream=v.captureStream();for(const track of sourceStream.getAudioTracks())stream.addTrack(track)}}catch{}
    for(const candidate of supportedMimes){try{rec=new MediaRecorder(stream,{mimeType:candidate});mime=candidate;break}catch{}}if(!rec)throw Error('Browser could not initialize any supported video encoder.');
-   finished=new Promise(resolve=>{rec.onstop=resolve;rec.onerror=e=>{encoderError=e.error||Error('Encoder failed');resolve()}});
+   finished=new Promise(resolve=>{rec.onstop=resolve;rec.onerror=e=>{encoderError=e.error||Error('Encoder failed');state.abortSeek?.();state.abortStart?.();state.abortPlayback?.();resolve()}});
    rec.ondataavailable=e=>{if(state.cancelled||encoderError||!e.data?.size)return;recordedBytes+=e.data.size;if(recordedBytes>256*1024*1024){encoderError=Error('Timeline export exceeded the 256 MB browser memory limit. Shorten the project or reduce output resolution.');state.abortPlayback?.();state.abortStart?.();return}fragments.push(e.data)};
    $('clipDownload').hidden=true;
   }
