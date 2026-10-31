@@ -44,4 +44,14 @@ assert.match(entry, /id<=0\)return json\(\{error:'Invalid media'\}/, 'Campaign I
 assert.match(entry, /campaign\.schedule/, 'Campaign creation must be audited');
 assert.match(entry, /Media expires before campaign starts/, 'Media retention must cover the campaign start');
 
+// Malformed signed capability tokens must fail closed.
+assert.match(entry, /parts\.length!==2/, 'Reject extra token segments');
+assert.match(entry, /encoded\.length>8192/, 'Reject oversized token payloads');
+assert.match(entry, /signature\.length!==64/, 'Require exact SHA-256 signature size');
+assert.match(entry, /Array\.isArray\(p\)/, 'Reject array/null capability payloads');
+
+// Recording references must be valid and safely bounded.
+assert.match(entry, /objectKey\.length>1024/, 'Reject oversized recording object keys');
+assert.match(entry, /!Number\.isSafeInteger\(sessionId\)\|\|sessionId<=0/, 'Reject invalid recording session IDs');
+
 console.log('Account 2 broadcast safety regression checks passed');
