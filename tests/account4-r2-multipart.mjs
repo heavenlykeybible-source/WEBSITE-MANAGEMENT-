@@ -4,10 +4,11 @@ const actor={id:7,authenticated:true,canImport:true},other={...actor,id:8};
 const uploads=[];
 let completedSize=11;
 const deleted=[];
+let receiptOverride=null;
 const bucket={
  async createMultipartUpload(key){uploads.push(key);return {uploadId:'u1'}},
  resumeMultipartUpload(key,id){assert.equal(id,'u1');assert.equal(key,uploads.at(-1));return {
-  async uploadPart(partNumber,bytes){return {partNumber,etag:'abc123'}},
+  async uploadPart(partNumber,bytes){return receiptOverride ?? {partNumber,etag:'abc123'}},
   async complete(parts){return {size:completedSize}},
   async abort(){}
  }}
@@ -23,6 +24,13 @@ for (const invalidActor of [null, {}, {id:7,authenticated:true}, {id:7,canImport
 }
 await assert.rejects(uploadPrivatePart(bucket,other,session,1,new Uint8Array(11)));
 assert.deepEqual(await uploadPrivatePart(bucket,actor,session,1,new Uint8Array(11)),{partNumber:1,etag:'abc123'});
+for (const badReceipt of [null,{partNumber:2,etag:'abc123'},{partNumber:1,etag:''},{partNumber:1,etag:'bad receipt'},{partNumber:1,etag:33}]) {
+  receiptOverride=badReceipt;
+  // Explicitly model null as a malformed storage response rather than defaulting.
+  if (badReceipt === null) receiptOverride={partNumber:1};
+  await assert.rejects(uploadPrivatePart(bucket,actor,session,1,new Uint8Array(11)),/Invalid R2 upload part receipt/);
+}
+receiptOverride=null;
 await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/server-side upload record/);
 session.parts[1]='abc123';
 await assert.rejects(completePrivateImport(bucket,actor,session,[]));
