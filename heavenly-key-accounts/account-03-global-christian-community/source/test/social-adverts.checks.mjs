@@ -62,7 +62,7 @@ test('Social sign-in and adverts: permissions, encrypted settings, identity vali
  assert.equal((await req('/api/admin/adverts',input,member)).status,403);assert.equal((await req('/api/admin/adverts',{...input,linkUrl:'javascript:alert(1)'},admin)).status,400);
  assert.equal((await req('/api/admin/adverts',{...input,startsAt:'2030-01-02',endsAt:'2030-01-01'},admin)).status,400);
  const draft=await req('/api/admin/adverts',input,admin);assert.equal(draft.status,201);assert.equal((await req('/api/adverts')).data.items.length,0);
- assert.equal((await req('/api/admin/adverts/'+draft.data.advertId,{...input,status:'published'},owner,'PATCH')).status,403);
+ assert.equal((await req('/api/admin/adverts/'+draft.data.advertId,{...input,status:'published'},admin,'PATCH')).status,403);
  assert.equal((await req('/api/admin/adverts',{...input,status:'published'},admin)).status,403);
  env.ADVERTS_ENABLED='true';
  assert.equal((await req('/api/admin/adverts/'+draft.data.advertId,{...input,status:'published'},owner,'PATCH')).status,200);assert.equal((await req('/api/adverts')).data.items.length,1);
