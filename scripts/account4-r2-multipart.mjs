@@ -22,6 +22,9 @@ export async function beginPrivateImport(bucket, actor, file) {
   const meta = validateImportMetadata(file, actor);
   const key = `private-imports/${encodeURIComponent(String(actor.id))}/${crypto.randomUUID()}`;
   const upload = await bucket.createMultipartUpload(key);
+  if (!upload || typeof upload.uploadId !== 'string' || !upload.uploadId) {
+    throw new Error('R2 multipart creation returned no valid upload identifier');
+  }
   return {
     ownerId: actor.id, key, uploadId: upload.uploadId,
     name: meta.name, size: meta.size, partCount: meta.partCount,
