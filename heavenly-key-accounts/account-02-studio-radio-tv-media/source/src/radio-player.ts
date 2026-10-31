@@ -61,9 +61,10 @@ function select(index){
  const item=playlist[position];audio.src=item.url;title.textContent=item.title||'Radio programme';if('mediaSession' in navigator&&typeof MediaMetadata==='function')navigator.mediaSession.metadata=new MediaMetadata({title:item.title||'Radio programme',artist:'Heavenly Key Evangelistic Movement'});return true;
 }
 async function start(){
+ let generation=0;
  try{if(!playlist.length){say('No radio recordings are available.');return;}
  if(!audio.getAttribute('src'))select(position);
- const generation=++playGeneration;await audio.play();if(generation!==playGeneration)return;playing=true;play.textContent='⏸ Pause';play.setAttribute('aria-label','Pause radio');say('Playing • '+(position+1)+' of '+playlist.length);}
+ generation=++playGeneration;await audio.play();if(generation!==playGeneration)return;playing=true;play.textContent='⏸ Pause';play.setAttribute('aria-label','Pause radio');say('Playing • '+(position+1)+' of '+playlist.length);}
  catch{if(generation===playGeneration)setPaused('Audio could not play. Check your connection, audio output, or try the next recording.');}
 }
 play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
