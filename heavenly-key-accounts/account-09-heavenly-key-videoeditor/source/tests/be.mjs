@@ -455,6 +455,14 @@ check('Members cannot read another member media',otherMediaRead.status===404);
 const otherMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:secondLogin.cookie});
 check('Members cannot delete another member media',otherMediaDelete.status===404);
 
+const foreignObjectKey='unrelated-owner/protected';
+objects.set(foreignObjectKey,Buffer.from('private'));
+db.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,?,?)').run('foreign-record',accountId,'foreign.png','image/png',7,foreignObjectKey,0,Date.now());
+const foreignRead=await request('media/foreign-record',{cookie:login.cookie});
+const foreignDelete=await request('media/foreign-record',{method:'DELETE',cookie:login.cookie});
+check('Foreign storage reference blocks media download',foreignRead.status===409);
+check('Foreign storage reference blocks media deletion',foreignDelete.status===409&&objects.has(foreignObjectKey));
+db.prepare('DELETE FROM media WHERE id=?').run('foreign-record');
 const originalMediaDelete = env.MEDIA.delete;
 let mediaDeleteAttempts = 0;
 env.MEDIA.delete = async () => { mediaDeleteAttempts++; throw new Error('Simulated temporary R2 outage'); };
