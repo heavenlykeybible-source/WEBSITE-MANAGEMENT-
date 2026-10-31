@@ -41,6 +41,12 @@ await assert.rejects(loadImportSession(db,actor,id),/unavailable/);
 row.object_key='private-imports/7/123e4567-e89b-42d3-a456-426614174001';
 await assert.rejects(loadImportSession(db,actor,id),/unavailable/,'Another valid session key must be rejected');
 row.object_key=originalKey;
+for (const badExpiry of [null,undefined,'not-a-timestamp',Infinity,Date.now()-1000]) {
+  const original=row.expires_at_ms;
+  row.expires_at_ms=badExpiry;
+  await assert.rejects(loadImportSession(db,actor,id),/unavailable/);
+  row.expires_at_ms=original;
+}
 for (const [field,bad] of [['size_bytes',0],['size_bytes',1073741825],['part_count',2],['upload_id','']]) {
   const original=row[field];
   row[field]=bad;
