@@ -12,7 +12,7 @@ assert.ok(!route.includes("marker==='media-engine-public-v1'"),'Browser audio el
 assert.ok(index.includes("if(marker!=='media-engine-v1'||!auth.startsWith('Bearer '))"),'Authenticated admin routes stay protected');
 assert.ok(broadcast.includes("eligibleMedia(env,id)"),'Public media delivery must check publication or active programme eligibility');
 assert.ok(broadcast.includes("if(TV_LOCKED&&!adminPreview&&media.media_type==='video')"),'Public video remains locked');
-assert.ok(broadcast.includes("const range=request.headers.get('Range')"),'Seekable radio range requests remain supported');
+assert.ok(broadcast.includes("parseAudioRange(request.headers.get('Range'),head.size)"),'Seekable radio range requests remain supported');
 assert.ok(player.includes('<audio id="audio" preload="none"'),'Radio player uses native browser audio');
 assert.ok(player.includes("audio.src=item.url"),'Player loads eligible audio URL directly');
 console.log('Account 2 public radio browser audio route and media access controls passed');
