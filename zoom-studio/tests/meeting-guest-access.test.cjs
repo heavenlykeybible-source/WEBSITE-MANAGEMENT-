@@ -535,3 +535,14 @@ test('oversized verified identity is not attached to a meeting socket',async()=>
  assert.equal(h.guest.attachment.aud,true);
  assert.equal(await h.r.stageAllowed({identity:{email:'x'.repeat(255),version:2,expires:Date.now()+60000}},Date.now()),false);
 });
+
+test('host token identity must be a bounded string',async()=>{
+ const h=setup();
+ h.host.close();
+ const newHost=h.add();
+ const room=h.guest.attachment.room;
+ h.context.check=async()=>({k:'meeting',r:room,u:'x'.repeat(255),pe:Date.now()+60000});
+ await h.r.webSocketMessage(newHost,JSON.stringify({t:'host',token:'host-valid'}));
+ assert.notEqual(newHost.attachment.role,'host');
+ assert.notEqual(newHost.readyState,1);
+});
