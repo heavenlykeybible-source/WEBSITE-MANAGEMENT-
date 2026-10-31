@@ -48,7 +48,7 @@ export async function recordImportPart(db, actor, id, receipt) {
     throw new Error('Invalid R2 part receipt');
   // Atomic condition prevents recording a receipt for an expired/closed session.
   const result = await db.prepare(
-    'INSERT INTO account4_import_parts(session_id,part_number,etag) SELECT id,?,? FROM account4_import_sessions WHERE id=? AND owner_id=? AND state=? AND expires_at_ms>? ON CONFLICT(session_id,part_number) DO UPDATE SET etag=excluded.etag WHERE EXISTS (SELECT 1 FROM account4_import_sessions s WHERE s.id=excluded.session_id AND s.owner_id=? AND s.state=? AND s.expires_at_ms>?)')
+    'INSERT INTO account4_import_parts(session_id,part_number,etag) SELECT id,?,? FROM account4_import_sessions WHERE id=? AND owner_id=? AND state=? AND expires_at_ms>? AND 1=1 ON CONFLICT(session_id,part_number) DO UPDATE SET etag=excluded.etag WHERE EXISTS (SELECT 1 FROM account4_import_sessions s WHERE s.id=excluded.session_id AND s.owner_id=? AND s.state=? AND s.expires_at_ms>?)')
     .bind(receipt.partNumber,receipt.etag,id,actor.id,'uploading',Date.now(),actor.id,'uploading',Date.now()).run();
   if (result.meta?.changes !== 1) throw new Error('Part receipt was not persisted');
   return receipt;
