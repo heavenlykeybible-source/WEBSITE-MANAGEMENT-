@@ -406,7 +406,8 @@ export default {
    const stale=await env.DB.prepare("SELECT session_id FROM live_sessions WHERE status='live' AND last_heartbeat_at<=datetime('now','-180 seconds')").all<{session_id:number}>();
    for(const x of stale.results){await env.DB.prepare("UPDATE live_sessions SET status='reconnecting',reconnect_deadline=datetime('now','+10 minutes') WHERE session_id=? AND status='live'").bind(x.session_id).run();}
    await env.DB.prepare("UPDATE live_sessions SET status='ended',ended_at=CURRENT_TIMESTAMP WHERE status='reconnecting' AND reconnect_deadline<=datetime('now')").run();
-   await env.DB.prepare("UPDATE playout_items SET status='playing' WHERE status='scheduled' AND julianday(starts_at)<=julianday('now') AND julianday(ends_at)>julianday('now')").run();
+   // Radio continues on schedule; television entries remain on hold.
+   await env.DB.prepare(TV_LOCKED?"UPDATE playout_items SET status='playing' WHERE status='scheduled' AND media_id IN (SELECT media_id FROM media_objects WHERE media_type='audio') AND julianday(starts_at)<=julianday('now') AND julianday(ends_at)>julianday('now')":"UPDATE playout_items SET status='playing' WHERE status='scheduled' AND julianday(starts_at)<=julianday('now') AND julianday(ends_at)>julianday('now')").run();
    await env.DB.prepare("UPDATE playout_items SET status='completed' WHERE status='playing' AND julianday(ends_at)<=julianday('now')").run();
    const expired=await env.DB.prepare("SELECT media_id,object_key FROM media_objects WHERE status!='deleted' AND keep_media=0 AND retention_until IS NOT NULL AND julianday(retention_until)<=julianday('now') LIMIT 50").all<{media_id:number,object_key:string}>();
    for(const x of expired.results){try{await env.MEDIA_R2.delete(x.object_key);}catch{continue;} await env.DB.prepare("UPDATE media_objects SET status='deleted',updated_at=CURRENT_TIMESTAMP WHERE media_id=?").bind(x.media_id).run();}
