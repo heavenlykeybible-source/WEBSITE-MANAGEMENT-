@@ -592,3 +592,19 @@ test('meeting identity expiration is rechecked after asynchronous account lookup
  const allowed=await h.r.stageAllowed({identity:{email:'member@example.com',version:2,expires:earlier+10}},earlier);
  assert.equal(allowed,false);
 });
+
+test('disconnected guest is not announced after slow TURN credential generation',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');
+ await reached;
+ h.guest.close();
+ release({});
+ await pending;
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
+});
