@@ -91,7 +91,7 @@ const enhancement=readFileSync('voice-enhance.js','utf8');
 assert.ok(enhancement.includes('enhanceDownload'),'Enhanced audio download control missing');
 assert.ok(headers.includes('Content-Security-Policy'),'Missing CSP');
 assert.ok(headers.includes("style-src 'self'; style-src-attr 'none'")&&!/style-src[^;]*'unsafe-inline'/.test(headers),'Enforced CSP must block inline styles and style attributes');
-assert.ok(!/<style\\b/i.test(html)&&!/\\sstyle\\s*=/.test(html),'HTML must not contain inline style blocks or attributes');
+assert.ok(!html.includes('<style')&&!html.includes(' style='),'HTML must not contain inline style blocks or attributes');
 assert.ok(html.includes('href="/editor.css"'),'External editor stylesheet must load from the same origin');
 assert.ok(headers.includes("script-src 'self'; script-src-attr 'none'")&&!/script-src[^;]*'unsafe-inline'/.test(headers),'Enforced CSP must block inline scripts and event attributes');
 assert.ok(editor.length>10000,'External editor bundle must contain the application code');
