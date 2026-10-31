@@ -146,7 +146,7 @@ test('human requests attention counter shows authenticated pending count and res
   assert.match(html,/api\('\/api\/human-requests'\)\.then\(h=>/);
   assert.match(html,/if\(epoch===authEpoch\)updateHumanRequestCount\(h\.items\)/);
   assert.match(html,/if\(name==='requests'\)updateHumanRequestCount\(d\.items\)/);
-  assert.equal((html.match(/selected='';paused=false;requestedHuman=false;humanRequestVersion=0;activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests';/g)||[]).length,2);
+  assert.equal((html.match(/selected='';paused=false;requestedHuman=false;humanRequestVersion=0;operatorAccessRole='viewer';activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests';/g)||[]).length,2);
   assert.match(html,/count===100\?'\+':'/);
 });
 
@@ -155,7 +155,7 @@ test('management tab requests never restore private data after logout or tab cha
   assert.match(html,/function showTab\(name\)\{activeManagementTab=name;const epoch=authEpoch;/);
   assert.match(html,/if\(epoch!==authEpoch\|\|activeManagementTab!==name\|\|!token\)return;renderManagement\(name,d\)/);
   assert.match(html,/if\(epoch===authEpoch&&activeManagementTab===name&&token\)status\(e.message\)/);
-  assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests'/g)||[]).length,2);
+  assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;operatorAccessRole='viewer';activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests'/g)||[]).length,2);
 });
 
 test('nested launch-diagnostics responses never render into a stale operator session', () => {
@@ -171,7 +171,7 @@ test('operator handover resolution sends the exact request generation', () => {
  assert.match(html,/targetRequestVersion=humanRequestVersion/);
  assert.match(html,/resumeAutomation:true,requestVersion:targetRequestVersion/);
  assert.match(html,/resumeAutomation:false,requestVersion:item\.human_request_version/);
- assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;activeManagementTab='chats';/g)||[]).length,2);
+ assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;operatorAccessRole='viewer';activeManagementTab='chats';/g)||[]).length,2);
 });
 
 test('owner can provision, list and revoke expiring staff credentials without displaying hashes', () => {
@@ -183,4 +183,13 @@ test('owner can provision, list and revoke expiring staff credentials without di
  assert.match(html,/api\('\/api\/operators\/revoke'/);
  assert.match(html,/showOnlyOnce|ONE-TIME TOKEN/);
  assert.match(html,/addAccountForm\(\);addWhatsAppReadiness\(\);addOperatorManagement\(\)/);
+});
+
+test('viewer role is read-only in the operator dashboard', () => {
+ assert.match(html,/operatorAccessRole='viewer'/);
+ assert.match(html,/Promise\.all\(\[api\('\/api\/conversations'\),api\('\/api\/operator\/session'\)\]\)/);
+ assert.match(html,/operatorAccessRole=session\.role/);
+ assert.match(html,/\$\('takeover'\)\.disabled=operatorAccessRole==='viewer'/);
+ assert.match(html,/\$\('saveDraft'\)\.disabled=operatorAccessRole==='viewer'/);
+ assert.match(html,/\$\('suggestReply'\)\.disabled=operatorAccessRole==='viewer'/);
 });
