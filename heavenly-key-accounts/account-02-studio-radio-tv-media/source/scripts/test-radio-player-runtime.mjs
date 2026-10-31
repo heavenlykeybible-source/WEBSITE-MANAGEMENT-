@@ -11,7 +11,7 @@ const source=readFileSync(resolve(root,'src/radio-player.ts'),'utf8');
 const generated=ts.transpileModule(source.replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 const response=runInNewContext(generated+';radioPlayerHtml()', {Response,crypto:webcrypto});
 const html=await response.text();
-const script=html.match(/<script[^>]*>([\\s\\S]*?)<\\/script>/)?.[1];
+const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Standalone player script should exist');
 const events=new Map(),elements=new Map();
 function element(id){
