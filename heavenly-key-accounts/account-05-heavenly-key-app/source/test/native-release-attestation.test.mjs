@@ -64,3 +64,13 @@ test('signed Android release must install and launch on an emulator before distr
  assert.match(source,/Signed APK changed during emulator verification/);
  assert.ok(source.indexOf('adb install -r')<source.indexOf('actions/upload-artifact@v4'));
 });
+
+test('live native installer release gate checks public packages after approved deployment',()=>{
+ const source=workflow('account5-live-native-release-gate.yml');
+ assert.match(source,/workflow_run:/);
+ assert.match(source,/Deploy Account 5 Heavenly Key App/);
+ assert.match(source,/conclusion == 'success'/);
+ assert.match(source,/node scripts\/verify-live-native-downloads\.mjs/);
+ assert.match(source,/node scripts\/verify-live-native-downloads\.mjs --full/);
+ assert.match(source,/workflow_dispatch:/);
+});
