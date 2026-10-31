@@ -109,6 +109,8 @@ export class MeetingRooms {
     // Crypto verification may complete after a socket disconnect or token expiry.
     const verifiedAt=Date.now();
     if(ws.readyState!==1)return;
+    // Another queued frame must not change this socket's role while its host token is checked.
+    if(this.data(ws).role)return this.close(ws,{t:'error',msg:'Connection state changed. Please reconnect.'});
     if(verifiedAt>d.until)return this.close(ws,{t:'error',msg:'Please reconnect.'});
     if(!a||a.k!=='meeting'||a.r!==d.room||typeof a.u!=='string'||!a.u.trim()||a.u.length>128||!Number.isFinite(a.pe)||a.pe<=verifiedAt)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
     const currentHost=this.host();
