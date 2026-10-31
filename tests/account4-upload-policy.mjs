@@ -15,5 +15,9 @@ for(const size of [0,-1,MAX_UPLOAD_BYTES+1,1.5,NaN])
   assert.throws(()=>validateImportMetadata({name:'file.zip',size},actor));
 assert.throws(()=>validatePart({partNumber:1,byteLength:1},meta));
 assert.throws(()=>validatePart({partNumber:104,byteLength:1},meta));
+for (const forged of [
+ {...meta,partCount:1}, {...meta,partCount:104}, {...meta,partSize:1},
+ {...meta,size:MAX_UPLOAD_BYTES+1}, {...meta,size:0}, {...meta,size:1.5}
+]) assert.throws(()=>validatePart({partNumber:1,byteLength:PART_BYTES},forged));
 for(const safe of ['archive.zip','project.html','style.css','image.png','content.json','bundle.js','readme.md','manual.pdf','photo.webp']) assert.equal(validateImportMetadata({name:safe,size:100},actor).name,safe);
 console.log('PASS Account 4 multipart upload policy boundaries');
