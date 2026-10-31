@@ -9,7 +9,7 @@ const html=readFileSync(resolve(root,'strength-for-today.html'),'utf8');
 const js=readFileSync(resolve(root,'strength-for-today.js'),'utf8');
 const css=readFileSync(resolve(root,'strength-for-today.css'),'utf8');
 const shareStudio=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
-const shareJs=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
+const shareJs=shareStudio;
 assert.ok(html.includes('href="./strength-for-today.css"'),'External stylesheet must be linked');
 assert.match(html,/http-equiv="Content-Security-Policy"[^>]*style-src \'self\'/,'Reader must enforce a page-level no-inline-style CSP');
 assert.doesNotMatch(html,/unsafe-inline|unsafe-eval/i,'Reader CSP must not weaken style or script policy');
@@ -60,6 +60,7 @@ for(const file of batchFiles){
  assert.ok(Array.isArray(data.entries)&&data.entries.length>0,'Every batch must contain dated entries: '+file);
  datedEntries.push(...data.entries);
 }
+assert.ok(js.includes("['2031-07-30','2031-10-31','strength-devotionals-year5-batch04.json']")||js.includes(' ["2031-07-30","2031-10-31","strength-devotionals-year5-batch04.json"]'),'Final devotional batch must map through 31 October 2031');
 const dates=datedEntries.map(entry=>entry.date).sort();
 assert.equal(dates.length,1828,'The calendar must contain all 1,828 dates through 2031-10-31');
 assert.equal(new Set(dates).size,dates.length,'Daily edition dates must not be duplicated');
