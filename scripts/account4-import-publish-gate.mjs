@@ -18,6 +18,7 @@ export async function assertPrivateImportPublishable(db, bucket, actor, id) {
       !new RegExp('^private-imports/' + actor.id +
         '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$','i').test(row.object_key || '') ||
       row.verdict !== 'clean' ||
+      row.object_key.toLowerCase() !== ('private-imports/' + actor.id + '/' + id).toLowerCase() ||
       row.scanned_key !== row.object_key ||
       !Number.isSafeInteger(row.size_bytes) || row.size_bytes < 1 ||
       row.scanned_size !== row.size_bytes ||
