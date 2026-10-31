@@ -321,7 +321,7 @@ function loadSeg(cb){if(seg)return cb(true);segWait.push(cb);if(segLoading)retur
    if(s.oc.width!==w||s.oc.height!==h){s.oc.width=w;s.oc.height=h}
    const c=s.oc.getContext('2d');c.save();c.clearRect(0,0,w,h);c.drawImage(r.segmentationMask,0,0,w,h);c.globalCompositeOperation='source-in';c.drawImage(r.image,0,0,w,h);c.globalCompositeOperation='destination-over';
    // The camera must use the program scene's own virtual background, never a global selection from another scene.
-   const scene=SC[pgm],sceneBg=scene&&scene.items.map(it=>src(it.id)).find(item=>item&&item.isBg);
+   const scene=SC[pgm],sceneBg=scene&&scene.items.filter(it=>it.on).map(it=>src(it.id)).find(item=>item&&item.isBg);
    if(s.bgm==='tpl'&&sceneBg?.fn)sceneBg.fn(c,0,0,w,h,performance.now());
    else if(s.bgm==='tpl'&&sceneBg?.img){const img=sceneBg.img,iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;if(iw&&ih)cover(c,img,iw,ih,0,0,w,h);else c.drawImage(r.image,0,0,w,h)}
    else if(s.bgm==='tpl'){c.drawImage(r.image,0,0,w,h)}
