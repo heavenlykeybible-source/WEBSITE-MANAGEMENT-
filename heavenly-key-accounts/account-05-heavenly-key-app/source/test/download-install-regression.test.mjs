@@ -124,3 +124,12 @@ test('scanned native install guides start verified package download for matching
  assert.match(js,/different device/i);
  assert.doesNotMatch(js,/window\.location\.assign\(destination\.href\)/);
 });
+
+
+test('sharing URLs are restricted to approved secure ministry destinations', () => {
+ const source = publicFile('app-pages.js');
+ assert.match(source, /destination\.protocol/);
+ assert.match(source, /destination\.hostname/);
+ assert.match(source, /destination\.username/);
+ assert.match(source, /Sharing link unavailable/);
+});
