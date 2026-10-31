@@ -29,3 +29,29 @@ article h3{color:var(--manna-middle)!important}
 .strength-inline-10{font-weight:700;color:#23477b}
 .strength-inline-11{display:block;font-weight:800;margin:8px 0}
 .strength-inline-12{padding:12px;border-radius:12px;border:1px solid #bdcde5;font:inherit;background:#fff;color:#123b80;max-width:100%;margin-bottom:12px}
+
+/* CSP-safe theme and dynamically-created component classes. */
+:root[data-manna-theme="0"]{--manna-start:#370a31;--manna-middle:#a72142;--manna-end:#f06a29;--manna-gold:#ffd579;--manna-subtitle:#ffe4ac}
+:root[data-manna-theme="1"]{--manna-start:#122e52;--manna-middle:#3f6685;--manna-end:#8aa9b8;--manna-gold:#f0e5c6;--manna-subtitle:#e4f0f8}
+:root[data-manna-theme="2"]{--manna-start:#14386c;--manna-middle:#2a83a5;--manna-end:#edae4f;--manna-gold:#ffdd84;--manna-subtitle:#fff0bd}
+:root[data-manna-theme="3"]{--manna-start:#211642;--manna-middle:#63429a;--manna-end:#9870c1;--manna-gold:#f6dca9;--manna-subtitle:#ead9ff}
+:root[data-manna-theme="4"]{--manna-start:#051a4a;--manna-middle:#194eb8;--manna-end:#427ecc;--manna-gold:#f7cc62;--manna-subtitle:#e2edff}
+:root[data-manna-theme="5"]{--manna-start:#340e2e;--manna-middle:#96314b;--manna-end:#bd6346;--manna-gold:#ffe0a2;--manna-subtitle:#fff0df}
+:root[data-manna-theme="6"]{--manna-start:#0a3947;--manna-middle:#087e80;--manna-end:#36a478;--manna-gold:#fee094;--manna-subtitle:#e5fff2}
+:root[data-manna-theme="7"]{--manna-start:#4a2144;--manna-middle:#a65c7b;--manna-end:#d69aa4;--manna-gold:#ffe6bf;--manna-subtitle:#ffedf0}
+:root[data-manna-theme="8"]{--manna-start:#263a79;--manna-middle:#7656b0;--manna-end:#c86b9e;--manna-gold:#ffdf7d;--manna-subtitle:#f5e4ff}
+:root[data-manna-theme="9"]{--manna-start:#073d35;--manna-middle:#167d58;--manna-end:#7da65e;--manna-gold:#f5d98c;--manna-subtitle:#efffde}
+:root[data-manna-theme="10"]{--manna-start:#242c4e;--manna-middle:#7e5b49;--manna-end:#ba8a51;--manna-gold:#ffe7a3;--manna-subtitle:#fff0ce}
+:root[data-manna-theme="11"]{--manna-start:#0b1238;--manna-middle:#31306e;--manna-end:#654579;--manna-gold:#f9d894;--manna-subtitle:#ede4ff}
+.topic[data-topic="0"]{--c:#a72142;--tone:#f06a29}.topic[data-topic="1"]{--c:#3f6685;--tone:#8aa9b8}
+.topic[data-topic="2"]{--c:#2a83a5;--tone:#edae4f}.topic[data-topic="3"]{--c:#63429a;--tone:#9870c1}
+.topic[data-topic="4"]{--c:#194eb8;--tone:#427ecc}.topic[data-topic="5"]{--c:#96314b;--tone:#bd6346}
+.topic[data-topic="6"]{--c:#087e80;--tone:#36a478}.topic[data-topic="7"]{--c:#a65c7b;--tone:#d69aa4}
+.topic[data-topic="8"]{--c:#7656b0;--tone:#c86b9e}.topic[data-topic="9"]{--c:#167d58;--tone:#7da65e}
+.topic[data-topic="10"]{--c:#7e5b49;--tone:#ba8a51}.topic[data-topic="11"]{--c:#31306e;--tone:#654579}
+.archive-history{margin:12px 0 18px;padding:14px;border:1px solid #c7d5ed;border-radius:12px;background:#f5f8ff}
+.archive-open-button{margin-left:8px;padding:9px;border:0;border-radius:8px;background:#1649b9;color:white;cursor:pointer}
+.archive-topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.archive-topic-button{padding:12px;border-radius:9px;border:1px solid #9ab4e0;background:#f5f8ff;color:#123b8b;text-align:left;cursor:pointer}
+.member-search-input{width:100%;padding:12px}
+.member-result-label{display:block;padding:10px;border-bottom:1px solid #ddd}
