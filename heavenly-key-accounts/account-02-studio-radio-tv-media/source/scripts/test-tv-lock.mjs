@@ -38,4 +38,11 @@ assert.ok(index.includes("if(TV_LOCKED)return tvLockedResponse();"),'Switch-to-v
 assert.ok(index.includes("if(TV_LOCKED&&k==='destination'&&v!=='radio')return tvLockedResponse()"),'TV studio presets must be blocked');
 assert.ok(index.includes("if(radio?.destination!=='radio')return tvLockedResponse()"),'TV viewer tokens must be blocked');
 assert.ok(index.includes("if(radio?.destination!=='radio')return json({live:null,television_locked:true})"),'TV public live status must be hidden while locked');
+assert.ok(index.includes("if(TV_LOCKED&&type!=='audio')return tvLockedResponse()"),'Only audio media registration is allowed');
+assert.ok(index.includes("if(TV_LOCKED&&b.published&&row.media_type!=='audio')return tvLockedResponse()"),'TV publishing must be blocked');
+assert.ok(index.includes("mode:'radio-only',television_locked:true"),'Studio must advertise radio-only features');
+assert.ok(index.includes("if(TV_LOCKED)return tvLockedResponse();"),'Video publisher tokens must be blocked');
+assert.ok(index.includes("audio/mpeg"),'MP3 must be accepted');
+assert.ok(index.includes("audio/ogg"),'OGG must be accepted');
+assert.ok(index.includes("audio/flac"),'FLAC must be accepted');
 console.log('Account 2 television locked; radio availability and backend enforcement checks passed');
