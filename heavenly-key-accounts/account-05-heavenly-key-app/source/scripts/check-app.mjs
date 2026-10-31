@@ -1,7 +1,8 @@
 import {readdirSync,readFileSync,existsSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {join,resolve,dirname} from 'node:path';
-const root=resolve(new URL('..',import.meta.url).pathname);
+import {fileURLToPath} from 'node:url';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 function files(dir){return readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?files(join(dir,e.name)):[join(dir,e.name)]);}
 for(const file of [...files(join(root,'src')),...files(join(root,'public'))].filter(f=>f.endsWith('.js'))){
  const result=spawnSync(process.execPath,['--check',file],{encoding:'utf8'});if(result.status!==0)throw Error(result.stderr);
@@ -18,3 +19,24 @@ for(const file of files(join(root,'public')).filter(f=>f.endsWith('.html'))){
  }
 }
 console.log('All app scripts, module dependencies and local page/assets links verified.');
+
+// Enforce the Account 5 strict-CSP contract across every shipped HTML entry point.
+for(const file of files(join(root,'public')).filter(f=>f.endsWith('.html'))){
+ const html=readFileSync(file,'utf8');
+ if(/<style\b/i.test(html))throw Error('Inline style block violates strict CSP in '+file);
+ if(/\sstyle\s*=/i.test(html))throw Error('Inline style attribute violates strict CSP in '+file);
+ if(/<iframe\b/i.test(html))throw Error('Nested frame is not allowed by Account 5 frame policy in '+file);
+ for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){const attrs=match[1],type=attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();if(!/\bsrc=/i.test(attrs)&&(!type||/^(?:text|application)\/(?:javascript|ecmascript)$/i.test(type)))throw Error('Inline executable script violates strict CSP in '+file);}
+}
+const policy=readFileSync(join(root,'public','_headers'),'utf8');
+for(const directive of ["script-src 'self'","style-src 'self'","frame-src 'none'","frame-ancestors 'none'","object-src 'none'","base-uri 'none'","upgrade-insecure-requests"]){if(!policy.includes(directive))throw Error('Missing required CSP directive: '+directive)}
+const reading=readFileSync(join(root,'public','daily-reading-plan.js'),'utf8');
+if(!reading.includes("import {KJV_BOOKS,READING_YEAR,readingForDay,TODAY_REFLECTIONS}"))throw Error('Daily reading catalogue import missing');
+if(!reading.includes('KJV_BOOKS.find(x=>x.name===reading.book)')||!reading.includes('encodeURIComponent(book.slug)'))throw Error('Daily reading Bible-book lookup is not aligned with the KJV catalogue');
+if(reading.includes('books.find')||reading.includes(':\\\\d{1,3}'))throw Error('Daily reading runtime/progress regression detected');
+const hymn=readFileSync(join(root,'public','old-time-gospel-revival-hymn-book.js'),'utf8');
+if(!hymn.includes('function readFavourites()')||hymn.includes('postMessage')||hymn.includes('window.parent'))throw Error('Hymn reader storage or cross-window isolation check failed');
+if(/\bunsafe-inline\b|\bunsafe-eval\b/.test(policy))throw Error('Unsafe CSP execution allowance detected');
+const config=readFileSync(join(root,'wrangler.toml'),'utf8');
+if(!/COMMUNITY_MEMBER_ACCESS_ENABLED\s*=\s*"false"/.test(config))throw Error('Unverified member gateway must remain disabled');
+console.log('Account 5 strict-CSP, page, module and daily-reading checks passed.');
