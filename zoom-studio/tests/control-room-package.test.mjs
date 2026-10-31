@@ -782,7 +782,7 @@ test('studio background processing rotates fairly and restores original camera a
  assert.match(html,/const cameras=S\.filter\(s=>s\.type==='camera'&&s\.blur&&s\.oc/);
  assert.match(html,/const s=cameras\[segIndex\+\+\]/,'multiple cameras should get processing turns');
  assert.match(html,/if\(\+\+s\.segFails>=3\)/,'segmentation errors must have a bounded fallback');
- assert.match(html,/s\.blur=false;s\.bgm='off';s\.oc=null;s\.segReady=false;msg\('Background processing failed/);
+ assert.match(html,/s\.segReady=false;if\(\+\+s\.segFails>=3\)\{s\.blur=false;s\.bgm='off';s\.oc=null;msg\('Background processing failed/);
  assert.match(html,/segBusy=false;segCur=null/,'the processing lock must be released');
 });
 
