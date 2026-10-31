@@ -918,3 +918,15 @@ test('rapid raise-hand toggles are throttled before reaching the host',async()=>
  assert.equal(hands.at(-1).on,true);
  assert.ok(viewer.d.handAt>0,'throttle state must be stored on participant socket');
 });
+
+test('invite keys cannot join through a socket allocated to a different meeting route',async()=>{
+ const s=await openRoom(),guest=s.add({room:'22222222-2222-4222-8222-222222222222'});
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Wrong route'});
+ assert.equal(guest.readyState,3,'a valid invite must not override the socket route');
+ assert.notEqual(guest.d.role,'guest','mismatched socket must never be admitted');
+ assert.ok(guest.messages.some(m=>m.t==='error'&&/route mismatch/i.test(m.msg)));
+ const legit=s.add();
+ await message(s.room,legit,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Valid viewer'});
+ assert.equal(legit.d.role,'guest','correctly routed invite must remain functional');
+ assert.equal(legit.readyState,1);
+});
