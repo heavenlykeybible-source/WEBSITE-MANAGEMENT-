@@ -1,3 +1,4 @@
+import { TV_LOCKED,tvLockedResponse } from './channel-lock';
 interface UploadEnv {DB:D1Database;MEDIA_R2:R2Bucket}
 export const MAX_MEDIA_BYTES=2*1024*1024*1024;
 const CHUNK=8*1024*1024;
@@ -6,8 +7,9 @@ export async function multipartUpload(request:Request,env:UploadEnv,actor:string
  const match=new URL(request.url).pathname.match(/^\/api\/media\/(\d+)\/multipart(?:\/(status|complete|abort|part\/(\d+)))?$/);
  if(!match)return null;
  const id=Number(match[1]),action=match[2]||'start';
- const media=await env.DB.prepare('SELECT object_key,mime_type,size_bytes,status FROM media_objects WHERE media_id=?').bind(id).first<any>();
+ const media=await env.DB.prepare('SELECT object_key,media_type,mime_type,size_bytes,status FROM media_objects WHERE media_id=?').bind(id).first<any>();
  if(!media||media.status==='deleted')return json({error:'Media not found'},404);
+ if(TV_LOCKED&&media.media_type!=='audio')return tvLockedResponse();
  let upload=await env.DB.prepare('SELECT * FROM media_uploads WHERE media_id=?').bind(id).first<any>();
  if(upload&&upload.actor_id!==actor)return json({error:'This upload belongs to another administrator'},403);
  if(action==='start'&&request.method==='POST'){
