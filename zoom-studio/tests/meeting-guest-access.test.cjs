@@ -405,3 +405,12 @@ test('stage permissions are checked again before interactive messages',async()=>
   assert.equal(h.host.messages.length,before);
  }
 });
+
+test('invalid reactions do not consume the valid reaction cooldown',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji:'invalid'}));
+ assert.equal(h.guest.attachment.reacted||0,0);
+ const before=h.host.messages.filter(m=>m.t==='react').length;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji:'👏'}));
+ assert.equal(h.host.messages.filter(m=>m.t==='react').length,before+1);
+});
