@@ -139,7 +139,7 @@ export class MeetingRooms {
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
-   }else if(m.t==='hand')this.send(host,{t:'hand',from:d.id,name:d.name,on:!!m.on,aud:d.aud});
+   }else if(m.t==='hand'&&now-(d.handAt||0)>=800){d.handAt=now;this.save(ws,d);this.send(host,{t:'hand',from:d.id,name:d.name,on:!!m.on,aud:d.aud});}
    else if(m.t==='react'&&now-(d.reacted||0)>800){if(!['❤️','👏','🙏'].includes(m.emoji))return;d.reacted=now;this.save(ws,d);this.broadcast({t:'react',from:d.id,emoji:m.emoji});}
   }
  }
