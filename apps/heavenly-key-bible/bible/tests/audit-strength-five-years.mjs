@@ -85,6 +85,8 @@ for(let i=0;i<entries.length;i++){
  if(i&&e.title===entries[i-1].title&&e.scripture===entries[i-1].scripture)
   flag(e.date,'CONSECUTIVE_REUSED_THEME',e.title);
  for(const t of e.topics||[]){
+  if(/consider\s+.{4,140}\s+in the light of this truth/i.test(t.reflection||'')) flag(e.date,'MECHANICAL_REFLECTION_FORMULA',t.topic);
+  if(/\bas i face\s+(?:a|an|the)\s+.{2,70}\byou (?:have|are|will)\b/i.test(t.prayer||'')) flag(e.date,'INCONSISTENT_PRAYER_PERSON',t.topic);
   if(/consider how this truth shapes|on \d{1,2}\/\d{1,2}|let this teaching guide your response/i.test(t.reflection||''))
    flag(e.date,'TEMPLATE_LANGUAGE',t.topic);
  }
@@ -106,7 +108,7 @@ const qualityBlockingCodes=new Set([
  'INCONSISTENT_VERSE_TEXT','INVALID_DATE','DATE_RANGE','CONSECUTIVE_REUSED_THEME',
  'UNSUPPORTED_PROMISE','END_TIME_DATE_SETTING',
  'PUBLICATION_STATUS','REVIEW_STATUS','LENGTH_LIMIT',
- 'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','RELEASE_GATE'
+ 'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','MECHANICAL_REFLECTION_FORMULA','INCONSISTENT_PRAYER_PERSON','RELEASE_GATE'
 ]);
 const qualityBlockingFlags=flags.filter(f=>qualityBlockingCodes.has(f.code));
 const automatedQualityPassed=qualityBlockingFlags.length===0 &&
