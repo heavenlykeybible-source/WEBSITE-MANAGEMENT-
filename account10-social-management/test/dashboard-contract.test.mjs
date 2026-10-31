@@ -280,3 +280,5 @@ test('draft queue blocks viewer actions and stale sessions', () => {
  assert.ok(html.includes("discard.disabled=true;try{await api('/api/drafts/discard'"));
  assert.ok(html.includes("approve.disabled=true;try{await api('/api/drafts/approve-internal'"));
 });
+
+test('post editor session guard exists',()=>{assert.ok(html.includes("activeManagementTab==='posts'&&!!token&&operatorAccessRole==='owner'"))});
