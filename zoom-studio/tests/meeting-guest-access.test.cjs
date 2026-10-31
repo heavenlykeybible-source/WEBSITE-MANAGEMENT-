@@ -429,3 +429,13 @@ test('meeting watch links reject URL credentials',async()=>{
  await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url:'https://example.com/video'}));
  assert.equal(h.host.attachment.watch,'https://example.com/video');
 });
+
+test('host chat preserves meeting controls in the socket attachment',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'audchat',on:false}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'chat',text:'Welcome everyone'}));
+ assert.equal(h.host.attachment.locked,true);
+ assert.equal(h.host.attachment.audChat,false);
+ assert.ok(h.guest.messages.some(m=>m.t==='chat'&&m.text==='Welcome everyone'));
+});
