@@ -26,7 +26,7 @@ const cspPages=[
 ];
 for(const page of cspPages){
  const html=fs.readFileSync(path.join(root,page),'utf8');
- assert(!/<script\\b(?![^>]*\\bsrc\\s*=)[^>]*>[\\s\\S]*?<\\/script>/i.test(html),page+' must not contain inline scripts under the enforced CSP');
+ assert(!/<script\b(?![^>]*\bsrc\s*=)[^>]*>[\s\S]*?<\/script>/i.test(html),page+' must not contain inline scripts under the enforced CSP');
 }
 for(const asset of ['./page-enhancements.js','./strength-data.js','./study-route.js']){
  assert(sw.includes(asset),asset+' must be included in the offline shell');
