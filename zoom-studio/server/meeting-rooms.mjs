@@ -102,6 +102,8 @@ export class MeetingRooms {
   }
   const host=this.host();let h=host&&this.data(host);
   if(!h||h.until<=now){this.end('The meeting has ended.');return;}
+  // Expired stage credentials must not signal or interact while awaiting the next alarm.
+  if(d.role==='guest'&&d.stage&&(!d.identity||!Number.isFinite(d.identity.expires)||d.identity.expires<=now))return this.close(ws,{t:'error',msg:'Your stage access has expired. Please sign in again.'});
   const chat=()=>{const text=typeof m.text==='string'?roomClean(m.text,300):'';if(!text||now-(d.last||0)<800)return;d.last=now;this.save(ws,d);this.broadcast({t:'chat',from:d.id,name:d.role==='host'?'Host':d.name,text});};
   if(d.role==='host'){
    // h and d are separate attachment snapshots. Save room controls through h.
