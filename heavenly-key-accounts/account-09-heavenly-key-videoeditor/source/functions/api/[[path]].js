@@ -474,6 +474,7 @@ export async function onRequest({ request: req, env, params }) {
       if (p[1] && m === 'GET') {
         const r = await env.DB.prepare('SELECT * FROM media WHERE id=? AND user_id=? AND deleted=0').bind(p[1], u.id).first();
         if (!r) return J({ error: 'Not found' }, 404);
+        if (typeof r.r2_key !== 'string' || !r.r2_key.startsWith(u.id + '/')) return J({ error: 'Media ownership check failed.' }, 409);
         const o = await env.MEDIA.get(r.r2_key);
         return o ? new Response(o.body, { headers: { 'content-type': r.type, 'content-disposition': `inline; filename="${String(r.name).replace(/[\r\n"\\]/g, '_')}"`, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'cross-origin-resource-policy': 'same-origin', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer', 'content-security-policy': "sandbox; default-src 'none'" } }) : J({ error: 'Missing file' }, 404);
       }
