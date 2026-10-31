@@ -69,7 +69,7 @@ function select(index){
 }
 async function start(){
  let generation=0;
- try{if(!playlist.length){say('No radio recordings are available.');return;}
+ try{if(play.disabled){say('Playlist is loading or unavailable. Refresh the playlist before playing.');return;}if(!playlist.length){say('No radio recordings are available.');return;}
  if(!audio.getAttribute('src'))select(position);
  generation=++playGeneration;playPending=true;await audio.play();if(generation!==playGeneration){if(!playing&&!playPending)audio.pause();return;}playPending=false;playing=true;play.textContent='⏸ Pause';play.setAttribute('aria-label','Pause radio');say('Playing • '+(position+1)+' of '+playlist.length);}
  catch{if(generation===playGeneration)setPaused('Audio could not play. Check your connection, audio output, or try the next recording.');}
