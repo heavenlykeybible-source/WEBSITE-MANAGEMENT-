@@ -439,3 +439,11 @@ test('host chat preserves meeting controls in the socket attachment',async()=>{
  assert.equal(h.host.attachment.audChat,false);
  assert.ok(h.guest.messages.some(m=>m.t==='chat'&&m.text==='Welcome everyone'));
 });
+
+test('malformed meeting identifiers are rejected before WebSocket upgrade',async()=>{
+ const h=setup();
+ for(const path of ['/meeting/------------------------------------','/meeting/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','/meeting/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa-']){
+  const response=await h.r.fetch(new Request('https://example.com'+path,{headers:{upgrade:'websocket',origin:'https://example.com'}}));
+  assert.equal(response.status,404,path);
+ }
+});
