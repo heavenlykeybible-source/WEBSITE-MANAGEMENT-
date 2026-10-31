@@ -141,8 +141,9 @@ export async function onRequest({ request: req, env, params }) {
       const signupIp = req.headers.get('cf-connecting-ip');
       const signupIpKey = signupIp ? 'ip:' + await sha(signupIp) : null;
       if (signupIpKey) {
-        const recentSignups = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='register_ip' AND at>?").bind(signupIpKey, Date.now()-3600000).first()).c;
-        if (recentSignups >= 10) return J({ error: 'Too many registrations. Try again later.' }, 429);
+        const signupAt=Date.now();
+        const reservation=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'register_ip_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='register_ip_attempt' AND at>?) < 10").bind(signupIpKey,signupAt,signupIpKey,signupAt-3600000).run();
+        if (!reservation.meta.changes) return J({ error: 'Too many registrations. Try again later.' }, 429);
       }
       if (await env.DB.prepare('SELECT 1 x FROM users WHERE email=?').bind(email).first()) return J({ error: 'That email is already registered.' }, 409);
       const id = rnd(16), salt = rnd(16);
