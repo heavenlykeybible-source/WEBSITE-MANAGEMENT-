@@ -393,3 +393,15 @@ test('stage reconnect secret does not authorize a different signed-in account',a
  const admitted=h.host.attachment.admitted;
  assert.ok(admitted.every(a=>a&&a.email==='member@example.com'&&a.pass==='pass'));
 });
+
+test('stage permissions are checked again before interactive messages',async()=>{
+ for(const message of [{t:'chat',text:'blocked'},{t:'hand',on:true},{t:'react',emoji:'❤️'}]){
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  h.users['member@example.com'].tv=3;
+  const before=h.host.messages.length;
+  await h.r.webSocketMessage(h.guest,JSON.stringify(message));
+  assert.equal(h.guest.readyState,3);
+  assert.equal(h.host.messages.length,before);
+ }
+});
