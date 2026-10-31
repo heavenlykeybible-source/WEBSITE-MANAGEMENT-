@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {startPersistedPrivateImport,uploadPersistedPrivatePart} from '../scripts/account4-import-workflow.mjs';
+import {startPersistedPrivateImport,uploadPersistedPrivatePart,finishPersistedPrivateImport} from '../scripts/account4-import-workflow.mjs';
 const actor={id:7,authenticated:true,canImport:true};
 let aborts=0,failSave=false,failAbort=false,creates=0;
 const bucket={
@@ -42,3 +42,23 @@ assert.equal(partUploads,2);
 await assert.rejects(uploadPersistedPrivatePart(partBucket,partDb,{...actor,id:8},started.id,1,new Uint8Array(11)));
 assert.equal(partUploads,2,'Unauthorized actor must not upload a part');
 console.log('PASS Account 4 durable part receipt acknowledgement');
+
+let failTransition=false,deleteCount=0,completeCount=0;
+const completionBucket={
+ resumeMultipartUpload(){return {async complete(parts){completeCount++;assert.deepEqual(parts,[{partNumber:1,etag:'abc123'}]);return {size:11}}}},
+ async delete(){deleteCount++}
+};
+const completionDb={prepare(sql){return {bind(){return {
+ async first(){return persistedRow},
+ async all(){return {results:[{part_number:1,etag:'abc123'}]}},
+ async run(){return {meta:{changes:failTransition?0:1}}}
+}}}}};
+assert.deepEqual(await finishPersistedPrivateImport(completionBucket,completionDb,actor,started.id),{id:started.id,size:11,state:'private-awaiting-review'});
+assert.equal(deleteCount,0);
+failTransition=true;
+await assert.rejects(finishPersistedPrivateImport(completionBucket,completionDb,actor,started.id),/transition denied/);
+assert.equal(deleteCount,1,'Failed D1 state transition must delete completed private object');
+assert.equal(completeCount,2);
+await assert.rejects(finishPersistedPrivateImport(completionBucket,completionDb,{...actor,id:8},started.id));
+assert.equal(completeCount,2,'Unauthorized actor cannot complete upload');
+console.log('PASS Account 4 private completion D1 rollback');
