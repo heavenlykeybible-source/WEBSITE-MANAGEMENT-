@@ -71,7 +71,8 @@ export class MeetingRooms {
   if(this.sockets().filter(w=>!this.data(w).role).length>=2)return new Response('Too many pending connections',{status:429});
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
-  this.save(server,{role:'',room:url.pathname.split('/')[2],until:Date.now()+15000});
+  try{this.save(server,{role:'',room:url.pathname.split('/')[2],until:Date.now()+15000});}
+  catch{try{server.close(1011,'Connection initialization failed')}catch{}return new Response('Connection initialization failed',{status:503});}
   return new Response(null,{status:101,webSocket:client});
  }
  async alarm(){
