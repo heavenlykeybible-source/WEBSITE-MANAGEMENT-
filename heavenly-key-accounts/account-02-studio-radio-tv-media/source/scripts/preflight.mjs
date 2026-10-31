@@ -45,12 +45,27 @@ for (let i = 0; i < nums.length; i++) {
   }
 }
 
-if (nums.length !== 5 || nums[nums.length - 1] !== 5) {
+if (nums.length !== 7 || nums[nums.length - 1] !== 7) {
   fail.push(
-    `Expected Media Engine migration 0005 as the current schema tip; found ${
+    `Expected Media Engine migration 0007 as the current schema tip; found ${
       nums.length ? String(nums[nums.length - 1]).padStart(4, "0") : "none"
     }.`
   );
+}
+
+// Verify that both concurrency and state migrations contain the required tables.
+for (const [name, expected] of [
+  ["0006_restream_operation_lock.sql", "restream_operation_lock"],
+  ["0007_restream_active_state.sql", "restream_active_state"],
+]) {
+  try {
+    const sql = await readFile(join(migrationDir, name), "utf8");
+    if (!sql.includes(`CREATE TABLE IF NOT EXISTS ${expected}`)) {
+      fail.push(`Migration ${name} does not create ${expected}.`);
+    }
+  } catch {
+    fail.push(`Required broadcast migration missing: ${name}`);
+  }
 }
 
 async function walk(dir) {

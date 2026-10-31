@@ -1,1 +1,32 @@
-{"name":"heavenlykey-media-engine","private":true,"scripts":{"check":"tsc --noEmit","deploy":"wrangler deploy","preflight":"node scripts/preflight.mjs"},"devDependencies":{"typescript":"^5.8.3","wrangler":"^4.0.0","@cloudflare/workers-types":"^5.20260930.2"}}
+{
+  "name": "heavenlykey-media-engine",
+  "private": true,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "preflight": "node scripts/preflight.mjs",
+    "test:broadcast": "node scripts/test-broadcast-handoff.mjs",
+    "test:d1": "node --experimental-sqlite scripts/test-broadcast-d1.mjs",
+    "test:stream-validation": "node scripts/test-stream-validation.mjs",
+    "test:capability-auth": "node scripts/test-capability-auth.mjs",
+    "test:tv-lock": "node scripts/test-tv-lock.mjs",
+    "test:radio-on-demand": "node scripts/test-radio-on-demand.mjs",
+    "test:radio-player": "node scripts/test-radio-player.mjs",
+    "test:radio-upload-security": "node scripts/test-radio-upload-security.mjs",
+    "test:audio-signature": "node scripts/test-audio-signature.mjs",
+    "test:radio-public-media": "node scripts/test-radio-public-media.mjs",
+    "test:radio-range": "node scripts/test-radio-range.mjs",
+    "test:radio-player-runtime": "node scripts/test-radio-player-runtime.mjs",
+    "test:radio-http-validators": "node scripts/test-radio-http-validators.mjs",
+    "test:radio-media-http-runtime": "node scripts/test-radio-media-http-runtime.mjs",
+    "test:radio-live-isolation-sql": "node --experimental-sqlite scripts/test-radio-live-isolation-sql.mjs",
+    "test:radio-playlist-order": "node scripts/test-radio-playlist-order.mjs",
+    "test:safety": "node scripts/broadcast-safety.test.mjs",
+    "test:release": "npm run check && npm run test:safety && npm run test:broadcast && npm run test:d1 && npm run test:stream-validation && npm run test:capability-auth && npm run test:tv-lock && npm run test:radio-on-demand && npm run test:radio-player && npm run test:radio-upload-security && npm run test:audio-signature && npm run test:radio-public-media && npm run test:radio-range && npm run test:radio-player-runtime && npm run test:radio-http-validators && npm run test:radio-media-http-runtime && npm run test:radio-live-isolation-sql && npm run test:radio-playlist-order && npm run preflight"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "wrangler": "^4.0.0",
+    "@cloudflare/workers-types": "^5.20260930.2"
+  }
+}

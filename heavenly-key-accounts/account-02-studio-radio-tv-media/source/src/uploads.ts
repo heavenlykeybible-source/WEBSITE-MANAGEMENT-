@@ -1,3 +1,5 @@
+import { TV_LOCKED,tvLockedResponse } from './channel-lock';
+import { supportedAudioSignature } from './audio-signature';
 interface UploadEnv {DB:D1Database;MEDIA_R2:R2Bucket}
 export const MAX_MEDIA_BYTES=2*1024*1024*1024;
 const CHUNK=8*1024*1024;
@@ -6,8 +8,9 @@ export async function multipartUpload(request:Request,env:UploadEnv,actor:string
  const match=new URL(request.url).pathname.match(/^\/api\/media\/(\d+)\/multipart(?:\/(status|complete|abort|part\/(\d+)))?$/);
  if(!match)return null;
  const id=Number(match[1]),action=match[2]||'start';
- const media=await env.DB.prepare('SELECT object_key,mime_type,size_bytes,status FROM media_objects WHERE media_id=?').bind(id).first<any>();
+ const media=await env.DB.prepare('SELECT object_key,media_type,mime_type,size_bytes,status FROM media_objects WHERE media_id=?').bind(id).first<any>();
  if(!media||media.status==='deleted')return json({error:'Media not found'},404);
+ if(TV_LOCKED&&media.media_type!=='audio')return tvLockedResponse();
  let upload=await env.DB.prepare('SELECT * FROM media_uploads WHERE media_id=?').bind(id).first<any>();
  if(upload&&upload.actor_id!==actor)return json({error:'This upload belongs to another administrator'},403);
  if(action==='start'&&request.method==='POST'){
@@ -48,6 +51,15 @@ export async function multipartUpload(request:Request,env:UploadEnv,actor:string
   if(parts.length!==count||parts.some((p,i)=>p.part_number!==i+1)||parts.reduce((sum,p)=>sum+p.size_bytes,0)!==upload.total_bytes)return json({error:'Some upload parts are missing. Resume the upload.'},409);
   await transfer.complete(parts.map(p=>({partNumber:p.part_number,etag:p.etag})));
   const object=await env.MEDIA_R2.head(media.object_key);if(!object||object.size!==upload.total_bytes)return json({error:'Uploaded size could not be verified'},409);
+  if(media.media_type==='audio'){
+   const first=await env.MEDIA_R2.get(media.object_key,{range:{offset:0,length:Math.min(16,object.size)}});
+   const sample=first?new Uint8Array(await first.arrayBuffer()):new Uint8Array(0);
+   if(!supportedAudioSignature(media.mime_type,sample)){
+    await env.DB.prepare("UPDATE media_objects SET status='failed',updated_at=CURRENT_TIMESTAMP WHERE media_id=?").bind(id).run();
+    await env.DB.prepare("UPDATE media_uploads SET status='rejected' WHERE media_id=?").bind(id).run();
+    return json({error:'Uploaded file header does not match its registered audio type. Register a valid recording.'},415);
+   }
+  }
   await env.DB.prepare("UPDATE media_objects SET status='approved',updated_at=CURRENT_TIMESTAMP WHERE media_id=?").bind(id).run();
   await env.DB.prepare("UPDATE media_uploads SET status='completed' WHERE media_id=?").bind(id).run();
   await env.DB.prepare('INSERT INTO audit_events(actor_id,action,resource_type,resource_id) VALUES(?,?,?,?)').bind(actor,'media.upload.complete','media',String(id)).run();

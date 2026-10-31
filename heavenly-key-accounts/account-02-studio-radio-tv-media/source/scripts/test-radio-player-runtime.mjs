@@ -1,0 +1,185 @@
+import assert from 'node:assert/strict';
+import {webcrypto} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {runInNewContext} from 'node:vm';
+import ts from 'typescript';
+
+const root=fileURLToPath(new URL('../',import.meta.url));
+const source=readFileSync(resolve(root,'src/radio-player.ts'),'utf8');
+const generated=ts.transpileModule(source.replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+const response=runInNewContext(generated+';radioPlayerHtml()', {Response,crypto:webcrypto});
+const html=await response.text();
+const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
+assert.ok(script,'Standalone player script should exist');
+const events=new Map(),elements=new Map(),mediaActions=new Map(),mediaSession={setActionHandler:(name,fn)=>mediaActions.set(name,fn)};
+let holdPlay=false,resolvePendingPlay=null,simulateAbort=false;const timers=new Map();let timerId=0;
+function element(id){
+ const listeners=new Map(),attributes=new Map();
+ return {id,textContent:'',value:'80',disabled:false,paused:true,volume:0,
+  src:'',addEventListener:(name,fn)=>listeners.set(name,fn), 
+  async fire(name){const fn=listeners.get(name);assert.ok(fn,id+' event '+name);return fn()},
+  setAttribute:(name,v)=>attributes.set(name,v),getAttribute(name){return name==='src'?(this.src||null):attributes.get(name)||null},
+  removeAttribute(name){if(name==='src')this.src='';else attributes.delete(name)},
+  pause(){this.paused=true},load(){},async play(){if(holdPlay){return await new Promise(resolve=>{resolvePendingPlay=()=>{this.paused=false;resolve()}})}this.paused=false;return undefined;}
+ };
+}
+for(const id of ['audio','play','next','retry','track','status','volume','volumeValue','output','outputHelp'])elements.set(id,element(id));
+let shouldFail=false,holdFetch=false,pendingFetch=null;const pendingFetches=[],fetchSignals=[];
+let fetchResult={items:[{type:'audio',title:'First',url:'/api/broadcast/media/1/object'},{type:'audio',title:'Second',url:'/api/broadcast/media/2/object'}]};
+const task=runInNewContext(script,{
+ document:{getElementById:id=>elements.get(id)},
+ window:{addEventListener:(name,fn)=>events.set(name,fn)},
+ navigator:{mediaSession},
+ AbortController,
+ setTimeout:(fn,ms)=>{assert.equal(ms,12000);const id=++timerId;timers.set(id,fn);return id;},
+ clearTimeout:id=>timers.delete(id),
+ fetch:async(_url,options)=>{fetchSignals.push(options.signal);if(holdFetch)return await new Promise((resolve,reject)=>{pendingFetch=resolve;pendingFetches.push(resolve);if(simulateAbort)options.signal.addEventListener('abort',()=>reject(Error('Network timeout')),{once:true})});if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
+ MediaMetadata:undefined,
+ console
+});
+await Promise.resolve();await Promise.resolve();await new Promise(resolve=>setImmediate(resolve));
+const get=id=>elements.get(id),audio=get('audio');
+assert.equal(get('track').textContent,'First');
+await get('play').fire('click');
+assert.equal(audio.src,'/api/broadcast/media/1/object');
+assert.equal(audio.paused,false);
+assert.equal(get('play').getAttribute('aria-label'),'Pause radio');
+assert.equal(mediaSession.playbackState,'playing','OS controls must show Playing');
+audio.paused=true;
+await audio.fire('pause');
+assert.equal(get('play').getAttribute('aria-label'),'Play radio','Native OS pause must reset button');
+assert.equal(mediaSession.playbackState,'paused','OS controls must show Paused');
+await get('play').fire('click');
+assert.equal(get('play').getAttribute('aria-label'),'Pause radio','Native pause must remain resumable');
+await audio.fire('ended');
+await Promise.resolve();
+assert.equal(audio.src,'/api/broadcast/media/2/object');
+assert.equal(audio.paused,false);
+await get('play').fire('click');
+assert.equal(audio.paused,true);
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
+await get('next').fire('click');
+assert.equal(audio.src,'/api/broadcast/media/1/object');
+fetchResult={items:[{type:'audio',title:'Replacement',url:'/api/broadcast/media/3/object'}]};
+await get('retry').fire('click');
+assert.equal(audio.paused,true);
+assert.equal(audio.getAttribute('src'),null);
+assert.equal(get('track').textContent,'Replacement');
+await get('play').fire('click');
+assert.equal(audio.src,'/api/broadcast/media/3/object');
+assert.equal(audio.paused,false);
+events.get('pagehide')();
+assert.equal(audio.paused,true);
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
+await get('play').fire('click');
+assert.equal(audio.paused,false);
+mediaActions.get('pause')();
+assert.equal(audio.paused,true);
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
+shouldFail=true;
+await get('retry').fire('click');
+assert.equal(audio.paused,true);
+assert.equal(audio.getAttribute('src'),null);
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
+assert.equal(get('next').disabled,true);
+assert.equal(get('track').textContent,'Playlist unavailable');
+shouldFail=false;holdFetch=true;
+const pending=get('retry').fire('click');
+assert.equal(get('play').disabled,true,'Play must be disabled during playlist loading');
+assert.equal(get('next').disabled,true,'Next must be disabled during playlist loading');
+mediaActions.get('play')();
+await Promise.resolve();
+assert.equal(audio.paused,true,'Headset play must not bypass loading lock');
+assert.equal(audio.getAttribute('src'),null,'Headset play must not select stale recordings while loading');
+assert.equal(typeof pendingFetch,'function','Network request must be pending');
+fetchResult={items:[{type:'audio',title:'Recovered',url:'/api/broadcast/media/4/object'}]};
+holdFetch=false;pendingFetch({ok:true,json:async()=>fetchResult});
+await pending;
+assert.equal(get('play').disabled,false,'Play must be enabled after playlist recovery');
+assert.equal(get('next').disabled,false);
+assert.equal(get('track').textContent,'Recovered');
+holdFetch=true;
+const first=get('retry').fire('click');
+const second=get('retry').fire('click');
+assert.equal(fetchSignals.at(-2).aborted,true,'Previous playlist fetch must be aborted');
+assert.equal(fetchSignals.at(-1).aborted,false);
+assert.equal(get('play').disabled,true);
+assert.equal(pendingFetches.length,3,'Should track both overlapping requests');
+const firstResult={items:[{type:'audio',title:'Outdated',url:'/api/broadcast/media/8/object'}]};
+const latestResult={items:[{type:'audio',title:'Latest',url:'/api/broadcast/media/9/object'}]};
+pendingFetches[2]({ok:true,json:async()=>latestResult});
+await second;
+assert.equal(get('track').textContent,'Latest');
+pendingFetches[1]({ok:true,json:async()=>firstResult});
+await first;
+assert.equal(get('track').textContent,'Latest','Outdated response must never replace latest playlist');
+assert.equal(get('play').disabled,false);
+holdPlay=true;
+const firstPlay=get('play').fire('click');
+assert.equal(typeof resolvePendingPlay,'function','Audio play must be awaiting permission or buffering');
+await get('play').fire('click');
+assert.equal(audio.paused,true,'Second tap must cancel pending playback');
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
+resolvePendingPlay();await firstPlay;
+assert.equal(audio.paused,true,'Late play promise must not restart audio after cancellation');
+assert.equal(get('play').getAttribute('aria-label'),'Play radio','Late play promise must never restore Playing controls');
+holdPlay=false;
+await get('play').fire('click');
+assert.equal(get('play').getAttribute('aria-label'),'Pause radio');
+holdFetch=true;
+const staleResume=get('retry').fire('click');
+const recentRefresh=get('retry').fire('click');
+const n=pendingFetches.length;
+pendingFetches[n-1]({ok:true,json:async()=>({items:[{type:'audio',title:'Current',url:'/api/broadcast/media/12/object'}]})});
+await recentRefresh;
+const statusBeforeStale=get('status').textContent;
+assert.equal(statusBeforeStale,'Playlist ready. Press Play to listen.');
+pendingFetches[n-2]({ok:true,json:async()=>({items:[{type:'audio',title:'Stale',url:'/api/broadcast/media/10/object'}]})});
+await staleResume;
+assert.equal(get('status').textContent,statusBeforeStale,'Old refresh completion must not overwrite current playback guidance');
+assert.equal(get('track').textContent,'Current');
+holdFetch=false;
+fetchResult={items:[{type:'audio',title:'Restored Session',url:'/api/broadcast/media/13/object'}]};
+await events.get('pageshow')({persisted:false});
+assert.equal(get('track').textContent,'Current','Normal pageshow must not reload playlist');
+await events.get('pageshow')({persisted:true});
+await Promise.resolve();await new Promise(resolve=>setImmediate(resolve));
+assert.equal(get('track').textContent,'Restored Session','BFCache restoration must reload playlist');
+assert.equal(audio.paused,true,'Restored page must not autoplay');
+assert.equal(get('play').disabled,false,'Restored page must allow listener to resume manually');
+simulateAbort=true;holdFetch=true;
+const timed=get('retry').fire('click');
+assert.equal(timers.size,1,'Stalled request must have timeout');
+[...timers.values()][0]();
+await timed;
+assert.equal(get('track').textContent,'Playlist unavailable');
+assert.equal(get('play').disabled,true);
+mediaActions.get('play')();
+await Promise.resolve();
+assert.equal(audio.paused,true,'Headset play must not bypass failure lock');
+assert.equal(timers.size,0,'Deadline must be cleared');
+simulateAbort=false;holdFetch=false;
+fetchResult={items:[{type:'audio',title:'Recovered after timeout',url:'/api/broadcast/media/14/object'}]};
+await get('retry').fire('click');
+assert.equal(get('track').textContent,'Recovered after timeout');
+assert.equal(get('play').disabled,false);
+await get('play').fire('click');
+assert.equal(mediaSession.playbackState,'playing');
+mediaActions.get('pause')();
+assert.equal(mediaSession.playbackState,'paused');
+fetchResult={items:[
+ {type:'audio',title:'Repeated',url:'/api/broadcast/media/20/object'},
+ {type:'audio',title:'Repeated again',url:'/api/broadcast/media/20/object'},
+ {type:'video',title:'Reject television',url:'/api/broadcast/media/21/object'},
+ {type:'audio',title:'Reject external',url:'https://untrusted.example/media.mp3'},
+ ...Array.from({length:60},(_,i)=>({type:'audio',title:'Approved '+i,url:'/api/broadcast/media/'+(100+i)+'/object'}))
+]};
+await get('retry').fire('click');
+assert.equal(get('track').textContent,'Repeated');
+for(let i=0;i<49;i++)await get('next').fire('click');
+assert.equal(audio.src,'/api/broadcast/media/148/object','Player must retain no more than 50 unique recordings');
+await get('next').fire('click');
+assert.equal(audio.src,'/api/broadcast/media/20/object','Next must wrap at the capped playlist limit');
+console.log('Account 2 radio runtime play, pause, next, end, refresh, and page-exit tests passed');
