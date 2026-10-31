@@ -80,6 +80,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   headers.set('x-content-type-options','nosniff');
   headers.set('x-frame-options','DENY');
   headers.set('referrer-policy','no-referrer');
+  headers.set('x-robots-tag','noindex, nofollow, noarchive');
   headers.set('strict-transport-security','max-age=31536000; includeSubDomains');
   headers.set('permissions-policy','payment=(), usb=(), accelerometer=(), gyroscope=()');
   headers.set('cross-origin-resource-policy','same-origin');
