@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {readFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
 import worker from '../worker.js';
 
 const origin='https://bible.heavenlykey.org';
@@ -59,4 +61,18 @@ test('HEAD hides draft and has no response body',async()=>{
 test('unknown publication manifest fails closed',async()=>{
  const {env}=fixtures({schemaVersion:2,publicationStatus:'published',publishedBatchFiles:[file]});
  assert.equal((await worker.fetch(request(),env)).status,404);
+});
+
+test('Cloudflare routes devotional JSON through Worker first',()=>{
+ const config=readFileSync(fileURLToPath(new URL('../wrangler.toml',import.meta.url)),'utf8');
+ assert.match(config,/run_worker_first\\s*=\\s*\\[[^\\n]*"\\/strength-devotionals-\\*"/);
+});
+test('offline service worker does not resurrect withdrawn devotional drafts',()=>{
+ const source=readFileSync(fileURLToPath(new URL('../../heavenly-key-website/bible/sw.js',import.meta.url)),'utf8');
+ assert.match(source,/const isDevotionalDraftLibrary\\s*=\\s*\\/\\^strength-devotionals-/);
+ const gate=source.slice(source.indexOf('if(isDevotionalDraftLibrary){'),source.indexOf('const aliases='));
+ assert.match(gate,/event\\.respondWith/);
+ assert.match(gate,/cache:"no-store"/);
+ assert.match(gate,/status:503/);
+ assert.match(gate,/await \\(await caches\\.open\\(name\\)\\)\\.delete\\(event\\.request\\)/);
 });
