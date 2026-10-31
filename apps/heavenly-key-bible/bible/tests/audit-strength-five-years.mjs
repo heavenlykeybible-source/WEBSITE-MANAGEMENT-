@@ -5,7 +5,9 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../heavenly-key-website/bible');
+const allDevotionalFiles = readdirSync(root).filter(n => /^strength-devotionals-.*\.json$/.test(n)).sort();
 const names = readdirSync(root).filter(n => /^strength-devotionals-(2026|2027|year[1-5])(?:-batch\d+)?\.json$/.test(n)).sort();
+const ignoredDevotionalFiles=allDevotionalFiles.filter(n=>!names.includes(n));
 const entries = names.flatMap(name => {
  const data=JSON.parse(readFileSync(resolve(root,name),'utf8'));
  if(!Array.isArray(data.entries))throw Error('Missing entries: '+name);
@@ -20,6 +22,7 @@ const normalizeLead = value => norm(value).split(' ').slice(0,12).join(' ');
 const topicNames=['Revival & Spiritual Fire','Holiness & Righteousness','Hope & Encouragement','Prayer & Intercession','Salvation & Repentance','Faith & Trust','The Holy Spirit','Evangelism & Soul Winning','Love & Christian Unity','The Word & Obedience','Wisdom & Discernment','End-time & Rapture Readiness'];
 const flags=[];
 const flag=(date,code,details)=>flags.push({date,code,details});
+for(const name of ignoredDevotionalFiles)flag('GLOBAL','UNRECOGNIZED_DEVOTIONAL_FILE',name);
 const days=new Set();const refl=new Map();const pray=new Map();const lead=new Map();
 const verseTextByReference=new Map();
 const validDate = value => typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
@@ -127,7 +130,7 @@ const qualityBlockingCodes=new Set([
  'INCOMPLETE_DAILY_ENTRY','MISSING_DAY_TITLE','MISSING_DAY_REFLECTION',
  'MISSING_DAY_PRAYER','DUPLICATE_DAY_TITLE','DUPLICATE_DAY_REFLECTION','DUPLICATE_DAY_PRAYER',
  'EXACT_DUPLICATE_REFLECTION','EXACT_DUPLICATE_PRAYER','REPEATED_REFLECTION_OPENING',
- 'INCONSISTENT_VERSE_TEXT','INVALID_DATE','OUT_OF_RANGE_DATE','DATE_RANGE','CALENDAR_TARGET_MISMATCH','NO_DEVOTIONAL_FILES','DAY_COUNT_MISMATCH','TOPIC_TOTAL_MISMATCH','MISSING_CALENDAR_DAY','CONSECUTIVE_REUSED_THEME',
+ 'INCONSISTENT_VERSE_TEXT','INVALID_DATE','OUT_OF_RANGE_DATE','DATE_RANGE','CALENDAR_TARGET_MISMATCH','NO_DEVOTIONAL_FILES','UNRECOGNIZED_DEVOTIONAL_FILE','DAY_COUNT_MISMATCH','TOPIC_TOTAL_MISMATCH','MISSING_CALENDAR_DAY','CONSECUTIVE_REUSED_THEME',
  'UNSUPPORTED_PROMISE','END_TIME_DATE_SETTING',
  'PUBLICATION_STATUS','REVIEW_STATUS','LENGTH_LIMIT',
  'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','MECHANICAL_REFLECTION_FORMULA','INCONSISTENT_PRAYER_PERSON','RELEASE_GATE'
@@ -155,7 +158,7 @@ const result={
  title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
- files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,missingDates,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
+ files:names.length,ignoredDevotionalFiles,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,missingDates,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:Array.isArray(manifest.publishedBatchFiles)?manifest.publishedBatchFiles.length:null,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),remediationPriority,
