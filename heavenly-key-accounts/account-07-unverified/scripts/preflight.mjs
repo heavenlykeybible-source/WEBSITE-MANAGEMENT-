@@ -26,7 +26,6 @@ for (const script of inlineScripts) {
 check(html.includes('src="/js/approved-widget-system.js"'), "Radio player script reference missing.");
 check(worker.includes("media-engine-public-v1"), "Account 2 public API marker missing.");
 check(worker.includes("MEDIA_PUBLIC_ORIGIN"), "Account 2 origin validation missing.");
-check(worker.includes('redirect: "manual"'), "Upstream redirects must be rejected.");
 check(worker.includes("AbortSignal.timeout"), "Upstream request timeout missing.");
 check(worker.includes('redirect: "manual"'), "Redirect policy must be explicit.");
 check(worker.includes("new Headers({ \"X-Heavenly-Key-Internal\": PUBLIC_MARKER"), "Account 2 public marker must be sent server-to-server.");
