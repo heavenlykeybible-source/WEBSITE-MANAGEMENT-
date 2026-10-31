@@ -37,6 +37,8 @@ const items=[
 const pendingDevotionals=new Map();let devotionalLoadToken=0;
 async function readBoundedDevotionalJson(response,maxBytes){
  if(!response.ok)throw Error('Devotional resource unavailable');
+ const contentType=response.headers.get('content-type')||'';
+ if(!/^application\/json(?:\s*;|\s*$)/i.test(contentType))throw Error('Unexpected devotional response content type');
  const contentLength=response.headers.get('content-length');
  if(contentLength!==null&&Number.isFinite(Number(contentLength))&&Number(contentLength)>maxBytes)throw Error('Devotional resource exceeds size limit');
  if(!response.body||typeof response.body.getReader!=='function')throw Error('Devotional response stream unavailable');
