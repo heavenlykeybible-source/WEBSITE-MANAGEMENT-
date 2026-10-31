@@ -415,6 +415,10 @@ const rejectedOversize = await onRequest({
 });
 check('Unknown-length upload exceeding 50 MB is rejected while streaming',rejectedOversize.status===413);
 const mediaCreated = await noLengthUpload.json();
+const anonymousMediaRead=await request('media/'+mediaCreated.id);
+check('Anonymous requests cannot download private media by guessing its ID',anonymousMediaRead.status===401 && anonymousMediaRead.response.headers.get('cache-control')==='no-store');
+const anonymousMediaDelete=await request('media/'+mediaCreated.id,{method:'DELETE'});
+check('Anonymous requests cannot delete private media by guessing its ID',anonymousMediaDelete.status===401 && anonymousMediaDelete.response.headers.get('cache-control')==='no-store');
 const ownedMediaRead = await request('media/'+mediaCreated.id,{cookie:login.cookie});
 check('Owned media download has private caching and sandbox protections',ownedMediaRead.status===200 && ownedMediaRead.response.headers.get('cache-control')==='private, no-store' && ownedMediaRead.response.headers.get('cross-origin-resource-policy')==='same-origin' && ownedMediaRead.response.headers.get('content-security-policy')==="sandbox; default-src 'none'" && ownedMediaRead.response.headers.get('x-content-type-options')==='nosniff' && ownedMediaRead.response.headers.get('content-disposition')?.startsWith('inline; filename='));
 const otherMediaRead = await request('media/'+mediaCreated.id,{cookie:secondLogin.cookie});
