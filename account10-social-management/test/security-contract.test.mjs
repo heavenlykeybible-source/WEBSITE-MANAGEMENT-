@@ -381,13 +381,28 @@ test('operator access fails closed for weak or malformed ADMIN_TOKEN configurati
  assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')<auth.indexOf('const provided=req.headers.get'));
 });
 
-test('state-changing operator API requests reject foreign browser Origin', () => {
- const a=source.indexOf("const origin=req.headers.get('origin')");
- const b=source.indexOf("if(!env.DB)return reply",a);
+test('state-changing operator API requests use the checked same-origin guard', () => {
  const auth=source.indexOf("if(provided!==`Bearer ${env.ADMIN_TOKEN}`)");
- assert.ok(auth>=0&&a>auth&&b>a);
- const handler=source.slice(a-100,b);
- assert.match(handler,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)/);
- assert.match(handler,/origin!==null&&origin!==u\.origin/);
- assert.match(handler,/Cross-origin operator mutations are forbidden/);
+ const guard=source.indexOf("if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))");
+ const database=source.indexOf("if(!env.DB)return reply",guard);
+ assert.ok(auth>=0&&guard>auth&&database>guard);
+ assert.match(source,/import \{ operatorMutationOriginAllowed \} from '\.\/operator-origin'/);
+ assert.match(source,/Cross-origin operator mutations are forbidden/);
+});
+
+test('operator browser-origin guard handles normal, absent, foreign and opaque Origin values', () => {
+ const helper=readFileSync(new URL('../src/operator-origin.ts',import.meta.url),'utf8');
+ const executable=helper.replace(
+  'export const operatorMutationOriginAllowed=(method:string,origin:string|null,requestOrigin:string):boolean=>',
+  'const operatorMutationOriginAllowed=(method,origin,requestOrigin)=>'
+ );
+ const allowed=new Function(executable+';return operatorMutationOriginAllowed')();
+ const same='https://socialplus.heavenlykey.org';
+ for(const method of ['POST','PUT','PATCH','DELETE']){
+  assert.equal(allowed(method,same,same),true,method+' same origin');
+  assert.equal(allowed(method,null,same),true,method+' absent origin');
+  assert.equal(allowed(method,'https://example.org',same),false,method+' foreign origin');
+  assert.equal(allowed(method,'null',same),false,method+' opaque origin');
+ }
+ assert.equal(allowed('GET','https://example.org',same),true);
 });
