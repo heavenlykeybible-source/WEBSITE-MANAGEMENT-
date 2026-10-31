@@ -20,6 +20,7 @@ if(!apiSource.includes("p[1] === 'cleanup' && !p[2] && m === 'POST'") || !apiSou
 if(!apiSource.includes("SELECT r2_key FROM media WHERE user_id=?'"))throw Error('Account deletion must include previously deleted R2 objects');
 if(!apiSource.includes("!item.r2_key.startsWith(u.id + '/')") || !apiSource.includes("!x.r2_key.startsWith(u.id + '/')"))throw Error('R2 deletion requires per-account object key ownership');
 if((apiSource.match(/!r\.r2_key\.startsWith\(u\.id \+ '\/'\)/g)||[]).length!==2)throw Error('Media read and delete must validate R2 ownership');
+if(!readFileSync('tests/be.mjs','utf8').includes('Foreign storage reference blocks media download') || !readFileSync('tests/be.mjs','utf8').includes('Foreign storage reference blocks media deletion'))throw Error('Cross-owner media regression tests missing');
 if(!apiSource.includes("typeof env.MEDIA.delete === 'function'"))throw Error('Health probe must require R2 deletion capability');
 if(!apiSource.includes("typeof env.MEDIA.delete === 'function'"))throw Error('Readiness probe must check R2 deletion capability');
 if((apiSource.match(/env\.MEDIA\.delete\(r\.r2_key\)/g)||[]).length!==2)throw Error('Media deletion must have a retry attempt');
