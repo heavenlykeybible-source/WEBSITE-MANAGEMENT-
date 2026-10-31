@@ -20,6 +20,10 @@ for (const name of ['run.sh','config.env','../secrets.zip','a/b.zip',''])
 await assert.rejects(saveImportSession(db,{...actor,id:0},{...session,ownerId:0}));
 const id=await saveImportSession(db,actor,session);
 assert.match(id,/^[a-f0-9-]{36}$/i);
+const originalPrepare=db.prepare;
+db.prepare=()=>({bind:()=>({run:async()=>({meta:{changes:0}})})});
+await assert.rejects(saveImportSession(db,actor,session),/not persisted/);
+db.prepare=originalPrepare;
 row={owner_id:7,object_key:session.key,upload_id:'u1',filename:'backup.zip',size_bytes:11,part_count:1,state:'uploading',expires_at_ms:session.expiresAt};
 assert.equal((await loadImportSession(db,actor,id)).parts[1],undefined);
 await assert.rejects(loadImportSession(db,other,'invalid'));
