@@ -33,6 +33,14 @@ assert.ok(css.length>1000,'External stylesheet appears unexpectedly incomplete')
 assert.match(html,/<title>OUR DAILY MANNA — STRENGTH FOR TODAY/i,'OUR DAILY MANNA must lead the page title');
 assert.match(html,/<h1>OUR DAILY MANNA<\/h1>/,'OUR DAILY MANNA must lead the visible masthead');
 assert.ok(html.includes('id="daily-central-message"')&&html.includes('id="daily-spiritual-focus"'),'Daily central message and spiritual focus must have dedicated fields');
+assert.ok(html.includes('id="daily-sections"')&&html.includes('id="daily-section-list"'),'The twelve-section reader must have a dedicated accessible container');
+assert.ok(js.includes('function hasApprovedDailySections(entry)'),'The reader must enforce the twelve-section editorial gate');
+assert.ok(js.includes("sections[7].scriptureReferences")&&js.includes("'matthew 11:12'")&&js.includes("'luke 18:1'"),'Warfare Prayer must verify its two required Scripture references');
+assert.ok(js.includes("worldStory.verificationStatus!=='verified'")&&js.includes("worldStory.topicAlignmentReview!=='approved'"),'Contemporary world stories require source verification and topic-alignment approval');
+assert.ok(js.includes("hymn.verificationStatus!=='verified'")&&js.includes("hymn.hymnbookReference"),'Hymns must be verified against the Heavenly Key hymnbook');
+assert.ok(js.includes("sections[9].medicalDisclaimer!==true"),'Health and Wellness Prayer must include a medical disclaimer');
+assert.ok(js.includes("challenges.length!==12"),'Kingdom Challenges must contain twelve practical challenges');
+assert.ok(css.includes('.daily-section-card')&&css.includes('.daily-section-source'),'Twelve-section cards and source links need responsive external styles');
 assert.ok(shareStudio.includes('OUR DAILY MANNA  •  KJV')&&shareStudio.includes('OUR DAILY MANNA — STRENGTH FOR TODAY'),'Scripture cards and share metadata must use the approved title');
 assert.ok(js.includes("Our Daily Manna — Strength for Today")&&js.includes("typeof entry.centralMessage==='string'")&&js.includes("typeof entry.spiritualFocus==='string'"),'A dated edition must not render without an approved central message and spiritual focus');
 
