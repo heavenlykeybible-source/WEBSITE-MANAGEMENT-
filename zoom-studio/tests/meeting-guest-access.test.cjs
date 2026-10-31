@@ -608,3 +608,19 @@ test('disconnected guest is not announced after slow TURN credential generation'
  assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
  assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
 });
+
+test('host lock during delayed TURN credential signing prevents guest admission',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');
+ await reached;
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+ release({});await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'),false);
+});
