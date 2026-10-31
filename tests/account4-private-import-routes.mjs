@@ -61,7 +61,10 @@ assert.equal(uploaded,1);
 await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(10)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT'));
 
 const status=await call('workspace/imports/'+started.id);
-assert.equal((await status.json()).import.uploadedParts,1);
+const statusData=await status.json();
+assert.equal(statusData.import.uploadedParts,1);
+assert.deepEqual(statusData.import.completedPartNumbers,[1]);
+assert.equal(JSON.stringify(statusData).includes('abc123'),false,'R2 ETags must never be exposed to the browser');
 const wrongOwner=await call('workspace/imports/'+started.id,'GET',undefined,other);
 assert.equal(wrongOwner.status,404);
 
