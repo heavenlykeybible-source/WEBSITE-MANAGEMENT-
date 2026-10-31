@@ -301,10 +301,10 @@ $('chc').onclick=()=>{const ch=$('chn').value.trim().replace(/^#/,'').toLowerCas
  if(cws)cws.close();const socket=new WebSocket('wss://irc-ws.chat.twitch.tv:443');cws=socket;
  chatLog.length=0;$('cl').replaceChildren();$('chs').textContent='Connecting to #'+ch+'...';
  socket.onopen=()=>{if(cws!==socket)return;socket.send('CAP REQ :twitch.tv/tags');socket.send('NICK justinfan'+(10000+Math.floor(Math.random()*80000)));socket.send('JOIN #'+ch);$('chs').textContent='Connected to #'+ch};
- socket.onmessage=e=>{if(cws!==socket)return;e.data.split('\r\n').forEach(l=>{if(l.startsWith('PING')){socket.send('PONG :tmi.twitch.tv');return}
+ socket.onmessage=e=>{if(cws!==socket||typeof e.data!=='string'||e.data.length>16384)return;e.data.split('\r\n').slice(0,50).forEach(l=>{if(l.startsWith('PING')){socket.send('PONG :tmi.twitch.tv');return}
   const m=l.match(/display-name=([^;]*);.*? PRIVMSG #\S+ :(.*)$/);if(!m)return;
-  chatLog.push({n:m[1],t:m[2]});if(chatLog.length>60)chatLog.shift();
-  const li=document.createElement('li');li.textContent=m[1]+': '+m[2];$('cl').prepend(li);while($('cl').children.length>30)$('cl').lastChild.remove()})};
+  const name=m[1].slice(0,40),message=m[2].slice(0,300);chatLog.push({n:name,t:message});if(chatLog.length>60)chatLog.shift();
+  const li=document.createElement('li');li.textContent=name+': '+message;$('cl').prepend(li);while($('cl').children.length>30)$('cl').lastChild.remove()})};
  socket.onerror=()=>{if(cws===socket)$('chs').textContent='Chat connection failed. Try again.'};
  socket.onclose=()=>{if(cws===socket){cws=null;$('chs').textContent='Chat disconnected.'}}};
 const dl=document.createElement('canvas');dl.width=W;dl.height=H;const dx=dl.getContext('2d');dx.lineCap='round';dx.lineJoin='round';
