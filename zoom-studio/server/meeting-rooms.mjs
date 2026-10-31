@@ -4,9 +4,9 @@ const roomClean=(s,n)=>typeof s==='string'?s.replace(/[\u0000-\u001f\u007f\u200b
 const roomICE=[{urls:'stun:stun.cloudflare.com:3478'}];
 const safeSignal=data=>{
  if(!data||typeof data!=='object'||Array.isArray(data))return null;
- if(data.sdp&&typeof data.sdp==='object'&&!Array.isArray(data.sdp)&&['offer','answer'].includes(data.sdp.type)&&typeof data.sdp.sdp==='string'&&data.sdp.sdp.length<=16000)
+ if(data.sdp&&typeof data.sdp==='object'&&!Array.isArray(data.sdp)&&['offer','answer'].includes(data.sdp.type)&&typeof data.sdp.sdp==='string'&&data.sdp.sdp.length<=16000&&new TextEncoder().encode(data.sdp.sdp).byteLength<=16000)
   return {sdp:{type:data.sdp.type,sdp:data.sdp.sdp}};
- if(data.c&&typeof data.c==='object'&&!Array.isArray(data.c)&&typeof data.c.candidate==='string'&&data.c.candidate.length<=4000){
+ if(data.c&&typeof data.c==='object'&&!Array.isArray(data.c)&&typeof data.c.candidate==='string'&&data.c.candidate.length<=4000&&new TextEncoder().encode(data.c.candidate).byteLength<=4000){
   const c={candidate:data.c.candidate};
   if(typeof data.c.sdpMid==='string'&&data.c.sdpMid.length<=64)c.sdpMid=data.c.sdpMid;
   if(Number.isInteger(data.c.sdpMLineIndex)&&data.c.sdpMLineIndex>=0&&data.c.sdpMLineIndex<1024)c.sdpMLineIndex=data.c.sdpMLineIndex;
