@@ -25,7 +25,7 @@ async function jsonBody(request){
   return value;
 }
 function ownerActor(user){
-  if(user?.kind!=='staff'||user?.role!=='owner'||!Number.isSafeInteger(user.id)||user.id<1)
+  if(user?.kind!=='staff'||user?.role!=='owner'||user?.status!=='active'||!Number.isSafeInteger(user.id)||user.id<1)
     problem('Only the signed-in primary owner can manage private imports',403);
   return {id:user.id,authenticated:true,canImport:true,canPublish:true,role:'owner'};
 }
