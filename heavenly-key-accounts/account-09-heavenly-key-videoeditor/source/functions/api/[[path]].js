@@ -463,8 +463,8 @@ export async function onRequest({ request: req, env, params }) {
         const r = await env.DB.prepare('SELECT r2_key FROM media WHERE id=? AND user_id=? AND deleted=0').bind(p[1], u.id).first();
         if (!r) return J({ error: 'Not found' }, 404);
         if (r) {
-          await env.MEDIA.delete(r.r2_key);
           const saved = await env.DB.prepare('UPDATE media SET deleted=1 WHERE id=? AND user_id=? AND deleted=0').bind(p[1],u.id).run();
+          if (saved.meta.changes) await env.MEDIA.delete(r.r2_key).catch(() => {});
           if (saved.meta.changes) {
             const sizeRow = await env.DB.prepare('SELECT size FROM media WHERE id=? AND user_id=?').bind(p[1],u.id).first();
             await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(sizeRow.size,u.id).run();
