@@ -26,6 +26,23 @@ jobs:
         run: npm ci
       - name: Audit dependencies for high-severity vulnerabilities
         run: npm audit --audit-level=high
+      - name: Validate production configuration safety
+        run: |
+          python3 - <<'PY'
+          import tomllib
+          with open('wrangler.toml', 'rb') as file:
+              cfg = tomllib.load(file)
+          assert cfg['name'] == 'website-management'
+          assert cfg['main'] == 'control-room-worker.js'
+          assert cfg['vars']['SIGNUP_OPEN'] == 'false'
+          assert cfg['vars']['PROTECTED_WORKERS'] == 'website-management'
+          assert cfg['observability']['enabled'] is True
+          rate = cfg['observability']['logs']['head_sampling_rate']
+          assert 0 < rate <= 1
+          assert len(cfg['d1_databases']) >= 1
+          assert len(cfg['r2_buckets']) >= 1
+          print('Account 4 production configuration checks passed')
+          PY
       - name: Check Worker syntax
         run: node --check control-room-worker.js
       - name: Run Account 4 regression suite
