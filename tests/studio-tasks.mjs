@@ -42,7 +42,10 @@ try{
  await assert.rejects(studioAITask(env,{...a1,aiPolicy:{...grant,expires_at:Date.now()-1000}},'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
  await assert.rejects(studioAITask(env,{...a1,aiPolicy:{...grant,connections:[7]}},'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
  await assert.rejects(studioAITask(env,{...a1,aiPolicy:{...grant,mode:'read'}},'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
+ const sharedRow=raw.prepare("SELECT value_json FROM settings WHERE key='ai:permissions:1'").get();
+ raw.prepare("UPDATE settings SET value_json=? WHERE key='ai:permissions:1'").run(JSON.stringify({...JSON.parse(sharedRow.value_json),all_agents:false}));
  await assert.rejects(studioAITask(env,{...a1,aiPolicy:undefined},'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
+ raw.prepare("UPDATE settings SET value_json=? WHERE key='ai:permissions:1'").run(sharedRow.value_json);
  const policyRow=raw.prepare("SELECT value_json FROM settings WHERE key='ai:permissions:1'").get();
  raw.prepare("UPDATE settings SET value_json=? WHERE key='ai:permissions:1'").run(JSON.stringify({...JSON.parse(policyRow.value_json),mode:'chat',connections:[]}));
  await assert.rejects(studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
