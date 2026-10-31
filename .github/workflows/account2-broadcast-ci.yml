@@ -45,6 +45,8 @@ jobs:
         run: npm run test:radio-player
       - name: Radio media upload security checks
         run: npm run test:radio-upload-security
+      - name: Audio file signature validation
+        run: npm run test:audio-signature
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
