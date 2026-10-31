@@ -11,7 +11,7 @@ Target: `heavenlykey-studio` (Cloudflare Pages), using direct GitHub integration
 ## Prerequisites
 - Review `OWNER-ADMIN-SETUP.md` and `AUDIT.md`.
 - Cloudflare account must contain D1 `heavenlykey-studio` and R2 `heavenlykey-media`; confirm binding IDs and account ownership.
-- Run `schema.sql` for a NEW D1 database. For an EXISTING database, back it up, then apply the applicable one-time migrations in order: `0001_user_roles.sql`, `0002_storage_usage.sql`, `0003_audit_event_index.sql`, `0004_session_user_expiry_index.sql`, and `0005_password_hash_iterations.sql` and `0006_session_inactivity_timeout.sql`. Do not apply a migration twice or apply `0005` to a fresh database created from the current schema.
+- Run `schema.sql` for a NEW D1 database. For an EXISTING database, back it up, then apply the applicable one-time migrations in order: `0001_user_roles.sql`, `0002_storage_usage.sql`, `0003_audit_event_index.sql`, `0004_session_user_expiry_index.sql`, `0005_password_hash_iterations.sql`, and `0006_session_inactivity_timeout.sql`. Do not apply a migration twice or apply `0005` to a fresh database created from the current schema.
 - Confirm the Cloudflare Pages project's production branch, custom domain, D1, R2 and Workers AI bindings.
 
 ## GitHub direct deployment
