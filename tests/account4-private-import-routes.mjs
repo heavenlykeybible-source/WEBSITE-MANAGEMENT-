@@ -60,8 +60,7 @@ const partResponse=await account4PrivateImportRoutes(new Request('https://contro
 assert.equal(partResponse.status,200);
 assert.deepEqual(await partResponse.json(),{partNumber:1,stored:true});
 assert.equal(uploaded,1);
-const partWithoutLock=await account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(11)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT');
-await assert.rejects(Promise.resolve(partWithoutLock),e=>e.status===503);
+await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(11)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT'),e=>e.status===503);
 assert.equal(uploaded,1,'A part must not mutate R2 without the session lock');
 await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(10)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT'));
 
@@ -70,8 +69,7 @@ assert.equal((await status.json()).import.uploadedParts,1);
 const wrongOwner=await call('workspace/imports/'+started.id,'GET',undefined,other);
 assert.equal(wrongOwner.status,404);
 
-const completeWithoutLock=await account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/complete',{method:'POST'}),env,owner,'workspace/imports/'+started.id+'/complete','POST');
-await assert.rejects(Promise.resolve(completeWithoutLock),e=>e.status===503);
+await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/complete',{method:'POST'}),env,owner,'workspace/imports/'+started.id+'/complete','POST'),e=>e.status===503);
 assert.equal(completed,0,'Completion must not race uploads without the session lock');
 const completedResponse=await call('workspace/imports/'+started.id+'/complete','POST');
 assert.equal(completedResponse.status,200);
