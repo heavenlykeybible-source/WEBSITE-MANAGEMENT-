@@ -17,6 +17,7 @@ if (!timeline.includes("else{$('clipStart').value='0';$('clipEnd').value=ready()
 if ((timeline.match(/Enter both clip start and end times/g)||[]).length!==2) throw Error('Timeline empty timing validation missing');
 if (!timeline.includes('let completedSeconds=0') || !timeline.includes("+'% complete.'")) throw Error('Timeline progress indicator missing');
 if ((timeline.match(/c\.end<=86400/g)||[]).length<2) throw Error('Saved timeline and export timestamp safety limits missing');
+if (!timeline.includes("$('clipEnd').value=validSourceRange()?v.duration.toFixed(2):'0'") || !timeline.includes('Video exceeds the 24-hour timeline limit or has invalid duration.')) throw Error('Invalid source metadata display safeguard missing');
 if (!timeline.includes('const validSourceRange=()=>ready()&&v.duration<=86400') || (timeline.match(/validSourceRange\(\)/g)||[]).length<4) throw Error('Timeline source duration limit missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
 for (const id of ['clipAddFull','clipClear','clipFirst','clipLast','clipReverse','clipSort','clipCopy','clipPaste']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
