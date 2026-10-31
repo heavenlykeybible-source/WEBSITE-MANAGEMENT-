@@ -8,6 +8,8 @@ db.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8'));
 const auditIndex=db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_audit_user_action_at'").get();
 if(!auditIndex)throw Error('Missing audit event query index');
 db.exec(readFileSync(new URL('../migrations/0003_audit_event_index.sql',import.meta.url),'utf8'));
+db.exec(readFileSync(new URL('../migrations/0004_session_user_expiry_index.sql',import.meta.url),'utf8'));
+if(!db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_sessions_user_expires'").get())throw Error('Missing session user expiry index');
 
 const objects = new Map();
 const env = {
