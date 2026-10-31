@@ -83,6 +83,30 @@ export default {
    }catch{return Response.json({success:false,error:{message:"The ministry media service is temporarily unavailable."}},{status:502});}
    finally{clearTimeout(timeout);}
   }
+  // Fail closed: unreleased dated devotionals must never be publicly downloadable.
+  // Client-side hiding and service-worker cache exclusions alone do not protect draft JSON.
+  const draftMatch=url.pathname.match(/^\/(strength-devotionals-(?:2026|2027|year[1-5])(?:-batch\d+)?\.json)$/);
+  if(draftMatch){
+   const deny=()=>new Response(null,{status:404,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff"}});
+   try{
+    const manifestResponse=await env.ASSETS.fetch(new Request(new URL("/strength-publication-status.json",url.origin)));
+    if(!manifestResponse.ok)return deny();
+    const manifest=await manifestResponse.json();
+    if(manifest?.schemaVersion!==1||manifest.publicationStatus!=="published"||
+       !Array.isArray(manifest.publishedBatchFiles)||!manifest.publishedBatchFiles.includes(draftMatch[1]))return deny();
+    const assetResponse=await env.ASSETS.fetch(new Request(new URL("/"+draftMatch[1],url.origin),request));
+    if(!assetResponse.ok)return deny();
+    const data=await assetResponse.clone().json();
+    if(data?.timezone!=="Africa/Lagos"||!Array.isArray(data.entries)||!data.entries.length||
+       !data.entries.every(entry=>entry?.status==="approved-for-publication"&&
+         Array.isArray(entry.topics)&&entry.topics.length===12&&
+         entry.topics.every(topic=>topic?.reviewStatus==="approved")))return deny();
+    const headers=new Headers(assetResponse.headers);
+    headers.set("Cache-Control","no-store");
+    headers.set("X-Content-Type-Options","nosniff");
+    return new Response(request.method==="HEAD"?null:assetResponse.body,{status:assetResponse.status,headers});
+   }catch{return deny();}
+  }
   // Canonical extensionless devotional URL; preserve legacy links with a permanent redirect.
   if(url.pathname==="/strength-for-today.html")return Response.redirect(new URL("/strength-for-today",url),308);
   if(url.pathname==="/strength-for-today"){
