@@ -49,11 +49,12 @@ async function refresh(){
  const result=await response.json();
  if(generation!==loadGeneration)return;
  const items=Array.isArray(result.items)?result.items.filter(validItem):[];
+ ++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');
  playlist=items;position=0;next.disabled=!items.length;
  if(!items.length){audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';title.textContent='No radio recordings available';say('The radio playlist is currently empty.');return;}
  title.textContent=items[0].title||'Radio programme';
  say('Playlist ready. Press Play to listen.');
- }catch(error){if(generation!==loadGeneration)return;playlist=[];next.disabled=true;say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
+ }catch(error){if(generation!==loadGeneration)return;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');playlist=[];next.disabled=true;title.textContent='Playlist unavailable';say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
 }
 function select(index){
  if(!playlist.length)return false;
