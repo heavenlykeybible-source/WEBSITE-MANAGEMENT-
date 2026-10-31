@@ -155,3 +155,11 @@ test('installation dialog close button works with and without native dialog API'
  assert.match(js, /typeof dialog\.close==='function'/);
  assert.match(js, /else dialog\.remove\(\)/);
 });
+
+test('offline Bible cache keys distinguish each book and chapter', () => {
+ const sw = publicFile('sw.js');
+ assert.match(sw, /READING\.has\(url\.pathname\)\?url\.search:''/);
+ assert.match(sw, /const key=url\.origin\+cachePath\+/);
+ assert.match(sw, /url\.searchParams\.getAll\('book'\)\.length>1/);
+ assert.match(sw, /url\.searchParams\.getAll\('chapter'\)\.length>1/);
+});
