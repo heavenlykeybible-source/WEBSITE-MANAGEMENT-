@@ -14,6 +14,7 @@ test('Audio Hymnal HTML and player module are not intercepted by external servic
   assert.equal(config.includes('"'+path+'"'),false,path+' should be served by static assets');
   assert.equal(source.includes('"'+path+'":'),false,path+' should not be mapped to external service');
  }
+ assert.doesNotMatch(config,/binding\s*=\s*"AUDIO_HYMNS_APP"/);
 });
 
 test('unrelated independent application services retain their routing and fail closed',async()=>{
