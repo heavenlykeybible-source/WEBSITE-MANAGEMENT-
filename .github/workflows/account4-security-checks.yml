@@ -38,8 +38,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
-      - name: Audit dependencies for high-severity vulnerabilities
-        run: npm audit --audit-level=high
+      - name: Audit dependencies for all reported vulnerabilities
+        run: npm audit --audit-level=low
       - name: Validate production configuration safety
         run: |
           python3 - <<'PY'
