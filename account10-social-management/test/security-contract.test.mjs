@@ -588,3 +588,8 @@ test('API JSON responses vary on browser origin and fetch metadata', () => {
 test('sibling subdomains cannot mutate protected operator API through same-site browser requests', () => {
  assert.match(source,/\['cross-site','same-site'\]\.includes\(req\.headers\.get\('sec-fetch-site'\)\|\|''\)/);
 });
+
+test('missing browser origin metadata has an explicit rejection path', () => {
+ assert.ok(source.includes('Untrusted browser mutation origin'));
+ assert.ok(source.includes("req.headers.has('sec-fetch-site')"));
+});
