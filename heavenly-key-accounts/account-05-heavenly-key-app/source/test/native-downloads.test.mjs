@@ -210,3 +210,20 @@ test('download statistics reject HTTP and query parameters even with a valid adm
  assert.equal(valid.status,200);
  assert.equal(calls.reads,1);
 });
+
+test('native installer rejects insecure transport and partial-range requests before R2 access',async()=>{
+ const inputs=[
+  ['http://apps.heavenlykey.org/api/native-download/all-in-one/android',{},400],
+  [origin+'/api/native-download/all-in-one/android',{range:'bytes=0-2'},416],
+  [origin+'/api/native-download/all-in-one/android',{'if-range':'"old-etag"'},416],
+ ];
+ for(const [url,headers,status] of inputs){
+  const {env,calls}=environment();
+  const result=await handleNativeDownloads(new Request(url,{headers}),env);
+  assert.equal(result.status,status,url);
+  assert.equal(calls.objects,0,'Rejected request must not access R2');
+ }
+ const {env}=environment();
+ const valid=await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env);
+ assert.equal(valid.status,200);
+});
