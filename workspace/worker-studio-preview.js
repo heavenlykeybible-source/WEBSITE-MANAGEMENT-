@@ -6,7 +6,6 @@ const IDENT=/^[A-Za-z_][A-Za-z0-9_]*$/;
 const ID=/^[a-z0-9][a-z0-9-]{0,62}$/;
 const SHA=/^[a-f0-9]{64}$/;
 const hash=s=>createHash('sha256').update(s).digest('hex');
-function requireValue(value,message){if(!value)throw Error(message);}
 function recordObject(value){return value!==null&&typeof value==='object'&&!Array.isArray(value);}
 function rejectDangerous(value,path='configuration'){
  if(typeof value==='string'&&/(?:-----BEGIN .*PRIVATE KEY-----|\b(?:password|access_token|api_token|secret_key)\s*[:=])/i.test(value))throw Error('Potential credentials in '+path);
@@ -23,6 +22,16 @@ export function buildIsolatedWorkerPreview(input){
  const worker=revision.worker;
  const resourceMap=input.resources;
  if(!Array.isArray(resourceMap))throw Error('Explicit isolated resource manifest required');
+ // Fail closed on incomplete inventories, including production-linked services.
+ if(input.binding_inventory_verified!==true||!Array.isArray(input.production_binding_names))
+  throw Error('Complete verified production binding inventory required');
+ const names=input.production_binding_names;
+ if(names.some(n=>typeof n!=='string'||!IDENT.test(n))||new Set(names).size!==names.length)
+  throw Error('Invalid or duplicate production binding names');
+ if(names.length!==resourceMap.length||resourceMap.some(x=>!names.includes(x?.binding)))
+  throw Error('Every production binding must have an explicit preview-safe mapping');
+ if(input.uses_service_bindings||input.has_unsupported_bindings)
+  throw Error('Service or unsupported bindings may reach production; block preview');
  const seen=new Set(),d1=[],kv=[],r2=[];
  for(const item of resourceMap){
   if(!recordObject(item)||!['d1','kv','r2'].includes(item.type)||!IDENT.test(String(item.binding||'')))throw Error('Unsupported preview resource');
@@ -30,9 +39,9 @@ export function buildIsolatedWorkerPreview(input){
   seen.add(item.binding);
   const production=String(item.production_id||'');
   const isolated=String(item.preview_id||'');
-  if(!isolated||production===isolated)throw Error('Preview must use separately allocated resources');
+  if(!production||!isolated||production===isolated)throw Error('Preview must map an identified production resource to a separately allocated preview resource');
   if(item.type==='d1'){
-   if(!/^[a-f0-9-]{36}$/i.test(isolated))throw Error('Invalid preview D1 database ID');
+   if(!/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(isolated))throw Error('Invalid preview D1 database ID');
    d1.push({binding:item.binding,database_name:'preview-'+preview+'-'+item.binding.toLowerCase(),database_id:isolated});
   }else if(item.type==='kv'){
    if(!/^[a-f0-9]{32}$/i.test(isolated))throw Error('Invalid preview KV namespace ID');
@@ -56,7 +65,7 @@ export function buildIsolatedWorkerPreview(input){
  const codeHash=hash(revision.source),configText=JSON.stringify(config,null,2)+'\n';
  const manifest=Object.freeze({connection:revision.connection,worker,preview_name:preview,
   baseline_sha256:revision.base_sha256,candidate_sha256:codeHash,
-  config_sha256:hash(configText),status:'not-deployed',access:policy.access,
+  config_sha256:hash(configText),status:'not-deployed',access:policy.access,verified_binding_names:[...names].sort(),
   approval:'required',notes:'Private Preview must be deployed and tested in a separate authorized execution environment. No Cloudflare write occurs here.'});
  return {config,configText,source:revision.source,manifest};
 }
