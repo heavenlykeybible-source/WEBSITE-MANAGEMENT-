@@ -115,3 +115,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Replay the same signed WhatsApp message in distinct stored webhook events; after the first processed event and operator resolution, the duplicate must not reopen the request or overwrite its chosen destination.
 - [ ] Verify the ledger consumes the handover message atomically with database processing and preserves `consumed=1` on duplicate events.
 - [ ] Run `npm run verify:local`, including typecheck, security tests, dashboard tests and Cloudflare dry-run, before seeking owner approval for staging deployment.
+
+## Authenticated D1 release readiness
+- [ ] After approved staging migration, call authenticated `GET /api/automation/readiness` and require `migrationReady=true`, `humanContactColumn=true`, `whatsappReplayLedger=true`, and `aiUsageLimits=true`.
+- [ ] Remove or simulate each required D1 object in a disposable test database and verify readiness returns false; never use a production database for destructive testing.
+- [ ] Treat `providerWebhooks=false` and `providerPublishing=false` as launch blockers even when schema checks pass. Schema presence is not proof of live provider acceptance.
+- [ ] Confirm documented migrations through `0010_whatsapp_handover_dedupe.sql` were applied in order to the selected D1 environment.
