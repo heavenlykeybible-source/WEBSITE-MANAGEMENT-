@@ -35,6 +35,10 @@ export async function uploadPrivatePart(bucket, actor, session, number, bytes) {
   validatePart({partNumber:number,byteLength:bytes.byteLength},session);
   const upload = bucket.resumeMultipartUpload(session.key, session.uploadId);
   const part = await upload.uploadPart(number, bytes);
+  // Never persist a malformed storage receipt as server-verified evidence.
+  if (!part || part.partNumber !== number || typeof part.etag !== 'string' ||
+      !/^[a-zA-Z0-9\"-]{1,128}$/.test(part.etag))
+    throw new Error('Invalid R2 upload part receipt');
   // Persist this receipt to D1 before acknowledging the chunk to the client.
   return {partNumber: part.partNumber, etag: part.etag};
 }
