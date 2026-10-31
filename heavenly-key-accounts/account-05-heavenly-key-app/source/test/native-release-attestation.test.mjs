@@ -84,3 +84,15 @@ test('Android release versions increase across signed releases and reject invali
  assert.match(gradle,/versionCode Integer.parseInt\(codeValue\)/);
  assert.match(gradle,/versionName '1.0.' \+ codeValue/);
 });
+
+test('Windows MSIX release versions increase and invalid versions are rejected',()=>{
+ const script=readFileSync(new URL('../../native/windows/package-msix.ps1',import.meta.url),'utf8');
+ const workflowSource=workflow('release-account5-windows.yml');
+ assert.match(script,/\$PackageVersion/);
+ assert.match(script,/Invalid MSIX package version/);
+ assert.match(script,/MSIX version component exceeds 65535/);
+ assert.match(script,/Version="\$PackageVersion"/);
+ assert.match(workflowSource,/HKEM_WINDOWS_MSIX_VERSION:/);
+ assert.match(workflowSource,/github.run_number/);
+ assert.match(workflowSource,/-PackageVersion \$env:HKEM_WINDOWS_MSIX_VERSION/);
+});
