@@ -44,3 +44,18 @@ test('large feeds are limited to twenty bounded text entries',async()=>{
  const r=await app.fetch(req('/api/community/feed'),enabled);const {items}=await r.json();
  assert.equal(items.length,20);assert.equal(items[0].display_name.length,160);assert.equal(items[0].body.length,5000);
 });
+
+test('partial, empty and mislabeled public community responses are rejected',async()=>{
+ const examples=[
+  new Response('{"items":[]}',{status:206,headers:{'content-type':'application/json','content-range':'bytes 0-11/12'}}),
+  new Response(null,{status:204,headers:{'content-type':'application/json'}}),
+  new Response('{"items":[]}',{status:200,headers:{'content-type':'text/plain; application/json'}}),
+  new Response('{"items":[]}',{status:200,headers:{'content-type':'application/json','content-range':'bytes 0-11/12'}})
+ ];
+ for(const upstream of examples){
+  const app=createWorker(async()=>upstream);
+  const response=await app.fetch(req('/api/community/feed'),enabled);
+  assert.equal(response.status,502,'Untrusted community payload accepted: '+upstream.status);
+  assert.deepEqual(await response.json(),{error:'Community content is temporarily unavailable.'});
+ }
+});
