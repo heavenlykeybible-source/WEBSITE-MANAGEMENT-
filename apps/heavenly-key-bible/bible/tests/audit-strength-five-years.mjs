@@ -57,7 +57,7 @@ for(let i=0;i<entries.length;i++){
  }
 }
 const manifest=JSON.parse(readFileSync(resolve(root,'strength-publication-status.json'),'utf8'));
-if(manifest.publicationStatus!=='editorial-hold'||manifest.publishedBatchFiles.length)flag('GLOBAL','RELEASE_GATE','Publication must stay on editorial hold during review');
+if(manifest.publicationStatus!=='editorial-hold'||!Array.isArray(manifest.publishedBatchFiles)||manifest.publishedBatchFiles.length)flag('GLOBAL','RELEASE_GATE','Publication must stay on editorial hold with an empty approved-file list during review');
 const doctrine=[
  'Scripture as final authority','Trinity and Christ’s virgin birth, atonement and resurrection',
  'Human sinfulness, repentance, justification by faith','Restitution','Water baptism and Lord’s Supper',
@@ -115,14 +115,14 @@ const automatedQualityPassed=qualityBlockingFlags.length===0 &&
  entries.length===requestedDayTarget &&
  topicCount===requestedDayTarget*12 &&
  entries.every(e=>e.status==='draft-not-published') &&
- manifest.publicationStatus==='editorial-hold' && manifest.publishedBatchFiles.length===0;
+ manifest.publicationStatus==='editorial-hold' && Array.isArray(manifest.publishedBatchFiles) && manifest.publishedBatchFiles.length===0;
 
 const result={
  title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
  files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
- approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:manifest.publishedBatchFiles.length,
+ approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:Array.isArray(manifest.publishedBatchFiles)?manifest.publishedBatchFiles.length:null,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
  sampleFlags:flags.slice(0,100),
