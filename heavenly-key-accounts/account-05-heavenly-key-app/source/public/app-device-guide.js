@@ -66,7 +66,7 @@
       const app = apps[appId];
       const destination = new URL(app.url, location.origin);
       const trustedHosts = new Set(['apps.heavenlykey.org', 'onlinebible.heavenlykey.org', 'global.heavenlykey.org', 'radio.heavenlykey.org', 'meeting.heavenlykey.org', 'heavenlykey.org', 'www.heavenlykey.org']);
-      const localDevelopment = destination.protocol === 'http:' && destination.hostname === 'localhost';
+      const localDevelopment = location.hostname === 'localhost' && destination.protocol === 'http:' && destination.hostname === 'localhost';
       if ((!localDevelopment && (destination.protocol !== 'https:' || !trustedHosts.has(destination.hostname))) || destination.username || destination.password) throw new Error('Invalid app URL');
       if (open) {
         open.href = destination.href;
