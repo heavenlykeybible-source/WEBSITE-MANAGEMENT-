@@ -42,3 +42,18 @@ test('release-aware worker and foreground update UI preserve user-controlled rel
  assert.match(platform,/Update app/);
  assert.doesNotMatch(platform,/setInterval\(/);
 });
+
+test('partial or disguised site sync payloads cannot be trusted as current ministry updates',async()=>{
+ const cases=[
+  new Response(JSON.stringify({success:true,items:[]}),{status:206,headers:{'content-type':'application/json','content-range':'bytes 0-20/100'}}),
+  new Response(null,{status:204,headers:{'content-type':'application/json'}}),
+  new Response(JSON.stringify({success:true,items:[]}),{status:200,headers:{'content-type':'text/plain; application/json'}}),
+  new Response(JSON.stringify({success:true,items:[]}),{status:200,headers:{'content-type':'application/json','content-range':'bytes 0-20/100'}}),
+ ];
+ for(const upstream of cases){
+  const result=await handleSiteSync(new Request('https://app.example.test/api/site-sync'),
+    {SITE_PUBLIC_SYNC_ENABLED:'true'},async()=>upstream);
+  assert.equal(result.status,502,'Unverified content was accepted: '+upstream.status);
+  assert.equal((await result.json()).success,undefined);
+ }
+});
