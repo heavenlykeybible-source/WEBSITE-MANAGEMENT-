@@ -183,8 +183,8 @@ export default {
     const room=String(b.room??'').trim(); const identity=String(b.identity??'').trim(); const publish=Boolean(b.publish);
     if(publish)return json({error:'Use a session-bound LiveKit publisher token for an active broadcast.'},403);
     if(!room||!identity||room.length>120||identity.length>120)return json({error:'room and identity are required'},400);
-    try { const {createLiveKitToken}=await import('./livekit'); return json(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,identity,publish)); }
-    catch(e){ return json({error:e instanceof Error?e.message:'Live transport unavailable'},503); }
+    try { const {createLiveKitToken}=await import('./livekit'); return json(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,identity,publish),200,{'Cache-Control':'no-store'}); }
+    catch(e){ return json({error:'Live transport unavailable'},503); }
   }
 
   if(url.pathname==='/api/media-engine/livekit/publisher-token'&&request.method==='POST'){
@@ -194,8 +194,8 @@ export default {
     if(live.source_type!=='camera'||!String(live.source_ref).startsWith('livekit:'))return json({error:'This session is not a LiveKit camera broadcast'},409);
     const room='heavenlykey-live-'+sessionId;
     try { const {createLiveKitToken}=await import('./livekit'); const token=await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,'publisher-'+cap.sub,true);
-      await env.DB.prepare("UPDATE live_sessions SET last_heartbeat_at=CURRENT_TIMESTAMP WHERE session_id=?").bind(sessionId).run(); return json(token); }
-    catch(e){return json({error:e instanceof Error?e.message:'Live transport unavailable'},503);}
+      await env.DB.prepare("UPDATE live_sessions SET last_heartbeat_at=CURRENT_TIMESTAMP WHERE session_id=?").bind(sessionId).run(); return json(token,200,{'Cache-Control':'no-store'}); }
+    catch(e){return json({error:'Live transport unavailable'},503);}
   }
 
   if(url.pathname==='/api/media-engine/studio/capabilities'&&request.method==='GET') return json({
