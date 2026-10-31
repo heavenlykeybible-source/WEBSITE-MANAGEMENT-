@@ -25,6 +25,7 @@ if (!timeline.includes('JSON.stringify({clips,selected:chosen()})') || !timeline
 for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="'+control+'"') || !timeline.includes("$('"+control+"').onclick=")) throw Error('Timeline playhead trim control missing: '+control);
 if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
 if (!timeline.includes('state.abortPlayback?.();state.abortStart?.();return') || !timeline.includes('if(encoderError)throw encoderError;')) throw Error('Oversized encoder stream early-abort safeguard missing');
+if (!timeline.includes('rec.ondataavailable=e=>{if(state.cancelled||encoderError||!e.data?.size)return;')) throw Error('Late encoder data discard missing');
 if (!timeline.includes('canvas.width>4096||canvas.height>4096') || !timeline.includes('canvas.width*canvas.height>8847360') || !timeline.includes('Invalid export canvas size.')) throw Error('Canvas export dimension safeguard missing');
 if (!timeline.includes('if(record)invalidateExport();')) throw Error('Stale timeline download invalidation missing');
 if (!timeline.includes("window.addEventListener?.('pagehide',()=>{invalidateExport();if(session){session.cancelled=true") || !timeline.includes("session.abortEncoder?.();v.pause()}});")) throw Error('Active timeline session pagehide cleanup missing');
