@@ -184,3 +184,11 @@ test('offline runtime never caches session-varying redirects or no-cache respons
  assert.match(sw, /cookie\|authorization/);
  assert.match(sw, /response\.headers\.get\('vary'\)/);
 });
+
+test('offline fallback can read only the current reviewed shell cache', () => {
+ const sw = publicFile('sw.js');
+ assert.match(sw, /const cache=await caches\.open\(CACHE\)/);
+ assert.match(sw, /await cache\.match\(key\)/);
+ assert.match(sw, /await cache\.match\('\/index\.html'\)/);
+ assert.doesNotMatch(sw, /await caches\.match\(/);
+});
