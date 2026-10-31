@@ -7,4 +7,5 @@ check({date:'2026-10-31',status:'draft',sections:{bibleReading:{oldTestament:'wr
 check({date:'2026-10-31',status:'approved-for-publication',sections:{}},'Doctrinal approval required');
 check({date:'2026-10-31',status:'approved-for-publication',sections:{}},'Source verification required');
 check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'http://example.com'}}},'World story requires documented HTTPS source');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story'}}},'World story requires a valid publication date');
 console.log('Additional devotional editorial contract regressions passed');
