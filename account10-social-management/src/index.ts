@@ -324,9 +324,11 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   try{
    const columns=await env.DB.prepare("PRAGMA table_info(conversations)").all<{name:string}>();
    const tables=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('whatsapp_handover_events','ai_rate_limits')").all<{name:string}>();
+   const ledgerColumns=await env.DB.prepare("PRAGMA table_info(whatsapp_handover_events)").all<{name:string}>();
+   const limitColumns=await env.DB.prepare("PRAGMA table_info(ai_rate_limits)").all<{name:string}>();
    humanContactColumn=columns.results.some(c=>c.name==='human_contact_target');
-   whatsappReplayLedger=tables.results.some(t=>t.name==='whatsapp_handover_events');
-   aiUsageLimits=tables.results.some(t=>t.name==='ai_rate_limits');
+   whatsappReplayLedger=tables.results.some(t=>t.name==='whatsapp_handover_events')&&['message_id','conversation_id','contact_target','consumed'].every(name=>ledgerColumns.results.some(c=>c.name===name));
+   aiUsageLimits=tables.results.some(t=>t.name==='ai_rate_limits')&&['scope','window_kind','window_start','request_count'].every(name=>limitColumns.results.some(c=>c.name===name));
    migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits;
   }catch{return reply({error:'Database readiness inspection failed; verify D1 binding and migrations',migrationReady:false},503)}
   const r=await env.DB.prepare('SELECT channel,status,COUNT(*) AS total FROM social_accounts GROUP BY channel,status').all();
