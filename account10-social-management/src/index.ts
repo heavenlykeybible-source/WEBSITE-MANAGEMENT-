@@ -94,12 +94,28 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(declaredLength!==null&&Number(declaredLength)>1048576)return reply({error:'Request exceeds 1 MiB limit'},413);
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
  if(env.ADMIN_TOKEN.length<32||env.ADMIN_TOKEN.length>512||/\s/.test(env.ADMIN_TOKEN))return reply({error:'Operator authentication secret must be a strong, whitespace-free token of 32–512 characters; rotate ADMIN_TOKEN in Cloudflare secrets before activation'},503);
- const provided=req.headers.get('authorization')||'';
- if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN))return reply({error:'Unauthorized'},401);
- // Browser-origin validation is an extra boundary for state-changing operator actions.
- // Service-to-service clients without an Origin header still require authorization.
- if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
+ const provided=req.headers.get('authorization')||'';
+ let operatorRole:'owner'|'operator'|'viewer'='owner';
+ let operatorId='owner';
+ if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN)){
+  const candidate=provided.startsWith('Bearer ')?provided.slice(7):'';
+  if(!/^[a-f0-9]{64}$/.test(candidate))return reply({error:'Unauthorized'},401);
+  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(candidate));
+  const digest=Array.from(new Uint8Array(bytes)).map(x=>x.toString(16).padStart(2,'0')).join('');
+  let operator;
+  try{operator=await env.DB.prepare("SELECT id,role FROM operator_credentials WHERE token_hash=? AND active=1 AND expires_at>CURRENT_TIMESTAMP LIMIT 1").bind(digest).first<{id:string;role:'operator'|'viewer'}>()}
+  catch{return reply({error:'Operator credential database unavailable; apply migration 0012',authenticated:false},503)}
+  if(!operator)return reply({error:'Unauthorized'},401);
+  operatorRole=operator.role;operatorId=operator.id;
+ }
+ // Read-only viewers cannot mutate; operators can work on conversations only.
+ if(operatorRole==='viewer'&&!['GET','HEAD'].includes(req.method))return reply({error:'Viewer role is read-only'},403);
+ if(operatorRole==='operator'&&!['GET','HEAD'].includes(req.method)&&![
+  '/api/human-requests','/api/human-requests/resolve','/api/takeover','/api/messages','/api/ai/suggest-reply'
+ ].includes(u.pathname))return reply({error:'Operator role cannot perform this administrative action'},403);
+ // Browser-origin validation is a second boundary for state-changing actions.
+ if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  if(['POST','PUT','PATCH'].includes(req.method)){
   const contentType=req.headers.get('content-type')||'';
   if(!/^application\/json(?:\s*;|\s*$)/i.test(contentType))return reply({error:'Content-Type must be application/json'},415);
@@ -322,6 +338,31 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(u.pathname==='/api/human-requests'&&req.method==='GET'){const r=await env.DB.prepare('SELECT id,channel,requested_human,human_paused,human_contact_target,human_request_version,updated_at FROM conversations WHERE requested_human=1 ORDER BY updated_at DESC LIMIT 100').all();return reply({items:r.results,externalNotificationsConfigured:false})}
  if(u.pathname==='/api/human-requests'&&req.method==='POST'){let b:any;try{b=await req.json()}catch{return reply({error:'Invalid JSON'},400)}if(!idOk(b?.conversationId)||!['ministry_agent','speak_to_evangelist'].includes(b?.target))return reply({error:'Valid conversation ID and human-contact target required'},400);let r;try{r=await env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=?,human_request_version=human_request_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND requested_human=0').bind(b.target,b.conversationId).run()}catch{return reply({error:'Human-contact configuration unavailable; apply migration 0009',saved:false},503)}if(!r.meta.changes){const existing=await env.DB.prepare('SELECT requested_human,human_contact_target FROM conversations WHERE id=?').bind(b.conversationId).first<{requested_human:number;human_contact_target:string}>();if(!existing)return reply({error:'Conversation not found'},404);return reply({error:'Human request already pending; resolve it before changing the selected contact',contactTarget:existing.human_contact_target,automationPaused:true},409)}return reply({saved:true,humanRequested:true,contactTarget:b.target,automationPaused:true,externalNotificationsSent:false})}
  if(u.pathname==='/api/handover-policy'&&req.method==='GET')return reply({enabled:true,providerConnected:false,channels:['whatsapp_business','facebook_messenger','online_assistant'],humanRequestOptions:[{id:'ministry_agent',label:'I want to speak with a Heavenly Key Evangelistic Movement agent'},{id:'speak_to_evangelist',label:'I want to speak with Evangelist Emmanuel Ogheneochuko Adiohwo'}],policy:{humanTakeoverPausesAI:true,resumeRequiresOperator:true,doNotAutoReplyAfterTakeover:true},note:'Human takeover is enforced for processed signed WhatsApp text events and Gemini operator suggestions. Provider-side notifications and automated outgoing replies are not enabled.'});
+ if(u.pathname==='/api/operator/session'&&req.method==='GET')return reply({authenticated:true,role:operatorRole,operatorId,sharedOwnerToken:operatorRole==='owner'});
+ if(u.pathname==='/api/operators'&&req.method==='GET'){
+  if(operatorRole!=='owner')return reply({error:'Owner permission required'},403);
+  const list=await env.DB.prepare('SELECT id,display_name,role,active,expires_at,created_at,revoked_at FROM operator_credentials ORDER BY created_at DESC LIMIT 100').all();
+  return reply({items:list.results,rawTokensStored:false});
+ }
+ if(u.pathname==='/api/operators'&&req.method==='POST'){
+  if(operatorRole!=='owner')return reply({error:'Owner permission required'},403);
+  let b:any;try{b=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(typeof b?.displayName!=='string'||!b.displayName.trim()||b.displayName.length>100||!['viewer','operator'].includes(b.role)||!Number.isSafeInteger(b.daysValid)||b.daysValid<1||b.daysValid>90)return reply({error:'Valid displayName, viewer/operator role and 1–90 daysValid required'},400);
+  const raw=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join('');
+  const sha=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw)))).map(x=>x.toString(16).padStart(2,'0')).join('');
+  const id='op_'+crypto.randomUUID();
+  const expires=new Date(Date.now()+b.daysValid*86400000).toISOString().slice(0,19).replace('T',' ');
+  try{await env.DB.prepare('INSERT INTO operator_credentials(id,display_name,token_hash,role,expires_at) VALUES(?,?,?,?,?)').bind(id,b.displayName.trim(),sha,b.role,expires).run()}catch{return reply({error:'Unable to create operator credential; verify migration 0012'},503)}
+  return reply({created:true,id,displayName:b.displayName.trim(),role:b.role,expiresAt:expires,token:raw,showOnlyOnce:true},201);
+ }
+ if(u.pathname==='/api/operators/revoke'&&req.method==='POST'){
+  if(operatorRole!=='owner')return reply({error:'Owner permission required'},403);
+  let b:any;try{b=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  if(!idOk(b?.operatorId))return reply({error:'Valid operatorId required'},400);
+  const r=await env.DB.prepare("UPDATE operator_credentials SET active=0,revoked_at=CURRENT_TIMESTAMP WHERE id=? AND active=1").bind(b.operatorId).run();
+  if(!r.meta.changes)return reply({error:'Active operator not found'},404);
+  return reply({revoked:true,operatorId:b.operatorId});
+ }
  if(u.pathname==='/api/automation/readiness'&&req.method==='GET'){
   let migrationReady=false;
   let humanContactColumn=false;
