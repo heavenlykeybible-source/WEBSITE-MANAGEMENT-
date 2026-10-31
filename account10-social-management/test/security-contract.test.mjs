@@ -574,7 +574,7 @@ test('public health route rejects mutations and serves bodyless HEAD responses',
 });
 
 test('operator mutations reject cross-site browser fetch metadata before origin fallback', () => {
- const fetchGuard=source.indexOf("req.headers.get('sec-fetch-site')==='cross-site'");
+ const fetchGuard=source.indexOf("['cross-site','same-site'].includes(req.headers.get('sec-fetch-site')||'')");
  const originGuard=source.indexOf("operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin)");
  assert.ok(fetchGuard>=0&&originGuard>fetchGuard);
  assert.match(source,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)&&\['cross-site','same-site'\]\.includes\(req\.headers\.get\('sec-fetch-site'\)\|\|''\)/);
