@@ -31,7 +31,7 @@ export async function listDestinations(env:Env){
  });
 }
 function unsafeStreamHost(hostname:string):boolean{
- const host=hostname.toLowerCase().replace(/^\[|\]$/g,'');
+ const host=hostname.toLowerCase().replace(/^\[|\]$/g,'').replace(/\.+$/,'');
  if(host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test'))return true;
  if(host.includes(':'))return host==='::1'||host==='::'||host.startsWith('fc')||host.startsWith('fd')||host.startsWith('fe8')||host.startsWith('fe9')||host.startsWith('fea')||host.startsWith('feb')||host.startsWith('::ffff:');
  const ip=host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
