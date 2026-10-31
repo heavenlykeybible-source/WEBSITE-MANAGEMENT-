@@ -170,11 +170,11 @@ export default {
     const b=await requireJson(request);if(!b)return json({error:'Invalid JSON'},400);
     const requestedSource=String(b.source??'live'), requestedChannel=String(b.channel??'video'); if(!['live','247'].includes(requestedSource)||!['radio','video'].includes(requestedChannel))return json({error:'Invalid broadcast source or channel'},400);
     if(requestedSource==='live'&&(!Number.isSafeInteger(Number(b.session_id))||Number(b.session_id)<=0))return json({error:'A valid live session ID is required'},400);
-    try{const source=requestedSource as 'live'|'247';const channel=requestedChannel as 'radio'|'video';const siteBase='https://heavenlykey.alldaywow247.workers.dev';const programmeUrl=source==='247'?siteBase+'/pages/'+(channel==='radio'?'radio':'video')+'.html?egress=1':undefined;const result=await startRestream(env,{source,sessionId:b.session_id?Number(b.session_id):undefined,programmeUrl,format:String(b.format??'landscape-720'),quality:String(b.quality??'balanced'),channel});await audit(env,cap,'restream.start','egress',result.egressId);return json(result,201);}catch(e){return json({error:e instanceof Error?e.message:'Social streaming could not start'},503);}
+    try{const source=requestedSource as 'live'|'247';const channel=requestedChannel as 'radio'|'video';const siteBase='https://heavenlykey.alldaywow247.workers.dev';const programmeUrl=source==='247'?siteBase+'/pages/'+(channel==='radio'?'radio':'video')+'.html?egress=1':undefined;const result=await startRestream(env,{source,sessionId:b.session_id?Number(b.session_id):undefined,programmeUrl,format:String(b.format??'landscape-720'),quality:String(b.quality??'balanced'),channel});await audit(env,cap,'restream.start','egress',result.egressId);return json(result,201);}catch(e){console.error('Social streaming start failed',e instanceof Error?e.name:'UnknownError');return json({error:'Social streaming could not start'},503);}
   }
   if(url.pathname==='/api/media-engine/restream/stop'&&request.method==='POST'){
     if(!['Super Administrator','Deputy Super Administrator'].includes(cap.role))return json({error:'Owner or deputy access is required to stop social streaming'},403);
-    try{const result=await stopRestream(env);await audit(env,cap,'restream.stop','egress');return json(result);}catch(e){return json({error:e instanceof Error?e.message:'Social streaming could not stop'},503);}
+    try{const result=await stopRestream(env);await audit(env,cap,'restream.stop','egress');return json(result);}catch(e){console.error('Social streaming stop failed',e instanceof Error?e.name:'UnknownError');return json({error:'Social streaming could not stop'},503);}
   }
 
 
