@@ -39,7 +39,7 @@ assert.match(html,/audio\.addEventListener\('waiting'/,'Buffering status must be
 assert.match(html,/if\(generation===playGeneration\)setPaused/,'Old async playback failures cannot alter current controls');
 assert.match(html,/setAttribute\('aria-label','Pause radio'\)/,'Accessible pause state must be announced');
 
-const script=html.match(/<script[^>]*>([\\s\\S]*?)<\\/script>/)?.[1];
+const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Radio player script must be present');
 new Script(script,{filename:'radio-player.js'}); // Validate emitted browser JavaScript, not the TS template.
 const match=script.match(/const validItem=item=>([^;]+);/);
