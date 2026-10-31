@@ -94,4 +94,10 @@ assert.match(entry, /b\.action!=='remove'&&typeof b\.enabled!=='boolean'/, 'Requ
 assert.match(entry, /saveDestination\(env,String\(b\.destination\?\?'\'\),combined,b\.enabled===true\)/, 'Only explicitly true may enable a new destination');
 assert.match(entry, /setDestinationEnabled\(env,String\(b\.destination\?\?'\),b\.enabled===true\)/, 'Only explicitly true may enable an existing destination');
 
+// Invalid streaming controls must fail closed instead of silently starting 'live'.
+assert.match(entry, /!\['live','247'\]\.includes\(requestedSource\)/, 'Reject unsupported streaming sources');
+assert.match(entry, /!\['radio','video'\]\.includes\(requestedChannel\)/, 'Reject unsupported channels');
+assert.match(entry, /Number\.isSafeInteger\(Number\(b\.session_id\)\)/, 'Require a valid live session identifier');
+assert.match(entry, /A valid live session ID is required/, 'Invalid live session IDs must return a client error');
+
 console.log('Account 2 broadcast safety regression checks passed');
