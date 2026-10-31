@@ -110,6 +110,39 @@ for(const e of entries){
    flag(e.date,'DOCTRINAL_REVIEW_'+code,scope+' — human contextual review required');
  }
 }
+// Explicitly audit each of the ministry's doctrinal areas for human review.
+// Coverage flags indicate topics to inspect; keyword matches never certify orthodoxy.
+const doctrinalCoverage=[
+ ['SCRIPTURE_AUTHORITY',/scripture|bible|word of god|inspiration/i],
+ ['GODHEAD_TRINITY',/trinity|father.*son.*holy (?:ghost|spirit)|godhead/i],
+ ['VIRGIN_BIRTH',/virgin birth|born of (?:the )?virgin|mary.*virgin/i],
+ ['CHRIST_ATONEMENT',/atonement|blood of (?:jesus|christ)|cross|crucifi/i],
+ ['CHRIST_RESURRECTION',/resurrection|risen (?:lord|christ)|rose again/i],
+ ['SIN_AND_REPENTANCE',/repent|sin|conversion/i],
+ ['JUSTIFICATION_BY_FAITH',/justif|faith in (?:jesus|christ)|saved by grace/i],
+ ['RESTITUTION',/restitut|make amends|restore what/i],
+ ['WATER_BAPTISM',/water baptism|bapti[sz]/i],
+ ['LORDS_SUPPER',/lord.s supper|communion|breaking of bread/i],
+ ['SANCTIFICATION',/sanctif|holiness|holy living/i],
+ ['HOLY_SPIRIT_BAPTISM',/baptism of the holy (?:ghost|spirit)|filled with the holy/i],
+ ['SPIRITUAL_GIFTS',/spiritual gifts|gifts of the spirit|prophe(?:cy|sy)/i],
+ ['DIVINE_HEALING',/healing|heal the sick|divine health/i],
+ ['EVANGELISM',/evangelis|gospel witness|preach the gospel/i],
+ ['MARRIAGE',/marriage|husband|wife|wedding/i],
+ ['RAPTURE',/rapture|caught up|christ.s coming/i],
+ ['GREAT_TRIBULATION',/great tribulation|tribulation/i],
+ ['SECOND_COMING',/second coming|return of christ/i],
+ ['MILLENNIUM',/millennium|thousand.year reign/i],
+ ['FINAL_JUDGMENT',/judg(?:e)?ment|judgment seat/i],
+ ['ETERNAL_DESTINY',/new heaven|new earth|eternal life|hell|resurrection of the dead/i]
+];
+const coverageCount=Object.fromEntries(doctrinalCoverage.map(([name])=>[name,0]));
+for(const e of entries)for(const t of e.topics||[]){
+ const content=[t.topic,t.reference,t.reflection,t.prayer].filter(Boolean).join(' ');
+ for(const [name,re] of doctrinalCoverage)if(re.test(content))coverageCount[name]++;
+}
+const doctrinalCoverageGaps=Object.entries(coverageCount).filter(([,count])=>count===0).map(([name])=>name);
+for(const name of doctrinalCoverageGaps)flag('GLOBAL','DOCTRINAL_COVERAGE_GAP',name);
 const requestedDayTarget=1828;
 const expectedStartDate='2026-10-30';
 const expectedEndDate='2031-10-31';
@@ -128,7 +161,7 @@ const qualityBlockingCodes=new Set([
  'UNSUPPORTED_PROMISE','END_TIME_DATE_SETTING',
  'PUBLICATION_STATUS','REVIEW_STATUS','LENGTH_LIMIT',
  'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','MECHANICAL_REFLECTION_FORMULA',
- 'INCONSISTENT_PRAYER_PERSON','RELEASE_GATE'
+ 'INCONSISTENT_PRAYER_PERSON','DOCTRINAL_COVERAGE_GAP','RELEASE_GATE'
 ]);
 const qualityBlockingFlags=flags.filter(f=>qualityBlockingCodes.has(f.code)||f.code.startsWith('DOCTRINAL_REVIEW_'));
 const automatedQualityPassed=qualityBlockingFlags.length===0 &&
@@ -153,7 +186,7 @@ const result={
   'Review Deeper Life doctrine/Daily Manna and MFM teachings as reference standards without reproducing their prose',
   'Document reviewer, version, review date and sign-off for each day before any publication',
   'Block future-dated JSON access at server boundary, not only hide it in the interface'
- ],doctrinalCoverageChecklist:doctrine,
+ ],doctrinalCoverageChecklist:doctrine,doctrinalCoverageKeywordCounts:coverageCount,doctrinalCoverageGaps,
  publicationReady:false
 };
 console.log(JSON.stringify(result,null,2));
