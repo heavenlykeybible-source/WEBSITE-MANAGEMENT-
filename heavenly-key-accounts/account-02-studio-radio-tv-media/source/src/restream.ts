@@ -69,14 +69,14 @@ export async function removeDestination(env:Env,destination:string){
 export async function setDestinationEnabled(env:Env,destination:string,enabled:boolean){
  if(!allowed.has(destination))throw new Error('Unsupported destination.');
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
- if(!store[destination]?.url)throw new Error('Connect this destination first.');
+ if(typeof store[destination]?.url!=='string')throw new Error('Connect this destination first.');
  if(enabled&&!safeStreamUrl(store[destination].url))throw new Error('Reconnect this destination with a safe public RTMP or RTMPS URL.');
  store[destination].enabled=enabled;store[destination].updatedAt=new Date().toISOString();
  await env.LIVE_STATUS_KV.put(CONFIG_KEY,await seal(env,store));
 }
 async function enabledUrls(env:Env){
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
- return Object.entries(store).filter(([name,v])=>allowed.has(name)&&v.enabled&&typeof v.url==='string'&&safeStreamUrl(v.url)!==null).map(([destination,v])=>({destination,url:v.url}));
+ return Object.entries(store).filter(([name,v])=>allowed.has(name)&&v!==null&&typeof v==='object'&&v.enabled===true&&typeof v.url==='string'&&safeStreamUrl(v.url)!==null).map(([destination,v])=>({destination,url:v.url}));
 }
 async function callLiveKit(env:any,method:string,body:unknown){
  const config=await resolveLiveKitConfig(env);if(!config)throw new Error('LiveKit connection is not configured.');
