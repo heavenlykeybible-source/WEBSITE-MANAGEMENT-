@@ -557,9 +557,13 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const conversation=await env.DB.prepare('SELECT id,human_paused,requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{id:string;human_paused:number;requested_human:number}>();
   if(!conversation)return reply({error:'Conversation not found'},404);
   if(conversation.human_paused||conversation.requested_human)return reply({action:'human_review',draftCreated:false,sent:false});
-  if(requestsHumanMinistryContact(data.message)){
-   await env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(data.conversationId).run();
-   return reply({action:'human_review',humanRequested:true,automationPaused:true,draftCreated:false,sent:false,externalNotificationsSent:false});
+  const requestedTarget=contactTargetForMinistryMessage(data.message);
+  if(requestedTarget){
+   try{
+    const reserved=await env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND requested_human=0 AND human_paused=0').bind(requestedTarget,data.conversationId).run();
+    if(!reserved.meta.changes)return reply({action:'human_review',draftCreated:false,sent:false,reason:'Conversation already paused or human request pending'});
+   }catch{return reply({error:'Human-contact routing unavailable; apply migration 0009',draftCreated:false,sent:false},503)}
+   return reply({action:'human_review',humanRequested:true,contactTarget:requestedTarget,automationPaused:true,draftCreated:false,sent:false,externalNotificationsSent:false});
   }
   const rules=await env.DB.prepare('SELECT id,keyword,reply FROM automation_rules ORDER BY length(keyword) DESC,keyword ASC LIMIT 100').all<{id:string;keyword:string;reply:string}>();
   const message=data.message.toLocaleLowerCase();
