@@ -14,7 +14,7 @@ Independent Cloudflare Worker, D1 database, and operator dashboard for unified s
 
 ## Cloudflare setup
 1. Review `wrangler.toml`, provision the intended D1 database, and initialize `schema.sql`.
-2. Apply all numbered migrations, `0002_webhook_events.sql` through `0010_whatsapp_handover_dedupe.sql`, **in order** after `schema.sql`. Both local and remote migration scripts cover all numbered migrations. Never apply production migrations without approval. See `npm run db:migrate:remote`.
+2. Apply all numbered migrations, `0002_webhook_events.sql` through `0011_human_request_version.sql`, **in order** after `schema.sql`. Both local and remote migration scripts cover all numbered migrations. Never apply production migrations without approval. See `npm run db:migrate:remote`.
 3. Configure `ADMIN_TOKEN`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, and `META_WHATSAPP_ACCESS_TOKEN` as Worker secrets, never in source or browser. `GEMINI_API_KEY` is optional for suggestions.
 4. Register the WhatsApp phone number ID in the dashboard, then verify its access against Meta before sending.
 5. Run `npm run check` and `npm run build:check`; verify signed inbound webhook, delivery attempts, receipts, permissions, and mobile/desktop UX in a real staging deployment.
@@ -65,3 +65,6 @@ After a human-approved deployment and migration `0008_ai_rate_limits.sql`, an au
 
 ## Read-only release readiness
 Authorized operators can call `GET /api/automation/readiness` after deployment to check D1 schema presence. The result includes `migrationReady`, `humanContactColumn`, `whatsappReplayLedger`, and `aiUsageLimits`. All must be true before processing ministry WhatsApp handover events. This does not test provider connectivity, message delivery, individual operator permissions, or production security. Use an approved staging environment for live integration tests.
+
+## Versioned human request resolution
+Apply migration `0011_human_request_version.sql` after 0010 before running the updated Worker. The human-request list and conversation detail now expose `human_request_version`. Authorized operator requests to `POST /api/human-requests/resolve` **must** supply `conversationId`, `resumeAutomation` and `requestVersion` from the currently displayed pending request. The API rejects stale generations with HTTP 409; clients must refresh rather than retry with a guessed version. Each new handover increments the version, including those imported from verified WhatsApp webhooks. This prevents a stale operator action from clearing a newer visitor request, but does not provide individual operator authentication or automatic human notification.
