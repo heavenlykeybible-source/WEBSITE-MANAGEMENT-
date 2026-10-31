@@ -5,6 +5,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../heavenly-key-website/bible');
+// Fail visibly when source data is unreadable; never report an incomplete audit as successful.
+process.on('unhandledRejection',reason=>{console.error('Devotional audit rejected:',reason);process.exitCode=1;});
 const allDevotionalFiles = readdirSync(root).filter(n => /^strength-devotionals-.*\.json$/.test(n)).sort();
 const names = readdirSync(root).filter(n => /^strength-devotionals-(2026|2027|year[1-5])(?:-batch\d+)?\.json$/.test(n)).sort();
 const ignoredDevotionalFiles=allDevotionalFiles.filter(n=>!names.includes(n));
