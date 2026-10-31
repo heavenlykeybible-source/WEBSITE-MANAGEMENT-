@@ -17,7 +17,7 @@ for (const path of ['editor.js','public/editor.js']) { if(!existsSync(path)) thr
 if(readFileSync('editor.js','utf8')!==readFileSync('public/editor.js','utf8')) throw Error('Editor script copies must match');
 if((readFileSync('public/index.html','utf8').match(/<script\b(?![^>]*\bsrc=)[^>]*>/gi)||[]).length) throw Error('Inline scripts are forbidden by the enforced CSP');
 
-for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
+for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs','tests/be.mjs','tests/frontend.mjs','tests/offline.mjs','tests/timeline-runtime.mjs','tests/scheduled-cleanup.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 const apiSource=readFileSync('functions/api/[[path]].js','utf8');
 if(!apiSource.includes(".replace(/^[.\\- ]+/, '').replace(/\\.{2,}/g, '.')"))throw Error('Uploaded filename normalization missing');
 if(!apiSource.includes(".replace(/[. ]+$/, '')"))throw Error('Trailing filename cleanup missing');
@@ -72,7 +72,7 @@ for(const [name,headers] of [['voice',voiceHeaders],['media',mediaHeaders]]){
 
 
 if ((apiSource.match(/match\(\/\(\?:\^\|;\\s\*\)hk=/g)||[]).length!==2 || !apiSource.includes('(?=;|$)/)')) throw Error('Exact session cookie boundary enforcement missing');
-if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gateway_attempt'") || !apiSource.includes("AND at>?) < 60") || !apiSource.includes("if (!reserved.meta.changes)")) throw Error('Atomic external AI gateway attempt quota safeguard missing');
+if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gateway_attempt'") || !apiSource.includes("AND at>?) < 30") || !apiSource.includes("if (!reserved.meta.changes)")) throw Error('Atomic external AI gateway daily quota safeguard missing');
 for (const [name, limit] of [['ai_tools_attempt',30],['transcribe_attempt',120]]) {
   if (!apiSource.includes("'"+name+"'") || !apiSource.includes("at>?) < "+limit) || !apiSource.includes('meta.changes')) throw Error('Atomic AI resource quota missing: '+name);
 }
