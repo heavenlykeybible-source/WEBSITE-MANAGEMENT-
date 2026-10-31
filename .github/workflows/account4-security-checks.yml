@@ -1,0 +1,30 @@
+name: Account 4 Security Checks
+on:
+  pull_request:
+    paths:
+      - 'control-room-worker.js'
+      - 'tests/**'
+      - 'schema.sql'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'wrangler.toml'
+      - '.github/workflows/account4-security-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Check Worker syntax
+        run: node --check control-room-worker.js
+      - name: Run Account 4 regression suite
+        run: npm test
