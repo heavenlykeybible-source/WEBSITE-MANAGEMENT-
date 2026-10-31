@@ -14,7 +14,7 @@ function setup(userOverrides = {}) {
     crypto: { subtle:webcrypto.subtle, getRandomValues:a=>webcrypto.getRandomValues(a), randomUUID },
     btoa:s=>Buffer.from(s,'binary').toString('base64'),
     hex: b=>Buffer.from(b).toString('hex'),
-    check: async (_secret,token) => token === 'valid' ? { e:'member@example.com', t:2, exp:now+60000 } : token === 'expired' ? {e:'member@example.com',t:2,exp:now-1000} : token === 'missing-exp' ? {e:'member@example.com',t:2} : token === 'purpose' ? {e:'member@example.com',k:'verify',t:2,exp:now+60000} : null,
+    check: async (_secret,token) => token === 'valid' ? { e:'member@example.com', t:2, exp:now+60000 } : token === 'other-valid' ? { e:'other@example.com', t:2, exp:now+60000 } : token === 'expired' ? {e:'member@example.com',t:2,exp:now-1000} : token === 'missing-exp' ? {e:'member@example.com',t:2} : token === 'purpose' ? {e:'member@example.com',k:'verify',t:2,exp:now+60000} : null,
     getUser: async (_env,email) => users[email] || null,
     accountRole: (_env,_email,u) => u.role
   };
@@ -386,10 +386,10 @@ test('stage reconnect secret does not authorize a different signed-in account',a
  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
  h.guest.close();
  h.users['other@example.com']={tv:2,banned:false,role:'user'};
- h.context.check=async()=>null;
  const other=h.add();
- await h.r.webSocketMessage(other,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Other user',pass:'pass',aud:false,accountToken:''}));
- assert.equal(other.attachment.stage,false,'anonymous visitor cannot inherit stage');
+ await h.r.webSocketMessage(other,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Other user',pass:'pass',aud:false,accountToken:'other-valid'}));
+ assert.equal(other.attachment.stage,false,'another signed-in user cannot inherit stage');
+ assert.equal(other.attachment.aud,false,'different signed-in account remains in waiting room');
  const admitted=h.host.attachment.admitted;
  assert.ok(admitted.every(a=>a&&a.email==='member@example.com'&&a.pass==='pass'));
 });
