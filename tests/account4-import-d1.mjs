@@ -9,8 +9,10 @@ const db={prepare(sql){return {bind(...args){statements.push({sql,args});return 
  async first(){return row;},
  async all(){return {results:parts};}
 };}}}};
-const session={ownerId:7,key:'private-imports/7/abc',uploadId:'u1',name:'backup.zip',size:11,partCount:1,state:'uploading',expiresAt:Date.now()+3600000};
+const session={ownerId:7,key:'private-imports/7/123e4567-e89b-42d3-a456-426614174000',uploadId:'u1',name:'backup.zip',size:11,partCount:1,state:'uploading',expiresAt:Date.now()+3600000};
 await assert.rejects(saveImportSession(db,actor,{...session,key:'private-imports/8/forged'}));
+await assert.rejects(saveImportSession(db,actor,{...session,key:'private-imports/7/../8/forged'}));
+await assert.rejects(saveImportSession(db,actor,{...session,key:'private-imports/7/not-a-uuid'}));
 await assert.rejects(saveImportSession(db,actor,{...session,expiresAt:0}));
 await assert.rejects(saveImportSession(db,actor,{...session,size:1073741825}));
 await assert.rejects(saveImportSession(db,actor,{...session,partCount:2}));
