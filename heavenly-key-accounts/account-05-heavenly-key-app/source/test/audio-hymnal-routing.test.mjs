@@ -61,3 +61,15 @@ test('independent HEAD and empty body statuses remain valid responses',async()=>
  const empty=await routeIndependentApp(request('/bible.html'),env);
  assert.equal(empty.status,204);assert.equal(await empty.text(),'');
 });
+
+test('independent service 302 redirects are rejected before browsers see them',async()=>{
+ const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+  fetch:async()=>new Response(null,{status:302,headers:{
+   'X-HK-App-Service':'bible-reader','Location':'https://unapproved.example/'
+  }})
+ }};
+ const response=await routeIndependentApp(request('/bible.html'),env);
+ assert.equal(response.status,502);
+ assert.equal(response.headers.get('location'),null);
+ assert.equal(response.headers.get('cache-control'),'no-store');
+});
