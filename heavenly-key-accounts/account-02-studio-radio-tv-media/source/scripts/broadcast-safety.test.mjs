@@ -60,4 +60,10 @@ assert.match(entry, /total>maxBytes/, 'Limit streamed bodies as they arrive');
 assert.match(entry, /reader\.cancel\(\)/, 'Cancel oversized request streams');
 assert.match(entry, /!Array\.isArray\(parsed\)/, 'Reject non-object JSON request payloads');
 
+// Signed capability claims must contain bounded identifiers, not truthy objects.
+assert.match(entry, /typeof p\.sub!=='string'/, 'Validate capability subject type');
+assert.match(entry, /p\.sub\.length>256/, 'Bound capability subject length');
+assert.match(entry, /typeof p\.nonce!=='string'/, 'Validate capability nonce type');
+assert.match(entry, /p\.nonce\.length>256/, 'Bound capability nonce length');
+
 console.log('Account 2 broadcast safety regression checks passed');
