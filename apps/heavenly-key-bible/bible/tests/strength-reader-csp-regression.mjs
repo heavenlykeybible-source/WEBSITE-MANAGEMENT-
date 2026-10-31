@@ -8,10 +8,15 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../heavenly-key-w
 const html=readFileSync(resolve(root,'strength-for-today.html'),'utf8');
 const js=readFileSync(resolve(root,'strength-for-today.js'),'utf8');
 const css=readFileSync(resolve(root,'strength-for-today.css'),'utf8');
+const shareJs=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
 assert.ok(html.includes('href="./strength-for-today.css"'),'External stylesheet must be linked');
 assert.ok(html.includes('src="./strength-for-today.js"'),'External reader script must be linked');
 assert.ok(!/<style\b/i.test(html),'Inline style blocks are forbidden');
 assert.ok(!/\sstyle\s*=/i.test(html),'Inline style attributes are forbidden');
+assert.match(html,/<img[^>]*id="manna-image-preview"[^>]*class="strength-inline-9"\s*\/>/,'Scripture preview image markup must be valid and class must precede self-closing slash');
+assert.doesNotMatch(shareJs,/\.style\b|\.cssText\b|\.setProperty\s*\(/,'Share studio must not write inline styles');
+assert.ok(shareJs.includes('preview.dataset.imageSize=size.value'),'Share studio must select image preview sizing through data attributes');
+assert.ok(css.includes('#manna-image-preview[data-image-size="vertical"]')&&css.includes('#manna-image-preview[data-image-size="facebook"]'),'Preview size styles must be provided by external CSS');
 assert.ok(!/\son[a-z]+\s*=/i.test(html),'Inline event-handler attributes are forbidden');
 for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){
  const attrs=match[1];
