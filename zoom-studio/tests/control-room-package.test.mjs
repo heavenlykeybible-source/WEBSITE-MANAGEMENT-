@@ -975,3 +975,15 @@ test('orphan guests are disconnected before pending connection slots are counted
  assert.equal(await response.text(),'Too many pending connections');
  assert.ok(old.messages.some(m=>m.t==='closed'&&/host is no longer connected/.test(m.why)));
 });
+
+test('handshake alarm storage errors reject before a WebSocket is allocated',async()=>{
+ const s=meeting();
+ s.state.storage.getAlarm=async()=>{throw Error('alarm storage unavailable')};
+ const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
+ await assert.rejects(s.room.fetch(req),/alarm storage unavailable/);
+ assert.equal(s.all.length,0,'no unauthenticated WebSocket may be accepted before expiration can be scheduled');
+ const source=fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8');
+ const schedule=source.indexOf('await this.scheduleHandshakeAlarm();',source.indexOf('async fetch(request)'));
+ const accept=source.indexOf('this.state.acceptWebSocket(server);',source.indexOf('async fetch(request)'));
+ assert.ok(schedule>0&&schedule<accept,'expiration alarm must be ready before the socket is accepted');
+});
