@@ -261,15 +261,13 @@ export async function onRequest({ request: req, env, params }) {
         return J({error:'Prompt must contain 3–6000 characters.'},400);
       const allowedTasks = new Set(['chat','coding','script','titles','description','captions','rewrite','hashtags','summary','outline','video_edit_plan','audio_edit_plan','image_prompt','posting_plan']);
       if (!allowedTasks.has(b.task)) return J({error:'Unsupported AI task.'},400);
-      const n = await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='ai_gateway' AND at>?").bind(u.id,Date.now()-DAY).first();
-      if (n.c >= 30) return J({error:'Daily AI gateway limit reached.'},429);
       const entries = parseAIConnections(env);
       const chosen = entries.find(x => x.id === b.connectionId && x.enabled !== false);
       if (!chosen) return J({error:'Select a configured AI connection.'},400);
       // Reserve one daily attempt atomically before calling a paid external provider.
       const attemptAt = Date.now();
-      const reserved = await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gateway_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='ai_gateway_attempt' AND at>?) < 60").bind(u.id,attemptAt,u.id,attemptAt-DAY).run();
-      if (!reserved.meta.changes) return J({error:'Daily AI gateway attempt limit reached.'},429);
+      const reserved = await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gateway_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='ai_gateway_attempt' AND at>?) < 30").bind(u.id,attemptAt,u.id,attemptAt-DAY).run();
+      if (!reserved.meta.changes) return J({error:'Daily AI gateway limit reached.'},429);
       // One explicit connection per request: no quota-bypass key rotation.
       try {
         const result = await invokeAIConnection(chosen, b.task, b.prompt, env);
