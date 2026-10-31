@@ -33,7 +33,8 @@ for(const [name,script] of Object.entries(pkg.scripts)){
 }
 // A deploy from the wrong Cloudflare account can strand the hostname.
 // Do not silently infer the zone account from a successful build or DNS resolution.
-if(!/^run_worker_first\s*=\s*true\s*$/m.test(config))fail.push('Static asset requests must pass through Worker security headers');
+const assetConfig=config.split('[assets]')[1]||'';
+if(!/^run_worker_first\s*=\s*true\s*$/m.test(assetConfig))fail.push('Static asset requests must pass through Worker security headers');
 const args=process.argv.slice(2);
 if(args.includes('--production'))fail.push('Production readiness cannot be certified by a static preflight: verify Cloudflare zone ownership, D1 migrations, secrets, asset upload and live integration tests manually.');
 if(fail.length){for(const message of fail)console.error('FAIL:',message);process.exitCode=1;}
