@@ -79,7 +79,11 @@ export class MeetingRooms {
     if(ws.readyState!==1||this.data(ws).role)return;
     if(this.host())return this.close(ws,{t:'error',msg:'This room already has a host.'});
     Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,now+86400000),locked:false,watch:'',audChat:true,slow:0,admitted:[]});
-    this.save(ws,d);return this.send(ws,{t:'created',room:d.room,key:d.key,ice:await meetingICE(this.env,d.room)});
+    this.save(ws,d);const ice=await meetingICE(this.env,d.room);
+    // TURN credential generation may yield while the host disconnects or expires.
+    if(ws.readyState!==1||this.host()!==ws)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'closed',why:'The meeting has ended.'});
+    return this.send(ws,{t:'created',room:d.room,key:d.key,ice});
    }
    if(m.t==='join'){
     const host=this.host();let h=host&&this.data(host);
