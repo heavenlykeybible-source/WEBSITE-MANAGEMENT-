@@ -1,1 +1,62 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=https://bible.heavenlykey.org/old-time-gospel-revival-hymn-book.html"><title>Old Time Gospel Revival Hymn Book</title><link rel="canonical" href="https://bible.heavenlykey.org/old-time-gospel-revival-hymn-book.html"></head><body><main><h1>Old Time Gospel Revival Hymn Book</h1><p>This hymn collection has moved to the official Bible hymn book.</p><a href="https://bible.heavenlykey.org/old-time-gospel-revival-hymn-book.html">Open the official hymn book</a></main><script>location.replace("https://bible.heavenlykey.org/old-time-gospel-revival-hymn-book.html")</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#142d69">
+<meta name="description" content="Heavenly Key audio hymn catalogue and recordings approved for publication.">
+<title>Heavenly Key Audio Hymnal</title>
+<link rel="canonical" href="https://apps.heavenlykey.org/audio-hymns.html">
+<link rel="manifest" href="/manifests/audio-hymns.webmanifest">
+<link rel="icon" href="/icons/audio-hymns.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/audio-hymns.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fe;color:#152745;font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+a{color:#1144a1}a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #f5b728;outline-offset:3px}
+.skip{position:absolute;left:-9999px}.skip:focus{left:12px;top:12px;background:#fff;z-index:20;padding:8px}
+header{background:linear-gradient(115deg,#0c2458,#224eaa);color:white;padding:24px 18px}
+header .inner,main,footer{max-width:1000px;margin:0 auto}header a{color:#fff}header h1{margin:12px 0 4px;font-size:clamp(1.55rem,4vw,2.6rem)}
+header p{max-width:720px;margin:0}main{padding:18px}.panel{background:white;border:1px solid #d4dff0;border-radius:16px;padding:20px;margin:0 0 18px;box-shadow:0 4px 16px #122c5c0c}
+.panel h2{font-size:1.23rem;margin:0 0 12px}.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{display:block;font-weight:650}select,input[type="range"]{display:block;width:100%;margin-top:6px}select{padding:12px;border:1px solid #a6b6d1;border-radius:8px;background:white;color:inherit}
+button{cursor:pointer;background:#183e92;color:#fff;border:0;border-radius:8px;padding:11px 16px;font:inherit;font-weight:650}
+button:disabled{opacity:.55;cursor:not-allowed}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.status{background:#edf3ff;border-left:4px solid #17479a;padding:12px;margin:14px 0;border-radius:6px}
+audio{width:100%;margin:12px 0}.small{font-size:.9rem;color:#455671}#hymn-verse{white-space:pre-wrap}
+.volume{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:16px}
+footer{padding:12px 20px 32px;font-size:.9rem;color:#415270}
+</style>
+<script type="module" src="/audio-hymns.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to hymnal</a>
+<header><div class="inner"><a href="/downloads.html">← All Heavenly Key Apps</a>
+<h1>Heavenly Key Audio Hymnal</h1>
+<p>Explore hymns and listen when an approved recording is available. Recordings are not published without the required rights.</p>
+</div></header>
+<main id="main" class="audio-hymns-page">
+<section class="panel" aria-labelledby="library-title"><h2 id="library-title">Explore the hymn library</h2>
+<div class="audio-hymn-source-grid">
+<a class="audio-hymn-source" href="/old-time-gospel-revival-hymn-book.html"><strong>Old Time Gospel Revival Hymn Book</strong><span>Open the text collection</span></a>
+<a class="audio-hymn-source" href="https://bible.heavenlykey.org/old-time-gospel-revival-hymn-book.html" rel="noopener noreferrer"><strong>Official Bible hymn collection</strong><span>Visit the external ministry library</span></a>
+</div><p id="hymn-count" class="small" role="status" aria-live="polite">Checking approved recording catalogue…</p></section>
+<section class="panel" aria-labelledby="listen-title"><h2 id="listen-title">Hymn selections</h2>
+<div class="controls">
+<label for="hymn-select">Choose hymn<select id="hymn-select"></select></label>
+<label for="hymn-style">Recording style<select id="hymn-style"><option value="choir">Choir</option><option value="solo">Solo</option><option value="instrumental">Instrumental</option><option value="featured">Featured rendition</option></select></label>
+<label for="hymn-playlist">After playback<select id="hymn-playlist"><option value="off">Stop</option><option value="next">Next approved hymn</option><option value="repeat">Repeat approved hymns</option></select></label>
+</div>
+<h3 id="hymn-title"></h3><p id="hymn-info" class="small"></p>
+<p id="hymn-verse"></p><p><a id="hymn-original" rel="noopener noreferrer" target="_blank" href="https://hymnary.org/">View hymn source information</a></p>
+<div class="actions"><button type="button" id="hymn-prev">Previous hymn</button><button type="button" id="hymn-next">Next hymn</button></div>
+<p id="hymn-status" class="status" role="status" aria-live="polite">Checking available recordings…</p>
+<div id="hymn-player-area" hidden><p id="hymn-performer"></p><audio id="hymn-player" controls preload="none"></audio>
+<div class="actions"><button id="hymn-save" type="button" disabled>Save approved recording offline</button><button id="hymn-remove" type="button">Remove offline recording</button></div></div>
+<div class="volume"><label for="hymn-voice-volume">Voice volume <span id="hymn-voice-level">100%</span><input id="hymn-voice-volume" type="range" min="0" max="100" value="100"></label>
+<label for="hymn-music-volume">Background volume <span id="hymn-music-level">40%</span><input id="hymn-music-volume" type="range" min="0" max="100" value="40"></label></div>
+<div class="actions"><label><input id="hymn-with-music" type="checkbox" disabled> Approved instrumental background</label><button id="hymn-music-start" type="button" disabled>Start instrumental</button></div>
+<p id="hymn-music-status" class="small" role="status" aria-live="polite">Checking instrumental permissions…</p><audio id="hymn-background-player" preload="none" hidden></audio>
+</section>
+</main>
+<footer>Heavenly Key Evangelistic Movement · REVIVAL • HOLINESS • POWER · Availability depends on approved publication rights.</footer>
+<script>if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>
+</body></html>
