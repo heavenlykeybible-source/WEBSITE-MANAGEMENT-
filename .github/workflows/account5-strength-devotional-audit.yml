@@ -82,6 +82,12 @@ jobs:
           node --check apps/heavenly-key-bible/bible/tests/strength-next-migration.mjs
           node apps/heavenly-key-bible/bible/tests/strength-next-migration-regression.mjs
           node --check apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs
+      - name: Test private five-year conversion export (never publish)
+        run: |
+          output_dir="$(mktemp -d)"
+          trap 'rm -rf "$output_dir"' EXIT
+          node apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs "$output_dir"
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; const d=JSON.parse(readFileSync(process.argv[1],"utf8")); if(d.publicationStatus!=="editorial-hold"||!d.entries.length||d.entries.some(e=>e.status!=="draft"||e.sections.challenges.length!==12))process.exit(1); console.log("Private migration export validated:",d.entries.length,"drafts")' "$output_dir/strength-next-private-drafts.json"
       - name: Inventory legacy migration gaps (informational until migration)
         continue-on-error: true
         run: node apps/heavenly-key-bible/bible/tests/strength-next-migration-audit.mjs
