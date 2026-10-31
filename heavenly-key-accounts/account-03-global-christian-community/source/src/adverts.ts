@@ -16,7 +16,12 @@ export function validateAdvert(input:any){
  if(status==="published"){const review=moderateText(result.title+" "+result.body+" "+result.sponsor,"post");if(["hold","block"].includes(review.decision))fail("Revise the advert to meet the community rules before publishing.");}return result;
 }
 export async function saveAdvert(env:Env,actor:SessionUser,input:any,id?:number){
- const a=validateAdvert(input);if(id&&!await env.DB.prepare("SELECT 1 FROM community_adverts WHERE advert_id=?").bind(id).first())fail("Advert not found.",404);
+ const a=validateAdvert(input);
+ const ownerId=Number(env.ADVERT_OWNER_USER_ID);
+ if(a.status==="published" || (id && await env.DB.prepare("SELECT 1 FROM community_adverts WHERE advert_id=? AND status='published'").bind(id).first())){
+   if(!Number.isSafeInteger(ownerId)||ownerId<=0||actor.userId!==ownerId||actor.role!=="owner")fail("Owner approval is required to publish or change a published advert.",403);
+ }
+ if(id&&!await env.DB.prepare("SELECT 1 FROM community_adverts WHERE advert_id=?").bind(id).first())fail("Advert not found.",404);
  if(a.imageUrl&&!await env.DB.prepare("SELECT 1 FROM advert_images WHERE image_id=?").bind(a.imageUrl.split("/").pop()).first())fail("Advert image not found. Upload the image again.");
  const values=[a.title,a.body,a.sponsor,a.linkUrl,a.imageUrl,a.buttonLabel,a.placement,a.status,a.startsAt,a.endsAt,a.priority];
  const results=await env.DB.batch([
@@ -26,7 +31,11 @@ export async function saveAdvert(env:Env,actor:SessionUser,input:any,id?:number)
  ]);return {advertId:Number((results[0].results?.[0] as any)?.advert_id)};
 }
 export async function listAdverts(env:Env,before:number){const rows=await env.DB.prepare("SELECT * FROM community_adverts WHERE (?=0 OR advert_id<?) ORDER BY advert_id DESC LIMIT 51").bind(before,before).all<any>();return {items:rows.results.slice(0,50),nextBefore:rows.results.length>50?rows.results[49].advert_id:null};}
-export async function publicAdverts(env:Env){const now=new Date().toISOString();const rows=await env.DB.prepare("SELECT advert_id,title,body,sponsor,link_url,image_url,button_label,placement FROM (SELECT advert_id,title,body,sponsor,link_url,image_url,button_label,placement,ROW_NUMBER() OVER(PARTITION BY placement ORDER BY priority DESC,advert_id DESC) AS slot FROM community_adverts WHERE status='published' AND (starts_at IS NULL OR starts_at<=?) AND (ends_at IS NULL OR ends_at>?)) WHERE slot<=2 ORDER BY placement,slot").bind(now,now).all();return {items:rows.results};}
+export async function publicAdverts(env:Env){
+ if(env.ADVERTS_ENABLED!=="true")return {items:[]};
+ const ownerId=Number(env.ADVERT_OWNER_USER_ID);
+ if(!Number.isSafeInteger(ownerId)||ownerId<=0)return {items:[]};
+ const now=new Date().toISOString();const rows=await env.DB.prepare("SELECT advert_id,title,body,sponsor,link_url,image_url,button_label,placement FROM (SELECT advert_id,title,body,sponsor,link_url,image_url,button_label,placement,ROW_NUMBER() OVER(PARTITION BY placement ORDER BY priority DESC,advert_id DESC) AS slot FROM community_adverts WHERE status='published' AND updated_by=? AND (starts_at IS NULL OR starts_at<=?) AND (ends_at IS NULL OR ends_at>?)) WHERE slot<=2 ORDER BY placement,slot").bind(ownerId,now,now).all();return {items:rows.results};}
 export async function uploadImage(env:Env,actor:SessionUser,request:Request){
  const limit=2*1024*1024;if(Number(request.headers.get("Content-Length"))>limit)fail("Advert images must be at most 2 MB.",413);
  const reader=request.body?.getReader();if(!reader)fail("Choose an advert image.");let size=0;const chunks:Uint8Array[]=[];
@@ -38,4 +47,8 @@ export async function uploadImage(env:Env,actor:SessionUser,request:Request){
  try{await env.DB.batch([env.DB.prepare("INSERT INTO advert_images(image_id,object_key,mime_type,created_by) VALUES(?,?,?,?)").bind(id,key,mime,actor.userId),env.DB.prepare("INSERT INTO safety_audit(actor_user_id,action,target_type,target_id,reason) VALUES(?,'advert_image_upload','advert',0,?)").bind(actor.userId,id)]);}catch(e){await env.MEDIA.delete(key);throw e;}
  return {imageUrl:"/api/adverts/images/"+id};
 }
-export async function image(env:Env,id:string){const now=new Date().toISOString(),url="/api/adverts/images/"+id;const row=await env.DB.prepare("SELECT i.object_key,i.mime_type FROM advert_images i WHERE i.image_id=? AND EXISTS(SELECT 1 FROM community_adverts a WHERE a.image_url=? AND a.status='published' AND (a.starts_at IS NULL OR a.starts_at<=?) AND (a.ends_at IS NULL OR a.ends_at>?))").bind(id,url,now,now).first<any>();if(!row)return null;const object=await env.MEDIA.get(row.object_key);return object?{body:object.body,mime:row.mime_type,etag:object.httpEtag}:null;}
+export async function image(env:Env,id:string){
+ if(env.ADVERTS_ENABLED!=="true")return null;
+ const ownerId=Number(env.ADVERT_OWNER_USER_ID);
+ if(!Number.isSafeInteger(ownerId)||ownerId<=0)return null;
+ const now=new Date().toISOString(),url="/api/adverts/images/"+id;const row=await env.DB.prepare("SELECT i.object_key,i.mime_type FROM advert_images i WHERE i.image_id=? AND EXISTS(SELECT 1 FROM community_adverts a WHERE a.image_url=? AND a.status='published' AND a.updated_by=? AND (a.starts_at IS NULL OR a.starts_at<=?) AND (a.ends_at IS NULL OR a.ends_at>?))").bind(id,url,ownerId,now,now).first<any>();if(!row)return null;const object=await env.MEDIA.get(row.object_key);return object?{body:object.body,mime:row.mime_type,etag:object.httpEtag}:null;}

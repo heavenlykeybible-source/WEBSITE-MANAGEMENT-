@@ -1,5 +1,7 @@
 export interface Env {
   COMMUNITY_CARE?: string;
+  ADVERTS_ENABLED?: string;
+  ADVERT_OWNER_USER_ID?: string;
   COMMUNITY_BLOCKED_WORDS?: string;
   DB: D1Database;
   SESSIONS: KVNamespace;
