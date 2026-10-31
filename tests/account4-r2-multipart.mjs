@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import {beginPrivateImport,uploadPrivatePart,completePrivateImport,abortPrivateImport} from '../scripts/account4-r2-multipart.mjs';
 const actor={id:7,authenticated:true,canImport:true},other={...actor,id:8};
-const uploads=[];\nlet completedSize=11;\nconst deleted=[];
+const uploads=[];
+let completedSize=11;
+const deleted=[];
 const bucket={
  async createMultipartUpload(key){uploads.push(key);return {uploadId:'u1'}},
  resumeMultipartUpload(key,id){assert.equal(id,'u1');assert.equal(key,uploads.at(-1));return {
@@ -28,4 +30,7 @@ await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,e
 await assert.rejects(uploadPrivatePart(bucket,actor,{...session,key:'private-imports/8/forged'},1,new Uint8Array(11)));
 // All parts must be present exactly once; client-controlled duplicate metadata is rejected.
 await assert.rejects(completePrivateImport(bucket,actor,{...session,partCount:2},[{partNumber:1,etag:'abc123'},{partNumber:1,etag:'abc123'}]));
-completedSize=10;\nawait assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/size mismatch/);\nassert.deepEqual(deleted,[session.key]);\nconsole.log('PASS owner-scoped private multipart R2 adapter');
+completedSize=10;
+await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/size mismatch/);
+assert.deepEqual(deleted,[session.key]);
+console.log('PASS owner-scoped private multipart R2 adapter');
