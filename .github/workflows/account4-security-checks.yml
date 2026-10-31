@@ -118,3 +118,7 @@ jobs:
         run: npm run test:cms-dom
       - name: Verify CMS build succeeds
         run: npm run build:cms
+      - name: Validate generated CMS Worker syntax and Cloudflare bundle
+        run: |
+          node --check control-room-worker.js
+          npx --yes wrangler@4 deploy --dry-run --outdir /tmp/account4-generated-worker-bundle
