@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {account4PrivateImportRoutes} from '../scripts/account4-private-import-routes.mjs';
 
 const workerSource=readFileSync(new URL('../control-room-worker.js',import.meta.url),'utf8');
-assert.match(workerSource,/function privateImportForm\\(\\)/);
-assert.ok(workerSource.includes("if(!/\\\\\\\\.zip$/i.test(selected.name)"),'UI must require a .zip filename');
+assert.ok(workerSource.includes('function privateImportForm()'),'Resumable upload UI must be mounted');
+assert.ok(workerSource.includes(String.raw`if(!/\\.zip$/i.test(selected.name)`),'UI must require a .zip filename');
 assert.ok(workerSource.includes('10*1024*1024'),'UI must upload in bounded 10 MiB parts');
 assert.ok(workerSource.includes('completedPartNumbers'),'UI must resume from server-confirmed completed parts');
 assert.ok(workerSource.includes('awaiting independent malware scanning'),'UI must not imply that private staging is publication-ready');
