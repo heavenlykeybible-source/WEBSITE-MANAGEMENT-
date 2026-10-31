@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {assertReviewedAccount4Source} from './account4-release-integrity.mjs';
 const account = process.env.CLOUDFLARE_ACCOUNT_ID;
 const token = process.env.CLOUDFLARE_API_TOKEN;
 const worker = 'website-management';
@@ -39,7 +40,9 @@ if (process.argv.includes('--check')) {
   if(remote.status !== 0 || !/^[a-f0-9]{40}$/i.test(latest) || latest !== approved)
     throw new Error('Account 4 production deployment blocked: approved commit is not the latest main revision');
   const source = await fs.readFile('control-room-worker.js', 'utf8');
-  if (source.length < 10000 || !source.includes('export default')) throw new Error('Worker source missing or incomplete');
+  const releaseMetadata = JSON.parse(await fs.readFile('patches/account4-reviewed-upgrade.json', 'utf8'));
+  assertReviewedAccount4Source(source, releaseMetadata);
+  if (!source.includes('export default')) throw new Error('Worker source missing or incomplete');
   const metadata = {
     main_module: 'control-room-worker.js',
     compatibility_date: settings.compatibility_date || '2026-10-18',
