@@ -6,9 +6,10 @@ import worker from '../worker.js';
 
 const origin='https://bible.heavenlykey.org';
 const file='strength-devotionals-2027-batch01.json';
+const topicNames=["Revival & Spiritual Fire","Holiness & Righteousness","Hope & Encouragement","Prayer & Intercession","Salvation & Repentance","Faith & Trust","The Holy Spirit","Evangelism & Soul Winning","Love & Christian Unity","The Word & Obedience","Wisdom & Discernment","End-time & Rapture Readiness"];
 const approvedEntry={
  date:'2026-11-13',status:'approved-for-publication',
- topics:Array.from({length:12},(_,i)=>({topic:'Topic '+i,reviewStatus:'approved',reference:'Psalm 85:6',bibleText:'Verse',reflection:'Reflection',prayer:'Prayer'}))
+ topics:Array.from({length:12},(_,i)=>({topic:topicNames[i],reviewStatus:'approved',reference:'Psalm 85:6',bibleText:'Verse',reflection:'Reflection',prayer:'Prayer'}))
 };
 const fixtures=(manifest,entries=[approvedEntry])=>{
  const requests=[];
@@ -78,6 +79,12 @@ test('empty Scripture and unbounded topic text deny public access',async()=>{
  tooLong[0].reflection='x'.repeat(281);
  const second=fixtures(published,[{...approvedEntry,topics:tooLong}]);
  assert.equal((await worker.fetch(request(),second.env)).status,404);
+});
+test('published batch with swapped doctrinal topic names is rejected',async()=>{
+ const topics=approvedEntry.topics.map(t=>({...t}));
+ [topics[0].topic,topics[1].topic]=[topics[1].topic,topics[0].topic];
+ const {env}=fixtures(published,[{...approvedEntry,topics}]);
+ assert.equal((await worker.fetch(request(),env)).status,404);
 });
 test('HEAD hides draft and has no response body',async()=>{
  const {env}=fixtures({schemaVersion:1,publicationStatus:'editorial-hold',publishedBatchFiles:[]});
