@@ -13,7 +13,7 @@ const response=runInNewContext(generated+';radioPlayerHtml()', {Response,crypto:
 const html=await response.text();
 const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Standalone player script should exist');
-const events=new Map(),elements=new Map();
+const events=new Map(),elements=new Map(),mediaActions=new Map();
 function element(id){
  const listeners=new Map(),attributes=new Map();
  return {id,textContent:'',value:'80',disabled:false,paused:true,volume:0,
@@ -30,7 +30,7 @@ let fetchResult={items:[{type:'audio',title:'First',url:'/api/broadcast/media/1/
 const task=runInNewContext(script,{
  document:{getElementById:id=>elements.get(id)},
  window:{addEventListener:(name,fn)=>events.set(name,fn)},
- navigator:{},
+ navigator:{mediaSession:{setActionHandler:(name,fn)=>mediaActions.set(name,fn)}},
  fetch:async()=>{if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
  MediaMetadata:undefined,
  console
@@ -61,6 +61,12 @@ assert.equal(audio.src,'/api/broadcast/media/3/object');
 assert.equal(audio.paused,false);
 events.get('pagehide')();
 assert.equal(audio.paused,true);
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
+await get('play').fire('click');
+assert.equal(audio.paused,false);
+mediaActions.get('pause')();
+assert.equal(audio.paused,true);
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
 shouldFail=true;
 await get('retry').fire('click');
 assert.equal(audio.paused,true);
