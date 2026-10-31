@@ -10,10 +10,10 @@ function render(){const s=sections[current];$('section-number').textContent='SEC
 if(current===10){const a=document.createElement('a');a.href='https://www.heavenlykey.org/';a.textContent='Heavenly Key — ministry website';body.append(a);}
 if(current===11)for(const [i,name] of names.entries()){const row=document.createElement('div');row.className='challenge';const label=document.createElement('strong');label.textContent=(i+1)+'. '+name;const detail=document.createElement('span');detail.className='muted';detail.textContent='Awaiting approved daily challenge.';row.append(label,detail);body.append(row);}
 [...menu.children].forEach((b,i)=>{if(i===current)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});$('prev').disabled=current===0;$('next').disabled=current===11;$('progress').textContent=(current+1)+' / 12';status.textContent='';}
-sections.forEach((s,i)=>{const button=document.createElement('button');button.type='button';button.textContent=String(i+1).padStart(2,'0')+'  '+s[0];button.onclick=()=>{current=i;render()};menu.append(button)});
-$('prev').onclick=()=>{if(current>0){current--;render()}};$('next').onclick=()=>{if(current<11){current++;render()}};
+sections.forEach((s,i)=>{const button=document.createElement('button');button.type='button';button.textContent=String(i+1).padStart(2,'0')+'  '+s[0];button.onclick=()=>{current=i;render();$('section-title').focus()};menu.append(button)});
+$('prev').onclick=()=>{if(current>0){current--;render();$('section-title').focus()}};$('next').onclick=()=>{if(current<11){current++;render();$('section-title').focus()}};
 async function copy(value){try{await navigator.clipboard.writeText(value);status.textContent='Copied preview text.'}catch{status.textContent='Copy unavailable on this device.'}}
-$('copy-section').onclick=()=>copy(sectionText(current));$('copy-all').onclick=()=>copy(allText());
+$('copy-section').onclick=()=>copy('DEVELOPMENT PREVIEW — NOT FOR PUBLICATION\n'+sectionText(current));$('copy-all').onclick=()=>copy(allText());
 $('share').onclick=async()=>{if(!navigator.share){await copy(allText());return}try{await navigator.share({title:'Strength for Today — Our Daily Manna (Preview)',text:allText()})}catch(e){if(e.name!=='AbortError')status.textContent='Sharing unavailable.'}};
 render();
 })();
