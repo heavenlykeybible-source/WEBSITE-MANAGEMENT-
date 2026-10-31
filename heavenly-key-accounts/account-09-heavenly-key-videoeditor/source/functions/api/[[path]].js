@@ -382,7 +382,7 @@ export async function onRequest({ request: req, env, params }) {
               await new Promise(resolve => setTimeout(resolve, 200 + Math.floor(Math.random() * 150)));
               await env.MEDIA.delete(item.r2_key);
             }
-            const removed=await env.DB.prepare('DELETE FROM media WHERE id=? AND user_id=? AND deleted=1').bind(item.id,u.id).run();
+            const removed=await env.DB.prepare('DELETE FROM media WHERE id=? AND user_id=? AND deleted=1 AND r2_key=?').bind(item.id,u.id,item.r2_key).run();
             cleaned+=Number(removed.meta.changes);
           } catch { failed++; }
         }
