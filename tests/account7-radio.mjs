@@ -55,6 +55,8 @@ p=player({mode:'live',transport:'livekit',sessionId:7,title:'Live message',items
 assert.equal(roomInstance.connected,true,'Live radio must connect to the Account 2 viewer room');
 let unsubscribed=false;roomInstance.events.track({kind:'video'},{setSubscribed:value=>unsubscribed=!value});assert.equal(unsubscribed,true);
 roomInstance.events.track({kind:'audio',attach:()=>{}},{});await tick();assert.equal(p.audio().paused,false);
+p.document.querySelector('.hkr-play').onclick();await tick();assert.equal(roomInstance.connected,false,'Pause disconnects LiveKit to stop unused background streaming');assert.equal(p.audio().paused,true,'Pause silences the live audio element');
+await p.document.querySelector('.hkr-play').onclick();assert.equal(roomInstance.connected,true,'Resume obtains a fresh LiveKit connection');
 p.document.querySelector('.hkr-stop').onclick();await tick();assert.equal(roomInstance.connected,false,'Stop disconnects live room');
 for(const name of ['approved-radio-display-20261017.webp','approved-radio-transparent-original.png'])assert.ok(fs.statSync(base+'assets/ministry/'+name).size>0);
 console.log('Account 7 tests passed: proxy restrictions, private key handling, media ranges, initial-load playback, track changes, live audio and stop cleanup.');
