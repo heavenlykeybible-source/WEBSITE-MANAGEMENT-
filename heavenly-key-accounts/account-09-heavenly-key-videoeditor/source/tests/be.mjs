@@ -462,6 +462,11 @@ const cleanedMedia=await request('media/cleanup',{method:'POST',cookie:login.coo
 check('Owner cleanup recovers failed R2 deletion',cleanedMedia.status===200&&cleanedMedia.data.cleaned===1&&cleanedMedia.data.failed===0);
 check('Orphaned R2 object removed after cleanup',!objects.has(orphanKey));
 check('Recovered tombstone removed from DB',!db.prepare('SELECT id FROM media WHERE id=?').get(mediaCreated.id));
+const anonymousCleanup=await request('media/cleanup',{method:'POST'});
+check('Anonymous members cannot trigger media cleanup',anonymousCleanup.status===401);
+for(let i=0;i<9;i++)db.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').run(accountId,'media_cleanup_attempt',Date.now());
+const cleanupThrottled=await request('media/cleanup',{method:'POST',cookie:login.cookie});
+check('Media cleanup enforces daily per-member attempt limit',cleanupThrottled.status===429);
 const uploadAttempts=db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='media_upload_attempt'").get(accountId).c;
 check('Media upload attempts are recorded even for unsupported content',uploadAttempts>0);
 for(let i=uploadAttempts;i<120;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'media_upload_attempt',Date.now());
