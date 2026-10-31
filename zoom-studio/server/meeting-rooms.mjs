@@ -79,7 +79,7 @@ export class MeetingRooms {
     // A login is required to appear on stage; anonymous guests remain audience members.
     let identity=null;
     if(typeof m.accountToken==='string'&&m.accountToken.length<=4096){
-     try{const claim=await check(this.env.AUTH_SECRET,m.accountToken);if(claim&&claim.e&&!claim.k){const u=await getUser(this.env,claim.e);if(u&&!u.banned&&(u.tv||0)===(claim.t||0)&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,claim.e,u)!=='user'||u.terms==='private-approved'))identity={email:claim.e,version:claim.t||0,expires:claim.exp};}}catch{}
+     try{const claim=await check(this.env.AUTH_SECRET,m.accountToken);if(claim&&claim.e&&!claim.k&&Number.isFinite(claim.exp)&&claim.exp>Date.now()){const u=await getUser(this.env,claim.e);if(u&&!u.banned&&(u.tv||0)===(claim.t||0)&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,claim.e,u)!=='user'||u.terms==='private-approved'))identity={email:claim.e,version:claim.t||0,expires:claim.exp};}}catch{}
     }
     // Account checks can yield while the host locks or ends the room.
     if(ws.readyState!==1||this.data(ws).role)return;
