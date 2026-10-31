@@ -54,4 +54,10 @@ assert.match(entry, /Array\.isArray\(p\)/, 'Reject array/null capability payload
 assert.match(entry, /objectKey\.length>1024/, 'Reject oversized recording object keys');
 assert.match(entry, /!Number\.isSafeInteger\(sessionId\)\|\|sessionId<=0/, 'Reject invalid recording session IDs');
 
+// Request bodies must be capped even when transfer encoding omits Content-Length.
+assert.match(entry, /const maxBytes=65536/, 'Limit JSON payloads to 64 KB');
+assert.match(entry, /total>maxBytes/, 'Limit streamed bodies as they arrive');
+assert.match(entry, /reader\.cancel\(\)/, 'Cancel oversized request streams');
+assert.match(entry, /!Array\.isArray\(parsed\)/, 'Reject non-object JSON request payloads');
+
 console.log('Account 2 broadcast safety regression checks passed');
