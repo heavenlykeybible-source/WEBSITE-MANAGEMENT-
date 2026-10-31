@@ -497,6 +497,13 @@ test('malformed WebSocket frames count toward per-connection rate limit',async()
  assert.notEqual(h.guest.readyState,1);
 });
 
+test('host moderation rejects invalid switch values',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:'false'}));
+ assert.equal(h.host.attachment.locked,true);
+});
+
 test('hand raise rejects nonboolean state without consuming cooldown',async()=>{
  const h=setup();await h.join('');
  const before=h.host.messages.filter(m=>m.t==='hand').length;
