@@ -22,6 +22,11 @@ assert.match(html,/\.addEventListener\('click'/);
 assert.match(html,/audio\.pause\(\)/);
 assert.match(html,/media-engine-public-v1/);
 assert.match(html,/channel=radio/);
+assert.match(html,/window\.addEventListener\('pagehide'/,'Playback must stop when the radio page closes');
+assert.match(html,/playGeneration/,'Async playback generation must avoid stale state');
+assert.match(html,/audio\.getAttribute\('src'\)/,'Missing player source must be detected reliably');
+assert.match(html,/audio\.addEventListener\('error'/,'Audio errors must be handled');
+
 const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Radio player script must be present');
 new Script(script,{filename:'radio-player.js'}); // Validate emitted browser JavaScript, not the TS template.
