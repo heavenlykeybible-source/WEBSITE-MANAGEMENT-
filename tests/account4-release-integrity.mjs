@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {assertReviewedAccount4Source} from '../scripts/account4-release-integrity.mjs';
+const packageJson=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
+const packageLock=JSON.parse(readFileSync(new URL('../package-lock.json',import.meta.url),'utf8'));
+assert.equal(packageJson.devDependencies['@simplewebauthn/server'],'13.3.3');
+assert.equal(packageLock.packages[''].devDependencies['@simplewebauthn/server'],'13.3.3');
+assert.equal(packageLock.packages['node_modules/@simplewebauthn/server'].version,'13.3.3');
 const source='x'.repeat(10001);
 const sha=createHash('sha256').update(source).digest('hex');
 const blob=createHash('sha1').update('blob '+Buffer.byteLength(source)+'\0').update(source).digest('hex');
