@@ -47,6 +47,7 @@ struct HeavenlyKeyWebView: UIViewRepresentable {
             // Hand installer links to Safari; WKWebView must not pretend to install an IPA.
             let firstParty = scheme == "https"
                 && url.host?.lowercased() == "apps.heavenlykey.org"
+                && (url.port == nil || url.port == 443)
                 && url.user == nil && url.password == nil
             if firstParty && !url.path.hasPrefix("/api/native-download/") {
                 decisionHandler(.allow)
