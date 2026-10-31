@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const fail = [];
@@ -79,6 +80,15 @@ for (const script of ["check", "preflight", "deploy"]) {
   if (!packageJson.scripts?.[script]) {
     fail.push(`Missing Media Engine npm script: ${script}`);
   }
+}
+
+try {
+  execFileSync(process.execPath, [join(root, "scripts/broadcast-safety.test.mjs")], {
+    stdio: "inherit",
+    timeout: 30000,
+  });
+} catch {
+  fail.push("Broadcast security regression tests failed.");
 }
 
 if (fail.length) {
