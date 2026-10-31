@@ -889,3 +889,12 @@ test('broadcast backgrounds are isolated to the selected scene and stale loads c
  assert.match(html,/const it=scene\.items;let b=it\.map\(x=>src\(x\.id\)\)\.find\(s=>s&&s\.isBg\)/,'background changes must not mutate an unrelated scene');
  assert.doesNotMatch(html,/let b=S\.find\(s=>s\.isBg\)/,'global background source reuse changes previous scenes');
 });
+
+test('live presenter virtual background follows the program scene and never leaks between scenes',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/const scene=SC\[pgm\],sceneBg=scene&&scene\.items\.map\(it=>src\(it\.id\)\)\.find\(item=>item&&item\.isBg\)/);
+ assert.match(html,/s\.bgm==='tpl'&&sceneBg\?\.fn/,'draw the chosen program scene template');
+ assert.match(html,/s\.bgm==='tpl'&&sceneBg\?\.img/,'use the scene image for camera compositing');
+ assert.match(html,/else if\(s\.bgm==='tpl'\)\{c\.drawImage\(r\.image/,'keep the original presenter visible if no template exists');
+ assert.doesNotMatch(html,/if\(s\.bgm==='tpl'&&bgFn\)/,'global template selection may leak an unrelated scene into camera output');
+});
