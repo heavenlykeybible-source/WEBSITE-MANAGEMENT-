@@ -41,6 +41,8 @@ jobs:
         run: npm run test:tv-lock
       - name: On-demand radio delivery tests
         run: npm run test:radio-on-demand
+      - name: Bluetooth and radio player safety checks
+        run: npm run test:radio-player
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
