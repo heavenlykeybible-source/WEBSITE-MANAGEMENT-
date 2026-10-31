@@ -227,3 +227,23 @@ test('native installer rejects insecure transport and partial-range requests bef
  const valid=await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env);
  assert.equal(valid.status,200);
 });
+
+test('R2 S3 upload metadata may be lowercase but must still match the verified release',async()=>{
+ const {env,calls}=environment();
+ const metadata={sha256:'b'.repeat(64),scannedsha256:'b'.repeat(64),
+  malwarescan:'passed',signatureverified:'true',appid:'all-in-one',platform:'android'};
+ env.NATIVE_RELEASES.head=async()=>{calls.objects++;return {size:4,customMetadata:metadata}};
+ const result=await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env);
+ assert.equal(result.status,200);
+ assert.equal(result.headers.get('x-release-sha256'),'b'.repeat(64));
+ for(const changed of [
+  {...metadata,scannedsha256:'c'.repeat(64)},
+  {...metadata,signatureverified:'false'},
+  {...metadata,appid:'other-app'},
+  {...metadata,platform:'windows'}
+ ]){
+  env.NATIVE_RELEASES.head=async()=>({size:4,customMetadata:changed});
+  const denied=await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method:'HEAD'}),env);
+  assert.equal(denied.status,403,'Unverified lowercase metadata was accepted');
+ }
+});
