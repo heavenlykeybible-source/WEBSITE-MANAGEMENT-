@@ -1,6 +1,6 @@
 // Read-only access check. Never print token values or replace saved bindings.
 const token=process.env.CLOUDFLARE_API_TOKEN,account=process.env.CLOUDFLARE_ACCOUNT_ID;
-if(!token||!account)throw Error('Set CLOUDFLARE_RADIO_API_TOKEN and CLOUDFLARE_RADIO_ACCOUNT_ID in GitHub Actions secrets for Account 8.');
+if(!token||!account)throw Error('Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in the selected deployment environment.');
 // Match the physical Workers namespace before any deployment, regardless of legacy folder labels.
 const namespaceResponse=await fetch(`https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/workers/subdomain`,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000)});
 const namespace=await namespaceResponse.json();
