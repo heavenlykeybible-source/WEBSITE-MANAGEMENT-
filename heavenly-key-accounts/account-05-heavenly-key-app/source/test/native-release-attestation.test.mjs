@@ -51,3 +51,16 @@ test('macOS release workflow requires notarization and records matching digest',
  assert.match(source,/scannedSha256=%s/);
  assert.match(source,/HeavenlyKeyMac\.dmg\.security\.txt/);
 });
+
+test('signed Android release must install and launch on an emulator before distribution',()=>{
+ const source=workflow('release-account5-android.yml');
+ assert.match(source,/assembleRelease :app:bundleRelease :app:lintRelease/);
+ assert.match(source,/apksigner.*verify --verbose/);
+ assert.match(source,/reactivecircus\/android-emulator-runner@v2/);
+ assert.match(source,/api-level: 35/);
+ assert.match(source,/adb install -r "\$apk"/);
+ assert.match(source,/adb shell am start -W -n org\.heavenlykey\.apps\/\.MainActivity/);
+ assert.match(source,/adb shell pidof org\.heavenlykey\.apps/);
+ assert.match(source,/Signed APK changed during emulator verification/);
+ assert.ok(source.indexOf('adb install -r')<source.indexOf('actions/upload-artifact@v4'));
+});
