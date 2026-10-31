@@ -3,6 +3,7 @@ import { LiveKitConnectionError, resolveLiveKitConfig, validateCloudConnection, 
 import { publicProgramme, serveBroadcastMedia, isPlaybackURL } from "./public-broadcast";
 import { restreamStatus, saveDestination, setDestinationEnabled, removeDestination, startRestream, stopRestream } from './restream';
 import { TV_LOCKED,channelAvailability,tvLockedResponse } from './channel-lock';
+import { radioPlayerHtml } from './radio-player';
 interface Env {
   MEDIA_ENGINE_SHARED_SECRET: string;
   MEDIA_ENGINE_VERSION?: string;
@@ -45,6 +46,7 @@ export default {
  async fetch(request:Request,env:Env):Promise<Response>{
   const url=new URL(request.url);
   if(url.pathname==='/'&&['GET','HEAD'].includes(request.method))return Response.redirect('https://heavenlykey.org/pages/admin#studio',302);
+  if(url.pathname==='/radio/player'&&request.method==='GET')return radioPlayerHtml();
   if(url.pathname==='/health'&&request.method==='GET') return json({ok:true,service:'heavenlykey-media-engine',version:env.MEDIA_ENGINE_VERSION??'v1',channels:channelAvailability()});
   if(url.pathname==='/api/broadcast/channel-availability'&&request.method==='GET')return json(channelAvailability());
   const marker=request.headers.get('X-Heavenly-Key-Internal'); const auth=request.headers.get('Authorization')??'';
