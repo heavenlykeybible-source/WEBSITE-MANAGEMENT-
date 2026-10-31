@@ -3,6 +3,8 @@ import { execFileSync } from 'node:child_process';
 const required = ['index.html','_headers','public/index.html','public/_headers','schema.sql','wrangler.toml','functions/api/[[path]].js','tests/be.mjs'];
 for (const path of required) if (!existsSync(path)) throw Error(`Missing ${path}`);
 for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
+const apiSource=readFileSync('functions/api/[[path]].js','utf8');
+if (!apiSource.includes("action='ai_gateway_attempt'") || !apiSource.includes('attempts.c >= 60') || !apiSource.includes("await log(env,u.id,'ai_gateway_attempt')")) throw Error('External AI gateway failed-attempt quota safeguard missing');
 const wrangler = readFileSync('wrangler.toml','utf8');
 for (const x of ['pages_build_output_dir = "public"','binding = "DB"','binding = "MEDIA"','binding = "AI"']) if (!wrangler.includes(x)) throw Error(`Missing binding ${x}`);
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) {
