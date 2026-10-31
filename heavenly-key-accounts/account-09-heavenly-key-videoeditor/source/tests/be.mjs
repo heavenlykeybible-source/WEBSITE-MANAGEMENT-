@@ -137,6 +137,10 @@ check('Atomic signup quota blocks IP after ten attempts including duplicates',re
 
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Account registration succeeds', created.status === 200);
+const targetedEmail='distributed-attempts@example.com';
+for(let i=0;i<40;i++)db.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').run(targetedEmail,'login_attempt_account',Date.now());
+const distributedLogin=await request('login',{method:'POST',headers:{'cf-connecting-ip':'203.0.113.88'},body:{email:targetedEmail,password:'not the real password'}});
+check('Atomic per-account login limit rejects attempts across different IPs',distributedLogin.status===429);
 const saturatedLoginIp='203.0.113.77';
 const saturatedLoginKey='ip:'+createHash('sha256').update(saturatedLoginIp).digest('hex');
 for(let i=0;i<100;i++) db.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').run(saturatedLoginKey,'login_attempt_ip',Date.now());
