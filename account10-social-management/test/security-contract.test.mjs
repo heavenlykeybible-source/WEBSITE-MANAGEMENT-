@@ -193,12 +193,12 @@ test('explicit human requests bypass all keyword-based automation before any dra
   const end=source.indexOf("if(u.pathname==='/api/automation/evaluate'",start);
   assert.ok(start>=0 && end>start, 'automation draft route must exist');
   const handler=source.slice(start,end);
-  const handover=handler.indexOf('if(requestsHumanMinistryContact(data.message))');
+  const handover=handler.indexOf('if(requestedTarget){');
   const rules=handler.indexOf("SELECT id,keyword,reply FROM automation_rules");
   const insert=handler.indexOf("INSERT OR IGNORE INTO messages");
   assert.ok(handover>=0 && rules>handover && insert>handover, 'human takeover must precede rules and draft writes');
-  assert.match(handler, /UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=\?/);
-  assert.match(handler, /humanRequested:true,automationPaused:true,draftCreated:false,sent:false,externalNotificationsSent:false/);
+  assert.match(handler, /UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
+  assert.match(handler, /humanRequested:true,contactTarget:requestedTarget,automationPaused:true,draftCreated:false,sent:false,externalNotificationsSent:false/);
 });
 
 test('Gemini ministry post suggestions do not publish or save automatically', () => {
@@ -282,4 +282,14 @@ test('Gemini human-contact suggestion saves the selected destination without not
  assert.match(handler, /Human-contact routing unavailable; apply migration 0009/);
  assert.match(handler, /externalNotificationsSent:false/);
  assert.ok(handler.indexOf('if(contactTarget){')<handler.indexOf('if(!env.GEMINI_API_KEY)'));
+});
+
+test('automation rule draft preserves human-contact destination before keyword matching', () => {
+ const begin=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'");
+ const end=source.indexOf("if(u.pathname==='/api/automation/evaluate'",begin);
+ const handler=source.slice(begin,end);
+ assert.ok(handler.indexOf('contactTargetForMinistryMessage(data.message)')>=0);
+ assert.ok(handler.indexOf('if(requestedTarget){')<handler.indexOf('SELECT id,keyword,reply FROM automation_rules'));
+ assert.match(handler,/human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
+ assert.match(handler,/contactTarget:requestedTarget,automationPaused:true/);
 });
