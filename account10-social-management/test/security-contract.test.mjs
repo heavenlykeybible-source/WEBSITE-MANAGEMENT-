@@ -268,7 +268,7 @@ test('operator human request stores validated destination and never claims notif
 test('signed WhatsApp inbound chooses agent or Evangelist without overwriting pending handover', () => {
   assert.match(source, /contactTargetForMinistryMessage\(item\.body\)/);
   assert.match(source, /human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0/);
-  assert.match(source, /\.bind\(target,conversationId\)/);
+  assert.match(source, /\.bind\(target,conversationId,inboundId,conversationId\)/);
   assert.match(source, /Human request already pending; resolve it before changing the selected contact/);
   assert.match(source, /Human request not pending or already resolved/);
 });
