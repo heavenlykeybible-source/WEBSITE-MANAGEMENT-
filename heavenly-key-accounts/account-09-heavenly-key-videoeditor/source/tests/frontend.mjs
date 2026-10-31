@@ -90,7 +90,7 @@ assert.ok(voice.includes('/api/voice-synthesize'),'Voice synthesis API not conne
 const enhancement=readFileSync('voice-enhance.js','utf8');
 assert.ok(enhancement.includes('enhanceDownload'),'Enhanced audio download control missing');
 assert.ok(headers.includes('Content-Security-Policy'),'Missing CSP');
-assert.ok(headers.includes("style-src 'self'; style-src-attr 'none'")&&!/style-src[^;]*'unsafe-inline'/.test(headers),'Enforced CSP must block inline styles and style attributes');
+assert.ok(headers.includes("base-uri 'none'")&&headers.includes("style-src 'self'; style-src-attr 'none'")&&!/style-src[^;]*'unsafe-inline'/.test(headers),'Enforced CSP must block inline styles and style attributes');
 assert.ok(!html.includes('<style')&&!html.includes(' style='),'HTML must not contain inline style blocks or attributes');
 assert.ok(html.includes('href="/editor.css"'),'External editor stylesheet must load from the same origin');
 assert.ok(headers.includes("script-src 'self'; script-src-attr 'none'")&&!/script-src[^;]*'unsafe-inline'/.test(headers),'Enforced CSP must block inline scripts and event attributes');
