@@ -58,8 +58,40 @@ async function studioAITask(env,actor,name,args){
  if(name==='my_studio_assignments'){
   const page=Number(args?.page||0);
   if(!Number.isSafeInteger(page)||page<0||page>100000)fail('Invalid task page');
-  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'studio:task:%' AND json_extract(value_json,'$.agent')=? AND json_extract(value_json,'$.status')='assigned' ORDER BY updated_at DESC,key DESC LIMIT 51 OFFSET ?").bind(actor.agentId,page*50).all();
-  return {tasks:rows.results.slice(0,50).map(x=>JSON.parse(x.value_json)),page,next_page:rows.results.length>50?page+1:null,notice:'These are assignments, not automatically running jobs. Proposals still enter Waiting for owner approval.'};
+  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'studio:task:%' AND json_extract(value_json,'$.agent')=? AND json_extract(value_json,'$.status') IN ('assigned','working') ORDER BY updated_at DESC,key DESC LIMIT 51 OFFSET ?").bind(actor.agentId,page*50).all();
+  return {tasks:rows.results.slice(0,50).map(x=>JSON.parse(x.value_json)),page,next_page:rows.results.length>50?page+1:null,notice:'Assigned or working tasks are tracked separately. No automatic production writes occur.'};
+ }
+ if(name==='claim_studio_assignment'||name==='update_studio_progress'){
+  const id=String(args?.task_id||'');
+  if(!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(id))fail('Invalid assignment ID',400);
+  return withOperationLock(env,'studio-task:'+id,async()=>{
+   const key='studio:task:'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+   if(!row)fail('Task not found',404);
+   const t=JSON.parse(row.value_json);
+   if(t.agent!==actor.agentId||!['assigned','working'].includes(t.status))fail('Not your active assignment',403);
+   const fresh=await env.DB.prepare("SELECT id,status,can_read,can_propose,owner_id,site_id FROM agents WHERE id=?").bind(actor.agentId).first();
+   if(!fresh||fresh.status!=='active'||!fresh.can_read||!fresh.can_propose||fresh.owner_id||fresh.site_id)fail('AI account is disabled',403);
+   const owner=await env.DB.prepare("SELECT id FROM users WHERE id=? AND role='owner' AND kind='staff' AND status='active'").bind(t.owner).first();
+   if(!owner)fail('Task owner unavailable',403);
+   const policy=await aiPolicy(env,owner),now=Date.now();
+   const delegated=actor.aiPolicy
+    ? actor.aiPolicy.mode==='work'&&actor.aiPolicy.expires_at>now&&Array.isArray(actor.aiPolicy.connections)&&actor.aiPolicy.connections.includes(t.connection)
+    : policy.all_agents===true;
+   if(!delegated||policy.mode!=='work'||policy.expires_at<=now||!policy.connections.includes(t.connection))
+    fail('AI account authorization expired or revoked',403);
+   if(name==='claim_studio_assignment'){
+    if(t.status==='working')return {ok:true,task_id:id,status:'working',note:'Already claimed by this AI; use update_studio_progress for updates.'};
+    t.status='working';t.started_at=now;t.updated_at=now;t.progress='Inspection started';
+   }else{
+    if(t.status!=='working')fail('Claim the assignment before reporting progress',409);
+    const message=String(args?.progress||'').trim();
+    if(!message||message.length>600)fail('Progress must be 1–600 characters',400);
+    t.progress=message;t.updated_at=now;
+   }
+   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(t),key).run();
+   await audit(env,'ai:'+actor.agentId,'studio-task-'+(name==='claim_studio_assignment'?'claimed':'progress'),id);
+   return {ok:true,task_id:id,status:t.status,progress:t.progress,updated_at:t.updated_at,notice:'Status saved. No Worker was deployed and no owner approval was bypassed.'};
+  });
  }
  if(name==='submit_studio_assignment'){
   if(!actor.a.can_propose)fail('Proposal permission required',403);
@@ -70,7 +102,7 @@ async function studioAITask(env,actor,name,args){
    const key='studio:task:'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
    if(!row)fail('Assignment not found',404);
    const t=JSON.parse(row.value_json);
-   if(t.agent!==actor.agentId||t.status!=='assigned')fail('Not your active assignment',403);
+   if(t.agent!==actor.agentId||!['assigned','working'].includes(t.status))fail('Not your active assignment',403);
    // Assignment is not a Cloudflare permission grant. Revalidate permission at submission time.
    const freshAgent=await env.DB.prepare("SELECT id,status,can_read,can_propose,owner_id,site_id FROM agents WHERE id=?").bind(actor.agentId).first();
    if(!freshAgent||freshAgent.status!=='active'||!freshAgent.can_read||!freshAgent.can_propose||freshAgent.owner_id||freshAgent.site_id)
