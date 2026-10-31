@@ -104,6 +104,10 @@ async function scenario(mode){
  assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+D duplicates selected clip');
  hotkey('z',{ctrlKey:true});
  assert.equal(window.hkTimeline.getClips().length,1,'Ctrl+Z undoes duplicate');
+ hotkey('y',{ctrlKey:true});
+ assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+Y redo restores clip');
+ hotkey('z',{ctrlKey:true});
+ assert.equal(window.hkTimeline.getClips().length,1,'Undo after Ctrl+Y works');
  hotkey('z',{ctrlKey:true,shiftKey:true});
  assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+Shift+Z redoes duplicate');
  hotkey('Delete');
