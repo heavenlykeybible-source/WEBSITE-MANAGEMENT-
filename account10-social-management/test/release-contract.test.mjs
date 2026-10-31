@@ -88,4 +88,6 @@ test('preflight isolates assets section', () => {
  assert.ok(script.includes("const assetConfig="));
  assert.ok(script.includes('assetSections.length!==1'));
  assert.ok(script.includes('assetSections[0]?.[1]'));
+ assert.ok(script.includes('Assets section must specify ./public directory'));
+ assert.ok(script.includes('Assets section must declare ASSETS binding'));
 });
