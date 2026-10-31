@@ -1,5 +1,5 @@
 import { originalAssistantInstruction } from './assistant-profile';
-import { requestsHumanMinistryContact, contactTargetForMinistryMessage } from './human-handover';
+import { contactTargetForMinistryMessage } from './human-handover';
 interface Env { DB: D1Database; MEDIA_BUCKET?: R2Bucket; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
