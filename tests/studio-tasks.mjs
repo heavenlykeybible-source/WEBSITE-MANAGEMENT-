@@ -33,6 +33,15 @@ try{
  const grant={mode:'work',connections:[4],expires_at:Date.now()+3600000};
  const a1={agentId:1,a:{id:1,can_read:1,can_propose:1},aiPolicy:grant};
  const a2={agentId:2,a:{id:2,can_read:1,can_propose:1},aiPolicy:grant};
+ await assert.rejects(studioAITask(env,a2,'claim_studio_assignment',{task_id:first.tasks[0].id}),e=>e.status===403);
+ await assert.rejects(studioAITask(env,a1,'update_studio_progress',{task_id:first.tasks[0].id,progress:'Ready'}),e=>e.status===409);
+ const claimed=await studioAITask(env,a1,'claim_studio_assignment',{task_id:first.tasks[0].id});
+ assert.equal(claimed.status,'working');
+ assert.equal((await studioAITask(env,a1,'claim_studio_assignment',{task_id:first.tasks[0].id})).status,'working');
+ const progress=await studioAITask(env,a1,'update_studio_progress',{task_id:first.tasks[0].id,progress:'Source inspection 60% complete'});
+ assert.equal(progress.progress,'Source inspection 60% complete');
+ await assert.rejects(studioAITask(env,a1,'update_studio_progress',{task_id:first.tasks[0].id,progress:''}),e=>e.status===400);
+ await assert.rejects(studioAITask(env,a2,'update_studio_progress',{task_id:first.tasks[0].id,progress:'Unauthorized'}),e=>e.status===403);
  assert.equal((await studioAITask(env,a1,'my_studio_assignments',{})).tasks.length,2);
  assert.equal((await studioAITask(env,a2,'my_studio_assignments',{})).tasks.length,2);
  await assert.rejects(studioAITask(env,a2,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:1}),e=>e.status===403);
@@ -59,6 +68,8 @@ try{
  assert.equal(submitted.status,'submitted');assert.equal(submitted.proposal_id,100);
  await assert.rejects(studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
  assert.equal((await studioAITask(env,a1,'my_studio_assignments',{})).tasks.length,1);
+ const reported=await endpoint('studio/tasks','GET');
+ assert.equal(reported.tasks.find(t=>t.id===first.tasks[0].id).progress,'Source inspection 60% complete');
  assert.equal((await endpoint('studio/tasks/'+first.tasks[1].id+'/cancel','POST')).status,'cancelled');
  assert.equal((await studioAITask(env,a2,'my_studio_assignments',{})).tasks.length,1);
  // More than 100 assignments must not disappear behind a global database limit.
