@@ -13,8 +13,12 @@ raw.prepare('UPDATE agents SET token_hash=? WHERE id=1').run(await w.sha256('nat
 const hostCall=(method,params={},session)=>w.mcp(new Request('https://control.test/mcp',{method:'POST',headers:{Authorization:'Bearer native-test-token','Content-Type':'application/json',...(session?{'Mcp-Session-Id':session}:{})},body:JSON.stringify({jsonrpc:'2.0',id:42,method,params})}),env);
 const initialized=await hostCall('initialize',{capabilities:{elicitation:{url:{}}}}),hostSession=initialized.headers.get('mcp-session-id');
 const hostPermission=await(await hostCall('tools/call',{name:'request_workspace_access',arguments:{connections:[5,6],hours:1,reason:'Inspect saved accounts from ChatGPT'}},hostSession)).json();
-assert.equal(hostPermission.error.code,-32042);assert.ok(hostPermission.error.data.elicitations[0].url.startsWith('https://control.test/?review_access='));assert.equal(await w.sharedAIGrant(env,a,5),false,'host handoff cannot grant itself access');
-const fallback=await(await hostCall('tools/call',{name:'request_workspace_access',arguments:{connections:[5,6],hours:1,reason:'Inspect saved accounts from ChatGPT'}})).json();assert.equal(fallback.result.structuredContent.status,'pending');
+assert.equal(hostPermission.result.isError,true,'External MCP sessions cannot impersonate an internal owner conversation');
+assert.match(hostPermission.result.content[0].text,/signed-in owner/i);
+assert.equal(await w.sharedAIGrant(env,a,5),false,'MCP request cannot grant itself access');
+const fallback=await(await hostCall('tools/call',{name:'request_workspace_access',arguments:{connections:[5,6],hours:1,reason:'Inspect saved accounts from ChatGPT'}})).json();
+assert.equal(fallback.result.isError,true,'Missing MCP session must also fail closed');
+assert.equal(await w.sharedAIGrant(env,a,6),false,'No implicit permission from fallback');
 const args={connections:[5,6],hours:24,reason:'Inspect and repair the assigned websites'};
 const request=(await w.requestAIWorkspaceAccess(env,{a,agentId:1},args)).permission_request;
 assert.equal((await w.requestAIWorkspaceAccess(env,{a,agentId:1},args)).permission_request.id,request.id,'duplicate requests reuse the pending request');
