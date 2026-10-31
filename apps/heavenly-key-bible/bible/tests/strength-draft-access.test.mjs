@@ -34,6 +34,15 @@ test('draft manifest blocks GET without requesting draft bytes',async()=>{
  assert.match(response.headers.get('Cache-Control'),/no-store/);
  assert.deepEqual(requests,['/strength-publication-status.json']);
 });
+test('unknown devotional filename is denied before static asset access',async()=>{
+ const {env,requests}=fixtures(published);
+ for(const name of ['strength-devotionals-year6-batch01.json','strength-devotionals-backup.json','strength-devotionals-2026-old.json']){
+  const response=await worker.fetch(new Request(origin+'/'+name),env);
+  assert.equal(response.status,404);
+  assert.match(response.headers.get('Cache-Control'),/no-store/);
+ }
+ assert.deepEqual(requests,[]);
+});
 test('unlisted batch blocked even when manifest is marked published',async()=>{
  const {env,requests}=fixtures({...published,publishedBatchFiles:[]});
  assert.equal((await worker.fetch(request(),env)).status,404);
