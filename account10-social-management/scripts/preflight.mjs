@@ -25,7 +25,7 @@ for(const scriptName of ['db:migrate:local','db:migrate:remote']){
  let prior=-1;
  for(const migration of migrations){const position=script.indexOf(migration);if(position<=prior)fail.push(scriptName+' missing or out of order: '+migration);prior=position;}
 }
-for(const file of ['public/index.html','public/editorial-studio.js','src/index.ts','schema.sql',...migrations.map(name=>'migrations/'+name)]){
+for(const file of ['public/index.html','public/app.js','public/editorial-studio.js','src/index.ts','schema.sql',...migrations.map(name=>'migrations/'+name)]){
  if(!existsSync(resolve(root,file)))fail.push('Missing '+file);
 }
 for(const [name,script] of Object.entries(pkg.scripts)){
