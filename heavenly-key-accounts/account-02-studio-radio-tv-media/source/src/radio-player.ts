@@ -37,16 +37,18 @@ input[type=range]{accent-color:#f3c957;flex:1;min-width:60px}
 <script nonce="${nonce}">
 (()=>{'use strict';
 const audio=document.getElementById('audio'),play=document.getElementById('play'),next=document.getElementById('next'),retry=document.getElementById('retry'),title=document.getElementById('track'),status=document.getElementById('status'),volume=document.getElementById('volume'),volumeValue=document.getElementById('volumeValue'),output=document.getElementById('output'),outputHelp=document.getElementById('outputHelp');
-let playlist=[],position=0,playing=false,playPending=false,loadGeneration=0,playGeneration=0;
+let playlist=[],position=0,playing=false,playPending=false,loadGeneration=0,playGeneration=0,playlistAbort=null;
 const setPaused=message=>{++playGeneration;playing=false;playPending=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');if(message)say(message)};
 const say=message=>{status.textContent=message};
 const validItem=item=>item&&item.type==='audio'&&typeof item.url==='string'&&/^\\/api\\/broadcast\\/media\\/\\d+\\/object$/.test(item.url);
 async function refresh(){
  const generation=++loadGeneration;
+ playlistAbort?.abort();
+ const controller=new AbortController();playlistAbort=controller;
  play.disabled=true;next.disabled=true;
  say('Loading approved radio recordings…');
  try{
- const response=await fetch('/api/broadcast/programme?channel=radio&delivery=on-demand',{headers:{'X-Heavenly-Key-Internal':'media-engine-public-v1'},cache:'no-store'});
+ const response=await fetch('/api/broadcast/programme?channel=radio&delivery=on-demand',{headers:{'X-Heavenly-Key-Internal':'media-engine-public-v1'},cache:'no-store',signal:controller.signal});
  if(!response.ok)throw Error('Radio playlist is unavailable ('+response.status+').');
  const result=await response.json();
  if(generation!==loadGeneration)return;
@@ -57,6 +59,7 @@ async function refresh(){
  title.textContent=items[0].title||'Radio programme';
  say('Playlist ready. Press Play to listen.');
  }catch(error){if(generation!==loadGeneration)return;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');playlist=[];play.disabled=true;next.disabled=true;title.textContent='Playlist unavailable';say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
+ finally{if(playlistAbort===controller)playlistAbort=null;}
 }
 function select(index){
  if(!playlist.length)return false;
@@ -75,7 +78,7 @@ next.addEventListener('click',async()=>{if(next.disabled)return;if(!select(posit
 retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
 audio.addEventListener('ended',()=>{if(!playlist.length)return;const continuePlaying=playing;select(position+1);if(continuePlaying)void start()});
 audio.addEventListener('pause',()=>{if(playing&&audio.paused&&!audio.ended)setPaused('Paused.');});
-window.addEventListener('pagehide',()=>{audio.pause();setPaused();});
+window.addEventListener('pagehide',()=>{++loadGeneration;playlistAbort?.abort();playlistAbort=null;audio.pause();setPaused();});
 audio.addEventListener('error',()=>{if(audio.getAttribute('src'))setPaused('This recording cannot be loaded. Try Next or Refresh playlist.')});
 audio.addEventListener('waiting',()=>{if(playing)say('Buffering radio audio…')});
 audio.addEventListener('playing',()=>{if(playing)say('Playing • '+(position+1)+' of '+playlist.length)});
