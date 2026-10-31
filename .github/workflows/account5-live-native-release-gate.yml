@@ -12,10 +12,15 @@ on:
     paths:
       - 'heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/verify-live-native-downloads.mjs'
       - '.github/workflows/account5-live-native-release-gate.yml'
+  workflow_run:
+    workflows: ['Deploy Account 5 Heavenly Key App']
+    types: [completed]
+    branches: [main]
 permissions:
   contents: read
 jobs:
   public-native-release:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
