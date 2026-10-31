@@ -378,7 +378,7 @@ export async function onRequest({ request: req, env, params }) {
         const extensions={'video/mp4':['mp4'],'video/webm':['webm'],'video/quicktime':['mov'],'video/ogg':['ogg','ogv'],'audio/mpeg':['mp3','mpeg'],'audio/wav':['wav'],'audio/x-wav':['wav'],'audio/webm':['webm'],'audio/ogg':['ogg','oga'],'audio/mp4':['m4a','mp4'],'audio/aac':['aac'],'audio/flac':['flac'],'audio/x-m4a':['m4a'],'image/png':['png'],'image/jpeg':['jpg','jpeg'],'image/gif':['gif'],'image/webp':['webp']};
         if (suffix && !extensions[type]?.includes(suffix)) return J({error:'Filename extension does not match media type.'},415);
         const segments=name.toLowerCase().split('.');
-        if (segments.slice(0,-1).some(part=>['html','htm','svg','js','mjs','php','phtml','asp','aspx','jsp','exe','bat','cmd','sh'].includes(part))) return J({error:'Unsafe filename extension.'},415);
+        if (segments.slice(0,-1).some(part=>['html','htm','shtml','svg','js','mjs','php','php5','php7','phtml','pht','asp','aspx','jsp','jspx','cgi','pl','py','rb','ps1','vbs','wsf','hta','exe','bat','cmd','sh'].includes(part))) return J({error:'Unsafe filename extension.'},415);
         const announced = req.headers.get('content-length');
         if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
         // Atomically reserve an upload attempt before buffering up to 50 MB into memory.
