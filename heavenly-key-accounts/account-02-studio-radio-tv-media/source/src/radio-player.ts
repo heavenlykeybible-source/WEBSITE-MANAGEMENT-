@@ -52,7 +52,7 @@ async function refresh(){
  const items=Array.isArray(result.items)?result.items.filter(validItem):[];
  ++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');
  playlist=items;position=0;next.disabled=!items.length;
- if(!items.length){audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';title.textContent='No radio recordings available';say('The radio playlist is currently empty.');return;}
+ if(!items.length){title.textContent='No radio recordings available';say('The radio playlist is currently empty.');return;}
  title.textContent=items[0].title||'Radio programme';
  say('Playlist ready. Press Play to listen.');
  }catch(error){if(generation!==loadGeneration)return;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');playlist=[];next.disabled=true;title.textContent='Playlist unavailable';say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
@@ -73,7 +73,7 @@ play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not r
 next.addEventListener('click',async()=>{if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
 retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
 audio.addEventListener('ended',()=>{if(!playlist.length)return;select(position+1);if(playing)void start()});
-window.addEventListener('pagehide',()=>{++playGeneration;audio.pause();playing=false;});
+window.addEventListener('pagehide',()=>{audio.pause();setPaused();});
 audio.addEventListener('error',()=>{if(audio.getAttribute('src'))setPaused('This recording cannot be loaded. Try Next or Refresh playlist.')});
 audio.addEventListener('waiting',()=>{if(playing)say('Buffering radio audio…')});
 audio.addEventListener('playing',()=>{if(playing)say('Playing • '+(position+1)+' of '+playlist.length)});
@@ -89,7 +89,7 @@ output.addEventListener('click',async()=>{
  catch{outputHelp.textContent='Audio output was not changed. You can choose a device in your system settings.';}
 });
 if(typeof navigator.mediaDevices?.selectAudioOutput!=='function'||typeof audio.setSinkId!=='function')output.textContent='🔊 Bluetooth setup help';
-if('mediaSession' in navigator){if(typeof MediaMetadata==='function')navigator.mediaSession.metadata=new MediaMetadata({title:'Online Revival Radio',artist:'Heavenly Key Evangelistic Movement'});try{navigator.mediaSession.setActionHandler('play',()=>{void start()});navigator.mediaSession.setActionHandler('pause',()=>{++playGeneration;audio.pause();playing=false;play.textContent='▶ Play Radio'});navigator.mediaSession.setActionHandler('nexttrack',()=>next.click())}catch{}}
+if('mediaSession' in navigator){if(typeof MediaMetadata==='function')navigator.mediaSession.metadata=new MediaMetadata({title:'Online Revival Radio',artist:'Heavenly Key Evangelistic Movement'});try{navigator.mediaSession.setActionHandler('play',()=>{void start()});navigator.mediaSession.setActionHandler('pause',()=>{audio.pause();setPaused('Paused.')});navigator.mediaSession.setActionHandler('nexttrack',()=>next.click())}catch{}}
 void refresh();
 })();
 </script></body></html>`;
