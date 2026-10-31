@@ -305,3 +305,21 @@ test('WhatsApp human takeover is consumed once across duplicate webhook events',
   assert.ok(handler.indexOf('INSERT OR IGNORE INTO whatsapp_handover_events')<handler.indexOf('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target='));
   assert.ok(handler.indexOf('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=')<handler.indexOf('UPDATE whatsapp_handover_events SET consumed=1'));
 });
+
+test('contact destination detection respects direct requests and explicit refusal', () => {
+  const handover=readFileSync(new URL('../src/human-handover.ts',import.meta.url),'utf8');
+  const executable=handover
+    .replace("export const requestsHumanMinistryContact=(input:string):boolean=>","const requestsHumanMinistryContact=(input)=>")
+    .replace("export const contactTargetForMinistryMessage=(input:string):'ministry_agent'|'speak_to_evangelist'|null=>","const contactTargetForMinistryMessage=(input)=>");
+  const classify=new Function(executable+';return contactTargetForMinistryMessage')();
+  const cases=[
+    ['I want to speak with Evangelist Emmanuel Ogheneochuko Adiohwo','speak_to_evangelist'],
+    ['I want to speak with a Heavenly Key Evangelistic Movement agent','ministry_agent'],
+    ['Please connect me with a human','ministry_agent'],
+    ["I don't want to speak with Evangelist Emmanuel",null],
+    ['I do not want to speak with an agent',null],
+    ["I'm not asking to speak with an agent",null],
+    ['Explain John 3:16 KJV',null]
+  ];
+  for(const [message,expected] of cases)assert.equal(classify(message),expected,message);
+});
