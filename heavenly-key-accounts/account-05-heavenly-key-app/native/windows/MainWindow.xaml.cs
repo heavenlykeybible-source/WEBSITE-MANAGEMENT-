@@ -38,7 +38,7 @@ public partial class MainWindow : Window
         return Uri.TryCreate(text, UriKind.Absolute, out var uri)
             && uri.Scheme == Uri.UriSchemeHttps
             && uri.Host.Equals("apps.heavenlykey.org", StringComparison.OrdinalIgnoreCase)
-            && string.IsNullOrEmpty(uri.UserInfo)
+            && uri.IsDefaultPort && string.IsNullOrEmpty(uri.UserInfo)
             && !uri.AbsolutePath.StartsWith("/api/native-download/", StringComparison.OrdinalIgnoreCase);
     }
 
