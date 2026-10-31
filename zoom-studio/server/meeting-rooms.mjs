@@ -9,10 +9,14 @@ async function meetingICE(env, room) {
  const urls=String(env.TURN_URLS||'').split(',').map(u=>u.trim()).filter(u=>/^turns?:[a-z0-9.-]+(?::[0-9]{1,5})?(?:\?transport=(?:udp|tcp))?$/i.test(u)&&!u.includes('..')&&(!u.match(/:(\d{1,5})(?:\?|$)/)||Number(u.match(/:(\d{1,5})(?:\?|$)/)[1])>=1&&Number(u.match(/:(\d{1,5})(?:\?|$)/)[1])<=65535)).slice(0,4);
  if(!urls.length||String(env.TURN_SHARED_SECRET||'').length<32)return ice;
  const username=Math.floor(Date.now()/1000)+3600+':'+room;
- const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.TURN_SHARED_SECRET),{name:'HMAC',hash:'SHA-1'},false,['sign']);
- const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(username)));
- const credential=btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
- ice.push({urls,username,credential});
+ try{
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.TURN_SHARED_SECRET),{name:'HMAC',hash:'SHA-1'},false,['sign']);
+  const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(username)));
+  const credential=btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
+  ice.push({urls,username,credential});
+ }catch{
+  // TURN credential generation is optional: do not abort meeting admission.
+ }
  return ice;
 }
 const capacityForRoom=env=>{const n=Number(env.MEETING_ROOM_CAP);return Number.isFinite(n)&&n>0?Math.max(2,Math.min(100,Math.floor(n))):25;};
