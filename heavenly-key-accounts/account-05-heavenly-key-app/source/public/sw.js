@@ -10,9 +10,11 @@ const SHELL=['/creation-to-eternity-presentation.css','/walk-integrations.css','
  '/audio-hymn-catalog.js','/audio-hymn-manifest.json','/audio-hymns.js','/audio-hymns.css','/featured-main-hymn.js','/lock-screen-media.js','/walk-offline.html','/walk-offline.js','/walk-offline-content.js','/offline-vault.js','/offline-status.js','/creation-to-eternity.html','/walk-offline.css','/creation-to-eternity.js','/creation-to-eternity.css','/offline-noscript.css'];
 const PUBLIC=new Set(SHELL),READING=new Set(['/bible.html']);
 function isSafePublicResponse(response){
- if(!response || !response.ok || response.type!=='basic' || response.redirected)return false;
+ if(!response || response.status!==200 || response.type!=='basic' || response.redirected)return false;
  const control=response.headers.get('cache-control')||'';
  const vary=response.headers.get('vary')||'';
+ // Partial content must never replace a complete offline shell asset.
+ if(response.headers.get('content-range'))return false;
  return !/(?:private|no-store|no-cache)/i.test(control) &&
    !/(?:^|,)\s*(?:\*|cookie|authorization)\s*(?:,|$)/i.test(vary);
 }
@@ -51,7 +53,7 @@ self.addEventListener('fetch',event=>{
  const request=event.request,url=new URL(request.url);
  const guide=/^\/download\/(?:android|iphone|ipad|windows|mac)\/$/.test(url.pathname);
  const cachePath=guide?url.pathname+'index.html':url.pathname;
- if(request.method!=='GET'||url.origin!==self.location.origin||!PUBLIC.has(cachePath)||request.headers.has('Authorization'))return;
+ if(request.method!=='GET'||url.origin!==self.location.origin||!PUBLIC.has(cachePath)||request.headers.has('Authorization')||request.headers.has('Range')||request.headers.has('If-Range'))return;
  if(url.search && !( /^\/download\/(?:android|iphone|ipad|windows|mac)\/index\.html$/.test(cachePath) &&
    [...url.searchParams.keys()].every(key=>key==='app') && url.searchParams.getAll('app').length===1 && /^[a-z0-9-]{1,64}$/.test(url.searchParams.get('app')) )){
   if(!READING.has(url.pathname)||[...url.searchParams.keys()].some(key=>!['book','chapter'].includes(key))||
