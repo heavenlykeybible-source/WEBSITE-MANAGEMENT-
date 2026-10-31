@@ -18,7 +18,8 @@
     "test:radio-range": "node scripts/test-radio-range.mjs",
     "test:radio-player-runtime": "node scripts/test-radio-player-runtime.mjs",
     "test:radio-http-validators": "node scripts/test-radio-http-validators.mjs",
-    "test:radio-media-http-runtime": "node scripts/test-radio-media-http-runtime.mjs"
+    "test:radio-media-http-runtime": "node scripts/test-radio-media-http-runtime.mjs",
+    "test:radio-live-isolation-sql": "node --experimental-sqlite scripts/test-radio-live-isolation-sql.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
