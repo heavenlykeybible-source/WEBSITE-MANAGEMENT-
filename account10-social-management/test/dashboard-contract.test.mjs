@@ -267,3 +267,8 @@ test('webhook ignore action prevents duplicate and stale-session submissions', (
  assert.ok(html.includes("btn.disabled=true;try{await api('/api/webhooks/events/review'"));
  assert.ok(html.includes("finally{if(current())btn.disabled=operatorAccessRole==='viewer'"));
 });
+
+test('human request resolve action has session and duplicate guards', () => {
+ assert.ok(html.includes('resolve.disabled=true'));
+ assert.ok(html.includes('resolve.disabled=operatorAccessRole'));
+});
