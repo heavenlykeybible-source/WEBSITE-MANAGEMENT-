@@ -38,6 +38,14 @@ for(const invalidLive of [null,{key,size:123,version:'version-replaced',etag:'a'
  live=invalidLive; await assert.rejects(check(),/not cleared/);
 }
 live={key,size:123,version:'version-123456',etag:'a'.repeat(32)};
+row={...good,scanned_etag:'a'.repeat(32)+'-103'};
+live={key,size:123,version:'version-123456',etag:row.scanned_etag};
+assert.equal((await check()).etag,row.scanned_etag);
+for(const invalidEtag of ['a'.repeat(31), 'a'.repeat(32)+'-0', 'a'.repeat(32)+'-1000', 'z'.repeat(32)]) {
+  row={...good,scanned_etag:invalidEtag};
+  await assert.rejects(check(),/not cleared/);
+}
+live={key,size:123,version:'version-123456',etag:'a'.repeat(32)};
 row=null;await assert.rejects(check(),/not cleared/);
 row={...good};
 for(const bad of [{...actor,canPublish:false},{...actor,role:'admin'},{...actor,role:undefined},{...actor,authenticated:false},{...actor,id:0}])
