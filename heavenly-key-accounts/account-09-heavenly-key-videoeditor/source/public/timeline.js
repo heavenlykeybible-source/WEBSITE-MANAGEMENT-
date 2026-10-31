@@ -5,6 +5,7 @@ wrap.innerHTML='<h2>Multi-Clip Timeline</h2><p class="muted">Edit clips from the
 let clips=[],undo=[],redo=[],session=null,exportUrl=null,pendingProjectMedia=false,copiedClip=null;
 const info=t=>$('clipStatus').textContent=t;
 const invalidateExport=()=>{if(exportUrl){URL.revokeObjectURL(exportUrl);exportUrl=null;}$('clipDownload').removeAttribute('href');$('clipDownload').hidden=true};
+window.addEventListener?.('pagehide',invalidateExport);
 const save=()=>{invalidateExport();undo.push(JSON.stringify({clips,selected:chosen()}));if(undo.length>40)undo.shift();redo=[]};
 const chosen=()=>{const i=Number($('clipList').value);return $('clipList').value===''?-1:i};
 function paint(selected=0){const list=$('clipList');list.replaceChildren();clips.forEach((c,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=(i+1)+'. '+c.start.toFixed(2)+'–'+c.end.toFixed(2)+'s / '+c.speed+'×';list.append(o)});if(clips.length)list.value=String(Math.min(clips.length-1,Math.max(0,selected)));else list.value='';const selectedClip=clips[chosen()];if(selectedClip){$('clipStart').value=String(selectedClip.start);$('clipEnd').value=String(selectedClip.end);$('clipSpeed').value=String(selectedClip.speed)}else{$('clipStart').value='0';$('clipEnd').value=ready()?String(Math.min(v.duration,86400)):'0';$('clipSpeed').value='1'}const seconds=clips.reduce((sum,c)=>sum+(c.end-c.start)/c.speed,0);info(clips.length+' clip(s) ready. Estimated timeline: '+(Number.isFinite(seconds)?seconds.toFixed(2):'invalid')+' seconds.');}
