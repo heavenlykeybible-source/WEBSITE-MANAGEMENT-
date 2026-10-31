@@ -7,7 +7,9 @@ on:
       - '.github/workflows/account4-release-safety.yml'
       - 'scripts/deploy-account4-existing.mjs'
       - 'scripts/apply-reviewed-account4-upgrade.mjs'
-      - 'cms/build.mjs'
+      - 'cms/**'
+      - 'tests/**'
+      - 'scripts/**'
       - 'workspace/**'
       - 'patches/account4-reviewed-upgrade.json'
       - 'tests/account4-release-safety-regression.mjs'
@@ -72,7 +74,8 @@ jobs:
       - name: Package generated Worker for owner review only
         run: |
           sha256sum control-room-worker.js > account4-generated-worker.sha256
-          printf '%s\\n' "${GITHUB_SHA}" > account4-generated-from-commit.txt
+          sha256sum --check account4-generated-worker.sha256
+          printf '%s\n' "${GITHUB_SHA}" > account4-generated-from-commit.txt
       - name: Retain generated Worker candidate (never deploy from PR)
         uses: actions/upload-artifact@v4
         with:
