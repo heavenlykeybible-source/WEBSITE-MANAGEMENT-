@@ -91,3 +91,9 @@ test('preflight isolates assets section', () => {
  assert.ok(script.includes('Assets section must specify ./public directory'));
  assert.ok(script.includes('Assets section must declare ASSETS binding'));
 });
+
+test('preflight rejects duplicate critical asset keys', () => {
+ const source=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
+ assert.match(source,/matches\.length!==1/);
+ assert.match(source,/Assets section must declare/);
+});
