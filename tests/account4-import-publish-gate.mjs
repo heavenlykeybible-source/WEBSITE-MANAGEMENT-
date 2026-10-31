@@ -30,6 +30,8 @@ for(const invalid of [{scanned_at:'nonsense'},{approved_at:'nonsense'},
  {scanned_sha256:'A'.repeat(64)},{approved_sha256:'b'.repeat(64)}]) {
  row={...good,...invalid}; await assert.rejects(check(),/not cleared/);
 }
+row={...good,object_key:'private-imports/7/123e4567-e89b-42d3-a456-426614174001',scanned_key:'private-imports/7/123e4567-e89b-42d3-a456-426614174001'};
+await assert.rejects(check(),/not cleared/,'A different valid private key must not be approved for this session');
 row={...good};
 for(const invalidLive of [null,{key,size:123,version:'version-replaced',etag:'a'.repeat(32)},
  {key,size:124,version:'version-123456',etag:'a'.repeat(32)},
