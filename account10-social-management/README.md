@@ -14,7 +14,7 @@ Independent Cloudflare Worker, D1 database, and operator dashboard for unified s
 
 ## Cloudflare setup
 1. Review `wrangler.toml`, provision the intended D1 database, and initialize `schema.sql`.
-2. Apply migrations `0002_webhook_events.sql`, `0003_conversation_lookup.sql`, `0004_whatsapp_delivery.sql`, `0005_whatsapp_receipts.sql`, `0006_whatsapp_receipt_inbox.sql`, and `0007_post_media.sql` **in order**. Apply `0007_post_media.sql` and `0008_ai_rate_limits.sql` after migration 0006. See `npm run db:migrate:remote`.
+2. Apply all numbered migrations, `0002_webhook_events.sql` through `0010_whatsapp_handover_dedupe.sql`, **in order** after `schema.sql`. Both local and remote migration scripts cover all numbered migrations. Never apply production migrations without approval. See `npm run db:migrate:remote`.
 3. Configure `ADMIN_TOKEN`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, and `META_WHATSAPP_ACCESS_TOKEN` as Worker secrets, never in source or browser. `GEMINI_API_KEY` is optional for suggestions.
 4. Register the WhatsApp phone number ID in the dashboard, then verify its access against Meta before sending.
 5. Run `npm run check` and `npm run build:check`; verify signed inbound webhook, delivery attempts, receipts, permissions, and mobile/desktop UX in a real staging deployment.
@@ -62,3 +62,6 @@ X/Twitter editorial suggestions are available, but X is not in the existing `soc
 
 ## Controlled live Gemini verification
 After a human-approved deployment and migration `0008_ai_rate_limits.sql`, an authenticated operator may `POST /api/ai/connection-check` using their bearer-token authorization. The endpoint calls Gemini using the existing ministry instructions and checks John 11:35 for the KJV verse containing “Jesus wept.” Five checks per hour are permitted. It does not send WhatsApp messages, publish posts, transmit visitor data or expose the API key. Passing one check does not prove complete doctrinal accuracy or WhatsApp delivery.
+
+## Read-only release readiness
+Authorized operators can call `GET /api/automation/readiness` after deployment to check D1 schema presence. The result includes `migrationReady`, `humanContactColumn`, `whatsappReplayLedger`, and `aiUsageLimits`. All must be true before processing ministry WhatsApp handover events. This does not test provider connectivity, message delivery, individual operator permissions, or production security. Use an approved staging environment for live integration tests.
