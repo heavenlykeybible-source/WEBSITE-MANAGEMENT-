@@ -79,13 +79,15 @@ test('preflight refuses wrong Worker identity and missing dashboard module', () 
  assert.ok(existsSync(resolve(root,'public','editorial-studio.js')));
 });
 
-test('preflight isolates assets section', () => {
+test('preflight isolates assets section from later Worker configuration sections', () => {
  const script=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
- assert.ok(script.includes("const assetConfig="));
- assert.ok(script.includes('assetSections.length!==1'));
- assert.ok(script.includes('assetSections[0]?.[1]'));
+ assert.ok(script.includes("const configLines=config.split('\\n')"));
+ assert.ok(script.includes("item.line==='[assets]'"));
+ assert.ok(script.includes('assetHeaders.length!==1'));
+ assert.ok(script.includes('assetStart+1,assetEnd>=0?assetEnd:undefined'));
  assert.ok(script.includes('Assets section must specify ./public directory'));
  assert.ok(script.includes('Assets section must declare ASSETS binding'));
+ assert.ok(script.includes('Assets section must declare run_worker_first exactly once'));
 });
 
 test('preflight rejects duplicate critical asset keys', () => {
