@@ -16,7 +16,7 @@ const safeSignal=data=>{
  return null;
 };
 export class MeetingRooms {
- constructor(state,env){this.state=state;this.env=env;this.hostAuthPending=false;}
+ constructor(state,env){this.state=state;this.env=env;this.hostAuthPending=false;this.closedSockets=new WeakSet();}
  sockets(){return this.state.getWebSockets().filter(w=>w.readyState===1);}
  data(w){return w.deserializeAttachment()||{};}
  save(w,d){w.serializeAttachment(d);}
@@ -182,10 +182,13 @@ export class MeetingRooms {
   }
  }
  webSocketClose(ws){
+  // A closed socket can lose its serialized attachment; guard duplicate callbacks in memory too.
+  if(this.closedSockets.has(ws))return;
+  this.closedSockets.add(ws);
   const d=this.data(ws);
-  // Error callbacks may be followed by a close callback; notify the room only once.
   if(d.closeNotified)return;
-  d.closeNotified=true;this.save(ws,d);
+  d.closeNotified=true;
+  try{this.save(ws,d)}catch{}
   if(d.role==='host'){
    const activeHost=this.host();if(!activeHost||activeHost===ws)this.end('The host left.');
   }else if(d.role==='guest'){
