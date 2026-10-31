@@ -23,7 +23,7 @@ export async function assertPrivateImportPublishable(db, bucket, actor, id) {
       row.scanned_size !== row.size_bytes ||
       typeof row.scanned_sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(row.scanned_sha256) ||
       row.approved_sha256 !== row.scanned_sha256 ||
-      typeof row.scanned_etag !== 'string' || !/^[0-9a-f]{32,128}$/i.test(row.scanned_etag) ||
+      typeof row.scanned_etag !== 'string' || !/^[0-9a-f]{32}(?:-[1-9][0-9]{0,2})?$/i.test(row.scanned_etag) ||
       typeof row.scanned_version !== 'string' || !/^[a-zA-Z0-9_-]{8,256}$/.test(row.scanned_version) ||
       !Number.isSafeInteger(row.approved_by) || row.approved_by !== actor.id ||
       typeof row.scanned_at !== 'string' || !row.scanned_at ||
