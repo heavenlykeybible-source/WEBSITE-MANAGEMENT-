@@ -62,23 +62,23 @@ test('post draft editor supports private image attachments', () => {
 });
 
 test('rapid conversation switching cannot display stale Gemini suggestions or history', () => {
-  assert.match(html, /const targetConversation=selected;const message=prompt/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch;const message=prompt/);
   assert.match(html, /conversationId:targetConversation,message:message\.trim\(\)/);
-  assert.match(html, /if\(selected!==targetConversation\)return;if\(result\.suggestion\)/);
-  assert.match(html, /const d=await api\('\/api\/conversation\?id='\+encodeURIComponent\(id\)\);if\(selected!==id\)return/);
-  assert.match(html, /if\(selected!==id\)return;renderMessages\(/);
+  assert.match(html, /if\(selected!==targetConversation\|\|authEpoch!==epoch\)return;if\(result\.suggestion\)/);
+  assert.match(html, /const d=await api\('\/api\/conversation\?id='\+encodeURIComponent\(id\)\);if\(selected!==id\|\|authEpoch!==epoch\)return/);
+  assert.match(html, /if\(selected!==id\|\|authEpoch!==epoch\)return;renderMessages\(/);
 });
 
 test('operator notes are saved only to the conversation selected at submission time', () => {
-  assert.match(html, /const targetConversation=selected;const body=\$\('draftText'\)\.value\.trim\(\)/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch;const body=\$\('draftText'\)\.value\.trim\(\)/);
   assert.match(html, /conversationId:targetConversation,body/);
-  assert.match(html, /if\(selected===targetConversation\)\{\$\('draftText'\)\.value=''/);
+  assert.match(html, /if\(selected===targetConversation&&authEpoch===epoch\)\{\$\('draftText'\)\.value=''/);
 });
 
 test('human takeover request preserves its original conversation when operators switch chats', () => {
-  assert.match(html, /const targetConversation=selected;const targetPaused=!paused/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch,wasHumanRequested=requestedHuman,targetRequestVersion=humanRequestVersion;const targetPaused=!paused/);
   assert.match(html, /conversationId:targetConversation,paused:targetPaused/);
-  assert.match(html, /if\(selected===targetConversation\)\{await openChat\(targetConversation\)/);
+  assert.match(html, /if\(selected===targetConversation&&authEpoch===epoch\)\{await openChat\(targetConversation\)/);
 });
 
 test('changing operator credentials clears private messages and drafts', () => {
