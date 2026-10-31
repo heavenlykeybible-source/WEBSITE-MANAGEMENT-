@@ -91,6 +91,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(declaredLength!==null&&(!/^[0-9]+$/.test(declaredLength)||!Number.isSafeInteger(Number(declaredLength))))return reply({error:'Invalid Content-Length'},400);
  if(declaredLength!==null&&Number(declaredLength)>1048576)return reply({error:'Request exceeds 1 MiB limit'},413);
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
+ if(env.ADMIN_TOKEN.length<32||env.ADMIN_TOKEN.length>512||/\s/.test(env.ADMIN_TOKEN))return reply({error:'Operator authentication secret must be a strong, whitespace-free token of 32–512 characters; rotate ADMIN_TOKEN in Cloudflare secrets before activation'},503);
  const provided=req.headers.get('authorization')||'';
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
