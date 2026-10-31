@@ -1,0 +1,36 @@
+name: Strength for Today - editorial audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: strength-editorial-audit
+  cancel-in-progress: false
+
+jobs:
+  verify-devotional-content:
+    name: Audit all devotional drafts without publishing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run complete five-year content audit
+        run: node apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs
+
+      - name: Confirm this workflow cannot deploy
+        if: always()
+        run: |
+          echo "Editorial audit only: no deployment credentials or publishing actions are configured."
+          echo "A successful technical audit does not constitute KJV or human doctrinal approval."
