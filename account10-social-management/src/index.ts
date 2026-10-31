@@ -105,18 +105,39 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
  if(env.ADMIN_TOKEN.length<32||env.ADMIN_TOKEN.length>512||/\s/.test(env.ADMIN_TOKEN))return reply({error:'Operator authentication secret must be a strong, whitespace-free token of 32–512 characters; rotate ADMIN_TOKEN in Cloudflare secrets before activation'},503);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
+ const authNow=Math.floor(Date.now()/1000);
+ const authWindow=Math.floor(authNow/900)*900;
+ // Hash the Cloudflare edge client address; never persist the raw IP address.
+ const clientAddress=(req.headers.get('cf-connecting-ip')||'unknown').slice(0,64);
+ const clientHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('account10-auth:'+clientAddress)))).map(x=>x.toString(16).padStart(2,'0')).join('');
+ let authLimit:{blocked_until:number}|null;
+ try{authLimit=await env.DB.prepare('SELECT blocked_until FROM auth_rate_limits WHERE client_hash=? AND window_start=?').bind(clientHash,authWindow).first<{blocked_until:number}>()}
+ catch{return reply({error:'Authentication throttling unavailable; apply migration 0013',authenticated:false},503)}
+ if(Number(authLimit?.blocked_until||0)>authNow){
+  const limited=reply({error:'Too many failed authentication attempts. Try again later.'},429);
+  const headers=new Headers(limited.headers);headers.set('retry-after',String(Number(authLimit!.blocked_until)-authNow));
+  return new Response(limited.body,{status:429,headers});
+ }
+ const rejectInvalidCredential=async():Promise<Response>=>{
+  try{
+   await env.DB.prepare("INSERT INTO auth_rate_limits(client_hash,window_start,failed_attempts,blocked_until) VALUES(?,?,1,0) ON CONFLICT(client_hash) DO UPDATE SET failed_attempts=CASE WHEN auth_rate_limits.window_start=excluded.window_start THEN auth_rate_limits.failed_attempts+1 ELSE 1 END,window_start=excluded.window_start,blocked_until=CASE WHEN auth_rate_limits.window_start=excluded.window_start AND auth_rate_limits.failed_attempts+1>=20 THEN excluded.window_start+900 ELSE CASE WHEN auth_rate_limits.window_start<>excluded.window_start THEN 0 ELSE auth_rate_limits.blocked_until END END").bind(clientHash,authWindow).run();
+   // Keep pseudonymous authentication-attempt records for no longer than 24 hours.
+   await env.DB.prepare('DELETE FROM auth_rate_limits WHERE window_start<?').bind(authNow-86400).run();
+  }catch{return reply({error:'Authentication throttling unavailable; apply migration 0013',authenticated:false},503)}
+  return reply({error:'Unauthorized'},401);
+ };
  const provided=req.headers.get('authorization')||'';
  let operatorRole:'owner'|'operator'|'viewer'='owner';
  let operatorId='owner';
  if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN)){
   const candidate=provided.startsWith('Bearer ')?provided.slice(7):'';
-  if(!/^[a-f0-9]{64}$/.test(candidate))return reply({error:'Unauthorized'},401);
+  if(!/^[a-f0-9]{64}$/.test(candidate))return rejectInvalidCredential();
   const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(candidate));
   const digest=Array.from(new Uint8Array(bytes)).map(x=>x.toString(16).padStart(2,'0')).join('');
   let operator;
   try{operator=await env.DB.prepare("SELECT id,role FROM operator_credentials WHERE token_hash=? AND active=1 AND expires_at>CURRENT_TIMESTAMP LIMIT 1").bind(digest).first<{id:string;role:'operator'|'viewer'}>()}
   catch{return reply({error:'Operator credential database unavailable; apply migration 0012',authenticated:false},503)}
-  if(!operator)return reply({error:'Unauthorized'},401);
+  if(!operator)return rejectInvalidCredential();
   operatorRole=operator.role;operatorId=operator.id;
  }
  // Read-only viewers cannot mutate; operators can work on conversations only.
@@ -315,8 +336,8 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   return reply({integrityPassed:checks.every(x=>x.passed),checks,unverifiedAccounts:unverifiedAccounts?.total??0,waitingDrafts:waitingDrafts?.total??0,readOnly:true});
  }
  if(u.pathname==='/api/operations/diagnostics'&&req.method==='GET'){
-  const checks:{name:string;ok:boolean;detail:string}[]=[{name:'admin_token',ok:!!env.ADMIN_TOKEN,detail:'Administrative authentication configured'},{name:'database_binding',ok:!!env.DB,detail:'Cloudflare D1 binding configured'},{name:'official_provider_oauth',ok:false,detail:'Official provider authorization not implemented'},{name:'external_message_delivery',ok:false,detail:'Guarded WhatsApp sender implemented; live provider delivery unverified, other providers not implemented'},{name:'whatsapp_access_token',ok:!!env.META_WHATSAPP_ACCESS_TOKEN,detail:env.META_WHATSAPP_ACCESS_TOKEN?'WhatsApp token configured; live permissions unverified':'WhatsApp token missing'}, {name:'scheduled_publishing',ok:false,detail:'Scheduled publishing worker not implemented'},{name:'gemini_reply_suggestions',ok:!!env.GEMINI_API_KEY,detail:env.GEMINI_API_KEY?'AI operator suggestions configured; live request remains unverified':'Gemini API key not configured'}];
-  for(const [name,sql] of [['conversations','SELECT COUNT(*) AS total FROM conversations'],['messages','SELECT COUNT(*) AS total FROM messages'],['social_accounts','SELECT COUNT(*) AS total FROM social_accounts'],['automation_rules','SELECT COUNT(*) AS total FROM automation_rules'],['social_posts','SELECT COUNT(*) AS total FROM social_posts'],['webhook_events','SELECT COUNT(*) AS total FROM webhook_events'],['whatsapp_delivery_attempts','SELECT COUNT(*) AS total FROM whatsapp_delivery_attempts'],['whatsapp_receipt_inbox','SELECT COUNT(*) AS total FROM whatsapp_receipt_inbox'],['whatsapp_receipt_column','SELECT COUNT(delivery_status) AS total FROM whatsapp_delivery_attempts']] as const){try{const row=await env.DB.prepare(sql).first<{total:number}>();checks.push({name:'table_'+name,ok:true,detail:String(row?.total??0)+' records'})}catch{checks.push({name:'table_'+name,ok:false,detail:'Table unavailable or schema not migrated'})}}
+  const checks:{name:string;ok:boolean;detail:string}[]=[{name:'admin_token',ok:!!env.ADMIN_TOKEN,detail:'Administrative authentication configured'},{name:'owner_mfa',ok:false,detail:'Owner still uses the shared ADMIN_TOKEN; individual owner identity, MFA and short-lived revocable sessions are not implemented'},{name:'database_binding',ok:!!env.DB,detail:'Cloudflare D1 binding configured'},{name:'official_provider_oauth',ok:false,detail:'Official provider authorization not implemented'},{name:'external_message_delivery',ok:false,detail:'Guarded WhatsApp sender implemented; live provider delivery unverified, other providers not implemented'},{name:'whatsapp_access_token',ok:!!env.META_WHATSAPP_ACCESS_TOKEN,detail:env.META_WHATSAPP_ACCESS_TOKEN?'WhatsApp token configured; live permissions unverified':'WhatsApp token missing'}, {name:'scheduled_publishing',ok:false,detail:'Scheduled publishing worker not implemented'},{name:'gemini_reply_suggestions',ok:!!env.GEMINI_API_KEY,detail:env.GEMINI_API_KEY?'AI operator suggestions configured; live request remains unverified':'Gemini API key not configured'}];
+  for(const [name,sql] of [['conversations','SELECT COUNT(*) AS total FROM conversations'],['messages','SELECT COUNT(*) AS total FROM messages'],['social_accounts','SELECT COUNT(*) AS total FROM social_accounts'],['automation_rules','SELECT COUNT(*) AS total FROM automation_rules'],['social_posts','SELECT COUNT(*) AS total FROM social_posts'],['webhook_events','SELECT COUNT(*) AS total FROM webhook_events'],['whatsapp_delivery_attempts','SELECT COUNT(*) AS total FROM whatsapp_delivery_attempts'],['whatsapp_receipt_inbox','SELECT COUNT(*) AS total FROM whatsapp_receipt_inbox'],['whatsapp_receipt_column','SELECT COUNT(delivery_status) AS total FROM whatsapp_delivery_attempts'],['operator_credentials','SELECT COUNT(*) AS total FROM operator_credentials'],['auth_rate_limits','SELECT COUNT(*) AS total FROM auth_rate_limits']] as const){try{const row=await env.DB.prepare(sql).first<{total:number}>();checks.push({name:'table_'+name,ok:true,detail:String(row?.total??0)+' records'})}catch{checks.push({name:'table_'+name,ok:false,detail:'Table unavailable or schema not migrated'})}}
   return reply({launchReady:checks.every(x=>x.ok),checks,checkedAt:new Date().toISOString()});
  }
  if(u.pathname==='/api/dashboard'&&req.method==='GET'){
