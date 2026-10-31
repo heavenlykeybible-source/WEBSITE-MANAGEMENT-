@@ -793,3 +793,13 @@ test('background model load coalesces concurrent requests and ignores obsolete m
  assert.match(html,/s\.bgRequest=requested/,'each camera mode request gets an identifier');
  assert.match(html,/if\(s\.bgRequest!==requested\)return/,'an obsolete asynchronous load cannot re-enable an unwanted effect');
 });
+
+test('simultaneous host authorization attempts cannot create competing hosts',async()=>{
+ const s=meeting(),first=s.add(),second=s.add(),token=roomToken();
+ const requests=[message(s.room,first,{t:'host',token}),message(s.room,second,{t:'host',token})];
+ await Promise.all(requests);
+ const created=[first,second].filter(w=>w.messages.some(m=>m.t==='created'));
+ assert.equal(created.length,1,'only one connection may become host');
+ assert.equal([first,second].filter(w=>w.readyState===1&&w.d.role==='host').length,1);
+ assert.equal(s.room.hostAuthPending,false,'authorization guard must be released');
+});
