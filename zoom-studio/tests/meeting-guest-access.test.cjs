@@ -502,6 +502,9 @@ test('host moderation rejects invalid switch values',async()=>{
  await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
  await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:'false'}));
  assert.equal(h.host.attachment.locked,true);
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'audchat',on:false}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'audchat',on:'true'}));
+ assert.equal(h.host.attachment.audChat,false);
 });
 
 test('hand raise rejects nonboolean state without consuming cooldown',async()=>{
