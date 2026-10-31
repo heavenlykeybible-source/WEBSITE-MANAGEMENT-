@@ -447,6 +447,29 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   }catch{return reply({connected:false,error:'Meta connection timed out or failed'},502)}
   finally{clearTimeout(timeout)}
  }
+ if(u.pathname==='/api/ai/connection-check'&&req.method==='POST'){
+  // Authenticated, rate-limited provider smoke test. Never uses visitor messages.
+  if(!env.GEMINI_API_KEY)return reply({geminiConnected:false,kjvSmokeTestPassed:false,error:'Gemini API key is not configured'},503);
+  const hour=Math.floor(Date.now()/3600000);
+  try{
+   const reserve=await env.DB.prepare("INSERT INTO ai_rate_limits(scope,window_kind,window_start,request_count) VALUES('account10-smoke','hour',?,1) ON CONFLICT(scope,window_kind,window_start) DO UPDATE SET request_count=request_count+1 WHERE request_count<5").bind(hour).run();
+   if(!reserve.meta?.changes)return reply({geminiConnected:false,kjvSmokeTestPassed:false,error:'Only five Gemini connection tests are allowed per hour'},429);
+  }catch{return reply({geminiConnected:false,kjvSmokeTestPassed:false,error:'AI usage protection unavailable; apply migration 0008'},503)}
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),10000);
+  try{
+   const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
+    method:'POST',signal:controller.signal,
+    headers:{'content-type':'application/json','x-goog-api-key':env.GEMINI_API_KEY},
+    body:JSON.stringify({systemInstruction:{parts:[{text:originalAssistantInstruction}]},contents:[{role:'user',parts:[{text:'For a ministry operator connection test, answer only the KJV reference for the verse containing Jesus wept. No other content.'}]}],generationConfig:{maxOutputTokens:80,temperature:0}})
+   });
+   if(!response.ok)return reply({geminiConnected:false,kjvSmokeTestPassed:false,providerStatus:response.status,error:'Gemini provider request failed; check key, model and quota'},502);
+   const result:any=await response.json();
+   const answer=(result?.candidates?.[0]?.content?.parts||[]).map((p:any)=>typeof p?.text==='string'?p.text:'').join('').trim();
+   const kjvSmokeTestPassed=/\\bJohn\\s+11\\s*:\\s*35\\b/i.test(answer);
+   return reply({geminiConnected:true,kjvSmokeTestPassed,provider:'gemini',model:'gemini-2.5-flash',outboundMessagesSent:false,socialPostsPublished:false,note:kjvSmokeTestPassed?'Gemini answered the KJV reference correctly; full doctrine remains unverified.':'Gemini responded, but the KJV reference check needs human review.'});
+  }catch{return reply({geminiConnected:false,kjvSmokeTestPassed:false,error:'Gemini provider network failure or timeout'},502)}
+  finally{clearTimeout(timeout)}
+ }
  if(u.pathname==='/api/ai/suggest-post'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   const supported=['facebook_page','instagram_professional','youtube','tiktok','x'];
