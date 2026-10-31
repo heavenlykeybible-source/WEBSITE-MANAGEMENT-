@@ -35,9 +35,29 @@ export async function handleNativeDownloads(request,env) {
   // Never distribute an arbitrary object merely because its path matches.
   // The reviewed app catalogue is the only source of eligible IDs.
   try {
-    const catalogResponse=await env.ASSETS.fetch(new Request(new URL('/app-downloads.json',url.origin)));
-    if(!catalogResponse.ok) throw new Error('Catalogue unavailable');
-    const catalogue=await catalogResponse.json();
+    const catalogResponse=await env.ASSETS.fetch(new Request(new URL('/app-downloads.json',url.origin),{redirect:'manual',credentials:'omit'}));
+    if(catalogResponse.status!==200 || catalogResponse.headers.has('content-range') ||
+       !/^application\/json(?:\s*;|\s*$)/i.test(catalogResponse.headers.get('content-type')||''))
+      throw new Error('Catalogue unavailable');
+    // An unbounded catalogue parse allows a compromised asset to exhaust Worker memory.
+    const length=catalogResponse.headers.get('content-length');
+    if(length!==null && (!/^\d+$/.test(length) || Number(length)>65536))throw new Error('Catalogue too large');
+    const reader=catalogResponse.body?.getReader();
+    if(!reader)throw new Error('Catalogue body missing');
+    let total=0;const chunks=[];
+    try {
+      for(;;){
+        const {done,value}=await reader.read();if(done)break;
+        total+=value.length;
+        if(total>65536){await reader.cancel();throw new Error('Catalogue too large');}
+        chunks.push(value);
+      }
+    } finally {reader.releaseLock();}
+    const bytes=new Uint8Array(total);let position=0;
+    for(const chunk of chunks){bytes.set(chunk,position);position+=chunk.length;}
+    const catalogue=JSON.parse(new TextDecoder().decode(bytes));
+    if(!catalogue || typeof catalogue!=='object' || Array.isArray(catalogue))
+      throw new Error('Invalid catalogue');
     if(!Object.prototype.hasOwnProperty.call(catalogue,appId)) return reply({error:'Unknown app'},404);
   } catch { return reply({error:'Download catalogue unavailable'},503); }
   if(!env.NATIVE_RELEASES) return reply({error:'Native downloads are not yet published'},503);
