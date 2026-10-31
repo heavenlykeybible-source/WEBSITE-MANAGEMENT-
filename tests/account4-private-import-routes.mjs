@@ -34,9 +34,11 @@ const db={prepare(sql){let args=[];return {bind(...values){args=values;return th
   return {success:true,meta:{changes:0}};
  }
 };}},env={DB:db,FILES:bucket};
+const lockKeys=[];
+const withLock=(key,fn)=>{lockKeys.push(key);return fn();};
 const call=(sub,method='GET',body,actor=owner,headers={})=>account4PrivateImportRoutes(
  new Request('https://control.test/api/owner/'+sub,{method,headers:{...(body===undefined?{}:{'content-type':'application/json'}),...headers},...(body===undefined?{}:{body:typeof body==='string'?body:JSON.stringify(body)})}),
- env,actor,sub,method,(key,fn)=>fn());
+ env,actor,sub,method,withLock);
 
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,role:'admin'}),e=>e.status===403);
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,kind:'member'}),e=>e.status===403);
@@ -54,10 +56,13 @@ assert.equal(started.notice.includes('Private staging only'),true);
 assert.equal(session.object_key.startsWith('private-imports/7/'),true);
 assert.equal(session.state,'uploading');
 
-const partResponse=await account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(11)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT');
+const partResponse=await account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(11)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT',withLock);
 assert.equal(partResponse.status,200);
 assert.deepEqual(await partResponse.json(),{partNumber:1,stored:true});
 assert.equal(uploaded,1);
+const partWithoutLock=await account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(11)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT');
+await assert.rejects(Promise.resolve(partWithoutLock),e=>e.status===503);
+assert.equal(uploaded,1,'A part must not mutate R2 without the session lock');
 await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(10)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT'));
 
 const status=await call('workspace/imports/'+started.id);
@@ -65,11 +70,15 @@ assert.equal((await status.json()).import.uploadedParts,1);
 const wrongOwner=await call('workspace/imports/'+started.id,'GET',undefined,other);
 assert.equal(wrongOwner.status,404);
 
+const completeWithoutLock=await account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/complete',{method:'POST'}),env,owner,'workspace/imports/'+started.id+'/complete','POST');
+await assert.rejects(Promise.resolve(completeWithoutLock),e=>e.status===503);
+assert.equal(completed,0,'Completion must not race uploads without the session lock');
 const completedResponse=await call('workspace/imports/'+started.id+'/complete','POST');
 assert.equal(completedResponse.status,200);
 assert.equal((await completedResponse.json()).state,'private-awaiting-review');
 assert.equal(completed,1);
 assert.equal(session.state,'private-awaiting-review');
+assert.ok(lockKeys.includes('account4-private-import-session:'+started.id),'Part upload and completion must share one session lock');
 
 const recovery=await call('workspace/imports/'+started.id+'/recovery');
 assert.equal((await recovery.json()).matchesExpectedSize,true);
