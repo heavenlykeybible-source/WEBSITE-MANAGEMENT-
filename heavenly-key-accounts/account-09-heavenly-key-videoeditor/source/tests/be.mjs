@@ -448,6 +448,8 @@ const anonymousMediaDelete=await request('media/'+mediaCreated.id,{method:'DELET
 check('Anonymous requests cannot delete private media by guessing its ID',anonymousMediaDelete.status===401 && anonymousMediaDelete.response.headers.get('cache-control')==='no-store');
 const ownedMediaRead = await request('media/'+mediaCreated.id,{cookie:login.cookie});
 check('Owned media download has private caching and sandbox protections',ownedMediaRead.status===200 && ownedMediaRead.response.headers.get('cache-control')==='private, no-store' && ownedMediaRead.response.headers.get('cross-origin-resource-policy')==='same-origin' && ownedMediaRead.response.headers.get('content-security-policy')==="sandbox; default-src 'none'" && ownedMediaRead.response.headers.get('x-content-type-options')==='nosniff' && ownedMediaRead.response.headers.get('content-disposition')==='inline; filename="sample.png"' && ownedMediaRead.response.headers.get('content-type')==='image/png');
+const missingMediaRead = await request('media/nonexistent',{cookie:login.cookie});
+check('Missing media returns a private 404 response',missingMediaRead.status===404);
 const otherMediaRead = await request('media/'+mediaCreated.id,{cookie:secondLogin.cookie});
 check('Members cannot read another member media',otherMediaRead.status===404);
 const otherMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:secondLogin.cookie});
