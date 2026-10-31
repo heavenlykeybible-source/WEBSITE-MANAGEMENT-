@@ -948,7 +948,7 @@ test('expired meeting host and its participants are reclaimed before capacity en
 
 test('one virtual-background load callback failure cannot prevent other waiting cameras from initializing',()=>{
  const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
- assert.match(html,/const done=ok=>\{segLoading=false;for\(const fn of segWait\.splice\(0\)\)\{try\{fn\(ok\)\}catch\(e\)/);
+ assert.match(html,/const done=ok=>\{if\(finished\)return;finished=true;clearTimeout\(timeout\);segLoading=false;for\(const fn of segWait\.splice\(0\)\)\{try\{fn\(ok\)\}catch\(e\)/);
  assert.match(html,/console\.error\('Background initialization callback failed',e\)/);
 });
 
@@ -1025,4 +1025,12 @@ test('parallel connection requests cannot bypass pending-handshake quotas while 
  assert.equal(responses.filter(r=>r.status===101).length,2,'only two pending connections may be accepted');
  assert.equal(responses.filter(r=>r.status===429).length,1,'one concurrent request must be rejected');
  assert.equal(sockets.length,2,'connection capacity must be enforced after asynchronous scheduling');
+});
+
+test('virtual camera model download fails safely on timeout and ignores late callbacks',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/const timeout=setTimeout\(\(\)=>\{seg=null;done\(false\)\},15000\)/,'background loading must have a bounded timeout');
+ assert.match(html,/if\(finished\)return;finished=true;clearTimeout\(timeout\)/,'model loading may complete only once');
+ assert.match(html,/sc\.onload=\(\)=>\{if\(finished\)return/,'late CDN success must not activate a timed-out background');
+ assert.match(html,/segLoading=false;for\(const fn of segWait\.splice\(0\)\)/,'waiting cameras must all be released after failure');
 });
