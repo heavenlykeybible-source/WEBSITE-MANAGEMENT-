@@ -347,7 +347,8 @@ export default {
   if(url.pathname==='/api/playout'&&request.method==='POST'){
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const media=Number(b.media_id); const start=new Date(String(b.starts_at)); const end=new Date(String(b.ends_at)); if(!Number.isInteger(media)||!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||end<=start)return json({error:'Invalid playout window'},400);
     if(end.getTime()<=Date.now())return json({error:'Programme end time must be in the future'},400);
-    const mr=await env.DB.prepare("SELECT media_id,keep_media,retention_until FROM media_objects WHERE media_id=? AND status IN ('approved','published')").bind(media).first<any>(); if(!mr)return json({error:'Media unavailable'},400);
+    const mr=await env.DB.prepare("SELECT media_id,media_type,keep_media,retention_until FROM media_objects WHERE media_id=? AND status IN ('approved','published')").bind(media).first<any>(); if(!mr)return json({error:'Media unavailable'},400);
+    if(TV_LOCKED&&mr.media_type==='video')return tvLockedResponse();
     if(!mr.keep_media&&mr.retention_until&&new Date(mr.retention_until).getTime()<end.getTime())return json({error:'This temporary media will expire before the programme ends. Keep the file permanently or choose an earlier programme time.'},409);
     if(!await env.MEDIA_R2.head((await env.DB.prepare("SELECT object_key FROM media_objects WHERE media_id=?").bind(media).first<any>())?.object_key??''))return json({error:'Media file is missing from storage'},400);
     const conflict=await env.DB.prepare("SELECT playout_id,title,starts_at,ends_at FROM playout_items WHERE status IN ('scheduled','playing') AND julianday(starts_at)<julianday(?) AND julianday(ends_at)>julianday(?) ORDER BY starts_at LIMIT 1").bind(end.toISOString(),start.toISOString()).first<any>();
