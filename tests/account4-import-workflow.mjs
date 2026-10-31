@@ -28,7 +28,7 @@ console.log('PASS Account 4 private import workflow startup rollback');
 let failReceipt=false,partUploads=0;
 const partBucket={resumeMultipartUpload(){return {async uploadPart(n){partUploads++;return {partNumber:n,etag:'abc123'}}}}};
 const expires=Date.now()+3600000;
-const persistedRow={owner_id:7,object_key:'private-imports/7/test',upload_id:'u1',filename:'backup.zip',size_bytes:11,part_count:1,state:'uploading',expires_at_ms:expires};
+const persistedRow={owner_id:7,object_key:'private-imports/7/123e4567-e89b-42d3-a456-426614174000',upload_id:'u1',filename:'backup.zip',size_bytes:11,part_count:1,state:'uploading',expires_at_ms:expires};
 const partDb={prepare(sql){return {bind(){return {
   async first(){return persistedRow},
   async all(){return {results:[]}},
