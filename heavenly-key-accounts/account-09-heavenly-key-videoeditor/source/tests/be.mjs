@@ -516,6 +516,16 @@ const pendingKey=accountId+'/pending-r2-cleanup';
 objects.set(pendingKey,Buffer.from('pending file'));
 db.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,?,?)').run('pending-cleanup',accountId,'pending.png','image/png',12,pendingKey,1,Date.now());
 const realCleanupDelete=env.MEDIA.delete;
+const replacementKey=accountId+'/replacement-r2-key';
+env.MEDIA.delete=async key=>{
+  db.prepare('UPDATE media SET r2_key=? WHERE id=? AND user_id=?').run(replacementKey,'pending-cleanup',accountId);
+  return realCleanupDelete(key);
+};
+const racedCleanup=await request('media/cleanup',{method:'POST',cookie:login.cookie});
+env.MEDIA.delete=realCleanupDelete;
+check('Cleanup preserves a media row whose storage key changed during R2 deletion',racedCleanup.status===200&&!!db.prepare('SELECT id FROM media WHERE id=? AND r2_key=?').get('pending-cleanup',replacementKey));
+db.prepare('UPDATE media SET r2_key=? WHERE id=? AND user_id=?').run(pendingKey,'pending-cleanup',accountId);
+objects.set(pendingKey,Buffer.from('pending file'));
 env.MEDIA.delete=async()=>{throw Error('Simulated R2 cleanup failure');};
 const retryableCleanup=await request('media/cleanup',{method:'POST',cookie:login.cookie});
 env.MEDIA.delete=realCleanupDelete;
