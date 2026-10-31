@@ -58,7 +58,7 @@ for (const badParts of [[{part_number:0,etag:'abc123'}],[{part_number:2,etag:'ab
   parts=validParts;
 }
 await assert.rejects(recordImportPart(db,actor,id,{partNumber:2,etag:'abc123'}));
-assert.deepEqual(await transitionImportSession(db,actor,id,'uploading','private-awaiting-review'),{id,state:'private-awaiting-review'});
+assert.deepEqual(await transitionImportSession(db,actor,id,'completing','private-awaiting-review'),{id,state:'private-awaiting-review'});
 assert.match(statements.at(-1).sql,/COUNT\(\*\)/,'Review transition must require complete part receipts');
 assert.match(statements.at(-1).sql,/MIN\(part_number\)/,'Review transition must require contiguous parts');
 assert.match(statements.at(-1).sql,/MAX\(part_number\)/,'Review transition must reject missing final parts');
