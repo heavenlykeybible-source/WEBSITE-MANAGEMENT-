@@ -414,3 +414,10 @@ test('invalid reactions do not consume the valid reaction cooldown',async()=>{
  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji:'👏'}));
  assert.equal(h.host.messages.filter(m=>m.t==='react').length,before+1);
 });
+
+test('participant display names strip invisible direction controls',async()=>{
+ const h=setup();await h.join('');
+ const another=h.add();
+ await h.r.webSocketMessage(another,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Safe\u202eName\u200b',pass:'other',aud:true}));
+ assert.equal(another.attachment.name,'SafeName');
+});
