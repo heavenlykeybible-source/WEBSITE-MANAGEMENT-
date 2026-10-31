@@ -16,7 +16,7 @@ async function renderImage(){
  ctx.strokeStyle='#ffffff22';ctx.lineWidth=3;
  for(let r=180;r<=760;r+=155){ctx.beginPath();ctx.arc(1010,120,r,0,Math.PI*2);ctx.stroke()}
  ctx.fillStyle=theme.gold;ctx.fillRect(72,76,936,7);ctx.globalAlpha=.15;ctx.font='bold 300px Georgia,serif';ctx.textAlign='center';ctx.fillText(theme.symbol||'✦',920,Math.round(h*.43));ctx.textAlign='left';ctx.globalAlpha=1;
- ctx.textBaseline='top';ctx.fillStyle=theme.gold;ctx.font='700 32px system-ui,sans-serif';ctx.fillText('DAILY MANNA  •  KJV',77,128);
+ ctx.textBaseline='top';ctx.fillStyle=theme.gold;ctx.font='700 32px system-ui,sans-serif';ctx.fillText('OUR DAILY MANNA  •  KJV',77,128);
  ctx.fillStyle=theme.text;ctx.font='800 62px system-ui,sans-serif';ctx.fillText('STRENGTH FOR TODAY',77,205);
  const titleY=vertical?380:330;
  ctx.fillStyle=theme.subtitle;const topicEnd=draw(ctx,item[0],77,titleY,915,56,38,3,1.35);
@@ -33,13 +33,13 @@ async function renderImage(){
  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Unable to export PNG.')),'image/png'));
  return {blob,w,h};
 }
-async function refresh(){const token=++renderToken;try{say('Creating your scripture card…');const out=await renderImage();if(token!==renderToken)return null;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(out.blob);preview.src=objectUrl;preview.style.aspectRatio=out.w+' / '+out.h;say('Ready · '+out.w+' × '+out.h+' PNG.');return out}catch(e){if(token===renderToken)say(e.message||'Unable to create image.');return null}}
+async function refresh(){const token=++renderToken;try{say('Creating your scripture card…');const out=await renderImage();if(token!==renderToken)return null;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(out.blob);preview.src=objectUrl;preview.dataset.imageSize=size.value;say('Ready · '+out.w+' × '+out.h+' PNG.');return out}catch(e){if(token===renderToken)say(e.message||'Unable to create image.');return null}}
 async function getImage(){return renderImage()}
 const filename=()=> 'daily-manna-'+(current+1)+'-'+size.value+'.png';
 function download(blob){const url=URL.createObjectURL(blob),anchor=document.createElement('a');anchor.href=url;anchor.download=filename();document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 $('manna-refresh-image').onclick=refresh;
 $('manna-download-image').onclick=async()=>{try{const result=await getImage();download(result.blob);say('PNG downloaded, with Global Christian Social Network branding and website address.')}catch(e){say(e.message)}};
-$('manna-share-image').onclick=async()=>{const button=$('manna-share-image');button.disabled=true;try{const {blob}=await getImage(),file=new File([blob],filename(),{type:'image/png'});if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({files:[file],title:'Daily Manna — Strength for Today',text:CAPTION});say('Your device sharing options opened.')}else{download(blob);try{await navigator.clipboard.writeText(CAPTION);say('Image downloaded and sharing caption copied. Upload the image to your chosen social app.')}catch{say('Image downloaded. Add this caption when posting: '+CAPTION)}}}catch(e){if(e?.name!=='AbortError')say('Image sharing unavailable: '+e.message)}finally{button.disabled=false}};
+$('manna-share-image').onclick=async()=>{const button=$('manna-share-image');button.disabled=true;try{const {blob}=await getImage(),file=new File([blob],filename(),{type:'image/png'});if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({files:[file],title:'OUR DAILY MANNA — STRENGTH FOR TODAY',text:CAPTION});say('Your device sharing options opened.')}else{download(blob);try{await navigator.clipboard.writeText(CAPTION);say('Image downloaded and sharing caption copied. Upload the image to your chosen social app.')}catch{say('Image downloaded. Add this caption when posting: '+CAPTION)}}}catch(e){if(e?.name!=='AbortError')say('Image sharing unavailable: '+e.message)}finally{button.disabled=false}};
 $('manna-copy-caption').onclick=async()=>{try{await navigator.clipboard.writeText(CAPTION);say('Sharing text copied.')}catch{say(CAPTION)}};
 // Keep the original Download Image button aligned with the selected premium format.
 $('download').onclick=async()=>{try{const {blob}=await getImage();download(blob);$('status').textContent='Branded PNG downloaded to this device.'}catch(e){$('status').textContent=e.message}};
