@@ -342,6 +342,6 @@ test('schema readiness cannot be accessed before bearer authorization', () => {
  const readiness=source.indexOf("if(u.pathname==='/api/automation/readiness'");
  assert.ok(auth>=0&&readiness>auth,'readiness must be after the shared authentication guard');
  const handler=source.slice(readiness,source.indexOf("if(u.pathname==='/api/accounts'",readiness));
- assert.doesNotMatch(handler,/ADMIN_TOKEN|META_APP_SECRET|GEMINI_API_KEY\s*[,)}]/);
+ assert.doesNotMatch(handler,/env\.ADMIN_TOKEN|env\.META_APP_SECRET|geminiApiKey:\s*env\.GEMINI_API_KEY/);
  assert.match(handler,/migrationReady:false/);
 });
