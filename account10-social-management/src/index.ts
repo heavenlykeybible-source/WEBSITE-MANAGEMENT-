@@ -124,6 +124,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  // Defense in depth: block browser cross-site mutations even if an Origin header is missing.
  if(['POST','PUT','PATCH','DELETE'].includes(req.method)&&['cross-site','same-site'].includes(req.headers.get('sec-fetch-site')||''))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  // Browser-origin validation is a second boundary for state-changing actions.
+ // A browser's Fetch Metadata must prove same-origin if its Origin is absent;
+ // non-browser service clients without Fetch Metadata retain token-based access.
+ if(['POST','PUT','PATCH','DELETE'].includes(req.method)&&req.headers.get('origin')===null&&req.headers.has('sec-fetch-site')&&req.headers.get('sec-fetch-site')!=='same-origin')return reply({error:'Untrusted browser mutation origin'},403);
  if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  if(['POST','PUT','PATCH'].includes(req.method)){
   const contentType=req.headers.get('content-type')||'';
