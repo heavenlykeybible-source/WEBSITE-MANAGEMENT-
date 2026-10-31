@@ -18,4 +18,7 @@ check({date:'2026-10-31',status:'approved-for-publication',review:{approvedBy:'E
 check({date:'2026-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2026-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true},provenance:{requiresEditorialRewrite:true},sections:{}},'Unresolved editorial provenance blocks publication');
 check({date:'2026-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2026-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true},provenance:{requiresScriptureVerification:true},sections:{}},'Unresolved editorial provenance blocks publication');
 check({date:'2031-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2031-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true},provenance:{requiresOriginalEditorialContent:true},sections:{}},'Unresolved editorial provenance blocks publication');
+
+const approvedReview={approvedBy:'Editor',approvedAt:'2026-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true};
+check({date:'2026-10-31',status:'approved-for-publication',review:approvedReview,sections:{}},'Approval must identify the current Heavenly Key Statement of Faith');
 console.log('Additional devotional editorial contract regressions passed');
