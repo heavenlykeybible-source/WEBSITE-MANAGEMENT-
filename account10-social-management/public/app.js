@@ -7,7 +7,7 @@ function addGeminiReadiness(){
  const root=$('managementBody'),section=document.createElement('section');
  section.style='margin-top:16px;padding:16px;border:1px solid #d3ddeb;border-radius:12px';
  const heading=document.createElement('h3');heading.textContent='Gemini AI connection';section.append(heading);
- const note=document.createElement('p');note.textContent='The Gemini API key is held by the server, never the browser. Run a limited KJV reference test to verify the live Gemini connection. This test sends no customer message and publishes or sends nothing.';section.append(note);
+ const note=document.createElement('p');note.textContent='The Gemini API key is held by the server, never the browser. Run a limited KJV reference test to verify the live Gemini connection. No customer message is sent; this test publishes nothing and sends no outbound message.';section.append(note);
  const button=document.createElement('button');button.type='button';button.textContent='Test Gemini connection';
  const result=document.createElement('p');result.setAttribute('role','status');result.setAttribute('aria-live','polite');result.textContent='Not tested yet.';
  button.onclick=async()=>{
