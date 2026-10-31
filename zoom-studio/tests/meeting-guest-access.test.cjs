@@ -318,3 +318,13 @@ test('host cannot deliver a WebRTC offer to an expired stage connection', async(
   assert.equal(h.guest.messages.filter(m=>m.t==='sig').length,count);
   assert.match(h.guest.messages.at(-1).msg,/expired/i);
 });
+
+test('host live reactions have a counter, bounded animation and reduced-motion support',()=>{
+ const html=fs.readFileSync(require('node:path').join(__dirname,'../site/index.html'),'utf8');
+ assert.match(html,/id="greactions"/);
+ assert.match(html,/id="greaction-layer"/);
+ assert.match(html,/function showLiveReaction\(emoji\)/);
+ assert.match(html,/while\(layer.children.length>12\)/);
+ assert.match(html,/prefers-reduced-motion:reduce/);
+ assert.match(html,/showLiveReaction\(m.emoji\)/);
+});
