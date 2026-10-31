@@ -66,7 +66,8 @@ test('preflight validates the domain within one route block and every migration'
  assert.match(source,/custom_domain/);
  assert.match(source,/migrations.map\(name=>'migrations\/'\+name\)/);
  assert.match(source,/Unsafe bulk database command must remain disabled/);
- assert.match(source,/MIGRATION-SAFETY\.md/);\n assert.ok(existsSync(resolve(root,'MIGRATION-SAFETY.md')));
+ assert.match(source,/MIGRATION-SAFETY\.md/);
+ assert.ok(existsSync(resolve(root,'MIGRATION-SAFETY.md')));
 });
 
 test('preflight refuses wrong Worker identity and missing dashboard module', () => {
