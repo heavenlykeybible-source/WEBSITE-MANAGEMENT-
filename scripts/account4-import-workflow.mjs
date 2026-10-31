@@ -39,7 +39,14 @@ export async function finishPersistedPrivateImport(bucket, db, actor, id) {
   const parts = Object.entries(session.parts).map(([partNumber,etag]) => ({partNumber:Number(partNumber),etag}));
   // Acquire the exclusive D1 state before the irreversible R2 completion.
   await claimImportCompletion(db, actor, id);
-  const completed = await completePrivateImport(bucket, actor, session, parts);
+  let completed;
+  try {
+    completed = await completePrivateImport(bucket, actor, session, parts);
+  } catch (error) {
+    // Completion may have succeeded remotely even if its response was lost.
+    // Never retry blindly or revert the exclusive claim.
+    throw new Error('R2 completion outcome uncertain; operator reconciliation required', {cause:error});
+  }
   try {
     await transitionImportSession(db, actor, id, 'completing', 'private-awaiting-review');
   } catch (error) {
