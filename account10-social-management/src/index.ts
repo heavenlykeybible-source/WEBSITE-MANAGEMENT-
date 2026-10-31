@@ -29,7 +29,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const challenge=u.searchParams.get('hub.challenge');
   if(!env.META_WEBHOOK_VERIFY_TOKEN)return reply({error:'Webhook verification is not configured'},503);
   if(mode!=='subscribe'||!token||token!==env.META_WEBHOOK_VERIFY_TOKEN||!challenge||!/^[0-9]{1,64}$/.test(challenge))return reply({error:'Webhook verification failed'},403);
-  return new Response(challenge,{status:200,headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
+  return new Response(challenge,{status:200,headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'no-referrer','strict-transport-security':'max-age=31536000; includeSubDomains'}});
  }
  if(u.pathname==='/api/webhooks/meta'&&req.method==='POST'){
   if(!env.META_APP_SECRET)return reply({error:'Meta signature verification is not configured'},503);
