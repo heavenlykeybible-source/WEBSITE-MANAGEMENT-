@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 export const SECTION_KEYS=Object.freeze(['topic','bibleReading','hymn','bibleStory','worldStory','eternity','decision','warfare','propheticPrayer','healthPrayer','salvation','challenges']);
 export const CHALLENGE_COUNT=12;
-export const FAITH_STATEMENT_URL='https://heavenlykey.org/what-we-believe/';
 const nonempty=value=>typeof value==='string'&&value.trim().length>0;
 const OLD_TESTAMENT_BOOKS=new Set(['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra','Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Solomon','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos','Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah','Malachi']);
 const NEW_TESTAMENT_BOOKS=new Set(['Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians','2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians','2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James','1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation']);
@@ -41,7 +40,12 @@ export function validateDailyDevotional(entry){
  if(entry.status==='approved-for-publication'&&(!nonempty(entry.review?.approvedBy)||!nonempty(entry.review?.approvedAt)))errors.push('Publication approval audit details required');
  if(entry.status==='approved-for-publication'&&(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(entry.review?.approvedAt||'')||!Number.isFinite(Date.parse(entry.review.approvedAt))||new Date(entry.review.approvedAt).toISOString()!==entry.review.approvedAt))errors.push('Publication approval timestamp must be valid UTC ISO 8601');
  if(entry.status==='approved-for-publication'&&entry.review?.doctrinalApproved!==true)errors.push('Doctrinal approval required');
- if(entry.status==='approved-for-publication'&&entry.review?.faithStatementUrl!==FAITH_STATEMENT_URL)errors.push('Approval must identify the current Heavenly Key Statement of Faith');
+ if(entry.status==='approved-for-publication'){
+  const standards=entry.review?.doctrinalStandards;
+  for(const id of ['heavenly-key-statement-of-faith','deeper-life-daily-manna-and-kumuyi','mountain-of-fire-and-miracles-ministries'])if(!Array.isArray(standards)||!standards.includes(id))errors.push('Doctrinal audit standard not recorded: '+id);
+  if(entry.review?.scriptureVerified!==true)errors.push('Scripture verification required');
+  if(!nonempty(entry.review?.doctrinalNotes))errors.push('Doctrinal review notes required');
+}
  if(entry.status==='approved-for-publication'&&entry.review?.sourcesVerified!==true)errors.push('Source verification required');
  return errors;
 }
