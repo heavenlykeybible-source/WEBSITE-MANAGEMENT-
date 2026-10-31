@@ -59,11 +59,21 @@ async function pbkdf2(pw, salt, iterations = 600000) {
 }
 const ROLES = new Set(['owner', 'admin']);
 const cookie = (t, age) => `hk=${t}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
+const SESSION_IDLE = 30 * 60 * 1000;
+const SESSION_ABSOLUTE = 30 * DAY;
+const SESSION_TOUCH_INTERVAL = 5 * 60 * 1000;
 async function user(req, env) {
   const m = (req.headers.get('cookie') || '').match(/(?:^|;\s*)hk=([a-f0-9]{64})(?=;|$)/);
   if (!m) return null;
-  const r = await env.DB.prepare('SELECT u.id,u.email,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').bind(await sha(m[1]), Date.now()).first();
-  return r || null;
+  const now = Date.now();
+  const tokenHash = await sha(m[1]);
+  const r = await env.DB.prepare('SELECT u.id,u.email,u.role,s.last_seen_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND s.last_seen_at>?').bind(tokenHash, now, now - SESSION_IDLE).first();
+  if (!r) return null;
+  // Touch at most once every five minutes to limit D1 writes while enforcing a 30-minute idle timeout.
+  if (r.last_seen_at <= now - SESSION_TOUCH_INTERVAL) {
+    await env.DB.prepare('UPDATE sessions SET last_seen_at=? WHERE token_hash=? AND last_seen_at=? AND expires_at>?').bind(now, tokenHash, r.last_seen_at, now).run();
+  }
+  return r;
 }
 const log = (env, uid, a) => env.DB.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').bind(uid, a, Date.now()).run();
 const body = async req => {
@@ -182,7 +192,7 @@ export async function onRequest({ request: req, env, params }) {
         await env.DB.prepare('UPDATE users SET pass_hash=?,salt=?,password_iterations=600000 WHERE id=? AND password_iterations=?').bind(upgradedHash,upgradedSalt,u.id,u.password_iterations || 100000).run();
       }
       const t = rnd(32);
-      await env.DB.prepare('INSERT INTO sessions VALUES(?,?,?)').bind(await sha(t), u.id, Date.now() + 30 * DAY).run();
+      await env.DB.prepare('INSERT INTO sessions(token_hash,user_id,expires_at,last_seen_at) VALUES(?,?,?,?)').bind(await sha(t), u.id, Date.now() + SESSION_ABSOLUTE, Date.now()).run();
       // Do not retain unlimited sessions when a member uses multiple browsers.
       await env.DB.prepare('DELETE FROM sessions WHERE user_id=? AND expires_at<=?').bind(u.id,Date.now()).run();
       await env.DB.prepare('DELETE FROM sessions WHERE user_id=? AND token_hash NOT IN (SELECT token_hash FROM sessions WHERE user_id=? ORDER BY expires_at DESC, rowid DESC LIMIT 20)').bind(u.id,u.id).run();
