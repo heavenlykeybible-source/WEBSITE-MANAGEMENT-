@@ -79,6 +79,7 @@ test('installed Hymn Library launches the real hymn book, not a redirect', () =>
   const worker=publicFile('sw.js');
   assert.equal(manifest.start_url,'/old-time-gospel-revival-hymn-book.html');
   assert.match(page,/rel="manifest" href="\/manifests\/hymns\.webmanifest"/);
+  assert.match(page,/navigator\.serviceWorker\.register\('\/sw\.js'\)/);
   assert.doesNotMatch(page,/<meta\s+http-equiv="refresh"/i);
   assert.match(worker,/'\/old-time-gospel-revival-hymn-book\.html'/);
   assert.doesNotMatch(worker,/'\/hymns\.html'/);
