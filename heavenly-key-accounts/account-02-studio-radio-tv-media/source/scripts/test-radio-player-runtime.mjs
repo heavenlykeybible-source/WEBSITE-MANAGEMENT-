@@ -14,6 +14,7 @@ const html=await response.text();
 const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Standalone player script should exist');
 const events=new Map(),elements=new Map(),mediaActions=new Map();
+let holdPlay=false,resolvePendingPlay=null;
 function element(id){
  const listeners=new Map(),attributes=new Map();
  return {id,textContent:'',value:'80',disabled:false,paused:true,volume:0,
@@ -21,7 +22,7 @@ function element(id){
   async fire(name){const fn=listeners.get(name);assert.ok(fn,id+' event '+name);return fn()},
   setAttribute:(name,v)=>attributes.set(name,v),getAttribute(name){return name==='src'?(this.src||null):attributes.get(name)||null},
   removeAttribute(name){if(name==='src')this.src='';else attributes.delete(name)},
-  pause(){this.paused=true},load(){},async play(){this.paused=false;return undefined;}
+  pause(){this.paused=true},load(){},async play(){if(holdPlay){return await new Promise(resolve=>{resolvePendingPlay=()=>{this.paused=false;resolve()}})}this.paused=false;return undefined;}
  };
 }
 for(const id of ['audio','play','next','retry','track','status','volume','volumeValue','output','outputHelp'])elements.set(id,element(id));
@@ -104,4 +105,13 @@ pendingFetches[1]({ok:true,json:async()=>firstResult});
 await first;
 assert.equal(get('track').textContent,'Latest','Outdated response must never replace latest playlist');
 assert.equal(get('play').disabled,false);
+holdPlay=true;
+const firstPlay=get('play').fire('click');
+assert.equal(typeof resolvePendingPlay,'function','Audio play must be awaiting permission or buffering');
+await get('play').fire('click');
+assert.equal(audio.paused,true,'Second tap must cancel pending playback');
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
+resolvePendingPlay();await firstPlay;
+assert.equal(get('play').getAttribute('aria-label'),'Play radio','Late play promise must never restore Playing controls');
+holdPlay=false;
 console.log('Account 2 radio runtime play, pause, next, end, refresh, and page-exit tests passed');
