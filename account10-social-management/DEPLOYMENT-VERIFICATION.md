@@ -109,3 +109,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Repeat with 'I want to speak with a Heavenly Key Evangelistic Movement agent' and verify `human_contact_target=ministry_agent`.
 - [ ] Both POST /api/ai/suggest-reply and POST /api/automation/evaluate-and-draft must honor the same destination and reject changes to pending or paused human requests.
 - [ ] Check browser dashboard's human requests list visibly distinguishes both routing choices and does not imply a human has already been notified.
+
+## WhatsApp human handover replay protection — migration 0010
+- [ ] Apply `0010_whatsapp_handover_dedupe.sql` after migration 0009 before activating the upgraded WhatsApp event processor; an unapplied migration should fail closed, not silently skip recording the handover.
+- [ ] Replay the same signed WhatsApp message in distinct stored webhook events; after the first processed event and operator resolution, the duplicate must not reopen the request or overwrite its chosen destination.
+- [ ] Verify the ledger consumes the handover message atomically with database processing and preserves `consumed=1` on duplicate events.
+- [ ] Run `npm run verify:local`, including typecheck, security tests, dashboard tests and Cloudflare dry-run, before seeking owner approval for staging deployment.
