@@ -1062,6 +1062,21 @@ test('stalled background download releases every camera and permits a retry',()=
 
 test('failed background processing stops showing stale virtual camera frames immediately',()=>{
  const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
- assert.match(html,/seg\.send\(\{image:s\.el\}\)\.then\(\(\)=>\{s\.segFails=0\}\)\.catch\(\(\)=>\{s\.segReady=false;if\(\+\+s\.segFails>=3\)/,'failure must clear stale compositing on the first error');
+ assert.match(html,/Promise\.resolve\(\)\.then\(\(\)=>seg\.send\(\{image:s\.el\}\)\)\.then\(\(\)=>\{s\.segFails=0\}\)\.catch\(\(\)=>\{s\.segReady=false;if\(\+\+s\.segFails>=3\)/,'both synchronous and asynchronous failures must clear stale frames');
  assert.match(html,/else if\(s\.blur&&s\.oc&&s\.segReady\)/,'camera output must fall back to raw image when composite is invalid');
+});
+
+test('camera inference wrapper handles synchronous exceptions as rejected asynchronous work',async()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/Promise\.resolve\(\)\.then\(\(\)=>seg\.send\(\{image:s\.el\}\)\)/);
+ const camera={segReady:true,segFails:0,blur:true};
+ const model={send(){throw Error('camera disconnected')}};
+ let busy=true;
+ await Promise.resolve().then(()=>model.send({image:{}})).then(()=>{camera.segFails=0}).catch(()=>{
+  camera.segReady=false;
+  if(++camera.segFails>=3)camera.blur=false;
+ }).finally(()=>{busy=false});
+ assert.equal(camera.segReady,false);
+ assert.equal(camera.segFails,1);
+ assert.equal(busy,false,'inference failure must release processing lock');
 });
