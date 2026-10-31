@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {assertReviewedAccount4Source} from '../scripts/account4-release-integrity.mjs';
+const source='x'.repeat(10001);
+const sha=createHash('sha256').update(source).digest('hex');
+const blob=createHash('sha1').update('blob '+Buffer.byteLength(source)+'\0').update(source).digest('hex');
+assert.equal(assertReviewedAccount4Source(source,{after_sha256:sha,built_sha256:'f'.repeat(64)}),sha);
+assert.equal(assertReviewedAccount4Source(source,{after_sha256:'0'.repeat(64),built_sha256:'f'.repeat(64),source_blob_sha:blob}),sha);
+assert.throws(()=>assertReviewedAccount4Source(source+'x',{after_sha256:sha,built_sha256:'f'.repeat(64),source_blob_sha:blob}));
+console.log('PASS Account 4 release integrity');
