@@ -44,6 +44,12 @@ export async function loadImportSession(db, actor, id) {
     throw new Error('Import session unavailable');
   const {results} = await db.prepare('SELECT part_number,etag FROM account4_import_parts WHERE session_id=? ORDER BY part_number')
     .bind(id).all();
+  if (!Array.isArray(results) || results.length > row.part_count ||
+      results.some(p => !Number.isSafeInteger(p?.part_number) ||
+        p.part_number < 1 || p.part_number > row.part_count ||
+        typeof p.etag !== 'string' || !/^[a-zA-Z0-9"-]{1,128}$/.test(p.etag)) ||
+      new Set(results.map(p => p.part_number)).size !== results.length)
+    throw new Error('Invalid persisted upload receipts');
   return {
     id,ownerId:row.owner_id,key:row.object_key,uploadId:row.upload_id,
     name:row.filename,size:row.size_bytes,partCount:row.part_count,
