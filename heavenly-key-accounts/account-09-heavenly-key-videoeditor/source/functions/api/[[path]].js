@@ -127,7 +127,7 @@ export async function onRequest({ request: req, env, params }) {
           dbReady = true;
         }
       } catch { dbReady = false; }
-      const storageReady = Boolean(env.MEDIA && typeof env.MEDIA.get === 'function' && typeof env.MEDIA.put === 'function');
+      const storageReady = Boolean(env.MEDIA && typeof env.MEDIA.get === 'function' && typeof env.MEDIA.put === 'function' && typeof env.MEDIA.delete === 'function');
       const aiReady = Boolean(env.AI && typeof env.AI.run === 'function');
       const ready = dbReady && storageReady && aiReady;
       return J({ status: ready ? 'ready' : 'degraded' }, ready ? 200 : 503);
