@@ -59,6 +59,7 @@ for(let i=0;i<entries.length;i++){
   if(t.reviewStatus!=='draft-original-editorial-and-doctrinal-approval-pending')flag(e.date,'REVIEW_STATUS',t.topic);
   for(const [field,value,dict] of [['reflection',t.reflection,refl],['prayer',t.prayer,pray]]){
    const key=norm(value);
+   if(!key)continue;
    if(dict.has(key))flag(e.date,'EXACT_DUPLICATE_'+field.toUpperCase(),t.topic+' first '+dict.get(key));
    else dict.set(key,e.date+' '+t.topic);
   }
