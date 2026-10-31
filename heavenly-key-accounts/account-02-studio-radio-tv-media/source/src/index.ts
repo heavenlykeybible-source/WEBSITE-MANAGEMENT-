@@ -51,6 +51,7 @@ export default {
   if(marker==='media-engine-public-v1' && request.method==='GET' && url.pathname==='/api/broadcast/live') {
     const row=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,started_at,last_heartbeat_at,reconnect_deadline FROM live_sessions WHERE status IN ('live','reconnecting') ORDER BY session_id DESC LIMIT 1").first();
     if(!row)return json({live:null});
+    if(TV_LOCKED){const radio=await env.DB.prepare('SELECT destination FROM live_sessions WHERE session_id=?').bind((row as any).session_id).first<{destination:string}>();if(radio?.destination!=='radio')return json({live:null,television_locked:true});}
      const safe=row as Record<string,unknown>;
      return json({live:{session_id:safe.session_id,title:safe.title,status:safe.status,source_type:safe.source_type,started_at:safe.started_at,reconnect_deadline:safe.reconnect_deadline}});
   }
@@ -59,6 +60,7 @@ export default {
   if(url.pathname==='/api/media-engine/livekit/viewer-token'&&request.method==='POST'&&marker==='media-engine-public-v1'){
     const live=await env.DB.prepare("SELECT session_id,source_ref,title,status FROM live_sessions WHERE source_ref LIKE 'livekit:%' AND ((status='live' AND last_heartbeat_at>datetime('now','-180 seconds')) OR (status='reconnecting' AND reconnect_deadline>datetime('now'))) ORDER BY session_id DESC LIMIT 1").first<any>();
     if(!live)return json({error:'No LiveKit broadcast is active'},404);
+    if(TV_LOCKED){const radio=await env.DB.prepare('SELECT destination FROM live_sessions WHERE session_id=?').bind(live.session_id).first<{destination:string}>();if(radio?.destination!=='radio')return tvLockedResponse();}
     try { const {createLiveKitToken}=await import('./livekit'); const room='heavenlykey-live-'+live.session_id; return json({...(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,'viewer-'+crypto.randomUUID(),false)),title:live.title,sessionId:live.session_id}); }
     catch(e){return json({error:e instanceof Error?e.message:'Live transport unavailable'},503);}
   }
@@ -100,7 +102,7 @@ export default {
     const prefs:Record<string,unknown>={};const textLimits:Record<string,number>={title:200,presenter:150,lowerThird:240,ticker:500,scripture:1000};
     for(const [k,max]of Object.entries(textLimits)){if(k in value){const v=(value as any)[k];if(typeof v!=='string'||v.length>max)return json({error:'Invalid studio text field: '+k},400);prefs[k]=v;}}
     const choices:Record<string,string[]>={format:['landscape-480','landscape-720','landscape-1080','portrait-720','portrait-1080','portrait-3-4','square-720','square-1080'],destination:['both','radio','video'],facing:['user','environment'],scene:['camera','screen','media','starting','break','ending'],backgroundMode:['none','blur','virtual','video'],backgroundPreset:['hkem-global','hkem-stage','nations-wall','world-map','sanctuary','prayer','europe-paris','europe-london','europe-rome','europe-alps','america-newyork','america-washington','america-coast','america-city','world-night','mission-clouds','royal-blue','wine-gold','clean-white','media-wall'],voicePreset:['condenser','speech','natural'],qualityPreset:['data','balanced','high']};
-    for(const [k,values]of Object.entries(choices)){if(k in value){const v=(value as any)[k];if(!values.includes(v))return json({error:'Invalid studio selection: '+k},400);prefs[k]=v;}}
+    for(const [k,values]of Object.entries(choices)){if(k in value){const v=(value as any)[k];if(!values.includes(v))return json({error:'Invalid studio selection: '+k},400);if(TV_LOCKED&&k==='destination'&&v!=='radio')return tvLockedResponse();prefs[k]=v;}}
     for(const k of ['cameraVisible','mirror','muteIntermission','showBrand','showLowerThird','showTicker','duckMusic','subjectProtection','noiseSuppression','echoCancellation','autoGainControl','noiseGate','compressor','limiter'])if(k in value){if(typeof (value as any)[k]!=='boolean')return json({error:'Invalid studio switch'},400);prefs[k]=(value as any)[k];}
     for(const [k,max]of [['micGain',150],['mediaGain',100],['screenGain',100],['musicGain',100],['countdown',60],['backgroundStrength',100],['voiceClarity',100],['backgroundVideoId',999999999]] as const)if(k in value){const v=(value as any)[k];if(typeof v!=='number'||!Number.isFinite(v)||v<0||v>max)return json({error:'Invalid studio mixer/countdown value'},400);prefs[k]=v;}
     await env.LIVE_STATUS_KV.put(key,JSON.stringify(prefs));await audit(env,cap,'studio.preset.save','studio');return json({ok:true});
@@ -305,6 +307,7 @@ export default {
   if(url.pathname==='/api/broadcast/live'&&request.method==='POST'){
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const title=String(b.title??'Live Broadcast'); const source=String(b.source_type??'camera'); if(!['camera','video'].includes(source))return json({error:'Choose a camera stream or an uploaded video'},400);
     if(source==='camera'){const ref=String(b.source_ref??'');if(ref.startsWith('livekit:')&&!(await resolveLiveKitConfig(env)))return json({error:'Configure LiveKit before starting camera live'},503);if(!ref.startsWith('livekit:')){try{const stream=new URL(ref);if(!isPlaybackURL(ref))throw new Error();}catch{return json({error:'Use a direct HTTPS media stream, not your radio or video webpage. Camera broadcasting uses the Production studio.'},400);}}}
+    if(TV_LOCKED&&source==='video')return tvLockedResponse();
     if(source==='video'){const id=Number(b.visual_media_id??String(b.source_ref??'').replace(/^media:/,''));const media=await env.DB.prepare("SELECT object_key FROM media_objects WHERE media_id=? AND media_type='video' AND status IN ('approved','published') AND (keep_media=1 OR retention_until IS NULL OR julianday(retention_until)>julianday('now'))").bind(id).first<any>();if(!media||!await env.MEDIA_R2.head(media.object_key))return json({error:'Select an uploaded, available video'},400);b.visual_media_id=id;b.source_ref='media:'+id;}
     const destination=String(b.destination??'both');if(TV_LOCKED&&destination!=='radio')return tvLockedResponse();if(!['radio','video','both'].includes(destination))return json({error:'Invalid broadcast destination'},400);
     if(b.fallback_media_id){const fallbackId=Number(b.fallback_media_id);const fallback=await env.DB.prepare("SELECT object_key FROM media_objects WHERE media_id=? AND media_type='video' AND status IN ('approved','published') AND (keep_media=1 OR retention_until IS NULL OR julianday(retention_until)>julianday('now'))").bind(fallbackId).first<any>();if(!Number.isInteger(fallbackId)||!fallback||!await env.MEDIA_R2.head(fallback.object_key))return json({error:'Select an uploaded, available standby advert video'},400);b.fallback_media_id=fallbackId;}
@@ -317,7 +320,7 @@ export default {
   m=url.pathname.match(/^\/api\/broadcast\/live\/(\d+)\/heartbeat$/); if(m&&request.method==='POST'){
     const r=await env.DB.prepare("UPDATE live_sessions SET status='live',last_heartbeat_at=CURRENT_TIMESTAMP,reconnect_deadline=NULL WHERE session_id=? AND status IN ('live','reconnecting')").bind(Number(m[1])).run(); if(!r.meta.changes)return json({error:'Live session not active'},404); return json({ok:true});
   }
-  m=url.pathname.match(/^\/api\/broadcast\/live\/(\d+)\/switch-to-video$/); if(m&&request.method==='POST'){
+  m=url.pathname.match(/^\/api\/broadcast\/live\/(\d+)\/switch-to-video$/); if(m&&request.method==='POST'){if(TV_LOCKED)return tvLockedResponse();
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400);
     const sessionId=Number(m[1]); const mediaId=Number(b.media_id);
     if(!Number.isInteger(sessionId)||!Number.isInteger(mediaId))return json({error:'Invalid session or media id'},400);
