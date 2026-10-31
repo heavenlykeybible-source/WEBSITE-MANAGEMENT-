@@ -18,6 +18,7 @@ for(const book of manifest.books){const data=JSON.parse(txt(`data/kjv/${book.cod
 const headers=txt('_headers');
 assert(headers.includes("Content-Security-Policy: default-src 'self'"));
 assert(headers.includes("script-src 'self'"),'CSP must restrict scripts to same-origin files');
+assert(headers.includes('https://api.qrserver.com'),'CSP must allow the install guide QR image provider');
 const cspPages=[
  'index.html','study-extensions.html','strength-for-today.html',
  'old-time-gospel-revival-hymn-book.html','404.html','bible-champions-embed.html','bible-study-tools.html',
