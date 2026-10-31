@@ -789,7 +789,7 @@ test('studio background processing rotates fairly and restores original camera a
 test('background model load coalesces concurrent requests and ignores obsolete mode changes',()=>{
  const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
  assert.match(html,/segWait\.push\(cb\);if\(segLoading\)return;/,'one model loading operation must serve concurrent cameras');
- assert.match(html,/for\(const fn of segWait\.splice\(0\)\)fn\(ok\)/,'all waiting cameras receive completion');
+ assert.match(html,/for\(const fn of segWait\.splice\(0\)\)\{try\{fn\(ok\)\}catch\(e\)/,'all waiting cameras receive completion independently');
  assert.match(html,/s\.bgRequest=requested/,'each camera mode request gets an identifier');
  assert.match(html,/if\(s\.bgRequest!==requested\)return/,'an obsolete asynchronous load cannot re-enable an unwanted effect');
 });
@@ -944,4 +944,10 @@ test('expired meeting host and its participants are reclaimed before capacity en
  assert.ok(cleanup>0&&limit>cleanup,'expired host meeting cleanup must precede new connection capacity checks');
  assert.match(source,/const previousHost=this\.host\(\)/);
  assert.match(source,/this\.end\('The meeting time has ended\.'\)/,'cleanup must disconnect all guests as well as the expired host');
+});
+
+test('one virtual-background load callback failure cannot prevent other waiting cameras from initializing',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/const done=ok=>\{segLoading=false;for\(const fn of segWait\.splice\(0\)\)\{try\{fn\(ok\)\}catch\(e\)/);
+ assert.match(html,/console\.error\('Background initialization callback failed',e\)/);
 });
