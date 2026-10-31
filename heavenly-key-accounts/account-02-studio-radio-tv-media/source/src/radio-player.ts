@@ -37,8 +37,8 @@ input[type=range]{accent-color:#f3c957;flex:1;min-width:60px}
 <script nonce="${nonce}">
 (()=>{'use strict';
 const audio=document.getElementById('audio'),play=document.getElementById('play'),next=document.getElementById('next'),retry=document.getElementById('retry'),title=document.getElementById('track'),status=document.getElementById('status'),volume=document.getElementById('volume'),volumeValue=document.getElementById('volumeValue'),output=document.getElementById('output'),outputHelp=document.getElementById('outputHelp');
-let playlist=[],position=0,playing=false,loadGeneration=0,playGeneration=0;
-const setPaused=message=>{++playGeneration;playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');if(message)say(message)};
+let playlist=[],position=0,playing=false,playPending=false,loadGeneration=0,playGeneration=0;
+const setPaused=message=>{++playGeneration;playing=false;playPending=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');if(message)say(message)};
 const say=message=>{status.textContent=message};
 const validItem=item=>item&&item.type==='audio'&&typeof item.url==='string'&&/^\\/api\\/broadcast\\/media\\/\\d+\\/object$/.test(item.url);
 async function refresh(){
@@ -51,12 +51,12 @@ async function refresh(){
  const result=await response.json();
  if(generation!==loadGeneration)return;
  const items=Array.isArray(result.items)?result.items.filter(validItem):[];
- ++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');
+ ++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');
  playlist=items;position=0;play.disabled=!items.length;next.disabled=!items.length;
  if(!items.length){title.textContent='No radio recordings available';say('The radio playlist is currently empty.');return;}
  title.textContent=items[0].title||'Radio programme';
  say('Playlist ready. Press Play to listen.');
- }catch(error){if(generation!==loadGeneration)return;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');playlist=[];play.disabled=true;next.disabled=true;title.textContent='Playlist unavailable';say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
+ }catch(error){if(generation!==loadGeneration)return;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');playlist=[];play.disabled=true;next.disabled=true;title.textContent='Playlist unavailable';say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
 }
 function select(index){
  if(!playlist.length)return false;
@@ -67,12 +67,12 @@ async function start(){
  let generation=0;
  try{if(!playlist.length){say('No radio recordings are available.');return;}
  if(!audio.getAttribute('src'))select(position);
- generation=++playGeneration;await audio.play();if(generation!==playGeneration)return;playing=true;play.textContent='⏸ Pause';play.setAttribute('aria-label','Pause radio');say('Playing • '+(position+1)+' of '+playlist.length);}
+ generation=++playGeneration;playPending=true;await audio.play();if(generation!==playGeneration)return;playPending=false;playing=true;play.textContent='⏸ Pause';play.setAttribute('aria-label','Pause radio');say('Playing • '+(position+1)+' of '+playlist.length);}
  catch{if(generation===playGeneration)setPaused('Audio could not play. Check your connection, audio output, or try the next recording.');}
 }
-play.addEventListener('click',async()=>{if(play.disabled)return;if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
-next.addEventListener('click',async()=>{if(next.disabled)return;if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
-retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
+play.addEventListener('click',async()=>{if(play.disabled)return;if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(playPending||!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
+next.addEventListener('click',async()=>{if(next.disabled)return;if(!select(position+1))return;if(playing||playPending)await start();else say('Next recording ready. Press Play.')});
+retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
 audio.addEventListener('ended',()=>{if(!playlist.length)return;const continuePlaying=playing;select(position+1);if(continuePlaying)void start()});
 audio.addEventListener('pause',()=>{if(playing&&audio.paused&&!audio.ended)setPaused('Paused.');});
 window.addEventListener('pagehide',()=>{audio.pause();setPaused();});
