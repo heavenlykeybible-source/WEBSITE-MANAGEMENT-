@@ -57,6 +57,8 @@ async function request(path, { method = 'GET', body, cookie, headers = {} } = {}
   return { response, status: response.status, data: type.includes('json') ? await response.json() : null,
     cookie: (response.headers.get('set-cookie') || '').split(';')[0] };
 }
+const missingRoute = await request('route-that-does-not-exist');
+check('JSON API responses include baseline security headers',missingRoute.response.headers.get('x-content-type-options')==='nosniff' && missingRoute.response.headers.get('x-frame-options')==='DENY' && missingRoute.response.headers.get('referrer-policy')==='no-referrer' && missingRoute.response.headers.get('cache-control')==='no-store');
 const healthy = await request('health');
 check('Health reports D1, media and AI bindings ready', healthy.status === 200 && healthy.data?.status === 'ready' && Object.keys(healthy.data).length === 1);
 const missingAI = await onRequest({
