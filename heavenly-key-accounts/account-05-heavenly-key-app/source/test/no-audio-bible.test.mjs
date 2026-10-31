@@ -17,7 +17,8 @@ test('Audio Bible is retired from Account 5 public entry points',()=>{
  assert.doesNotMatch(retired,/<audio\b|audio-bible\.js/i);
 });
 test('Written KJV and hymns remain available',()=>{
- assert.match(read('bible.html'),/Authorised King James Version/);
+ assert.match(read('bible.html'),/Heavenly Key Bible/);
+ assert.match(read('bible.html'),/https:\/\/onlinebible\.heavenlykey\.org\//);
  assert.ok(existsSync(new URL('study-library.js',root)));
  assert.ok(existsSync(new URL('hymns.html',root)));
  assert.ok(existsSync(new URL('audio-hymns.html',root)));
