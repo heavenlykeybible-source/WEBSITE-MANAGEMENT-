@@ -28,6 +28,11 @@ for (const invalidActor of [null, {}, {id:7,authenticated:true}, {id:7,canImport
   await assert.rejects(completePrivateImport(bucket,invalidActor,session,[{partNumber:1,etag:'abc123'}]));
   await assert.rejects(abortPrivateImport(bucket,invalidActor,session));
 }
+for (const invalid of [{size:0},{size:1073741825},{size:11,partCount:2},{expiresAt:Infinity},{expiresAt:1.5}]) {
+  const bad={...session,...invalid};
+  await assert.rejects(uploadPrivatePart(bucket,actor,bad,1,new Uint8Array(11)),/session invalid/);
+  await assert.rejects(completePrivateImport(bucket,actor,bad,[{partNumber:1,etag:'abc123'}]),/session invalid/);
+}
 await assert.rejects(uploadPrivatePart(bucket,other,session,1,new Uint8Array(11)));
 assert.deepEqual(await uploadPrivatePart(bucket,actor,session,1,new Uint8Array(11)),{partNumber:1,etag:'abc123'});
 for (const badReceipt of [null,{partNumber:2,etag:'abc123'},{partNumber:1,etag:''},{partNumber:1,etag:'bad receipt'},{partNumber:1,etag:33}]) {
