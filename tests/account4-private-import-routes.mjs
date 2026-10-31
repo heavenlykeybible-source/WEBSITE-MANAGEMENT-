@@ -41,6 +41,7 @@ const call=(sub,method='GET',body,actor=owner,headers={})=>account4PrivateImport
  env,actor,sub,method,withLock);
 
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,role:'admin'}),e=>e.status===403);
+await assert.rejects(call('workspace/imports','GET',undefined,{...owner,status:'suspended'}),e=>e.status===403);
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,kind:'member'}),e=>e.status===403);
 missingSchema=true;
 await assert.rejects(call('workspace/imports','GET'),e=>e.status===503);
