@@ -33,6 +33,13 @@ async function smartAIApproval(){
  AI_APPROVAL_PROOF=session.proof;AI_APPROVAL_EXPIRES=session.expires;
  return AI_APPROVAL_PROOF;
 }
+async function endSmartAIApproval(){
+ var proof=AI_APPROVAL_PROOF;
+ AI_APPROVAL_PROOF=null;AI_APPROVAL_EXPIRES=0;
+ if(!proof)return {ok:true,ended:true,message:'No quick-approval session is active in this tab.'};
+ try{return await api('approval-session/end','POST',{proof:proof});}
+ catch(e){throw Error('Local approval token cleared. Server revocation was not confirmed: '+e.message);}
+}
 async function accessRequestCenter(){try{
  var data=await api('ai/access-requests'),box=h('main',{class:'card'}),target=new URLSearchParams(location.search).get('review_access');
  show(nav(),h('h3',{},'AI account authorization'),h('p',{},'Verify your identity once for a short approval session. Every requested account still needs your explicit approval; AIs can never approve themselves.'),box);
