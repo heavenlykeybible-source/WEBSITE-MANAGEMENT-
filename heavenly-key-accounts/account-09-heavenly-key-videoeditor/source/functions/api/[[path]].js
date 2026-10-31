@@ -193,6 +193,17 @@ export async function onRequest({ request: req, env, params }) {
     if (a === 'me' && m === 'GET') return u ? J({ email: u.email, role: u.role || 'member' }) : J({ error: 'Not signed in' }, 401);
     if (!u) return J({ error: 'Please sign in.' }, 401);
 
+    if (a === 'logout-all' && m === 'POST') {
+      const b = await body(req);
+      if (!b || typeof b.password !== 'string' || b.password.length > 200)
+        return J({ error: 'Password confirmation required.' }, 400);
+      const row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
+      if (!row || await pbkdf2(b.password, row.salt) !== row.pass_hash)
+        return J({ error: 'Wrong password.' }, 401);
+      await env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(u.id).run();
+      await log(env,u.id,'logout_all');
+      return J({ ok: true }, 200, { 'set-cookie': cookie('', 0) });
+    }
     if (a === 'account' && m === 'DELETE') {
       if (ROLES.has(u.role)) return J({ error: 'Privileged accounts require an administrator-assisted deletion.' }, 403);
       const b = await body(req), row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
