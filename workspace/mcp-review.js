@@ -40,7 +40,7 @@ async function ownerApprovalSession(req,env,user,sub,m){
  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('owner:approval-session:'+await sha256(token),JSON.stringify({user:user.id,pass_ver:user.pass_ver||0,expires})).run();await audit(env,user.username,'approval-session-started','10 minute owner review session');return json({proof:token,expires});
 }
 async function checkOwnerApprovalSession(env,user,proof){
- if(typeof proof!=='string'||!proof.startsWith('approval-session:'))return false;
+ if(typeof proof!=='string'||!/^approval-session:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(proof))fail('Invalid approval session. Verify again.',403);
  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('owner:approval-session:'+await sha256(proof)).first();if(!row)fail('Approval session expired. Verify again.',403);
  const r=JSON.parse(row.value_json),current=await env.DB.prepare("SELECT pass_ver,role,kind FROM users WHERE id=? AND status='active'").bind(user.id).first();
  if(!current||current.role!=='owner'||current.kind!=='staff'||r.user!==user.id||r.pass_ver!==(current.pass_ver||0)||r.expires<=Date.now())fail('Approval session expired or revoked. Verify again.',403);return true;
