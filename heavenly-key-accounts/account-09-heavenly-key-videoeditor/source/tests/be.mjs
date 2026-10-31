@@ -214,7 +214,12 @@ const gatewayLimit=await onRequest({request:aiRequest(),env:aiEnv,params:{path:[
 check('External AI gateway blocks excess attempted calls before provider dispatch',gatewayLimit.status===429);
 const aiToolsNormal=await request('ai-tools',{method:'POST',cookie:login.cookie,body:{task:'summary',text:'Create a meaningful summary of the supplied content.'}});
 check('AI tools consume one reserved request before provider execution',aiToolsNormal.status===200&&db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='ai_tools_attempt'").get(accountId).c===1);
-for(let i=1;i<30;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'ai_tools_attempt',Date.now());
+const failedAiTools=await onRequest({
+  request:new Request('https://studio.example/api/ai-tools',{method:'POST',headers:{cookie:login.cookie,'content-type':'application/json','x-requested-with':'hk'},body:JSON.stringify({task:'summary',text:'Summarize this test input.'})}),
+  env:{...env,AI:{run:async()=>{throw Error('Simulated provider outage')}}},params:{path:['ai-tools']}
+});
+check('Failed AI tools provider call still consumes one reserved attempt',failedAiTools.status===500&&db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='ai_tools_attempt'").get(accountId).c===2);
+for(let i=2;i<30;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'ai_tools_attempt',Date.now());
 const aiToolsFull=await request('ai-tools',{method:'POST',cookie:login.cookie,body:{task:'summary',text:'Create a meaningful summary of the supplied content.'}});
 check('AI tools atomically enforce thirty attempted requests daily',aiToolsFull.status===429);
 const noVoice = await request('voice-config', { cookie: login.cookie });
