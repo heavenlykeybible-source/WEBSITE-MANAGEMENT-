@@ -1319,3 +1319,19 @@ test('editing live scene layers invalidates background processing but editing pr
  assert.equal(state.uiCalls,2,'out-of-range visibility actions must not mutate the UI');
  assert.match(html,/if\(scene===SC\[pgm\]\)invalidateProgramBg\(\);gal\(\);ui\(\)/,'live gallery background replacement invalidates processed camera');
 });
+
+test('invalid preview scene selections do not corrupt on-air or preview state',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const start=html.indexOf(' ssel:i=>{'),end=html.indexOf('},',start);
+ assert.ok(start>0&&end>start);
+ const handler=html.slice(start,end+1).replace(/^\s*ssel:/,'');
+ const SC=[{items:[]},{items:[]}];
+ const state={SC,studio:true,pvw:1,uiCalls:0};
+ const fn=new Function('state','with(state){const take=i=>{throw Error("must not switch program")};const ui=()=>uiCalls++;return ('+handler+')}')(state);
+ for(const i of [-1,2,NaN,"0",null])fn(i);
+ assert.equal(state.pvw,1);
+ assert.equal(state.uiCalls,0,'invalid scene selections must not redraw the studio');
+ fn(0);
+ assert.equal(state.pvw,0);
+ assert.equal(state.uiCalls,1);
+});
