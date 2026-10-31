@@ -227,7 +227,8 @@ const act={
  sadd:()=>{SC.push({name:'Scene '+(SC.length+1),items:[]});ui()},
  sren:i=>{const n=prompt('Scene name',SC[i].name);if(n)SC[i].name=n.slice(0,40);ui()},
  sdel:i=>{if(SC.length<2){msg('Keep at least one scene.');return}SC.splice(i,1);from=null;
-  pgm=pgm>i?pgm-1:pgm===i?0:pgm;pvw=pvw>i?pvw-1:pvw===i?0:pvw;ui()},
+  pgm=pgm>i?pgm-1:pgm===i?0:pgm;pvw=pvw>i?pvw-1:pvw===i?0:pvw;
+  sceneVersion++;for(const camera of S)if(camera.type==='camera')camera.segReady=false;ui()},
  iup:j=>{const a=SC[ed()].items;if(j>0)[a[j-1],a[j]]=[a[j],a[j-1]];ui()},
  idn:j=>{const a=SC[ed()].items;if(j<a.length-1)[a[j+1],a[j]]=[a[j],a[j+1]];ui()},
  ivis:j=>{const it=SC[ed()].items[j];it.on=!it.on;ui()},
