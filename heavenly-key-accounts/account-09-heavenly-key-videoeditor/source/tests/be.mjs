@@ -137,6 +137,13 @@ check('Atomic signup quota blocks IP after ten attempts including duplicates',re
 
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Account registration succeeds', created.status === 200);
+const saturatedLoginIp='203.0.113.77';
+const saturatedLoginKey='ip:'+createHash('sha256').update(saturatedLoginIp).digest('hex');
+for(let i=0;i<100;i++) db.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').run(saturatedLoginKey,'login_attempt_ip',Date.now());
+const throttledLogin=await request('login',{method:'POST',headers:{'cf-connecting-ip':saturatedLoginIp},body:{email:'smoke@example.com',password:'correct horse battery'}});
+check('Atomic IP login attempt cap rejects request 101 before authentication',throttledLogin.status===429&&!throttledLogin.cookie);
+const independentLoginIp=await request('login',{method:'POST',headers:{'cf-connecting-ip':'203.0.113.78'},body:{email:'smoke@example.com',password:'correct horse battery'}});
+check('Login throttling is isolated by IP address',independentLoginIp.status===200&&independentLoginIp.cookie.length>5);
 const login = await request('login', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Login creates session cookie', login.status === 200 && login.cookie.length > 5);
 const failedLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'incorrect password'}});
