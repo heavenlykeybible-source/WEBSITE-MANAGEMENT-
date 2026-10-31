@@ -123,6 +123,6 @@ assert.ok(restream.includes('function safeStreamUrl('), 'Validate stored streami
 assert.ok(restream.includes('if(enabled&&!safeStreamUrl(store[destination].url))'), 'Validate destination when re-enabled');
 assert.ok(restream.includes("v.enabled===true&&typeof v.url==='string'&&safeStreamUrl(v.url)!==null"), 'Validate destination before broadcast');
 
-assert.ok(entry.includes("typeof b?.session_id==='boolean'"), 'Reject boolean publisher session IDs');
+assert.ok(entry.includes("typeof b?.session_id==='number'"), 'Require numeric or canonical string publisher session IDs');
 assert.ok(entry.includes('sessionId<=0'), 'Reject nonpositive publisher session IDs');
 console.log('Account 2 broadcast safety regression checks passed');
