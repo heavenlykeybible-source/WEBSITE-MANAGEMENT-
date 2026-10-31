@@ -66,4 +66,8 @@ assert.match(entry, /p\.sub\.length>256/, 'Bound capability subject length');
 assert.match(entry, /typeof p\.nonce!=='string'/, 'Validate capability nonce type');
 assert.match(entry, /p\.nonce\.length>256/, 'Bound capability nonce length');
 
+// Recording retention flags must not accept truthy strings such as "false".
+assert.match(entry, /typeof b\.keep_recording!=='boolean'/, 'Create-recording retention must validate the boolean type');
+assert.match(entry, /const keep=b\.keep_recording===true/, 'Keep-recording must be explicitly true');
+
 console.log('Account 2 broadcast safety regression checks passed');
