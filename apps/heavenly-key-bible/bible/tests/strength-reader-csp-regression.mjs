@@ -61,13 +61,13 @@ for(const file of batchFiles){
  datedEntries.push(...data.entries);
 }
 const dates=datedEntries.map(entry=>entry.date).sort();
-assert.equal(dates.length,1826,'The current draft library should contain 1,826 dated editions through 2031-10-29');
+assert.equal(dates.length,1828,'The calendar must contain all 1,828 dates through 2031-10-31');
 assert.equal(new Set(dates).size,dates.length,'Daily edition dates must not be duplicated');
 const dayMs=86400000;
-for(let day=Date.parse('2026-10-30T00:00:00Z');day<=Date.parse('2031-10-29T00:00:00Z');day+=dayMs){
+for(let day=Date.parse('2026-10-30T00:00:00Z');day<=Date.parse('2031-10-31T00:00:00Z');day+=dayMs){
  assert.ok(dates.includes(new Date(day).toISOString().slice(0,10)),'Missing daily edition date '+new Date(day).toISOString().slice(0,10));
 }
-assert.ok(!dates.includes('2031-10-30')&&!dates.includes('2031-10-31'),'Do not fabricate the two missing final dates');
+for(const requiredDate of ['2031-10-30','2031-10-31']){const placeholder=datedEntries.find(entry=>entry.date===requiredDate);assert.ok(placeholder,'Missing final calendar date '+requiredDate);assert.equal(placeholder.status,'draft-not-published','Final placeholder must remain unpublished');assert.match(placeholder.title,/EDITORIAL AUTHORING REQUIRED — NOT FOR PUBLICATION/,'Final placeholder must be visibly marked for authoring');assert.equal(placeholder.topics.length,12,'Final placeholder must preserve the twelve-topic structure');}
 
 
 assert.doesNotMatch(js,/\.style\b|\.cssText\b|\.setProperty\s*\(/,'Runtime CSSOM/inline style assignments are forbidden by the reader CSP');
