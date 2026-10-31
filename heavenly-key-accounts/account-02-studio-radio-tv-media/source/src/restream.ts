@@ -31,10 +31,10 @@ export async function listDestinations(env:Env){
  });
 }
 function unsafeStreamHost(hostname:string):boolean{
- const host=hostname.toLowerCase().replace(/^\\[|\\]$/g,'');
+ const host=hostname.toLowerCase().replace(/^\[|\]$/g,'');
  if(host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test'))return true;
  if(host.includes(':'))return host==='::1'||host==='::'||host.startsWith('fc')||host.startsWith('fd')||host.startsWith('fe8')||host.startsWith('fe9')||host.startsWith('fea')||host.startsWith('feb')||host.startsWith('::ffff:');
- const ip=host.match(/^(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)$/);
+ const ip=host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
  if(ip){
   const [a,b]=ip.slice(1).map(Number);
   return a===0||a===10||a===127||a>=224||(a===169&&b===254)||(a===172&&b>=16&&b<=31)||(a===192&&b===168)||(a===100&&b>=64&&b<=127)||(a===192&&b===0)||(a===198&&(b===18||b===19));
