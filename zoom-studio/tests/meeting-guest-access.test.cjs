@@ -480,3 +480,13 @@ test('slow mode accepts only finite integer seconds',async()=>{
   assert.equal(h.host.attachment.slow,expected);
  }
 });
+
+test('watch links reject malformed and non-HTTPS destinations',async()=>{
+ const h=setup();await h.join('');
+ for(const url of ['https://not-a-valid-host','https://user:pass@example.com/video','https://example.com:0/video','javascript:alert(1)','https://example.com/space here']){
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url}));
+  assert.equal(h.host.attachment.watch,'',url);
+ }
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url:'https://example.com/video'}));
+ assert.equal(h.host.attachment.watch,'https://example.com/video');
+});
