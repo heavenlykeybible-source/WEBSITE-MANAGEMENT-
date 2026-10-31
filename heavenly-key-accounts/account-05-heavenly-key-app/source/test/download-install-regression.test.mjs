@@ -285,3 +285,19 @@ test('download catalogue selection rejects prototype-inherited and malformed IDs
  assert.match(js,/typeof app\.url!=='string'/);
  assert.doesNotMatch(js,/const apps=await load\(\),id=button\.dataset\.downloadApp,app=apps\[id\];if\(!app\)/);
 });
+
+test('device guide rejects duplicate, malformed and non-HTTPS catalogue destinations', () => {
+ const js=publicFile('app-device-guide.js');
+ assert.match(js,/params\.getAll\('app'\)\.length <= 1/);
+ assert.match(js,/const validAppId =/);
+ assert.match(js,/credentials: 'omit', redirect: 'error'/);
+ assert.match(js,/destination\.port/);
+ assert.match(js,/typeof app\.url !== 'string'/);
+ assert.match(js,/!\/\^https:/);
+ assert.match(js,/localDevelopment/);
+});
+
+test('share URL validation excludes unexpected HTTPS ports', () => {
+ const js=publicFile('app-pages.js');
+ assert.match(js,/destination\.username\|\|destination\.password\|\|destination\.port/);
+});
