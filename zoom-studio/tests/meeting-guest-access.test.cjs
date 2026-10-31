@@ -490,3 +490,9 @@ test('watch links reject malformed and non-HTTPS destinations',async()=>{
  await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url:'https://example.com/video'}));
  assert.equal(h.host.attachment.watch,'https://example.com/video');
 });
+
+test('malformed WebSocket frames count toward per-connection rate limit',async()=>{
+ const h=setup();await h.join('');
+ for(let i=0;i<101&&h.guest.readyState===1;i++)await h.r.webSocketMessage(h.guest,'{not-json');
+ assert.notEqual(h.guest.readyState,1);
+});
