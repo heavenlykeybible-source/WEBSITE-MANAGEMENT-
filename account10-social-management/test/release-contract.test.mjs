@@ -16,17 +16,11 @@ test('Every production migration is checked into source', () => {
   }
 });
 
-test('Migration scripts and release checklist include every migration in sequence', () => {
-  for (const scriptName of ['db:migrate:local','db:migrate:remote']) {
-    const script = packageJson.scripts[scriptName] || '';
-    let prior = -1;
-    for (const migration of migrations) {
-      const index = script.indexOf(migration);
-      assert.ok(index > prior, scriptName + ': missing or out-of-order ' + migration);
-      prior = index;
-    }
-  }
+test('Migration inventory is documented but bulk remote execution is deliberately disabled', () => {
   for (const migration of migrations) assert.ok(checklist.includes(migration), 'checklist omits ' + migration);
+  assert.equal(packageJson.scripts['db:migrate:remote'], undefined);
+  assert.equal(packageJson.scripts['db:init:remote'], undefined);
+  assert.equal(packageJson.scripts['db:migrate:local'], undefined);
 });
 
 test('Cloudflare config binds the expected database and assets', () => {
