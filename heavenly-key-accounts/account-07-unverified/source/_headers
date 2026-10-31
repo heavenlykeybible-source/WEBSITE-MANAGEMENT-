@@ -7,3 +7,4 @@
   Cross-Origin-Opener-Policy: same-origin-allow-popups
   Cross-Origin-Resource-Policy: same-origin
   X-Permitted-Cross-Domain-Policies: none
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-Jywxjf9mwxDxk5t8wpaeKfnvOAS9ssTree7LLOtNOKE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.heavenlykey.org; media-src 'self' https: blob:; connect-src 'self'; upgrade-insecure-requests
