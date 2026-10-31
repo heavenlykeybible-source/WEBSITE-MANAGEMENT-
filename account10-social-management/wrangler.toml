@@ -1,6 +1,9 @@
 name = "heavenly-key-social-management"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
+# Upload private Worker source maps for actionable production error diagnostics.
+# Source maps are uploaded as Worker metadata, not published in the static assets directory.
+upload_source_maps = true
 
 # Account 10 official hostname. Activated only upon approved Wrangler deployment.
 [[routes]]
