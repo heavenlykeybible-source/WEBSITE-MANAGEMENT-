@@ -1,0 +1,38 @@
+name: Strength for Today reader security regression
+
+on:
+  pull_request:
+    paths:
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today.html'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today.css'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today.js'
+      - 'apps/heavenly-key-bible/bible/tests/strength-reader-csp-regression.mjs'
+      - '.github/workflows/strength-reader-security.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: strength-reader-security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reader-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check reader JavaScript syntax
+        run: node --check apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today.js
+      - name: Run CSP and dynamic-style regression checks
+        run: node --test apps/heavenly-key-bible/bible/tests/strength-reader-csp-regression.mjs
+      - name: Confirm this workflow is test-only
+        run: echo "Security regression only; no publishing, deployment, secrets, or production changes."
