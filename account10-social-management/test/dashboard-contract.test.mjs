@@ -122,3 +122,13 @@ test('operator credential changes and sign-out abort in-flight dashboard request
   assert.match(html, /\$\('connect'\)\.onclick=\(\)=>\{sessionController\.abort\(\);sessionController=new AbortController\(\)/);
   assert.match(html, /\$\('logout'\)\.onclick=\(\)=>\{sessionController\.abort\(\);sessionController=new AbortController\(\)/);
 });
+
+test('operator takeover button resolves pending human request before resuming Gemini', () => {
+  assert.match(html, /requestedHuman=!!d\.conversation\.requested_human/);
+  assert.match(html, /requestedHuman\?'Resolve human request and resume AI'/);
+  assert.match(html, /wasHumanRequested&&!confirm\(/);
+  assert.match(html, /if\(wasHumanRequested\)\{await api\('\/api\/human-requests\/resolve'/);
+  assert.match(html, /resumeAutomation:true/);
+  assert.match(html, /else\{await api\('\/api\/takeover'/);
+  assert.equal((html.match(/selected='';paused=false;requestedHuman=false/g)||[]).length,2);
+});
