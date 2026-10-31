@@ -360,6 +360,22 @@ export async function onRequest({ request: req, env, params }) {
       }
     }
     if (a === 'media') {
+      if (p[1] === 'cleanup' && !p[2] && m === 'POST') {
+        const at=Date.now();
+        const slot=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'media_cleanup_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='media_cleanup_attempt' AND at>?) < 10").bind(u.id,at,u.id,at-DAY).run();
+        if (!slot.meta.changes) return J({error:'Daily cleanup limit reached.'},429);
+        const pending=(await env.DB.prepare('SELECT id,r2_key FROM media WHERE user_id=? AND deleted=1 ORDER BY created_at ASC LIMIT 10').bind(u.id).all()).results;
+        let cleaned=0, failed=0;
+        for (const item of pending) {
+          try {
+            await env.MEDIA.delete(item.r2_key);
+            const removed=await env.DB.prepare('DELETE FROM media WHERE id=? AND user_id=? AND deleted=1').bind(item.id,u.id).run();
+            cleaned+=Number(removed.meta.changes);
+          } catch { failed++; }
+        }
+        await log(env,u.id,'media_cleanup_run').catch(()=>{});
+        return J({cleaned,failed});
+      }
       if (!p[1] && m === 'GET') {
         const l = (await env.DB.prepare('SELECT id,name,type,size,created_at FROM media WHERE user_id=? AND deleted=0 ORDER BY created_at DESC LIMIT 500').bind(u.id).all()).results;
         const used = (await env.DB.prepare('SELECT storage_used s FROM users WHERE id=?').bind(u.id).first()).s;
