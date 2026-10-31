@@ -142,6 +142,7 @@ export default {
   if(url.pathname==='/api/media-engine/restream/destination'&&request.method==='POST'){
     if(!['Super Administrator','Deputy Super Administrator'].includes(cap.role))return json({error:'Owner or deputy access is required to manage social streaming destinations'},403);
     const b=await requireJson(request);if(!b)return json({error:'Invalid JSON'},400);
+    if(b.action!=='remove'&&typeof b.enabled!=='boolean')return json({error:'Specify enabled as true or false'},400);
     try{
       const destination=String(b.destination??'');
       const current=await restreamStatus(env);
@@ -159,9 +160,9 @@ export default {
           if(!['rtmp:','rtmps:'].includes(parsed.protocol)||parsed.username||parsed.password)return json({error:'Enter a valid RTMP or RTMPS server URL'},400);
           combined=server.replace(/\/+$/,'')+'/'+streamKey.replace(/^\/+/, '');
         }
-        const result=await saveDestination(env,String(b.destination??''),combined,Boolean(b.enabled));await audit(env,cap,'restream.destination.save','destination',String(b.destination??''));return json({ok:true,...result});
+        const result=await saveDestination(env,String(b.destination??''),combined,b.enabled===true);await audit(env,cap,'restream.destination.save','destination',String(b.destination??''));return json({ok:true,...result});
       }
-      await setDestinationEnabled(env,String(b.destination??''),Boolean(b.enabled));await audit(env,cap,'restream.destination.toggle','destination',String(b.destination??''));return json({ok:true});
+      await setDestinationEnabled(env,String(b.destination??''),b.enabled===true);await audit(env,cap,'restream.destination.toggle','destination',String(b.destination??''));return json({ok:true});
     }catch(e){return json({error:e instanceof Error?e.message:'Destination could not be saved'},400);}
   }
   if(url.pathname==='/api/media-engine/restream/start'&&request.method==='POST'){
