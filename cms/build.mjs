@@ -56,6 +56,24 @@ if(!/"name"\s*:\s*"claim_studio_assignment"|name\s*:\s*'claim_studio_assignment'
  if(worker.split(defsAnchor).length!==2)throw Error('Refusing build: core MCP tools list missing');
  worker=worker.replace(defsAnchor,defsAnchor+'\n  '+studioToolDefs.filter(x=>x.name==='claim_studio_assignment'||x.name==='update_studio_progress').map(x=>JSON.stringify(x)).join(',\n  ')+',');
 }
+// Retain the SHA-256 captured when AI inspected the existing Worker.
+// The approval stage and the last pre-publication check both re-read Cloudflare.
+const pinnedProposalMeta="JSON.stringify({ connection_id: conn.id, name, ...(additions.length ? { bindings:additions } : {}) })";
+const pinnedReplacement="JSON.stringify({ connection_id: conn.id, name, ...(additions.length ? { bindings:additions } : {}), ...(b.base_sha256 ? {base_sha256:b.base_sha256} : {}) })";
+if(worker.includes(pinnedProposalMeta))worker=worker.replace(pinnedProposalMeta,pinnedReplacement);
+if(!worker.includes(pinnedReplacement))throw Error('Refusing build: pinned Worker proposal metadata missing');
+const reviewWorkerAnchor="candidate.source_hash = await sha256(await object.text());";
+const reviewWorkerPin="if(m.base_sha256){await verifyPinnedStudioWorker(env,m);checks.push('Live Worker source SHA-256 still matches the original AI inspection');}";
+if(!worker.includes(reviewWorkerPin)){
+ if(worker.split(reviewWorkerAnchor).length!==2)throw Error('Refusing build: Worker review path missing');
+ worker=worker.replace(reviewWorkerAnchor,reviewWorkerAnchor+'\n    '+reviewWorkerPin);
+}
+const deployWorkerAnchor="await deployWorker(env, meta.connection_id, meta.name, await o.text(), workerBindings(meta.bindings));";
+const deployWorkerPin="if(meta.base_sha256)await verifyPinnedStudioWorker(env,meta);";
+if(!worker.includes(deployWorkerPin)){
+ if(worker.split(deployWorkerAnchor).length!==2)throw Error('Refusing build: Worker publication path missing');
+ worker=worker.replace(deployWorkerAnchor,deployWorkerPin+'\n    '+deployWorkerAnchor);
+}
 const nativeClient='// BEGIN NATIVE WORKSPACE CLIENT\n'+(fs.readFileSync(new URL('../workspace/client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/browser-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END NATIVE WORKSPACE CLIENT';
 if(worker.includes('// BEGIN NATIVE WORKSPACE CLIENT'))worker=worker.replace(/\/\/ BEGIN NATIVE WORKSPACE CLIENT[\s\S]*?\/\/ END NATIVE WORKSPACE CLIENT/,()=>nativeClient);
 else worker=worker.replace('var CHAT=[],',nativeClient+'\nvar CHAT=[],');
