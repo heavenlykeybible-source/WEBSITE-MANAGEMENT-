@@ -89,4 +89,9 @@ assert.match(entry, /ch\.length>100\|\|ref\.length>300/, 'Limit social account m
 assert.match(entry, /typeof b\.automatable!=='boolean'/, 'Validate social automation flag type');
 assert.match(entry, /social\.account\.create/, 'Audit creation of social destination accounts');
 
+// Streaming destinations must not interpret nonempty text like "false" as enabled.
+assert.match(entry, /b\.action!=='remove'&&typeof b\.enabled!=='boolean'/, 'Require explicit destination enable setting');
+assert.match(entry, /saveDestination\(env,String\(b\.destination\?\?'\'\),combined,b\.enabled===true\)/, 'Only explicitly true may enable a new destination');
+assert.match(entry, /setDestinationEnabled\(env,String\(b\.destination\?\?'\),b\.enabled===true\)/, 'Only explicitly true may enable an existing destination');
+
 console.log('Account 2 broadcast safety regression checks passed');
