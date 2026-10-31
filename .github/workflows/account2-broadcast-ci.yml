@@ -39,6 +39,8 @@ jobs:
         run: npm run test:capability-auth
       - name: Television lock and radio availability checks
         run: npm run test:tv-lock
+      - name: On-demand radio delivery tests
+        run: npm run test:radio-on-demand
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
