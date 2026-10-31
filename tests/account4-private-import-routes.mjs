@@ -4,6 +4,7 @@ import {account4PrivateImportRoutes} from '../scripts/account4-private-import-ro
 const owner={id:7,username:'owner',kind:'staff',role:'owner',status:'active'};
 const other={...owner,id:8};
 let session=null,parts=[],state='uploading',creates=0,uploaded=0,completed=0,missingSchema=false;
+const auditEvents=[];
 const bucket={
  async createMultipartUpload(key){creates++;return {uploadId:'r2-upload-1'};},
  resumeMultipartUpload(key,uploadId){assert.equal(uploadId,'r2-upload-1');return {
@@ -36,7 +37,7 @@ const db={prepare(sql){let args=[];return {bind(...values){args=values;return th
 };}},env={DB:db,FILES:bucket};
 const call=(sub,method='GET',body,actor=owner,headers={})=>account4PrivateImportRoutes(
  new Request('https://control.test/api/owner/'+sub,{method,headers:{...(body===undefined?{}:{'content-type':'application/json'}),...headers},...(body===undefined?{}:{body:typeof body==='string'?body:JSON.stringify(body)})}),
- env,actor,sub,method,(key,fn)=>fn());
+ env,actor,sub,method,(key,fn)=>fn(),(event,detail)=>auditEvents.push({event,detail}));
 
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,role:'admin'}),e=>e.status===403);
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,kind:'member'}),e=>e.status===403);
@@ -53,6 +54,7 @@ assert.equal(started.partCount,1);
 assert.equal(started.notice.includes('Private staging only'),true);
 assert.equal(session.object_key.startsWith('private-imports/7/'),true);
 assert.equal(session.state,'uploading');
+assert.equal(auditEvents[0].event,'private-import-started');
 
 const partResponse=await account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(11)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT');
 assert.equal(partResponse.status,200);
@@ -73,6 +75,7 @@ assert.equal(completedResponse.status,200);
 assert.equal((await completedResponse.json()).state,'private-awaiting-review');
 assert.equal(completed,1);
 assert.equal(session.state,'private-awaiting-review');
+assert.ok(auditEvents.some(event=>event.event==='private-import-completed'));
 
 const recovery=await call('workspace/imports/'+started.id+'/recovery');
 assert.equal((await recovery.json()).matchesExpectedSize,true);
