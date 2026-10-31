@@ -8,7 +8,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
 const checklist = readFileSync(resolve(root, 'DEPLOYMENT-VERIFICATION.md'), 'utf8');
 const wrangler = readFileSync(resolve(root, 'wrangler.toml'), 'utf8');
-const migrations = ['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql','0010_whatsapp_handover_dedupe.sql','0011_human_request_version.sql','0012_operator_credentials.sql'];
+const migrations = ['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql','0010_whatsapp_handover_dedupe.sql','0011_human_request_version.sql','0012_operator_credentials.sql','0013_auth_rate_limits.sql'];
 
 test('Every production migration is checked into source', () => {
   for (const migration of migrations) {
@@ -96,4 +96,21 @@ test('preflight rejects duplicate critical asset keys', () => {
  const source=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
  assert.match(source,/matches\.length!==1/);
  assert.match(source,/Assets section must declare/);
+});
+
+
+test('Account 10 strict script CSP has a same-origin external dashboard bundle', () => {
+ const html=readFileSync(resolve(root,'public','index.html'),'utf8');
+ const worker=readFileSync(resolve(root,'src','index.ts'),'utf8');
+ assert.ok(existsSync(resolve(root,'public','app.js')));
+ assert.match(html,/<script src="\/app\.js" defer><\/script>/);
+ assert.doesNotMatch(html,/<script\b(?![^>]*\bsrc=)[^>]*>/i);
+ assert.match(worker,/script-src 'self'; script-src-attr 'none'/);
+});
+
+
+test('preflight syntax-checks the external dashboard bundle without executing it', () => {
+ const preflight=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
+ assert.match(preflight,/new Script\(read\('public\/app\.js'\)/);
+ assert.match(preflight,/node:vm/);
 });
