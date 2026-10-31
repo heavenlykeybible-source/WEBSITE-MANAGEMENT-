@@ -69,7 +69,8 @@ This section supersedes any older status above where it conflicts with the curre
 - Enforced CSP now blocks inline scripts, script event attributes, inline styles, and style attributes; `base-uri 'none'` is set.
 - Offline core caching includes the external editor assets.
 - Backend test syntax was repaired after a duplicate top-level `const` declaration was found.
-- Password storage was strengthened from 100,000 to 600,000 PBKDF2-HMAC-SHA-256 iterations for new registrations and Owner/Admin provisioning. A versioned database migration preserves legacy hash parameters and upgrades existing accounts after successful login.
+- Password storage was strengthened from 100,000 to 600,000 PBKDF2-HMAC-SHA-256 iterations for new registrations and Owner/Admin provisioning.
+- Sessions now enforce a 30-minute inactivity timeout and 30-day absolute lifetime, with activity timestamps refreshed at five-minute intervals and regression coverage. A versioned database migration preserves legacy hash parameters and upgrades existing accounts after successful login.
 - External AI gateway attempts are reserved atomically at a 30-attempt daily limit; the test fixture and preflight assertion were aligned.
 - Preflight now syntax-checks backend and test modules before the test suite.
 
@@ -86,7 +87,7 @@ This section supersedes any older status above where it conflicts with the curre
 3. Perform staging tests against the real Cloudflare D1, R2 and Workers AI bindings, including concurrent uploads and cleanup.
 4. Complete real Chrome, Firefox, Safari/iOS and Android testing, including long exports, microphones, camera permissions and offline behavior.
 5. Complete independent security testing, monitoring/alerting, privacy/terms review, account recovery, and production sign-off.
-6. Apply and verify migration `0005_password_hash_iterations.sql` on an existing D1 database after backup; confirm fresh databases use the updated `schema.sql`.
+6. Apply and verify migrations `0005_password_hash_iterations.sql` and `0006_session_inactivity_timeout.sql` on an existing D1 database after backup; confirm fresh databases use the updated `schema.sql`.
 7. Confirm the active production hostname, Worker routing, secrets, D1 migrations, bucket privacy and backup/restore procedure with the authorized Cloudflare owner.
 
 ### Product capability limits
