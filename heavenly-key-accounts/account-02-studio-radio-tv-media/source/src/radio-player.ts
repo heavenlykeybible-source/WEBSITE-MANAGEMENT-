@@ -45,6 +45,7 @@ async function refresh(){
  const generation=++loadGeneration;
  playlistAbort?.abort();
  const controller=new AbortController();playlistAbort=controller;
+ const timeout=setTimeout(()=>controller.abort(),12000);
  play.disabled=true;next.disabled=true;
  say('Loading approved radio recordings…');
  try{
@@ -59,7 +60,7 @@ async function refresh(){
  title.textContent=items[0].title||'Radio programme';
  say('Playlist ready. Press Play to listen.');
  }catch(error){if(generation!==loadGeneration)return;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');playlist=[];play.disabled=true;next.disabled=true;title.textContent='Playlist unavailable';say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
- finally{if(playlistAbort===controller)playlistAbort=null;}
+ finally{clearTimeout(timeout);if(playlistAbort===controller)playlistAbort=null;}
 }
 function select(index){
  if(!playlist.length)return false;
