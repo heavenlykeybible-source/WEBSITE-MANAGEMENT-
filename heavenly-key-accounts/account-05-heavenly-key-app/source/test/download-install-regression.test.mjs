@@ -176,3 +176,11 @@ test('offline precache uses a bounded worker pool and rejects private response c
  assert.match(sw, /credentials:'omit'/);
  assert.match(sw, /private\|no-store/);
 });
+
+test('offline runtime never caches session-varying redirects or no-cache responses', () => {
+ const sw = publicFile('sw.js');
+ assert.match(sw, /!response\.redirected/);
+ assert.match(sw, /no-store\|no-cache/);
+ assert.match(sw, /cookie\|authorization/);
+ assert.match(sw, /response\.headers\.get\('vary'\)/);
+});
