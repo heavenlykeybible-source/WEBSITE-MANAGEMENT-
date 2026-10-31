@@ -11,6 +11,7 @@ const lock=load('src/channel-lock.ts');
 const index=load('src/index.ts');
 const broadcast=load('src/public-broadcast.ts');
 const restream=load('src/restream.ts');
+const uploads=load('src/uploads.ts');
 const transpiled=ts.transpileModule(lock.replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 const lockExports=runInNewContext(transpiled+';({TV_LOCKED,TV_LOCK_MESSAGE,channelAvailability,tvLockedResponse})',{Response});
 assert.equal(lockExports.TV_LOCKED,true);
@@ -42,6 +43,8 @@ assert.ok(index.includes("if(TV_LOCKED&&type!=='audio')return tvLockedResponse()
 assert.ok(index.includes("if(TV_LOCKED&&b.published&&row.media_type!=='audio')return tvLockedResponse()"),'TV publishing must be blocked');
 assert.ok(index.includes("mode:'radio-only',television_locked:true"),'Studio must advertise radio-only features');
 assert.ok(index.includes("if(TV_LOCKED)return tvLockedResponse();"),'Video publisher tokens must be blocked');
+assert.ok(uploads.includes("if(TV_LOCKED&&media.media_type!=='audio')return tvLockedResponse()"),'Legacy multipart video upload must be locked');
+assert.ok(index.includes("if(TV_LOCKED&&row.media_type!=='audio')return tvLockedResponse()"),'Legacy direct video upload must be locked');
 assert.ok(index.includes("audio/mpeg"),'MP3 must be accepted');
 assert.ok(index.includes("audio/ogg"),'OGG must be accepted');
 assert.ok(index.includes("audio/flac"),'FLAC must be accepted');
