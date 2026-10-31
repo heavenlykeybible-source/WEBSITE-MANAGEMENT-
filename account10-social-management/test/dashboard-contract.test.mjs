@@ -62,23 +62,23 @@ test('post draft editor supports private image attachments', () => {
 });
 
 test('rapid conversation switching cannot display stale Gemini suggestions or history', () => {
-  assert.match(html, /const targetConversation=selected;const message=prompt/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch;const message=prompt/);
   assert.match(html, /conversationId:targetConversation,message:message\.trim\(\)/);
-  assert.match(html, /if\(selected!==targetConversation\)return;if\(result\.suggestion\)/);
-  assert.match(html, /const d=await api\('\/api\/conversation\?id='\+encodeURIComponent\(id\)\);if\(selected!==id\)return/);
-  assert.match(html, /if\(selected!==id\)return;renderMessages\(/);
+  assert.match(html, /if\(selected!==targetConversation\|\|authEpoch!==epoch\)return;if\(result\.suggestion\)/);
+  assert.match(html, /const d=await api\('\/api\/conversation\?id='\+encodeURIComponent\(id\)\);if\(selected!==id\|\|authEpoch!==epoch\)return/);
+  assert.match(html, /if\(selected!==id\|\|authEpoch!==epoch\)return;renderMessages\(/);
 });
 
 test('operator notes are saved only to the conversation selected at submission time', () => {
-  assert.match(html, /const targetConversation=selected;const body=\$\('draftText'\)\.value\.trim\(\)/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch;const body=\$\('draftText'\)\.value\.trim\(\)/);
   assert.match(html, /conversationId:targetConversation,body/);
-  assert.match(html, /if\(selected===targetConversation\)\{\$\('draftText'\)\.value=''/);
+  assert.match(html, /if\(selected===targetConversation&&authEpoch===epoch\)\{\$\('draftText'\)\.value=''/);
 });
 
 test('human takeover request preserves its original conversation when operators switch chats', () => {
-  assert.match(html, /const targetConversation=selected;const targetPaused=!paused/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch,wasHumanRequested=requestedHuman,targetRequestVersion=humanRequestVersion;const targetPaused=!paused/);
   assert.match(html, /conversationId:targetConversation,paused:targetPaused/);
-  assert.match(html, /if\(selected===targetConversation\)\{await openChat\(targetConversation\)/);
+  assert.match(html, /if\(selected===targetConversation&&authEpoch===epoch\)\{await openChat\(targetConversation\)/);
 });
 
 test('changing operator credentials clears private messages and drafts', () => {
@@ -103,8 +103,8 @@ test('switching conversations hides the previous customer message before loading
 });
 
 test('WhatsApp send refresh stays in the originating conversation', () => {
-  assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=selected/);
-  assert.match(html, /if\(selected===currentConversation\)\{status\(result\.sent/);
+  assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=conversationId;if\(send\.disabled\|\|operatorAccessRole!=='owner'\|\|selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return/);
+  assert.match(html, /if\(selected===currentConversation&&authEpoch===sessionEpoch\)\{await openChat\(currentConversation\);if\(selected===currentConversation&&authEpoch===sessionEpoch\)status\(result\.sent/);
   assert.match(html, /await openChat\(currentConversation\)/);
 });
 
@@ -202,16 +202,6 @@ test('limited operators cannot open owner-only dashboard tools', () => {
  assert.match(html,/This section requires owner authorization/);
 });
 
-
-test('post draft editor async work is bound to the current owner session and posts tab', () => {
- assert.match(html,/function addDraftEditor\(\)\{const epoch=authEpoch;const current=\(\)=>epoch===authEpoch&&activeManagementTab==='posts'&&!!token&&operatorAccessRole==='owner'/);
- assert.match(html,/async function load\(\)\{if\(!current\(\)\)return/);
- assert.match(html,/if\(!current\(\)\)return;list\.replaceChildren\(\)/);
- assert.match(html,/if\(!current\(\)\|\|remove\.disabled\)return/);
- assert.match(html,/if\(!current\(\)\|\|save\.disabled\)return/);
-});
-
-
 test('Gemini suggestion button remains disabled after role, conversation or session changes', () => {
  assert.match(html, /finally\{button\.disabled=!selected\|\|operatorAccessRole==='viewer'\|\|selected!==targetConversation\|\|authEpoch!==epoch\}/);
 });
@@ -292,6 +282,17 @@ test('draft queue blocks viewer actions and stale sessions', () => {
 });
 
 test('post editor session guard exists',()=>{assert.ok(html.includes("activeManagementTab==='posts'&&!!token&&operatorAccessRole==='owner'"))});
+
+
+test('post draft editor async work is bound to the current owner session and posts tab', () => {
+ assert.match(html,/function addDraftEditor\(\)\{const epoch=authEpoch;const current=\(\)=>epoch===authEpoch&&activeManagementTab==='posts'&&!!token&&operatorAccessRole==='owner'/);
+ assert.match(html,/async function load\(\)\{if\(!current\(\)\)return/);
+ assert.match(html,/if\(!current\(\)\)return;list\.replaceChildren\(\)/);
+ assert.match(html,/if\(!current\(\)\|\|remove\.disabled\)return/);
+ assert.match(html,/if\(!current\(\)\|\|save\.disabled\)return/);
+});
+
+
 
 
 test('dashboard has keyboard skip navigation, accessible focus and mobile touch targets', () => {
