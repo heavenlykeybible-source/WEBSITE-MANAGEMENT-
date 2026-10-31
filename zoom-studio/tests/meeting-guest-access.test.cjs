@@ -715,3 +715,15 @@ test('alarm closes orphaned guest when host connection is missing',async()=>{
  assert.notEqual(h.guest.readyState,1);
  assert.equal(h.guest.messages.some(m=>m.t==='closed'&&m.why==='The host left.'),true);
 });
+
+test('alarm closes guests when host disappears during async stage check',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
+ const pending=h.r.alarm();await reached;
+ h.host.close();release();await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='closed'&&m.why==='The host left.'),true);
+});
