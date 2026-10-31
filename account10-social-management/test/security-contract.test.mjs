@@ -506,3 +506,8 @@ test('static dashboard isolates cross-origin resources and removes server disclo
  assert.ok(source.includes("headers.delete('x-powered-by')"));
  assert.ok(source.includes("headers.delete('x-aspnet-version')"));
 });
+
+test('private dashboard responses discourage search indexing', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("headers.set('x-robots-tag','noindex, nofollow, noarchive')"));
+});
