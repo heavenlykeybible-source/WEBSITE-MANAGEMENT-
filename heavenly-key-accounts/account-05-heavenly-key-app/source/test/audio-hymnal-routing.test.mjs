@@ -151,3 +151,18 @@ test('independent apps reject insecure and parameterized entry URLs before servi
  assert.equal(response.status,502,'Untrusted service identity must still be enforced');
  assert.equal(calls,1);
 });
+
+test('independent services cannot opt their pages into browser or shared caching',async()=>{
+ for(const upstreamCache of ['public, max-age=86400','s-maxage=3600','private, max-age=600']){
+  const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+   fetch:async()=>new Response('<h1>Reader</h1>',{headers:{
+    'X-HK-App-Service':'bible-reader','Content-Type':'text/html',
+    'Cache-Control':upstreamCache
+   }})
+  }};
+  const response=await routeIndependentApp(request('/bible.html'),env);
+  assert.equal(response.status,200);
+  assert.equal(response.headers.get('cache-control'),'no-store');
+  assert.equal(await response.text(),'<h1>Reader</h1>');
+ }
+});
