@@ -46,7 +46,8 @@ async function runTimeline(record){
  if(record&&totalSeconds>600)return info('Browser export is limited to ten minutes. Shorten the timeline.');
  if(record&&(!Number.isFinite(canvas.width)||!Number.isFinite(canvas.height)||canvas.width<1||canvas.height<1||canvas.width>4096||canvas.height>4096||canvas.width*canvas.height>8847360))return info('Invalid export canvas size. Choose a supported resolution up to 4K and try again.');
  if(record&&(!canvas.captureStream||!window.MediaRecorder||typeof MediaRecorder.isTypeSupported!=='function'))return info('Video export is unavailable in this browser.');
- const mime=record?['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t)):null;
+ const supportedMimes=record?['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].filter(t=>MediaRecorder.isTypeSupported(t)):[];
+ let mime=supportedMimes[0]||null;
  if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
  if(record)invalidateExport();
  const state={cancelled:false};session=state;setBusy(true);
@@ -56,7 +57,7 @@ async function runTimeline(record){
   if(record){
    stream=canvas.captureStream(30);
    try{if(v.captureStream){sourceStream=v.captureStream();for(const track of sourceStream.getAudioTracks())stream.addTrack(track)}}catch{}
-   rec=new MediaRecorder(stream,{mimeType:mime});
+   for(const candidate of supportedMimes){try{rec=new MediaRecorder(stream,{mimeType:candidate});mime=candidate;break}catch{}}if(!rec)throw Error('Browser could not initialize any supported video encoder.');
    finished=new Promise(resolve=>{rec.onstop=resolve;rec.onerror=e=>{encoderError=e.error||Error('Encoder failed');resolve()}});
    rec.ondataavailable=e=>{if(state.cancelled||encoderError||!e.data?.size)return;recordedBytes+=e.data.size;if(recordedBytes>256*1024*1024){encoderError=Error('Timeline export exceeded the 256 MB browser memory limit. Shorten the project or reduce output resolution.');state.abortPlayback?.();state.abortStart?.();return}fragments.push(e.data)};
    $('clipDownload').hidden=true;
