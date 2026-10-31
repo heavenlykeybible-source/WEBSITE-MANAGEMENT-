@@ -51,9 +51,11 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
   if(sub==='workspace/imports'&&method==='POST'){
     const input=await jsonBody(request);
     if(typeof input.name!=='string'||!Number.isSafeInteger(input.size))problem('Provide a filename and an integer byte size');
-    const active=await env.DB.prepare("SELECT COUNT(*) AS count FROM account4_import_sessions WHERE owner_id=? AND state IN ('uploading','completing')").bind(actor.id).first();
-    if((active?.count||0)>=3)problem('You already have three active uploads. Complete or reconcile one first.',429);
-    const create=()=>startPersistedPrivateImport(env.FILES,env.DB,actor,{name:input.name,size:input.size});
+    const create=async()=>{
+      const active=await env.DB.prepare("SELECT COUNT(*) AS count FROM account4_import_sessions WHERE owner_id=? AND state IN ('uploading','completing')").bind(actor.id).first();
+      if((active?.count||0)>=3)problem('You already have three active uploads. Complete or reconcile one first.',429);
+      return startPersistedPrivateImport(env.FILES,env.DB,actor,{name:input.name,size:input.size});
+    };
     const result=withLock?await withLock('account4-private-import-start:'+actor.id,create):await create();
     return Response.json({...result,notice:'Private staging only. Malware scanning and explicit release approval are still required.'},{status:201,headers:{'cache-control':'no-store'}});
   }
