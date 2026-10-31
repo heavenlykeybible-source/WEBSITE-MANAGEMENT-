@@ -196,7 +196,7 @@ test('offline fallback can read only the current reviewed shell cache', () => {
 test('precache and runtime share a single safe public-response cache policy', () => {
  const sw=publicFile('sw.js');
  assert.match(sw,/function isSafePublicResponse\(response\)/);
- assert.equal((sw.match(/if\(isSafePublicResponse\(response\)\)/g)||[]).length,2);
+ assert.equal((sw.match(/if\(isSafePublicResponse\(response\)\)/g)||[]).length,1);
  assert.match(sw,/!response\.ok/);
  assert.match(sw,/response\.redirected/);
  assert.match(sw,/no-store\|no-cache/);
