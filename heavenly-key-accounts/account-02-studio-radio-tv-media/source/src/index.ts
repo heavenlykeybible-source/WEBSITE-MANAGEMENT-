@@ -15,14 +15,36 @@ const ADMIN_ROLES = new Set(['Administrator','Super Administrator','Deputy Super
 const json = (body: unknown, status=200, headers?: HeadersInit) => Response.json(body,{status,headers});
 function fromHex(value:string):Uint8Array { if(!/^[0-9a-f]{64}$/i.test(value)) throw new Error('Invalid signature'); const o=new Uint8Array(32); for(let i=0;i<32;i++)o[i]=parseInt(value.slice(i*2,i*2+2),16); return o; }
 async function verifyCapability(token:string, secret:string):Promise<Capability|null>{
-  const [encoded,signature]=token.split('.'); if(!encoded||!signature)return null;
-  let p:Capability; try{p=JSON.parse(atob(encoded)) as Capability;}catch{return null;}
+  const parts=token.split('.'); if(parts.length!==2)return null; const [encoded,signature]=parts; if(!encoded||!signature||encoded.length>8192||signature.length!==64||!/^[0-9a-fA-F]{64}$/.test(signature))return null;
+  let p:Capability; try{p=JSON.parse(atob(encoded)) as Capability;if(!p||typeof p!=='object'||Array.isArray(p))return null;}catch{return null;}
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
   let valid=false; try{valid=await crypto.subtle.verify('HMAC',key,fromHex(signature) as unknown as BufferSource,new TextEncoder().encode(encoded));}catch{return null;}
-  const now=Math.floor(Date.now()/1000); if(!valid||!p.sub||!p.nonce||!Number.isInteger(p.exp)||p.exp<now||p.iat>now+30||!ADMIN_ROLES.has(p.role))return null; return p;
+  const now=Math.floor(Date.now()/1000); if(!valid||typeof p.sub!=='string'||p.sub.length===0||p.sub.length>256||typeof p.nonce!=='string'||p.nonce.length===0||p.nonce.length>256||!Number.isInteger(p.exp)||!Number.isInteger(p.iat)||p.iat>now+30||p.iat<now-300||p.exp<=now||p.exp<=p.iat||p.exp-p.iat>300||!ADMIN_ROLES.has(p.role))return null; return p;
 }
 function audit(env:Env, cap:Capability, action:string, type:string, id?:string){ return env.DB.prepare('INSERT INTO audit_events(actor_id,action,resource_type,resource_id) VALUES(?,?,?,?)').bind(cap.sub,action,type,id??null).run(); }
-async function requireJson(request:Request){ try{return await request.json() as Record<string,unknown>}catch{return null;} }
+async function requireJson(request:Request):Promise<Record<string,unknown>|null>{
+  const maxBytes=65536;
+  const declared=Number(request.headers.get('content-length'));
+  if(Number.isFinite(declared)&&declared>maxBytes)return null;
+  if(!request.body)return null;
+  const reader=request.body.getReader();
+  const parts:Uint8Array[]=[];
+  let total=0;
+  try{
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      total+=value.byteLength;
+      if(total>maxBytes){await reader.cancel();return null;}
+      parts.push(value);
+    }
+    const bytes=new Uint8Array(total);
+    let offset=0;
+    for(const part of parts){bytes.set(part,offset);offset+=part.byteLength;}
+    const parsed:unknown=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+    return parsed!==null&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed as Record<string,unknown>:null;
+  }catch{return null;}finally{reader.releaseLock();}
+}
 function expiryHours(hours=48){return new Date(Date.now()+hours*3600000).toISOString();}
 
 export default {
@@ -42,8 +64,8 @@ export default {
   if(url.pathname==='/api/media-engine/livekit/viewer-token'&&request.method==='POST'&&marker==='media-engine-public-v1'){
     const live=await env.DB.prepare("SELECT session_id,source_ref,title,status FROM live_sessions WHERE source_ref LIKE 'livekit:%' AND ((status='live' AND last_heartbeat_at>datetime('now','-180 seconds')) OR (status='reconnecting' AND reconnect_deadline>datetime('now'))) ORDER BY session_id DESC LIMIT 1").first<any>();
     if(!live)return json({error:'No LiveKit broadcast is active'},404);
-    try { const {createLiveKitToken}=await import('./livekit'); const room='heavenlykey-live-'+live.session_id; return json({...(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,'viewer-'+crypto.randomUUID(),false)),title:live.title,sessionId:live.session_id}); }
-    catch(e){return json({error:e instanceof Error?e.message:'Live transport unavailable'},503);}
+    try { const {createLiveKitToken}=await import('./livekit'); const room='heavenlykey-live-'+live.session_id; return json({...(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,'viewer-'+crypto.randomUUID(),false)),title:live.title,sessionId:live.session_id},200,{'Cache-Control':'no-store'}); }
+    catch(e){console.error('Viewer token issuance failed',e instanceof Error?e.name:'UnknownError');return json({error:'Live transport unavailable'},503);}
   }
 
   if(marker!=='media-engine-v1'||!auth.startsWith('Bearer ')) return json({error:'Unauthorized'},401);
@@ -120,6 +142,7 @@ export default {
   if(url.pathname==='/api/media-engine/restream/destination'&&request.method==='POST'){
     if(!['Super Administrator','Deputy Super Administrator'].includes(cap.role))return json({error:'Owner or deputy access is required to manage social streaming destinations'},403);
     const b=await requireJson(request);if(!b)return json({error:'Invalid JSON'},400);
+    if(b.action!=='remove'&&typeof b.enabled!=='boolean')return json({error:'Specify enabled as true or false'},400);
     try{
       const destination=String(b.destination??'');
       const current=await restreamStatus(env);
@@ -137,19 +160,21 @@ export default {
           if(!['rtmp:','rtmps:'].includes(parsed.protocol)||parsed.username||parsed.password)return json({error:'Enter a valid RTMP or RTMPS server URL'},400);
           combined=server.replace(/\/+$/,'')+'/'+streamKey.replace(/^\/+/, '');
         }
-        const result=await saveDestination(env,String(b.destination??''),combined,Boolean(b.enabled));await audit(env,cap,'restream.destination.save','destination',String(b.destination??''));return json({ok:true,...result});
+        const result=await saveDestination(env,String(b.destination??''),combined,b.enabled===true);await audit(env,cap,'restream.destination.save','destination',String(b.destination??''));return json({ok:true,...result});
       }
-      await setDestinationEnabled(env,String(b.destination??''),Boolean(b.enabled));await audit(env,cap,'restream.destination.toggle','destination',String(b.destination??''));return json({ok:true});
+      await setDestinationEnabled(env,String(b.destination??''),b.enabled===true);await audit(env,cap,'restream.destination.toggle','destination',String(b.destination??''));return json({ok:true});
     }catch(e){return json({error:e instanceof Error?e.message:'Destination could not be saved'},400);}
   }
   if(url.pathname==='/api/media-engine/restream/start'&&request.method==='POST'){
     if(!['Super Administrator','Deputy Super Administrator'].includes(cap.role))return json({error:'Owner or deputy access is required to start social streaming'},403);
     const b=await requireJson(request);if(!b)return json({error:'Invalid JSON'},400);
-    try{const source=String(b.source??'live')==='247'?'247':'live';const channel=String(b.channel??'video')==='radio'?'radio':'video';const siteBase='https://heavenlykey.alldaywow247.workers.dev';const programmeUrl=source==='247'?siteBase+'/pages/'+(channel==='radio'?'radio':'video')+'.html?egress=1':undefined;const result=await startRestream(env,{source,sessionId:b.session_id?Number(b.session_id):undefined,programmeUrl,format:String(b.format??'landscape-720'),quality:String(b.quality??'balanced'),channel});await audit(env,cap,'restream.start','egress',result.egressId);return json(result,201);}catch(e){return json({error:e instanceof Error?e.message:'Social streaming could not start'},503);}
+    const requestedSource=String(b.source??'live'), requestedChannel=String(b.channel??'video'); if(!['live','247'].includes(requestedSource)||!['radio','video'].includes(requestedChannel))return json({error:'Invalid broadcast source or channel'},400);
+    if(requestedSource==='live'&&(!((typeof b.session_id==='number'&&Number.isSafeInteger(b.session_id)&&b.session_id>0)||(typeof b.session_id==='string'&&/^[1-9][0-9]*$/.test(b.session_id)&&Number.isSafeInteger(Number(b.session_id))))))return json({error:'A valid live session ID is required'},400);
+    try{const source=requestedSource as 'live'|'247';const channel=requestedChannel as 'radio'|'video';const siteBase='https://heavenlykey.alldaywow247.workers.dev';const programmeUrl=source==='247'?siteBase+'/pages/'+(channel==='radio'?'radio':'video')+'.html?egress=1':undefined;const result=await startRestream(env,{source,sessionId:b.session_id?Number(b.session_id):undefined,programmeUrl,format:String(b.format??'landscape-720'),quality:String(b.quality??'balanced'),channel});await audit(env,cap,'restream.start','egress',result.egressId);return json(result,201);}catch(e){console.error('Social streaming start failed',e instanceof Error?e.name:'UnknownError');return json({error:'Social streaming could not start'},503);}
   }
   if(url.pathname==='/api/media-engine/restream/stop'&&request.method==='POST'){
     if(!['Super Administrator','Deputy Super Administrator'].includes(cap.role))return json({error:'Owner or deputy access is required to stop social streaming'},403);
-    try{const result=await stopRestream(env);await audit(env,cap,'restream.stop','egress');return json(result);}catch(e){return json({error:e instanceof Error?e.message:'Social streaming could not stop'},503);}
+    try{const result=await stopRestream(env);await audit(env,cap,'restream.stop','egress');return json(result);}catch(e){console.error('Social streaming stop failed',e instanceof Error?e.name:'UnknownError');return json({error:'Social streaming could not stop'},503);}
   }
 
 
@@ -158,19 +183,19 @@ export default {
     const room=String(b.room??'').trim(); const identity=String(b.identity??'').trim(); const publish=Boolean(b.publish);
     if(publish)return json({error:'Use a session-bound LiveKit publisher token for an active broadcast.'},403);
     if(!room||!identity||room.length>120||identity.length>120)return json({error:'room and identity are required'},400);
-    try { const {createLiveKitToken}=await import('./livekit'); return json(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,identity,publish)); }
-    catch(e){ return json({error:e instanceof Error?e.message:'Live transport unavailable'},503); }
+    try { const {createLiveKitToken}=await import('./livekit'); return json(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,identity,publish),200,{'Cache-Control':'no-store'}); }
+    catch(e){ return json({error:'Live transport unavailable'},503); }
   }
 
   if(url.pathname==='/api/media-engine/livekit/publisher-token'&&request.method==='POST'){
-    const b=await requireJson(request); const sessionId=Number(b?.session_id); if(!Number.isInteger(sessionId))return json({error:'session_id is required'},400);
+    const b=await requireJson(request); const sessionId=Number(b?.session_id); if(!Number.isSafeInteger(sessionId)||sessionId<=0||!(typeof b?.session_id==='number'||(typeof b?.session_id==='string'&&/^[1-9][0-9]*$/.test(b.session_id))))return json({error:'session_id must be a positive integer'},400);
     const live=await env.DB.prepare("SELECT session_id,status,source_type,source_ref FROM live_sessions WHERE session_id=? AND status IN ('live','reconnecting')").bind(sessionId).first<any>();
     if(!live)return json({error:'Live session not active'},404);
     if(live.source_type!=='camera'||!String(live.source_ref).startsWith('livekit:'))return json({error:'This session is not a LiveKit camera broadcast'},409);
     const room='heavenlykey-live-'+sessionId;
     try { const {createLiveKitToken}=await import('./livekit'); const token=await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,'publisher-'+cap.sub,true);
-      await env.DB.prepare("UPDATE live_sessions SET last_heartbeat_at=CURRENT_TIMESTAMP WHERE session_id=?").bind(sessionId).run(); return json(token); }
-    catch(e){return json({error:e instanceof Error?e.message:'Live transport unavailable'},503);}
+      await env.DB.prepare("UPDATE live_sessions SET last_heartbeat_at=CURRENT_TIMESTAMP WHERE session_id=?").bind(sessionId).run(); return json(token,200,{'Cache-Control':'no-store'}); }
+    catch(e){return json({error:'Live transport unavailable'},503);}
   }
 
   if(url.pathname==='/api/media-engine/studio/capabilities'&&request.method==='GET') return json({
@@ -339,7 +364,7 @@ export default {
   if(url.pathname==='/api/playout'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM playout_items WHERE status IN (\'scheduled\',\'playing\') ORDER BY starts_at LIMIT 50').all(); return json({items:r.results});}
 
   if(url.pathname==='/api/social/accounts'&&request.method==='POST'){
-    const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const ch=String(b.channel_name??''); const ref=String(b.provider_account_ref??''); if(!ch||!ref)return json({error:'Missing account fields'},400); const r=await env.DB.prepare('INSERT INTO social_accounts(channel_name,provider_account_ref,automatable,created_by) VALUES(?,?,?,?)').bind(ch,ref,b.automatable===false?0:1,cap.sub).run(); return json({account_id:Number(r.meta.last_row_id)},201);
+    const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const ch=String(b.channel_name??'').trim(); const ref=String(b.provider_account_ref??'').trim(); if(!ch||!ref||ch.length>100||ref.length>300||!/^[a-zA-Z0-9 _.-]+$/.test(ch)||typeof b.automatable!=='undefined'&&typeof b.automatable!=='boolean')return json({error:'Invalid social account fields'},400); const r=await env.DB.prepare('INSERT INTO social_accounts(channel_name,provider_account_ref,automatable,created_by) VALUES(?,?,?,?)').bind(ch,ref,b.automatable===false?0:1,cap.sub).run(); const accountId=Number(r.meta.last_row_id); await audit(env,cap,'social.account.create','social_account',String(accountId)); return json({account_id:accountId},201);
   }
   if(url.pathname==='/api/social/accounts'&&request.method==='GET'){const r=await env.DB.prepare('SELECT account_id,channel_name,status,automatable,created_at FROM social_accounts ORDER BY account_id DESC LIMIT 100').all();return json({items:r.results});}
 
@@ -347,9 +372,9 @@ export default {
   if(url.pathname==='/api/recordings'&&request.method==='POST'){
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400);
     const objectKey=String(b.object_key??''); const title=String(b.title??'Live Recording'); const sessionId=b.live_session_id==null?null:Number(b.live_session_id);
-    if(!objectKey||!title||title.length>200)return json({error:'Invalid recording metadata'},400);
+    if(!objectKey||objectKey.length>1024||!title||title.length>200||(sessionId!==null&&(!Number.isSafeInteger(sessionId)||sessionId<=0)))return json({error:'Invalid recording metadata'},400);
     const head=await env.MEDIA_R2.head(objectKey); if(!head)return json({error:'Recording object not found in Media R2'},400);
-    const keep=Boolean(b.keep_recording); const retention=keep?null:expiryHours(Number(b.retention_hours??48));
+    if(b.keep_recording!==undefined&&typeof b.keep_recording!=='boolean')return json({error:'keep_recording must be a boolean'},400); const keep=b.keep_recording===true; const retentionHours=Number(b.retention_hours??48); if(!Number.isFinite(retentionHours)||retentionHours<1||retentionHours>48)return json({error:'Retention must be between 1 and 48 hours'},400); const retention=keep?null:expiryHours(retentionHours);
     const r=await env.DB.prepare('INSERT INTO recordings(object_key,title,live_session_id,keep_recording,retention_until,created_by) VALUES(?,?,?,?,?,?)').bind(objectKey,title,sessionId,keep?1:0,retention,cap.sub).run();
     const id=Number(r.meta.last_row_id);
     const accounts=await env.DB.prepare("SELECT account_id,channel_name FROM social_accounts WHERE status='connected' AND automatable=1").all<{account_id:number,channel_name:string}>();
@@ -357,16 +382,16 @@ export default {
     await audit(env,cap,'recording.register','recording',String(id)); return json({recording_id:id,retention_until:retention,distribution_jobs:accounts.results.length},201);
   }
   let rm=url.pathname.match(/^\/api\/recordings\/(\d+)\/keep$/); if(rm&&request.method==='POST'){
-    const b=await requireJson(request); const keep=Boolean(b?.keep); const retention=keep?null:expiryHours(Number(b?.retention_hours??48)); const r=await env.DB.prepare("UPDATE recordings SET keep_recording=?,retention_until=? WHERE recording_id=? AND status!='deleted'").bind(keep?1:0,retention,Number(rm[1])).run(); if(!r.meta.changes)return json({error:'Recording not found'},404); return json({ok:true});
+    const b=await requireJson(request); if(!b||typeof b.keep!=='boolean')return json({error:'Specify whether to keep this recording'},400); const keep=b.keep; const retentionHours=Number(b.retention_hours??48); if(!Number.isFinite(retentionHours)||retentionHours<1||retentionHours>48)return json({error:'Retention must be between 1 and 48 hours'},400); const retention=keep?null:expiryHours(retentionHours); const r=await env.DB.prepare("UPDATE recordings SET keep_recording=?,retention_until=? WHERE recording_id=? AND status!='deleted'").bind(keep?1:0,retention,Number(rm[1])).run(); if(!r.meta.changes)return json({error:'Recording not found'},404); await audit(env,cap,'recording.retention.update','recording',rm[1]); return json({ok:true});
   }
   rm=url.pathname.match(/^\/api\/recordings\/(\d+)$/); if(rm&&request.method==='DELETE'){
-    const row=await env.DB.prepare("SELECT object_key FROM recordings WHERE recording_id=? AND status!='deleted'").bind(Number(rm[1])).first<{object_key:string}>(); if(!row)return json({error:'Recording not found'},404); try{await env.MEDIA_R2.delete(row.object_key);}catch{return json({error:'Recording storage deletion failed'},502);} await env.DB.prepare("UPDATE recordings SET status='deleted',retention_until=CURRENT_TIMESTAMP WHERE recording_id=?").bind(Number(rm[1])).run(); return json({ok:true});
+    const row=await env.DB.prepare("SELECT object_key FROM recordings WHERE recording_id=? AND status!='deleted'").bind(Number(rm[1])).first<{object_key:string}>(); if(!row)return json({error:'Recording not found'},404); try{await env.MEDIA_R2.delete(row.object_key);}catch{return json({error:'Recording storage deletion failed'},502);} await env.DB.prepare("UPDATE recordings SET status='deleted',retention_until=CURRENT_TIMESTAMP WHERE recording_id=?").bind(Number(rm[1])).run(); await env.DB.prepare("UPDATE distribution_jobs SET status='cancelled',last_error='Recording deleted by administrator',updated_at=CURRENT_TIMESTAMP WHERE recording_id=? AND status IN ('pending','processing','failed')").bind(Number(rm[1])).run(); await audit(env,cap,'recording.delete','recording',rm[1]); return json({ok:true});
   }
   if(url.pathname==='/api/campaigns'&&request.method==='POST'){
     const b=await requireJson(request);if(!b)return json({error:'Invalid JSON'},400);const when=new Date(String(b.scheduled_for));if(!Number.isFinite(when.getTime())||when.getTime()<=Date.now())return json({error:'Choose a future planning time'},400);
     const title=String(b.title??'').trim();if(!title||title.length>200)return json({error:'Enter a title up to 200 characters'},400);
-    if(b.media_id!=null){const id=Number(b.media_id);if(!Number.isSafeInteger(id))return json({error:'Invalid media'},400);const file=await env.DB.prepare("SELECT object_key FROM media_objects WHERE media_id=? AND status IN ('approved','published') AND (keep_media=1 OR julianday(retention_until)>julianday('now'))").bind(id).first<{object_key:string}>();if(!file||!await env.MEDIA_R2.head(file.object_key))return json({error:'Choose an available uploaded file'},400);}
-    const r=await env.DB.prepare('INSERT INTO campaigns(title,scheduled_for,media_id,created_by) VALUES(?,?,?,?)').bind(title,when.toISOString(),b.media_id!=null?Number(b.media_id):null,cap.sub).run();return json({campaign_id:Number(r.meta.last_row_id)},201);
+    if(b.media_id!=null){const id=Number(b.media_id);if(!Number.isSafeInteger(id)||id<=0)return json({error:'Invalid media'},400);const file=await env.DB.prepare("SELECT object_key,keep_media,retention_until FROM media_objects WHERE media_id=? AND status IN ('approved','published') AND (keep_media=1 OR julianday(retention_until)>julianday('now'))").bind(id).first<{object_key:string,keep_media:number,retention_until:string|null}>();if(!file||!await env.MEDIA_R2.head(file.object_key))return json({error:'Choose an available uploaded file'},400);if(!file.keep_media&&file.retention_until&&new Date(file.retention_until).getTime()<=when.getTime())return json({error:'Media expires before campaign starts'},409);}
+    const r=await env.DB.prepare('INSERT INTO campaigns(title,scheduled_for,media_id,created_by) VALUES(?,?,?,?)').bind(title,when.toISOString(),b.media_id!=null?Number(b.media_id):null,cap.sub).run();const campaignId=Number(r.meta.last_row_id);await audit(env,cap,'campaign.schedule','campaign',String(campaignId));return json({campaign_id:campaignId},201);
   }
   {const match=url.pathname.match(/^\/api\/campaigns\/(\d+)\/cancel$/);if(match&&request.method==='POST'){const r=await env.DB.prepare("UPDATE campaigns SET status='cancelled' WHERE campaign_id=? AND status='scheduled'").bind(Number(match[1])).run();if(!r.meta.changes)return json({error:'Active plan not found'},404);await audit(env,cap,'campaign.cancel','campaign',match[1]);return json({ok:true});}}
   if(url.pathname==='/api/campaigns'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM campaigns ORDER BY scheduled_for LIMIT 100').all();return json({items:r.results});}

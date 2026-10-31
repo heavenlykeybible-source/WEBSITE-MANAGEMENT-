@@ -27,14 +27,33 @@ export async function listDestinations(env:Env){
  return Array.from(allowed).map(destination=>{
   const row=store[destination];
   let host:string|null=null;try{host=row?new URL(row.url).hostname:null;}catch{}
-  return {destination,configured:!!row?.url,enabled:!!row?.enabled,host,updatedAt:row?.updatedAt??null};
+  const safe=typeof row?.url==='string'&&safeStreamUrl(row.url)!==null;
+  return {destination,configured:typeof row?.url==='string'&&row.url.length>0,enabled:row?.enabled===true&&safe,requiresReconnect:!!row?.url&&!safe,host:safe?host:null,updatedAt:row?.updatedAt??null};
  });
+}
+function unsafeStreamHost(hostname:string):boolean{
+ let canonical:string;try{canonical=new URL('http://'+hostname).hostname;}catch{return true;}
+ const host=canonical.toLowerCase().replace(/^\[|\]$/g,'').replace(/\.+$/,'');
+ if(host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test'))return true;
+ if(host.includes(':'))return host==='::1'||host==='::'||host.startsWith('fc')||host.startsWith('fd')||host.startsWith('fe8')||host.startsWith('fe9')||host.startsWith('fea')||host.startsWith('feb')||host.startsWith('::ffff:');
+ const ip=host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+ if(ip){
+  const [a,b]=ip.slice(1).map(Number);
+  return a===0||a===10||a===127||a>=224||(a===169&&b===254)||(a===172&&b>=16&&b<=31)||(a===192&&b===168)||(a===100&&b>=64&&b<=127)||(a===192&&b===0)||(a===198&&(b===18||b===19));
+ }
+ return false;
+}
+
+function safeStreamUrl(urlValue:string):URL|null{
+ try{
+  const u=new URL(urlValue.trim());
+  if(!['rtmp:','rtmps:'].includes(u.protocol)||!u.hostname||unsafeStreamHost(u.hostname)||u.username||u.password||u.href.length>2048)return null;
+  return u;
+ }catch{return null;}
 }
 export async function saveDestination(env:Env,destination:string,urlValue:string,enabled:boolean){
  if(!allowed.has(destination))throw new Error('Unsupported destination.');
- let u:URL;try{u=new URL(urlValue.trim());}catch{throw new Error('Enter the platform RTMP or RTMPS server URL including its stream key.');}
- if(!['rtmp:','rtmps:'].includes(u.protocol)||!u.hostname||u.username||u.password)throw new Error('Use a valid RTMP or RTMPS streaming URL.');
- if(u.href.length>2048)throw new Error('Streaming URL is too long.');
+ const u=safeStreamUrl(urlValue);if(!u)throw new Error('Use a valid public RTMP or RTMPS streaming URL (maximum 2048 characters).');
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
  store[destination]={url:u.href,enabled,updatedAt:new Date().toISOString()};
  await env.LIVE_STATUS_KV.put(CONFIG_KEY,await seal(env,store));
@@ -51,13 +70,14 @@ export async function removeDestination(env:Env,destination:string){
 export async function setDestinationEnabled(env:Env,destination:string,enabled:boolean){
  if(!allowed.has(destination))throw new Error('Unsupported destination.');
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
- if(!store[destination]?.url)throw new Error('Connect this destination first.');
+ if(typeof store[destination]?.url!=='string')throw new Error('Connect this destination first.');
+ if(enabled&&!safeStreamUrl(store[destination].url))throw new Error('Reconnect this destination with a safe public RTMP or RTMPS URL.');
  store[destination].enabled=enabled;store[destination].updatedAt=new Date().toISOString();
  await env.LIVE_STATUS_KV.put(CONFIG_KEY,await seal(env,store));
 }
 async function enabledUrls(env:Env){
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
- return Object.entries(store).filter(([name,v])=>allowed.has(name)&&v.enabled&&v.url).map(([destination,v])=>({destination,url:v.url}));
+ return Object.entries(store).filter(([name,v])=>allowed.has(name)&&v!==null&&typeof v==='object'&&v.enabled===true&&typeof v.url==='string'&&safeStreamUrl(v.url)!==null).map(([destination,v])=>({destination,url:v.url}));
 }
 async function callLiveKit(env:any,method:string,body:unknown){
  const config=await resolveLiveKitConfig(env);if(!config)throw new Error('LiveKit connection is not configured.');
@@ -65,7 +85,7 @@ async function callLiveKit(env:any,method:string,body:unknown){
  const endpoint=config.LIVEKIT_URL.replace('wss:','https:')+'/twirp/livekit.Egress/'+method;
  const r=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(15000)});
  const text=await r.text();let data:any={};try{data=text?JSON.parse(text):{};}catch{}
- if(!r.ok)throw new Error(data?.msg||data?.message||('LiveKit Egress returned HTTP '+r.status));
+ if(!r.ok)throw new Error('LiveKit Egress request failed (HTTP '+r.status+').');
  return data;
 }
 export async function startRestream(env:any,input:{source:'live'|'247';sessionId?:number;programmeUrl?:string;format?:string;quality?:string;channel?:'radio'|'video'}){
@@ -74,7 +94,8 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  const format=String(input.format??'landscape-720');
  const presetByFormat:Record<string,string>={landscape_720:'H264_720P_30',landscape_1080:'H264_1080P_30',portrait_720:'PORTRAIT_H264_720P_30',portrait_1080:'PORTRAIT_H264_1080P_30'};
  const normalized=format.replace(/-/g,'_');
- const preset=presetByFormat[normalized]??(normalized.startsWith('portrait_')?'PORTRAIT_H264_720P_30':'H264_720P_30');
+ const preset=presetByFormat[normalized];
+ if(!preset)throw new Error('Unsupported streaming format.');
  let body:any;
  if(input.source==='live'){
   if(!Number.isSafeInteger(input.sessionId)||Number(input.sessionId)<=0)throw new Error('An active live session is required.');

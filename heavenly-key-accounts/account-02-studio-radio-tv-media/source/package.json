@@ -1,1 +1,17 @@
-{"name":"heavenlykey-media-engine","private":true,"scripts":{"check":"tsc --noEmit","deploy":"wrangler deploy","preflight":"node scripts/preflight.mjs"},"devDependencies":{"typescript":"^5.8.3","wrangler":"^4.0.0","@cloudflare/workers-types":"^5.20260930.2"}}
+{
+  "name": "heavenlykey-media-engine",
+  "private": true,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "preflight": "node scripts/preflight.mjs",
+    "test:safety": "node scripts/broadcast-safety.test.mjs",
+    "predeploy": "npm run test:release",
+    "test:release": "npm run check && npm run test:safety && npm run preflight"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "wrangler": "^4.0.0",
+    "@cloudflare/workers-types": "^5.20260930.2"
+  }
+}
