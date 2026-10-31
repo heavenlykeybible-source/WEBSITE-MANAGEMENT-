@@ -169,4 +169,17 @@ await get('play').fire('click');
 assert.equal(mediaSession.playbackState,'playing');
 mediaActions.get('pause')();
 assert.equal(mediaSession.playbackState,'paused');
+fetchResult={items:[
+ {type:'audio',title:'Repeated',url:'/api/broadcast/media/20/object'},
+ {type:'audio',title:'Repeated again',url:'/api/broadcast/media/20/object'},
+ {type:'video',title:'Reject television',url:'/api/broadcast/media/21/object'},
+ {type:'audio',title:'Reject external',url:'https://untrusted.example/media.mp3'},
+ ...Array.from({length:60},(_,i)=>({type:'audio',title:'Approved '+i,url:'/api/broadcast/media/'+(100+i)+'/object'}))
+]};
+await get('retry').fire('click');
+assert.equal(get('track').textContent,'Repeated');
+for(let i=0;i<49;i++)await get('next').fire('click');
+assert.equal(audio.src,'/api/broadcast/media/148/object','Player must retain no more than 50 unique recordings');
+await get('next').fire('click');
+assert.equal(audio.src,'/api/broadcast/media/20/object','Next must wrap at the capped playlist limit');
 console.log('Account 2 radio runtime play, pause, next, end, refresh, and page-exit tests passed');
