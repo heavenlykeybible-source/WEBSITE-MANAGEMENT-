@@ -2,6 +2,7 @@ import { TV_LOCKED,TV_LOCK_MESSAGE } from './channel-lock';
 import { onDemandRadioMetadata } from './radio-on-demand';
 import { parseAudioRange } from './radio-byte-range';
 import { radioNotModified,radioCanResumeRange } from './radio-http-validators';
+import { readRadioPlaylistOrder } from './radio-playlist-order';
 export function youtubeVideoId(value:string):string|null {try{const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password)return null;let id:string|null=null;if(u.hostname==='youtu.be')id=u.pathname.slice(1).split('/')[0];else if(['youtube.com','www.youtube.com','m.youtube.com','www.youtube-nocookie.com'].includes(u.hostname)){id=u.pathname==='/watch'?u.searchParams.get('v'):/^\/(?:embed|shorts|live)\/([^/]+)/.exec(u.pathname)?.[1]||null;}return id&&/^[a-zA-Z0-9_-]{11}$/.test(id)?id:null;}catch{return null;}}
 export function isPlaybackURL(value:string):boolean {try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!(u.hostname==='heavenlykey.alldaywow247.workers.dev'&&!u.pathname.startsWith('/api/broadcast/media/'));}catch{return false;}}
 export interface BroadcastEnv { DB:D1Database; MEDIA_R2:R2Bucket; LIVE_STATUS_KV?:KVNamespace }
@@ -47,7 +48,7 @@ export async function publicProgramme(request:Request,env:BroadcastEnv):Promise<
  if(settings?.playlist_enabled===0)return reply({mode:'offline',title:channel==='audio'?'ONLINE REVIVAL RADIO':'FAITH OF OUR FATHERS TV',items:[]});
  const playlist=await env.DB.prepare(`SELECT m.* FROM media_objects m WHERE ${channelFilter} AND m.status='published' AND ${ready} ORDER BY CASE WHEN m.media_type='audio' THEN 0 ELSE 1 END,m.media_id LIMIT 50`).all();
  let entries=playlist.results;
- const orderKey='playlist-order-'+(channel==='audio'?'radio':'video');let order:number[]=[];try{const raw=await env.LIVE_STATUS_KV?.get(orderKey);order=raw?JSON.parse(raw):[];}catch{order=[];}
+ const orderKey='playlist-order-'+(channel==='audio'?'radio':'video');let order:number[]=[];try{order=readRadioPlaylistOrder(await env.LIVE_STATUS_KV?.get(orderKey));}catch{order=[];}
  if(Array.isArray(order)&&order.length){const rank=new Map(order.map((id:any,index:number)=>[Number(id),index]));entries=[...entries].sort((a:any,b:any)=>(rank.get(a.media_id)??10000+a.media_id)-(rank.get(b.media_id)??10000+b.media_id));}
  return reply({mode:entries.length?'playlist':'offline',title:channel==='audio'?'ONLINE REVIVAL RADIO':'FAITH OF OUR FATHERS TV',items:entries.map(mediaItem)});
 }
