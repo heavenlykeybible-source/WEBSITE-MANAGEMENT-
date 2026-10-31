@@ -13,7 +13,8 @@
     "test:radio-on-demand": "node scripts/test-radio-on-demand.mjs",
     "test:radio-player": "node scripts/test-radio-player.mjs",
     "test:radio-upload-security": "node scripts/test-radio-upload-security.mjs",
-    "test:audio-signature": "node scripts/test-audio-signature.mjs"
+    "test:audio-signature": "node scripts/test-audio-signature.mjs",
+    "test:radio-public-media": "node scripts/test-radio-public-media.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
