@@ -421,3 +421,11 @@ test('participant display names strip invisible direction controls',async()=>{
  await h.r.webSocketMessage(another,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Safe\u202eName\u200b',pass:'other',aud:true}));
  assert.equal(another.attachment.name,'SafeName');
 });
+
+test('meeting watch links reject URL credentials',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url:'https://user:pass@example.com/video'}));
+ assert.equal(h.host.attachment.watch,'');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url:'https://example.com/video'}));
+ assert.equal(h.host.attachment.watch,'https://example.com/video');
+});
