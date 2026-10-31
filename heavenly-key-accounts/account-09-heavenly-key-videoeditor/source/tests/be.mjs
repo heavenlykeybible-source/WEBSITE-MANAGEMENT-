@@ -9,6 +9,13 @@ const auditIndex=db.prepare("SELECT name FROM sqlite_master WHERE type='index' A
 if(!auditIndex)throw Error('Missing audit event query index');
 db.exec(readFileSync(new URL('../migrations/0003_audit_event_index.sql',import.meta.url),'utf8'));
 db.exec(readFileSync(new URL('../migrations/0004_session_user_expiry_index.sql',import.meta.url),'utf8'));
+// Verify session migration against the pre-inactivity-timeout schema.
+const legacySessionDb = new DatabaseSync(':memory:');
+legacySessionDb.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8').replace(',last_seen_at INTEGER NOT NULL', '').replace(',password_iterations INTEGER NOT NULL DEFAULT 600000', ''));
+legacySessionDb.exec(readFileSync(new URL('../migrations/0005_password_hash_iterations.sql', import.meta.url), 'utf8'));
+legacySessionDb.exec(readFileSync(new URL('../migrations/0006_session_inactivity_timeout.sql', import.meta.url), 'utf8'));
+if(!legacySessionDb.prepare("SELECT name FROM pragma_table_info('sessions') WHERE name='last_seen_at'").get()) throw Error('Session inactivity migration did not add last_seen_at');
+legacySessionDb.close();
 // Exercise migration 0005 against a legacy schema, not the fresh schema that already has the column.
 const legacyDb = new DatabaseSync(':memory:');
 const legacySchema = readFileSync(new URL('../schema.sql', import.meta.url), 'utf8').replace(',password_iterations INTEGER NOT NULL DEFAULT 600000', '');
@@ -187,6 +194,20 @@ const independentLoginIp=await request('login',{method:'POST',headers:{'cf-conne
 check('Login throttling is isolated by IP address',independentLoginIp.status===200&&independentLoginIp.cookie.length>5);
 const login = await request('login', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Login creates session cookie', login.status === 200 && login.cookie.length > 5);
+const sessionIdleLogin=await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
+const idleTokenHash=createHash('sha256').update(sessionIdleLogin.cookie.slice(3)).digest('hex');
+const initialSession=db.prepare('SELECT last_seen_at,expires_at FROM sessions WHERE token_hash=?').get(idleTokenHash);
+const idleTouchTime=Date.now()-6*60*1000;
+db.prepare('UPDATE sessions SET last_seen_at=? WHERE token_hash=?').run(idleTouchTime,idleTokenHash);
+const activeAfterIdleTouch=await request('me',{cookie:sessionIdleLogin.cookie});
+const touchedSession=db.prepare('SELECT last_seen_at,expires_at FROM sessions WHERE token_hash=?').get(idleTokenHash);
+check('Active session is accepted within the 30-minute inactivity window',activeAfterIdleTouch.status===200);
+check('Active session activity refreshes last-seen timestamp',touchedSession.last_seen_at>idleTouchTime);
+check('Session retains fixed 30-day absolute expiry',touchedSession.expires_at===initialSession.expires_at);
+db.prepare('UPDATE sessions SET last_seen_at=? WHERE token_hash=?').run(Date.now()-31*60*1000,idleTokenHash);
+const idleExpired=await request('me',{cookie:sessionIdleLogin.cookie});
+check('Session is rejected after 30 minutes of inactivity',idleExpired.status===401);
+await request('logout',{method:'POST',cookie:sessionIdleLogin.cookie});
 const failedLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'incorrect password'}});
 check('Incorrect password is rejected without exposing a session',failedLogin.status===401&&!failedLogin.cookie);
 const oversizedPassword=await request('login',{method:'POST',body:{email:'smoke@example.com',password:'a'.repeat(10000)}});
