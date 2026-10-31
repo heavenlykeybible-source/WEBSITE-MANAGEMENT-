@@ -74,6 +74,10 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
     if(typeof withLock!=='function')problem('Safe private-import concurrency control is unavailable',503);
     return withLock('account4-private-import-session:'+id,fn);
   };
+  const mutateSession=fn=>{
+    if(typeof withLock!=='function')problem('Safe private-import concurrency control is unavailable',503);
+    return withLock('account4-private-import-session:'+id,fn);
+  };
   if(action.startsWith('parts/')&&method==='PUT'){
     const session=await loadImportSession(env.DB,actor,id);
     const partNumber=Number(match[3]);
