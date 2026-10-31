@@ -272,3 +272,11 @@ test('human request resolve action has session and duplicate guards', () => {
  assert.ok(html.includes('resolve.disabled=true'));
  assert.ok(html.includes('resolve.disabled=operatorAccessRole'));
 });
+
+test('draft queue blocks viewer actions and stale sessions', () => {
+ assert.ok(html.includes("activeManagementTab==='chats'&&!!token"));
+ assert.ok(html.includes("operatorAccessRole==='viewer'||discard.disabled"));
+ assert.ok(html.includes("operatorAccessRole==='viewer'||approve.disabled"));
+ assert.ok(html.includes("discard.disabled=true;try{await api('/api/drafts/discard'"));
+ assert.ok(html.includes("approve.disabled=true;try{await api('/api/drafts/approve-internal'"));
+});
