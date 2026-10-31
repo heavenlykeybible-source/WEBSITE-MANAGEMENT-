@@ -20,7 +20,11 @@ export class MeetingRooms {
  sockets(){return this.state.getWebSockets().filter(w=>w.readyState===1);}
  data(w){return w.deserializeAttachment()||{};}
  save(w,d){w.serializeAttachment(d);}
- send(w,m){if(w?.readyState===1)try{w.send(JSON.stringify(m));}catch{}}
+ send(w,m){if(w?.readyState!==1)return;try{
+  // Do not build up unbounded outbound signalling for an unresponsive browser.
+  if(w.bufferedAmount>1048576){w.close(1009,'Slow connection');return;}
+  w.send(JSON.stringify(m));
+ }catch{try{w.close(1011,'Send failed')}catch{}}}
  host(){return this.sockets().find(w=>this.data(w).role==='host');}
  guests(){return this.sockets().filter(w=>this.data(w).role==='guest');}
  stage(){const host=this.host();if(!host)return [];const key=this.data(host).key;return this.guests().filter(w=>{const d=this.data(w);return d.stage&&d.ok&&d.session===key;});}
