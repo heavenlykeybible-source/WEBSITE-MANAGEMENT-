@@ -25,6 +25,9 @@ assert.ok(broadcast.includes("channel==='audio'?{...data,playback:onDemandRadioM
 assert.ok(broadcast.includes("AND (destination=? OR (destination='both' AND ?='video'))"),'Radio must ignore television-only and mixed live sessions');
 assert.ok(broadcast.includes(".bind(channel==='audio'?'radio':'video',channel).first<any>()"),'Live channel restriction must use bound parameters');
 assert.ok(broadcast.includes('return reply({mode:entries.length?'), 'Playlist must supply listener-activated contract');
+assert.ok(broadcast.includes("const listenerOnly=channel==='audio'"),'Only radio permits on-demand mode');
+assert.ok(broadcast.includes('if(!listenerOnly&&live&&'),'On-demand playlists bypass legacy live takeover');
+assert.ok(broadcast.includes('if(!listenerOnly&&scheduled)return'),'On-demand playlists bypass fixed scheduled takeover');
 assert.ok(broadcast.includes("const object=request.method==='HEAD'?head:await env.MEDIA_R2.get"),'Audio must be loaded only on listener request');
 assert.ok(broadcast.includes("'Accept-Ranges':'bytes'"),'Seek/range audio delivery must remain available');
 assert.ok(index.includes("if(TV_LOCKED&&destination!=='radio')return tvLockedResponse()"),'Television must remain locked');
