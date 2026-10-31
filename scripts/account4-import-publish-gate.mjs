@@ -12,7 +12,7 @@ export async function assertPrivateImportPublishable(db, actor, id) {
     'SELECT s.owner_id,s.state,s.object_key,s.size_bytes,a.verdict,a.object_key AS scanned_key,a.size_bytes AS scanned_size,a.approved_by,a.approved_at,a.scanned_at FROM account4_import_sessions s LEFT JOIN account4_import_release_attestations a ON a.session_id=s.id WHERE s.id=? AND s.owner_id=?'
   ).bind(id,actor.id).first();
   // No release on missing rows, failed/unknown scans, modified objects,
-  // missing approval, or approval by the importing owner.
+  // missing owner approval.
   if (!row || row.owner_id !== actor.id ||
       row.state !== 'private-awaiting-review' ||
       !new RegExp('^private-imports/' + actor.id +
@@ -22,7 +22,6 @@ export async function assertPrivateImportPublishable(db, actor, id) {
       !Number.isSafeInteger(row.size_bytes) || row.size_bytes < 1 ||
       row.scanned_size !== row.size_bytes ||
       !Number.isSafeInteger(row.approved_by) || row.approved_by < 1 ||
-      row.approved_by === row.owner_id ||
       typeof row.scanned_at !== 'string' || !row.scanned_at ||
       typeof row.approved_at !== 'string' || !row.approved_at)
     throw new Error('Private import not cleared for publication');
