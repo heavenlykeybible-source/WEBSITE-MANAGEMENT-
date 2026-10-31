@@ -1,11 +1,12 @@
 // D1 persistence for private multipart uploads. Not connected to production routes.
 // Only server-verified authentication may supply actor.id and actor.canImport.
 function authorized(actor) {
-  if (!actor?.authenticated || actor.canImport !== true || !Number.isSafeInteger(actor.id))
+  if (!actor?.authenticated || actor.canImport !== true || !Number.isSafeInteger(actor.id) || actor.id <= 0)
     throw new Error('Import permission required');
 }
 export async function saveImportSession(db, actor, session) {
   authorized(actor);
+  if (!session || typeof session !== 'object') throw new Error('Invalid import session');
   if (session.ownerId !== actor.id || session.state !== 'uploading' ||
       typeof session.name !== 'string' || !session.name ||
       !Number.isSafeInteger(session.size) || session.size < 1 || session.size > 1073741824 ||
@@ -29,6 +30,7 @@ export async function loadImportSession(db, actor, id) {
     .bind(id,actor.id).first();
   if (!row || row.owner_id !== actor.id || row.state !== 'uploading' ||
       row.expires_at_ms <= Date.now() ||
+      typeof row.object_key !== 'string' ||
       !row.object_key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`))
     throw new Error('Import session unavailable');
   const {results} = await db.prepare('SELECT part_number,etag FROM account4_import_parts WHERE session_id=? ORDER BY part_number')
