@@ -46,6 +46,8 @@ missingSchema=true;
 await assert.rejects(call('workspace/imports','GET'),e=>e.status===503);
 missingSchema=false;
 await assert.rejects(call('workspace/imports','POST',{name:'backup.zip',size:1073741825}),/1 GiB/);
+await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'backup.zip',size:11})}),env,owner,'workspace/imports','POST'),e=>e.status===503);
+assert.equal(creates,0,'Upload admission must fail closed without an owner-level lock');
 const startedResponse=await call('workspace/imports','POST',{name:'backup.zip',size:11});
 assert.equal(startedResponse.status,201);
 const started=await startedResponse.json();
