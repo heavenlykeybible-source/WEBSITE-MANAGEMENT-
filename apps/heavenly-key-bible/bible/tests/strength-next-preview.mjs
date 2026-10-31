@@ -20,10 +20,12 @@ for(const name of ["Today's Topic",'Bible Reading','Hymn of the Day','Bible Stor
 assert.match(js,/Awaiting approved daily challenge/);
 assert.match(js,/menu\.addEventListener\('keydown'/);
 for(const key of ['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'])assert.ok(js.includes("case '"+key+"'"),'Missing keyboard shortcut '+key);
-assert.match(js,/event\.preventDefault\(\);current=target;render\(\);buttons\[target\]\.focus\(\)/);
+assert.ok(js.includes('navigate(target,{focus:false})'),'Keyboard navigation should use common navigation handler');
 assert.match(js,/b\.tabIndex=i===current\?0:-1/);
 assert.ok(js.includes("$('section-title').focus()"));
 assert.ok(js.includes('DEVELOPMENT PREVIEW — NOT FOR PUBLICATION'));
+for(const marker of ['sectionFromHash','hashchange','history.replaceState','window.print()','adjustText'])assert.ok(js.includes(marker),'Missing navigation or reader feature '+marker);
+assert.ok(html.includes('@media print'));
 assert.doesNotMatch(js,/innerHTML\s*=/);
 assert.doesNotMatch(js,/fetch\s*\(/);
 console.log('Twelve-section preview structure and draft-only safety checks passed.');
