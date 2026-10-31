@@ -65,10 +65,11 @@
       const apps = await response.json();
       if (!Object.prototype.hasOwnProperty.call(apps, appId)) throw new Error('Unknown app');
       const app = apps[appId];
-      if (!app || typeof app.name !== 'string' || !app.name.trim() || typeof app.url !== 'string' || !/^https:\/\//i.test(app.url)) throw new Error('Invalid catalogue entry');
-      const destination = new URL(app.url);
+      if (!app || typeof app.name !== 'string' || !app.name.trim() || typeof app.url !== 'string') throw new Error('Invalid catalogue entry');
+      const destination = new URL(app.url, location.origin);
+      const localDevelopment = location.hostname === 'localhost' && destination.protocol === 'http:' && destination.hostname === 'localhost';
       const trustedHosts = new Set(['apps.heavenlykey.org', 'onlinebible.heavenlykey.org', 'global.heavenlykey.org', 'radio.heavenlykey.org', 'meeting.heavenlykey.org', 'heavenlykey.org', 'www.heavenlykey.org']);
-      if ((destination.protocol !== 'https:' || !trustedHosts.has(destination.hostname) || destination.port) || destination.username || destination.password) throw new Error('Invalid app URL');
+      if ((!localDevelopment && (destination.protocol !== 'https:' || !trustedHosts.has(destination.hostname) || destination.port || !/^https:\/\//i.test(app.url))) || destination.username || destination.password) throw new Error('Invalid app URL');
       if (open) {
         open.href = destination.href;
         open.textContent = 'Open ' + app.name + ' Now';
