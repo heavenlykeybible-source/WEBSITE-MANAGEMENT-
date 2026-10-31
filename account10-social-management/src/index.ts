@@ -447,6 +447,38 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   }catch{return reply({connected:false,error:'Meta connection timed out or failed'},502)}
   finally{clearTimeout(timeout)}
  }
+ if(u.pathname==='/api/ai/suggest-post'&&req.method==='POST'){
+  let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
+  const supported=['facebook_page','instagram_professional','youtube','tiktok'];
+  if(!supported.includes(data?.platform)||typeof data?.topic!=='string'||!data.topic.trim()||data.topic.length>2000)return reply({error:'Choose a supported channel and a ministry topic under 2000 characters'},400);
+  if(!env.GEMINI_API_KEY)return reply({error:'Gemini API key is not configured',sent:false,published:false},503);
+  const seconds=Math.floor(Date.now()/1000);
+  const limits:[string,'minute'|'hour',number,number][]=[
+   ['editorial:'+data.platform,'minute',Math.floor(seconds/60),6],
+   ['account10','hour',Math.floor(seconds/3600),300]
+  ];
+  for(const [scope,kind,windowStart,maxRequests] of limits){
+   let reservation;
+   try{reservation=await env.DB.prepare("INSERT INTO ai_rate_limits(scope,window_kind,window_start,request_count) VALUES(?,?,?,1) ON CONFLICT(scope,window_kind,window_start) DO UPDATE SET request_count=request_count+1 WHERE request_count<?").bind(scope,kind,windowStart,maxRequests).run()}
+   catch{return reply({error:'AI usage protection unavailable; apply migration 0008',sent:false,published:false},503)}
+   if(!reservation.meta?.changes)return reply({error:'Editorial suggestion limit reached; review existing drafts',sent:false,published:false,automaticRetry:false},429);
+  }
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
+  try{
+   const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
+    method:'POST',signal:controller.signal,
+    headers:{'content-type':'application/json','x-goog-api-key':env.GEMINI_API_KEY},
+    body:JSON.stringify({systemInstruction:{parts:[{text:originalAssistantInstruction}]},contents:[{role:'user',parts:[{text:'Prepare a short, original and factually cautious Christian ministry social-media post for '+data.platform+'. Follow the ministry-only KJV instruction. Never claim first-hand testimony, a verified event, an official quotation or a completed action. No fundraising, business advice, calls to pay, or fabricated Bible verses. This is a human-reviewed DRAFT, not a published post. Topic: '+data.topic}]}],generationConfig:{maxOutputTokens:350,temperature:0.4}})
+   });
+   if(response.status===429)return reply({error:'Gemini provider rate limit; review manually',sent:false,published:false,automaticRetry:false},503);
+   if(!response.ok)return reply({error:'Gemini editorial suggestion failed',sent:false,published:false,providerStatus:response.status},502);
+   const result:any=await response.json();
+   const suggestion=(result?.candidates?.[0]?.content?.parts||[]).map((p:any)=>typeof p?.text==='string'?p.text:'').join('').trim().slice(0,3000);
+   if(!suggestion)return reply({error:'Gemini returned no usable draft',sent:false,published:false},502);
+   return reply({action:'review_post',platform:data.platform,suggestion,sent:false,published:false,saved:false,requiresOperatorApproval:true,provider:'gemini'});
+  }catch{return reply({error:'Gemini request failed or timed out',sent:false,published:false},502)}
+  finally{clearTimeout(timeout)}
+ }
  if(u.pathname==='/api/ai/suggest-reply'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.message!=='string'||!data.message.trim()||data.message.length>4000)return reply({error:'Valid conversation and message required'},400);
