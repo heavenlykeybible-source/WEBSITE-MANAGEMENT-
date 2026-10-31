@@ -1087,3 +1087,12 @@ test('invalid segmentation results immediately invalidate stale presenter frames
  assert.match(html,/if\(!Number\.isFinite\(iw\)\|\|!Number\.isFinite\(ih\)\|\|iw<1\|\|ih<1\)\{s\.segReady=false;return\}/);
  assert.match(html,/else if\(s\.blur&&s\.oc&&s\.segReady\)/,'camera drawing falls back to the original frame');
 });
+
+test('choosing a studio background makes an existing hidden background layer visible',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/const layer=it\.find\(x=>x\.id===b\.id\);if\(layer\)layer\.on=true;else it\.unshift\(\{id:b\.id,p:'full',on:true\}\)/);
+ const bg={id:'background-1',isBg:true},items=[{id:bg.id,p:'full',on:false}];
+ const layer=items.find(x=>x.id===bg.id);if(layer)layer.on=true;else items.unshift({id:bg.id,p:'full',on:true});
+ assert.equal(items.length,1,'switching templates must not duplicate the existing scene background');
+ assert.equal(items[0].on,true,'the selected background must be shown again');
+});
