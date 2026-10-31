@@ -33,7 +33,7 @@ async function renderImage(){
  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Unable to export PNG.')),'image/png'));
  return {blob,w,h};
 }
-async function refresh(){const token=++renderToken;try{say('Creating your scripture card…');const out=await renderImage();if(token!==renderToken)return null;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(out.blob);preview.src=objectUrl;preview.style.aspectRatio=out.w+' / '+out.h;say('Ready · '+out.w+' × '+out.h+' PNG.');return out}catch(e){if(token===renderToken)say(e.message||'Unable to create image.');return null}}
+async function refresh(){const token=++renderToken;try{say('Creating your scripture card…');const out=await renderImage();if(token!==renderToken)return null;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(out.blob);preview.src=objectUrl;preview.dataset.imageSize=size.value;say('Ready · '+out.w+' × '+out.h+' PNG.');return out}catch(e){if(token===renderToken)say(e.message||'Unable to create image.');return null}}
 async function getImage(){return renderImage()}
 const filename=()=> 'daily-manna-'+(current+1)+'-'+size.value+'.png';
 function download(blob){const url=URL.createObjectURL(blob),anchor=document.createElement('a');anchor.href=url;anchor.download=filename();document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
