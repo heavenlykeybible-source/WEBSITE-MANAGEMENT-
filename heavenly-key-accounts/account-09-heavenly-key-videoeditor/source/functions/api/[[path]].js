@@ -366,7 +366,9 @@ export async function onRequest({ request: req, env, params }) {
         return J({ items: l, used, quota: QUOTA });
       }
       if (!p[1] && m === 'POST') {
-        const name = (new URL(req.url).searchParams.get('name') || 'file').replace(/[^\w.\- ]/g, '_').replace(/^[.\- ]+/, '').replace(/\.{2,}/g, '.').slice(0, 120).replace(/[. ]+$/, '') || 'file';
+        const rawName = new URL(req.url).searchParams.get('name') || 'file';
+        if (rawName.includes(':')) return J({error:'Invalid media filename.'},415);
+        const name = rawName.replace(/[^\w.\- ]/g, '_').replace(/^[.\- ]+/, '').replace(/\.{2,}/g, '.').slice(0, 120).replace(/[. ]+$/, '') || 'file';
         const type = (req.headers.get('content-type') || 'application/octet-stream').split(';')[0];
         if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
         const suffix=name.includes('.') ? name.slice(name.lastIndexOf('.')+1).toLowerCase() : '';
