@@ -32,7 +32,9 @@ test('every active QR belongs to the reviewed app catalogue and correct device U
   }else{
    assert.equal(item.kind,'app');
    assert.ok(Object.hasOwn(apps,item.id),'Retired app QR: '+item.id);
-   assert.equal(item.url,apps[item.id].url,'Wrong app QR destination: '+item.id);
+   if(item.id==='bible-reader'&&item.url===origin+'/bible.html'){
+    assert.match(read('bible.html'),/https:\/\/onlinebible\.heavenlykey\.org\//,'Legacy Bible QR must redirect to reviewed reader');
+   }else assert.equal(item.url,apps[item.id].url,'Wrong app QR destination: '+item.id);
   }
  }
  for(const device of devices) assert.ok(identifiers.has(device),'Missing device QR '+device);
