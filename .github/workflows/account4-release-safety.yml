@@ -94,6 +94,7 @@ jobs:
           node tests/domains.mjs
           node tests/ai-workspace.mjs
           node tests/browser-agent.mjs
+          node tests/worker-studio-policy.mjs
           node tests/account4-unified-access.mjs
           node tests/owner-passkeys.mjs
           npm run test:cms-dom
