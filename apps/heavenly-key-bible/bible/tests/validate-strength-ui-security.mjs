@@ -16,6 +16,13 @@ assert(html.includes("archiveContainer.id='strength-archive'"),'Archive missing'
 assert(html.includes("memberFind.id='find-members'"),'Member search missing');
 assert(html.includes("memberSend.id='send-selected'"),'Member share missing');
 assert(html.includes("memberClose.id='close-selector'"),'Member dialog close missing');
+assert.equal((html.match(/\$\('members'\)\.onclick=/g)||[]).length,1,'Member selector must have exactly one click handler');
+const memberOpenHandler=html.match(/\$\('members'\)\.onclick=async\(\)=>\{[^\n]+/);
+assert(memberOpenHandler,'Member selector open handler missing');
+assert(memberOpenHandler[0].includes('if(!await authenticated())return;'),'Member selector must require an active session');
+assert(memberOpenHandler[0].includes('selector.hidden=false;'),'Member selector must open instead of redirecting');
+assert(memberOpenHandler[0].includes('memberInput.focus('),'Member search must receive focus when opened');
+assert(!memberOpenHandler[0].includes('window.location.href'),'Member selector must not redirect away from the page');
 assert(html.includes("publicationStatus==='published'"),'Dated devotionals must require publication status');
 assert(html.includes("approval.publishedBatchFiles.includes(batch[2])"),'Batch must be explicitly allowlisted');
 assert(html.includes("dailyDrafts.clear();pendingDevotionals.clear();"),'Content must be cleared when publication is on hold');
@@ -78,7 +85,7 @@ assert(sw.includes('isDevotionalDraftLibrary'),'Devotional cache classification 
 assert(sw.includes("entry.status==='approved-for-publication'"),'Unapproved content must never be cached');
 assert(sw.includes("topic.reviewStatus==='approved'"),'Topics must pass review before offline caching');
 assert(sw.includes('if(safeToCache){try{await cache.put'),'Cache failures must not interrupt online responses');
-assert(sw.includes('hk-bible-shell-v71'),'Service-worker cache version must retire older draft caches');
+assert(sw.includes('hk-bible-shell-v72'),'Service-worker cache version must retire older draft caches');
 assert(html.includes("redirect:'error'"),'Member API requests must not follow redirects');
 assert(html.includes("cache:'no-store'"),'Member API requests must bypass response caching');
 assert(html.includes('new AbortController()'),'Member API requests need cancellation');
