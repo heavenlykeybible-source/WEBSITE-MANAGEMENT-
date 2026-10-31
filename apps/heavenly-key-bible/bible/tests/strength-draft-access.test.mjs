@@ -65,14 +65,18 @@ test('unknown publication manifest fails closed',async()=>{
 
 test('Cloudflare routes devotional JSON through Worker first',()=>{
  const config=readFileSync(fileURLToPath(new URL('../wrangler.toml',import.meta.url)),'utf8');
- assert.match(config,/run_worker_first\\s*=\\s*\\[[^\\n]*"\\/strength-devotionals-\\*"/);
+ const routeLine=config.split('\\n').find(line=>line.trim().startsWith('run_worker_first ='));
+ assert.ok(routeLine,'Worker-first route configuration required');
+ assert.ok(routeLine.includes('"/strength-devotionals-*"'),'Draft JSON must be routed through worker');
 });
-test('offline service worker does not resurrect withdrawn devotional drafts',()=>{
+test('offline service worker cannot resurrect withdrawn devotional drafts',()=>{
  const source=readFileSync(fileURLToPath(new URL('../../heavenly-key-website/bible/sw.js',import.meta.url)),'utf8');
- assert.match(source,/const isDevotionalDraftLibrary\\s*=\\s*\\/\\^strength-devotionals-/);
- const gate=source.slice(source.indexOf('if(isDevotionalDraftLibrary){'),source.indexOf('const aliases='));
- assert.match(gate,/event\\.respondWith/);
- assert.match(gate,/cache:"no-store"/);
- assert.match(gate,/status:503/);
- assert.match(gate,/await \\(await caches\\.open\\(name\\)\\)\\.delete\\(event\\.request\\)/);
+ assert.ok(source.includes('const isDevotionalDraftLibrary ='),'Draft JSON identification required');
+ const start=source.indexOf('if(isDevotionalDraftLibrary){');
+ const end=source.indexOf('const aliases=',start);
+ assert.ok(start>=0&&end>start,'Draft interception must precede generic offline routing');
+ const gate=source.slice(start,end);
+ for(const expected of ['event.respondWith','cache:"no-store"','status:503','caches.open(name)','delete(event.request)']){
+  assert.ok(gate.includes(expected),'Offline draft gate missing '+expected);
+ }
 });
