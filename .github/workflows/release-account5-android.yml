@@ -16,6 +16,8 @@ jobs:
       HKEM_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.HKEM_ANDROID_KEYSTORE_PASSWORD }}
       HKEM_ANDROID_KEY_ALIAS: ${{ secrets.HKEM_ANDROID_KEY_ALIAS }}
       HKEM_ANDROID_KEY_PASSWORD: ${{ secrets.HKEM_ANDROID_KEY_PASSWORD }}
+      # Workflow run number increases for every future release attempt.
+      HKEM_ANDROID_VERSION_CODE: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
