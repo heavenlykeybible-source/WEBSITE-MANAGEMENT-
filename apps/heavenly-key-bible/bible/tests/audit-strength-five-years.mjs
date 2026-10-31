@@ -154,7 +154,7 @@ const remediationPriority=[
 // Give editors a short, date-specific review queue instead of a wall of repeated flags.
 const reviewByDate=new Map();
 for(const issue of qualityBlockingFlags){
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(issue.date))continue;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(issue.date))continue;
  let record=reviewByDate.get(issue.date);
  if(!record){record={date:issue.date,blockingIssues:0,codes:{},sourceFiles:new Set()};reviewByDate.set(issue.date,record);}
  record.blockingIssues++;
