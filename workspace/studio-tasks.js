@@ -1,3 +1,14 @@
+// Existing Workers must never be overwritten by a proposal without an
+// immutable source baseline. Legacy proposals must be resubmitted.
+function requirePinnedExistingWorker(meta,exists){
+ if(!meta||typeof meta!=='object')fail('Worker proposal metadata missing',409);
+ const digest=meta.base_sha256;
+ if(exists&&(!digest||!/^[a-f0-9]{64}$/.test(String(digest))))
+  fail('Existing Worker proposal has no valid source baseline. Reinspect the live Worker and resubmit.',409);
+ if(!exists&&digest!==undefined)
+  fail('Pinned Worker no longer exists. Reinspect the target before proposing.',409);
+ return true;
+}
 // Check the exact source originally inspected by the AI at review AND release.
 // Do not silently downgrade a pinned proposal into a modified_on-only check.
 async function verifyPinnedStudioWorker(env,meta){
