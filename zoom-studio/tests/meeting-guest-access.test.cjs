@@ -249,3 +249,25 @@ test('expired or malformed account tokens cannot enter the meeting stage', async
     assert.equal(h.guest.attachment.stage,false);
   }
 });
+
+test('room alarm removes banned and deleted accounts from stage', async()=>{
+  for(const action of ['ban','delete']){
+    const h=setup();await h.join('valid');
+    await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+    assert.equal(h.guest.attachment.stage,true);
+    if(action==='ban')h.users['member@example.com'].banned=true;
+    else delete h.users['member@example.com'];
+    await h.r.alarm();
+    assert.equal(h.guest.readyState,3);
+    assert.match(h.guest.messages.at(-1).msg,/expired/i);
+  }
+});
+
+test('room alarm rejects malformed stage identity expiry', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  delete h.guest.attachment.identity.expires;
+  await h.r.alarm();
+  assert.equal(h.guest.readyState,3);
+});
