@@ -47,4 +47,10 @@ await assert.rejects(completePrivateImport(bucket,actor,{...session,partCount:2}
 completedSize=10;
 await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/size mismatch/);
 assert.deepEqual(deleted,[session.key]);
+completedSize=undefined;
+await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/size mismatch/);
+assert.equal(deleted.length,2);
+completedSize='11';
+await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/size mismatch/);
+assert.equal(deleted.length,3);
 console.log('PASS owner-scoped private multipart R2 adapter');
