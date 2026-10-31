@@ -323,3 +323,16 @@ test('contact destination detection respects direct requests and explicit refusa
   ];
   for(const [message,expected] of cases)assert.equal(classify(message),expected,message);
 });
+
+test('readiness endpoint inspects D1 migrations without falsely claiming provider connection', () => {
+ const begin=source.indexOf("if(u.pathname==='/api/automation/readiness'");
+ const end=source.indexOf("if(u.pathname==='/api/accounts'",begin);
+ assert.ok(begin>0&&end>begin,'readiness route must exist');
+ const handler=source.slice(begin,end);
+ assert.match(handler,/PRAGMA table_info\(conversations\)/);
+ assert.match(handler,/whatsapp_handover_events/);
+ assert.match(handler,/ai_rate_limits/);
+ assert.match(handler,/migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits/);
+ assert.match(handler,/providerWebhooks:false,providerPublishing:false/);
+ assert.match(handler,/Schema presence does not prove webhook delivery/);
+});
