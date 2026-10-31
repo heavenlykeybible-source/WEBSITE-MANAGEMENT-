@@ -23,4 +23,7 @@ assert.throws(()=>migrateLegacyEntry({...legacy,topics:topics.slice(1)}),/twelve
 assert.throws(()=>migrateLegacyEntry({...legacy,topics:topics.map(t=>({...t,topic:'Repeated'}))}),/Duplicate/);
 assert.throws(()=>migrateLegacyBatch({entries:[legacy,legacy]}),/Duplicate devotional date/);
 assert.equal(migrateLegacyBatch({entries:[legacy]}).length,1);
+const missingDatePlaceholder={date:'2031-10-30',title:'EDITORIAL AUTHORING REQUIRED — NOT FOR PUBLICATION',scripture:'',reflection:'',prayer:'',status:'draft-not-published',topics:topics.map(t=>({topic:t.topic,reference:'',bibleText:'',reflection:'',prayer:'',reviewStatus:'draft-original-editorial-and-doctrinal-approval-pending'}))};
+assert.equal(migrateLegacyBatch({entries:[legacy,missingDatePlaceholder]}).length,1,'Unwritten calendar placeholders must remain missing drafts, not become content');
+assert.throws(()=>migrateLegacyEntry(missingDatePlaceholder),/Incomplete legacy topic/,'An unwritten placeholder must never be migrated as a devotional');
 console.log('One-topic migration and draft safety regression checks passed');
