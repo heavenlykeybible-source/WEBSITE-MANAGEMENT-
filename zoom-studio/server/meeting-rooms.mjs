@@ -87,7 +87,8 @@ export class MeetingRooms {
  async webSocketMessage(ws,raw){
   // Ignore queued frames from sockets already disconnected or removed by the host.
   if(ws.readyState!==1)return;
-  if(typeof raw!=='string'||raw.length>20000)return this.close(ws,{t:'error',msg:'Invalid message.'});
+  // Enforce a UTF-8 wire-size bound, not only JavaScript's UTF-16 character count.
+  if(typeof raw!=='string'||raw.length>20000||new TextEncoder().encode(raw).byteLength>20000)return this.close(ws,{t:'error',msg:'Invalid message.'});
   // Count all frames, including malformed JSON, before parsing to prevent rate-limit bypass.
   const d=this.data(ws),now=Date.now();
   if(now-(d.stampAt||0)>=3000){d.stampAt=now;d.stampN=0;}
