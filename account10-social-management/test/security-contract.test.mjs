@@ -599,7 +599,8 @@ test('missing browser origin metadata has an explicit rejection path', () => {
 test('private API authentication throttles failed credentials per keyed-HMAC edge address', () => {
   assert.match(source,/SELECT blocked_until FROM auth_rate_limits WHERE client_hash=\? AND window_start=\?/);
   assert.match(source,/cf-connecting-ip/);
-  assert.match(source,/crypto\.subtle\.importKey\('raw',new TextEncoder\(\)\.encode\(env\.ADMIN_TOKEN\),\{name:'HMAC',hash:'SHA-256'\}/);\n  assert.match(source,/crypto\.subtle\.sign\('HMAC',rateLimitKey,new TextEncoder\(\)\.encode\(clientAddress\)\)/);
+  assert.match(source,/crypto\.subtle\.importKey\('raw',new TextEncoder\(\)\.encode\(env\.ADMIN_TOKEN\),\{name:'HMAC',hash:'SHA-256'\}/);
+  assert.match(source,/crypto\.subtle\.sign\('HMAC',rateLimitKey,new TextEncoder\(\)\.encode\(clientAddress\)\)/);
   assert.match(source,/failed_attempts\+1>=20/);
   assert.match(source,/Too many failed authentication attempts/);
   assert.match(source,/retry-after/);
