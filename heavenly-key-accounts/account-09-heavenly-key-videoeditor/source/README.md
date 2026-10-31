@@ -13,8 +13,8 @@ Browser video, audio and voice studio with optional accounts on free Cloudflare.
 - ARCHITECTURE.md, AUDIT.md: design and audit/launch readiness
 - tests/: the automated test scripts (sandbox paths, see tests/README.md)
 
-## Release status
-Current locally verified build: 53/53 backend integration checks passed with simulated D1/R2/AI; static Chromium page loaded without page errors. Live Cloudflare, mobile, and export testing remain necessary. See RELEASE-STATUS.md.
+## Release status (31 October 2026)
+**Not production launch-certified.** Recent source-level security changes are committed, but the latest complete `npm run check` has not been executed. Real Cloudflare D1/R2/AI, malware scanning, and cross-browser/mobile verification remain outstanding. Do not rely on historical test counts as verification of the latest source. See `AUDIT.md` and `RELEASE-STATUS.md`.
 
 ## Try it without deploying
 Serve this folder over http (for example `python3 -m http.server`) and open index.html. The editor, audio and voice tools work. Accounts, media library and auto-captions need the Cloudflare deploy.
