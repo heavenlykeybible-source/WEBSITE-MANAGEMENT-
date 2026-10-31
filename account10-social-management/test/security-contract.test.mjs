@@ -538,3 +538,9 @@ test('exact API root stays outside static asset handling', () => {
  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
  assert.ok(source.includes("u.pathname!=='/api'&&!u.pathname.startsWith('/api/')"));
 });
+
+test('unsupported tunnel and trace methods are rejected before routing', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("req.method==='TRACE'||req.method==='CONNECT'"));
+ assert.ok(source.includes("return reply({error:'Method not allowed'},405)"));
+});
