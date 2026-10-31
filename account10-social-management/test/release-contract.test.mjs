@@ -64,3 +64,12 @@ test('preflight is mandatory, read-only, and never claims production readiness',
  assert.match(source,/Production readiness cannot be certified/);
  assert.doesNotMatch(source,/execSync|spawnSync|wrangler deploy|wrangler d1 execute/);
 });
+
+test('preflight validates the domain within one route block and every migration', () => {
+ const source=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
+ assert.match(source,/const routeBlocks=/);
+ assert.match(source,/socialRoutes.length!==1/);
+ assert.match(source,/custom_domain/);
+ assert.match(source,/migrations.map\(name=>'migrations\/'\+name\)/);
+ assert.match(source,/position<=prior/);
+});
