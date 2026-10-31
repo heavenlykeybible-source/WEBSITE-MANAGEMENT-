@@ -788,3 +788,18 @@ test('delayed guest signaling authorization does not kick demoted participant',a
  assert.equal(h.guest.attachment.stage,false);
  assert.equal(h.host.messages.some(m=>m.t==='sig'),false);
 });
+
+test('delayed stage chat cannot bypass audience chat restriction after demotion',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'audchat',on:false}));
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
+ const pending=h.r.webSocketMessage(h.guest,JSON.stringify({t:'chat',text:'stale-stage-message'}));
+ await reached;
+ h.guest.attachment.stage=false;h.guest.attachment.aud=true;
+ release();await pending;
+ assert.equal(h.host.messages.some(m=>m.t==='chat'&&m.text==='stale-stage-message'),false);
+ assert.equal(h.guest.readyState,1);
+});
