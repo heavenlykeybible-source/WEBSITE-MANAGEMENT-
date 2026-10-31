@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 export const SECTION_KEYS=Object.freeze(['topic','bibleReading','hymn','bibleStory','worldStory','eternity','decision','warfare','propheticPrayer','healthPrayer','salvation','challenges']);
 export const CHALLENGE_COUNT=12;
+export const FAITH_STATEMENT_URL='https://heavenlykey.org/what-we-believe/';
 const nonempty=value=>typeof value==='string'&&value.trim().length>0;
 const validSourceUrl=value=>{if(!nonempty(value)||value.length>2048)return false;try{const u=new URL(value);return u.protocol==='https:'&&Boolean(u.hostname)&&!u.username&&!u.password&&!u.hash&&u.hostname.includes('.')}catch{return false}};
 const bibleReference=value=>nonempty(value)&&/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d+:\d+(?:-\d+)?$/.test(value);
@@ -33,6 +34,7 @@ export function validateDailyDevotional(entry){
  if(entry.status==='approved-for-publication'&&(!nonempty(entry.review?.approvedBy)||!nonempty(entry.review?.approvedAt)))errors.push('Publication approval audit details required');
  if(entry.status==='approved-for-publication'&&(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(entry.review?.approvedAt||'')||!Number.isFinite(Date.parse(entry.review.approvedAt))||new Date(entry.review.approvedAt).toISOString()!==entry.review.approvedAt))errors.push('Publication approval timestamp must be valid UTC ISO 8601');
  if(entry.status==='approved-for-publication'&&entry.review?.doctrinalApproved!==true)errors.push('Doctrinal approval required');
+ if(entry.status==='approved-for-publication'&&entry.review?.faithStatementUrl!==FAITH_STATEMENT_URL)errors.push('Approval must identify the current Heavenly Key Statement of Faith');
  if(entry.status==='approved-for-publication'&&entry.review?.sourcesVerified!==true)errors.push('Source verification required');
  return errors;
 }
