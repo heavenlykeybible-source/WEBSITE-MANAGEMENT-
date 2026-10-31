@@ -27,7 +27,7 @@ Broadcast source of truth: Account 2 — Heavenly Key Media & Broadcast Engine.
 1. Confirm the exact Account 2 HTTPS origin and configure `MEDIA_PUBLIC_ORIGIN` in the existing Account 7 Worker.
 2. Confirm the Cloudflare account, Worker identity, saved bindings/secrets, custom domain and production asset configuration.
 3. Restore and verify the original approved artwork.
-4. Run `node scripts/preflight.mjs` and fix every failure.
+4. Run `node scripts/preflight.mjs` and fix every failure; confirm `.assetsignore` excludes private deployment files.
 5. Deploy only through the approved non-GitHub-Actions process; then run `node scripts/verify-live.mjs https://radio.heavenlykey.org`.
 6. Implement and verify real browser LiveKit playback if Account 2 publishes LiveKit transport.
 7. Test iPhone Safari, Android Chrome, desktop browsers, Bluetooth, background audio, reconnects and low-bandwidth behavior.
