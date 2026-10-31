@@ -83,6 +83,12 @@ const doctrine=[
 
 // Whole-library triage: flags for human reviewers, never automatic doctrinal approval.
 const titleOccurrences=new Map(), dailyReflections=new Map(), dailyPrayers=new Map();
+const isUnwrittenCalendarPlaceholder=e=>
+ e?.status==='draft-not-published' &&
+ e?.title==='EDITORIAL AUTHORING REQUIRED — NOT FOR PUBLICATION' &&
+ e?.scripture==='' && e?.reflection==='' && e?.prayer==='' &&
+ Array.isArray(e?.topics) && e.topics.length===12 &&
+ e.topics.every(t=>typeof t?.topic==='string'&&t.topic.trim()&&t.reference===''&&t.bibleText===''&&t.reflection===''&&t.prayer==='');
 const keepFirst=(map,value,e,kind)=>{
  const key=norm(value);
  if(!key){flag(e.date,'MISSING_'+kind,e._file);return;}
@@ -91,12 +97,16 @@ const keepFirst=(map,value,e,kind)=>{
 };
 for(let i=0;i<entries.length;i++){
  const e=entries[i];
- keepFirst(titleOccurrences,e.title,e,'DAY_TITLE');
- keepFirst(dailyReflections,e.reflection,e,'DAY_REFLECTION');
- keepFirst(dailyPrayers,e.prayer,e,'DAY_PRAYER');
+ const placeholder=isUnwrittenCalendarPlaceholder(e);
+ // Placeholders count toward calendar coverage but are not content and must not inflate duplicate metrics.
+ if(!placeholder){
+  keepFirst(titleOccurrences,e.title,e,'DAY_TITLE');
+  keepFirst(dailyReflections,e.reflection,e,'DAY_REFLECTION');
+  keepFirst(dailyPrayers,e.prayer,e,'DAY_PRAYER');
+ }
  if(![e.scripture,e.title,e.reflection,e.prayer].every(v=>typeof v==='string'&&v.trim()))flag(e.date,'INCOMPLETE_DAILY_ENTRY',e._file);
- if(norm(e.reflection).split(' ').length<16)flag(e.date,'THIN_DAILY_REFLECTION',e._file);
- if(i&&e.title===entries[i-1].title&&e.scripture===entries[i-1].scripture)
+ if(!placeholder&&e.reflection.trim()&&norm(e.reflection).split(' ').length<16)flag(e.date,'THIN_DAILY_REFLECTION',e._file);
+ if(!placeholder&&i&&!isUnwrittenCalendarPlaceholder(entries[i-1])&&e.title===entries[i-1].title&&e.scripture===entries[i-1].scripture)
   flag(e.date,'CONSECUTIVE_REUSED_THEME',e.title);
  for(const t of (Array.isArray(e.topics)?e.topics:[])){
   if(!t||typeof t!=='object'||Array.isArray(t))continue;
