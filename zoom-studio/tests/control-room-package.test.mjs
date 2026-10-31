@@ -871,3 +871,13 @@ test('existing host expiration is checked after asynchronous token verification'
  assert.match(source,/if\(old\.until>verifiedAt\)return this\.close/,'old host expiry should use the verified time, not the stale message time');
  assert.doesNotMatch(source,/if\(old\.until>now\)return this\.close/);
 });
+
+test('closed socket duplicate callbacks survive attachment serialization failure',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ guest.readyState=3;
+ guest.serializeAttachment=()=>{throw new Error('Socket already closed')};
+ s.room.webSocketClose(guest);
+ s.room.webSocketError(guest);
+ assert.equal(s.host.messages.filter(m=>m.t==='left'&&m.gid===guest.d.id).length,1);
+});
