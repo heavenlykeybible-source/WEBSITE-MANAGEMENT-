@@ -4,6 +4,7 @@ const required = ['index.html','_headers','public/index.html','public/_headers',
 for (const path of required) if (!existsSync(path)) throw Error(`Missing ${path}`);
 for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 const apiSource=readFileSync('functions/api/[[path]].js','utf8');
+if ((apiSource.match(/match\(\/\(\?:\^\|;\\s\*\)hk=/g)||[]).length!==2 || !apiSource.includes('(?=;|$)/)')) throw Error('Exact session cookie boundary enforcement missing');
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gateway_attempt'") || !apiSource.includes("AND at>?) < 60") || !apiSource.includes("if (!reserved.meta.changes)")) throw Error('Atomic external AI gateway attempt quota safeguard missing');
 for (const [name, limit] of [['ai_tools_attempt',30],['transcribe_attempt',120]]) {
   if (!apiSource.includes("'"+name+"'") || !apiSource.includes("at>?) < "+limit) || !apiSource.includes('meta.changes')) throw Error('Atomic AI resource quota missing: '+name);
