@@ -24,6 +24,7 @@ if (!timeline.includes('copiedClip=null;undo=[];redo=[];paint()') || !timeline.i
 if (!timeline.includes('JSON.stringify({clips,selected:chosen()})') || !timeline.includes('paint(previous.selected)') || !timeline.includes('paint(next.selected)')) throw Error('Timeline undo/redo selection persistence missing');
 for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="'+control+'"') || !timeline.includes("$('"+control+"').onclick=")) throw Error('Timeline playhead trim control missing: '+control);
 if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
+if (!timeline.includes('state.abortPlayback?.();state.abortStart?.();return') || !timeline.includes('if(encoderError)throw encoderError;')) throw Error('Oversized encoder stream early-abort safeguard missing');
 if (!timeline.includes('canvas.width>4096||canvas.height>4096') || !timeline.includes('canvas.width*canvas.height>8847360') || !timeline.includes('Invalid export canvas size.')) throw Error('Canvas export dimension safeguard missing');
 if (!timeline.includes('if(record)invalidateExport();')) throw Error('Stale timeline download invalidation missing');
 if (!timeline.includes('session.abortSeek?.()') || !timeline.includes('await seek(c.start,state)')) throw Error('Timeline seek cancellation safeguard missing');
