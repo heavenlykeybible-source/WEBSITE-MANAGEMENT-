@@ -235,3 +235,13 @@ test('X account inventory stays unverified and cannot bypass draft-only publishi
   assert.match(source,/const platforms=\['facebook_page','instagram_professional','youtube','tiktok'\]/);
   assert.doesNotMatch(source,/['"]x['"]\s*,\s*status:'published'/);
 });
+
+test('server rejects resuming AI while a visitor human request is unresolved', () => {
+ const start=source.indexOf("if(u.pathname==='/api/takeover'&&req.method==='POST')");
+ const end=source.indexOf("return reply({error:'Not found'},404)",start);
+ assert.ok(start>=0 && end>start);
+ const handler=source.slice(start,end);
+ assert.match(handler,/WHERE id=\? AND \(\?=1 OR requested_human=0\)/);
+ assert.match(handler,/A human assistance request remains pending; resolve it explicitly before resuming Gemini/);
+ assert.match(handler,/automationPaused:true\},409/);
+});
