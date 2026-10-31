@@ -22,7 +22,7 @@ assert.ok(!/\b(?:innerHTML|outerHTML|insertAdjacentHTML)\b/.test(js),'Unsafe HTM
 assert.ok(!/\b(?:postMessage|window\.parent)\b/.test(js),'Cross-window messaging is not part of this reader');
 assert.ok(css.length>1000,'External stylesheet appears unexpectedly incomplete');
 
-assert.doesNotMatch(js,/\\.style\\b|\\.cssText\\b|\\.setProperty\\s*\\(/,'Runtime CSSOM/inline style assignments are forbidden by the reader CSP');
+assert.doesNotMatch(js,/\.style\b|\.cssText\b|\.setProperty\s*\(/,'Runtime CSSOM/inline style assignments are forbidden by the reader CSP');
 for(const className of ['archive-history','archive-open-button','archive-topic-grid','archive-topic-button','member-search-input','member-result-label']){
  assert.ok(js.includes(className),'Reader must use CSP-safe class '+className);
  assert.ok(css.includes('.'+className),'External CSS must define '+className);
