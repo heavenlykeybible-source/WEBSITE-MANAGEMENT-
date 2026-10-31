@@ -119,4 +119,8 @@ for(const host of ['stream.youtube.com','rtmp.example.com','8.8.8.8']){
  assert.equal(unsafeHost(host),false,'Must permit public streaming host: '+host);
 }
 
+assert.ok(restream.includes('function safeStreamUrl('), 'Validate stored streaming destinations');
+assert.ok(restream.includes('if(enabled&&!safeStreamUrl(store[destination].url))'), 'Validate destination when re-enabled');
+assert.ok(restream.includes("v.enabled&&typeof v.url==='string'&&safeStreamUrl(v.url)!==null"), 'Validate destination before broadcast');
+
 console.log('Account 2 broadcast safety regression checks passed');
