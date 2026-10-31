@@ -50,7 +50,11 @@ const missingDayDrafts=missingDates.map(date=>({date,status:'draft',review:{doct
 const payload={schemaVersion:2,publicationStatus:'editorial-hold',generatedFor:'private-editorial-review-only',coverage:{start:expectedStart,end:expectedEnd,sourceDays:converted.length,missingDates,complete:false,missingSectionCounts,incompleteReadingDays,incompleteWarfareDays,editorialApprovalRequired:true},missingDayDrafts,entries:converted};
 const destination=join(out,'strength-next-private-drafts.json');
 // Refuse paths whose output file already exists; never follow an output-file symlink.
-if(readdirSync(out).length!==0)throw Error('Private export destination changed during processing');
+if(lstatSync(requestedOutput).isSymbolicLink()||realpathSync(requestedOutput)!==out)throw Error('Private output directory changed during processing');
+const finalDirectoryStats=statSync(out);
+if(!finalDirectoryStats.isDirectory()||readdirSync(out).length!==0)throw Error('Private export destination changed during processing');
+if(process.platform!=='win32'&&(finalDirectoryStats.mode&0o077))throw Error('Private directory permissions changed during processing');
+if(typeof process.getuid==='function'&&finalDirectoryStats.uid!==process.getuid())throw Error('Private directory ownership changed during processing');
 writeFileSync(destination,JSON.stringify(payload,null,2),{encoding:'utf8',flag:'wx',mode:0o600});
 if(statSync(destination).mode & 0o077)throw Error('Private export permissions are too broad');
 console.log(JSON.stringify({status:'PRIVATE_DRAFTS_ONLY',days:converted.length,incompleteReadingDays,incompleteWarfareDays,missingDates,missingDayDrafts:missingDayDrafts.length,output:'strength-next-private-drafts.json',publication:'BLOCKED'},null,2));
