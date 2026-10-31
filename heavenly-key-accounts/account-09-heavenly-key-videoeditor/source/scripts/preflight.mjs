@@ -18,7 +18,7 @@ if((apiSource.match(/env\.MEDIA\.delete\(key\)/g)||[]).length!==2 || !apiSource.
 if(!readFileSync('tests/be.mjs','utf8').includes('Failed upload cleanup succeeds on second deletion attempt'))throw Error('Upload rollback recovery regression test missing');
 if(!apiSource.includes("await env.MEDIA.delete(r.r2_key).catch(async () => { await log(env, u.id, 'media_r2_delete_failed').catch(() => {}); });"))throw Error('Media deletion retry and failure audit missing');
 if(!apiSource.includes('SELECT r2_key,size FROM media') || !apiSource.includes('bind(r.size,u.id).run()'))throw Error('Media delete size reuse missing');
-if(!apiSource.includes("p[1] === 'cleanup' && !p[2] && m === 'POST'") || !apiSource.includes("SELECT id,r2_key FROM media WHERE user_id=? AND deleted=1 ORDER BY created_at ASC LIMIT 10") || !apiSource.includes("DELETE FROM media WHERE id=? AND user_id=? AND deleted=1"))throw Error('Authenticated bounded R2 cleanup route missing');
+if(!apiSource.includes("p[1] === 'cleanup' && !p[2] && m === 'POST'") || !apiSource.includes("SELECT id,r2_key FROM media WHERE user_id=? AND deleted=1 ORDER BY created_at ASC LIMIT 10") || !apiSource.includes("DELETE FROM media WHERE id=? AND user_id=? AND deleted=1 AND r2_key=?"))throw Error('Authenticated bounded R2 cleanup route missing');
 if(!apiSource.includes("SELECT r2_key FROM media WHERE user_id=?'"))throw Error('Account deletion must include previously deleted R2 objects');
 if(!apiSource.includes('Account deletion was not completed; please retry.'))throw Error('Account deletion must stop safely on R2 storage failure');
 if((apiSource.match(/env\.MEDIA\.delete\(item\.r2_key\)/g)||[]).length!==2)throw Error('Media cleanup must retry transient R2 deletion errors');
