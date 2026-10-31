@@ -1172,7 +1172,8 @@ test('Twitch chat frames and rendered messages stay bounded under external messa
  const before=chatLog.length;
  ws.onmessage({data:'x'.repeat(16385)});
  assert.equal(chatLog.length,before,'oversized chat frames must be discarded');
- ws.onmessage({data:Array.from({length:60},()=>line).join('\r\n')});
+ const shortLine='@display-name=Joe;tag=x PRIVMSG #mychannel :hello';
+ ws.onmessage({data:Array.from({length:60},()=>shortLine).join('\r\n')});
  assert.equal(chatLog.length,51,'only 50 IRC lines per network frame may be processed');
  assert.equal(nodes.cl.children.length,30,'visible chat history remains bounded');
 });
