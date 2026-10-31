@@ -87,15 +87,21 @@ async function studioTaskBoard(){
    check.onchange=function(){if(check.checked)chosen.add(a.id);else chosen.delete(a.id);};
    selections.appendChild(h('label',{class:'card'},check,document.createTextNode(' '+a.name)));
   });
-  async function refresh(){
-   var d=await api('studio/tasks');tasks.innerHTML='';
+  async function refresh(page){
+   page=page||0;
+   var d=await api('studio/tasks?page='+page);
+   if(page===0)tasks.innerHTML='';
    d.tasks.forEach(function(t){
     var card=h('section',{class:'card'},h('b',{},t.agent_name+' · '+t.worker),h('p',{},t.instruction),h('p',{},t.status+' · '+lagosTime(t.updated_at)));
     if(t.proposal_id)card.appendChild(h('button',{onclick:function(){openP(t.proposal_id);}},'Review proposal #'+t.proposal_id));
     if(t.status==='assigned')card.appendChild(h('button',{class:'bad',onclick:async function(){try{await api('studio/tasks/'+t.id+'/cancel','POST',{});await refresh();}catch(e){status.textContent=e.message;}}},'Cancel task'));
     tasks.appendChild(card);
    });
-   if(!d.tasks.length)tasks.appendChild(h('p',{},'No AI assignments yet.'));
+   if(page===0&&!d.tasks.length)tasks.appendChild(h('p',{},'No AI assignments yet.'));
+   if(d.next_page!==null&&d.next_page!==undefined){
+    var more=h('button',{class:'sm',onclick:async function(){this.disabled=true;this.remove();try{await refresh(d.next_page);}catch(e){status.textContent=e.message;}}},'Load older AI assignments');
+    tasks.appendChild(more);
+   }
   }
   var submit=h('button',{onclick:async function(){
    this.disabled=true;try{
