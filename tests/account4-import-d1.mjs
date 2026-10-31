@@ -15,6 +15,9 @@ await assert.rejects(saveImportSession(db,actor,{...session,expiresAt:0}));
 await assert.rejects(saveImportSession(db,actor,{...session,size:1073741825}));
 await assert.rejects(saveImportSession(db,actor,{...session,partCount:2}));
 await assert.rejects(saveImportSession(db,actor,{...session,size:0}));
+for (const name of ['run.sh','config.env','../secrets.zip','a/b.zip',''])
+  await assert.rejects(saveImportSession(db,actor,{...session,name}));
+await assert.rejects(saveImportSession(db,{...actor,id:0},{...session,ownerId:0}));
 const id=await saveImportSession(db,actor,session);
 assert.match(id,/^[a-f0-9-]{36}$/i);
 row={owner_id:7,object_key:session.key,upload_id:'u1',filename:'backup.zip',size_bytes:11,part_count:1,state:'uploading',expires_at_ms:session.expiresAt};
