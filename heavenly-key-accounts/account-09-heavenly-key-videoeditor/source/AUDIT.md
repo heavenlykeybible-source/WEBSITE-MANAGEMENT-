@@ -70,7 +70,7 @@ This section supersedes any older status above where it conflicts with the curre
 - Offline core caching includes the external editor assets.
 - Backend test syntax was repaired after a duplicate top-level `const` declaration was found.
 - Password storage was strengthened from 100,000 to 600,000 PBKDF2-HMAC-SHA-256 iterations for new registrations and Owner/Admin provisioning.
-- Sessions now enforce a 30-minute inactivity timeout and 30-day absolute lifetime, with activity timestamps refreshed at five-minute intervals and regression coverage. A versioned database migration preserves legacy hash parameters and upgrades existing accounts after successful login.
+- Sessions now enforce a 30-minute inactivity timeout and 30-day absolute lifetime, with activity timestamps refreshed at five-minute intervals and regression coverage for legacy migration backfill. A versioned database migration preserves legacy hash parameters and upgrades existing accounts after successful login.
 - External AI gateway attempts are reserved atomically at a 30-attempt daily limit; the test fixture and preflight assertion were aligned.
 - Preflight now syntax-checks backend and test modules before the test suite.
 
