@@ -149,3 +149,11 @@ test('human requests attention counter shows authenticated pending count and res
   assert.equal((html.match(/selected='';paused=false;requestedHuman=false;\$\('requestsTab'\)\.textContent='Human Requests';/g)||[]).length,2);
   assert.match(html,/count===100\?'\+':'/);
 });
+
+test('management tab requests never restore private data after logout or tab change', () => {
+  assert.match(html,/activeManagementTab='chats'/);
+  assert.match(html,/function showTab\(name\)\{activeManagementTab=name;const epoch=authEpoch;/);
+  assert.match(html,/if\(epoch!==authEpoch\|\|activeManagementTab!==name\|\|!token\)return;renderManagement\(name,d\)/);
+  assert.match(html,/if\(epoch===authEpoch&&activeManagementTab===name&&token\)status\(e.message\)/);
+  assert.equal((html.match(/requestedHuman=false;activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests'/g)||[]).length,2);
+});
