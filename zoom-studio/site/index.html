@@ -217,7 +217,7 @@ $('fm').onchange=e=>{if(e.target.files.length)addMedia(e.target.files);e.target.
 $('fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.src=URL.createObjectURL(f);place(mk('image',f.name.replace(/\.[^.]+$/,''),{img}));e.target.value='';ui()};
 
 function invalidateProgramBg(){sceneVersion++;for(const camera of S)if(camera.type==='camera')camera.segReady=false}
-function take(i){if(!Number.isInteger(i)||i<0||i>=SC.length||i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;invalidateProgramBg();t0=performance.now();if(studio)pvw=o}
+function take(i){if(!Number.isInteger(i)||i<0||i>=SC.length||i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;sceneVersion++;for(const camera of S)if(camera.type==='camera')camera.segReady=false;t0=performance.now();if(studio)pvw=o}
 $('take').onclick=()=>{take(pvw);ui()};
 $('stm').onchange=e=>{studio=e.target.checked;if(studio)pvw=SC.length>1?(pgm+1)%SC.length:pgm;$('cvs').classList.toggle('s',studio);$('pw').hidden=!studio;$('take').hidden=!studio;ui()};
 $('vol').oninput=e=>mon.gain.value=e.target.value;
@@ -229,7 +229,7 @@ const act={
  sren:i=>{const n=prompt('Scene name',SC[i].name);if(n)SC[i].name=n.slice(0,40);ui()},
  sdel:i=>{if(!Number.isInteger(i)||i<0||i>=SC.length)return;if(SC.length<2){msg('Keep at least one scene.');return}SC.splice(i,1);from=null;
   pgm=pgm>i?pgm-1:pgm===i?0:pgm;pvw=pvw>i?pvw-1:pvw===i?0:pvw;
-  invalidateProgramBg();ui()},
+  sceneVersion++;for(const camera of S)if(camera.type==='camera')camera.segReady=false;ui()},
  iup:j=>{const a=SC[ed()].items;if(j>0&&j<a.length){[a[j-1],a[j]]=[a[j],a[j-1]];if(ed()===pgm)invalidateProgramBg()}ui()},
  idn:j=>{const a=SC[ed()].items;if(j>=0&&j<a.length-1){[a[j+1],a[j]]=[a[j],a[j+1]];if(ed()===pgm)invalidateProgramBg()}ui()},
  ivis:j=>{const it=SC[ed()].items[j];if(!it)return;it.on=!it.on;if(ed()===pgm)invalidateProgramBg();ui()},
