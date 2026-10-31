@@ -416,6 +416,14 @@ const brokenWav=await onRequest({
 });
 check('Malformed audio is rejected before AI usage',brokenWav.status===415);
 
+check('Successful transcription reserves one attempted AI operation',db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe_attempt'").get(accountId).c===1);
+for(let i=1;i<120;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'transcribe_attempt',Date.now());
+const tooManyTranscriptions=await onRequest({
+  request:new Request('https://studio.example/api/transcribe',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},body:validWav
+  }),env,params:{path:['transcribe']}
+});
+check('Audio transcription atomically caps 120 attempted operations per day',tooManyTranscriptions.status===429);
 const logout = await request('logout', { method: 'POST', cookie: login.cookie });
 check('Logout succeeds', logout.status === 200);
 const expired = await request('me', { cookie: login.cookie });
