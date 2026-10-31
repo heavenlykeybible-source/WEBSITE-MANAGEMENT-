@@ -987,3 +987,10 @@ test('handshake alarm storage errors reject before a WebSocket is allocated',asy
  const accept=source.indexOf('this.state.acceptWebSocket(server);',source.indexOf('async fetch(request)'));
  assert.ok(schedule>0&&schedule<accept,'expiration alarm must be ready before the socket is accepted');
 });
+
+test('failed studio background loading does not replace the last confirmed selection',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/function setBg\(i\)\{const t=T\[i\];if\(!t\)return;const request=\+\+bgPick,scene=SC\[ed\(\)\]/);
+ assert.match(html,/const go=\(\)=>\{if\(request!==bgPick\|\|!SC\.includes\(scene\)\)return;curBg=i;bgImg=/);
+ assert.doesNotMatch(html,/function setBg\(i\)\{const t=T\[i\];if\(!t\)return;curBg=i;/);
+});
