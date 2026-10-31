@@ -6,7 +6,11 @@ import {validateImportMetadata, validatePart} from './account4-upload-policy.mjs
 function requireSession(session, actor) {
   if (!actor?.authenticated || !actor.canImport || !actor.id ||
       !session || session.ownerId !== actor.id ||
-      session.state !== 'uploading' || !Number.isFinite(session.expiresAt) ||\n      Date.now() >= session.expiresAt ||\n      typeof session.key !== 'string' ||\n      !session.key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`) ||\n      typeof session.uploadId !== 'string' || !session.uploadId)
+      session.state !== 'uploading' || !Number.isFinite(session.expiresAt) ||
+      Date.now() >= session.expiresAt ||
+      typeof session.key !== 'string' ||
+      !session.key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`) ||
+      typeof session.uploadId !== 'string' || !session.uploadId)
     throw new Error('Upload permission or session invalid');
   return session;
 }
@@ -44,7 +48,12 @@ export async function completePrivateImport(bucket, actor, session, parts) {
     seen.add(p.partNumber);
   }
   const ordered = [...parts].sort((a,b)=>a.partNumber-b.partNumber);
-  // A durable server-side session must record the ETag for every uploaded part.\n  // Never accept completion metadata solely because the browser submitted it.\n  if (!session.parts || typeof session.parts !== 'object' ||\n      ordered.some(p => session.parts[p.partNumber] !== p.etag))\n    throw new Error('Part receipt does not match server-side upload record');\n  const result = await bucket.resumeMultipartUpload(session.key,session.uploadId).complete(ordered);
+  // A durable server-side session must record the ETag for every uploaded part.
+  // Never accept completion metadata solely because the browser submitted it.
+  if (!session.parts || typeof session.parts !== 'object' ||
+      ordered.some(p => session.parts[p.partNumber] !== p.etag))
+    throw new Error('Part receipt does not match server-side upload record');
+  const result = await bucket.resumeMultipartUpload(session.key,session.uploadId).complete(ordered);
   if (result.size !== session.size) throw new Error('Completed object size mismatch');
   return {key:session.key,size:result.size,state:'private-awaiting-review'};
 }
