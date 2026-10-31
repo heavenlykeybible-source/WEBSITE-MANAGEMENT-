@@ -24,8 +24,12 @@ export async function routeIndependentApp(request,env){
  // Independent static apps must not set Account 5 session cookies or redirect
  // browsers through an unreviewed Location header.
  const safe=new Headers(response.headers);
- safe.delete('set-cookie');
- safe.delete('location');
+ // Do not let a separately deployed application mutate Account 5 browser state,
+ // perform meta-equivalent redirects or grant cross-origin access to this host.
+ for(const name of ['set-cookie','location','refresh','clear-site-data',
+  'access-control-allow-origin','access-control-allow-credentials',
+  'access-control-allow-headers','access-control-allow-methods',
+  'access-control-expose-headers','access-control-max-age'])safe.delete(name);
  safe.set('x-content-type-options','nosniff');
  safe.set('referrer-policy','no-referrer');
  const noBody=request.method==='HEAD'||[204,205,304].includes(response.status);
