@@ -49,6 +49,8 @@ jobs:
         run: npm run test:audio-signature
       - name: Public browser radio audio delivery checks
         run: npm run test:radio-public-media
+      - name: Radio HTTP range and seek checks
+        run: npm run test:radio-range
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
