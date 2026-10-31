@@ -63,9 +63,11 @@ self.addEventListener('fetch',event=>{
   if(cacheable)event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
   return response;
  }).catch(async()=>{
-  const cached=await caches.match(key);if(cached)return cached;
-  if(request.mode==='navigate'&&(url.pathname==='/'||url.pathname==='/index.html'))return(await caches.match('/index.html'))||Response.error();
-  if(request.mode==='navigate' && /^\/download\/(?:android|iphone|ipad|windows|mac)\/?$/.test(url.pathname)) return (await caches.match(url.pathname.replace(/\/$/,'')+'/index.html')) || Response.error();
+  const cache=await caches.open(CACHE);
+  // Offline fallbacks must belong to the currently reviewed release only.
+  const cached=await cache.match(key);if(cached)return cached;
+  if(request.mode==='navigate'&&(url.pathname==='/'||url.pathname==='/index.html'))return(await cache.match('/index.html'))||Response.error();
+  if(request.mode==='navigate' && /^\/download\/(?:android|iphone|ipad|windows|mac)\/?$/.test(url.pathname)) return (await cache.match(url.pathname.replace(/\/$/,'')+'/index.html')) || Response.error();
   return Response.error();
  }));
 });
