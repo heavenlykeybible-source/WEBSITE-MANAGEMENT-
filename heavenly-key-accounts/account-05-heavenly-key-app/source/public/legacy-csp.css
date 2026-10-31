@@ -11,3 +11,6 @@
 .hk-csp-index-3-1{text-align:center;padding:14px 12px;font-size:.9rem}
 .hk-csp-index-4-1{text-align:center;padding:14px 12px;font-size:.9rem}
 .hk-csp-index-5-1{text-align:center;padding:14px 12px;font-size:.9rem}
+
+/* 404 page inline stylesheet */
+body{margin:0;background:#f6f8fc;color:#17345b;font:17px/1.6 system-ui;min-height:100dvh;display:grid;place-items:center}main{max-width:620px;padding:36px;text-align:center}h1{font-size:clamp(30px,7vw,48px);line-height:1.15}a{display:inline-block;margin:8px;padding:12px 20px;border-radius:12px;background:#173e8c;color:#fff;text-decoration:none}small{display:block;margin-top:26px}
