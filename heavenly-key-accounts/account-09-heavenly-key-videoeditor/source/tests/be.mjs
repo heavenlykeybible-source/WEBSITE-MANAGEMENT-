@@ -326,7 +326,7 @@ const noLengthUpload = await onRequest({
 });
 check('Media supports absent content length',noLengthUpload.status===200);
 const mismatchedExt=await onRequest({request:new Request('https://studio.example/api/media?name=extensionless',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'}}),env,params:{path:['media']}});
-check('Upload rejects mismatched filename extensions',mismatchedExt.status===415);
+check('Upload rejects missing filename extensions',mismatchedExt.status===415);
 const misleadingName=await onRequest({request:new Request('https://studio.example/api/media?name=picture.png.html',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'}}),env,params:{path:['media']}});
 check('Upload rejects misleading multi-extension filenames',misleadingName.status===415);
 const disguisedMedia=await onRequest({request:new Request('https://studio.example/api/media?name=picture.php5.png',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'}}),env,params:{path:['media']}});
