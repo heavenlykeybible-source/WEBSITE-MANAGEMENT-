@@ -11,7 +11,7 @@ Target: `heavenlykey-studio` (Cloudflare Pages), using direct GitHub integration
 ## Prerequisites
 - Review `OWNER-ADMIN-SETUP.md` and `AUDIT.md`.
 - Cloudflare account must contain D1 `heavenlykey-studio` and R2 `heavenlykey-media`; confirm binding IDs and account ownership.
-- Run `schema.sql` for a NEW D1 database, or run `migrations/0001_user_roles.sql` and then `migrations/0002_storage_usage.sql` once for an EXISTING database after backup.
+- Run `schema.sql` for a NEW D1 database. For an EXISTING database, back it up, then apply the applicable one-time migrations in order: `0001_user_roles.sql`, `0002_storage_usage.sql`, `0003_audit_event_index.sql`, `0004_session_user_expiry_index.sql`, and `0005_password_hash_iterations.sql`. Do not apply a migration twice or apply `0005` to a fresh database created from the current schema.
 - Confirm the Cloudflare Pages project's production branch, custom domain, D1, R2 and Workers AI bindings.
 
 ## GitHub direct deployment
@@ -27,7 +27,7 @@ Target: `heavenlykey-studio` (Cloudflare Pages), using direct GitHub integration
 ## Corrected deployment root and D1 registration fix
 For the packaged folder, the **repository root directory** is `heavenlykey-studio` only when the ZIP contents are committed under that exact directory. For a repository folder at `heavenly-key-accounts/account-09-heavenly-key-videoeditor/source`, use that exact root instead. Pages build command: none; output directory: `public`. Do not configure a Worker deploy action for a Pages Functions project.
 
-A fresh database must apply `schema.sql`, which includes the user `role` column. Existing database users require the one-time migrations `migrations/0001_user_roles.sql` and then `migrations/0002_storage_usage.sql`. Do not run the migration on a fresh database already created from the current schema.
+A fresh database must apply `schema.sql`, which includes `role`, `storage_used`, session indexes, and `password_iterations` (600,000 for new accounts). Existing databases must apply applicable one-time migrations `0001` through `0005` in order after a verified backup. Migration `0005` preserves the legacy 100,000 iteration value for verification; successful login upgrades that account to 600,000. Do not run migrations on a fresh database already created from the current schema.
 
 No live deployment was made while creating this ZIP. Real credentials and bindings must be configured in the correct Cloudflare account before enabling production.
 
@@ -36,7 +36,7 @@ No live deployment was made while creating this ZIP. Real credentials and bindin
 Before staging, back up the existing Account 9 D1 database and apply `migrations/0003_audit_event_index.sql` once. It adds an idempotent composite audit index to accelerate login-throttling and AI-usage lookups. New databases created using the current `schema.sql` already include it. The migration is committed only; it has not been executed on live D1.
 
 ## Preflight
-Run `npm run check` from the Account 9 source directory before dispatching GitHub Actions. The owner/admin SQL provisioning script is documented in `OWNER-ADMIN-SETUP.md`. Do not deploy before bindings and database migrations are verified.
+Run `npm run check` from the Account 9 source directory before any staging release. Do not use GitHub Actions for deployment. The owner/admin SQL provisioning script is documented in `OWNER-ADMIN-SETUP.md`. Do not deploy before bindings and database migrations are verified.
 
 ## Static deployment security (23 October 2026)
 Deploy ONLY the `public/` directory as static assets, with `functions/` in the project root. Do not publish `.` because it exposes `schema.sql`, tests, migrations, and private setup documentation. Set Cloudflare Pages output directory to `public` and Pages project root to this source folder. Preserve the Pages Functions directory at the project root.
@@ -60,3 +60,8 @@ The connected Cloudflare Account 9 resource listing confirms:
 These listing checks do **not** establish that a Worker has valid bindings, migrations, live permissions, a matching secret configuration, or functioning public DNS. An authorized deployment operator must confirm the deployed Worker identity, D1 schema/migrations, R2 `MEDIA` and `DB` bindings, and Workers AI `AI` binding. Owner/admin provisioning and preview production release require independent permissioned actions. Do not store owner passwords, tokens, or private AI connection credentials in Git.
 
 Release requirements: current successful quality gate, real Cloudflare authentication/storage/transcription smoke tests, verified browser audio and WebM exports, Safari/iOS/Android tests, error monitoring, custom-domain confirmation, and explicit production sign-off. No live launch is asserted by this documentation.
+
+
+## Password-hash strengthening — 31 October 2026
+
+New registrations and provisioned Owner/Admin accounts use PBKDF2-HMAC-SHA-256 with 600,000 iterations. Existing accounts retain their recorded legacy work factor until their next successful login, when the API re-hashes their password with a fresh salt and 600,000 iterations. Apply `migrations/0005_password_hash_iterations.sql` once to an existing database before deploying this API. Back up D1 first. Fresh databases already contain the column in `schema.sql`; do not apply migration 0005 to them.
