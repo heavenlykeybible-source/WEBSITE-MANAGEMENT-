@@ -123,10 +123,18 @@ const malformedRegistration=await request('register',{method:'POST',body:{email:
 check('Registration rejects non-string passwords',malformedRegistration.status===400);
 
 const signupKey='ip:'+createHash('sha256').update('203.0.113.9').digest('hex');
-for(let i=0;i<10;i++) db.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').run(signupKey,'register_ip',Date.now());
+for(let i=0;i<10;i++) db.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').run(signupKey,'register_ip_attempt',Date.now());
 const rateLimitedSignup=await request('register',{method:'POST',headers:{'cf-connecting-ip':'203.0.113.9'},body:{email:'blocked@example.com',password:'correct horse battery'}});
 check('Registration velocity limit blocks excess signups from one IP',rateLimitedSignup.status===429);
 check('Rate-limited registration does not create a member',!db.prepare('SELECT 1 FROM users WHERE email=?').get('blocked@example.com'));
+const invalidSignupIP='203.0.113.29';
+for(let i=0;i<10;i++){
+  const attempt=await request('register',{method:'POST',headers:{'cf-connecting-ip':invalidSignupIP},body:{email:'failed-signup@example.com',password:'another long valid password'}});
+  check('Repeated signup attempt '+(i+1)+' is rejected after duplicate email',attempt.status===200&&i===0||attempt.status===409&&i>0);
+}
+const rejectedSignup=await request('register',{method:'POST',headers:{'cf-connecting-ip':invalidSignupIP},body:{email:'eleventh-signup@example.com',password:'another long valid password'}});
+check('Atomic signup quota blocks IP after ten attempts including duplicates',rejectedSignup.status===429);
+
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Account registration succeeds', created.status === 200);
 const login = await request('login', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
