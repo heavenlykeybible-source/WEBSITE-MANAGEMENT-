@@ -2,6 +2,7 @@ import { multipartUpload, MAX_MEDIA_BYTES } from './uploads';
 import { LiveKitConnectionError, resolveLiveKitConfig, validateCloudConnection, checkLiveKitConnection, saveLiveKitConnection, liveKitConnectionStatus, recordLiveKitVerification, resetLiveKitConnection } from './livekit-config';
 import { publicProgramme, serveBroadcastMedia, isPlaybackURL } from "./public-broadcast";
 import { restreamStatus, saveDestination, setDestinationEnabled, removeDestination, startRestream, stopRestream } from './restream';
+import { TV_LOCKED,channelAvailability,tvLockedResponse } from './channel-lock';
 interface Env {
   MEDIA_ENGINE_SHARED_SECRET: string;
   MEDIA_ENGINE_VERSION?: string;
@@ -44,7 +45,8 @@ export default {
  async fetch(request:Request,env:Env):Promise<Response>{
   const url=new URL(request.url);
   if(url.pathname==='/'&&['GET','HEAD'].includes(request.method))return Response.redirect('https://heavenlykey.org/pages/admin#studio',302);
-  if(url.pathname==='/health'&&request.method==='GET') return json({ok:true,service:'heavenlykey-media-engine',version:env.MEDIA_ENGINE_VERSION??'v1'});
+  if(url.pathname==='/health'&&request.method==='GET') return json({ok:true,service:'heavenlykey-media-engine',version:env.MEDIA_ENGINE_VERSION??'v1',channels:channelAvailability()});
+  if(url.pathname==='/api/broadcast/channel-availability'&&request.method==='GET')return json(channelAvailability());
   const marker=request.headers.get('X-Heavenly-Key-Internal'); const auth=request.headers.get('Authorization')??'';
   if(marker==='media-engine-public-v1' && request.method==='GET' && url.pathname==='/api/broadcast/live') {
     const row=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,started_at,last_heartbeat_at,reconnect_deadline FROM live_sessions WHERE status IN ('live','reconnecting') ORDER BY session_id DESC LIMIT 1").first();
@@ -76,6 +78,7 @@ export default {
   }
   if(url.pathname==='/api/broadcast/playlist-order'&&request.method==='POST'){
     const b=await requireJson(request),channel=String(b?.channel??''),ids=Array.isArray(b?.media_ids)?b!.media_ids.map(Number):null;
+    if(TV_LOCKED&&channel==='video')return tvLockedResponse();
     if(!['radio','video'].includes(channel)||!ids||ids.length>50||ids.some(x=>!Number.isSafeInteger(x)||x<1)||new Set(ids).size!==ids.length)return json({error:'Enter a valid unique playlist order'},400);
     if(ids.length){
       const placeholders=ids.map(()=>'?').join(',');
@@ -86,7 +89,7 @@ export default {
   }
   if(url.pathname==='/api/broadcast/settings'&&request.method==='GET'){const r=await env.DB.prepare('SELECT channel,playlist_enabled FROM broadcast_settings ORDER BY channel').all();return json({items:r.results});}
   if(url.pathname==='/api/broadcast/settings'&&request.method==='POST'){
-    const b=await requireJson(request);if(!b||!['radio','video'].includes(String(b.channel))||typeof b.enabled!=='boolean')return json({error:'Choose a channel and playlist switch'},400);
+    const b=await requireJson(request);if(TV_LOCKED&&b?.channel==='video')return tvLockedResponse();if(!b||!['radio','video'].includes(String(b.channel))||typeof b.enabled!=='boolean')return json({error:'Choose a channel and playlist switch'},400);
     await env.DB.prepare('UPDATE broadcast_settings SET playlist_enabled=? WHERE channel=?').bind(b.enabled?1:0,String(b.channel)).run();await audit(env,cap,'playlist.switch','channel',String(b.channel));return json({ok:true});
   }
   {const match=url.pathname.match(/^\/api\/playout\/(\d+)\/cancel$/);if(match&&request.method==='POST'){const r=await env.DB.prepare("UPDATE playout_items SET status='cancelled' WHERE playout_id=? AND status IN ('scheduled','playing')").bind(Number(match[1])).run();if(!r.meta.changes)return json({error:'Active programme not found'},404);await audit(env,cap,'playout.cancel','playout',match[1]);return json({ok:true});}}
@@ -160,6 +163,7 @@ export default {
   if(url.pathname==='/api/media-engine/restream/start'&&request.method==='POST'){
     if(!['Super Administrator','Deputy Super Administrator'].includes(cap.role))return json({error:'Owner or deputy access is required to start social streaming'},403);
     const b=await requireJson(request);if(!b)return json({error:'Invalid JSON'},400);
+    if(TV_LOCKED&&String(b.channel??'video')!=='radio')return tvLockedResponse();
     try{const source=String(b.source??'live')==='247'?'247':'live';const channel=String(b.channel??'video')==='radio'?'radio':'video';const siteBase='https://heavenlykey.alldaywow247.workers.dev';const programmeUrl=source==='247'?siteBase+'/pages/'+(channel==='radio'?'radio':'video')+'.html?egress=1':undefined;const result=await startRestream(env,{source,sessionId:b.session_id?Number(b.session_id):undefined,programmeUrl,format:String(b.format??'landscape-720'),quality:String(b.quality??'balanced'),channel});await audit(env,cap,'restream.start','egress',result.egressId);return json(result,201);}catch(e){return json({error:e instanceof Error?e.message:'Social streaming could not start'},503);}
   }
   if(url.pathname==='/api/media-engine/restream/stop'&&request.method==='POST'){
@@ -302,7 +306,7 @@ export default {
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400); const title=String(b.title??'Live Broadcast'); const source=String(b.source_type??'camera'); if(!['camera','video'].includes(source))return json({error:'Choose a camera stream or an uploaded video'},400);
     if(source==='camera'){const ref=String(b.source_ref??'');if(ref.startsWith('livekit:')&&!(await resolveLiveKitConfig(env)))return json({error:'Configure LiveKit before starting camera live'},503);if(!ref.startsWith('livekit:')){try{const stream=new URL(ref);if(!isPlaybackURL(ref))throw new Error();}catch{return json({error:'Use a direct HTTPS media stream, not your radio or video webpage. Camera broadcasting uses the Production studio.'},400);}}}
     if(source==='video'){const id=Number(b.visual_media_id??String(b.source_ref??'').replace(/^media:/,''));const media=await env.DB.prepare("SELECT object_key FROM media_objects WHERE media_id=? AND media_type='video' AND status IN ('approved','published') AND (keep_media=1 OR retention_until IS NULL OR julianday(retention_until)>julianday('now'))").bind(id).first<any>();if(!media||!await env.MEDIA_R2.head(media.object_key))return json({error:'Select an uploaded, available video'},400);b.visual_media_id=id;b.source_ref='media:'+id;}
-    const destination=String(b.destination??'both');if(!['radio','video','both'].includes(destination))return json({error:'Invalid broadcast destination'},400);
+    const destination=String(b.destination??'both');if(TV_LOCKED&&destination!=='radio')return tvLockedResponse();if(!['radio','video','both'].includes(destination))return json({error:'Invalid broadcast destination'},400);
     if(b.fallback_media_id){const fallbackId=Number(b.fallback_media_id);const fallback=await env.DB.prepare("SELECT object_key FROM media_objects WHERE media_id=? AND media_type='video' AND status IN ('approved','published') AND (keep_media=1 OR retention_until IS NULL OR julianday(retention_until)>julianday('now'))").bind(fallbackId).first<any>();if(!Number.isInteger(fallbackId)||!fallback||!await env.MEDIA_R2.head(fallback.object_key))return json({error:'Select an uploaded, available standby advert video'},400);b.fallback_media_id=fallbackId;}
     const active=await env.DB.prepare("SELECT session_id FROM live_sessions WHERE status IN ('live','reconnecting') LIMIT 1").first(); if(active)return json({error:'Another live session is active'},409);
     const r=await env.DB.prepare('INSERT INTO live_sessions(title,status,source_type,source_ref,visual_media_id,fallback_media_id,started_at,last_heartbeat_at,created_by,destination) VALUES(?,?,?, ?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?,?)').bind(title,'live',source,b.source_ref?String(b.source_ref):null,b.visual_media_id?Number(b.visual_media_id):null,b.fallback_media_id?Number(b.fallback_media_id):null,cap.sub,destination).run(); const id=Number(r.meta.last_row_id); await audit(env,cap,'broadcast.start','live_session',String(id)); return json({session_id:id,status:'live'},201);
