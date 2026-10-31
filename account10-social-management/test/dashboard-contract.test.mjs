@@ -218,3 +218,7 @@ test('WhatsApp send control is visible only to owners, matching server-side role
  assert.match(html, /if\(operatorAccessRole==='owner'&&m\.direction==='outbound'&&m\.id&&currentChannel==='whatsapp_business'&&deliveryAttempts&&!attempt\)/);
  assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=conversationId/);
 });
+
+test('human takeover action cannot repaint stale sessions or reenable read-only controls', () => {
+ assert.match(html, /catch\(e\)\{if\(selected===targetConversation&&authEpoch===epoch\)status\(e\.message\)\}finally\{if\(selected===targetConversation&&authEpoch===epoch\)button\.disabled=operatorAccessRole==='viewer'\}/);
+});
