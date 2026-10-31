@@ -28,6 +28,7 @@ await assert.rejects(saveImportSession(db,other,session));
 await recordImportPart(db,actor,id,{partNumber:1,etag:'abc123'});
 assert.ok(statements.at(-1).sql.includes('ON CONFLICT'));
 assert.ok(statements.at(-1).sql.includes('AND 1=1 ON CONFLICT'), 'SQLite SELECT UPSERT parsing guard must be present');
+assert.equal(statements.at(-1).args.length,9,'Receipt statement must bind all nine parameters');
 parts=[{part_number:1,etag:'abc123'}];
 assert.equal((await loadImportSession(db,actor,id)).parts[1],'abc123');
 await assert.rejects(recordImportPart(db,actor,id,{partNumber:2,etag:'abc123'}));
