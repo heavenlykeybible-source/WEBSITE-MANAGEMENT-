@@ -54,7 +54,8 @@ async function refresh(){
  if(!response.ok)throw Error('Radio playlist is unavailable ('+response.status+').');
  const result=await response.json();
  if(generation!==loadGeneration)return;
- const items=Array.isArray(result.items)?result.items.filter(validItem):[];
+ const items=[];const seen=new Set();
+ if(Array.isArray(result.items))for(const item of result.items){if(items.length>=50)break;if(!validItem(item)||seen.has(item.url))continue;seen.add(item.url);items.push(item);}
  ++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;syncMediaState('paused');play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');
  playlist=items;position=0;play.disabled=!items.length;next.disabled=!items.length;
  if(!items.length){title.textContent='No radio recordings available';say('The radio playlist is currently empty.');return;}
