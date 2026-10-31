@@ -261,3 +261,9 @@ test('webhook import protects against stale or duplicate actions', () => {
  assert.ok(html.includes('process.disabled=true'));
  assert.ok(html.includes("if(!current()||operatorAccessRole==='viewer'||process.disabled)return"));
 });
+
+test('webhook ignore action prevents duplicate and stale-session submissions', () => {
+ assert.ok(html.includes("btn.onclick=async()=>{if(!current()||operatorAccessRole==='viewer'||btn.disabled)return"));
+ assert.ok(html.includes("btn.disabled=true;try{await api('/api/webhooks/events/review'"));
+ assert.ok(html.includes("finally{if(current())btn.disabled=operatorAccessRole==='viewer'"));
+});
