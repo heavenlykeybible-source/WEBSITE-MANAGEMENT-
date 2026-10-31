@@ -1,4 +1,4 @@
--- Rate-limit failed private-API credentials by a one-way hash of the Cloudflare edge IP.
+-- Rate-limit failed private-API credentials by a keyed HMAC of the Cloudflare edge IP (keyed with ADMIN_TOKEN; raw IPs are never stored).
 -- Raw IP addresses are never stored. One rolling 15-minute bucket per address.
 CREATE TABLE IF NOT EXISTS auth_rate_limits(
  client_hash TEXT PRIMARY KEY CHECK(length(client_hash)=64),
