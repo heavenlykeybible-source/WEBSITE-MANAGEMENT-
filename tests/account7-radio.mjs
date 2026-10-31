@@ -57,6 +57,9 @@ let unsubscribed=false;roomInstance.events.track({kind:'video'},{setSubscribed:v
 roomInstance.events.track({kind:'audio',attach:()=>{}},{});await tick();assert.equal(p.audio().paused,false);
 p.document.querySelector('.hkr-stop').onclick();await tick();assert.equal(roomInstance.connected,false,'Stop disconnects live room');
 for(const name of ['approved-radio-display-20261017.webp','approved-radio-transparent-original.png'])assert.ok(fs.statSync(base+'assets/ministry/'+name).size>0);
+const liveVerifier=fs.readFileSync('heavenly-key-accounts/account-07-unverified/scripts/verify-live.mjs','utf8');
+assert.ok(liveVerifier.includes('Refusing to mark Account 7 deployment launch-ready.'),'Missing broadcast configuration must block launch verification');
+assert.ok(!liveVerifier.includes('process.exit(0)'),'Missing broadcast configuration must never be treated as a successful release');
 const securityHeaders=fs.readFileSync(base+'_headers','utf8');
 for(const [name,value] of [
  ['Strict-Transport-Security','max-age=31536000'],
