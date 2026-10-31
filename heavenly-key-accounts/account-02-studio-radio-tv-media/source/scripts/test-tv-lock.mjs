@@ -33,4 +33,9 @@ assert.ok(restream.includes("if(TV_LOCKED&&input.channel!=='radio')"),'Core egre
 assert.ok(broadcast.includes("if(channel==='video'&&TV_LOCKED)"),'Public TV programme must return locked status');
 assert.ok(broadcast.includes("if(TV_LOCKED&&!adminPreview&&media.media_type==='video')"),'TV public video files must be blocked while editing previews remain available');
 assert.ok(broadcast.includes("channel==='audio'?'radio':'video'"),'Audio radio routing must remain intact');
+assert.ok(index.includes("if(TV_LOCKED&&source==='video')return tvLockedResponse()"),'TV source cannot be smuggled into a radio live session');
+assert.ok(index.includes("if(TV_LOCKED)return tvLockedResponse();"),'Switch-to-video action must be blocked');
+assert.ok(index.includes("if(TV_LOCKED&&k==='destination'&&v!=='radio')return tvLockedResponse()"),'TV studio presets must be blocked');
+assert.ok(index.includes("if(radio?.destination!=='radio')return tvLockedResponse()"),'TV viewer tokens must be blocked');
+assert.ok(index.includes("if(radio?.destination!=='radio')return json({live:null,television_locked:true})"),'TV public live status must be hidden while locked');
 console.log('Account 2 television locked; radio availability and backend enforcement checks passed');
