@@ -11,6 +11,8 @@ const css=readFileSync(resolve(root,'strength-for-today.css'),'utf8');
 const shareStudio=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
 const shareJs=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
 assert.ok(html.includes('href="./strength-for-today.css"'),'External stylesheet must be linked');
+assert.match(html,/http-equiv="Content-Security-Policy"[^>]*style-src \'self\'/,'Reader must enforce a page-level no-inline-style CSP');
+assert.doesNotMatch(html,/unsafe-inline|unsafe-eval/i,'Reader CSP must not weaken style or script policy');
 assert.ok(html.includes('src="./strength-for-today.js"'),'External reader script must be linked');
 assert.ok(!/<style\b/i.test(html),'Inline style blocks are forbidden');
 assert.ok(!/\sstyle\s*=/i.test(html),'Inline style attributes are forbidden');
