@@ -99,10 +99,11 @@ export default {
     const data=await assetResponse.clone().json();
     const validDate=(date)=>typeof date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&
       !Number.isNaN(Date.parse(date))&&new Date(date+"T00:00:00Z").toISOString().slice(0,10)===date;
+    const requiredTopics=["Revival & Spiritual Fire","Holiness & Righteousness","Hope & Encouragement","Prayer & Intercession","Salvation & Repentance","Faith & Trust","The Holy Spirit","Evangelism & Soul Winning","Love & Christian Unity","The Word & Obedience","Wisdom & Discernment","End-time & Rapture Readiness"];
     if(data?.timezone!=="Africa/Lagos"||!Array.isArray(data.entries)||!data.entries.length||
        data.entries.length>366||!data.entries.every(entry=>entry&&validDate(entry.date)&&
          entry.status==="approved-for-publication"&&Array.isArray(entry.topics)&&
-         entry.topics.length===12&&entry.topics.every(topic=>topic&&topic.reviewStatus==="approved"&&
+         entry.topics.length===requiredTopics.length&&entry.topics.every((topic,index)=>topic&&topic.topic===requiredTopics[index]&&topic.reviewStatus==="approved"&&
            typeof topic.reference==="string"&&topic.reference.trim()&&topic.reference.length<=100&&
            typeof topic.bibleText==="string"&&topic.bibleText.trim()&&topic.bibleText.length<=1200&&
            typeof topic.reflection==="string"&&topic.reflection.trim()&&topic.reflection.length<=280&&
