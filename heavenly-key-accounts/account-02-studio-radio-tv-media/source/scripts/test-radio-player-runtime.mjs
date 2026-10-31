@@ -35,7 +35,7 @@ const task=runInNewContext(script,{
  AbortController,
  setTimeout:(fn,ms)=>{assert.equal(ms,12000);const id=++timerId;timers.set(id,fn);return id;},
  clearTimeout:id=>timers.delete(id),
- fetch:async(_url,options)=>{fetchSignals.push(options.signal);if(holdFetch)return await new Promise(resolve=>{pendingFetch=resolve;pendingFetches.push(resolve)});if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
+ fetch:async(_url,options)=>{fetchSignals.push(options.signal);if(holdFetch)return await new Promise((resolve,reject)=>{pendingFetch=resolve;pendingFetches.push(resolve);if(simulateAbort)options.signal.addEventListener('abort',()=>reject(Error('Network timeout')),{once:true})});if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
  MediaMetadata:undefined,
  console
 });
