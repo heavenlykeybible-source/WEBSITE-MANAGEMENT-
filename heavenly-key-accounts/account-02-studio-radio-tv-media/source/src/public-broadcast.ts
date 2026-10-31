@@ -1,3 +1,4 @@
+import { TV_LOCKED,TV_LOCK_MESSAGE } from './channel-lock';
 export function youtubeVideoId(value:string):string|null {try{const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password)return null;let id:string|null=null;if(u.hostname==='youtu.be')id=u.pathname.slice(1).split('/')[0];else if(['youtube.com','www.youtube.com','m.youtube.com','www.youtube-nocookie.com'].includes(u.hostname)){id=u.pathname==='/watch'?u.searchParams.get('v'):/^\/(?:embed|shorts|live)\/([^/]+)/.exec(u.pathname)?.[1]||null;}return id&&/^[a-zA-Z0-9_-]{11}$/.test(id)?id:null;}catch{return null;}}
 export function isPlaybackURL(value:string):boolean {try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!(u.hostname==='heavenlykey.alldaywow247.workers.dev'&&!u.pathname.startsWith('/api/broadcast/media/'));}catch{return false;}}
 export interface BroadcastEnv { DB:D1Database; MEDIA_R2:R2Bucket; LIVE_STATUS_KV?:KVNamespace }
@@ -15,6 +16,7 @@ function mediaItem(m:any){return {mediaId:m.media_id,title:m.object_key.split('/
 
 export async function publicProgramme(request:Request,env:BroadcastEnv):Promise<Response>{
  const channel=new URL(request.url).searchParams.get('channel')==='radio'?'audio':'video';
+ if(channel==='video'&&TV_LOCKED)return json({mode:'locked',channel:'video',locked:true,title:'FAITH OF OUR FATHERS TV',message:TV_LOCK_MESSAGE,items:[]},423);
  const live=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,destination,reconnect_deadline FROM live_sessions WHERE ((status='live' AND julianday(last_heartbeat_at)>julianday('now','-180 seconds')) OR (status='reconnecting' AND julianday(reconnect_deadline)>julianday('now'))) ORDER BY session_id DESC LIMIT 1").first<any>();
  if(live&&(live.destination==='both'||live.destination===(channel==='audio'?'radio':'video'))){
   if(live.status==='reconnecting'){
