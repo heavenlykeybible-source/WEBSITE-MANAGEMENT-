@@ -126,11 +126,41 @@ jobs:
           command -v aws || { echo '::error::AWS CLI unavailable on runner'; exit 1; }
           endpoint="https://$CF_ACCOUNT_ID.r2.cloudflarestorage.com"
           key="all-in-one/$PLATFORM/release.$APPROVED_EXTENSION"
+          # Stage under an unservable key first. The Worker serves only exact
+          # all-in-one/<platform>/release.<extension> object paths.
+          stage_key="staging/$GITHUB_RUN_ID/$PLATFORM/release.$APPROVED_EXTENSION"
+          cleanup_stage() {
+            aws --endpoint-url "$endpoint" s3api delete-object \
+              --bucket heavenly-key-native-releases --key "$stage_key" >/dev/null || true
+          }
+          trap cleanup_stage EXIT
           aws --endpoint-url "$endpoint" s3api put-object \
-            --bucket heavenly-key-native-releases --key "$key" \
+            --bucket heavenly-key-native-releases --key "$stage_key" \
             --body "$APPROVED_INSTALLER" \
             --content-type application/octet-stream \
             --metadata "sha256=$APPROVED_DIGEST,scannedsha256=$APPROVED_DIGEST,malwarescan=passed,signatureverified=true,appid=all-in-one,platform=$PLATFORM"
+          staged="$(aws --endpoint-url "$endpoint" s3api head-object --bucket heavenly-key-native-releases --key "$stage_key")"
+          test "$(jq -r '.ContentLength' <<<"$staged")" = "$APPROVED_SIZE"
+          test "$(jq -r '.Metadata.sha256' <<<"$staged")" = "$APPROVED_DIGEST"
+          test "$(jq -r '.Metadata.scannedsha256' <<<"$staged")" = "$APPROVED_DIGEST"
+          test "$(jq -r '.Metadata.signatureverified' <<<"$staged")" = true
+          test "$(jq -r '.Metadata.appid' <<<"$staged")" = all-in-one
+          test "$(jq -r '.Metadata.platform' <<<"$staged")" = "$PLATFORM"
+          staged_copy="$RUNNER_TEMP/account5-r2-staged.$APPROVED_EXTENSION"
+          aws --endpoint-url "$endpoint" s3api get-object \
+            --bucket heavenly-key-native-releases --key "$stage_key" "$staged_copy" >/dev/null
+          test "$(stat -c %s "$staged_copy")" = "$APPROVED_SIZE" || {
+            echo "::error::Staged installer size mismatch"; exit 1;
+          }
+          test "$(sha256sum "$staged_copy" | cut -d ' ' -f 1)" = "$APPROVED_DIGEST" || {
+            echo "::error::Staged installer SHA-256 mismatch"; exit 1;
+          }
+          rm -f "$staged_copy"
+          # Publish only the hash-verified staged object, preserving its metadata.
+          aws --endpoint-url "$endpoint" s3api copy-object \
+            --bucket heavenly-key-native-releases --key "$key" \
+            --copy-source "heavenly-key-native-releases/$stage_key" \
+            --metadata-directive COPY >/dev/null
           verify="$(aws --endpoint-url "$endpoint" s3api head-object --bucket heavenly-key-native-releases --key "$key")"
           test "$(jq -r '.ContentLength' <<<"$verify")" = "$APPROVED_SIZE"
           test "$(jq -r '.Metadata.sha256' <<<"$verify")" = "$APPROVED_DIGEST"
@@ -138,18 +168,17 @@ jobs:
           test "$(jq -r '.Metadata.signatureverified' <<<"$verify")" = true
           test "$(jq -r '.Metadata.appid' <<<"$verify")" = all-in-one
           test "$(jq -r '.Metadata.platform' <<<"$verify")" = "$PLATFORM"
-          # Metadata is an attestation, not proof of the bytes actually stored.
-          # Read the private object back and verify the entire SHA-256 before
-          # calling promotion successful. Abort on a missing or changed object.
           stored_copy="$RUNNER_TEMP/account5-r2-readback.$APPROVED_EXTENSION"
           aws --endpoint-url "$endpoint" s3api get-object \
             --bucket heavenly-key-native-releases --key "$key" "$stored_copy" >/dev/null
           test "$(stat -c %s "$stored_copy")" = "$APPROVED_SIZE" || {
-            echo "::error::Private R2 package size differs after upload"; exit 1;
+            echo "::error::Private R2 package size differs after publication"; exit 1;
           }
           test "$(sha256sum "$stored_copy" | cut -d ' ' -f 1)" = "$APPROVED_DIGEST" || {
-            echo "::error::Private R2 package SHA-256 differs after upload"; exit 1;
+            echo "::error::Private R2 package SHA-256 differs after publication"; exit 1;
           }
           rm -f "$stored_copy"
+          cleanup_stage
+          trap - EXIT
           echo "Approved package stored and cryptographically read-back-verified in PRIVATE R2 under $key."
           echo 'This does not deploy the Worker or prove public device installation. Run the independent live-release gate after approved Worker publication.'
