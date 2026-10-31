@@ -230,7 +230,12 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
     messageInsertPositions.push(statements.length);
     statements.push(env.DB.prepare("INSERT OR IGNORE INTO messages(id,conversation_id,direction,body,created_at) VALUES(?,?,'inbound',?,datetime(?,'unixepoch'))").bind('wa_msg_'+messageKey,conversationId,item.body,item.timestamp));
     const target=contactTargetForMinistryMessage(item.body);
-    if(target)statements.push(env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND requested_human=0').bind(target,conversationId));
+    if(target){
+     const inboundId='wa_msg_'+messageKey;
+     statements.push(env.DB.prepare("INSERT OR IGNORE INTO whatsapp_handover_events(message_id,conversation_id,contact_target,consumed) VALUES(?,?,?,0)").bind(inboundId,conversationId,target));
+     statements.push(env.DB.prepare("UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND requested_human=0 AND EXISTS(SELECT 1 FROM whatsapp_handover_events WHERE message_id=? AND conversation_id=? AND consumed=0)").bind(target,conversationId,inboundId,conversationId));
+     statements.push(env.DB.prepare("UPDATE whatsapp_handover_events SET consumed=1 WHERE message_id=? AND conversation_id=? AND consumed=0").bind(inboundId,conversationId));
+    }
     statements.push(env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
    }
    for(const item of receipts){
