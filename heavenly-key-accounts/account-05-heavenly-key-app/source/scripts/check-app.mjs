@@ -31,5 +31,5 @@ for(const directive of ["script-src 'self'","style-src 'self'","frame-src 'none'
 const reading=readFileSync(join(root,'public','daily-reading-plan.js'),'utf8');
 if(!reading.includes("import {KJV_BOOKS,READING_YEAR,readingForDay,TODAY_REFLECTIONS}"))throw Error('Daily reading catalogue import missing');
 if(!reading.includes('KJV_BOOKS.find(x=>x.name===reading.book)')||!reading.includes('encodeURIComponent(book.slug)'))throw Error('Daily reading Bible-book lookup is not aligned with the KJV catalogue');
-if(reading.includes('books.find')||reading.includes(':\\\\\\\\d{1,3}'))throw Error('Daily reading runtime/progress regression detected');
+if(reading.includes('books.find')||reading.includes(':\\\\d{1,3}'))throw Error('Daily reading runtime/progress regression detected');
 console.log('Account 5 strict-CSP, page, module and daily-reading checks passed.');
