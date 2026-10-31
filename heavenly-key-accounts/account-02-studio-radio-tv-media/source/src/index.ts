@@ -371,7 +371,7 @@ export default {
     const objectKey=String(b.object_key??''); const title=String(b.title??'Live Recording'); const sessionId=b.live_session_id==null?null:Number(b.live_session_id);
     if(!objectKey||objectKey.length>1024||!title||title.length>200||(sessionId!==null&&(!Number.isSafeInteger(sessionId)||sessionId<=0)))return json({error:'Invalid recording metadata'},400);
     const head=await env.MEDIA_R2.head(objectKey); if(!head)return json({error:'Recording object not found in Media R2'},400);
-    const keep=Boolean(b.keep_recording); const retentionHours=Number(b.retention_hours??48); if(!Number.isFinite(retentionHours)||retentionHours<1||retentionHours>48)return json({error:'Retention must be between 1 and 48 hours'},400); const retention=keep?null:expiryHours(retentionHours);
+    if(b.keep_recording!==undefined&&typeof b.keep_recording!=='boolean')return json({error:'keep_recording must be a boolean'},400); const keep=b.keep_recording===true; const retentionHours=Number(b.retention_hours??48); if(!Number.isFinite(retentionHours)||retentionHours<1||retentionHours>48)return json({error:'Retention must be between 1 and 48 hours'},400); const retention=keep?null:expiryHours(retentionHours);
     const r=await env.DB.prepare('INSERT INTO recordings(object_key,title,live_session_id,keep_recording,retention_until,created_by) VALUES(?,?,?,?,?,?)').bind(objectKey,title,sessionId,keep?1:0,retention,cap.sub).run();
     const id=Number(r.meta.last_row_id);
     const accounts=await env.DB.prepare("SELECT account_id,channel_name FROM social_accounts WHERE status='connected' AND automatable=1").all<{account_id:number,channel_name:string}>();
