@@ -6,7 +6,7 @@ const bibleReference=value=>nonempty(value)&&/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d+
 export function validateDailyDevotional(entry){
  const errors=[];
  if(!entry||typeof entry!=='object'||Array.isArray(entry))return ['Entry must be an object'];
- if(!/^\d{4}-\d{2}-\d{2}$/.test(entry.date||'')||Number.isNaN(Date.parse(entry.date))||new Date(entry.date).toISOString().slice(0,10)!==entry.date)errors.push('Invalid ISO date');
+ if(typeof entry.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(entry.date)||!Number.isFinite(Date.parse(entry.date))||new Date(entry.date).toISOString().slice(0,10)!==entry.date)errors.push('Invalid ISO date');
  if(entry.status!=='draft'&&entry.status!=='approved-for-publication')errors.push('Invalid publication status');
  if(!entry.sections||typeof entry.sections!=='object'||Array.isArray(entry.sections))return errors.concat('Missing sections');
  const s=entry.sections;
