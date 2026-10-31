@@ -9,6 +9,7 @@ const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistan
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
 const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const u=new URL(req.url);
+ if(req.method==='TRACE'||req.method==='CONNECT')return reply({error:'Method not allowed'},405);
  // Account 2 Studio social route compatibility; preserves the standalone Account 10 API.
  const legacy:Record<string,string>={
  '/api/social/welcome-menu':'/api/welcome-menu',
