@@ -79,7 +79,7 @@ async function runTimeline(record){
    });
    completedSeconds+=(c.end-c.start)/c.speed;
   }
-  v.pause();
+  if(!state.sourceChanged)v.pause();
   if(rec&&rec.state!=='inactive'){rec.stop();await new Promise((resolve,reject)=>{let settled=false;const cleanup=()=>{clearTimeout(timeout);if(state.abortEncoder===abort)state.abortEncoder=null};const done=(error)=>{if(settled)return;settled=true;cleanup();error?reject(error):resolve()};const abort=()=>done();state.abortEncoder=abort;const timeout=setTimeout(()=>done(Error('Timeline encoder did not finish within 15 seconds')),15000);finished.then(()=>done());if(state.cancelled)abort()})}if(encoderError)throw encoderError;
   if(state.cancelled)return state.sourceChanged?undefined:info('Timeline operation stopped.');
   if(record){
