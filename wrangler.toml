@@ -15,6 +15,9 @@ head_sampling_rate = 0.1
 enabled = true
 head_sampling_rate = 0.01
 
+[secrets]
+required = ["ADMIN_USER", "ADMIN_PASS", "SESSION_SECRET", "VAULT_KEY"]
+
 [previews]
 enabled = true
 
