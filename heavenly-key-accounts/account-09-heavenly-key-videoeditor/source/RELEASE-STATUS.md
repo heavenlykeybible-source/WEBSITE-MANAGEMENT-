@@ -82,3 +82,12 @@ Verification boundary:
 - Account deletion and logout-all password confirmation verify using the account's recorded iteration count, preserving legacy account access until migration by login.
 - Backend regression coverage was added for new-account hash strength and legacy-login upgrade. Preflight checks enforce schema, migration and provisioning consistency.
 - These source-level changes have not yet been executed through the complete test suite or against live Cloudflare D1. Apply migration 0005 only to an existing pre-update database; do not apply it to a fresh database created from the updated `schema.sql`.
+
+
+## Session lifetime hardening — 31 October 2026
+
+- Added a 30-minute inactivity timeout and a fixed 30-day absolute maximum session lifetime.
+- Session activity refreshes `last_seen_at` no more than once every five minutes, limiting D1 writes while retaining a sliding idle window.
+- New sessions store `last_seen_at`; `user()` rejects expired or idle sessions before returning an authenticated user.
+- Added migration `0006_session_inactivity_timeout.sql` for existing databases and regression coverage for active, refreshed, idle-expired and absolute-expiry behavior.
+- This is committed source-level work only; the full suite and live D1 migration have not yet been executed. Back up existing D1 before applying migrations.
