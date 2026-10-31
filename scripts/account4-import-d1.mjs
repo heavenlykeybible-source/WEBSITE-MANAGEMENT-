@@ -6,7 +6,7 @@ function authorized(actor) {
 }
 export async function saveImportSession(db, actor, session) {
   authorized(actor);
-  if (session.ownerId !== actor.id || session.state !== 'uploading')
+  if (session.ownerId !== actor.id || session.state !== 'uploading' ||\n      typeof session.key !== 'string' ||\n      !session.key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`) ||\n      typeof session.uploadId !== 'string' || !session.uploadId ||\n      !Number.isSafeInteger(session.expiresAt) || session.expiresAt <= Date.now())
     throw new Error('Invalid import owner or state');
   const id = crypto.randomUUID();
   await db.prepare('INSERT INTO account4_import_sessions (id,owner_id,object_key,upload_id,filename,size_bytes,part_count,state,expires_at_ms) VALUES (?,?,?,?,?,?,?,?,?)')
@@ -19,7 +19,7 @@ export async function loadImportSession(db, actor, id) {
     throw new Error('Invalid import session identifier');
   const row = await db.prepare('SELECT * FROM account4_import_sessions WHERE id=? AND owner_id=?')
     .bind(id,actor.id).first();
-  if (!row || row.state !== 'uploading' || row.expires_at_ms <= Date.now())
+  if (!row || row.state !== 'uploading' || row.expires_at_ms <= Date.now() ||\n      !row.object_key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`))
     throw new Error('Import session unavailable');
   const {results} = await db.prepare('SELECT part_number,etag FROM account4_import_parts WHERE session_id=? ORDER BY part_number')
     .bind(id).all();
@@ -38,8 +38,8 @@ export async function recordImportPart(db, actor, id, receipt) {
     throw new Error('Invalid R2 part receipt');
   // Atomic condition prevents recording a receipt for an expired/closed session.
   const result = await db.prepare(
-    'INSERT INTO account4_import_parts(session_id,part_number,etag) SELECT id,?,? FROM account4_import_sessions WHERE id=? AND owner_id=? AND state=? AND expires_at_ms>? ON CONFLICT(session_id,part_number) DO UPDATE SET etag=excluded.etag')
-    .bind(receipt.partNumber,receipt.etag,id,actor.id,'uploading',Date.now()).run();
+    'INSERT INTO account4_import_parts(session_id,part_number,etag) SELECT id,?,? FROM account4_import_sessions WHERE id=? AND owner_id=? AND state=? AND expires_at_ms>? ON CONFLICT(session_id,part_number) DO UPDATE SET etag=excluded.etag WHERE EXISTS (SELECT 1 FROM account4_import_sessions s WHERE s.id=excluded.session_id AND s.owner_id=? AND s.state=? AND s.expires_at_ms>?)')
+    .bind(receipt.partNumber,receipt.etag,id,actor.id,'uploading',Date.now(),actor.id,'uploading',Date.now()).run();
   if (result.meta?.changes !== 1) throw new Error('Part receipt was not persisted');
   return receipt;
 }
