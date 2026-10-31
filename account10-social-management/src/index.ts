@@ -82,6 +82,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   headers.set('referrer-policy','no-referrer');
   headers.set('strict-transport-security','max-age=31536000; includeSubDomains');
   headers.set('permissions-policy','payment=(), usb=(), accelerometer=(), gyroscope=()');
+  headers.set('cross-origin-resource-policy','same-origin');
+  headers.delete('x-powered-by');
+  headers.delete('x-aspnet-version');
   headers.set('content-security-policy',"frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'; upgrade-insecure-requests");
   // Always fetch a fresh operator dashboard after releases; do not cache login UI HTML.
   if(headers.get('content-type')?.toLowerCase().includes('text/html'))headers.set('cache-control','no-store');
