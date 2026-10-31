@@ -159,3 +159,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] An expired credential and a revoked credential both return HTTP 401 immediately; revoke never affects the owner's own master secret. Verify tokens stop working across Worker instances.
 - [ ] Operator creation accepts only a display name, viewer/operator role and expiry 1–90 days. List response never exposes token_hash or raw token.
 - [ ] Check existing owner `ADMIN_TOKEN` is strong, protected and rotated safely. Before global launch add MFA, named owner account, audited operator activity and server-side abuse/rate limiting.
+
+## Staff read-endpoint least privilege — role audit
+- [ ] After migration 0012, authenticate as viewer and operator and confirm `/api/operators`, `/api/webhooks/events`, `/api/operations/data-integrity`, `/api/media`, and unknown new GET endpoints all return HTTP 403.
+- [ ] Confirm viewer access to authorized conversation/overview screens and operator access to their internal draft and delivery-review screens. The owner retains administrator-only diagnostics and credential management.
+- [ ] Switch roles and sign out: owner-only navigation buttons must disappear for non-owners and stale responses must not restore restricted management views.
+- [ ] Any newly introduced GET endpoint is DENIED for staff until it is deliberately reviewed and added to `src/operator-permissions.ts` with regression tests. This follows OWASP deny-by-default guidance.
