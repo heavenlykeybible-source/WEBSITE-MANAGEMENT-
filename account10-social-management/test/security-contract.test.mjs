@@ -629,3 +629,11 @@ test('Account 10 dashboard uses an external same-origin application script with 
  assert.match(source,/default-src 'self'; base-uri 'self'; object-src 'none'/);
  assert.match(source,/frame-ancestors 'none'/);
 });
+
+
+test('Gemini API key remains server-side and is never embedded in dashboard assets', () => {
+ const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+ assert.match(source,/GEMINI_API_KEY\?:string/);
+ assert.match(source,/x-goog-api-key/);
+ assert.doesNotMatch(app,/GEMINI_API_KEY|x-goog-api-key|generativelanguage\.googleapis\.com/);
+});
