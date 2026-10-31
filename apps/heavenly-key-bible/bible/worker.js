@@ -47,9 +47,21 @@ function publicPath(url) {
  }
  return null;
 }
-export default {
- async scheduled(_event,env,ctx){ctx.waitUntil(dispatchReadPray(env));},
- async fetch(request, env) {
+function withSecurityHeaders(response,request){
+ const headers=new Headers(response.headers);
+ const defaults={
+  "X-Content-Type-Options":"nosniff",
+  "X-Frame-Options":"SAMEORIGIN",
+  "Referrer-Policy":"strict-origin-when-cross-origin",
+  "Permissions-Policy":"camera=(), microphone=(), geolocation=()",
+  "X-Permitted-Cross-Domain-Policies":"none",
+  "Content-Security-Policy":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.qrserver.com; font-src 'self'; connect-src 'self'; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+ };
+ for(const [name,value] of Object.entries(defaults))if(!headers.has(name))headers.set(name,value);
+ if(new URL(request.url).protocol==="https:"&&!headers.has("Strict-Transport-Security"))headers.set("Strict-Transport-Security","max-age=31536000");
+ return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+}
+async function handleFetch(request,env){
   const url=new URL(request.url);
   if(url.pathname.startsWith("/api/read-pray/"))return handleReadPray(request,env,url);
   if(!["GET","HEAD"].includes(request.method))return Response.json({success:false,error:{message:"This Bible service is read-only."}},{status:405,headers:{Allow:"GET, HEAD"}});
@@ -134,5 +146,12 @@ export default {
    }
   }
   return env.ASSETS.fetch(request);
+}
+
+export default {
+ async scheduled(_event,env,ctx){ctx.waitUntil(dispatchReadPray(env));},
+ async fetch(request,env){
+  const response=await handleFetch(request,env);
+  return withSecurityHeaders(response,request);
  }
 };
