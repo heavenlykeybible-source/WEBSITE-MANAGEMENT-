@@ -99,6 +99,30 @@ try{
      console.log('PASS all',Object.keys(catalogue).length,'app selection dialogs on small phone');
     }
     if(id==='all-in-one' && size.name==='phone'){
+     // Decode the actual PNG manifest icons in Chromium. A valid PNG header alone
+     // cannot prove the file is renderable or correctly linked from the app page.
+     const installAssets=await page.evaluate(async()=>{
+       const manifestLink=document.querySelector('link[rel="manifest"]');
+       if(!manifestLink)return {error:'Missing all-in-one manifest link'};
+       const response=await fetch(manifestLink.href,{cache:'no-store'});
+       if(!response.ok)return {error:'Manifest HTTP '+response.status};
+       const manifest=await response.json();
+       const icons=[];
+       for(const size of [192,512]){
+         const icon=manifest.icons.find(x=>x.type==='image/png'&&x.sizes===size+'x'+size);
+         if(!icon)return {error:'Missing '+size+'px PNG icon'};
+         const image=new Image();image.src=new URL(icon.src,manifestLink.href).href;
+         try{await image.decode()}catch{return {error:'Icon failed to decode '+size+'px'}}
+         icons.push({expected:size,width:image.naturalWidth,height:image.naturalHeight});
+       }
+       return {start:manifest.start_url,display:manifest.display,icons};
+     });
+     if(installAssets.error)throw Error('PWA install artwork: '+installAssets.error);
+     if(installAssets.start!=='/experience.html'||installAssets.display!=='standalone')
+       throw Error('Incorrect installed app identity '+JSON.stringify(installAssets));
+     if(installAssets.icons.some(x=>x.width!==x.expected||x.height!==x.expected))
+       throw Error('Incorrect decoded installation artwork '+JSON.stringify(installAssets.icons));
+     console.log('PASS Chromium decodes official 192px and 512px install artwork');
      // Run actual all-in-one app navigation, not merely static page rendering.
      for(const screen of ['grow','community','live']){
        const choice=page.locator('#home [data-screen="'+screen+'"]');
