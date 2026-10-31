@@ -82,7 +82,7 @@ const updateLagosDate=()=>{const selected=previewDate||lagosDayKey();const day=n
   const res=await fetch(path,{method,credentials:'same-origin',cache:'no-store',redirect:'error',signal:controller.signal,headers:{'Accept':'application/json',...(payload!==undefined?{'Content-Type':'application/json'}:{})},...(payload!==undefined?{body:payload}:{})});
   if(!res.ok)throw Error('Member service unavailable ('+res.status+')');
   const type=res.headers.get('Content-Type')||'';
-  if(!type.toLowerCase().includes('application/json'))throw Error('Unexpected member service response');
+  if(!/^application\/json(?:\s*;|\s*$)/i.test(type))throw Error('Unexpected member service response');
   return await readBoundedDevotionalJson(res,262144);
  }catch(error){if(error?.name==='AbortError')throw Error('Member request timed out. Please retry.');throw error}
  finally{clearTimeout(timeout)}
