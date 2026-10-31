@@ -60,11 +60,11 @@ for (const key of ['private-imports/7/forged','private-imports/7/../8/other','pr
 await assert.rejects(completePrivateImport(bucket,actor,{...session,partCount:2},[{partNumber:1,etag:'abc123'},{partNumber:1,etag:'abc123'}]));
 completedSize=10;
 await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/size mismatch/);
-assert.deepEqual(deleted,[session.key]);
+assert.deepEqual(deleted,[]);
 completedSize=undefined;
 await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/size mismatch/);
-assert.equal(deleted.length,2);
+assert.equal(deleted.length,0);
 completedSize='11';
 await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/size mismatch/);
-assert.equal(deleted.length,3);
+assert.equal(deleted.length,0);
 console.log('PASS owner-scoped private multipart R2 adapter');
