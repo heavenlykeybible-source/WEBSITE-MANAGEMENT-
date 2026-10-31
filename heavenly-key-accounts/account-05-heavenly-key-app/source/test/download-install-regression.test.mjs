@@ -215,7 +215,7 @@ test('runtime never retains personalized HTML navigation responses', () => {
  const sw=publicFile('sw.js');
  assert.match(sw,/request\.mode!=='navigate'/);
  assert.match(sw,/request\.destination!=='document'/);
- assert.match(sw,/isSafePublicResponse\(response\)\)event\.waitUntil/);
+ assert.match(sw,/isSafePublicResponse\(response\) && hasCompatibleAssetType\(cachePath,response\)\)event\.waitUntil/);
 });
 
 test('service worker omits member cookies for public asset fetches', () => {
