@@ -188,7 +188,7 @@ export default {
   }
 
   if(url.pathname==='/api/media-engine/livekit/publisher-token'&&request.method==='POST'){
-    const b=await requireJson(request); const sessionId=Number(b?.session_id); if(!Number.isSafeInteger(sessionId)||sessionId<=0||typeof b?.session_id==='boolean')return json({error:'session_id must be a positive integer'},400);
+    const b=await requireJson(request); const sessionId=Number(b?.session_id); if(!Number.isSafeInteger(sessionId)||sessionId<=0||!(typeof b?.session_id==='number'||(typeof b?.session_id==='string'&&/^[1-9][0-9]*$/.test(b.session_id))))return json({error:'session_id must be a positive integer'},400);
     const live=await env.DB.prepare("SELECT session_id,status,source_type,source_ref FROM live_sessions WHERE session_id=? AND status IN ('live','reconnecting')").bind(sessionId).first<any>();
     if(!live)return json({error:'Live session not active'},404);
     if(live.source_type!=='camera'||!String(live.source_ref).startsWith('livekit:'))return json({error:'This session is not a LiveKit camera broadcast'},409);
