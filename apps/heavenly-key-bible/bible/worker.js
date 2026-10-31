@@ -120,6 +120,9 @@ export default {
     const today=parts.year+'-'+parts.month+'-'+parts.day;
     if(dates.some(date=>date>today))return deny();
     const headers=new Headers(assetResponse.headers);
+    headers.delete("Content-Range");
+    headers.delete("Accept-Ranges");
+    headers.delete("Content-Length");
     headers.set("Cache-Control","no-store");
     headers.set("X-Content-Type-Options","nosniff");
     return new Response(request.method==="HEAD"?null:assetResponse.body,{status:assetResponse.status,headers});
