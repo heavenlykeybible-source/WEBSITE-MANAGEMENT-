@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-const workflow=name=>readFileSync(new URL('../../../../../.github/workflows/'+name,import.meta.url),'utf8');
+const workflow=name=>readFileSync(new URL('../../../../.github/workflows/'+name,import.meta.url),'utf8');
 
 test('native release promotion requires cryptographic identity evidence for Android Windows and Mac',()=>{
  const source=workflow('promote-account5-native-release.yml');
