@@ -494,3 +494,8 @@ test('API JSON media type validation is anchored', () => {
  assert.ok(source.includes('application\\/json(?:\\s*;|\\s*$)'));
  assert.ok(!source.includes("startsWith('application/json')"));
 });
+
+test('dashboard content policy keeps safe navigation defaults', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("form-action 'self'; upgrade-insecure-requests"));
+});
