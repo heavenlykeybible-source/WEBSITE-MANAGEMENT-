@@ -34,8 +34,15 @@ async function mcpWorkspaceAccess(req,env,agent,args,id){
 }
 
 async function ownerApprovalSession(req,env,user,sub,m){
- if(sub!=='approval-session')return null;if(user.kind!=='staff'||user.role!=='owner')fail('Owner access required',403);if(m!=='POST')fail('Method not allowed',405);
- const b=await body(req);await reauthenticate(env,user,b.password);const token='approval-session:'+crypto.randomUUID(),expires=Date.now()+10*60000;
+ if(sub!=='approval-session'&&sub!=='approval-session/end')return null;if(user.kind!=='staff'||user.role!=='owner')fail('Owner access required',403);if(m!=='POST')fail('Method not allowed',405);
+ const b=await body(req);
+ if(sub==='approval-session/end'){
+  await checkOwnerApprovalSession(env,user,b.proof);
+  await env.DB.prepare('DELETE FROM settings WHERE key=?').bind('owner:approval-session:'+await sha256(b.proof)).run();
+  await audit(env,user.username,'approval-session-ended','Owner ended temporary AI approval session');
+  return json({ok:true,ended:true,message:'Quick approvals ended successfully. Future approvals require verification again.'});
+ }
+ await reauthenticate(env,user,b.password);const token='approval-session:'+crypto.randomUUID(),expires=Date.now()+10*60000;
  await env.DB.prepare("DELETE FROM settings WHERE key LIKE 'owner:approval-session:%' AND json_extract(value_json,'$.expires') < ?").bind(Date.now()).run();
  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('owner:approval-session:'+await sha256(token),JSON.stringify({user:user.id,pass_ver:user.pass_ver||0,expires})).run();await audit(env,user.username,'approval-session-started','10 minute owner review session');return json({proof:token,expires});
 }
