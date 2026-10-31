@@ -9,7 +9,13 @@ const auditIndex=db.prepare("SELECT name FROM sqlite_master WHERE type='index' A
 if(!auditIndex)throw Error('Missing audit event query index');
 db.exec(readFileSync(new URL('../migrations/0003_audit_event_index.sql',import.meta.url),'utf8'));
 db.exec(readFileSync(new URL('../migrations/0004_session_user_expiry_index.sql',import.meta.url),'utf8'));
-db.exec(readFileSync(new URL('../migrations/0005_password_hash_iterations.sql',import.meta.url),'utf8'));
+// Exercise migration 0005 against a legacy schema, not the fresh schema that already has the column.
+const legacyDb = new DatabaseSync(':memory:');
+const legacySchema = readFileSync(new URL('../schema.sql', import.meta.url), 'utf8').replace(',password_iterations INTEGER NOT NULL DEFAULT 600000', '');
+legacyDb.exec(legacySchema);
+legacyDb.exec(readFileSync(new URL('../migrations/0005_password_hash_iterations.sql', import.meta.url), 'utf8'));
+if(!legacyDb.prepare("SELECT name FROM pragma_table_info('users') WHERE name='password_iterations'").get()) throw Error('Legacy password hash migration did not add iteration metadata');
+legacyDb.close();
 if(!db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_sessions_user_expires'").get())throw Error('Missing session user expiry index');
 if(!db.prepare("SELECT name FROM pragma_table_info('users') WHERE name='password_iterations'").get())throw Error('Missing password hash iteration metadata');
 
