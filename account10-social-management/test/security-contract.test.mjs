@@ -161,7 +161,7 @@ test('Ministry policy refuses invented theological attribution and missing websi
 
 test('WhatsApp human contact request pauses Gemini without sending or claiming notification', () => {
   assert.match(source, /from '\.\/human-handover'/);
-  assert.match(source, /if\(target\)statements\.push/);
+  assert.match(source, /if\(target\)\{/);
   assert.match(source, /UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0/);
   assert.match(source, /messageInsertPositions\.push\(statements\.length\)/);
   assert.match(source, /results\.filter\(\(result,index\)=>messageInsertPositions\.includes\(index\)\)/);
@@ -292,4 +292,15 @@ test('automation rule draft preserves human-contact destination before keyword m
  assert.ok(handler.indexOf('if(requestedTarget){')<handler.indexOf('SELECT id,keyword,reply FROM automation_rules'));
  assert.match(handler,/human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
  assert.match(handler,/contactTarget:requestedTarget,automationPaused:true/);
+});
+
+test('WhatsApp human takeover is consumed once across duplicate webhook events', () => {
+  const start=source.indexOf("if(u.pathname==='/api/webhooks/events/process'");
+  const end=source.indexOf("if(u.pathname===",start+30);
+  const handler=source.slice(start,end);
+  assert.match(handler,/INSERT OR IGNORE INTO whatsapp_handover_events/);
+  assert.match(handler,/EXISTS\(SELECT 1 FROM whatsapp_handover_events WHERE message_id=\? AND conversation_id=\? AND consumed=0\)/);
+  assert.match(handler,/UPDATE whatsapp_handover_events SET consumed=1 WHERE message_id=\? AND conversation_id=\? AND consumed=0/);
+  assert.ok(handler.indexOf('INSERT OR IGNORE INTO whatsapp_handover_events')<handler.indexOf('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target='));
+  assert.ok(handler.indexOf('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=')<handler.indexOf('UPDATE whatsapp_handover_events SET consumed=1'));
 });
