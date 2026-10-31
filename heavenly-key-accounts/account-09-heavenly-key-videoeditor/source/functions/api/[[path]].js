@@ -194,7 +194,7 @@ export async function onRequest({ request: req, env, params }) {
       const t = rnd(32);
       await env.DB.prepare('INSERT INTO sessions(token_hash,user_id,expires_at,last_seen_at) VALUES(?,?,?,?)').bind(await sha(t), u.id, Date.now() + SESSION_ABSOLUTE, Date.now()).run();
       // Do not retain unlimited sessions when a member uses multiple browsers.
-      await env.DB.prepare('DELETE FROM sessions WHERE user_id=? AND expires_at<=?').bind(u.id,Date.now()).run();
+      await env.DB.prepare('DELETE FROM sessions WHERE user_id=? AND (expires_at<=? OR last_seen_at<=?)').bind(u.id,Date.now(),Date.now()-SESSION_IDLE).run();
       await env.DB.prepare('DELETE FROM sessions WHERE user_id=? AND token_hash NOT IN (SELECT token_hash FROM sessions WHERE user_id=? ORDER BY expires_at DESC, rowid DESC LIMIT 20)').bind(u.id,u.id).run();
       await log(env, u.id, 'login');
       await env.DB.prepare("DELETE FROM audit WHERE user_id=? AND action='login_fail' AND at<?").bind(email, Date.now() - 900000).run();
