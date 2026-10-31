@@ -13,4 +13,5 @@ check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',s
 check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story',publishedDate:'2026-02-30'}}},'World story requires a valid publication date');
 check({date:'2026-10-31',status:'approved-for-publication',review:{doctrinalApproved:false,sourcesVerified:true},sections:{}},'Doctrinal approval required');
 check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story',publishedDate:'2026-10-30'}}},'World story requires named publisher');
+check({date:'2026-10-31',status:'draft',sections:{challenges:Array.from({length:12},()=>({theme:'Same theme',text:'Different daily challenge'}))}},'Daily challenge themes must be unique');
 console.log('Additional devotional editorial contract regressions passed');
