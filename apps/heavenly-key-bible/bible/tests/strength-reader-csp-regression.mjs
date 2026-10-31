@@ -21,4 +21,16 @@ assert.ok(!/\b(?:eval|Function)\s*\(/.test(js),'Dynamic code evaluation is forbi
 assert.ok(!/\b(?:innerHTML|outerHTML|insertAdjacentHTML)\b/.test(js),'Unsafe HTML-string DOM sinks require explicit review');
 assert.ok(!/\b(?:postMessage|window\.parent)\b/.test(js),'Cross-window messaging is not part of this reader');
 assert.ok(css.length>1000,'External stylesheet appears unexpectedly incomplete');
+
+assert.doesNotMatch(js,/\\.style\\b|\\.cssText\\b|\\.setProperty\\s*\\(/,'Runtime CSSOM/inline style assignments are forbidden by the reader CSP');
+for(const className of ['archive-history','archive-open-button','archive-topic-grid','archive-topic-button','member-search-input','member-result-label']){
+ assert.ok(js.includes(className),'Reader must use CSP-safe class '+className);
+ assert.ok(css.includes('.'+className),'External CSS must define '+className);
+}
+for(let i=0;i<12;i++){
+ assert.ok(js.includes('data-topic=String(i)'),'Topic controls must be data-driven');
+ assert.ok(css.includes('.topic[data-topic="'+i+'"]'),'Missing CSP-safe topic palette '+i);
+ assert.ok(css.includes(':root[data-manna-theme="'+i+'"]'),'Missing CSP-safe theme palette '+i);
+}
+
 console.log('Strength for Today reader: inline-markup CSP regression checks passed.');
