@@ -71,3 +71,40 @@ async function accessRequestCenter(){try{
   card.appendChild(status);box.appendChild(card);
  });
 }catch(e){oops(e);}}
+
+
+async function studioTaskBoard(){
+ try{
+  var data=await Promise.all([api('agents'),api('connections'),api('studio/tasks')]);
+  var agents=data[0].agents.filter(function(a){return a.status==='active'&&a.can_read&&a.can_propose&&!a.site_id&&!a.owner_id;});
+  var accounts=data[1].connections,chosen=new Set();
+  var account=h('select',{'aria-label':'Target Cloudflare account'}),worker=h('input',{'aria-label':'Worker name',placeholder:'Existing Worker name'}),
+   goal=h('textarea',{'aria-label':'Assignment instructions',rows:4,placeholder:'Describe the change the AI should prepare'}),
+   selections=h('div'),status=h('p',{role:'status','aria-live':'polite'}),tasks=h('div');
+  accounts.forEach(function(c){account.appendChild(h('option',{value:c.id},c.label));});
+  agents.forEach(function(a){
+   var check=h('input',{type:'checkbox','aria-label':'Assign '+a.name});
+   check.onchange=function(){if(check.checked)chosen.add(a.id);else chosen.delete(a.id);};
+   selections.appendChild(h('label',{class:'card'},check,document.createTextNode(' '+a.name)));
+  });
+  async function refresh(){
+   var d=await api('studio/tasks');tasks.innerHTML='';
+   d.tasks.forEach(function(t){
+    var card=h('section',{class:'card'},h('b',{},t.agent_name+' · '+t.worker),h('p',{},t.instruction),h('p',{},t.status+' · '+lagosTime(t.updated_at)));
+    if(t.proposal_id)card.appendChild(h('button',{onclick:function(){openP(t.proposal_id);}},'Review proposal #'+t.proposal_id));
+    if(t.status==='assigned')card.appendChild(h('button',{class:'bad',onclick:async function(){try{await api('studio/tasks/'+t.id+'/cancel','POST',{});await refresh();}catch(e){status.textContent=e.message;}}},'Cancel task'));
+    tasks.appendChild(card);
+   });
+   if(!d.tasks.length)tasks.appendChild(h('p',{},'No AI assignments yet.'));
+  }
+  var submit=h('button',{onclick:async function(){
+   this.disabled=true;try{
+    var response=await api('studio/tasks','POST',{connection:+account.value,worker:worker.value.trim(),instruction:goal.value.trim(),agents:Array.from(chosen)});
+    status.textContent='Assignments saved successfully: '+response.assigned+' AI tasks. Each AI can inspect its own assignment; no production release occurred.';
+    await refresh();
+   }catch(e){status.textContent=e.message;}finally{this.disabled=false;}
+  }},'Assign selected AIs');
+  show(nav(),h('h3',{},'Parallel AI Worker Studio'),h('p',{},'Give multiple AIs separate assignments at the same time. Submit more batches as needed. Each AI submits its completed code to Waiting Room; only the owner may approve a release.'),h('section',{class:'card'},h('label',{},'Cloudflare account'),account,h('label',{},'Worker to repair'),worker,h('label',{},'Task instructions'),goal,h('h4',{},'Choose assistants'),selections,submit,status),h('h3',{},'Assignments'),tasks);
+  await refresh();
+ }catch(e){oops(e);}
+}
