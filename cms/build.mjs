@@ -68,11 +68,22 @@ if(!worker.includes(reviewWorkerPin)){
  if(worker.split(reviewWorkerAnchor).length!==2)throw Error('Refusing build: Worker review path missing');
  worker=worker.replace(reviewWorkerAnchor,reviewWorkerAnchor+'\n    '+reviewWorkerPin);
 }
+const reviewBaselineAnchor="baseline = current ? { exists: true, modified_on: current.modified_on || null } : { exists: false };";
+const reviewPinRequired="requirePinnedExistingWorker(m,Boolean(current));";
+if(!worker.includes(reviewPinRequired)){
+ if(worker.split(reviewBaselineAnchor).length!==2)throw Error('Refusing build: Worker review baseline missing');
+ worker=worker.replace(reviewBaselineAnchor,reviewPinRequired+'\n    '+reviewBaselineAnchor);
+}
 const deployWorkerAnchor="await deployWorker(env, meta.connection_id, meta.name, await o.text(), workerBindings(meta.bindings));";
 const deployWorkerPin="if(meta.base_sha256)await verifyPinnedStudioWorker(env,meta);";
 if(!worker.includes(deployWorkerPin)){
  if(worker.split(deployWorkerAnchor).length!==2)throw Error('Refusing build: Worker publication path missing');
  worker=worker.replace(deployWorkerAnchor,deployWorkerPin+'\n    '+deployWorkerAnchor);
+}
+const deploymentPinCheck="const proposedConn=await connById(env,meta.connection_id);const scriptList=(await cf(env,proposedConn,'GET','/workers/scripts')).result;if(!Array.isArray(scriptList))fail('Could not verify Worker existence',502);requirePinnedExistingWorker(meta,scriptList.some(x=>x.id===meta.name));";
+if(!worker.includes(deploymentPinCheck)){
+ if(worker.split("if(meta.base_sha256)await verifyPinnedStudioWorker(env,meta);").length!==2)throw Error('Refusing build: Worker release pin missing');
+ worker=worker.replace("if(meta.base_sha256)await verifyPinnedStudioWorker(env,meta);",deploymentPinCheck+'\n    '+"if(meta.base_sha256)await verifyPinnedStudioWorker(env,meta);");
 }
 const nativeClient='// BEGIN NATIVE WORKSPACE CLIENT\n'+(fs.readFileSync(new URL('../workspace/client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/browser-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END NATIVE WORKSPACE CLIENT';
 if(worker.includes('// BEGIN NATIVE WORKSPACE CLIENT'))worker=worker.replace(/\/\/ BEGIN NATIVE WORKSPACE CLIENT[\s\S]*?\/\/ END NATIVE WORKSPACE CLIENT/,()=>nativeClient);
