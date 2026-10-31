@@ -39,4 +39,9 @@ assert.match(entry, /if\(url\.pathname==='\/api\/campaigns'&&request\.method==='
 assert.match(entry, /status IN \('approved','published'\)/);
 assert.match(entry, /campaign\.cancel/, 'Campaign cancellation must be audited');
 
+// Campaigns must record creation and never schedule already-expired media.
+assert.match(entry, /id<=0\)return json\(\{error:'Invalid media'\}/, 'Campaign IDs must be positive');
+assert.match(entry, /campaign\.schedule/, 'Campaign creation must be audited');
+assert.match(entry, /Media expires before campaign starts/, 'Media retention must cover the campaign start');
+
 console.log('Account 2 broadcast safety regression checks passed');
