@@ -4,6 +4,11 @@ on:
     branches: [main]
     paths:
       - 'control-room-worker.js'
+      - 'workspace/**'
+      - 'security/**'
+      - 'cms/**'
+      - 'ai/**'
+      - 'scripts/**'
       - 'tests/**'
       - 'schema.sql'
       - 'package.json'
@@ -14,6 +19,11 @@ on:
   pull_request:
     paths:
       - 'control-room-worker.js'
+      - 'workspace/**'
+      - 'security/**'
+      - 'cms/**'
+      - 'ai/**'
+      - 'scripts/**'
       - 'tests/**'
       - 'schema.sql'
       - 'package.json'
