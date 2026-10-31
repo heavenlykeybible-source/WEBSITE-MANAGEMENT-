@@ -306,3 +306,15 @@ test('expired stage cannot send signaling or chat before alarm fires', async()=>
   assert.equal(h.host.messages.length,before);
   assert.match(h.guest.messages.at(-1).msg,/expired/i);
 });
+
+test('host cannot deliver a WebRTC offer to an expired stage connection', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  h.guest.attachment.identity.expires=Date.now()-1000;
+  const count=h.guest.messages.filter(m=>m.t==='sig').length;
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'sig',gid:h.guest.attachment.id,data:{sdp:{type:'offer',sdp:'v=0'}}}));
+  assert.equal(h.guest.readyState,3);
+  assert.equal(h.guest.messages.filter(m=>m.t==='sig').length,count);
+  assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
