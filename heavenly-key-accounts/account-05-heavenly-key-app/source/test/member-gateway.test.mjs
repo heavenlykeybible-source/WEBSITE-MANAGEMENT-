@@ -117,3 +117,18 @@ test('partial upstream session validation cannot authorize track access',async()
  assert.equal(response.status,502);
  assert.equal((await response.json()).items,undefined);
 });
+
+test('member POST endpoints reject MIME types disguised as application/json',async()=>{
+ const rejected=['application/json-patch+json','application/json-seq','application/jsonx','text/plain; application/json'];
+ for(const contentType of rejected){
+  let called=false;
+  const req=request('login','POST',{email:'a@b.test',password:'secret'},{'content-type':contentType});
+  const response=await memberGateway(req,enabled,async()=>{called=true;throw Error('Should not contact upstream');});
+  assert.equal(response.status,415,contentType);
+  assert.equal(called,false,contentType);
+ }
+ const accepted=request('login','POST',{email:'a@b.test',password:'secret'},{'content-type':'application/json; charset=utf-8'});
+ const result=await memberGateway(accepted,enabled,async()=>json({ok:true},200,{'set-cookie':'gc_session='+ID+'; Path=/; HttpOnly'}));
+ assert.equal(result.status,200);
+ assert.match(result.headers.get('set-cookie'),/^__Host-hk_session=/);
+});
