@@ -1188,7 +1188,7 @@ test('failed scene background drawing restores the canvas and invalidates the pr
  const camera={oc:{width:0,height:0,getContext:()=>ctx},blur:true,bgm:'tpl',segReady:true};
  const SC=[{items:[{id:'background',on:true}]}];
  const seg={onResults(fn){callback=fn}};
- new Function('seg','segCur','segScene','sceneVersion','SC','pgm','src','
+ new Function('seg','segCur','segScene','sceneVersion','SC','pgm','src','$','performance','cover','console',source)(
   seg,camera,0,0,SC,0,()=>({isBg:true,fn(){throw Error('bad studio background')}}),()=>({checked:false}),{now:()=>1},()=>{},{error:()=>{}}
  );
  callback({image:{width:1280,height:720},segmentationMask:{}});
@@ -1204,28 +1204,6 @@ test('switching program scenes invalidates stale virtual camera background frame
  const source=html.slice(begin,end);
  const S=[{type:'camera',segReady:true},{type:'camera',segReady:true},{type:'mic',segReady:true}];
  const isolated='let pgm=0,from=null,t0=0,pvw=1,studio=true,sceneVersion=0;'+source+';take(1);return {pgm,from,t0,pvw}';
- const state=new Function('S','$','performance',isolated)(S,()=>({value:'cut'}),{now:()=>42});
- assert.equal(state.pgm,1);
- assert.deepEqual(S.slice(0,2).map(s=>s.segReady),[false,false]);
- assert.equal(S[2].segReady,true);
- assert.equal(state.pvw,0);
-});
-,'performance','cover','console',source)(
-  seg,camera,SC,0,()=>({isBg:true,fn(){throw Error('bad studio background')}}),()=>({checked:false}),{now:()=>1},()=>{},{error:()=>{}}
- );
- callback({image:{width:1280,height:720},segmentationMask:{}});
- assert.equal(saveCount,1);
- assert.equal(restoreCount,1,'canvas save must always be balanced by restore');
- assert.equal(camera.segReady,false,'failed composite must not hide the original presenter video');
-});
-
-test('switching program scenes invalidates stale virtual camera background frames',()=>{
- const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
- const begin=html.indexOf('function take(i){'),end=html.indexOf("$('take').onclick",begin);
- assert.ok(begin>=0&&end>begin,'studio take function exists');
- const source=html.slice(begin,end);
- const S=[{type:'camera',segReady:true},{type:'camera',segReady:true},{type:'mic',segReady:true}];
- const isolated='let pgm=0,from=null,t0=0,pvw=1,studio=true;'+source+';take(1);return {pgm,from,t0,pvw}';
  const state=new Function('S','$','performance',isolated)(S,()=>({value:'cut'}),{now:()=>42});
  assert.equal(state.pgm,1);
  assert.deepEqual(S.slice(0,2).map(s=>s.segReady),[false,false]);
