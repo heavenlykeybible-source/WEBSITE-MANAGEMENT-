@@ -744,3 +744,15 @@ test('host cannot moderate a stale participant from a previous meeting session',
  assert.equal(old.readyState,1,'active host must not target an old session');
  assert.equal(old.messages.length,sent);
 });
+
+test('scheduled alarm proactively closes stale guests without interrupting current meeting',async()=>{
+ const s=await openRoom(),stale=s.add(),current=s.add();
+ await message(s.room,stale,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Old viewer'});
+ await message(s.room,current,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Current viewer'});
+ stale.d.session='previous-host-generation';
+ await s.room.alarm();
+ assert.equal(stale.readyState,3,'orphaned viewer must be disconnected');
+ assert.ok(stale.messages.some(m=>m.t==='closed'&&/previous meeting/.test(m.why)));
+ assert.equal(current.readyState,1,'active viewer must stay connected');
+ assert.equal(s.host.readyState,1,'active host must stay connected');
+});
