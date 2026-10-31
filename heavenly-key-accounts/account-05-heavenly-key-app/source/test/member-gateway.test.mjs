@@ -91,3 +91,29 @@ test('disabled access still allows a same-origin local logout but rejects logout
  const cross=await memberGateway(request('logout','POST',{}, {...signed,Origin:'https://evil.test'}),{},async()=>{throw Error();});
  assert.equal(cross.status,403);assert.equal(cross.headers.get('set-cookie'),null);
 });
+
+test('partial or MIME-confused upstream authentication responses fail closed',async()=>{
+ const payload={user:{userId:4,status:'active'},profile:{displayName:'Member'}};
+ const failures=[
+  new Response(JSON.stringify(payload),{status:206,headers:{'content-type':'application/json','content-range':'bytes 0-40/80'}}),
+  new Response(JSON.stringify(payload),{status:200,headers:{'content-type':'text/plain; application/json'}}),
+  new Response(JSON.stringify(payload),{status:200,headers:{'content-type':'application/json','content-range':'bytes 0-40/80'}}),
+ ];
+ for(const upstream of failures){
+  const response=await memberGateway(request('session','GET',undefined,signed),enabled,async()=>upstream);
+  assert.equal(response.status,502,'Unverified session response was accepted');
+  assert.equal(response.headers.get('set-cookie'),null);
+  assert.equal((await response.json()).member,undefined);
+ }
+});
+
+test('partial upstream session validation cannot authorize track access',async()=>{
+ let requests=0;
+ const response=await memberGateway(request('tracks','GET',undefined,signed),enabled,async()=>{
+  requests++;
+  return new Response(JSON.stringify(member),{status:206,headers:{'content-type':'application/json','content-range':'bytes 0-40/80'}});
+ });
+ assert.equal(requests,1);
+ assert.equal(response.status,502);
+ assert.equal((await response.json()).items,undefined);
+});
