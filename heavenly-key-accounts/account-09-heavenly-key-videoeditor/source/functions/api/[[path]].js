@@ -301,12 +301,7 @@ export async function onRequest({ request: req, env, params }) {
     }
     if (a === 'transcribe' && m === 'POST') {
       if (!env.AI) return J({ error: 'AI is not enabled on this deployment.' }, 503);
-      const suffix=name.includes('.') ? name.slice(name.lastIndexOf('.')+1).toLowerCase() : '';
-        const extensions={'video/mp4':['mp4'],'video/webm':['webm'],'video/quicktime':['mov'],'video/ogg':['ogg','ogv'],'audio/mpeg':['mp3','mpeg'],'audio/wav':['wav'],'audio/x-wav':['wav'],'audio/webm':['webm'],'audio/ogg':['ogg','oga'],'audio/mp4':['m4a','mp4'],'audio/aac':['aac'],'audio/flac':['flac'],'audio/x-m4a':['m4a'],'image/png':['png'],'image/jpeg':['jpg','jpeg'],'image/gif':['gif'],'image/webp':['webp']};
-        if (!suffix || !extensions[type]?.includes(suffix)) return J({error:'Filename extension does not match media type.'},415);
-        const segments=name.toLowerCase().split('.');
-        if (segments.slice(0,-1).some(part=>['html','htm','shtml','svg','js','mjs','php','php5','php7','phtml','pht','asp','aspx','jsp','jspx','cgi','pl','py','rb','ps1','vbs','wsf','hta','exe','bat','cmd','sh'].includes(part))) return J({error:'Unsafe filename extension.'},415);
-        const announced = req.headers.get('content-length');
+      const announced = req.headers.get('content-length');
       if ((req.headers.get('content-type') || '').split(';')[0] !== 'audio/wav') return J({ error: 'Send a WAV file.' }, 415);
       if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > 3 * 1024 * 1024)) return J({ error: 'Audio chunk too large.' }, 413);
       const transcriptionCount = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe_attempt' AND at>?").bind(u.id, Date.now() - DAY).first()).c;
