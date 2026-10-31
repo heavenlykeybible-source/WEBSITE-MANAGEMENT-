@@ -12,7 +12,7 @@
     "deploy:meetings": "npm run deploy --prefix heavenly-key-accounts/account-08-heavenly-key-meetingspace/source"
   },
   "devDependencies": {
-    "@simplewebauthn/server": "13.2.2",
+    "@simplewebauthn/server": "13.3.3",
     "esbuild": "0.25.12",
     "linkedom": "0.18.13"
   }
