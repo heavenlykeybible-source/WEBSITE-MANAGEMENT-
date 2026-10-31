@@ -15,7 +15,7 @@ Independent listener site intended for `radio.heavenlykey.org`. Account 2 is the
 
 ## Test evidence
 
-A GitHub Actions verification run completed successfully on commit `c3578f1439f889ad494a4224be6e8bf71539a80c`, including dependency installation, repository regression suite, Account 7 player/proxy regressions, Account 2 integration regressions and CSP/security-header tests. All three Account 7-specific GitHub Actions workflows (temporary verification, production deployment and Account 7-to-Account 2 connection) have been removed from this branch to respect the owner's preference not to use GitHub Actions for this project. The source code and tests remain in this branch. Re-run the commands below in the owner's chosen build/deployment environment before release.
+A GitHub Actions verification run completed successfully on commit `c3578f1439f889ad494a4224be6e8bf71539a80c`, including dependency installation, repository regression suite, Account 7 player/proxy regressions, Account 2 integration regressions and CSP/security-header tests. **That run predates the final CDN allowlist tightening and the new exact-import regression assertion on this branch. The latest branch head has not yet had a complete test rerun**, so the earlier green result must not be treated as validation of the latest commit. All Account 7-specific GitHub Actions workflows for verification, production deployment and Account 7-to-Account 2 connection have been removed from this branch to respect the owner's preference not to use GitHub Actions. The source code and tests remain in this branch. Re-run the commands below in the owner's chosen build/deployment environment before release.
 
 ```sh
 node tests/run.mjs
@@ -31,7 +31,7 @@ node tests/account7-security-headers.mjs
 - Confirm existing Worker bindings `MEDIA_PUBLIC_ORIGIN` and `RADIO_PUBLIC_API_KEY` without printing secret values. The origin must be the verified HTTPS Account 2 media endpoint and the key must match the server-side Account 2 configuration.
 - Verify custom-domain DNS/routing and HTTPS.
 - Test a real broadcast, reconnection, and lock-screen/Bluetooth/background playback on iOS, Android and desktop browsers. Media Session controls are not uniformly supported by all browsers.
-- Complete independent security and accessibility review, including WCAG 2.2 keyboard, focus, contrast and screen-reader checks.
+- Complete independent security verification against OWASP ASVS 5.0.0 and accessibility verification against WCAG 2.2 AA, including keyboard, focus visibility, target size, contrast and screen-reader checks. The current source-level header tests are not an ASVS audit or WCAG conformance claim.
 
 ## Protected production resources
 
