@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-const required = ['index.html','_headers','public/index.html','public/_headers','schema.sql','wrangler.toml','functions/api/[[path]].js','tests/be.mjs'];
+const required = ['index.html','_headers','public/index.html','public/_headers','schema.sql','wrangler.toml','functions/api/[[path]].js','tests/be.mjs','migrations/0005_password_hash_iterations.sql'];
 for (const path of required) if (!existsSync(path)) throw Error(`Missing ${path}`);
 const staticHeaders=readFileSync('_headers','utf8');
 const deployHeaders=readFileSync('public/_headers','utf8');
@@ -19,6 +19,10 @@ if((readFileSync('public/index.html','utf8').match(/<script\b(?![^>]*\bsrc=)[^>]
 
 for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs','tests/be.mjs','tests/frontend.mjs','tests/offline.mjs','tests/timeline-runtime.mjs','tests/scheduled-cleanup.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 const apiSource=readFileSync('functions/api/[[path]].js','utf8');
+const schemaSource=readFileSync('schema.sql','utf8');
+const passwordMigration=readFileSync('migrations/0005_password_hash_iterations.sql','utf8');
+const roleProvisioning=readFileSync('scripts/provision-roles.mjs','utf8');
+if(!schemaSource.includes('password_iterations INTEGER NOT NULL DEFAULT 600000') || !passwordMigration.includes('DEFAULT 100000') || !roleProvisioning.includes('pbkdf2Sync(password, salt, 600000')) throw Error('Password hash iteration schema, legacy migration or role provisioning mismatch');
 if(!apiSource.includes(".replace(/^[.\\- ]+/, '').replace(/\\.{2,}/g, '.')"))throw Error('Uploaded filename normalization missing');
 if(!apiSource.includes(".replace(/[. ]+$/, '')"))throw Error('Trailing filename cleanup missing');
 if(!apiSource.includes("rawName.includes(':')"))throw Error('Colon filename rejection missing');
