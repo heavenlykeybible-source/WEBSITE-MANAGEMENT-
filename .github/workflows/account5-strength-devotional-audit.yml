@@ -9,6 +9,8 @@ on:
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/data/annotations/**'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/style.css'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/app.js'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today-next.html'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today-next.js'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/data/kjv/**'
       - 'apps/heavenly-key-bible/bible/worker.js'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-devotionals-*.json'
@@ -51,6 +53,21 @@ jobs:
           node --check apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs
       - name: Verify annotated KJV verses and colouring styles
         run: node apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs
+  devotional-next-preview:
+    name: New devotional preview syntax and structure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Check new devotional preview script syntax
+        run: node --check apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today-next.js
+      - name: Check section structure and safe preview labels
+        run: node apps/heavenly-key-bible/bible/tests/strength-next-preview.mjs
   editorial-quality-gate:
     name: Editorial quality gate (not doctrinal approval)
     runs-on: ubuntu-latest
