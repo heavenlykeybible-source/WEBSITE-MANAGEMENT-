@@ -112,7 +112,7 @@ for(const fragment of ["host==='localhost'","a===127","a===10","a===172&&b>=16&&
 const hostValidatorSource=restream.match(/function unsafeStreamHost\(hostname:string\):boolean\{[\s\S]*?\n\}/)?.[0];
 assert.ok(hostValidatorSource, 'Host validator implementation must be present');
 const unsafeHost=runInNewContext('('+hostValidatorSource.replace('(hostname:string):boolean','(hostname)')+')',Object.create(null),{timeout:1000});
-for(const host of ['localhost','localhost.','stream.local','127.0.0.1','10.0.0.5','172.16.10.20','192.168.1.2','169.254.1.2','[::1]','[fd00::1]']){
+for(const host of ['localhost','localhost.','stream.local','127.0.0.1','127.1','2130706433','0x7f000001','192.168.1','10.0.0.5','172.16.10.20','192.168.1.2','169.254.1.2','[::1]','[fd00::1]','[::ffff:127.0.0.1]']){
  assert.equal(unsafeHost(host),true,'Must block private streaming host: '+host);
 }
 for(const host of ['stream.youtube.com','rtmp.example.com','8.8.8.8']){
