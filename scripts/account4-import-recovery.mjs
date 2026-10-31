@@ -10,7 +10,7 @@ export async function inspectPrivateImportRecovery(db, bucket, actor, id) {
   if (!row || row.owner_id !== actor.id ||
       !['completing','private-awaiting-review'].includes(row.state) ||
       typeof row.object_key !== 'string' ||
-      !new RegExp('^private-imports/' + actor.id + '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$','i').test(row.object_key))
+      row.object_key.toLowerCase() !== ('private-imports/' + actor.id + '/' + id).toLowerCase())
     throw new Error('Private import recovery unavailable');
   if (!bucket || typeof bucket.head !== 'function')
     throw new Error('Private R2 recovery unavailable');
