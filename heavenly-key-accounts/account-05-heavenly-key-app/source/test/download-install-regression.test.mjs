@@ -192,3 +192,13 @@ test('offline fallback can read only the current reviewed shell cache', () => {
  assert.match(sw, /await cache\.match\('\/index\.html'\)/);
  assert.doesNotMatch(sw, /await caches\.match\(/);
 });
+
+test('precache and runtime share a single safe public-response cache policy', () => {
+ const sw=publicFile('sw.js');
+ assert.match(sw,/function isSafePublicResponse\(response\)/);
+ assert.equal((sw.match(/if\(isSafePublicResponse\(response\)\)/g)||[]).length,3);
+ assert.match(sw,/!response\.ok/);
+ assert.match(sw,/response\.redirected/);
+ assert.match(sw,/no-store\|no-cache/);
+ assert.match(sw,/cookie\|authorization/);
+});
