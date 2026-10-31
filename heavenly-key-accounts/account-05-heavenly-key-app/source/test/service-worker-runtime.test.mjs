@@ -159,3 +159,19 @@ test('byte-range fetches are delegated without cache interception', async () => 
     assert.equal(handled, false, header);
   }
 });
+
+test('an HTML error page is never cached as JavaScript', async () => {
+ const wrong = harness(async () => publicResponse({ 'content-type': 'text/html' }));
+ await wrong.request('/app.js', { mode:'same-origin', destination:'script' });
+ assert.equal(wrong.entries.size, 0);
+ await assert.rejects(wrong.install(), /Essential app shell unavailable: \/index\.html/);
+ const acceptable = harness(async path => {
+   const type = path.endsWith('.js') ? 'text/javascript' :
+     path.endsWith('.css') ? 'text/css' :
+     path.endsWith('.html') ? 'text/html' :
+     path.endsWith('.webmanifest') ? 'application/manifest+json' : null;
+   return publicResponse(type ? { 'content-type': type } : {});
+ });
+ await acceptable.install();
+ assert.ok(acceptable.entries.has('/app.js'));
+});
