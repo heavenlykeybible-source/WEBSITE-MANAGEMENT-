@@ -544,3 +544,13 @@ test('unsupported tunnel and trace methods are rejected before routing', () => {
  assert.ok(source.includes("req.method==='TRACE'||req.method==='CONNECT'"));
  assert.ok(source.includes("return reply({error:'Method not allowed'},405)"));
 });
+
+test('Meta webhook verification response includes protective headers', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ const start=source.indexOf('return new Response(challenge');
+ const response=source.slice(start,start+420);
+ assert.ok(start>=0);
+ assert.ok(response.includes("'x-frame-options':'DENY'"));
+ assert.ok(response.includes("'referrer-policy':'no-referrer'"));
+ assert.ok(response.includes("'strict-transport-security'"));
+});
