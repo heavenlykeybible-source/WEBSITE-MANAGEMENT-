@@ -140,3 +140,12 @@ test('human request queue visibly distinguishes ministry agent and Evangelist ha
   assert.match(html, /For Heavenly Key Evangelistic Movement agent/);
   assert.match(html, /Human contact target unverified/);
 });
+
+test('human requests attention counter shows authenticated pending count and resets on logout', () => {
+  assert.match(html,/function updateHumanRequestCount\(items\)/);
+  assert.match(html,/api\('\/api\/human-requests'\)\.then\(h=>/);
+  assert.match(html,/if\(epoch===authEpoch\)updateHumanRequestCount\(h\.items\)/);
+  assert.match(html,/if\(name==='requests'\)updateHumanRequestCount\(d\.items\)/);
+  assert.equal((html.match(/selected='';paused=false;requestedHuman=false;\$\('requestsTab'\)\.textContent='Human Requests';/g)||[]).length,2);
+  assert.match(html,/count===100\?'\+':'/);
+});
