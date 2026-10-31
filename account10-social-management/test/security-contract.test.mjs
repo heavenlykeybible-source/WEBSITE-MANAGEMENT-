@@ -528,3 +528,8 @@ test('JSON API responses disallow cross-origin resource embedding', () => {
  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
  assert.ok(source.includes("'cross-origin-resource-policy':'same-origin'"));
 });
+
+test('API response headers disable unnecessary browser capabilities', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("'permissions-policy':'payment=(), usb=(), accelerometer=(), gyroscope=()'"));
+});
