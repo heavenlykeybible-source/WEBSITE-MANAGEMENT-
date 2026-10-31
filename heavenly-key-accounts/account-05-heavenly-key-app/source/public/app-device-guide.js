@@ -101,14 +101,9 @@
           const size = Number(available.headers.get('content-length'));
           const digest = available.headers.get('x-release-sha256') || '';
           nativeAvailable = available.ok && contentType.includes(expectedTypes[platform]) && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
-          nativeLink.hidden = !nativeAvailable;
-          if (nativeAvailable && matchesDevice()) {
-            status('Your verified ' + platform + ' app download is starting. If your browser does not start it, use the Download button.');
-            // Navigate to the official attachment response; do not silently
-            // install software or fake an app-store/native download.
-            window.location.assign(nativeLink.href);
-            return;
-          }
+          // Do not initiate software downloads on QR scans or page navigation.
+          // Show the package only on the matching platform and require a click.
+          nativeLink.hidden = !(nativeAvailable && matchesDevice());
           if (nativeAvailable && platform === 'android') status('A native Android APK is available without a Heavenly Key account. Use Download Android APK or open the web app. Android may ask you to approve installation outside the Play Store.');
         } catch { nativeLink.hidden = true; }
       }
