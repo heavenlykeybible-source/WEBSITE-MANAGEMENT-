@@ -771,7 +771,7 @@ test('repeated close and error callbacks notify host only once',async()=>{
 test('broadcast studio preserves sharp camera output and fails safely on background errors',()=>{
  const page=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
  assert.match(page,/limit=\$\('lite'\)\.checked\?720:1280/,'normal mode must use a higher-resolution segmentation canvas');
- assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\)return/,'disabled segmentation must not keep processing the camera');
+ assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\|\|!r\?\.image\|\|!r\.segmentationMask\)return/,'disabled or invalid segmentation must not keep processing the camera');
  assert.match(page,/s\.oc=null;s\.segReady=false;ui\(\);msg\('Original camera restored/,'disabling backgrounds restores the unprocessed camera');
  assert.match(page,/t\.img\.onerror=\(\)=>\{if\(request===bgPick&&SC\.includes\(scene\)\)msg\('This studio background could not be loaded/,'only the active background load may report an error');
  for(const ratio of ['Landscape (16:9)','Portrait (9:16, phones)','Square (1:1)'])assert.ok(page.includes(ratio));
@@ -993,4 +993,11 @@ test('failed studio background loading does not replace the last confirmed selec
  assert.match(html,/function setBg\(i\)\{const t=T\[i\];if\(!t\)return;const request=\+\+bgPick,scene=SC\[ed\(\)\]/);
  assert.match(html,/const go=\(\)=>\{if\(request!==bgPick\|\|!SC\.includes\(scene\)\)return;curBg=i;bgImg=/);
  assert.doesNotMatch(html,/function setBg\(i\)\{const t=T\[i\];if\(!t\)return;curBg=i;/);
+});
+
+test('malformed segmentation frames leave original presenter camera visible',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/!r\?\.image\|\|!r\.segmentationMask/,'missing image or segmentation mask must not be drawn');
+ assert.match(html,/!Number\.isFinite\(iw\)\|\|!Number\.isFinite\(ih\)\|\|iw<1\|\|ih<1/,'invalid camera dimensions must be ignored');
+ assert.match(html,/else if\(s\.blur&&s\.oc&&s\.segReady\)/,'raw presenter video remains available before a valid composite');
 });
