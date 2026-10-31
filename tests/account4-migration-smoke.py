@@ -37,6 +37,12 @@ rejected("UPDATE account4_import_release_attestations SET scanned_sha256=? WHERE
 rejected("UPDATE account4_import_release_attestations SET approved_sha256=? WHERE session_id=?", ("short",ident))
 rejected("UPDATE account4_import_release_attestations SET approved_by=NULL WHERE session_id=?", (ident,))
 rejected("UPDATE account4_import_release_attestations SET size_bytes=? WHERE session_id=?", (0,ident))
+rejected("UPDATE account4_import_release_attestations SET verdict=? WHERE session_id=?", ("malicious",ident))
+rejected("UPDATE account4_import_release_attestations SET scanned_sha256=? WHERE session_id=?", ("b"*64,ident))
+rejected("UPDATE account4_import_release_attestations SET approved_at=? WHERE session_id=?", ("2026-10-31T10:00:00Z",ident))
+rejected("UPDATE account4_import_release_attestations SET scanned_at=NULL WHERE session_id=?", (ident,))
+rejected("UPDATE account4_import_release_attestations SET scanned_version=NULL WHERE session_id=?", (ident,))
+
 db.execute("DELETE FROM account4_import_sessions WHERE id=?", (ident,))
 assert db.execute("SELECT COUNT(*) FROM account4_import_release_attestations").fetchone()[0] == 0
 assert db.execute("PRAGMA foreign_key_check").fetchall() == []
