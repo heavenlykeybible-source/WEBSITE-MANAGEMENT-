@@ -1,6 +1,7 @@
 import { originalAssistantInstruction } from './assistant-profile';
 import { contactTargetForMinistryMessage } from './human-handover';
 import { operatorMutationOriginAllowed } from './operator-origin';
+import { administratorTokenMatches } from './admin-auth';
 interface Env { DB: D1Database; MEDIA_BUCKET?: R2Bucket; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
@@ -94,7 +95,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
  if(env.ADMIN_TOKEN.length<32||env.ADMIN_TOKEN.length>512||/\s/.test(env.ADMIN_TOKEN))return reply({error:'Operator authentication secret must be a strong, whitespace-free token of 32–512 characters; rotate ADMIN_TOKEN in Cloudflare secrets before activation'},503);
  const provided=req.headers.get('authorization')||'';
- if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
+ if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN))return reply({error:'Unauthorized'},401);
  // Browser-origin validation is an extra boundary for state-changing operator actions.
  // Service-to-service clients without an Origin header still require authorization.
  if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))return reply({error:'Cross-origin operator mutations are forbidden'},403);
