@@ -38,7 +38,7 @@ async function loadDailyDrafts(){const date=previewDate||lagosDayKey(),token=++d
    const approvalResponse=await fetch('./strength-publication-status.json',{cache:'no-store',credentials:'omit'});
    if(approvalResponse.ok){
     const approval=await approvalResponse.json();
-    published=approval?.schemaVersion===1&&approval?.publicationStatus==='published'&&Array.isArray(approval.publishedBatchFiles)&&approval.publishedBatchFiles.includes(batch[2]);
+    published=approval?.schemaVersion===1&&approval?.publicationStatus==='published'&&Array.isArray(approval.publishedBatchFiles)&&approval.publishedBatchFiles.length<=24&&approval.publishedBatchFiles.every(name=>typeof name==='string'&&name.length<=100)&&approval.publishedBatchFiles.includes(batch[2]);
    }
   }catch{}
  }
