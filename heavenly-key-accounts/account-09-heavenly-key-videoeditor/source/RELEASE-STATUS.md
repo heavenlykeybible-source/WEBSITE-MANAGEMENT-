@@ -52,3 +52,24 @@ No deployment was attempted and no production database, bucket, binding, credent
 - Natural-language AI video editing, text-to-video and voice cloning are not implemented; the editing assistant uses local keyword commands.
 - Automated captions use Workers AI Whisper; this has NOT been verified with a live Cloudflare binding.
 - No actual Cloudflare deployment, production Account 9 Owner/Admin logins or real media export tests have been verified in this release.
+
+
+---
+
+# Verification update — 31 October 2026
+
+Latest source-level work:
+- Fixed a duplicate top-level declaration in `tests/be.mjs` that prevented the backend test module from compiling.
+- Changed the external AI gateway daily attempt reservation to an atomic 30-call limit and aligned its regression fixture.
+- Expanded `scripts/preflight.mjs` to syntax-check the backend and all test modules.
+- Previous source commits also moved inline JavaScript/CSS to same-origin files, enforced strict no-inline CSP, and added those assets to offline caching.
+
+Verification boundary:
+- GitHub source files and commit history were inspected.
+- Static source consistency and syntax-oriented checks were inspected at source level.
+- **The complete `npm run check` was not executed for this latest state.**
+- No current CI status was available for the latest commit.
+- No Cloudflare deployment, real D1/R2/AI smoke test, or live mobile/browser test was performed in this review.
+- Malware scanning remains absent and is a release blocker.
+
+**Release decision: NOT launch-certified.** Do not publish a global launch claim until the blockers in `AUDIT.md` have been completed and recorded with evidence. No deployment was made.
