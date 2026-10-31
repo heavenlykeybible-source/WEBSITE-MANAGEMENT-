@@ -615,3 +615,13 @@ test('launch diagnostics explicitly block shared-owner authentication without MF
   assert.match(source,/table_auth_rate_limits/);
   assert.match(source,/table_operator_credentials/);
 });
+
+
+test('Account 10 dashboard uses an external same-origin application script with strict CSP', () => {
+ const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
+ assert.match(html,/<script src="\/app\.js" defer><\/script>/);
+ assert.doesNotMatch(html,/<script\b(?![^>]*\bsrc=)[^>]*>/i);
+ assert.match(source,/script-src 'self'; script-src-attr 'none'/);
+ assert.match(source,/default-src 'self'; base-uri 'self'; object-src 'none'/);
+ assert.match(source,/frame-ancestors 'none'/);
+});
