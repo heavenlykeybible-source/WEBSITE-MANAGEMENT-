@@ -72,6 +72,7 @@ for(const [name,headers] of [['voice',voiceHeaders],['media',mediaHeaders]]){
 
 
 if ((apiSource.match(/match\(\/\(\?:\^\|;\\s\*\)hk=/g)||[]).length!==2 || !apiSource.includes('(?=;|$)/)')) throw Error('Exact session cookie boundary enforcement missing');
+if (!apiSource.includes('iterations = 600000') || !apiSource.includes('password_iterations=600000') || !apiSource.includes('u?.password_iterations || 100000')) throw Error('Password hash strength and legacy upgrade missing');
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gateway_attempt'") || !apiSource.includes("AND at>?) < 30") || !apiSource.includes("if (!reserved.meta.changes)")) throw Error('Atomic external AI gateway daily quota safeguard missing');
 for (const [name, limit] of [['ai_tools_attempt',30],['transcribe_attempt',120]]) {
   if (!apiSource.includes("'"+name+"'") || !apiSource.includes("at>?) < "+limit) || !apiSource.includes('meta.changes')) throw Error('Atomic AI resource quota missing: '+name);
