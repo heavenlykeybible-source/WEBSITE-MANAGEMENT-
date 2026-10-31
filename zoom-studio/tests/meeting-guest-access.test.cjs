@@ -557,3 +557,13 @@ test('closed host socket cannot be activated after asynchronous token check',asy
  assert.notEqual(ws.attachment.role,'host');
  assert.equal(h.r.host(),undefined);
 });
+
+test('host authentication verifier failure closes socket safely',async()=>{
+ const h=setup();h.host.close();
+ const ws=h.add();
+ h.context.check=async()=>{throw new Error('Temporary verifier failure');};
+ await h.r.webSocketMessage(ws,JSON.stringify({t:'host',token:'valid-host'}));
+ assert.notEqual(ws.readyState,1);
+ assert.notEqual(ws.attachment.role,'host');
+ assert.ok(ws.messages.some(m=>m.t==='error'));
+});
