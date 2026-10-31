@@ -97,3 +97,13 @@ test('preflight rejects duplicate critical asset keys', () => {
  assert.match(source,/matches\.length!==1/);
  assert.match(source,/Assets section must declare/);
 });
+
+
+test('Account 10 strict script CSP has a same-origin external dashboard bundle', () => {
+ const html=readFileSync(resolve(root,'public','index.html'),'utf8');
+ const worker=readFileSync(resolve(root,'src','index.ts'),'utf8');
+ assert.ok(existsSync(resolve(root,'public','app.js')));
+ assert.match(html,/<script src="\/app\.js" defer><\/script>/);
+ assert.doesNotMatch(html,/<script\b(?![^>]*\bsrc=)[^>]*>/i);
+ assert.match(worker,/script-src 'self'; script-src-attr 'none'/);
+});
