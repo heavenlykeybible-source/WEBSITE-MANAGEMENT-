@@ -51,7 +51,7 @@ export class MeetingRooms {
  }
  async alarm(){
   const host=this.host(),h=host&&this.data(host),now=Date.now();
-  if(h&&h.until<=now)this.end('The meeting time has ended.');
+  if(h&&h.until<=now){this.end('The meeting time has ended.');return;}
   for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});if(d.role==='guest'&&d.stage&&!(await this.stageAllowed(d,now)))this.close(w,{t:'error',msg:'Your stage access has expired. Please sign in again.'});}
   if(this.sockets().length)await this.state.storage.setAlarm(now+60000);
  }
