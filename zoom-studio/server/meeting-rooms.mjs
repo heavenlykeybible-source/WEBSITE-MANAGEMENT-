@@ -98,7 +98,11 @@ export class MeetingRooms {
     if(guests.length>=capacityForRoom(this.env)-1||guests.filter(w=>this.data(w).aud===aud).length>=(aud?Math.max(1,capacityForRoom(this.env)-1):Math.min(20,capacityForRoom(this.env)-1)))return this.close(ws,{t:'error',msg:'This room is full.'});
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),identity,ok:aud,aud,stage:false,invited:false,ao:!!m.ao,last:0});
     if(!aud&&d.pass&&!guests.some(w=>{const x=this.data(w);return x.pass===d.pass&&x.stage;})&&h.admitted.some(a=>a&&a.pass===d.pass&&a.email===d.identity.email)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<capacityForStage(this.env)){d.ok=true;d.stage=true;}
-    this.save(ws,d);this.send(ws,{t:'welcome',ice:await meetingICE(this.env,d.room),watch:h.watch,chat:h.audChat,slow:h.slow,stageEligible:!!identity,audience:aud});
+    this.save(ws,d);const ice=await meetingICE(this.env,d.room);
+    // TURN signing may yield: never announce a disconnected guest or ended meeting.
+    if(ws.readyState!==1||this.host()!==host)return;
+    h=this.data(host);if(h.until<=Date.now())return this.close(ws,{t:'closed',why:'The meeting has ended.'});
+    this.send(ws,{t:'welcome',ice,watch:h.watch,chat:h.audChat,slow:h.slow,stageEligible:!!identity,audience:aud});
     if(d.ok)this.send(ws,{t:'admitted'});
     if(aud)this.send(host,{t:'viewer-join',gid:d.id});
     if(d.stage)this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});
