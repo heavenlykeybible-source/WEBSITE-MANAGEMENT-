@@ -531,5 +531,11 @@ const otherAccount=db.prepare('SELECT id FROM users WHERE email=?').get('other-u
 for(let i=0;i<10;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(otherAccount,'logout_all_attempt',Date.now());
 const allDeviceThrottled=await request('logout-all',{method:'POST',cookie:secondLogin.cookie,body:{password:'separate long passphrase'}});
 check('Account session revocation confirmation throttled',allDeviceThrottled.status===429);
+const deleteTargetId=db.prepare('SELECT id FROM users WHERE email=?').get('other-user@example.com').id;
+for(let i=0;i<10;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(deleteTargetId,'account_delete_attempt',Date.now());
+const throttledDelete=await request('account',{method:'DELETE',cookie:secondLogin.cookie,body:{password:'separate long passphrase'}});
+const unchangedMember=await request('me',{cookie:secondLogin.cookie});
+check('Sensitive account deletion enforces confirmation attempt limit',throttledDelete.status===429);
+check('Blocked deletion leaves account and sessions intact',unchangedMember.status===200&&!!db.prepare('SELECT id FROM users WHERE id=?').get(deleteTargetId));
 console.log('RESULT', passed, '/', total);
 if (passed !== total) process.exitCode = 1;
