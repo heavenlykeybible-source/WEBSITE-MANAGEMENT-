@@ -1,5 +1,5 @@
-import {beginPrivateImport, uploadPrivatePart} from './account4-r2-multipart.mjs';
-import {saveImportSession, loadImportSession, recordImportPart} from './account4-import-d1.mjs';
+import {beginPrivateImport, uploadPrivatePart, completePrivateImport} from './account4-r2-multipart.mjs';
+import {saveImportSession, loadImportSession, recordImportPart, transitionImportSession} from './account4-import-d1.mjs';
 
 // Staging-only orchestration. Never exposes objects publicly or deploys code.
 // The durable D1 record must exist before the session identifier is returned.
@@ -28,4 +28,23 @@ export async function uploadPersistedPrivatePart(bucket, db, actor, id, partNumb
   const receipt = await uploadPrivatePart(bucket, actor, session, partNumber, bytes);
   await recordImportPart(db, actor, id, receipt);
   return {partNumber:receipt.partNumber, stored:true};
+}
+
+// Completion uses only receipts retrieved from D1, never client-supplied ETags.
+// On a failed D1 transition, remove the newly completed private R2 object.
+export async function finishPersistedPrivateImport(bucket, db, actor, id) {
+  const session = await loadImportSession(db, actor, id);
+  const parts = Object.entries(session.parts).map(([partNumber,etag]) => ({partNumber:Number(partNumber),etag}));
+  const completed = await completePrivateImport(bucket, actor, session, parts);
+  try {
+    await transitionImportSession(db, actor, id, 'uploading', 'private-awaiting-review');
+  } catch (error) {
+    try {
+      await bucket.delete(session.key);
+    } catch (cleanupError) {
+      throw new AggregateError([error,cleanupError], 'D1 transition failed and R2 cleanup failed');
+    }
+    throw error;
+  }
+  return {id, size:completed.size, state:'private-awaiting-review'};
 }
