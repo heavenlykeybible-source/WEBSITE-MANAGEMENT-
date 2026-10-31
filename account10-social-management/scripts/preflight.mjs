@@ -13,6 +13,7 @@ const fail=[];
 const requireMatch=(name,re)=>{if(!re.test(config))fail.push(name)};
 requireMatch('Expected Worker identity',/^name\s*=\s*"heavenly-key-social-management"\s*$/m);
 requireMatch('Worker entry point',/^main\s*=\s*"src\/index\.ts"/m);
+requireMatch('Private Worker source-map upload',/^upload_source_maps\s*=\s*true\s*$/m);
 requireMatch('Static assets directory',/^directory\s*=\s*"\.\/public"/m);
 requireMatch('ASSETS binding',/^binding\s*=\s*"ASSETS"/m);
 requireMatch('D1 binding',/^binding\s*=\s*"DB"/m);
