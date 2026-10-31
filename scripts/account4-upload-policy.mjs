@@ -4,7 +4,10 @@ export const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
 export const PART_BYTES = 10 * 1024 * 1024;
 const SAFE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._ -]{0,199}$/;
 const BLOCKED_EXT = /\.(?:exe|dll|bat|cmd|ps1|sh|php|jsp|aspx|cgi|env|pem|key)$/i;
-export function validateImportMetadata({name, size}, actor) {
+export function validateImportMetadata(file, actor) {
+  if (!file || typeof file !== 'object' || Array.isArray(file))
+    throw new Error('Valid import metadata required');
+  const {name, size} = file;
   if (!actor || actor.authenticated !== true || actor.canImport !== true ||
       !Number.isSafeInteger(actor.id) || actor.id <= 0)
     throw new Error('Authenticated import permission required');
