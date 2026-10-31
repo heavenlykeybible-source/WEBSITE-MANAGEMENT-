@@ -15,4 +15,103 @@ async function verificationPanel(mount){if(!own())return;try{var data=await api(
  ['recheck','decline'].forEach(function(action){card.appendChild(h('button',{class:action==='decline'?'bad':'sm',onclick:async function(){this.disabled=true;try{var result=await api('verification/resolve','POST',{id:r.id,action:action});card.innerHTML='';card.appendChild(h('p',{},result.notice));}catch(e){status.textContent=e.message;}finally{this.disabled=false;}}},action==='decline'?'Decline':'Recheck saved connection'));});card.appendChild(status);mount.appendChild(card);});}catch(e){mount.textContent='Verification status could not be loaded: '+e.message;}}
 async function verificationCenter(){var mount=h('div');show(nav(),h('h3',{},'Provider verification'),h('p',{},'Routine operations use your saved API connections. Provider sign-ins, CAPTCHA and email challenges must be completed on the provider’s own page. Completing this panel never grants AI access automatically.'),mount,h('button',{class:'sm',onclick:function(){verificationPanel(mount);}},'Refresh'),h('button',{class:'sm',onclick:nativeImports},'Import from repository or phone'));await verificationPanel(mount);}
 
-async function accessRequestCenter(){try{var data=await api('ai/access-requests'),box=h('main',{class:'card'}),target=new URLSearchParams(location.search).get('review_access');show(nav(),h('h3',{},'AI account authorization'),box);var requests=data.requests.filter(function(r){return !target||r.id===target;});if(!requests.length)box.appendChild(h('p',{},'No active request. It may have expired or already been decided.'));requests.forEach(function(r){var all=h('input',{type:'checkbox'}),status=h('p',{role:'status'}),card=h('section',{class:'card'},h('h4',{},r.reason),h('p',{},r.accounts.map(function(c){return c.label;}).join(', ')+' · '+r.hours+' hours'),h('label',{},all,document.createTextNode('Apply this access to all enabled staff AI connections')),h('p',{},'Permission covers work preparation and Worker status checks. Each publication still requires review.'));['approve','decline'].forEach(function(decision){card.appendChild(h('button',{class:decision==='decline'?'bad':'',onclick:async function(){this.disabled=true;try{var proof=decision==='approve'?await passwordDialog('Authorize selected AI accounts'):undefined;if(decision==='approve'&&!proof)return;await api('ai/access-requests/decide','POST',{id:r.id,decision:decision,password:proof,all_agents:all.checked});card.textContent=decision==='approve'?'Authorized. Return to your AI conversation and continue.':'Declined. No access granted.';}catch(e){status.textContent=e.message;}finally{this.disabled=false;}}},decision==='approve'?'Approve access':'Decline'));});card.appendChild(status);box.appendChild(card);});}catch(e){oops(e);}}
+var AI_APPROVAL_PROOF=null,AI_APPROVAL_EXPIRES=0;
+async function smartAIApproval(){
+ if(AI_APPROVAL_PROOF&&Date.now()+15000<AI_APPROVAL_EXPIRES)return AI_APPROVAL_PROOF;
+ AI_APPROVAL_PROOF=null;AI_APPROVAL_EXPIRES=0;
+ var proof=null;
+ if(typeof verifyOwnerDevice==='function'&&window.isSecureContext&&navigator.credentials){
+  try{proof=await verifyOwnerDevice();}catch(e){
+   if(e.name==='NotAllowedError')return null;
+   // If no passkey is registered, the owner can use their password.
+  }
+ }
+ if(!proof)proof=await passwordDialog('Verify once to authorize AI accounts for 10 minutes');
+ if(!proof)return null;
+ var session=await api('approval-session','POST',{password:proof});
+ if(!session.proof||!(session.expires>Date.now()))throw Error('Owner verification was not confirmed');
+ AI_APPROVAL_PROOF=session.proof;AI_APPROVAL_EXPIRES=session.expires;
+ return AI_APPROVAL_PROOF;
+}
+async function endSmartAIApproval(){
+ var proof=AI_APPROVAL_PROOF;
+ AI_APPROVAL_PROOF=null;AI_APPROVAL_EXPIRES=0;
+ if(!proof)return {ok:true,ended:true,message:'No quick-approval session is active in this tab.'};
+ try{return await api('approval-session/end','POST',{proof:proof});}
+ catch(e){throw Error('Local approval token cleared. Server revocation was not confirmed: '+e.message);}
+}
+async function accessRequestCenter(){try{
+ var data=await api('ai/access-requests'),box=h('main',{class:'card'}),target=new URLSearchParams(location.search).get('review_access');
+ show(nav(),h('h3',{},'AI account authorization'),h('p',{},'Verify your identity once for a short approval session. Every requested account still needs your explicit approval; AIs can never approve themselves.'),box);
+ var requests=data.requests.filter(function(r){return !target||r.id===target;});
+ if(!requests.length)box.appendChild(h('p',{role:'status'},'No active request. It may have expired or already been decided.'));
+ requests.forEach(function(r){
+  var all=h('input',{type:'checkbox'}),status=h('p',{role:'status','aria-live':'polite'}),card=h('section',{class:'card'},h('h4',{},r.reason),h('p',{},r.accounts.map(function(c){return c.label;}).join(', ')+' · '+r.hours+' hours'),h('label',{},all,document.createTextNode('Apply this access to all enabled staff AI connections')),h('p',{},'This authorizes preparation and Worker status checks for the listed accounts. Every production release still needs separate review.'));
+  ['approve','decline'].forEach(function(decision){
+   card.appendChild(h('button',{class:decision==='decline'?'bad':'',onclick:async function(){
+    this.disabled=true;
+    try{
+     var proof=decision==='approve'?await smartAIApproval():null;
+     if(decision==='approve'&&!proof){status.textContent='Verification cancelled. No AI permissions were granted.';return;}
+     var result=await api('ai/access-requests/decide','POST',{id:r.id,decision:decision,approval_proof:proof,all_agents:all.checked});
+     card.innerHTML='';
+     var success=h('p',{role:'status','aria-live':'polite',style:'font-weight:700;color:'+ (decision==='approve'?'#0a7543':'#8a3a2d')},result.message|| (decision==='approve'?'AI access successfully authorized.':'AI access declined.'));
+     card.appendChild(success);
+     if(decision==='approve'){
+      card.appendChild(h('p',{},'Approved accounts: '+(result.accounts||r.accounts).map(function(c){return c.label;}).join(', ')));
+      if(result.expires_at)card.appendChild(h('p',{},'Access expires: '+lagosTime(result.expires_at)));
+      card.appendChild(h('p',{},'Return to your AI conversation. Production publication still requires human approval.'));
+     }
+    }catch(e){
+     if(/approval session expired|session expired|session.*revoked/i.test(e.message||'')){AI_APPROVAL_PROOF=null;AI_APPROVAL_EXPIRES=0;}
+     status.textContent=e.message;
+    }finally{this.disabled=false;}
+   }},decision==='approve'?'Approve access':'Decline'));
+  });
+  card.appendChild(status);box.appendChild(card);
+ });
+}catch(e){oops(e);}}
+
+
+async function studioTaskBoard(){
+ try{
+  var data=await Promise.all([api('agents'),api('connections'),api('studio/tasks')]);
+  var agents=data[0].agents.filter(function(a){return a.status==='active'&&a.can_read&&a.can_propose&&!a.site_id&&!a.owner_id;});
+  var accounts=data[1].connections,chosen=new Set();
+  var account=h('select',{'aria-label':'Target Cloudflare account'}),worker=h('input',{'aria-label':'Worker name',placeholder:'Existing Worker name'}),
+   goal=h('textarea',{'aria-label':'Assignment instructions',rows:4,placeholder:'Describe the change the AI should prepare'}),
+   selections=h('div'),status=h('p',{role:'status','aria-live':'polite'}),tasks=h('div');
+  accounts.forEach(function(c){account.appendChild(h('option',{value:c.id},c.label));});
+  agents.forEach(function(a){
+   var check=h('input',{type:'checkbox','aria-label':'Assign '+a.name});
+   check.onchange=function(){if(check.checked)chosen.add(a.id);else chosen.delete(a.id);};
+   selections.appendChild(h('label',{class:'card'},check,document.createTextNode(' '+a.name)));
+  });
+  async function refresh(page){
+   page=page||0;
+   var d=await api('studio/tasks?page='+page);
+   if(page===0)tasks.innerHTML='';
+   d.tasks.forEach(function(t){
+    var card=h('section',{class:'card'},h('b',{},t.agent_name+' · '+t.worker),h('p',{},t.instruction),h('p',{role:'status'},t.status+' · '+lagosTime(t.updated_at)));
+    if(t.progress)card.appendChild(h('p',{},'Progress: '+t.progress));
+    if(t.proposal_id)card.appendChild(h('button',{onclick:function(){openP(t.proposal_id);}},'Review proposal #'+t.proposal_id));
+    if(t.status==='assigned')card.appendChild(h('button',{class:'bad',onclick:async function(){try{await api('studio/tasks/'+t.id+'/cancel','POST',{});await refresh();}catch(e){status.textContent=e.message;}}},'Cancel task'));
+    tasks.appendChild(card);
+   });
+   if(page===0&&!d.tasks.length)tasks.appendChild(h('p',{},'No AI assignments yet.'));
+   if(d.next_page!==null&&d.next_page!==undefined){
+    var more=h('button',{class:'sm',onclick:async function(){this.disabled=true;this.remove();try{await refresh(d.next_page);}catch(e){status.textContent=e.message;}}},'Load older AI assignments');
+    tasks.appendChild(more);
+   }
+  }
+  var submit=h('button',{onclick:async function(){
+   this.disabled=true;try{
+    var response=await api('studio/tasks','POST',{connection:+account.value,worker:worker.value.trim(),instruction:goal.value.trim(),agents:Array.from(chosen)});
+    status.textContent='Assignments saved successfully: '+response.assigned+' AI tasks. Each AI can inspect its own assignment; no production release occurred.';
+    await refresh();
+   }catch(e){status.textContent=e.message;}finally{this.disabled=false;}
+  }},'Assign selected AIs');
+  show(nav(),h('h3',{},'Parallel AI Worker Studio'),h('p',{},'Give multiple AIs separate assignments at the same time. Submit more batches as needed. Each AI submits its completed code to Waiting Room; only the owner may approve a release.'),h('section',{class:'card'},h('label',{},'Cloudflare account'),account,h('label',{},'Worker to repair'),worker,h('label',{},'Task instructions'),goal,h('h4',{},'Choose assistants'),selections,submit,status),h('h3',{},'Assignments'),tasks);
+  await refresh();
+ }catch(e){oops(e);}
+}

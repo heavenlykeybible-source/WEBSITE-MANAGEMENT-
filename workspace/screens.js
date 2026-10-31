@@ -32,7 +32,7 @@ async function controlHome(){CURRENT_NAV='Home';try{
  var d=await api('summary');
  show(nav(),h('h3',{class:'page-title'},'Control Room'),h('p',{},'Manage your websites, review AI work and monitor connected accounts.'),
  h('section',{class:'stat-grid'},h('div',{class:'stat'},h('strong',{},String(d.waiting||0)),h('span',{},'Waiting for your review'))),
- h('div',{class:'card'},h('h3',{},'Your workspace'),h('button',{onclick:claude},'Chat with AI'),h('button',{onclick:websiteScreens},'Browse website screens'),h('button',{onclick:waiting},'Review waiting work'),h('button',{onclick:releaseHistory},'Release history and recovery')),
+ h('div',{class:'card'},h('h3',{},'Your workspace'),h('button',{onclick:claude},'Chat with AI'),h('button',{onclick:studioTaskBoard},'Parallel AI assignments'),h('button',{onclick:websiteScreens},'Browse website screens'),h('button',{onclick:waiting},'Review waiting work'),h('button',{onclick:releaseHistory},'Release history and recovery')),
  h('div',{class:'card'},h('h3',{},'Connections'),h('button',{onclick:cloud},'Cloudflare accounts'),h('button',{onclick:github},'GitHub sites and backups'),h('button',{onclick:projectSources},'Google Drive project source')));
  }catch(e){oops(e);}}
 async function githubSourceBackup(site,mount){try{

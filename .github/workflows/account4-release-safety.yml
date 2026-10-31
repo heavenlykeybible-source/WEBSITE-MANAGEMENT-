@@ -1,0 +1,111 @@
+name: Account 4 release and import acceptance
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/account4-release-safety.yml'
+      - 'scripts/deploy-account4-existing.mjs'
+      - 'scripts/apply-reviewed-account4-upgrade.mjs'
+      - 'cms/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'workspace/**'
+      - 'patches/account4-reviewed-upgrade.json'
+      - 'tests/account4-release-safety-regression.mjs'
+      - 'tests/native-imports.mjs'
+      - 'tests/native-imports-browser.mjs'
+      - 'tests/account4-permission-ui.mjs'
+      - 'tests/account4-studio-menu.mjs'
+      - 'tests/domains.mjs'
+      - 'tests/ai-workspace.mjs'
+      - 'tests/browser-agent.mjs'
+      - 'cms/editor.js'
+      - 'cms/frame.js'
+      - 'tests/cms-dom.mjs'
+      - 'tests/cms-browser.mjs'
+      - 'tests/account4-unified-access.mjs'
+      - 'tests/owner-passkeys.mjs'
+      - 'browser-agent/**'
+      - 'control-room-worker.js'
+      - 'schema.sql'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'heavenly-key-accounts/account-04-website-management-control-room/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: account4-acceptance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-account4:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check syntax and release protections
+        run: |
+          node --check scripts/deploy-account4-existing.mjs
+          node --check scripts/apply-reviewed-account4-upgrade.mjs
+          node --check control-room-worker.js
+          node tests/account4-release-safety-regression.mjs
+      - name: Verify deterministic CMS build without production deployment
+        run: |
+          npm run build:cms
+          node --check control-room-worker.js
+          cp control-room-worker.js /tmp/account4-first-build.js
+          git restore --source=HEAD -- control-room-worker.js
+          npm run build:cms
+          node --check control-room-worker.js
+          cmp -s /tmp/account4-first-build.js control-room-worker.js || { echo '::error::Non-deterministic Worker build'; exit 1; }
+          if ! git diff --quiet HEAD -- control-room-worker.js; then
+            echo '::notice::Generated Worker differs from committed source. Production workflow will refuse deployment until generated Worker is reviewed and committed.'
+          fi
+      - name: Package generated Worker for owner review only
+        run: |
+          sha256sum control-room-worker.js > account4-generated-worker.sha256
+          sha256sum --check account4-generated-worker.sha256
+          printf '%s\n' "${GITHUB_SHA}" > account4-generated-from-commit.txt
+      - name: Retain generated Worker candidate (never deploy from PR)
+        uses: actions/upload-artifact@v4
+        with:
+          name: account4-generated-worker-${{ github.sha }}
+          path: |
+            control-room-worker.js
+            account4-generated-worker.sha256
+            account4-generated-from-commit.txt
+          retention-days: 7
+          if-no-files-found: error
+      - name: Test owner permissions and application imports
+        run: |
+          node tests/account4-permission-ui.mjs
+          node tests/account4-studio-menu.mjs
+          node tests/native-imports.mjs
+          node tests/domains.mjs
+          node tests/ai-workspace.mjs
+          node tests/browser-agent.mjs
+          node tests/worker-studio-policy.mjs
+          node tests/worker-studio-preview.mjs
+          node tests/worker-studio-ai.mjs
+          node tests/studio-tasks.mjs
+          node tests/account4-unified-access.mjs
+          node tests/owner-passkeys.mjs
+          npm run test:cms-dom
+      - name: Install isolated browser for real preview tests
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test imported website as interactive mobile preview
+        run: |
+          node tests/native-imports-browser.mjs
+          npm run test:cms-browser

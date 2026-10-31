@@ -27,12 +27,13 @@ async function aiWorkspaceRoutes(req,env,user,sub,m){
   const b=await body(req);if(!/^[a-f0-9-]{36}$/.test(String(b.id))||!['approve','decline'].includes(b.decision))fail('Choose Approve or Decline');
   return withOperationLock(env,'ai-access:'+b.id,async()=>{
    const key='ai:access-request:'+b.id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('Request not found',404);const r=JSON.parse(row.value_json);if(r.user!==user.id||r.status!=='pending'||r.expires<Date.now())fail('This request expired or was already decided.',409);
+   let policyExpires=null;
    if(b.decision==='approve'){
-    await reauthenticate(env,user,b.password);const old=await aiPolicy(env,user);const connections=[...new Set([...(old.expires_at>Date.now()?old.connections:[]),...r.connections])];for(const id of connections)await connById(env,id);
+    if(b.approval_proof){await checkOwnerApprovalSession(env,user,b.approval_proof);}else{await reauthenticate(env,user,b.password);}const old=await aiPolicy(env,user);const connections=[...new Set([...(old.expires_at>Date.now()?old.connections:[]),...r.connections])];for(const id of connections)await connById(env,id);
     const policy={...old,mode:'work',connections,all_agents:b.all_agents===true||old.all_agents===true,expires_at:Math.max(old.expires_at||0,Date.now()+r.hours*3600000)};
-    await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind('ai:permissions:'+user.id,JSON.stringify(policy)).run();
+    await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind('ai:permissions:'+user.id,JSON.stringify(policy)).run();policyExpires=policy.expires_at;
    }
-   r.status=b.decision;r.decided_at=Date.now();await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(r),key).run();await audit(env,user.username,'ai-access-'+b.decision,r.accounts.map(c=>c.label).join(', '));return json({ok:true,decision:b.decision});
+   r.status=b.decision;r.decided_at=Date.now();await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(r),key).run();await audit(env,user.username,'ai-access-'+b.decision,r.accounts.map(c=>c.label).join(', '));return json({ok:true,decision:b.decision,accounts:r.accounts.map(c=>({id:c.id,label:c.label})),expires_at:b.decision==='approve'?policyExpires:undefined,message:b.decision==='approve'?'AI access successfully authorized for the selected accounts. Publication still requires owner review.':'AI access declined. No permissions were granted.'});
   });
  }
  fail('Method not allowed',405);
