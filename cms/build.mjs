@@ -35,20 +35,26 @@ if(!worker.includes(studioRoute)){
  if(worker.split(nativeDispatch).length!==2)throw Error('Refusing build: owner AI-workspace dispatch missing');
  worker=worker.replace(nativeDispatch,studioRoute+'\n  '+nativeDispatch);
 }
-const studioToolDispatch="if(name==='my_studio_assignments'||name==='submit_studio_assignment')return studioAITask(env,actor,name,args);";
+const studioToolDispatch="if(['my_studio_assignments','claim_studio_assignment','update_studio_progress','submit_studio_assignment'].includes(name))return studioAITask(env,actor,name,args);";
 const toolCallAnchor="if(name==='inspect_heavenlykey_domains')return inspectDomainsTool(env,actor,args);";
 if(!worker.includes(studioToolDispatch)){
- if(worker.split(toolCallAnchor).length!==2)throw Error('Refusing build: MCP/AI tool dispatch missing');
- worker=worker.replace(toolCallAnchor,studioToolDispatch+'\n  '+toolCallAnchor);
+ const oldDispatch="if(name==='my_studio_assignments'||name==='submit_studio_assignment')return studioAITask(env,actor,name,args);";
+ if(worker.includes(oldDispatch))worker=worker.replace(oldDispatch,studioToolDispatch);
+ else{
+  if(worker.split(toolCallAnchor).length!==2)throw Error('Refusing build: MCP/AI tool dispatch missing');
+  worker=worker.replace(toolCallAnchor,studioToolDispatch+'\n  '+toolCallAnchor);
+ }
 }
 const studioToolDefs=[
  {name:'my_studio_assignments',description:'List my independently assigned AI Worker Studio tasks, with page starting at 0. Read-only; no production change.',inputSchema:{type:'object',properties:{page:{type:'integer',minimum:0}},additionalProperties:false}},
+ {name:'claim_studio_assignment',description:'Explicitly start working on my assignment without launching production operations.',inputSchema:{type:'object',properties:{task_id:{type:'string'}},required:['task_id'],additionalProperties:false}},
+ {name:'update_studio_progress',description:'Record a brief progress update on my claimed task for the owner dashboard.',inputSchema:{type:'object',properties:{task_id:{type:'string'},progress:{type:'string',maxLength:600}},required:['task_id','progress'],additionalProperties:false}},
  {name:'submit_studio_assignment',description:'Link my completed task to my exact existing waiting Worker proposal. Owner review and approval remain necessary.',inputSchema:{type:'object',properties:{task_id:{type:'string'},proposal_id:{type:'integer'}},required:['task_id','proposal_id'],additionalProperties:false}}
 ];
 const defsAnchor='const TOOLS = [';
-if(!/\bname\s*:\s*['\"]my_studio_assignments['\"]|\"name\"\s*:\s*\"my_studio_assignments\"/.test(worker)){
+if(!/"name"\s*:\s*"claim_studio_assignment"|name\s*:\s*'claim_studio_assignment'/.test(worker)){
  if(worker.split(defsAnchor).length!==2)throw Error('Refusing build: core MCP tools list missing');
- worker=worker.replace(defsAnchor,defsAnchor+'\n  '+studioToolDefs.map(x=>JSON.stringify(x)).join(',\n  ')+',');
+ worker=worker.replace(defsAnchor,defsAnchor+'\n  '+studioToolDefs.filter(x=>x.name==='claim_studio_assignment'||x.name==='update_studio_progress').map(x=>JSON.stringify(x)).join(',\n  ')+',');
 }
 const nativeClient='// BEGIN NATIVE WORKSPACE CLIENT\n'+(fs.readFileSync(new URL('../workspace/client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/browser-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END NATIVE WORKSPACE CLIENT';
 if(worker.includes('// BEGIN NATIVE WORKSPACE CLIENT'))worker=worker.replace(/\/\/ BEGIN NATIVE WORKSPACE CLIENT[\s\S]*?\/\/ END NATIVE WORKSPACE CLIENT/,()=>nativeClient);
