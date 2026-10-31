@@ -30,8 +30,10 @@ export async function uploadPersistedPrivatePart(bucket, db, actor, id, partNumb
   return {partNumber:receipt.partNumber, stored:true};
 }
 
-// Completion uses only receipts retrieved from D1, never client-supplied ETags.
-// On a failed D1 transition, remove the newly completed private R2 object.
+// Completion uses only server-persisted receipts, never client-supplied ETags.
+// A failed D1 transition has an ambiguous outcome: it may have committed while
+// the response was lost. Do NOT delete the private object; another concurrent
+// completion may already have transitioned it to review. Reconcile server-side.
 export async function finishPersistedPrivateImport(bucket, db, actor, id) {
   const session = await loadImportSession(db, actor, id);
   const parts = Object.entries(session.parts).map(([partNumber,etag]) => ({partNumber:Number(partNumber),etag}));
@@ -39,12 +41,7 @@ export async function finishPersistedPrivateImport(bucket, db, actor, id) {
   try {
     await transitionImportSession(db, actor, id, 'uploading', 'private-awaiting-review');
   } catch (error) {
-    try {
-      await bucket.delete(session.key);
-    } catch (cleanupError) {
-      throw new AggregateError([error,cleanupError], 'D1 transition failed and R2 cleanup failed');
-    }
-    throw error;
+    throw new Error('Private import completion requires operator reconciliation; object was not deleted', {cause:error});
   }
   return {id, size:completed.size, state:'private-awaiting-review'};
 }
