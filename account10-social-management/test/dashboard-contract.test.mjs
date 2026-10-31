@@ -236,3 +236,7 @@ test('WhatsApp send guard checks owner role and duplicate submission both before
  assert.match(html, /const currentConversation=conversationId;if\(send\.disabled\|\|operatorAccessRole!=='owner'\|\|selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return/);
  assert.match(html, /if\(operatorAccessRole!=='owner'\|\|selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return;send\.disabled=true;try/);
 });
+
+test('WhatsApp send confirmation cannot repaint another chat after asynchronous refresh', () => {
+ assert.match(html, /if\(selected===currentConversation&&authEpoch===sessionEpoch\)\{await openChat\(currentConversation\);if\(selected===currentConversation&&authEpoch===sessionEpoch\)status\(result\.sent\?/);
+});
