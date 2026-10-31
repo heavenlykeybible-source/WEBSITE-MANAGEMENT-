@@ -27,6 +27,10 @@ for(const [field,value] of Object.entries({
 }
 for(const invalid of [{scanned_at:'nonsense'},{approved_at:'nonsense'},
  {approved_at:'2026-10-31T10:00:00Z'},
+ {scanned_at:'2026-10-31T11:00:00+00:00'},
+ {approved_at:'2026-10-31 12:00:00'},
+ {scanned_at:'2099-01-01T00:00:00Z'},
+ {approved_at:'2099-01-01T00:00:00Z'},
  {scanned_sha256:'A'.repeat(64)},{approved_sha256:'b'.repeat(64)}]) {
  row={...good,...invalid}; await assert.rejects(check(),/not cleared/);
 }
