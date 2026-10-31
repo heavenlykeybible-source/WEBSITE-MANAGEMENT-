@@ -4,6 +4,7 @@ export const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
 export const PART_BYTES = 10 * 1024 * 1024;
 const SAFE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._ -]{0,199}$/;
 const BLOCKED_EXT = /\.(?:exe|dll|bat|cmd|ps1|sh|php|phtml|phar|jsp|jspx|aspx|asp|cgi|env|pem|key)(?:\.|$)/i;
+const ALLOWED_EXT = /\.(?:zip|html|htm|css|js|mjs|json|png|jpg|jpeg|webp|txt|md|pdf)$/i;
 const WINDOWS_RESERVED = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 export function validateImportMetadata(file, actor) {
   if (!file || typeof file !== 'object' || Array.isArray(file))
@@ -13,7 +14,7 @@ export function validateImportMetadata(file, actor) {
       !Number.isSafeInteger(actor.id) || actor.id <= 0)
     throw new Error('Authenticated import permission required');
   if (typeof name !== 'string' || !SAFE_NAME.test(name) || name === '.' || name === '..' ||
-      name.includes('..') || /[. ]$/.test(name) || WINDOWS_RESERVED.test(name) || BLOCKED_EXT.test(name))
+      name.includes('..') || /[. ]$/.test(name) || WINDOWS_RESERVED.test(name) || BLOCKED_EXT.test(name) || !ALLOWED_EXT.test(name))
     throw new Error('Invalid or disallowed file name');
   if (!Number.isSafeInteger(size) || size < 1 || size > MAX_UPLOAD_BYTES)
     throw new Error('File size outside 1 GiB limit');
