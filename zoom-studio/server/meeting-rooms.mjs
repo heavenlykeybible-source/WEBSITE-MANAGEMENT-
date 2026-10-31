@@ -103,6 +103,8 @@ export class MeetingRooms {
     if(ws.readyState!==1||this.host()!==host)return;
     h=this.data(host);if(h.until<=Date.now())return this.close(ws,{t:'closed',why:'The meeting has ended.'});
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
+    // A verified stage credential may expire while TURN signing is pending.
+    if(d.identity&&(!Number.isFinite(d.identity.expires)||d.identity.expires<=Date.now()))return this.close(ws,{t:'error',msg:'Your meeting access expired. Please sign in and rejoin.'});
     this.send(ws,{t:'welcome',ice,watch:h.watch,chat:h.audChat,slow:h.slow,stageEligible:!!identity,audience:aud});
     if(d.ok)this.send(ws,{t:'admitted'});
     if(aud)this.send(host,{t:'viewer-join',gid:d.id});
