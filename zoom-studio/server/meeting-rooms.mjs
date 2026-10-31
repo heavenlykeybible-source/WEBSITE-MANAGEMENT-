@@ -50,6 +50,8 @@ export class MeetingRooms {
   // Reclaim capacity from previous host generations before applying the socket cap.
   const active=this.host(),activeKey=active&&this.data(active).key;
   if(activeKey)for(const guest of this.guests())if(this.data(guest).session!==activeKey)this.close(guest,{t:'closed',why:'The previous meeting has ended.'});
+  // Orphaned guests must not occupy connection capacity after their host disconnects.
+  if(!activeKey)for(const guest of this.guests())this.close(guest,{t:'closed',why:'The host is no longer connected.'});
   // Expired unauthenticated handshakes should not block legitimate visitors while waiting for the next alarm.
   const now=Date.now();
   for(const ws of this.sockets()){
