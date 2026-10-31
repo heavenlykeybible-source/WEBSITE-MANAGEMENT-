@@ -1,0 +1,16 @@
+name = "heavenlykey-videoeditor-media-cleanup"
+main = "scripts/media-cleanup-worker.mjs"
+compatibility_date = "2026-01-01"
+
+# Independent Worker deployment; do not deploy without owner approval.
+[triggers]
+crons = [ "0 */6 * * *" ]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "heavenly-key-videoeditor-db"
+database_id = "37d1fd6a-4424-4cca-a757-ea347098a758"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "heavenly-key-videoeditor-media"
