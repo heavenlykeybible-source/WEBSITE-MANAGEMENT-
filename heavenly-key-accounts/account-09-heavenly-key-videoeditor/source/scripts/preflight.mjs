@@ -9,6 +9,7 @@ if(!deployHeaders.includes("manifest-src 'self'")) throw Error('Manifest source 
 
 for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 const apiSource=readFileSync('functions/api/[[path]].js','utf8');
+if(!apiSource.includes(".replace(/^[.\\- ]+/, '').replace(/\\.{2,}/g, '.')"))throw Error('Uploaded filename normalization missing');
 // Binary API responses bypass the JSON response helper; require their own isolation headers.
 for(const header of ["'cross-origin-resource-policy':'same-origin'", "'cross-origin-resource-policy': 'same-origin'"]){
   if(!apiSource.includes(header))throw Error('Missing binary response resource isolation: '+header);
