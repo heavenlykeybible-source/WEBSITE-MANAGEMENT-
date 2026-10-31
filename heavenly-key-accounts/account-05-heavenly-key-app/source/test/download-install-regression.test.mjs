@@ -196,7 +196,7 @@ test('offline fallback can read only the current reviewed shell cache', () => {
 test('precache and runtime share a single safe public-response cache policy', () => {
  const sw=publicFile('sw.js');
  assert.match(sw,/function isSafePublicResponse\(response\)/);
- assert.equal((sw.match(/if\(isSafePublicResponse\(response\)\)/g)||[]).length,3);
+ assert.equal((sw.match(/if\(isSafePublicResponse\(response\)\)/g)||[]).length,2);
  assert.match(sw,/!response\.ok/);
  assert.match(sw,/response\.redirected/);
  assert.match(sw,/no-store\|no-cache/);
@@ -209,4 +209,11 @@ test('incomplete essential offline app shell rejects installation', () => {
  assert.match(sw,/if\(!isSafePublicResponse\(response\)\) throw new Error/);
  assert.match(sw,/await cache\.put\(path,response\)/);
  assert.doesNotMatch(sw,/for\(const path of core\)\{\s*try\{/);
+});
+
+test('runtime never retains personalized HTML navigation responses', () => {
+ const sw=publicFile('sw.js');
+ assert.match(sw,/request\.mode!=='navigate'/);
+ assert.match(sw,/request\.destination!=='document'/);
+ assert.match(sw,/isSafePublicResponse\(response\)\)event\.waitUntil/);
 });
