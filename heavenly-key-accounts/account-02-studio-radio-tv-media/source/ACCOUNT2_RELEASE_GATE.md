@@ -22,3 +22,12 @@ Television is on hold and must not be unlocked without a separate explicit owner
 Verify `GET /api/broadcast/channel-availability` returns radio available and television locked. Run `npm run test:tv-lock` plus existing Account 2 checks. Do not present a passed CI run as proof that radio has passed live listener, device, continuity, and production RTMPS tests.
 
 Before deploying the lock, check whether television or a mixed `both` destination is already on air; coordinate stopping it rather than assuming a code rollout will stop an external provider egress. Production changes still require owner approval.
+
+
+## Radio-only operating model and proposed 24/7 audio engine
+
+Television and video broadcast capabilities are on hold. Do not delete historical video assets or their database rows: the lock prevents broadcasting and new video upload, but preserves reversible records. Do not publish a release without an owner-approved isolated Account 2 change set.
+
+**Audio ingestion:** Accept supported audio MIME types, verify uploaded size and R2 object existence, retain resumable multipart uploads and publish only approved audio. Improve upload UX later with client-side metadata extraction, audio preview, duplicate checksum checks and an explicit rights/licensing declaration; none of those future UX features are claimed implemented.
+
+**24/7 radio:** Audio files should be stored as audio objects in R2, *not embedded as base64/source code*. A playlist manifest (media IDs, ordering, start times, fallback and rotation policy) is the code/data controlling playback. The existing radio programme endpoint and playlist scheduling can drive listeners, but continuous synchronized internet-radio output requires an always-running audio playout/encoding service (e.g. FFmpeg -> Icecast/HLS) with silence fallback, watchdog, retry, monitoring and legal rights for the audio. A Cloudflare Worker alone is not a persistent audio encoder. Production 24/7 audio output and listener tests remain pending.
