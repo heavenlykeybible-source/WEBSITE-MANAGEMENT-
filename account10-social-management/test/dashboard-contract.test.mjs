@@ -205,3 +205,7 @@ test('limited operators cannot open owner-only dashboard tools', () => {
 test('Gemini suggestion button remains disabled after role, conversation or session changes', () => {
  assert.match(html, /finally\{button\.disabled=!selected\|\|operatorAccessRole==='viewer'\|\|selected!==targetConversation\|\|authEpoch!==epoch\}/);
 });
+
+test('WhatsApp send errors cannot repaint a different conversation or authentication session', () => {
+ assert.match(html, /catch\(err\)\{if\(selected===currentConversation&&authEpoch===sessionEpoch\)status\(err\.message\)\}finally\{send\.disabled=false\}/);
+});
