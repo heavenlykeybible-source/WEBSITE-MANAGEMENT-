@@ -43,6 +43,8 @@ jobs:
         run: npm run test:radio-on-demand
       - name: Bluetooth and radio player safety checks
         run: npm run test:radio-player
+      - name: Radio media upload security checks
+        run: npm run test:radio-upload-security
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
