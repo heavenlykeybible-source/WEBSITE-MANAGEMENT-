@@ -107,7 +107,14 @@ const expectedStartDate='2026-10-30';
 const expectedEndDate='2031-10-31';
 if(entries[0]?.date!==expectedStartDate)flag('GLOBAL','DATE_RANGE','Expected start '+expectedStartDate);
 if(entries.at(-1)?.date!==expectedEndDate)flag('GLOBAL','DATE_RANGE','Expected end '+expectedEndDate);
-const daysNeededToMeetRequest=Math.max(0,requestedDayTarget-entries.length);
+const presentDates=new Set(entries.filter(e=>validDate(e.date)).map(e=>e.date));
+const missingDates=[];
+for(let day=Date.parse(expectedStartDate+'T00:00:00Z');day<=Date.parse(expectedEndDate+'T00:00:00Z');day+=86400000){
+ const date=new Date(day).toISOString().slice(0,10);
+ if(!presentDates.has(date))missingDates.push(date);
+}
+for(const date of missingDates)flag(date,'MISSING_CALENDAR_DAY','No devotional entry exists for this required date');
+const daysNeededToMeetRequest=missingDates.length;
 if(names.length===0)flag('GLOBAL','NO_DEVOTIONAL_FILES','No devotional data files were discovered');
 if(entries.length!==requestedDayTarget)flag('GLOBAL','DAY_COUNT_MISMATCH','Expected '+requestedDayTarget+' days; found '+entries.length);
 if(topicCount!==requestedDayTarget*12)flag('GLOBAL','TOPIC_TOTAL_MISMATCH','Expected '+(requestedDayTarget*12)+' topics; found '+topicCount);
@@ -119,7 +126,7 @@ const qualityBlockingCodes=new Set([
  'INCOMPLETE_DAILY_ENTRY','MISSING_DAY_TITLE','MISSING_DAY_REFLECTION',
  'MISSING_DAY_PRAYER','DUPLICATE_DAY_TITLE','DUPLICATE_DAY_REFLECTION','DUPLICATE_DAY_PRAYER',
  'EXACT_DUPLICATE_REFLECTION','EXACT_DUPLICATE_PRAYER','REPEATED_REFLECTION_OPENING',
- 'INCONSISTENT_VERSE_TEXT','INVALID_DATE','DATE_RANGE','CALENDAR_TARGET_MISMATCH','NO_DEVOTIONAL_FILES','DAY_COUNT_MISMATCH','TOPIC_TOTAL_MISMATCH','CONSECUTIVE_REUSED_THEME',
+ 'INCONSISTENT_VERSE_TEXT','INVALID_DATE','DATE_RANGE','CALENDAR_TARGET_MISMATCH','NO_DEVOTIONAL_FILES','DAY_COUNT_MISMATCH','TOPIC_TOTAL_MISMATCH','MISSING_CALENDAR_DAY','CONSECUTIVE_REUSED_THEME',
  'UNSUPPORTED_PROMISE','END_TIME_DATE_SETTING',
  'PUBLICATION_STATUS','REVIEW_STATUS','LENGTH_LIMIT',
  'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','MECHANICAL_REFLECTION_FORMULA','INCONSISTENT_PRAYER_PERSON','RELEASE_GATE'
@@ -135,7 +142,7 @@ const result={
  title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
- files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
+ files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,missingDates,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:Array.isArray(manifest.publishedBatchFiles)?manifest.publishedBatchFiles.length:null,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
