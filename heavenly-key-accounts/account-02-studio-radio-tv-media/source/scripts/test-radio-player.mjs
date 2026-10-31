@@ -26,6 +26,11 @@ assert.match(html,/window\.addEventListener\('pagehide'/,'Playback must stop whe
 assert.match(html,/playGeneration/,'Async playback generation must avoid stale state');
 assert.match(html,/audio\.getAttribute\('src'\)/,'Missing player source must be detected reliably');
 assert.match(html,/audio\.addEventListener\('error'/,'Audio errors must be handled');
+assert.match(html,/window\.addEventListener\('offline'/,'Offline status must be visible');
+assert.match(html,/window\.addEventListener\('online'/,'Reconnect guidance must be visible');
+assert.match(html,/audio\.addEventListener\('waiting'/,'Buffering status must be announced');
+assert.match(html,/if\(generation===playGeneration\)setPaused/,'Old async playback failures cannot alter current controls');
+assert.match(html,/setAttribute\('aria-label','Pause radio'\)/,'Accessible pause state must be announced');
 
 const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Radio player script must be present');
