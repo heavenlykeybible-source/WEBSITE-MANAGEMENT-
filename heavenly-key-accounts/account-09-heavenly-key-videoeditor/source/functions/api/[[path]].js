@@ -367,7 +367,7 @@ export async function onRequest({ request: req, env, params }) {
       }
       if (!p[1] && m === 'POST') {
         const rawName = new URL(req.url).searchParams.get('name') || 'file';
-        if (rawName.includes(':') || [...rawName].some(c => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)) return J({error:'Invalid media filename.'},415);
+        if (rawName.length > 255 || rawName.includes(':') || [...rawName].some(c => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)) return J({error:'Invalid media filename.'},415);
         const name = rawName.replace(/[^\w.\- ]/g, '_').replace(/^[.\- ]+/, '').replace(/\.{2,}/g, '.').slice(0, 120).replace(/[. ]+$/, '') || 'file';
         const type = (req.headers.get('content-type') || 'application/octet-stream').split(';')[0];
         if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
