@@ -12,6 +12,9 @@ const db={prepare(sql){return {bind(...args){statements.push({sql,args});return 
 const session={ownerId:7,key:'private-imports/7/abc',uploadId:'u1',name:'backup.zip',size:11,partCount:1,state:'uploading',expiresAt:Date.now()+3600000};
 await assert.rejects(saveImportSession(db,actor,{...session,key:'private-imports/8/forged'}));
 await assert.rejects(saveImportSession(db,actor,{...session,expiresAt:0}));
+await assert.rejects(saveImportSession(db,actor,{...session,size:1073741825}));
+await assert.rejects(saveImportSession(db,actor,{...session,partCount:2}));
+await assert.rejects(saveImportSession(db,actor,{...session,size:0}));
 const id=await saveImportSession(db,actor,session);
 assert.match(id,/^[a-f0-9-]{36}$/i);
 row={owner_id:7,object_key:session.key,upload_id:'u1',filename:'backup.zip',size_bytes:11,part_count:1,state:'uploading',expires_at_ms:session.expiresAt};
