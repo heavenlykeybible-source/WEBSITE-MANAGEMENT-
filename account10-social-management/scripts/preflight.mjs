@@ -42,16 +42,19 @@ for(const [name,script] of Object.entries(pkg.scripts)){
 }
 // A deploy from the wrong Cloudflare account can strand the hostname.
 // Do not silently infer the zone account from a successful build or DNS resolution.
-const assetSections=[...config.matchAll(/^\s*\[assets\]\s*$([\s\S]*?)(?=^\s*\[|$(?![\s\S]))/gm)];
-if(assetSections.length!==1)fail.push('Exactly one assets section is required');
-const assetConfig=assetSections[0]?.[1]||'';
-for(const key of ['directory','binding','run_worker_first']){
- const matches=[...assetConfig.matchAll(new RegExp('^\s*'+key+'\s*=','gm'))];
+const assetStart=config.indexOf('[assets]');
+const assetEnd=config.indexOf('\n[',assetStart+1);
+const assetConfig=assetStart>=0?config.slice(assetStart,assetEnd>=0?assetEnd:undefined):'';
+if((config.match(/^\\[assets\\]$/gm)||[]).length!==1)fail.push('Exactly one assets section is required');
+const assetLines=assetConfig.split(/\\r?\\n/).slice(1);
+const assetValue=key=>{
+ const matches=assetLines.filter(line=>line.trim()&&!line.trim().startsWith('#')&&line.includes('=')&&line.split('=')[0].trim()===key);
  if(matches.length!==1)fail.push('Assets section must declare '+key+' exactly once');
-}
-if(!/^directory\s*=\s*"\.\/public"\s*$/m.test(assetConfig))fail.push('Assets section must specify ./public directory');
-if(!/^binding\s*=\s*"ASSETS"\s*$/m.test(assetConfig))fail.push('Assets section must declare ASSETS binding');
-if(!/^run_worker_first\s*=\s*true\s*$/m.test(assetConfig))fail.push('Static asset requests must pass through Worker security headers');
+ return matches[0]?.split('=').slice(1).join('=').trim();
+};
+if(assetValue('directory')!=='"./public"')fail.push('Assets section must specify ./public directory');
+if(assetValue('binding')!=='"ASSETS"')fail.push('Assets section must declare ASSETS binding');
+if(assetValue('run_worker_first')!=='true')fail.push('Static asset requests must pass through Worker security headers');
 const args=process.argv.slice(2);
 if(args.includes('--production'))fail.push('Production readiness cannot be certified by a static preflight: verify Cloudflare zone ownership, D1 migrations, secrets, asset upload and live integration tests manually.');
 if(fail.length){for(const message of fail)console.error('FAIL:',message);process.exitCode=1;}
