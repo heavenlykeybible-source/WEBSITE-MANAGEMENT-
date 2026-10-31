@@ -185,7 +185,7 @@ const AC=new(window.AudioContext||window.webkitAudioContext)();
 const dest=AC.createMediaStreamDestination(),bus=AC.createGain(),mon=AC.createGain(),an=AC.createAnalyser();
 an.fftSize=128;bus.connect(dest);bus.connect(an);mon.connect(AC.destination);mon.gain.value=.8;
 const arr=new Uint8Array(an.frequencyBinCount);
-let S=[],SC=[{name:'Scene 1',items:[]}],uid=1,pgm=0,pvw=0,from=null,t0=0,studio=false;
+let S=[],SC=[{name:'Scene 1',items:[]}],uid=1,pgm=0,pvw=0,from=null,t0=0,studio=false,sceneVersion=0;
 const msg=t=>$('note').textContent=t,src=id=>S.find(s=>s.id===id),ed=()=>studio?pvw:pgm;
 
 function mk(type,name,x){const s={id:uid++,type,name,vol:.8,mute:false,...x};S.push(s);return s}
@@ -216,7 +216,7 @@ async function mic(){try{
 $('fm').onchange=e=>{if(e.target.files.length)addMedia(e.target.files);e.target.value=''};
 $('fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.src=URL.createObjectURL(f);place(mk('image',f.name.replace(/\.[^.]+$/,''),{img}));e.target.value='';ui()};
 
-function take(i){if(i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;for(const camera of S)if(camera.type==='camera')camera.segReady=false;t0=performance.now();if(studio)pvw=o}
+function take(i){if(i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;sceneVersion++;for(const camera of S)if(camera.type==='camera')camera.segReady=false;t0=performance.now();if(studio)pvw=o}
 $('take').onclick=()=>{take(pvw);ui()};
 $('stm').onchange=e=>{studio=e.target.checked;if(studio)pvw=SC.length>1?(pgm+1)%SC.length:pgm;$('cvs').classList.toggle('s',studio);$('pw').hidden=!studio;$('take').hidden=!studio;ui()};
 $('vol').oninput=e=>mon.gain.value=e.target.value;
@@ -285,7 +285,7 @@ function frame(){if($('lite').checked){const t=performance.now();if(t-lastF<70){
  cx.drawImage(dl,0,0);if($('low').checked)lc.drawImage($('cv'),0,0,lo.width,lo.height);if(guests.size){if(gc.width!==W/2){gc.width=W/2;gc.height=H/2}gx.drawImage($('cv'),0,0,gc.width,gc.height)}
  if(studio){px.fillStyle='#0d1620';px.fillRect(0,0,W,H);drawScene(px,SC[pvw],1)}
  // Process one camera per frame, rotating fairly across active presenters.
- if(seg&&!segBusy){const cameras=S.filter(s=>s.type==='camera'&&s.blur&&s.oc&&s.el&&s.el.readyState>1);if(cameras.length){segIndex=segIndex%cameras.length;const s=cameras[segIndex++];segBusy=true;segCur=s;Promise.resolve().then(()=>seg.send({image:s.el})).then(()=>{s.segFails=0}).catch(()=>{s.segReady=false;if(++s.segFails>=3){s.blur=false;s.bgm='off';s.oc=null;msg('Background processing failed. Original camera restored to keep the presenter visible.');ui()}}).finally(()=>{segBusy=false;segCur=null})}}
+ if(seg&&!segBusy){const cameras=S.filter(s=>s.type==='camera'&&s.blur&&s.oc&&s.el&&s.el.readyState>1);if(cameras.length){segIndex=segIndex%cameras.length;const s=cameras[segIndex++];segBusy=true;segCur=s;segScene=sceneVersion;Promise.resolve().then(()=>seg.send({image:s.el})).then(()=>{s.segFails=0}).catch(()=>{s.segReady=false;if(++s.segFails>=3){s.blur=false;s.bgm='off';s.oc=null;msg('Background processing failed. Original camera restored to keep the presenter visible.');ui()}}).finally(()=>{segBusy=false;segCur=null})}}
  for(const s of S){if(!s.g)continue;
   if(s.type==='mic'){s.an.getFloatTimeDomainData(mbuf);let q=0;for(const v of mbuf)q+=v*v;const now=performance.now();
    if(20*Math.log10(Math.sqrt(q/mbuf.length)+1e-9)>s.gate)s.hold=now+400;const op=now<s.hold;
@@ -316,10 +316,10 @@ cvEl.onpointermove=e=>{if(!dwn)return;const[x,y]=pt(e);dx.beginPath();dx.moveTo(
 cvEl.onpointerup=cvEl.onpointercancel=()=>{dwn=false};
 $('dcl').onclick=()=>dx.clearRect(0,0,W,H);
 const cover=(c,e,iw,ih,x,y,w,h)=>{const k=Math.max(w/iw,h/ih),dw=iw*k,dh=ih*k;c.drawImage(e,x+(w-dw)/2,y+(h-dh)/2,dw,dh)};
-let seg=null,segBusy=false,segCur=null,segIndex=0,segLoading=false,segWait=[],bgImg=null,curBg=0,bgPick=0,bgFn=null;
+let seg=null,segBusy=false,segCur=null,segScene=-1,segIndex=0,segLoading=false,segWait=[],bgImg=null,curBg=0,bgPick=0,bgFn=null;
 function loadSeg(cb){if(seg)return cb(true);segWait.push(cb);if(segLoading)return;segLoading=true;let finished=false;const done=ok=>{if(finished)return;finished=true;clearTimeout(timeout);segLoading=false;for(const fn of segWait.splice(0)){try{fn(ok)}catch(e){console.error('Background initialization callback failed',e)}}};const timeout=setTimeout(()=>{seg=null;done(false)},15000);const B='https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/',sc=document.createElement('script');sc.src=B+'selfie_segmentation.js';
  sc.onload=()=>{if(finished)return;try{seg=new SelfieSegmentation({locateFile:f=>B+f});seg.setOptions({modelSelection:1});
-  seg.onResults(r=>{const s=segCur;if(!s||!s.oc||!s.blur)return;if(!r?.image||!r.segmentationMask){s.segReady=false;return}const iw=r.image.width,ih=r.image.height;if(!Number.isFinite(iw)||!Number.isFinite(ih)||iw<1||ih<1){s.segReady=false;return}const limit=$('lite').checked?720:1280,k=Math.min(1,limit/Math.max(iw,ih)),w=Math.max(1,Math.round(iw*k)),h=Math.max(1,Math.round(ih*k));
+  seg.onResults(r=>{const s=segCur;if(!s||!s.oc||!s.blur||segScene!==sceneVersion)return;if(!r?.image||!r.segmentationMask){s.segReady=false;return}const iw=r.image.width,ih=r.image.height;if(!Number.isFinite(iw)||!Number.isFinite(ih)||iw<1||ih<1){s.segReady=false;return}const limit=$('lite').checked?720:1280,k=Math.min(1,limit/Math.max(iw,ih)),w=Math.max(1,Math.round(iw*k)),h=Math.max(1,Math.round(ih*k));
    if(s.oc.width!==w||s.oc.height!==h){s.oc.width=w;s.oc.height=h}
    const c=s.oc.getContext('2d');if(!c){s.segReady=false;return}c.save();try{c.clearRect(0,0,w,h);c.drawImage(r.segmentationMask,0,0,w,h);c.globalCompositeOperation='source-in';c.drawImage(r.image,0,0,w,h);c.globalCompositeOperation='destination-over';
    // The camera must use the program scene's own virtual background, never a global selection from another scene.
