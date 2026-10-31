@@ -301,3 +301,12 @@ test('share URL validation excludes unexpected HTTPS ports', () => {
  const js=publicFile('app-pages.js');
  assert.match(js,/destination\.username\|\|destination\.password\|\|destination\.port/);
 });
+
+test('download dialog validates destinations before advertising an official app', () => {
+ const js=publicFile('app-pages.js');
+ assert.match(js,/fetch\('\/app-downloads\.json',\{cache:'no-store',credentials:'omit',redirect:'error'\}\)/);
+ assert.match(js,/throw Error\('Unapproved app destination'\)/);
+ assert.match(js,/destination\.protocol!=='https:'/);
+ assert.match(js,/destination\.port\|\|destination\.username\|\|destination\.password/);
+ assert.match(js,/destination\.hostname/);
+});
