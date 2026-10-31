@@ -22,6 +22,7 @@ struct HeavenlyKeyMacBrowser: NSViewRepresentable {
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
         let browser = WKWebView(frame: .zero, configuration: configuration)
         browser.navigationDelegate = context.coordinator
+        browser.uiDelegate = context.coordinator
         browser.allowsBackForwardNavigationGestures = true
         browser.load(URLRequest(url: home))
         return browser
@@ -29,7 +30,25 @@ struct HeavenlyKeyMacBrowser: NSViewRepresentable {
 
     func updateNSView(_ nsView: WKWebView, context: Context) {}
 
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+        // External and explicitly new-window links remain usable on macOS.
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            guard navigationAction.targetFrame == nil,
+                  let url = navigationAction.request.url,
+                  let scheme = url.scheme?.lowercased(),
+                  ["https", "mailto", "tel"].contains(scheme),
+                  (scheme != "https" || (url.host != nil && url.user == nil && url.password == nil))
+            else { return nil }
+            NSWorkspace.shared.open(url)
+            return nil
+        }
+
+
         func webView(
             _ webView: WKWebView,
             decidePolicyFor navigationAction: WKNavigationAction,
