@@ -231,3 +231,11 @@ test('shared app page script tolerates missing directory widgets', () => {
  assert.match(js,/if\(!help\)return/);
  assert.match(js,/document\.querySelectorAll\('\[data-download-app\]'\)/);
 });
+
+test('native installer checks exact MIME type and avoids unsupported verification claims', () => {
+ const js=publicFile('app-device-guide.js');
+ assert.match(js,/contentType\.split\(';',1\)\[0\]\.trim\(\) === expectedTypes\[platform\]/);
+ assert.doesNotMatch(js,/contentType\.includes\(expectedTypes\[platform\]\)/);
+ assert.match(js,/Confirm its publisher signature before installing/);
+ assert.doesNotMatch(js,/A verified native installation package is available/);
+});
