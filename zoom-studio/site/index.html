@@ -224,7 +224,7 @@ $('vol').oninput=e=>mon.gain.value=e.target.value;
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('a',x===b));document.querySelectorAll('section').forEach((s,i)=>s.classList.toggle('a',i==b.dataset.t))});
 
 const act={
- ssel:i=>{studio?pvw=i:take(i);ui()},
+ ssel:i=>{if(!Number.isInteger(i)||i<0||i>=SC.length)return;studio?pvw=i:take(i);ui()},
  sadd:()=>{SC.push({name:'Scene '+(SC.length+1),items:[]});ui()},
  sren:i=>{const n=prompt('Scene name',SC[i].name);if(n)SC[i].name=n.slice(0,40);ui()},
  sdel:i=>{if(!Number.isInteger(i)||i<0||i>=SC.length)return;if(SC.length<2){msg('Keep at least one scene.');return}SC.splice(i,1);from=null;
