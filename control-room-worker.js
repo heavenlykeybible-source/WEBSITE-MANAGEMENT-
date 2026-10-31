@@ -4241,7 +4241,7 @@ function privateImportForm(){
    }
    status.textContent='All parts stored. Completing private upload…';
    var result=await api('workspace/imports/'+current.id+'/complete','POST',{});
-   current.state=result.state;status.textContent='Private staging complete · '+current.id+'. The package remains private and awaits independent malware scanning and owner release approval. No live website was changed.';
+   var finishedId=current.id;current=null;status.textContent='Private staging complete · '+finishedId+'. The package remains private and awaits independent malware scanning and owner release approval. No live website was changed.';
   }catch(e){status.textContent=e.message+(current?' Upload ID: '+current.id:'');}
   finally{busy=false;upload.disabled=false;resume.disabled=false;}
  }},'Upload / resume privately');
