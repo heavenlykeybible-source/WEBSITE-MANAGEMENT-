@@ -56,3 +56,38 @@ Layered multi-track timeline, keyframe editing beyond the slow zoom and pan, mas
 
 ## 6. Recommended order
 Deploy to staging, fix what real Cloudflare breaks, add email and payments, add legal pages, then decide on the GPU host for voice and video generation.
+
+
+---
+
+## Current security and release review — 31 October 2026
+
+This section supersedes any older status above where it conflicts with the current source. The repository has since received additional changes; the historical test counts above are not evidence that the latest commit has passed the full suite.
+
+### Verified source changes in the current review
+- Inline editor JavaScript and CSS were moved to same-origin external assets.
+- Enforced CSP now blocks inline scripts, script event attributes, inline styles, and style attributes; `base-uri 'none'` is set.
+- Offline core caching includes the external editor assets.
+- Backend test syntax was repaired after a duplicate top-level `const` declaration was found.
+- External AI gateway attempts are reserved atomically at a 30-attempt daily limit; the test fixture and preflight assertion were aligned.
+- Preflight now syntax-checks backend and test modules before the test suite.
+
+### Security controls observed in source
+- Authenticated, per-user media ownership checks and private R2 object keys.
+- Media type/extension allowlists, signature checks, upload size and storage quotas, and bounded request streaming.
+- Private media response headers, sandbox CSP, and `nosniff`.
+- Atomic per-user attempt limits for several sensitive operations.
+- R2 deletion retries and ownership-conditioned database deletion.
+
+### Unresolved release blockers
+1. **Malware scanning is not implemented.** Signature checks are not antivirus scanning. Do not treat unscanned uploads as malware-cleared. Integrate and verify a real scanner or quarantine workflow before public release.
+2. Run `npm run check` from this exact source directory on Node 22+; the latest source changes have not been run through the complete suite in this review.
+3. Perform staging tests against the real Cloudflare D1, R2 and Workers AI bindings, including concurrent uploads and cleanup.
+4. Complete real Chrome, Firefox, Safari/iOS and Android testing, including long exports, microphones, camera permissions and offline behavior.
+5. Complete independent security testing, monitoring/alerting, privacy/terms review, account recovery, and production sign-off.
+6. Confirm the active production hostname, Worker routing, secrets, D1 migrations, bucket privacy and backup/restore procedure with the authorized Cloudflare owner.
+
+### Product capability limits
+The editor must not be marketed as a full desktop nonlinear editor until multi-track composition, advanced keyframes, robust MP4 export, stabilization, LUTs and the other missing features listed above are implemented and tested. Current browser export and AI features have documented limitations.
+
+**Current disposition: NOT production launch-certified.** Source-level changes are committed; the full test suite, live infrastructure, malware scanning and cross-device verification remain outstanding.
