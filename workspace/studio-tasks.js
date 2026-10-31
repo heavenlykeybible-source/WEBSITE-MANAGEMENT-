@@ -56,9 +56,24 @@ async function studioTaskRoutes(req,env,user,sub,method){
 async function studioAITask(env,actor,name,args){
  if(actor.ow||actor.a?.owner_id||actor.a?.site_id||!actor.a?.can_read)fail('Unscoped staff AI required',403);
  if(name==='my_studio_assignments'){
+  // A revoked assistant must not read old assignment instructions through a
+  // session which was authenticated before the owner withdrew access.
+  const fresh=await env.DB.prepare("SELECT id,status,can_read,can_propose,owner_id,site_id FROM agents WHERE id=?").bind(actor.agentId).first();
+  if(!fresh||fresh.status!=='active'||!fresh.can_read||fresh.owner_id||fresh.site_id)fail('AI connection disabled or revoked',403);
+  const owner=await env.DB.prepare("SELECT id FROM users WHERE role='owner' AND kind='staff' AND status='active'").first();
+  if(!owner)fail('Task owner unavailable',403);
+  const policy=await aiPolicy(env,owner),now=Date.now();
+  const delegated=actor.aiPolicy
+   ? actor.aiPolicy.mode==='work'&&actor.aiPolicy.expires_at>now&&Array.isArray(actor.aiPolicy.connections)
+   : policy.all_agents===true;
+  if(!delegated||policy.mode!=='work'||policy.expires_at<=now)fail('Owner AI authorization expired or revoked',403);
+  const allowed=actor.aiPolicy
+   ? actor.aiPolicy.connections.filter(c=>policy.connections.includes(c))
+   : policy.connections;
+  if(!allowed.length)fail('No authorized Cloudflare accounts',403);
   const page=Number(args?.page||0);
   if(!Number.isSafeInteger(page)||page<0||page>100000)fail('Invalid task page');
-  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'studio:task:%' AND json_extract(value_json,'$.agent')=? AND json_extract(value_json,'$.status') IN ('assigned','working') ORDER BY updated_at DESC,key DESC LIMIT 51 OFFSET ?").bind(actor.agentId,page*50).all();
+  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'studio:task:%' AND json_extract(value_json,'$.agent')=? AND json_extract(value_json,'$.owner')=? AND json_extract(value_json,'$.connection') IN ("+allowed.map(()=>'?').join(',')+") AND json_extract(value_json,'$.status') IN ('assigned','working') ORDER BY updated_at DESC,key DESC LIMIT 51 OFFSET ?").bind(actor.agentId,owner.id,...allowed,page*50).all();
   return {tasks:rows.results.slice(0,50).map(x=>JSON.parse(x.value_json)),page,next_page:rows.results.length>50?page+1:null,notice:'Assigned or working tasks are tracked separately. No automatic production writes occur.'};
  }
  if(name==='claim_studio_assignment'||name==='update_studio_progress'){
