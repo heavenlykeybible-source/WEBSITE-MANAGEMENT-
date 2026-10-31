@@ -25,12 +25,13 @@ function element(id){
  };
 }
 for(const id of ['audio','play','next','retry','track','status','volume','volumeValue','output','outputHelp'])elements.set(id,element(id));
+let shouldFail=false;
 let fetchResult={items:[{type:'audio',title:'First',url:'/api/broadcast/media/1/object'},{type:'audio',title:'Second',url:'/api/broadcast/media/2/object'}]};
 const task=runInNewContext(script,{
  document:{getElementById:id=>elements.get(id)},
  window:{addEventListener:(name,fn)=>events.set(name,fn)},
  navigator:{},
- fetch:async()=>({ok:true,json:async()=>fetchResult}),
+ fetch:async()=>{if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
  MediaMetadata:undefined,
  console
 });
@@ -60,4 +61,11 @@ assert.equal(audio.src,'/api/broadcast/media/3/object');
 assert.equal(audio.paused,false);
 events.get('pagehide')();
 assert.equal(audio.paused,true);
+shouldFail=true;
+await get('retry').fire('click');
+assert.equal(audio.paused,true);
+assert.equal(audio.getAttribute('src'),null);
+assert.equal(get('play').getAttribute('aria-label'),'Play radio');
+assert.equal(get('next').disabled,true);
+assert.equal(get('track').textContent,'Playlist unavailable');
 console.log('Account 2 radio runtime play, pause, next, end, refresh, and page-exit tests passed');
