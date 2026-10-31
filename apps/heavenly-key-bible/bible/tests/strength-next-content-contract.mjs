@@ -21,6 +21,7 @@ export function validateDailyDevotional(entry){
  if(!nonempty(s.hymn?.collection)||!Number.isInteger(s.hymn?.number)||s.hymn.number<1||!nonempty(s.hymn?.title))errors.push('Hymn collection, number and title required');
  if(!bibleReference(s.bibleStory?.reference)||!nonempty(s.bibleStory?.summary))errors.push('Bible story and Scripture source required');
  if(!nonempty(s.worldStory?.summary)||!nonempty(s.worldStory?.sourceUrl)||!validSourceUrl(s.worldStory.sourceUrl))errors.push('World story requires documented HTTPS source');
+ if(!nonempty(s.worldStory?.publisher)||s.worldStory.publisher.length>200)errors.push('World story requires named publisher');
  if(!nonempty(s.worldStory?.publishedDate)||!/^\d{4}-\d{2}-\d{2}$/.test(s.worldStory.publishedDate)||!Number.isFinite(Date.parse(s.worldStory.publishedDate))||new Date(s.worldStory.publishedDate).toISOString().slice(0,10)!==s.worldStory.publishedDate)errors.push('World story requires a valid publication date');
  if(typeof entry.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(entry.date)&&typeof s.worldStory?.publishedDate==='string'&&s.worldStory.publishedDate>entry.date)errors.push('World story publication cannot postdate the devotional');
  for(const key of ['eternity','decision','propheticPrayer','healthPrayer','salvation'])if(!nonempty(s[key]?.text))errors.push('Missing '+key+' text');
