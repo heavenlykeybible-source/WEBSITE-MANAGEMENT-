@@ -61,6 +61,7 @@ export class MeetingRooms {
   // Account lookups above may yield past the host deadline. End the room now,
   // rather than keeping expired sessions active until the next alarm.
   const currentHost=this.host();
+  if(!currentHost&&this.guests().length){this.end('The host left.');return;}
   if(currentHost&&this.data(currentHost).until<=Date.now()){this.end('The meeting time has ended.');return;}
   if(this.sockets().length)await this.state.storage.setAlarm(Date.now()+60000);
  }
