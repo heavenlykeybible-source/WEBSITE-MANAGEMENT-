@@ -518,3 +518,8 @@ test('dashboard and service worker scripts are served without stale browser cach
  assert.ok(source.includes("u.pathname==='/sw.js'"));
  assert.ok(source.includes("headers.set('cache-control','no-store')"));
 });
+
+test('JSON API responses include a nonindexing header', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("'x-robots-tag':'noindex'"));
+});
