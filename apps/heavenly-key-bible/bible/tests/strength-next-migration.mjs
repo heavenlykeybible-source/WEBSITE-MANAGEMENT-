@@ -15,7 +15,7 @@ export function migrateLegacyEntry(entry) {
   if (!title) throw new Error('Missing legacy central topic');
   return {
     date:entry.date, status:'draft', review:{doctrinalApproved:false,sourcesVerified:false},
-    provenance:{format:'legacy-twelve-topic',sourceDate:entry.date,originalTopicCount:topics.length},
+    provenance:{format:'legacy-twelve-topic',sourceDate:entry.date,originalTopicCount:topics.length,requiresEditorialRewrite:true,requiresScriptureVerification:true,sourceMaterial:{centralPrayer:clean(entry.prayer),originalTopicMaterials:entry.topics.map((topic,index)=>({originalIndex:index,bibleText:clean(topic.bibleText),prayer:clean(topic.prayer)}))}},
     sections:{
       topic:{title,scripture:clean(entry.scripture),reflection:clean(entry.reflection)},
       bibleReading:{oldTestament:[],newTestament:[]},
