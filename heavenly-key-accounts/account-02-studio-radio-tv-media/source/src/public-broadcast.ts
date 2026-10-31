@@ -19,7 +19,7 @@ export async function publicProgramme(request:Request,env:BroadcastEnv):Promise<
  const channel=new URL(request.url).searchParams.get('channel')==='radio'?'audio':'video';
  const reply=(data:Record<string,unknown>,status=200)=>json(channel==='audio'?{...data,playback:onDemandRadioMetadata()}:data,status);
  if(channel==='video'&&TV_LOCKED)return reply({mode:'locked',channel:'video',locked:true,title:'FAITH OF OUR FATHERS TV',message:TV_LOCK_MESSAGE,items:[]},423);
- const live=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,destination,reconnect_deadline FROM live_sessions WHERE ((status='live' AND julianday(last_heartbeat_at)>julianday('now','-180 seconds')) OR (status='reconnecting' AND julianday(reconnect_deadline)>julianday('now'))) ORDER BY session_id DESC LIMIT 1").first<any>();
+ const live=await env.DB.prepare("SELECT session_id,title,status,source_type,source_ref,visual_media_id,fallback_media_id,destination,reconnect_deadline FROM live_sessions WHERE ((status='live' AND julianday(last_heartbeat_at)>julianday('now','-180 seconds')) OR (status='reconnecting' AND julianday(reconnect_deadline)>julianday('now'))) AND (destination=? OR (destination='both' AND ?='video')) ORDER BY session_id DESC LIMIT 1").bind(channel==='audio'?'radio':'video',channel).first<any>();
  if(live&&(live.destination==='both'||live.destination===(channel==='audio'?'radio':'video'))){
   if(live.status==='reconnecting'){
    const fallbackId=Number(live.fallback_media_id);
