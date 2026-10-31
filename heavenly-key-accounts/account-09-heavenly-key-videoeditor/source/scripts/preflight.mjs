@@ -11,6 +11,7 @@ for (const [name, limit] of [['ai_tools_attempt',30],['transcribe_attempt',120]]
 }
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'register_ip_attempt'") || !apiSource.includes("AND at>?) < 10") || !apiSource.includes('if (!reservation.meta.changes)')) throw Error('Atomic signup attempt throttle missing');
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'login_attempt_ip'") || !apiSource.includes("AND at>?) < 100") || !apiSource.includes('if (!loginSlot.meta.changes)')) throw Error('Atomic per-IP login rate protection missing');
+if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'login_attempt_account'") || !apiSource.includes("AND at>?) < 40") || !apiSource.includes('if (!accountSlot.meta.changes)')) throw Error('Atomic per-account login throttling missing');
 const wrangler = readFileSync('wrangler.toml','utf8');
 for (const x of ['pages_build_output_dir = "public"','binding = "DB"','binding = "MEDIA"','binding = "AI"']) if (!wrangler.includes(x)) throw Error(`Missing binding ${x}`);
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) {
