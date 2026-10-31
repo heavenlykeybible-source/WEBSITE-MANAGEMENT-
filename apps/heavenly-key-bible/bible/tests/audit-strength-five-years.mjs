@@ -14,6 +14,7 @@ const entries = names.flatMap(name => {
  return data.entries.map((entry,index)=>{
   if(!entry||typeof entry!=='object'||Array.isArray(entry))throw Error('Invalid entry in '+name+' at index '+index);
   if(typeof entry.date!=='string')throw Error('Missing or invalid date in '+name+' at index '+index);
+  if(Object.hasOwn(entry,'_file'))throw Error('Reserved metadata key in '+name+' at index '+index);
   return {...entry,_file:name};
  });
 }).sort((a,b)=>a.date.localeCompare(b.date));
