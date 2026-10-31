@@ -10,7 +10,7 @@ async function publicJson(path, upstreamFetch) {
     // Never proxy request cookies, Authorization, client headers, query strings or redirects.
     const result = await upstreamFetch(ORIGIN+path,{method:'GET',headers:{Accept:'application/json'},
       credentials:'omit',redirect:'manual',cache:'no-store',signal:controller.signal});
-    if(!result.ok || !(result.headers.get('content-type')||'').toLowerCase().includes('application/json'))throw Error('Unavailable');
+    if(result.status!==200 || result.headers.has('content-range') || !/^application\/json(?:\s*;|\s*$)/i.test(result.headers.get('content-type')||''))throw Error('Unavailable');
     const reader=result.body?.getReader();if(!reader)throw Error('Missing body');
     let count=0;const chunks=[];
     try {
