@@ -16,6 +16,9 @@ for(const header of ["'cross-origin-resource-policy':'same-origin'", "'cross-ori
 if(!apiSource.includes("'cache-control':'private, no-store'"))throw Error('Private voice audio must not be cached');
 const voiceHeaders=apiSource.split("return new Response(audio,{headers:")[1]?.split("});")[0] || '';
 if(!voiceHeaders.includes("'cross-origin-resource-policy':'same-origin'"))throw Error('Voice response missing same-origin policy');
+const mediaHeaders=apiSource.split("return o ? new Response(o.body, { headers:")[1]?.split("}) : J(")[0] || '';
+if(!mediaHeaders.includes("'cross-origin-resource-policy': 'same-origin'"))throw Error('Private media response missing same-origin policy');
+
 
 
 if ((apiSource.match(/match\(\/\(\?:\^\|;\\s\*\)hk=/g)||[]).length!==2 || !apiSource.includes('(?=;|$)/)')) throw Error('Exact session cookie boundary enforcement missing');
