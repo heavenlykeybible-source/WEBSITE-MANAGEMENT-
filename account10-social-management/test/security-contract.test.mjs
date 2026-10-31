@@ -181,3 +181,9 @@ test('human contact detector recognizes explicit handover requests, not Bible qu
   for(const message of ['Explain John 3:16 KJV','I love the evangelist preaching','Please pray for my family']) assert.equal(match(message),false,message);
   assert.match(source,/enabled:true,providerConnected:false,channels:\['whatsapp_business'/);
 });
+
+test('social account and post routes do not publish without verified provider authorization', () => {
+  assert.match(source, /publishingConnected:false/);
+  assert.match(source, /published:false,note:'Saved for review/);
+  assert.match(source, /providerPublishing:false/);
+});
