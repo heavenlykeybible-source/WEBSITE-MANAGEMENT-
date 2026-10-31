@@ -10,10 +10,10 @@ const compile=p=>ts.transpileModule(read(p).replace(/^import .*;\s*$/gm,'').repl
 const combined=['src/radio-byte-range.ts','src/radio-http-validators.ts','src/public-broadcast.ts'].map(compile).join('\n');
 const runtime=runInNewContext(combined+';({serveBroadcastMedia})',{Response,Request,Headers,URL,console,TV_LOCKED:true,TV_LOCK_MESSAGE:'Television locked'});
 const media={media_id:11,object_key:'radio/approved.mp3',media_type:'audio',mime_type:'audio/mpeg',status:'published'};
-let current=media,reads=0,heads=0;
+let current=media,reads=0,heads=0,queries=0;
 const bytes=new Uint8Array(100).map((_,i)=>i);
 const env={
- DB:{prepare:()=>({bind(){return this},async first(){return current}})},
+ DB:{prepare:()=>{queries++;return {bind(){return this},async first(){return current}}}},
  MEDIA_R2:{
   async head(){heads++;return {size:bytes.length,httpEtag:'"record-v1"'}},
   async get(_key,options){reads++;const start=options?.range?.offset??0;const end=start+(options?.range?.length??bytes.length);return {body:new Response(bytes.slice(start,end)).body}}
@@ -37,6 +37,13 @@ r=await serve('GET',{Range:'bytes=4-8','If-Range':'W/"record-v1"'});
 assert.equal(r.status,200);assert.equal((await r.arrayBuffer()).byteLength,100,'Weak If-Range must receive full audio');
 r=await serve('GET',{Range:'bytes=4-8','If-Range':'"record-v1"'});
 assert.equal(r.status,206);assert.equal((await r.arrayBuffer()).byteLength,5,'Strong matching If-Range must resume audio');
+const previousQueries=queries,previousHeads=heads;
+for(const invalid of [0,-1,NaN,Infinity,Number.MAX_SAFE_INTEGER+1]){
+ const blocked=await runtime.serveBroadcastMedia(request('GET'),env,invalid);
+ assert.equal(blocked.status,404,'Invalid object IDs must fail closed');
+}
+assert.equal(queries,previousQueries,'Invalid IDs must not query D1');
+assert.equal(heads,previousHeads,'Invalid IDs must not access R2');
 current=null;const count=heads;
 r=await serve('GET');assert.equal(r.status,404);assert.equal(heads,count,'Unavailable media must not access storage');
 current={...media,media_type:'video'};r=await serve('GET');assert.equal(r.status,423,'TV video must remain locked');
