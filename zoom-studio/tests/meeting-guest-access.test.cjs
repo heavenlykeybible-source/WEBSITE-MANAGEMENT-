@@ -447,3 +447,12 @@ test('malformed meeting identifiers are rejected before WebSocket upgrade',async
   assert.equal(response.status,404,path);
  }
 });
+
+test('rapid hand-raise updates are throttled without closing the guest',async()=>{
+ const h=setup();await h.join('');
+ const before=h.host.messages.filter(m=>m.t==='hand').length;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'hand',on:true}));
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'hand',on:false}));
+ assert.equal(h.host.messages.filter(m=>m.t==='hand').length,before+1);
+ assert.equal(h.guest.readyState,1);
+});
