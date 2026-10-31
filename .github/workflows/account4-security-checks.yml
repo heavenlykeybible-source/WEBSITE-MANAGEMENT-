@@ -94,6 +94,17 @@ jobs:
           assert not forbidden, 'Sensitive filenames committed: ' + ', '.join(forbidden)
           print('No forbidden credential or environment files are tracked')
           PY
+      - name: Enforce CI least-privilege protections
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          workflow = Path('.github/workflows/account4-security-checks.yml').read_text()
+          assert 'permissions:\n  contents: read' in workflow, 'Workflow must have read-only default permissions'
+          assert 'persist-credentials: false' in workflow, 'Checkout credentials must not persist'
+          assert '      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' in workflow, 'Checkout must be SHA pinned'
+          assert '  push:\n    branches: [main]' in workflow, 'Main branch must be tested'
+          print('CI least-privilege and main-branch safeguards passed')
+          PY
       - name: Check Worker syntax
         run: node --check control-room-worker.js
       - name: Run Account 4 regression suite
