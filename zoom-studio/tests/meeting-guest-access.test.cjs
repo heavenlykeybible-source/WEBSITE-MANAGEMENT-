@@ -656,3 +656,13 @@ test('disconnected host receives no creation acknowledgement after slow TURN sig
  assert.equal(ws.messages.some(m=>m.t==='created'),false);
  assert.equal(h.r.host(),undefined);
 });
+
+test('expired guest handshake cannot join after delayed account verification',async()=>{
+ const h=setup();
+ h.guest.attachment.until=Date.now()+10;
+ h.context.check=async()=>{await new Promise(resolve=>setTimeout(resolve,35));return {e:'member@example.com',t:2,exp:Date.now()+60000};};
+ await h.join('valid');
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
+});
