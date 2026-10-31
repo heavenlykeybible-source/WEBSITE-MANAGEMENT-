@@ -17,7 +17,7 @@ export default {
    // Account 2 verifies this server-side token; never expose it in browser assets.
    let response;try{response=await fetch(new Request(target,{method:request.method,headers,redirect:'manual',signal:AbortSignal.timeout(15000)}));}catch{return Response.json({error:'Broadcast engine unreachable'},{status:502,headers:{'Cache-Control':'no-store'}});}
    if(response.status>=300&&response.status<400)return Response.json({error:'Unexpected broadcast redirect'},{status:502,headers:{'Cache-Control':'no-store'}});
-   const h=new Headers(response.headers);h.set('Cache-Control','no-store');h.delete('set-cookie');h.delete('access-control-allow-origin');h.delete('content-security-policy');
+   const h=new Headers(response.headers);h.set('Cache-Control','no-store');h.set('X-Content-Type-Options','nosniff');h.set('Referrer-Policy','no-referrer');h.set('Cross-Origin-Resource-Policy','same-origin');h.delete('set-cookie');h.delete('access-control-allow-origin');h.delete('content-security-policy');
    return new Response(request.method==='HEAD'?null:response.body,{status:response.status,headers:h});
   }
   return env.ASSETS?env.ASSETS.fetch(request):new Response('Radio assets not configured',{status:503});
