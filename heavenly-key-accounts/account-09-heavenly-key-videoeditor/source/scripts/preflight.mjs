@@ -6,6 +6,7 @@ const staticHeaders=readFileSync('_headers','utf8');
 const deployHeaders=readFileSync('public/_headers','utf8');
 if(staticHeaders!==deployHeaders) throw Error('Security header configurations must match');
 if(!deployHeaders.includes("manifest-src 'self'")) throw Error('Manifest source policy missing');
+if(!deployHeaders.includes("base-uri 'none'")) throw Error('Base URI must be disabled when the editor does not use a base element');
 if(!deployHeaders.includes("script-src 'self'; script-src-attr 'none'") || /script-src[^;]*'unsafe-inline'/.test(deployHeaders)) throw Error('Strict script CSP must block inline scripts and event attributes');
 if(!deployHeaders.includes("style-src 'self'; style-src-attr 'none'") || /style-src[^;]*'unsafe-inline'/.test(deployHeaders)) throw Error('Strict style CSP must block inline styles and style attributes');
 for (const path of ['editor.css','public/editor.css']) if(!existsSync(path)) throw Error('Missing '+path);
