@@ -64,6 +64,7 @@ if (!timeline.includes("$('clipList').onkeydown=") || !timeline.includes("key===
 const html=readFileSync('public/index.html','utf8');
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) if (!html.includes('src="/'+name+'"')) throw Error('Script not loaded: '+name);
 if (html !== readFileSync('index.html','utf8')) throw Error('Public page not synchronized with editor source');
+if (!html.includes('id="logoutAll"') || !html.includes("api('logout-all','POST',{password})")) throw Error('All-device sign-out control missing from editor');
 for (const asset of ['logo-256.png','logo-512.png','favicon.png']) if (!existsSync('public/assets/'+asset)) throw Error('Public asset missing: '+asset);
 for (const x of ['id="vexp"','id="vdl"','id="autocap"']) if (!html.includes(x)) throw Error(`Missing client control ${x}`);
 const api=readFileSync('functions/api/[[path]].js','utf8');
