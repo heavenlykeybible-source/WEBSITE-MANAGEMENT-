@@ -27,6 +27,7 @@ legacyDb.exec(readFileSync(new URL('../migrations/0005_password_hash_iterations.
 if(!legacyDb.prepare("SELECT name FROM pragma_table_info('users') WHERE name='password_iterations'").get()) throw Error('Legacy password hash migration did not add iteration metadata');
 legacyDb.close();
 if(!db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_sessions_user_expires'").get())throw Error('Missing session user expiry index');
+if(!db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_sessions_user_last_seen'").get())throw Error('Missing session inactivity index');
 if(!db.prepare("SELECT name FROM pragma_table_info('users') WHERE name='password_iterations'").get())throw Error('Missing password hash iteration metadata');
 
 const objects = new Map();
@@ -213,6 +214,9 @@ check('Session is rejected at its absolute expiry even after recent activity',ab
 db.prepare('UPDATE sessions SET expires_at=?,last_seen_at=? WHERE token_hash=?').run(initialSession.expires_at,Date.now()-31*60*1000,idleTokenHash);
 const idleExpired=await request('me',{cookie:sessionIdleLogin.cookie});
 check('Session is rejected after 30 minutes of inactivity',idleExpired.status===401);
+const cleanupLogin=await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
+check('Expired idle sessions are removed during the next login',!db.prepare('SELECT 1 FROM sessions WHERE token_hash=?').get(idleTokenHash));
+await request('logout',{method:'POST',cookie:cleanupLogin.cookie});
 await request('logout',{method:'POST',cookie:sessionIdleLogin.cookie});
 const failedLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'incorrect password'}});
 check('Incorrect password is rejected without exposing a session',failedLogin.status===401&&!failedLogin.cookie);
