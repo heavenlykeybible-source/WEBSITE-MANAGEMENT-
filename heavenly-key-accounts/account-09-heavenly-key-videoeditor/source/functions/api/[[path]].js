@@ -60,7 +60,7 @@ async function pbkdf2(pw, salt) {
 const ROLES = new Set(['owner', 'admin']);
 const cookie = (t, age) => `hk=${t}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
 async function user(req, env) {
-  const m = (req.headers.get('cookie') || '').match(/(?:^|; )hk=([a-f0-9]{64})/);
+  const m = (req.headers.get('cookie') || '').match(/(?:^|;\s*)hk=([a-f0-9]{64})(?=;|$)/);
   if (!m) return null;
   const r = await env.DB.prepare('SELECT u.id,u.email,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').bind(await sha(m[1]), Date.now()).first();
   return r || null;
@@ -171,7 +171,7 @@ export async function onRequest({ request: req, env, params }) {
       return J({ ok: true, email: u.email, role: u.role || 'member' }, 200, { 'set-cookie': cookie(t, 30 * 86400) });
     }
     if (a === 'logout' && m === 'POST') {
-      const c = (req.headers.get('cookie') || '').match(/(?:^|; )hk=([a-f0-9]{64})/);
+      const c = (req.headers.get('cookie') || '').match(/(?:^|;\s*)hk=([a-f0-9]{64})(?=;|$)/);
       if (c) await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha(c[1])).run();
       return J({ ok: true }, 200, { 'set-cookie': cookie('', 0) });
     }
