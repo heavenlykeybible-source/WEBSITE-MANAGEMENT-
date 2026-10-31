@@ -839,3 +839,15 @@ test('queued socket role change cannot be promoted into a host by delayed verifi
  assert.ok(!candidate.messages.some(m=>m.t==='created'));
  assert.equal(candidate.readyState,3,'role mutation closes the conflicting connection');
 });
+
+test('meeting signalling enforces a 20 KB UTF-8 wire payload cap',async()=>{
+ const s=await openRoom(),before=s.host.messages.length;
+ const payload=JSON.stringify({t:'chat',text:'🌍'.repeat(6000)});
+ assert.ok(payload.length<20000,'test payload must fit below the old UTF-16 size limit');
+ assert.ok(new TextEncoder().encode(payload).byteLength>20000,'test payload must exceed the UTF-8 wire limit');
+ await s.room.webSocketMessage(s.host,payload);
+ assert.equal(s.host.readyState,3,'oversized wire frame must disconnect its sender');
+ assert.equal(s.host.messages.filter(m=>m.t==='chat').length,0,'oversized content must not be broadcast');
+ assert.equal(s.host.messages.length,before+1);
+ assert.match(s.host.messages.at(-1).msg,/Invalid message/);
+});
