@@ -272,7 +272,7 @@ function dr(c,s,x,y,w,h,fr){
   if(f&&f.audio){c.fillStyle='#f2c14e';const n=48,bw=w/n,mh=h*.6;for(let i=0;i<n;i++){const v=arr[i]/255*mh+3;c.fillRect(x+i*bw+3,y+h*.8-v,bw-6,v)}
    c.fillStyle='#fff';c.font='500 '+Math.round(Math.min(h*.06,w*.045))+'px system-ui,sans-serif';c.textBaseline='middle';c.shadowColor='#000';c.shadowBlur=10;c.fillText(f.name,x+20,y+h*.9,w-40);c.shadowBlur=0}
   else fit(c,s.el,s.el.videoWidth,s.el.videoHeight,x,y,w,h)}
- else if(s.blur&&s.oc)(fr?cover:fit)(c,s.oc,s.oc.width,s.oc.height,x,y,w,h);
+ else if(s.blur&&s.oc&&s.segReady)(fr?cover:fit)(c,s.oc,s.oc.width,s.oc.height,x,y,w,h);
  else(fr?cover:fit)(c,s.el,s.el.videoWidth,s.el.videoHeight,x,y,w,h)}
 function drawScene(c,sc,a){c.globalAlpha=a;for(const t of sc.items){const s=src(t.id);if(t.on&&s){const[q,r,u,v]=P[t.p],X=q*W,Y=r*H,Wd=u*W,Hd=v*H;
   if(FR[t.p]){c.save();c.shadowColor='rgba(0,0,0,.55)';c.shadowBlur=24;rrect(c,X,Y,Wd,Hd,22);c.fillStyle='#0d1620';c.fill();c.shadowBlur=0;c.clip();dr(c,s,X,Y,Wd,Hd,1);c.restore();rrect(c,X,Y,Wd,Hd,22);c.strokeStyle='#f2c14e';c.lineWidth=4;c.stroke()}
@@ -285,7 +285,7 @@ function frame(){if($('lite').checked){const t=performance.now();if(t-lastF<70){
  cx.drawImage(dl,0,0);if($('low').checked)lc.drawImage($('cv'),0,0,lo.width,lo.height);if(guests.size){if(gc.width!==W/2){gc.width=W/2;gc.height=H/2}gx.drawImage($('cv'),0,0,gc.width,gc.height)}
  if(studio){px.fillStyle='#0d1620';px.fillRect(0,0,W,H);drawScene(px,SC[pvw],1)}
  // Process one camera per frame, rotating fairly across active presenters.
- if(seg&&!segBusy){const cameras=S.filter(s=>s.type==='camera'&&s.blur&&s.oc&&s.el&&s.el.readyState>1);if(cameras.length){segIndex=segIndex%cameras.length;const s=cameras[segIndex++];segBusy=true;segCur=s;seg.send({image:s.el}).then(()=>{s.segFails=0}).catch(()=>{if(++s.segFails>=3){s.blur=false;s.bgm='off';s.oc=null;msg('Background processing failed. Original camera restored to keep the presenter visible.');ui()}}).finally(()=>{segBusy=false;segCur=null})}}
+ if(seg&&!segBusy){const cameras=S.filter(s=>s.type==='camera'&&s.blur&&s.oc&&s.el&&s.el.readyState>1);if(cameras.length){segIndex=segIndex%cameras.length;const s=cameras[segIndex++];segBusy=true;segCur=s;seg.send({image:s.el}).then(()=>{s.segFails=0}).catch(()=>{if(++s.segFails>=3){s.blur=false;s.bgm='off';s.oc=null;s.segReady=false;msg('Background processing failed. Original camera restored to keep the presenter visible.');ui()}}).finally(()=>{segBusy=false;segCur=null})}}
  for(const s of S){if(!s.g)continue;
   if(s.type==='mic'){s.an.getFloatTimeDomainData(mbuf);let q=0;for(const v of mbuf)q+=v*v;const now=performance.now();
    if(20*Math.log10(Math.sqrt(q/mbuf.length)+1e-9)>s.gate)s.hold=now+400;const op=now<s.hold;
@@ -325,11 +325,11 @@ function loadSeg(cb){if(seg)return cb(true);segWait.push(cb);if(segLoading)retur
    if(s.bgm==='tpl'&&sceneBg?.fn)sceneBg.fn(c,0,0,w,h,performance.now());
    else if(s.bgm==='tpl'&&sceneBg?.img){const img=sceneBg.img,iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;if(iw&&ih)cover(c,img,iw,ih,0,0,w,h);else c.drawImage(r.image,0,0,w,h)}
    else if(s.bgm==='tpl'){c.drawImage(r.image,0,0,w,h)}
-   else{c.filter='blur(14px)';c.drawImage(r.image,0,0,w,h)}c.restore()});done(true)}catch(e){seg=null;done(false)}};
+   else{c.filter='blur(14px)';c.drawImage(r.image,0,0,w,h)}c.restore();s.segReady=true});done(true)}catch(e){seg=null;done(false)}};
  sc.onerror=()=>done(false);document.head.appendChild(sc)}
-function setBgMode(s,v){const requested=Symbol();s.bgRequest=requested;if(v==='off'){s.blur=false;s.bgm='off';s.oc=null;ui();msg('Original camera restored without background processing.');return}msg('Loading background model...');
+function setBgMode(s,v){const requested=Symbol();s.bgRequest=requested;if(v==='off'){s.blur=false;s.bgm='off';s.oc=null;s.segReady=false;ui();msg('Original camera restored without background processing.');return}msg('Loading background model...');
  loadSeg(ok=>{if(s.bgRequest!==requested)return;if(!ok){msg('Could not load the background model. Check your connection.');s.blur=false;s.bgm='off';ui();return}
-  s.oc=s.oc||document.createElement('canvas');s.segFails=0;s.bgm=v;s.blur=true;msg(v==='tpl'?'Template background is on. Pick a template under Start.':'Background blur is on.');ui()})}
+  s.oc=s.oc||document.createElement('canvas');s.segReady=false;s.segFails=0;s.bgm=v;s.blur=true;msg(v==='tpl'?'Template background is on. Pick a template under Start.':'Background blur is on.');ui()})}
 
 const T=[['Nations stage','bg/nations-stage.jpg'],['Gold stage','bg/gold-stage.jpg'],['Globe and doves','bg/globe-doves.jpg'],['Worship crowd','bg/worship-crowd.jpg'],['Vertical nations (portrait)','bg/vertical-nations.jpg',1]].map(([n,u,p])=>({n,u,p,th:u.replace('bg/','bg/th-')}));
 function proc(n,c1,c2,c3){const c=document.createElement('canvas');c.width=1280;c.height=720;const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,720);
