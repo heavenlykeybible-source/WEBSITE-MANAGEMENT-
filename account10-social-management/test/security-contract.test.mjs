@@ -455,6 +455,9 @@ test('least-privilege staff policy denies unknown writes and external messaging'
  const allowed=new Function(js+';return operatorActionAllowed')();
  for(const role of ['viewer','operator']){
   assert.equal(allowed(role,'GET','/api/conversations'),true);
+  for(const secretPath of ['/api/operators','/api/webhooks/events','/api/operations/data-integrity','/api/media','/api/automation/readiness','/api/whatsapp/readiness','/api/unknown-next-release']){
+   assert.equal(allowed(role,'GET',secretPath),false,role+' must not read '+secretPath);
+  }
   assert.equal(allowed(role,'POST','/api/operators'),false);
   assert.equal(allowed(role,'POST','/api/whatsapp/send-approved'),false);
   assert.equal(allowed(role,'POST','/api/posts'),false);
@@ -466,4 +469,22 @@ test('least-privilege staff policy denies unknown writes and external messaging'
  }
  assert.equal(allowed('operator','POST','/api/new-unsafe-feature'),false);
  assert.equal(allowed('owner','POST','/api/operators'),true);
+});
+
+test('staff GET permissions use explicit endpoint allowlists and no wildcard read', () => {
+ const helper=readFileSync(new URL('../src/operator-permissions.ts',import.meta.url),'utf8');
+ assert.doesNotMatch(helper,/if\(method==='GET'\|\|method==='HEAD'\)return true/);
+ assert.match(helper,/const sharedRead=/);
+ assert.match(helper,/const operatorRead=/);
+ const js=helper.replace(
+  "export const operatorActionAllowed=(role:'owner'|'operator'|'viewer',method:string,path:string):boolean=>",
+  "const operatorActionAllowed=(role,method,path)=>"
+ );
+ const can=new Function(js+';return operatorActionAllowed')();
+ assert.equal(can('operator','GET','/api/drafts'),true);
+ assert.equal(can('viewer','GET','/api/drafts'),false);
+ assert.equal(can('operator','GET','/api/operators'),false);
+ assert.equal(can('viewer','GET','/api/webhooks/events'),false);
+ assert.equal(can('operator','GET','/api/future-route'),false);
+ assert.equal(can('owner','GET','/api/operators'),true);
 });
