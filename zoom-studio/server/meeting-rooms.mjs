@@ -36,7 +36,7 @@ export class MeetingRooms {
   const url=new URL(request.url);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
-  const roomPath=url.pathname.match(/^\/meeting\/([a-f0-9-]{36})(?:\/room)?\/?$/i);
+  const roomPath=url.pathname.match(/^\/meeting\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(?:\/room)?\/?$/i);
   if(!roomPath||url.search)return new Response('Invalid meeting route',{status:404});
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
   const capacity=capacityForRoom(this.env);
