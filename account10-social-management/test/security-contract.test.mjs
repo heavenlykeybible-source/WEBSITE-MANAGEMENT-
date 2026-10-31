@@ -499,3 +499,10 @@ test('dashboard content policy keeps safe navigation defaults', () => {
  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
  assert.ok(source.includes("form-action 'self'; upgrade-insecure-requests"));
 });
+
+test('static dashboard isolates cross-origin resources and removes server disclosure headers', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("headers.set('cross-origin-resource-policy','same-origin')"));
+ assert.ok(source.includes("headers.delete('x-powered-by')"));
+ assert.ok(source.includes("headers.delete('x-aspnet-version')"));
+});
