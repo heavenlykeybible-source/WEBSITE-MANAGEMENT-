@@ -13,3 +13,12 @@ Changes are staged on the development branch only. Do not merge or deploy withou
 8. Confirm application status from multiple regions and verify monitoring, alerts, and recovery procedures.
 
 **Launch blockers:** successful CI alone does not demonstrate safe legacy cutover, credential validity, actual media output, multi-region correctness, or complete security.
+
+
+## Owner directive: television is locked; radio only
+
+Television is on hold and must not be unlocked without a separate explicit owner instruction and a reviewed release. The Account 2 `TV_LOCKED` backend gate denies public TV programmes and public video playback (HTTP 423), TV destinations (including `both`), TV playlist/settings changes, TV social egress starts, and new scheduled TV playouts. Cron does not activate previously scheduled TV videos. Radio audio scheduling, radio programmes and explicitly radio-directed streams remain available. Media management and authenticated video previews are preserved for future work; the television broadcasting channel is not enabled.
+
+Verify `GET /api/broadcast/channel-availability` returns radio available and television locked. Run `npm run test:tv-lock` plus existing Account 2 checks. Do not present a passed CI run as proof that radio has passed live listener, device, continuity, and production RTMPS tests.
+
+Before deploying the lock, check whether television or a mixed `both` destination is already on air; coordinate stopping it rather than assuming a code rollout will stop an external provider egress. Production changes still require owner approval.
