@@ -47,6 +47,16 @@ for(const entry of converted){
 }
 for(const entry of converted)for(const key of Object.keys(missingSectionCounts))if(entry.sections[key]===null)missingSectionCounts[key]++;
 const missingDayDrafts=missingDates.map(date=>({date,status:'draft',review:{doctrinalApproved:false,sourcesVerified:false},provenance:{format:'missing-legacy-date',requiresOriginalEditorialContent:true},sections:{topic:null,bibleReading:{oldTestament:[],newTestament:[]},hymn:null,bibleStory:null,worldStory:null,eternity:null,decision:null,warfare:{permanentReferences:['Matthew 11:12','Luke 18:1'],prayerPoints:[]},propheticPrayer:null,healthPrayer:null,salvation:null,challenges:[]}}));
+// Keep the editorial report aggregate-only: no private draft text or invented approvals.
+const editorialQueue={
+ schemaVersion:1,status:'EDITORIAL_REVIEW_REQUIRED',
+ totalDays:converted.length+missingDayDrafts.length,
+ legacyDraftDays:converted.length,missingOriginalDays:missingDayDrafts.length,
+ missingOriginalDates:missingDates,
+ incompleteReadingDays,incompleteWarfareDays,missingSectionCounts,
+ approvalsGranted:0,publicationAllowed:false,
+ nextSteps:['Write and verify missing original dates','Complete six KJV readings per day','Verify hymn and sourced stories','Write and review prayers and all twelve sections','Obtain explicit doctrinal and source approvals']
+};
 const payload={schemaVersion:2,publicationStatus:'editorial-hold',generatedFor:'private-editorial-review-only',coverage:{start:expectedStart,end:expectedEnd,sourceDays:converted.length,missingDates,complete:false,missingSectionCounts,incompleteReadingDays,incompleteWarfareDays,editorialApprovalRequired:true},missingDayDrafts,entries:converted};
 const destination=join(out,'strength-next-private-drafts.json');
 // Refuse paths whose output file already exists; never follow an output-file symlink.
@@ -56,5 +66,8 @@ if(!finalDirectoryStats.isDirectory()||readdirSync(out).length!==0)throw Error('
 if(process.platform!=='win32'&&(finalDirectoryStats.mode&0o077))throw Error('Private directory permissions changed during processing');
 if(typeof process.getuid==='function'&&finalDirectoryStats.uid!==process.getuid())throw Error('Private directory ownership changed during processing');
 writeFileSync(destination,JSON.stringify(payload,null,2),{encoding:'utf8',flag:'wx',mode:0o600});
+const queueDestination=join(out,'strength-next-editorial-queue.json');
+writeFileSync(queueDestination,JSON.stringify(editorialQueue,null,2),{encoding:'utf8',flag:'wx',mode:0o600});
+if(statSync(queueDestination).mode & 0o077)throw Error('Private editorial queue permissions are too broad');
 if(statSync(destination).mode & 0o077)throw Error('Private export permissions are too broad');
 console.log(JSON.stringify({status:'PRIVATE_DRAFTS_ONLY',days:converted.length,incompleteReadingDays,incompleteWarfareDays,missingDates,missingDayDrafts:missingDayDrafts.length,output:'strength-next-private-drafts.json',publication:'BLOCKED'},null,2));
