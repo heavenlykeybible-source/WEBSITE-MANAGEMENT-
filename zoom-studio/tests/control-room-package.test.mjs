@@ -1034,3 +1034,28 @@ test('virtual camera model download fails safely on timeout and ignores late cal
  assert.match(html,/sc\.onload=\(\)=>\{if\(finished\)return/,'late CDN success must not activate a timed-out background');
  assert.match(html,/segLoading=false;for\(const fn of segWait\.splice\(0\)\)/,'waiting cameras must all be released after failure');
 });
+
+test('stalled background download releases every camera and permits a retry',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const source=html.slice(html.indexOf('let seg=null,'),html.indexOf('function setBgMode('));
+ assert.ok(source.startsWith('let seg=null,')&&source.includes('function loadSeg(cb)'), 'background loader must be extractable');
+ const scripts=[],timeouts=[],cleared=[];
+ const document={createElement:()=>({}),head:{appendChild:node=>scripts.push(node)}};
+ const loadSeg=new Function('document','setTimeout','clearTimeout','console',source+';return loadSeg')(
+  document,(fn,delay)=>{const task={fn,delay};timeouts.push(task);return task;},
+  token=>cleared.push(token),{error:()=>{}}
+ );
+ const outcomes=[];
+ loadSeg(ok=>outcomes.push(['first',ok]));
+ loadSeg(ok=>outcomes.push(['second',ok]));
+ assert.equal(scripts.length,1,'concurrent users share one model request');
+ assert.equal(timeouts[0].delay,15000);
+ timeouts[0].fn();
+ assert.deepEqual(outcomes,[['first',false],['second',false]]);
+ scripts[0].onload();
+ assert.equal(outcomes.length,2,'late script load cannot notify cameras a second time');
+ loadSeg(ok=>outcomes.push(['retry',ok]));
+ assert.equal(scripts.length,2,'retry is permitted after timeout');
+ timeouts[1].fn();
+ assert.deepEqual(outcomes.at(-1),['retry',false]);
+});
