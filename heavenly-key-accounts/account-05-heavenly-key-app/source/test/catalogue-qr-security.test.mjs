@@ -84,3 +84,17 @@ test('installed Hymn Library launches the real hymn book, not a redirect', () =>
   assert.match(worker,/'\/old-time-gospel-revival-hymn-book\.html'/);
   assert.doesNotMatch(worker,/'\/hymns\.html'/);
 });
+
+test('Audio Hymnal opens local rights-gated player instead of redirecting offsite', () => {
+  const html=publicFile('audio-hymns.html');
+  const manifest=JSON.parse(publicFile('manifests/audio-hymns.webmanifest'));
+  const release=JSON.parse(publicFile('audio-hymn-manifest.json'));
+  const essential=['hymn-select','hymn-style','hymn-player','hymn-status','hymn-count','hymn-save','hymn-remove','hymn-with-music','hymn-background-player'];
+  assert.equal(manifest.start_url,'/audio-hymns.html');
+  assert.match(html,/rel="manifest" href="\/manifests\/audio-hymns\.webmanifest"/);
+  assert.match(html,/type="module" src="\/audio-hymns\.js"/);
+  assert.doesNotMatch(html,/http-equiv="refresh"/i);
+  for(const id of essential)assert.ok(html.includes('id="'+id+'"'),'Missing player control '+id);
+  assert.equal(release.publicationApproved,false,'Never bypass unpublished recording permissions');
+  assert.match(publicFile('audio-hymn-catalog.js'),/manifest\.publicationApproved!==true/);
+});
