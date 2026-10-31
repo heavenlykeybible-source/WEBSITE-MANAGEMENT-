@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS account4_import_release_attestations (
   size_bytes INTEGER NOT NULL CHECK(size_bytes BETWEEN 1 AND 1073741824),
   verdict TEXT NOT NULL CHECK(verdict IN ('pending','clean','malicious','error')),
   scanned_at TEXT,
+  scanned_etag TEXT CHECK(scanned_etag IS NULL OR (length(scanned_etag) BETWEEN 32 AND 128 AND scanned_etag NOT GLOB '*[^0-9A-Fa-f]*')),
   scanned_version TEXT CHECK(scanned_version IS NULL OR (length(scanned_version) BETWEEN 8 AND 256)),
   scanned_sha256 TEXT CHECK(scanned_sha256 IS NULL OR (length(scanned_sha256)=64 AND scanned_sha256 NOT GLOB '*[^0-9a-f]*')),
   approved_sha256 TEXT CHECK(approved_sha256 IS NULL OR (length(approved_sha256)=64 AND approved_sha256 NOT GLOB '*[^0-9a-f]*')),
@@ -19,7 +20,7 @@ CREATE TABLE IF NOT EXISTS account4_import_release_attestations (
   CHECK (verdict = 'clean' OR
          (approved_by IS NULL AND approved_at IS NULL AND approved_sha256 IS NULL)),
   CHECK (verdict != 'clean' OR
-         (scanned_at IS NOT NULL AND scanned_version IS NOT NULL AND scanned_sha256 IS NOT NULL)),
+         (scanned_at IS NOT NULL AND scanned_version IS NOT NULL AND scanned_etag IS NOT NULL AND scanned_sha256 IS NOT NULL)),
   CHECK (approved_sha256 IS NULL OR approved_sha256 = scanned_sha256),
   CHECK (approved_at IS NULL OR
          (scanned_at IS NOT NULL AND julianday(approved_at) IS NOT NULL AND
