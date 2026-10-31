@@ -53,6 +53,9 @@ await assert.rejects(uploadPrivatePart(bucket,actor,{...session,expiresAt:0},1,n
 await assert.rejects(completePrivateImport(bucket,actor,{...session,state:'private-awaiting-review'},[{partNumber:1,etag:'abc123'}]));
 await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'forged123'}]),/server-side upload record/);
 await assert.rejects(uploadPrivatePart(bucket,actor,{...session,key:'private-imports/8/forged'},1,new Uint8Array(11)));
+for (const key of ['private-imports/7/forged','private-imports/7/../8/other','private-imports/7/123e4567-e89b-12d3-a456-426614174000/extra']) {
+  await assert.rejects(uploadPrivatePart(bucket,actor,{...session,key},1,new Uint8Array(11)),/session invalid/);
+}
 // All parts must be present exactly once; client-controlled duplicate metadata is rejected.
 await assert.rejects(completePrivateImport(bucket,actor,{...session,partCount:2},[{partNumber:1,etag:'abc123'},{partNumber:1,etag:'abc123'}]));
 completedSize=10;
