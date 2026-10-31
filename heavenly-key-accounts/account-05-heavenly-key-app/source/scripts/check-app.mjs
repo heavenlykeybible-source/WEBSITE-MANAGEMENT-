@@ -18,3 +18,18 @@ for(const file of files(join(root,'public')).filter(f=>f.endsWith('.html'))){
  }
 }
 console.log('All app scripts, module dependencies and local page/assets links verified.');
+
+// Enforce the Account 5 strict-CSP contract on primary public entry points.
+for(const name of ['walk-offline.html','experience.html','devotional.html','creation-to-eternity.html','old-time-gospel-revival-hymn-book.html']){
+ const file=join(root,'public',name);const html=readFileSync(file,'utf8');
+ for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){const attrs=match[1],type=attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();if(!/\bsrc=/i.test(attrs)&&(!type||/^(?:text|application)\/(?:javascript|ecmascript)$/i.test(type)))throw Error('Inline executable script violates strict CSP in '+name);}
+ if(/\sstyle\s*=/i.test(html))throw Error('Inline style violates strict CSP in '+name);
+ if(/<iframe\b/i.test(html))throw Error('Nested frame is not allowed by Account 5 frame policy in '+name);
+}
+const policy=readFileSync(join(root,'public','_headers'),'utf8');
+for(const directive of ["script-src 'self'","style-src 'self'","frame-src 'none'","frame-ancestors 'none'","object-src 'none'","base-uri 'none'","upgrade-insecure-requests"]){if(!policy.includes(directive))throw Error('Missing required CSP directive: '+directive)}
+const reading=readFileSync(join(root,'public','daily-reading-plan.js'),'utf8');
+if(!reading.includes("import {KJV_BOOKS,READING_YEAR,readingForDay,TODAY_REFLECTIONS}"))throw Error('Daily reading catalogue import missing');
+if(!reading.includes('KJV_BOOKS.find(x=>x.name===reading.book)')||!reading.includes('encodeURIComponent(book.slug)'))throw Error('Daily reading Bible-book lookup is not aligned with the KJV catalogue');
+if(reading.includes('books.find')||reading.includes(':\\\\d{1,3}'))throw Error('Daily reading runtime/progress regression detected');
+console.log('Account 5 strict-CSP, page, module and daily-reading checks passed.');

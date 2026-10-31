@@ -1,5 +1,5 @@
 /* Dedicated KJV reading schedule. */
-import {READING_YEAR,readingForDay,TODAY_REFLECTIONS} from './bible-catalog.js';
+import {KJV_BOOKS,READING_YEAR,readingForDay,TODAY_REFLECTIONS} from './bible-catalog.js';
 const root=document.getElementById('study-root');
 const make=(tag,value,cls)=>{const e=document.createElement(tag);if(value!==undefined&&value!==null)e.textContent=value;if(cls)e.className=cls;return e;};
 const heading=(title,description)=>{root.append(make('h2',title));if(description)root.append(make('p',description,'study-subtitle'));};
@@ -15,16 +15,16 @@ async function devotional(){
  const saved=readPref(progressKey,{});
  const progress=saved&&typeof saved==='object'&&!Array.isArray(saved)?saved:{};
  const progressStatus=make('p','');
- const refreshProgress=()=>{const done=Object.keys(progress).filter(k=>progress[k]===true&&/^(morning|evening):\\d{1,3}$/.test(k)).length;progressStatus.textContent=done+' of 730 reading sessions marked complete on this device. Progress is not synced.';};
+ const refreshProgress=()=>{const done=Object.keys(progress).filter(k=>progress[k]===true&&/^(morning|evening):\d{1,3}$/.test(k)).length;progressStatus.textContent=done+' of 730 reading sessions marked complete on this device. Progress is not synced.';};
  const c=make('section',null,'study-grid');
  for(const [n,slot,index] of [[0,'Morning devotion',day],[1,'Evening devotion',(day+181)%365]]){
   const reading=dates[index],card=make('article',null,'study-card'),title=make('h3',slot),ref=make('strong',reading.book+' '+reading.chapter),preview=make('blockquote');
-  const book=books.find(x=>x.name===reading.book),item=excerpts?.readings?.[index];
+  const book=KJV_BOOKS.find(x=>x.name===reading.book),item=excerpts?.readings?.[index];
   if(item&&item.book===reading.book&&item.chapter===reading.chapter&&typeof item.verse==='string'){
    preview.textContent=item.verse+' — '+reading.book+' '+reading.chapter+':1 (KJV)';
   }else{preview.textContent='Open the full KJV chapter to read the passage.';}
   if(!book){card.append(make('p','Bible book unavailable in the catalogue.'));c.append(card);continue;}
-  const open=link('Read full chapter →','bible.html?book='+encodeURIComponent(book.id)+'&chapter='+reading.chapter);
+  const open=link('Read full chapter →','bible.html?book='+encodeURIComponent(book.slug)+'&chapter='+reading.chapter);
   const key=(n===0?'morning':'evening')+':'+(day+1);
   const checkbox=make('input');checkbox.type='checkbox';checkbox.checked=progress[key]===true;checkbox.id='reading-complete-'+n;
   const label=make('label',' Mark '+slot.toLowerCase()+' complete');label.htmlFor=checkbox.id;
