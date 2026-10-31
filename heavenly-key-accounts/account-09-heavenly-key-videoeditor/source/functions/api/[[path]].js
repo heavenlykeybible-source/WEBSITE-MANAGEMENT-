@@ -466,8 +466,7 @@ export async function onRequest({ request: req, env, params }) {
           const saved = await env.DB.prepare('UPDATE media SET deleted=1 WHERE id=? AND user_id=? AND deleted=0').bind(p[1],u.id).run();
           if (saved.meta.changes) await env.MEDIA.delete(r.r2_key).catch(() => {});
           if (saved.meta.changes) {
-            const sizeRow = r;
-            await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(sizeRow.size,u.id).run();
+            await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(r.size,u.id).run();
           }
           return saved.meta.changes ? J({ ok: true }) : J({ error: 'Not found' }, 404);
         }
