@@ -20,29 +20,36 @@ const ADMIN_ROLES = new Set(['Administrator','Super Administrator','Deputy Super
 const json = (body: unknown, status=200, headers?: HeadersInit) => Response.json(body,{status,headers});
 function fromHex(value:string):Uint8Array { if(!/^[0-9a-f]{64}$/i.test(value)) throw new Error('Invalid signature'); const o=new Uint8Array(32); for(let i=0;i<32;i++)o[i]=parseInt(value.slice(i*2,i*2+2),16); return o; }
 async function verifyCapability(token:string, secret:string):Promise<Capability|null>{
-  // Reject malformed or oversized inputs before parsing and allocating crypto keys.
-  if(typeof token!=='string'||token.length>4096||typeof secret!=='string'||!secret)return null;
-  const parts=token.split('.'); if(parts.length!==2)return null;
-  const [encoded,signature]=parts;
-  if(!encoded||encoded.length>3000||!signature||!/^[a-f0-9]{64}$/i.test(signature))return null;
-  let p:Capability;
-  try{p=JSON.parse(atob(encoded)) as Capability;}catch{return null;}
-  // JSON null, arrays and non-numeric timestamps must fail closed, not throw.
-  if(!p||typeof p!=='object'||Array.isArray(p))return null;
-  const now=Math.floor(Date.now()/1000);
-  if(typeof p.sub!=='string'||!p.sub.trim()||p.sub.length>256||
-     typeof p.nonce!=='string'||!p.nonce.trim()||p.nonce.length>256||
-     !Number.isSafeInteger(p.iat)||p.iat<=0||p.iat>now+30||
-     !Number.isSafeInteger(p.exp)||p.exp<=now||p.exp<=p.iat||
-     !ADMIN_ROLES.has(p.role))return null;
-  try{
-    const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
-    const valid=await crypto.subtle.verify('HMAC',key,fromHex(signature) as unknown as BufferSource,new TextEncoder().encode(encoded));
-    return valid?p:null;
-  }catch{return null;}
+  const parts=token.split('.'); if(parts.length!==2)return null; const [encoded,signature]=parts; if(!encoded||!signature||encoded.length>8192||signature.length!==64||!/^[0-9a-fA-F]{64}$/.test(signature))return null;
+  let p:Capability; try{p=JSON.parse(atob(encoded)) as Capability;if(!p||typeof p!=='object'||Array.isArray(p))return null;}catch{return null;}
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
+  let valid=false; try{valid=await crypto.subtle.verify('HMAC',key,fromHex(signature) as unknown as BufferSource,new TextEncoder().encode(encoded));}catch{return null;}
+  const now=Math.floor(Date.now()/1000); if(!valid||typeof p.sub!=='string'||p.sub.length===0||p.sub.length>256||typeof p.nonce!=='string'||p.nonce.length===0||p.nonce.length>256||!Number.isInteger(p.exp)||!Number.isInteger(p.iat)||p.iat>now+30||p.iat<now-300||p.exp<=now||p.exp<=p.iat||p.exp-p.iat>300||!ADMIN_ROLES.has(p.role))return null; return p;
 }
 function audit(env:Env, cap:Capability, action:string, type:string, id?:string){ return env.DB.prepare('INSERT INTO audit_events(actor_id,action,resource_type,resource_id) VALUES(?,?,?,?)').bind(cap.sub,action,type,id??null).run(); }
-async function requireJson(request:Request){ try{return await request.json() as Record<string,unknown>}catch{return null;} }
+async function requireJson(request:Request):Promise<Record<string,unknown>|null>{
+  const maxBytes=65536;
+  const declared=Number(request.headers.get('content-length'));
+  if(Number.isFinite(declared)&&declared>maxBytes)return null;
+  if(!request.body)return null;
+  const reader=request.body.getReader();
+  const parts:Uint8Array[]=[];
+  let total=0;
+  try{
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      total+=value.byteLength;
+      if(total>maxBytes){await reader.cancel();return null;}
+      parts.push(value);
+    }
+    const bytes=new Uint8Array(total);
+    let offset=0;
+    for(const part of parts){bytes.set(part,offset);offset+=part.byteLength;}
+    const parsed:unknown=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+    return parsed!==null&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed as Record<string,unknown>:null;
+  }catch{return null;}finally{reader.releaseLock();}
+}
 function expiryHours(hours=48){return new Date(Date.now()+hours*3600000).toISOString();}
 
 export default {
