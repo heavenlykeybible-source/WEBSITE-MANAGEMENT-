@@ -55,3 +55,10 @@ article h3{color:var(--manna-middle)!important}
 .archive-topic-button{padding:12px;border-radius:9px;border:1px solid #9ab4e0;background:#f5f8ff;color:#123b8b;text-align:left;cursor:pointer}
 .member-search-input{width:100%;padding:12px}
 .member-result-label{display:block;padding:10px;border-bottom:1px solid #ddd}
+
+/* Daily edition: central message and spiritual focus */
+.daily-edition{margin:18px 0 24px;padding:20px 22px;border:1px solid #e4c66f;border-left:5px solid var(--manna-middle,#a72142);border-radius:16px;background:linear-gradient(135deg,#fffdf5,#f2f6ff)}
+.daily-edition h2,.daily-edition h3{margin:0 0 8px;color:var(--manna-middle,#a72142);font-size:13px;letter-spacing:.09em}
+.daily-edition p{margin:0 0 16px;font-size:17px;line-height:1.75;color:#172e54}
+.daily-edition p:last-child{margin-bottom:0}
+.daily-edition[hidden]{display:none}
