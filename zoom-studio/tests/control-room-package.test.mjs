@@ -773,7 +773,7 @@ test('broadcast studio preserves sharp camera output and fails safely on backgro
  assert.match(page,/limit=\$\('lite'\)\.checked\?720:1280/,'normal mode must use a higher-resolution segmentation canvas');
  assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\)return/,'disabled segmentation must not keep processing the camera');
  assert.match(page,/s\.oc=null;ui\(\);msg\('Original camera restored/,'disabling backgrounds restores the unprocessed camera');
- assert.match(page,/t\.img\.onerror=\(\)=>msg\('This studio background could not be loaded/,'missing studio assets must be reported');
+ assert.match(page,/t\.img\.onerror=\(\)=>\{if\(request===bgPick&&SC\.includes\(scene\)\)msg\('This studio background could not be loaded/,'only the active background load may report an error');
  for(const ratio of ['Landscape (16:9)','Portrait (9:16, phones)','Square (1:1)'])assert.ok(page.includes(ratio));
 });
 
