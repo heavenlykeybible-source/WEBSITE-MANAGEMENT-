@@ -297,6 +297,18 @@ try {
   });
   check('Voice provider HTML masquerading as MP3 is rejected',invalidVoice.status===502);
 } finally { globalThis.fetch=originalFetch; }
+const countedVoiceAttempts=db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='voice_synthesize_attempt'").get(accountId).c;
+check('Failed voice provider responses consume reserved attempts',countedVoiceAttempts===2);
+for(let i=countedVoiceAttempts;i<10;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'voice_synthesize_attempt',Date.now());
+const voiceRateLimited=await onRequest({
+  request:new Request('https://studio.example/api/voice-synthesize',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'application/json','x-requested-with':'hk'},
+    body:JSON.stringify({text:'Authorized sample',consentConfirmed:true})
+  }),
+  env:{...env,VOICE_TTS_API_KEY:'test-only',VOICE_TTS_VOICE_ID:'test-voice'},
+  params:{path:['voice-synthesize']}
+});
+check('Voice synthesis quota blocks attempt eleven',voiceRateLimited.status===429);
 const anonymousVoice = await request('voice-config');
 check('Anonymous voice configuration forbidden', anonymousVoice.status === 401);
 
