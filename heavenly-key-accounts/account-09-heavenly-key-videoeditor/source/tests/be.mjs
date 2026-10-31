@@ -439,7 +439,13 @@ check('Members cannot read another member media',otherMediaRead.status===404);
 const otherMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:secondLogin.cookie});
 check('Members cannot delete another member media',otherMediaDelete.status===404);
 
+const originalMediaDelete = env.MEDIA.delete;
+let mediaDeleteAttempts = 0;
+env.MEDIA.delete = async () => { mediaDeleteAttempts++; throw new Error('Simulated temporary R2 outage'); };
 const deletedMedia = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:login.cookie});
+env.MEDIA.delete = originalMediaDelete;
+check('Media deletion retries after R2 failure',mediaDeleteAttempts===2);
+check('Unrecoverable R2 deletion is audited',db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='media_r2_delete_failed'").get(accountId).c===1);
 check('Media deletion succeeds for owned file',deletedMedia.status===200);
 const repeatedMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:login.cookie});
 check('Repeated media deletion reports not found',repeatedMediaDelete.status===404);
