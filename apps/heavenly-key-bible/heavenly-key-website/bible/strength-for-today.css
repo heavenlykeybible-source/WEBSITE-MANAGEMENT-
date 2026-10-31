@@ -62,3 +62,6 @@ article h3{color:var(--manna-middle)!important}
 .daily-edition p{margin:0 0 16px;font-size:17px;line-height:1.75;color:#172e54}
 .daily-edition p:last-child{margin-bottom:0}
 .daily-edition[hidden]{display:none}
+
+#manna-image-preview[data-image-size="vertical"]{aspect-ratio:9/16}
+#manna-image-preview[data-image-size="facebook"]{aspect-ratio:3/4}
