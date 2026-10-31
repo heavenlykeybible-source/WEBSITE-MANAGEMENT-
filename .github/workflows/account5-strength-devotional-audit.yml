@@ -8,6 +8,8 @@ on:
       - 'apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/data/annotations/**'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/style.css'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/app.js'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/data/kjv/**'
       - 'apps/heavenly-key-bible/bible/worker.js'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-devotionals-*.json'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-publication-status.json'
@@ -43,6 +45,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
+      - name: Check Bible reader and colour audit syntax
+        run: |
+          node --check apps/heavenly-key-bible/heavenly-key-website/bible/app.js
+          node --check apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs
       - name: Verify annotated KJV verses and colouring styles
         run: node apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs
   editorial-quality-gate:
