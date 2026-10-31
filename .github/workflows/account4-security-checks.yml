@@ -110,6 +110,8 @@ jobs:
       - name: Validate Control Room workspace and security module syntax
         run: |
           find workspace security cms -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -r -n1 node --check
+      - name: Validate Cloudflare Worker packaging without deployment
+        run: npx --yes wrangler@4 deploy --dry-run --outdir /tmp/account4-worker-bundle
       - name: Run Account 4 regression suite
         run: npm test
       - name: Run CMS editor DOM security and functionality checks
