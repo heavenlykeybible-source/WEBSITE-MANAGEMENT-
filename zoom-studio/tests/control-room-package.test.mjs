@@ -1097,3 +1097,17 @@ test('choosing a studio background makes an existing hidden background layer vis
  assert.equal(items.length,1,'switching templates must not duplicate the existing scene background');
  assert.equal(items[0].on,true,'the selected background must be shown again');
 });
+
+test('WebSocket initialization failure closes the accepted socket rather than leaking an unauthenticated client',async()=>{
+ const source=fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8').replace('export class MeetingRooms','class MeetingRooms');
+ let accepted;
+ const MockResponse=class {constructor(body,{status,webSocket}={}){this.status=status;this.body=body;this.webSocket=webSocket}};
+ const MockPair=class {constructor(){const ws={readyState:1,closed:false,serializeAttachment(){throw Error('serialization unavailable')},deserializeAttachment(){return {}},close(){this.closed=true;this.readyState=3}};return {0:{},1:ws}}};
+ const Room=new Function('Response','WebSocketPair',source+';return MeetingRooms')(MockResponse,MockPair);
+ const room=new Room({getWebSockets:()=>accepted&&accepted.readyState===1?[accepted]:[],acceptWebSocket:ws=>{accepted=ws},storage:{async getAlarm(){return null},async setAlarm(){}}},{});
+ const request=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
+ const response=await room.fetch(request);
+ assert.equal(response.status,503,'a failed attachment cannot create a usable connection');
+ assert.equal(accepted.closed,true,'the accepted WebSocket must be closed on initialization error');
+ assert.equal(accepted.readyState,3);
+});
