@@ -3,7 +3,7 @@ export async function inspectPrivateImportRecovery(db, bucket, actor, id) {
   if (actor?.authenticated !== true || actor.canImport !== true ||
       !Number.isSafeInteger(actor.id) || actor.id <= 0)
     throw new Error('Import permission required');
-  if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+  if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
     throw new Error('Invalid import identifier');
   const row = await db.prepare('SELECT owner_id,object_key,size_bytes,state,expires_at_ms FROM account4_import_sessions WHERE id=? AND owner_id=?')
     .bind(id,actor.id).first();
