@@ -87,7 +87,7 @@ test('preflight isolates assets section from later Worker configuration sections
  assert.ok(script.includes('assetStart+1,assetEnd>=0?assetEnd:undefined'));
  assert.ok(script.includes('Assets section must specify ./public directory'));
  assert.ok(script.includes('Assets section must declare ASSETS binding'));
- assert.ok(script.includes('Assets section must declare run_worker_first exactly once'));
+ assert.ok(script.includes("assetValue('run_worker_first')"));
 });
 
 test('preflight rejects duplicate critical asset keys', () => {
