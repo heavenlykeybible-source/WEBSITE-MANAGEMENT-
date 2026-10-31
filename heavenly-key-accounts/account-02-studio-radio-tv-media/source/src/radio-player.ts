@@ -75,7 +75,7 @@ async function start(){
 }
 play.addEventListener('click',async()=>{if(play.disabled)return;if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(playPending||!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
 next.addEventListener('click',async()=>{if(next.disabled)return;if(!select(position+1))return;if(playing||playPending)await start();else say('Next recording ready. Press Play.')});
-retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
+retry.addEventListener('click',async()=>{const resume=playing;const previousGeneration=loadGeneration;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;playPending=false;play.textContent='▶ Play Radio';await refresh();if(loadGeneration===previousGeneration+1&&resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
 audio.addEventListener('ended',()=>{if(!playlist.length)return;const continuePlaying=playing;select(position+1);if(continuePlaying)void start()});
 audio.addEventListener('pause',()=>{if(playing&&audio.paused&&!audio.ended)setPaused('Paused.');});
 window.addEventListener('pagehide',()=>{++loadGeneration;playlistAbort?.abort();playlistAbort=null;audio.pause();setPaused();});
