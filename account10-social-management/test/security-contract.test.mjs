@@ -332,7 +332,7 @@ test('readiness endpoint inspects D1 migrations without falsely claiming provide
  assert.match(handler,/PRAGMA table_info\(conversations\)/);
  assert.match(handler,/whatsapp_handover_events/);
  assert.match(handler,/ai_rate_limits/);
- assert.match(handler,/migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits/);
+ assert.match(handler,/migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits&&operatorCredentialsReady/);
  assert.match(handler,/providerWebhooks:false,providerPublishing:false/);
  assert.match(handler,/Schema presence does not prove webhook delivery/);
 });
@@ -354,7 +354,7 @@ test('readiness requires the real handover ledger and limiter columns, not just 
  assert.match(handler,/PRAGMA table_info\(ai_rate_limits\)/);
  assert.match(handler,/\['message_id','conversation_id','contact_target','consumed'\]/);
  assert.match(handler,/\['scope','window_kind','window_start','request_count'\]/);
- assert.match(handler,/migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits/);
+ assert.match(handler,/migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits&&operatorCredentialsReady/);
 });
 
 test('human request resolution is versioned and rejects stale operator tabs', () => {
