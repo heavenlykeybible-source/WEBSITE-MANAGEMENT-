@@ -563,3 +563,12 @@ test('Meta challenge response blocks cross-origin embedding and active content',
  assert.ok(response.includes("'cross-origin-resource-policy':'same-origin'"));
  assert.ok(response.includes("default-src 'none'; frame-ancestors 'none'; base-uri 'none'"));
 });
+
+test('public health route rejects mutations and serves bodyless HEAD responses', () => {
+ const begin=source.indexOf("if(u.pathname==='/health'){");
+ const end=source.indexOf("if(u.pathname!=='/api'",begin);
+ assert.ok(begin>=0&&end>begin);
+ const route=source.slice(begin,end);
+ assert.match(route,/if\(req\.method!=='GET'&&req\.method!=='HEAD'\)return reply\(\{error:'Method not allowed'\},405\)/);
+ assert.match(route,/req\.method==='HEAD'\?new Response\(null,\{status:health\.status,headers:health\.headers\}\):health/);
+});
