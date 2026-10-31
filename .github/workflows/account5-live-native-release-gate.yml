@@ -22,7 +22,7 @@ jobs:
   public-native-release:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/source
@@ -34,5 +34,5 @@ jobs:
       - name: Check production installer URLs and metadata
         run: node scripts/verify-live-native-downloads.mjs
       - name: Download and cryptographically hash complete installers
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_download }}
+        if: ${{ github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.full_download) }}
         run: node scripts/verify-live-native-downloads.mjs --full
