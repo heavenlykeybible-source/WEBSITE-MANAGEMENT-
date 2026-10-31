@@ -18,6 +18,7 @@ if(!apiSource.includes("await env.MEDIA.delete(r.r2_key).catch(async () => { awa
 if(!apiSource.includes('SELECT r2_key,size FROM media') || !apiSource.includes('bind(r.size,u.id).run()'))throw Error('Media delete size reuse missing');
 if(!apiSource.includes("p[1] === 'cleanup' && !p[2] && m === 'POST'") || !apiSource.includes("SELECT id,r2_key FROM media WHERE user_id=? AND deleted=1 ORDER BY created_at ASC LIMIT 10") || !apiSource.includes("DELETE FROM media WHERE id=? AND user_id=? AND deleted=1"))throw Error('Authenticated bounded R2 cleanup route missing');
 if(!apiSource.includes("SELECT r2_key FROM media WHERE user_id=?'"))throw Error('Account deletion must include previously deleted R2 objects');
+if(!apiSource.includes('Account deletion was not completed; please retry.'))throw Error('Account deletion must stop safely on R2 storage failure');
 if(!apiSource.includes("!item.r2_key.startsWith(u.id + '/')") || !apiSource.includes("!x.r2_key.startsWith(u.id + '/')"))throw Error('R2 deletion requires per-account object key ownership');
 if((apiSource.match(/!r\.r2_key\.startsWith\(u\.id \+ '\/'\)/g)||[]).length!==2)throw Error('Media read and delete must validate R2 ownership');
 if(!readFileSync('tests/be.mjs','utf8').includes('Foreign storage reference blocks media download') || !readFileSync('tests/be.mjs','utf8').includes('Foreign storage reference blocks media deletion'))throw Error('Cross-owner media regression tests missing');
