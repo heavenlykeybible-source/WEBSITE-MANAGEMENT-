@@ -443,7 +443,7 @@ check('Uploaded media returns a nonempty identifier',Boolean(mediaCreated.id));
 const uploadQuotaBefore=db.prepare('SELECT storage_used FROM users WHERE id=?').get(accountId).storage_used;
 const realUploadPut=env.MEDIA.put;
 env.MEDIA.put=async()=>{throw Error('Simulated R2 upload outage');};
-const failedMediaUpload=await onRequest({request:new Request('https://studio.example/api/media?name=failure.png',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},body:Uint8Array.from([137,80,78,71])}),env,params:{path:['media']}});
+const failedMediaUpload=await onRequest({request:new Request('https://studio.example/api/media?name=failure.png',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},body:Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+X9uSAAAAAElFTkSuQmCC','base64'))}),env,params:{path:['media']}});
 env.MEDIA.put=realUploadPut;
 check('Failed R2 upload returns service error',failedMediaUpload.status===500);
 check('Failed R2 upload releases reserved storage quota',db.prepare('SELECT storage_used FROM users WHERE id=?').get(accountId).storage_used===uploadQuotaBefore);
