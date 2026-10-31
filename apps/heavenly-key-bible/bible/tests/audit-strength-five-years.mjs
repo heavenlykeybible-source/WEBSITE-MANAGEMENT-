@@ -132,6 +132,18 @@ const qualityBlockingCodes=new Set([
  'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','MECHANICAL_REFLECTION_FORMULA','INCONSISTENT_PRAYER_PERSON','RELEASE_GATE'
 ]);
 const qualityBlockingFlags=flags.filter(f=>qualityBlockingCodes.has(f.code));
+// Prioritize content remediation without mutating the unpublished devotional corpus.
+const remediationPriority=[
+ ['MISSING_CALENDAR_DAY','Author and review missing dated entries; do not publish unapproved material'],
+ ['EXACT_DUPLICATE_REFLECTION','Rewrite duplicate topic reflections with distinct scriptural insight'],
+ ['EXACT_DUPLICATE_PRAYER','Rewrite duplicate topic prayers with context-specific requests'],
+ ['REPEATED_REFLECTION_OPENING','Remove formulaic topic openings and independently edit each entry'],
+ ['MECHANICAL_REFLECTION_FORMULA','Replace templated wording with human-reviewed exposition'],
+ ['TEMPLATE_LANGUAGE','Replace placeholder/template wording'],
+ ['INCONSISTENT_PRAYER_PERSON','Correct inconsistent prayer voice'],
+ ['THIN_DAILY_REFLECTION','Expand underdeveloped daily reflections'],
+ ['DUPLICATE_DAY_TITLE','Review repeated day titles and themes']
+].map(([code,action])=>({code,count:flags.filter(f=>f.code===code).length,action})).filter(item=>item.count>0);
 const automatedQualityPassed=qualityBlockingFlags.length===0 &&
  entries.length===requestedDayTarget &&
  topicCount===requestedDayTarget*12 &&
@@ -145,7 +157,7 @@ const result={
  files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,missingDates,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:Array.isArray(manifest.publishedBatchFiles)?manifest.publishedBatchFiles.length:null,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
- flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
+ flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),remediationPriority,
  sampleFlags:[...new Map(flags.map(f=>[f.code,f])).values()].slice(0,100),
  manualReviewRequirements:[
   'Every devotional requires Scripture quotation verified against the KJV and contextual reading',
@@ -158,7 +170,7 @@ const result={
  publicationReady:false
 };
 if(process.env.STRENGTH_AUDIT_SUMMARY==='1') {
- console.log(JSON.stringify({files:result.files,days:result.days,requestedDayTarget:result.requestedDayTarget,missingDates:result.missingDates,topicEntries:result.topicEntries,qualityBlockingFlagCount:result.qualityBlockingFlagCount,flagsByType:result.flagsByType,sampleFlags:result.sampleFlags,publicationReady:result.publicationReady},null,2));
+ console.log(JSON.stringify({files:result.files,days:result.days,requestedDayTarget:result.requestedDayTarget,missingDates:result.missingDates,topicEntries:result.topicEntries,qualityBlockingFlagCount:result.qualityBlockingFlagCount,flagsByType:result.flagsByType,remediationPriority:result.remediationPriority,sampleFlags:result.sampleFlags,publicationReady:result.publicationReady},null,2));
 } else console.log(JSON.stringify(result,null,2));
 if(!automatedQualityPassed) {
  console.error('EDITORIAL QUALITY BLOCKED: unresolved duplicates, templated copy, incomplete data or missing requested dates. Human doctrinal and KJV approval still required.');
