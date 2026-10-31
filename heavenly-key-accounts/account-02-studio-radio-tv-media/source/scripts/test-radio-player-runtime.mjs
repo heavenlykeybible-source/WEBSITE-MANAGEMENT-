@@ -112,6 +112,7 @@ await get('play').fire('click');
 assert.equal(audio.paused,true,'Second tap must cancel pending playback');
 assert.equal(get('play').getAttribute('aria-label'),'Play radio');
 resolvePendingPlay();await firstPlay;
+assert.equal(audio.paused,true,'Late play promise must not restart audio after cancellation');
 assert.equal(get('play').getAttribute('aria-label'),'Play radio','Late play promise must never restore Playing controls');
 holdPlay=false;
 console.log('Account 2 radio runtime play, pause, next, end, refresh, and page-exit tests passed');
