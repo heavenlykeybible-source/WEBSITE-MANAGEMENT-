@@ -294,3 +294,15 @@ test('host rejects malformed or oversized tokens before authentication', async()
     assert.match(incoming.messages.at(-1).msg,/invalid meeting token/i);
   }
 });
+
+test('expired stage cannot send signaling or chat before alarm fires', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  h.guest.attachment.identity.expires=Date.now()-1000;
+  const before=h.host.messages.length;
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}}));
+  assert.equal(h.guest.readyState,3);
+  assert.equal(h.host.messages.length,before);
+  assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
