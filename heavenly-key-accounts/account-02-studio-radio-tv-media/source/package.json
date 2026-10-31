@@ -9,7 +9,8 @@
     "test:d1": "node --experimental-sqlite scripts/test-broadcast-d1.mjs",
     "test:stream-validation": "node scripts/test-stream-validation.mjs",
     "test:capability-auth": "node scripts/test-capability-auth.mjs",
-    "test:tv-lock": "node scripts/test-tv-lock.mjs"
+    "test:tv-lock": "node scripts/test-tv-lock.mjs",
+    "test:radio-on-demand": "node scripts/test-radio-on-demand.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
