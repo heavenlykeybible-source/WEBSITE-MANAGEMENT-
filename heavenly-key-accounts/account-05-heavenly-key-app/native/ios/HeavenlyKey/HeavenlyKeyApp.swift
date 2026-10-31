@@ -24,6 +24,7 @@ struct HeavenlyKeyWebView: UIViewRepresentable {
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
         webView.load(URLRequest(url: homeURL, cachePolicy: .useProtocolCachePolicy))
         return webView
@@ -31,7 +32,26 @@ struct HeavenlyKeyWebView: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+        // WKWebView does not automatically open target="_blank" windows.
+        // Hand approved user-initiated links to Safari instead of silently dropping them.
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            guard navigationAction.targetFrame == nil,
+                  let url = navigationAction.request.url,
+                  let scheme = url.scheme?.lowercased(),
+                  ["https", "mailto", "tel"].contains(scheme),
+                  (scheme != "https" || (url.host != nil && url.user == nil && url.password == nil))
+            else { return nil }
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            return nil
+        }
+
+
         func webView(
             _ webView: WKWebView,
             decidePolicyFor navigationAction: WKNavigationAction,
