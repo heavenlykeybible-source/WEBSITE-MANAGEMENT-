@@ -1,9 +1,10 @@
 /** Standalone Account 2 radio player. No autoplay or external audio engine. */
 export function radioPlayerHtml():Response {
+ const nonce=Array.from(crypto.getRandomValues(new Uint8Array(16)),byte=>byte.toString(16).padStart(2,'0')).join('');
  const html=`<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10264b"><title>Heavenly Key — Online Revival Radio</title>
-<style>
+<style nonce="${nonce}">
 :root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:linear-gradient(145deg,#0b162e,#12386b 58%,#102545);color:#fff;display:grid;place-items:center;padding:24px}
 main{width:min(100%,560px);background:#08172bbd;border:1px solid #ffffff29;border-radius:26px;padding:clamp(20px,5vw,36px);box-shadow:0 25px 90px #0006}
@@ -33,7 +34,7 @@ input[type=range]{accent-color:#f3c957;flex:1;min-width:60px}
 <p class="hint">Television is locked. Audio plays only when you press Play; playback stops when you pause or leave this page.</p>
 <audio id="audio" preload="none" playsinline></audio>
 </main>
-<script>
+<script nonce="${nonce}">
 (()=>{'use strict';
 const audio=document.getElementById('audio'),play=document.getElementById('play'),next=document.getElementById('next'),retry=document.getElementById('retry'),title=document.getElementById('track'),status=document.getElementById('status'),volume=document.getElementById('volume'),volumeValue=document.getElementById('volumeValue'),output=document.getElementById('output'),outputHelp=document.getElementById('outputHelp');
 let playlist=[],position=0,playing=false,loadGeneration=0,playGeneration=0;
@@ -92,5 +93,5 @@ if('mediaSession' in navigator){if(typeof MediaMetadata==='function')navigator.m
 void refresh();
 })();
 </script></body></html>`;
- return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Permissions-Policy':'speaker-selection=(self)','Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"}});
+ return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Permissions-Policy':'speaker-selection=(self)','Content-Security-Policy':`default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`}});
 }
