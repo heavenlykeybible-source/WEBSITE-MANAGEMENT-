@@ -18,6 +18,7 @@ if (!readFileSync('schema.sql','utf8').includes(sessionIndex) || !readFileSync('
 if (!apiSource.includes("if (a === 'logout-all' && m === 'POST')") || !apiSource.includes("await env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(u.id).run()") || !apiSource.includes("await log(env,u.id,'logout_all')")) throw Error('Account-wide session revocation safeguard missing');
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'voice_synthesize_attempt'") || !apiSource.includes("AND at>?) < 10") || !apiSource.includes('if(!voiceSlot.meta.changes)')) throw Error('Atomic voice synthesis attempt quota missing');
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'logout_all_attempt'") || !apiSource.includes('if (!reauthSlot.meta.changes)')) throw Error('Account session revocation attempt throttle missing');
+if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'account_delete_attempt'") || !apiSource.includes('if (!deleteSlot.meta.changes)')) throw Error('Atomic account deletion reauthentication throttle missing');
 const wrangler = readFileSync('wrangler.toml','utf8');
 for (const x of ['pages_build_output_dir = "public"','binding = "DB"','binding = "MEDIA"','binding = "AI"']) if (!wrangler.includes(x)) throw Error(`Missing binding ${x}`);
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) {
