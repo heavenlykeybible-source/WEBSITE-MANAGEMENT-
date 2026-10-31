@@ -480,6 +480,7 @@ export async function onRequest({ request: req, env, params }) {
       if (p[1] && m === 'DELETE') {
         const r = await env.DB.prepare('SELECT r2_key,size FROM media WHERE id=? AND user_id=? AND deleted=0').bind(p[1], u.id).first();
         if (!r) return J({ error: 'Not found' }, 404);
+        if (typeof r.r2_key !== 'string' || !r.r2_key.startsWith(u.id + '/')) return J({ error: 'Media ownership check failed.' }, 409);
         if (r) {
           const saved = await env.DB.prepare('UPDATE media SET deleted=1 WHERE id=? AND user_id=? AND deleted=0').bind(p[1],u.id).run();
           if (saved.meta.changes) await env.MEDIA.delete(r.r2_key).catch(async () => { await new Promise(resolve => setTimeout(resolve, 200 + Math.floor(Math.random() * 150))); await env.MEDIA.delete(r.r2_key).catch(async () => { await log(env, u.id, 'media_r2_delete_failed').catch(() => {}); }); });
