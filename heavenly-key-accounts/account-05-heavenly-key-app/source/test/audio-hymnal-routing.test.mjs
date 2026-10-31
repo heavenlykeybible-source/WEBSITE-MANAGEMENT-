@@ -133,3 +133,22 @@ test('service binding subrequests disable automatic redirect following and crede
  assert.equal(upstreamRequest.headers.get('authorization'),null);
  assert.equal(upstreamRequest.headers.get('accept'),'text/html');
 });
+
+test('independent apps reject insecure and parameterized entry URLs before service lookup',async()=>{
+ let calls=0;
+ const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{fetch:async()=>{calls++;return new Response('Unexpected');}}};
+ for(const url of [
+  'http://apps.heavenlykey.org/bible.html',
+  'https://apps.heavenlykey.org/bible.html?app=other',
+  'https://apps.heavenlykey.org/bible.html?token=private',
+  'https://user:pass@apps.heavenlykey.org/bible.html'
+ ]){
+  const response=await routeIndependentApp(new Request(url),env);
+  assert.equal(response.status,400,url);
+  assert.equal(response.headers.get('cache-control'),'no-store');
+ }
+ assert.equal(calls,0,'Unsafe independent app requests reached another service');
+ const response=await routeIndependentApp(new Request('https://apps.heavenlykey.org/bible.html'),env);
+ assert.equal(response.status,502,'Untrusted service identity must still be enforced');
+ assert.equal(calls,1);
+});
