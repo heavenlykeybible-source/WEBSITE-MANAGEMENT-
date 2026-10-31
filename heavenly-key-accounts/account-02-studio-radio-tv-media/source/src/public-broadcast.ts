@@ -12,7 +12,7 @@ const ready="m.status IN ('approved','published') AND (m.status='published' OR m
 export async function eligibleMedia(env:BroadcastEnv,id:number):Promise<any>{
  return env.DB.prepare(`SELECT m.* FROM media_objects m WHERE m.media_id=? AND ${ready} AND
  (m.status='published' OR EXISTS (SELECT 1 FROM playout_items p WHERE p.media_id=m.media_id AND p.status IN ('scheduled','playing') AND julianday(p.starts_at)<=julianday('now') AND julianday(p.ends_at)>julianday('now'))
- OR EXISTS (SELECT 1 FROM live_sessions l WHERE ((l.status='live' AND julianday(l.last_heartbeat_at)>julianday('now','-180 seconds')) OR (l.status='reconnecting' AND julianday(l.reconnect_deadline)>julianday('now'))) AND (l.visual_media_id=m.media_id OR l.fallback_media_id=m.media_id OR l.source_ref='media:'||m.media_id)))`).bind(id).first();
+ OR EXISTS (SELECT 1 FROM live_sessions l WHERE ((l.status='live' AND julianday(l.last_heartbeat_at)>julianday('now','-180 seconds')) OR (l.status='reconnecting' AND julianday(l.reconnect_deadline)>julianday('now'))) AND (l.visual_media_id=m.media_id OR l.fallback_media_id=m.media_id OR l.source_ref='media:'||m.media_id) AND (l.destination='radio' OR (?=0 AND l.destination IN ('video','both')))))`).bind(id,TV_LOCKED?1:0).first();
 }
 
 function mediaItem(m:any){return {mediaId:m.media_id,title:m.object_key.split('/').pop()??'Ministry programme',type:m.media_type,mimeType:m.mime_type,url:`/api/broadcast/media/${m.media_id}/object`};}
