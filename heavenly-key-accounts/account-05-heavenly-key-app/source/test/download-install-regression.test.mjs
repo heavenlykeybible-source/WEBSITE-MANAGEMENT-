@@ -24,6 +24,7 @@ test('download guide restricts app destinations to secure HTTPS or local develop
   assert.match(js, /trustedHosts\.has\(destination\.hostname\)/);
   assert.match(js, /destination\.username \|\| destination\.password/);
   assert.match(js, /destination\.protocol === 'http:' && destination\.hostname === 'localhost'/);
+  assert.match(js, /location\.hostname === 'localhost'/);
 });
 
 test('every published app in catalogue has a download control in directory', () => {
