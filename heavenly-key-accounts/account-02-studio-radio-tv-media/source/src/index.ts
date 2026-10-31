@@ -4,6 +4,7 @@ import { publicProgramme, serveBroadcastMedia, isPlaybackURL } from "./public-br
 import { restreamStatus, saveDestination, setDestinationEnabled, removeDestination, startRestream, stopRestream } from './restream';
 import { TV_LOCKED,channelAvailability,tvLockedResponse } from './channel-lock';
 import { validRadioObjectKey,validRadioRetentionHours } from './radio-upload-security';
+import { supportedAudioSignature } from './audio-signature';
 import { radioPlayerHtml } from './radio-player';
 interface Env {
   MEDIA_ENGINE_SHARED_SECRET: string;
@@ -282,6 +283,7 @@ export default {
     while(true){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>26214400){await reader.cancel();return json({error:'Uploads are limited to 25MB'},413);}chunks.push(part.value);}
     if(!size)return json({error:'Upload body is empty'},400);
     const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+    if(row.media_type==='audio'&&!supportedAudioSignature(row.mime_type,bytes.subarray(0,16)))return json({error:'The file contents do not match the selected audio format'},415);
     await env.MEDIA_R2.put(row.object_key,bytes,{httpMetadata:{contentType:row.mime_type}});
     await env.DB.prepare("UPDATE media_objects SET status='approved',size_bytes=?,updated_at=CURRENT_TIMESTAMP WHERE media_id=?").bind(size,mediaId).run();
     await audit(env,cap,'media.upload','media',String(mediaId));
