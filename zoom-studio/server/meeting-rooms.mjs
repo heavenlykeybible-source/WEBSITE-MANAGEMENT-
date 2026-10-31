@@ -69,7 +69,7 @@ export class MeetingRooms {
    if(now>d.until)return this.close(ws,{t:'error',msg:'Please reconnect.'});
    if(m.t==='host'){
     if(typeof m.token!=='string'||m.token.length===0||m.token.length>4096)return this.close(ws,{t:'error',msg:'Invalid meeting token.'});
-    const a=await check(this.env.AUTH_SECRET,m.token);
+    let a;try{a=await check(this.env.AUTH_SECRET,m.token);}catch{return this.close(ws,{t:'error',msg:'Unable to verify meeting access.'});}
     if(!a||a.k!=='meeting'||a.r!==d.room||typeof a.u!=='string'||a.u.length===0||a.u.length>254||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
     // Authentication may yield; never activate a closed or already-joined socket.
     if(ws.readyState!==1||this.data(ws).role)return;
