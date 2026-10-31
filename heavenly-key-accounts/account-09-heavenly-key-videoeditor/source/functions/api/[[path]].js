@@ -371,6 +371,10 @@ export async function onRequest({ request: req, env, params }) {
         if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
         const announced = req.headers.get('content-length');
         if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
+        // Atomically reserve an upload attempt before buffering up to 50 MB into memory.
+        const uploadAt=Date.now();
+        const uploadSlot=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'media_upload_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='media_upload_attempt' AND at>?) < 120").bind(u.id,uploadAt,u.id,uploadAt-DAY).run();
+        if(!uploadSlot.meta.changes)return J({error:'Daily media upload attempt limit reached.'},429);
         const payload = await readBoundedMedia(req, MAXFILE);
         if (!payload) return J({ error: 'File exceeds 50 MB.' }, 413);
         const size = payload.byteLength;
