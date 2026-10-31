@@ -601,5 +601,16 @@ const throttledDelete=await request('account',{method:'DELETE',cookie:secondLogi
 const unchangedMember=await request('me',{cookie:secondLogin.cookie});
 check('Sensitive account deletion enforces confirmation attempt limit',throttledDelete.status===429);
 check('Blocked deletion leaves account and sessions intact',unchangedMember.status===200&&!!db.prepare('SELECT id FROM users WHERE id=?').get(deleteTargetId));
+const privacySignup=await request('register',{method:'POST',body:{email:'privacy-cleanup@example.com',password:'correct horse battery'}});
+const privacyLogin=await request('login',{method:'POST',body:{email:'privacy-cleanup@example.com',password:'correct horse battery'}});
+check('Privacy cleanup fixture account created',privacySignup.status===200&&privacyLogin.status===200);
+const privacyUser=db.prepare('SELECT id FROM users WHERE email=?').get('privacy-cleanup@example.com').id;
+const privacyKey=privacyUser+'/deleted-file';
+objects.set(privacyKey,Buffer.from('orphan media'));
+db.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,?,?)').run('privacy-tombstone',privacyUser,'deleted.png','image/png',12,privacyKey,1,Date.now());
+const privacyDeletion=await request('account',{method:'DELETE',cookie:privacyLogin.cookie,body:{password:'correct horse battery'}});
+check('Account deletion succeeds with tombstoned media',privacyDeletion.status===200);
+check('Account deletion removes previously deleted R2 objects',!objects.has(privacyKey));
+check('Account deletion removes tombstone records',!db.prepare('SELECT id FROM media WHERE id=?').get('privacy-tombstone'));
 console.log('RESULT', passed, '/', total);
 if (passed !== total) process.exitCode = 1;
