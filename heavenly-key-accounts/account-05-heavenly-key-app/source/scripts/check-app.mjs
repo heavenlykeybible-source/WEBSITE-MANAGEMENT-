@@ -22,7 +22,7 @@ console.log('All app scripts, module dependencies and local page/assets links ve
 // Enforce the Account 5 strict-CSP contract on primary public entry points.
 for(const name of ['walk-offline.html','experience.html','devotional.html','creation-to-eternity.html','old-time-gospel-revival-hymn-book.html']){
  const file=join(root,'public',name);const html=readFileSync(file,'utf8');
- if(/<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i.test(html))throw Error('Inline script violates strict CSP in '+name);
+ for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){const attrs=match[1],type=attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();if(!/\bsrc=/i.test(attrs)&&(!type||/^(?:text|application)\/(?:javascript|ecmascript)$/i.test(type)))throw Error('Inline executable script violates strict CSP in '+name);}
  if(/\sstyle\s*=/i.test(html))throw Error('Inline style violates strict CSP in '+name);
  if(/<iframe\b/i.test(html))throw Error('Nested frame is not allowed by Account 5 frame policy in '+name);
 }
