@@ -42,6 +42,7 @@ struct HeavenlyKeyMacBrowser: NSViewRepresentable {
             }
             let trusted = scheme == "https"
                 && url.host?.lowercased() == "apps.heavenlykey.org"
+                && (url.port == nil || url.port == 443)
                 && url.user == nil && url.password == nil
             if trusted && !url.path.hasPrefix("/api/native-download/") {
                 decisionHandler(.allow)
