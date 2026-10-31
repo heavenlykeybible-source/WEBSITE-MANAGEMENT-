@@ -41,7 +41,7 @@ const db={prepare(sql){let args=[];return {bind(...values){args=values;return th
   if(sql.startsWith('UPDATE account4_import_sessions SET state=')){session.state=args[0];state=args[0];return {success:true,meta:{changes:1}};}
   return {success:true,meta:{changes:0}};
  }
-};}},env={DB:db,FILES:bucket};
+};}},env={DB:db,PRIVATE_IMPORTS:bucket};
 const call=(sub,method='GET',body,actor=owner,headers={})=>account4PrivateImportRoutes(
  new Request('https://control.test/api/owner/'+sub,{method,headers:{...(body===undefined?{}:{'content-type':'application/json'}),...headers},...(body===undefined?{}:{body:typeof body==='string'?body:JSON.stringify(body)})}),
  env,actor,sub,method,(key,fn)=>fn(),(event,detail)=>auditEvents.push({event,detail}));
