@@ -29,6 +29,11 @@ db.prepare=originalPrepare;
 row={owner_id:7,object_key:session.key,upload_id:'u1',filename:'backup.zip',size_bytes:11,part_count:1,state:'uploading',expires_at_ms:session.expiresAt};
 assert.equal((await loadImportSession(db,actor,id)).parts[1],undefined);
 await assert.rejects(loadImportSession(db,other,'invalid'));
+const beforeInvalidId=statements.length;
+for(const invalidId of ['f'.repeat(36),'123e4567e89b42d3a456426614174000',
+ '123e4567-e89b-42d3-a456-42661417400z','123e4567--89b-42d3-a456-426614174000'])
+  await assert.rejects(loadImportSession(db,actor,invalidId),/Invalid import session identifier/);
+assert.equal(statements.length,beforeInvalidId,'Invalid IDs must be rejected before D1 queries');
 const originalKey=row.object_key;
 row.object_key='private-imports/8/forged';
 await assert.rejects(loadImportSession(db,actor,id),/unavailable/);
