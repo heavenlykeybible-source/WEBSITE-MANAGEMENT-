@@ -98,3 +98,13 @@ test('Audio Hymnal opens local rights-gated player instead of redirecting offsit
   assert.equal(release.publicationApproved,false,'Never bypass unpublished recording permissions');
   assert.match(publicFile('audio-hymn-catalog.js'),/manifest\.publicationApproved!==true/);
 });
+
+test('Audio Hymnal HTML provides every control required by existing player module', () => {
+  const html=publicFile('audio-hymns.html');
+  const script=publicFile('audio-hymns.js');
+  const required=[...new Set([...script.matchAll(/el\('([^']+)'\)/g)].map(match=>match[1]))];
+  for(const id of required){
+    assert.ok(html.includes('id="'+id+'"'),'Audio player is missing '+id);
+  }
+  assert.ok(required.length>=20,'Expected complete audio player controls');
+});
