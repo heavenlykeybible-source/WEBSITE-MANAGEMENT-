@@ -51,6 +51,8 @@ jobs:
         run: npm run test:radio-public-media
       - name: Radio HTTP range and seek checks
         run: npm run test:radio-range
+      - name: Runtime radio player lifecycle checks
+        run: npm run test:radio-player-runtime
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
