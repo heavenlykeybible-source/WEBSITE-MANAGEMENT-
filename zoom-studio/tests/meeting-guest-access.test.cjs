@@ -580,3 +580,15 @@ test('meeting admission survives optional TURN credential signing failure',async
  assert.match(welcome.ice[0].urls,/^stun:/);
  assert.equal(h.guest.readyState,1);
 });
+
+test('meeting identity expiration is rechecked after asynchronous account lookup',async()=>{
+ const h=setup();
+ h.context.check=async()=>({e:'member@example.com',t:2,exp:Date.now()+10});
+ h.context.getUser=async()=>{await new Promise(resolve=>setTimeout(resolve,35));return {tv:2,banned:false,role:'user'};};
+ await h.join('valid');
+ assert.equal(h.guest.attachment.identity,null);
+ assert.equal(h.guest.attachment.aud,true);
+ const earlier=Date.now();
+ const allowed=await h.r.stageAllowed({identity:{email:'member@example.com',version:2,expires:earlier+10}},earlier);
+ assert.equal(allowed,false);
+});
