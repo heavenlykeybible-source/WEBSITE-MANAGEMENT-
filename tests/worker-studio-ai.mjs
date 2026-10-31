@@ -13,12 +13,12 @@ try{
  const env={DB,FILES,VAULT_KEY:'fixture-vault-key-very-long-123456789',ADMIN_PASS:'fixture-owner-password'};
  raw.prepare('UPDATE cf_connections SET token_enc=? WHERE id=4').run(await seal(env,'fixture-token'));
  let live='export default {fetch(){return new Response("old")}}';
- let reads=0,writes=0;
+ let reads=0,writes=0,multipart=null;
  globalThis.fetch=async(url,init={})=>{
   if(!String(url).includes('/workers/scripts/worker-one/content'))throw Error('Unexpected provider call '+url);
   if(init.method&&init.method!=='GET')writes++;
   reads++;
-  return new Response(live,{status:200,headers:{'content-type':'application/javascript'}});
+  return multipart?new Response(multipart):new Response(live,{status:200,headers:{'content-type':'application/javascript'}});
  };
  const policy={mode:'work',connections:[4],expires_at:Date.now()+3600000};
  await checkAIToolPermission(env,{aiPolicy:policy},'read_worker_source',{connection:4});
@@ -32,6 +32,29 @@ try{
  }
  assert.equal(requirePinnedExistingWorker({name:'new-worker'},false),true);
  assert.throws(()=>requirePinnedExistingWorker({name:'deleted-worker',base_sha256:'a'.repeat(64)},false),e=>e.status===409);
+ const single=await extraAITool(env,{kind:'agent',a:{can_read:1,can_propose:1},agentId:1},'read_worker_source',{connection:4,worker:'worker-one'});
+ assert.equal(single.single_file,true);assert.equal(single.modules.length,1);
+ assert.equal(single.modules[0].sha256,await sha256(live));
+ assert.match(single.project_sha256,/^[a-f0-9]{64}$/);
+ const makeForm=(reverse=false,duplicate=false)=>{
+  const form=new FormData(),entries=[['index.mjs','export default {fetch(){return new Response("ok")}}'],['helper.mjs','export const answer = 42;']];
+  if(reverse)entries.reverse();
+  if(duplicate)entries.push(entries[0]);
+  for(const [name,code] of entries)form.append(name,new Blob([code],{type:'application/javascript'}),name);
+  form.append('metadata',new Blob(['{}'],{type:'application/json'}),'metadata.json');
+  return form;
+ };
+ multipart=makeForm();
+ const project1=await extraAITool(env,{kind:'agent',a:{can_read:1,can_propose:1},agentId:1},'read_worker_source',{connection:4,worker:'worker-one',module:'index.mjs'});
+ assert.equal(project1.single_file,false);assert.equal(project1.modules.length,2);assert.equal(project1.module_sha256,null);
+ assert.match(project1.project_sha256,/^[a-f0-9]{64}$/);
+ assert.equal(project1.modules.find(m=>m.name==='helper.mjs').sha256,await sha256('export const answer = 42;'));
+ multipart=makeForm(true);
+ const project2=await extraAITool(env,{kind:'agent',a:{can_read:1,can_propose:1},agentId:1},'read_worker_source',{connection:4,worker:'worker-one',module:'helper.mjs'});
+ assert.equal(project1.project_sha256,project2.project_sha256,'Multipart order must not change project identity');
+ multipart=makeForm(false,true);
+ await assert.rejects(extraAITool(env,{kind:'agent',a:{can_read:1,can_propose:1},agentId:1},'read_worker_source',{connection:4,worker:'worker-one'}),e=>e.status===409);
+ multipart=null;
  const actor={kind:'agent',agentId:1,a:{id:1,can_read:1,can_propose:1}};
  const args={connection:4,worker:'worker-one',base_sha256:await sha256(live),code:'export default {fetch(){return new Response("new")}}'};
  const result=await extraAITool(env,actor,'propose_existing_worker_revision',args);
