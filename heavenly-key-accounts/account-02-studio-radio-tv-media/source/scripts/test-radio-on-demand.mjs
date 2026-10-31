@@ -26,6 +26,8 @@ assert.ok(broadcast.includes("AND (destination=? OR (destination='both' AND ?='v
 assert.ok(broadcast.includes(".bind(channel==='audio'?'radio':'video',channel).first<any>()"),'Live channel restriction must use bound parameters');
 assert.ok(broadcast.includes('return reply({mode:entries.length?'), 'Playlist must supply listener-activated contract');
 assert.ok(broadcast.includes("const listenerOnly=channel==='audio'"),'Only radio permits on-demand mode');
+assert.ok(broadcast.includes("AND (l.destination='radio' OR (?=0 AND l.destination IN ('video','both')))"),'TV-only live sessions must not authorize public radio media while TV is locked');
+assert.ok(broadcast.includes('.bind(id,TV_LOCKED?1:0).first()'),'TV restriction must use a bound database condition');
 assert.ok(broadcast.includes('if(!listenerOnly&&live&&'),'On-demand playlists bypass legacy live takeover');
 assert.ok(broadcast.includes('const live=listenerOnly?null:await env.DB.prepare'),'On-demand radio must skip unnecessary live-session database reads');
 assert.ok(broadcast.includes('const scheduled=listenerOnly?null:await env.DB.prepare'),'On-demand radio must skip unnecessary scheduled playout reads');
