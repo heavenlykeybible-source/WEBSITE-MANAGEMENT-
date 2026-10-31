@@ -97,7 +97,7 @@ export default {
     const assetResponse=await env.ASSETS.fetch(new Request(new URL("/"+draftMatch[1],url.origin),request));
     if(!assetResponse.ok)return deny();
     const data=await assetResponse.clone().json();
-    const validDate=(date)=>typeof date==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(date)&&
+    const validDate=(date)=>typeof date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&
       !Number.isNaN(Date.parse(date))&&new Date(date+"T00:00:00Z").toISOString().slice(0,10)===date;
     if(data?.timezone!=="Africa/Lagos"||!Array.isArray(data.entries)||!data.entries.length||
        data.entries.length>366||!data.entries.every(entry=>entry&&validDate(entry.date)&&
