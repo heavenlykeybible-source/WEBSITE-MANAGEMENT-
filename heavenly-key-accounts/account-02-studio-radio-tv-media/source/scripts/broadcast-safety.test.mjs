@@ -28,4 +28,10 @@ assert.equal((entry.match(/Retention must be between 1 and 48 hours/g) ?? []).le
 assert.match(entry, /typeof b\.keep!=='boolean'/, 'Keep-recording changes require an explicit boolean');
 assert.match(entry, /async scheduled\(/, 'Cron trigger must have a scheduled handler');
 
+// Capabilities must not be valid indefinitely or with malformed issuance times.
+assert.match(entry, /Number\.isInteger\(p\.iat\)/, 'Issued-at must be an integer');
+assert.match(entry, /p\.iat<now-300/, 'Reject stale issued-at values');
+assert.match(entry, /p\.exp-p\.iat>300/, 'Reject long-lived admin capabilities');
+assert.match(entry, /p\.exp<=p\.iat/, 'Reject expiration before issuance');
+
 console.log('Account 2 broadcast safety regression checks passed');
