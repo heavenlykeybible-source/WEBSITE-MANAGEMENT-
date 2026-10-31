@@ -92,7 +92,8 @@ async function studioTaskBoard(){
    var d=await api('studio/tasks?page='+page);
    if(page===0)tasks.innerHTML='';
    d.tasks.forEach(function(t){
-    var card=h('section',{class:'card'},h('b',{},t.agent_name+' · '+t.worker),h('p',{},t.instruction),h('p',{},t.status+' · '+lagosTime(t.updated_at)));
+    var card=h('section',{class:'card'},h('b',{},t.agent_name+' · '+t.worker),h('p',{},t.instruction),h('p',{role:'status'},t.status+' · '+lagosTime(t.updated_at)));
+    if(t.progress)card.appendChild(h('p',{},'Progress: '+t.progress));
     if(t.proposal_id)card.appendChild(h('button',{onclick:function(){openP(t.proposal_id);}},'Review proposal #'+t.proposal_id));
     if(t.status==='assigned')card.appendChild(h('button',{class:'bad',onclick:async function(){try{await api('studio/tasks/'+t.id+'/cancel','POST',{});await refresh();}catch(e){status.textContent=e.message;}}},'Cancel task'));
     tasks.appendChild(card);
