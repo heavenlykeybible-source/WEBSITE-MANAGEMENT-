@@ -12,7 +12,8 @@
     "test:tv-lock": "node scripts/test-tv-lock.mjs",
     "test:radio-on-demand": "node scripts/test-radio-on-demand.mjs",
     "test:radio-player": "node scripts/test-radio-player.mjs",
-    "test:radio-upload-security": "node scripts/test-radio-upload-security.mjs"
+    "test:radio-upload-security": "node scripts/test-radio-upload-security.mjs",
+    "test:audio-signature": "node scripts/test-audio-signature.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
