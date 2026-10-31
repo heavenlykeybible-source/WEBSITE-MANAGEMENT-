@@ -70,8 +70,7 @@ export async function completePrivateImport(bucket, actor, session, parts) {
     throw new Error('Part receipt does not match server-side upload record');
   const result = await bucket.resumeMultipartUpload(session.key,session.uploadId).complete(ordered);
   if (!result || !Number.isSafeInteger(result.size) || result.size !== session.size) {
-    // A completed object with the wrong size must not be retained as an import.
-    await bucket.delete(session.key);
+    // Preserve the private object for operator review after uncertain completion.
     throw new Error('Completed object size mismatch');
   }
   return {key:session.key,size:result.size,state:'private-awaiting-review'};
