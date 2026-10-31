@@ -15,15 +15,14 @@ assert(scriptStart>='<script>'.length&&scriptEnd>scriptStart,'inline application
 const script=html.slice(scriptStart,scriptEnd);
 new vm.Script(script,{filename:htmlPath});
 
-const handlers=script.match(/\\$\\('members'\\)\\.onclick=/g)||[];
-assert.equal(handlers.length,1,'Send Strength to Members must have exactly one click handler');
+assert.equal(script.split("$('members').onclick=").length-1,1,'Send Strength to Members must have exactly one click handler');
 assert(!script.includes('window.location.href=COMMUNITY_STRENGTH_URL'),'member button must not redirect away from selector');
-assert.match(script,/selector\\.hidden=true/,'member selector must start hidden');
-assert.match(script,/\\$\\('members'\\)\\.onclick=async\\(\\)=>\\{if\\(!await authenticated\\(\\)\\)return;selector\\.hidden=false;/,'opening selector must require an active signed-in session');
-assert.match(script,/memberInput\\.focus\\(\\{preventScroll:true\\}\\)/,'member search must receive focus when opened');
-assert.match(script,/request\\('\\/api\\/discover\\?q='/,'member discovery must use validated same-origin API helper');
-assert.match(script,/role','region'/,'member selector must expose a named accessible region');
-assert.match(script,/aria-labelledby','strength-member-selector-title'/,'member selector must have an accessible name');
-assert.match(script,/event\\.key==='Escape'/,'Escape must close the member selector');
-assert.match(script,/\\$\\('members'\\)\\.focus\\(\\)/,'focus must return to the opening control after closing');
+assert(script.includes('selector.hidden=true'),'member selector must start hidden');
+assert(script.includes("$('members').onclick=async()=>{if(!await authenticated())return;selector.hidden=false;"),'opening selector must require an active signed-in session');
+assert(script.includes('memberInput.focus({preventScroll:true})'),'member search must receive focus when opened');
+assert(script.includes("request('/api/discover?q='),'member discovery must use validated same-origin API helper');
+assert(script.includes("setAttribute('role','region')"),'member selector must expose a named accessible region');
+assert(script.includes("setAttribute('aria-labelledby','strength-member-selector-title')"),'member selector must have an accessible name');
+assert(script.includes("event.key==='Escape'"),'Escape must close the member selector');
+assert(script.includes("$('members').focus()"),'focus must return to the opening control after closing');
 console.log('PASS: Strength for Today member selector, authentication guard, safe discovery, keyboard operation and focus restoration.');
