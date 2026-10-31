@@ -17,7 +17,26 @@ export async function saveImportSession(db, actor, session) {
       !Number.isSafeInteger(session.partCount) ||
       session.partCount !== Math.ceil(session.size / (10 * 1024 * 1024)) ||
       typeof session.key !== 'string' ||
-      !session.key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`) ||
+      !new RegExp(`^private-imports/${actor.id}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}import {validateImportMetadata} from './account4-upload-policy.mjs';
+// D1 persistence for private multipart uploads. Not connected to production routes.
+// Only server-verified authentication may supply actor.id and actor.canImport.
+function authorized(actor) {
+  if (!actor?.authenticated || actor.canImport !== true || !Number.isSafeInteger(actor.id) || actor.id <= 0)
+    throw new Error('Import permission required');
+}
+export async function saveImportSession(db, actor, session) {
+  authorized(actor);
+  if (!session || typeof session !== 'object') throw new Error('Invalid import session');
+  // Recheck the original upload policy at the persistence boundary; callers
+  // cannot bypass filename and size validation by writing directly to D1.
+  validateImportMetadata({name:session.name,size:session.size},actor);
+  if (session.ownerId !== actor.id || session.state !== 'uploading' ||
+      typeof session.name !== 'string' || !session.name ||
+      !Number.isSafeInteger(session.size) || session.size < 1 || session.size > 1073741824 ||
+      !Number.isSafeInteger(session.partCount) ||
+      session.partCount !== Math.ceil(session.size / (10 * 1024 * 1024)) ||
+      typeof session.key !== 'string' ||
+      , 'i').test(session.key) ||
       typeof session.uploadId !== 'string' || !session.uploadId ||
       !Number.isSafeInteger(session.expiresAt) || session.expiresAt <= Date.now())
     throw new Error('Invalid import owner or state');
@@ -42,7 +61,70 @@ export async function loadImportSession(db, actor, id) {
       row.part_count !== Math.ceil(row.size_bytes / (10 * 1024 * 1024)) ||
       typeof row.upload_id !== 'string' || !row.upload_id ||
       typeof row.object_key !== 'string' ||
-      !row.object_key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`))
+      !new RegExp(`^private-imports/${actor.id}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}import {validateImportMetadata} from './account4-upload-policy.mjs';
+// D1 persistence for private multipart uploads. Not connected to production routes.
+// Only server-verified authentication may supply actor.id and actor.canImport.
+function authorized(actor) {
+  if (!actor?.authenticated || actor.canImport !== true || !Number.isSafeInteger(actor.id) || actor.id <= 0)
+    throw new Error('Import permission required');
+}
+export async function saveImportSession(db, actor, session) {
+  authorized(actor);
+  if (!session || typeof session !== 'object') throw new Error('Invalid import session');
+  // Recheck the original upload policy at the persistence boundary; callers
+  // cannot bypass filename and size validation by writing directly to D1.
+  validateImportMetadata({name:session.name,size:session.size},actor);
+  if (session.ownerId !== actor.id || session.state !== 'uploading' ||
+      typeof session.name !== 'string' || !session.name ||
+      !Number.isSafeInteger(session.size) || session.size < 1 || session.size > 1073741824 ||
+      !Number.isSafeInteger(session.partCount) ||
+      session.partCount !== Math.ceil(session.size / (10 * 1024 * 1024)) ||
+      typeof session.key !== 'string' ||
+      !new RegExp(`^private-imports/${actor.id}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}import {validateImportMetadata} from './account4-upload-policy.mjs';
+// D1 persistence for private multipart uploads. Not connected to production routes.
+// Only server-verified authentication may supply actor.id and actor.canImport.
+function authorized(actor) {
+  if (!actor?.authenticated || actor.canImport !== true || !Number.isSafeInteger(actor.id) || actor.id <= 0)
+    throw new Error('Import permission required');
+}
+export async function saveImportSession(db, actor, session) {
+  authorized(actor);
+  if (!session || typeof session !== 'object') throw new Error('Invalid import session');
+  // Recheck the original upload policy at the persistence boundary; callers
+  // cannot bypass filename and size validation by writing directly to D1.
+  validateImportMetadata({name:session.name,size:session.size},actor);
+  if (session.ownerId !== actor.id || session.state !== 'uploading' ||
+      typeof session.name !== 'string' || !session.name ||
+      !Number.isSafeInteger(session.size) || session.size < 1 || session.size > 1073741824 ||
+      !Number.isSafeInteger(session.partCount) ||
+      session.partCount !== Math.ceil(session.size / (10 * 1024 * 1024)) ||
+      typeof session.key !== 'string' ||
+      , 'i').test(session.key) ||
+      typeof session.uploadId !== 'string' || !session.uploadId ||
+      !Number.isSafeInteger(session.expiresAt) || session.expiresAt <= Date.now())
+    throw new Error('Invalid import owner or state');
+  const id = crypto.randomUUID();
+  const result = await db.prepare('INSERT INTO account4_import_sessions (id,owner_id,object_key,upload_id,filename,size_bytes,part_count,state,expires_at_ms) VALUES (?,?,?,?,?,?,?,?,?)')
+    .bind(id,actor.id,session.key,session.uploadId,session.name,session.size,session.partCount,'uploading',session.expiresAt).run();
+  if (result?.success === false || result?.meta?.changes !== 1)
+    throw new Error('Import session was not persisted');
+  return id;
+}
+export async function loadImportSession(db, actor, id) {
+  authorized(actor);
+  if (typeof id !== 'string' || !/^[a-f0-9-]{36}$/i.test(id))
+    throw new Error('Invalid import session identifier');
+  const row = await db.prepare('SELECT * FROM account4_import_sessions WHERE id=? AND owner_id=?')
+    .bind(id,actor.id).first();
+  if (!row || row.owner_id !== actor.id || row.state !== 'uploading' ||
+      row.expires_at_ms <= Date.now() ||
+      !Number.isSafeInteger(row.size_bytes) || row.size_bytes < 1 ||
+      row.size_bytes > 1073741824 ||
+      !Number.isSafeInteger(row.part_count) ||
+      row.part_count !== Math.ceil(row.size_bytes / (10 * 1024 * 1024)) ||
+      typeof row.upload_id !== 'string' || !row.upload_id ||
+      typeof row.object_key !== 'string' ||
+      , 'i').test(row.object_key))
     throw new Error('Import session unavailable');
   const {results} = await db.prepare('SELECT part_number,etag FROM account4_import_parts WHERE session_id=? ORDER BY part_number')
     .bind(id).all();
