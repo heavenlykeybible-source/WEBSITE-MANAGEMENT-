@@ -1,3 +1,17 @@
+// Check the exact source originally inspected by the AI at review AND release.
+// Do not silently downgrade a pinned proposal into a modified_on-only check.
+async function verifyPinnedStudioWorker(env,meta){
+ if(!meta||meta.base_sha256===undefined)return null; // legacy proposals use the existing review rules
+ const expected=String(meta.base_sha256||'');
+ if(!/^[a-f0-9]{64}$/.test(expected))fail('Invalid pinned Worker baseline',409);
+ const worker=String(meta.name||'');
+ if(!STUDIO_WORKER_NAME.test(worker))fail('Pinned Worker target is invalid',409);
+ const live=await readAIWorker(env,{connection:meta.connection_id,worker,offset:0});
+ if(!live.single_file||!live.module_sha256)fail('Worker is no longer a single module. Reinspect the complete project.',409);
+ if(live.module_sha256!==expected)fail('Live Worker source changed since AI inspection. Prepare a fresh reviewed proposal.',409);
+ return {verified_sha256:expected,connection:live.connection,worker};
+}
+
 // Account 4 concurrent AI assignment board. Pure controls on the owner side.
 // Assignments do not execute AI jobs or grant account access by themselves.
 const STUDIO_WORKER_NAME=/^[a-z0-9][a-z0-9-]{0,62}$/;
