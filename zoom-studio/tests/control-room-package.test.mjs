@@ -772,7 +772,7 @@ test('repeated close and error callbacks notify host only once',async()=>{
 test('broadcast studio preserves sharp camera output and fails safely on background errors',()=>{
  const page=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
  assert.match(page,/limit=\$\('lite'\)\.checked\?720:1280/,'normal mode must use a higher-resolution segmentation canvas');
- assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\)return;if\(!r\?\.image\|\|!r\.segmentationMask\)\{s\.segReady=false;return\}/,'disabled or invalid segmentation must not keep processing the camera');
+ assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\|\|segScene!==sceneVersion\)return;if\(!r\?\.image\|\|!r\.segmentationMask\)\{s\.segReady=false;return\}/,'disabled, stale, or invalid segmentation must not keep processing the camera');
  assert.match(page,/s\.oc=null;s\.segReady=false;ui\(\);msg\('Original camera restored/,'disabling backgrounds restores the unprocessed camera');
  assert.match(page,/t\.img\.onerror=\(\)=>\{if\(request===bgPick&&SC\.includes\(scene\)\)msg\('This studio background could not be loaded/,'only the active background load may report an error');
  for(const ratio of ['Landscape (16:9)','Portrait (9:16, phones)','Square (1:1)'])assert.ok(page.includes(ratio));
@@ -1188,7 +1188,29 @@ test('failed scene background drawing restores the canvas and invalidates the pr
  const camera={oc:{width:0,height:0,getContext:()=>ctx},blur:true,bgm:'tpl',segReady:true};
  const SC=[{items:[{id:'background',on:true}]}];
  const seg={onResults(fn){callback=fn}};
- new Function('seg','segCur','SC','pgm','src','$','performance','cover','console',source)(
+ new Function('seg','segCur','segScene','sceneVersion','SC','pgm','src','
+  seg,camera,0,0,SC,0,()=>({isBg:true,fn(){throw Error('bad studio background')}}),()=>({checked:false}),{now:()=>1},()=>{},{error:()=>{}}
+ );
+ callback({image:{width:1280,height:720},segmentationMask:{}});
+ assert.equal(saveCount,1);
+ assert.equal(restoreCount,1,'canvas save must always be balanced by restore');
+ assert.equal(camera.segReady,false,'failed composite must not hide the original presenter video');
+});
+
+test('switching program scenes invalidates stale virtual camera background frames',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const begin=html.indexOf('function take(i){'),end=html.indexOf("$('take').onclick",begin);
+ assert.ok(begin>=0&&end>begin,'studio take function exists');
+ const source=html.slice(begin,end);
+ const S=[{type:'camera',segReady:true},{type:'camera',segReady:true},{type:'mic',segReady:true}];
+ const isolated='let pgm=0,from=null,t0=0,pvw=1,studio=true,sceneVersion=0;'+source+';take(1);return {pgm,from,t0,pvw}';
+ const state=new Function('S','$','performance',isolated)(S,()=>({value:'cut'}),{now:()=>42});
+ assert.equal(state.pgm,1);
+ assert.deepEqual(S.slice(0,2).map(s=>s.segReady),[false,false]);
+ assert.equal(S[2].segReady,true);
+ assert.equal(state.pvw,0);
+});
+,'performance','cover','console',source)(
   seg,camera,SC,0,()=>({isBg:true,fn(){throw Error('bad studio background')}}),()=>({checked:false}),{now:()=>1},()=>{},{error:()=>{}}
  );
  callback({image:{width:1280,height:720},segmentationMask:{}});
@@ -1209,4 +1231,22 @@ test('switching program scenes invalidates stale virtual camera background frame
  assert.deepEqual(S.slice(0,2).map(s=>s.segReady),[false,false]);
  assert.equal(S[2].segReady,true);
  assert.equal(state.pvw,0);
+});
+
+test('late background inference from a prior program scene is discarded',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const start=html.indexOf('seg.onResults(r=>'),end=html.indexOf('});done(true)',start);
+ assert.ok(start>0&&end>start);
+ const source=html.slice(start,end+3);
+ let callback,canvasCalls=0;
+ const seg={onResults(fn){callback=fn}};
+ const camera={blur:true,oc:{width:720,height:405,getContext(){canvasCalls++;return {}}},segReady:false};
+ new Function('seg','segCur','segScene','sceneVersion','SC','pgm','src','$','performance','cover','console',source)(
+  seg,camera,0,1,[{items:[]}],0,()=>null,()=>({checked:false}),{now:()=>1},()=>{},{error:()=>{}}
+ );
+ callback({image:{width:720,height:405},segmentationMask:{}});
+ assert.equal(canvasCalls,0,'late inference cannot draw the old scene');
+ assert.equal(camera.segReady,false,'no old composite may become visible');
+ assert.match(html,/segCur=s;segScene=sceneVersion;/,'each inference must record its scene generation');
+ assert.match(html,/pgm=i;sceneVersion\+\+;/,'program scene changes must advance the generation');
 });
