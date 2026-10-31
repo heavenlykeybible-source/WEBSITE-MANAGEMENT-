@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "title": "STRENGTH FOR TODAY — Five-Year Doctrinal and Editorial Audit Framework",
+  "scope": {
+    "firstDate": "2026-10-30",
+    "lastDate": "2031-10-31",
+    "expectedDailyEditions": 1828,
+    "timezone": "Africa/Lagos",
+    "status": "AUDIT_STANDARD_NOT_PUBLIC_APP_CONTENT"
+  },
+  "hierarchy": {
+    "primary": "The Bible is the final authority; the current Heavenly Key Statement of Faith defines the ministry's doctrinal boundaries.",
+    "secondary": [
+      "Deeper Life Bible Church / Daily Manna devotional approach and Pastor W.F. Kumuyi's publicly available biblical teaching",
+      "Mountain of Fire and Miracles Ministries' publicly stated beliefs and scriptural prayer emphasis"
+    ],
+    "conflictRule": "Do not merge distinct denominational formulations or allow a secondary source to override Scripture or Heavenly Key's Statement of Faith. If a secondary source's particular formulation is not explicitly adopted by Heavenly Key, flag it for pastoral review rather than presenting it as Heavenly Key doctrine."
+  },
+  "auditStandards": [
+    {
+      "id": "heavenly-key-statement-of-faith",
+      "name": "Heavenly Key Statement of Faith",
+      "role": "Primary ministry doctrinal boundary",
+      "principles": [
+        "The Bible is final authority for faith, conduct and ministry.",
+        "The Father, Son and Holy Ghost are distinct and perfectly united in the Godhead.",
+        "Jesus Christ: virgin birth, sinless life, crucifixion, death, burial, bodily resurrection and coming again.",
+        "Human sin, genuine repentance, faith in Christ, salvation by God's grace and a transformed obedient life.",
+        "Restitution where wrongs can properly be corrected; consecrated holy living.",
+        "The present work and baptism of the Holy Spirit, power for Christian witness and gifts according to Scripture.",
+        "Redemption in Christ; prayer for healing, deliverance and wholeness according to Scripture.",
+        "Every Christian's call to compassionate personal evangelism and the Great Commission.",
+        "Biblical end-time hope; watchfulness, faithfulness and readiness for Christ's return."
+      ]
+    },
+    {
+      "id": "deeper-life-daily-manna-and-kumuyi",
+      "name": "Deeper Life / Daily Manna / Pastor W.F. Kumuyi",
+      "role": "Doctrinal and devotional comparison standard; use verified public sermons and official church teaching, not copied devotional prose",
+      "principles": [
+        "Scripture-centred exposition: the context and meaning of the passage govern the lesson.",
+        "Repentance and conversion must be genuine, not merely emotional regret or religious activity.",
+        "Justification and salvation rest on God's grace and Christ's atoning work, not human merit.",
+        "Holiness, sanctification, purity of heart and obedience must be treated seriously and biblically.",
+        "Restitution and a clear conscience where applicable.",
+        "The Holy Spirit's baptism, power and gifts must be presented with scriptural care and without teaching people to manufacture manifestations.",
+        "Healing, evangelism, marriage, Christ's return, resurrection, judgement, heaven and hell must not be contradicted or treated carelessly.",
+        "Daily application should arise naturally from the Scripture, with practical obedience, prayer and soul-winning rather than generic motivational filler."
+      ]
+    },
+    {
+      "id": "mountain-of-fire-and-miracles-ministries",
+      "name": "Mountain of Fire and Miracles Ministries",
+      "role": "Doctrinal and prayer comparison standard; use official published beliefs and public teaching",
+      "principles": [
+        "Scripture is inspired and the basis for faith and fellowship.",
+        "The triune God, the fall of humanity and redemption through Christ's blood.",
+        "Salvation through Christ and the regenerative work of the Holy Spirit; sanctification as separation from evil.",
+        "Holy Spirit baptism, restitution where possible, water baptism and the Lord's Supper.",
+        "Divine healing through Christ; prayer for healing must not replace responsible medical care or promise guaranteed outcomes.",
+        "Rapture, second advent, millennial reign, final judgement and new heaven and earth.",
+        "Spiritual warfare must remain subject to Scripture, Christ's victory, truth, repentance and holy living; reject superstition, fear manipulation, vengeance, curses against people, formulaic guarantees or claims that a prayer phrase mechanically controls God."
+      ]
+    }
+  ],
+  "perDayAudit": [
+    "Daily topic is biblical, clear, specific, non-duplicative and suitable for its assigned date in the five-year progression.",
+    "All six KJV readings are exact, correctly referenced, contextually interpreted and split into three Old Testament and three New Testament readings.",
+    "The daily topic is supported by the readings; the Bible story is a faithful account of its passage and does not invent details.",
+    "The contemporary story is real, attributable, accurately sourced, date-appropriate, ethically presented and directly relevant; no fabricated testimony or unverified miracle claim.",
+    "Hymn title, number, wording and source are verified against the ministry's licensed/owned hymn collection; no invented hymn metadata or unlicensed full lyrics.",
+    "Eternity in View is consistent with biblical teaching on Christ's return, resurrection, judgement, heaven and hell.",
+    "Destiny Decision & Action calls for concrete biblical obedience, repentance, restitution, holiness, faith or evangelism as relevant; it does not teach salvation by works.",
+    "Warfare Prayer is Christ-centred and scriptural, not superstition, fear, revenge, manipulation or guaranteed outcomes.",
+    "Prophetic Prayer is a prayer, not an invented divine quotation, guaranteed prediction, or claim of revelation without substantiation.",
+    "Health & Wellness Prayer honours God's care and healing while not discouraging diagnosis, treatment or professional medical help.",
+    "Salvation Prayer clearly presents sin, repentance, grace, faith in Jesus Christ, His death and bodily resurrection; it does not imply a prayer formula alone saves.",
+    "All twelve Kingdom Challenges are distinct, practical, safe, measurable and connected to the day's teaching."
+  ],
+  "severity": {
+    "block": [
+      "Contradiction of Scripture or Heavenly Key Statement of Faith",
+      "False gospel or works-based salvation",
+      "Misquotation or materially false interpretation of Scripture",
+      "Fabricated Bible narrative, testimony, miracle, source or prophecy",
+      "Manipulative spiritual threats, guaranteed healing/prosperity/deliverance, vengeance or superstition",
+      "Dangerous health instruction or discouraging appropriate medical care"
+    ],
+    "major": [
+      "Contradiction with a cited Deeper Life/Kumuyi or MFM doctrinal source requiring reconciliation",
+      "Out-of-context proof text",
+      "Topic/story/readings do not align",
+      "Unsupported contemporary story or hymn attribution",
+      "Repeated/templated content that undermines the daily lesson"
+    ],
+    "editorial": [
+      "Clarity, grammar, repetition, weak application, inaccessible wording or incomplete section"
+    ]
+  },
+  "publicationRule": "Every one of the 1,828 dates must have a completed per-day audit record, verified Scripture and source citations, documented corrections, and named human doctrinal/editorial approval before publication. Automated keyword checks are triage only and cannot grant doctrinal approval.",
+  "nonCopyingRule": "Use the named ministries' published doctrine and teaching as audit references. Do not reproduce copyrighted Daily Manna entries, sermons or MFM devotional/prayer books; write original Heavenly Key material and cite factual sources."
+}

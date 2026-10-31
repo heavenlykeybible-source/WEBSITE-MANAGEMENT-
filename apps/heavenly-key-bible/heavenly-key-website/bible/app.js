@@ -86,7 +86,7 @@ async function getAnnotations(code){
   const r=await fetch("./data/annotations/"+code+".json");
   if(!r.ok)throw Error("No verified annotations");
   const data=await r.json();annotationCache.set(code,data);return data;
- } catch {annotationCache.set(code,{});return {}; }
+ } catch {return {}; } // Transient failures must be retried on a later chapter load.
 }
 function highlightedVerse(text,marks){
  const fragment=document.createDocumentFragment();

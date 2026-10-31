@@ -1,0 +1,146 @@
+name: Account 5 - Strength for Today quality audit
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-content-contract-regression.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-migration-audit.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-migration.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-migration-regression.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-embargo.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/data/annotations/**'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/style.css'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/app.js'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today-next.html'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today-next.js'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/data/kjv/**'
+      - 'apps/heavenly-key-bible/bible/worker.js'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-devotionals-*.json'
+      - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-publication-status.json'
+      - '.github/workflows/account5-strength-devotional-audit.yml'
+permissions:
+  contents: read
+jobs:
+  devotional-security:
+    name: Devotional security regression checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Check Worker and embargo test syntax
+        run: |
+          node --check apps/heavenly-key-bible/bible/worker.js
+          node --check apps/heavenly-key-bible/bible/tests/strength-embargo.mjs
+      - name: Test server-side devotional embargo
+        run: node apps/heavenly-key-bible/bible/tests/strength-embargo.mjs
+  scripture-colour-check:
+    name: Scripture colour annotation integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Check Bible reader and colour audit syntax
+        run: |
+          node --check apps/heavenly-key-bible/heavenly-key-website/bible/app.js
+          node --check apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs
+      - name: Verify annotated KJV verses and colouring styles
+        run: node apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs
+  devotional-next-preview:
+    name: New devotional preview syntax and structure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Check new devotional preview script syntax
+        run: node --check apps/heavenly-key-bible/heavenly-key-website/bible/strength-for-today-next.js
+      - name: Check new devotional editorial content contract
+        run: |
+          node --check apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs
+          node apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs
+          node apps/heavenly-key-bible/bible/tests/strength-next-content-contract-regression.mjs
+      - name: Verify non-destructive one-topic migration
+        run: |
+          node --check apps/heavenly-key-bible/bible/tests/strength-next-migration.mjs
+          node apps/heavenly-key-bible/bible/tests/strength-next-migration-regression.mjs
+          node --check apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs
+      - name: Test private five-year conversion export (never publish)
+        run: |
+          output_dir="$(mktemp -d)"
+          trap 'rm -rf "$output_dir"' EXIT
+          chmod 755 "$output_dir"
+          if node apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs "$output_dir"; then
+            echo "ERROR: Insecure export directory was accepted"
+            exit 1
+          fi
+          chmod 700 "$output_dir"
+          node apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs "$output_dir"
+          test "$(stat -c '%a' "$output_dir/strength-next-private-drafts.json")" = 600
+          test "$(stat -c '%a' "$output_dir")" = 700
+          # Re-running must never alter or overwrite the existing private draft export.
+          before_hash="$(sha256sum "$output_dir/strength-next-private-drafts.json" | cut -d ' ' -f 1)"
+          if node apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs "$output_dir"; then
+            echo "SECURITY FAILURE: existing private export was overwritten"
+            exit 1
+          fi
+          after_hash="$(sha256sum "$output_dir/strength-next-private-drafts.json" | cut -d ' ' -f 1)"
+          test "$before_hash" = "$after_hash"
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; const d=JSON.parse(readFileSync(process.argv[1],"utf8")); if(d.publicationStatus!=="editorial-hold"||!d.entries.length||d.entries.some(e=>e.status!=="draft"||e.sections.challenges.length!==12||!(e.provenance.sourceBatch||"").startsWith("strength-devotionals-")||!(e.provenance.sourceBatch||"").endsWith(".json"))||d.missingDayDrafts.length!==d.coverage.missingDates.length||d.missingDayDrafts.some(e=>e.status!=="draft"||e.sections.challenges.length!==0)||d.coverage.complete!==false||d.coverage.incompleteReadingDays.oldTestament!==d.entries.length||d.coverage.incompleteReadingDays.newTestament!==d.entries.length||d.coverage.incompleteWarfareDays!==d.entries.length||new Set([...d.entries,...d.missingDayDrafts].map(e=>e.date)).size!==1828||d.entries.length+d.missingDayDrafts.length!==1828||JSON.stringify(d.coverage.missingDates)!==JSON.stringify(["2031-10-30","2031-10-31"])||d.missingDayDrafts.some(e=>!d.coverage.missingDates.includes(e.date)||e.provenance.format!=="missing-legacy-date"||e.provenance.requiresOriginalEditorialContent!==true)||d.entries.some(e=>e.review.doctrinalApproved!==false||e.review.sourcesVerified!==false)||d.missingDayDrafts.some(e=>e.review.doctrinalApproved!==false||e.review.sourcesVerified!==false))process.exit(1); console.log("Private migration export validated:",d.entries.length,"drafts")' "$output_dir/strength-next-private-drafts.json"
+      - name: Reject unsafe private export destinations
+        run: |
+          script="apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs"
+          if node "$script" .; then echo "SECURITY FAILURE: repository destination accepted"; exit 1; fi
+          if node "$script" ..; then echo "SECURITY FAILURE: repository ancestor accepted"; exit 1; fi
+          output_dir="$(mktemp -d)"
+          trap 'rm -rf "$output_dir"' EXIT
+          printf 'occupied' > "$output_dir/keep.txt"
+          if node "$script" "$output_dir"; then echo "SECURITY FAILURE: nonempty destination accepted"; exit 1; fi
+          test "$(cat "$output_dir/keep.txt")" = occupied
+          ln -s "$PWD" "$output_dir/repository-link"
+          if node "$script" "$output_dir/repository-link"; then echo "SECURITY FAILURE: symlink into repository accepted"; exit 1; fi
+          mkdir "$output_dir/isolated"
+          chmod 700 "$output_dir/isolated"
+          ln -s "$output_dir/isolated" "$output_dir/external-link"
+          if node "$script" "$output_dir/external-link"; then echo "SECURITY FAILURE: symbolic-link destination accepted"; exit 1; fi
+          test ! -e "$output_dir/isolated/strength-next-private-drafts.json"
+          test ! -e strength-next-private-drafts.json
+      - name: Inventory legacy migration gaps (informational until migration)
+        continue-on-error: true
+        run: node apps/heavenly-key-bible/bible/tests/strength-next-migration-audit.mjs
+      - name: Check section structure and safe preview labels
+        run: node apps/heavenly-key-bible/bible/tests/strength-next-preview.mjs
+  editorial-quality-gate:
+    name: Editorial quality gate (not doctrinal approval)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Check audit script syntax
+        run: node --check apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs
+      - name: Audit all devotional JSON data (read-only)
+        env:
+          STRENGTH_AUDIT_SUMMARY: '1'
+        run: node apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs

@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {validateDailyDevotional,SECTION_KEYS} from './strength-next-content-contract.mjs';
+assert.equal(SECTION_KEYS.length,12);
+const check=(entry,expected)=>assert.ok(validateDailyDevotional(entry).includes(expected),expected);
+check({date:'2026-02-30',status:'draft',sections:{}},'Invalid ISO date');
+check({date:'2026-10-31',status:'draft',sections:{bibleReading:{oldTestament:'wrong',newTestament:null}}},'Require exactly three Old Testament readings');
+check({date:'2026-10-31',status:'draft',sections:{bibleReading:{oldTestament:[{reference:'Matthew 1:1',kjvText:'text'},{reference:'Genesis 1:1',kjvText:'text'},{reference:'Exodus 1:1',kjvText:'text'}],newTestament:[{reference:'John 1:1',kjvText:'text'},{reference:'Acts 1:1',kjvText:'text'},{reference:'Romans 1:1',kjvText:'text'}]}}},'Scripture book belongs to the wrong testament in oldTestament: Matthew');
+check({date:'2026-10-31',status:'draft',sections:{topic:{title:'Holiness'},bibleStory:{reference:'1 Peter 1:15-16',summary:'A story',relatedTopic:'Revival'}}},'Bible story must explicitly align with the daily topic');
+check({date:'2026-10-31',status:'draft',sections:{topic:{title:'Holiness'},worldStory:{summary:'A sourced story',sourceUrl:'https://example.org/story',publisher:'Publisher',publishedDate:'2026-10-30',relatedTopic:'Revival'}}},'Contemporary life story must explicitly align with the daily topic');
+check({date:'2026-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2026-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true,scriptureVerified:true,doctrinalNotes:'Reviewed',doctrinalStandards:['heavenly-key-statement-of-faith']} ,sections:{}},'Doctrinal audit standard not recorded: deeper-life-daily-manna-and-kumuyi');
+check({date:'2026-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2026-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true,scriptureVerified:true,doctrinalNotes:'Reviewed',doctrinalStandards:['heavenly-key-statement-of-faith','deeper-life-daily-manna-and-kumuyi','mountain-of-fire-and-miracles-ministries']},sections:{}},'Missing section: topic');
+check({date:'2026-10-31',status:'approved-for-publication',sections:{}},'Doctrinal approval required');
+check({date:'2026-10-31',status:'approved-for-publication',sections:{}},'Source verification required');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'http://example.com'}}},'World story requires documented HTTPS source');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story'}}},'World story requires a valid publication date');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://user:pass@example.org/story',publishedDate:'2026-10-30'}}},'World story requires documented HTTPS source');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story',publishedDate:'2026-11-01'}}},'World story publication cannot postdate the devotional');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story',publishedDate:'2026-02-30'}}},'World story requires a valid publication date');
+check({date:'2026-10-31',status:'approved-for-publication',review:{doctrinalApproved:false,sourcesVerified:true},sections:{}},'Doctrinal approval required');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story',publishedDate:'2026-10-30'}}},'World story requires named publisher');
+check({date:'2026-10-31',status:'draft',sections:{challenges:Array.from({length:12},()=>({theme:'Same theme',text:'Different daily challenge'}))}},'Daily challenge themes must be unique');
+check({date:'2026-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2026-02-30T12:00:00.000Z'},sections:{}},'Publication approval timestamp must be valid UTC ISO 8601');
+check({date:'2026-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2026-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true},provenance:{requiresEditorialRewrite:true},sections:{}},'Unresolved editorial provenance blocks publication');
+check({date:'2026-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2026-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true},provenance:{requiresScriptureVerification:true},sections:{}},'Unresolved editorial provenance blocks publication');
+check({date:'2031-10-31',status:'approved-for-publication',review:{approvedBy:'Editor',approvedAt:'2031-10-31T12:00:00.000Z',doctrinalApproved:true,sourcesVerified:true},provenance:{requiresOriginalEditorialContent:true},sections:{}},'Unresolved editorial provenance blocks publication');
+
+console.log('Additional devotional editorial contract regressions passed');
