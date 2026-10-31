@@ -52,6 +52,24 @@ test('one unapproved topic blocks entire listed batch',async()=>{
  const response=await worker.fetch(request(),env);
  assert.equal(response.status,404);
 });
+test('duplicate dates deny a supposedly published batch',async()=>{
+ const {env}=fixtures(published,[approvedEntry,{...approvedEntry}]);
+ assert.equal((await worker.fetch(request(),env)).status,404);
+});
+test('invalid calendar date denies a supposedly published batch',async()=>{
+ const {env}=fixtures(published,[{...approvedEntry,date:'2026-02-30'}]);
+ assert.equal((await worker.fetch(request(),env)).status,404);
+});
+test('empty Scripture and unbounded topic text deny public access',async()=>{
+ const incomplete=approvedEntry.topics.map(t=>({...t}));
+ incomplete[0].bibleText=' ';
+ const {env}=fixtures(published,[{...approvedEntry,topics:incomplete}]);
+ assert.equal((await worker.fetch(request(),env)).status,404);
+ const tooLong=approvedEntry.topics.map(t=>({...t}));
+ tooLong[0].reflection='x'.repeat(281);
+ const second=fixtures(published,[{...approvedEntry,topics:tooLong}]);
+ assert.equal((await worker.fetch(request(),second.env)).status,404);
+});
 test('HEAD hides draft and has no response body',async()=>{
  const {env}=fixtures({schemaVersion:1,publicationStatus:'editorial-hold',publishedBatchFiles:[]});
  const response=await worker.fetch(request('HEAD'),env);
