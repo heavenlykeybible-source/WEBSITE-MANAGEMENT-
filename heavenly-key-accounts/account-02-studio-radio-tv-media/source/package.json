@@ -6,7 +6,7 @@
     "deploy": "wrangler deploy",
     "preflight": "node scripts/preflight.mjs",
     "test:safety": "node scripts/broadcast-safety.test.mjs",
-    "predeploy": "npm run check && npm run preflight"
+    "predeploy": "npm run check && npm run test:safety && npm run preflight"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
