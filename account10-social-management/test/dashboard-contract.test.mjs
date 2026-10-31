@@ -201,3 +201,7 @@ test('limited operators cannot open owner-only dashboard tools', () => {
  assert.match(html,/operatorAccessRole=session\.role;refreshRoleNavigation\(\)/);
  assert.match(html,/This section requires owner authorization/);
 });
+
+test('Gemini suggestion button remains disabled after role, conversation or session changes', () => {
+ assert.match(html, /finally\{button\.disabled=!selected\|\|operatorAccessRole==='viewer'\|\|selected!==targetConversation\|\|authEpoch!==epoch\}/);
+});
