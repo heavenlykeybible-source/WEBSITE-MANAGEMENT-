@@ -32,6 +32,7 @@ jobs:
           node --check scripts/account4-import-d1.mjs
           node --check scripts/account4-import-workflow.mjs
           node --check scripts/account4-import-recovery.mjs
+          node --check scripts/account4-import-reconcile.mjs
           node --check scripts/account4-import-publish-gate.mjs
           node --check scripts/account4-import-conditional-read.mjs
           node --check tests/account4-upload-policy.mjs
@@ -39,6 +40,7 @@ jobs:
           node --check tests/account4-import-d1.mjs
           node --check tests/account4-import-workflow.mjs
           node --check tests/account4-import-recovery.mjs
+          node --check tests/account4-import-reconcile.mjs
           node --check tests/account4-import-publish-gate.mjs
           node --check tests/account4-import-conditional-read.mjs
       - run: node tests/account4-upload-policy.mjs
@@ -46,6 +48,7 @@ jobs:
       - run: node tests/account4-import-d1.mjs
       - run: node tests/account4-import-workflow.mjs
       - run: node tests/account4-import-recovery.mjs
+      - run: node tests/account4-import-reconcile.mjs
       - run: node tests/account4-import-publish-gate.mjs
       - run: node tests/account4-import-conditional-read.mjs
       - name: Validate Account 4 D1 migration constraints in SQLite
