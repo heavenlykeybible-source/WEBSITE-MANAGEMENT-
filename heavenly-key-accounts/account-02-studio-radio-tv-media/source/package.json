@@ -10,7 +10,8 @@
     "test:stream-validation": "node scripts/test-stream-validation.mjs",
     "test:capability-auth": "node scripts/test-capability-auth.mjs",
     "test:tv-lock": "node scripts/test-tv-lock.mjs",
-    "test:radio-on-demand": "node scripts/test-radio-on-demand.mjs"
+    "test:radio-on-demand": "node scripts/test-radio-on-demand.mjs",
+    "test:radio-player": "node scripts/test-radio-player.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
