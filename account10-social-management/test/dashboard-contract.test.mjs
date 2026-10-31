@@ -173,3 +173,14 @@ test('operator handover resolution sends the exact request generation', () => {
  assert.match(html,/resumeAutomation:false,requestVersion:item\.human_request_version/);
  assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;activeManagementTab='chats';/g)||[]).length,2);
 });
+
+test('owner can provision, list and revoke expiring staff credentials without displaying hashes', () => {
+ assert.match(html,/function addOperatorManagement\(\)/);
+ assert.match(html,/api\('\/api\/operator\/session'\)/);
+ assert.match(html,/session\.role!=='owner'/);
+ assert.match(html,/days\.max='90'/);
+ assert.match(html,/api\('\/api\/operators'\)/);
+ assert.match(html,/api\('\/api\/operators\/revoke'/);
+ assert.match(html,/showOnlyOnce|ONE-TIME TOKEN/);
+ assert.match(html,/addAccountForm\(\);addWhatsAppReadiness\(\);addOperatorManagement\(\)/);
+});
