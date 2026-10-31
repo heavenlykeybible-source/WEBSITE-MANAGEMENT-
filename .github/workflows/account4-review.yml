@@ -1,0 +1,29 @@
+name: Account 4 Review Checks
+on:
+  pull_request:
+    paths:
+      - 'control-room-worker.js'
+      - 'cms/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'wrangler.toml'
+      - '.github/workflows/account4-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm audit --audit-level=high
+      - run: npm test
+      - run: npm run test:cms-dom
+      - run: npm run test:cms-browser
