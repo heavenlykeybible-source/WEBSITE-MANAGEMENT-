@@ -9,7 +9,7 @@ async function scenario(mode){
  const videoEvents=new Map();video.addEventListener=(type,listener)=>videoEvents.set(type,listener);video.removeEventListener=(type,listener)=>{if(videoEvents.get(type)===listener)videoEvents.delete(type)};
  Object.assign(node('cv'),{width:1920,height:1080});
  const track={stop(){if(mode==='cleanup-fail')throw Error('Track cleanup failed')}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
- class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='streaming-oversize'){this.ondataavailable({data:{size:256*1024*1024+1}});this.ondataavailable({data:{get size(){throw Error('Late encoder data should be ignored')}}})}if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode==='cancel-encoder')setTimeout(()=>node('clipCancel').onclick(),0);if(mode!=='timeout'&&mode!=='cancel-encoder'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
+ class Recorder{static isTypeSupported(type){return mode!=='webm-only'||type.startsWith('video/webm')}constructor(stream,options){this.state='inactive';this.mimeType=mode==='actual-webm'?'video/webm;codecs=vp8':mode==='invalid-mime'?'video/unknown':options.mimeType}start(){this.state='recording';if(mode==='streaming-oversize'){this.ondataavailable({data:{size:256*1024*1024+1}});this.ondataavailable({data:{get size(){throw Error('Late encoder data should be ignored')}}})}if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode==='cancel-encoder')setTimeout(()=>node('clipCancel').onclick(),0);if(mode!=='timeout'&&mode!=='cancel-encoder'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
  const winEvents=new Map();let revokedURLs=0;
  const window={MediaRecorder:Recorder,addEventListener:(event,handler)=>winEvents.set(event,handler)};
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){revokedURLs++}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
@@ -238,6 +238,9 @@ async function scenario(mode){
  if(mode==='cancel-seek'||mode==='cancel-play'||mode==='cancel-start')assert.match(status,/Timeline operation stopped/);
  if(mode==='play-timeout'||mode==='late-play')assert.match(status,/Video playback did not start within 15 seconds/);
  if(mode==='late-play'){const count=video.pauseCount;await new Promise(resolve=>setTimeout(resolve,40));assert.ok(video.pauseCount>count,'Late playback is paused after timeout')}
+ if(mode==='webm-only'){assert.match(node('clipStatus').textContent,/Timeline export ready/);assert.equal(node('clipDownload').download,'heavenly-key-timeline.webm','WebM fallback download uses matching extension')}
+ if(mode==='actual-webm'){assert.match(node('clipStatus').textContent,/Timeline export ready/);assert.equal(node('clipDownload').download,'heavenly-key-timeline.webm','Recorder MIME overrides requested MP4 format')}
+ if(mode==='invalid-mime')assert.match(node('clipStatus').textContent,/unexpected video format/,'Unexpected recorder format is rejected');
  if(mode==='cleanup-fail'){assert.equal(node('clipCancel').disabled,true,'Track cleanup failure must release editor controls');assert.equal(node('vf').disabled,false,'Track cleanup failure must unlock source input')}
  if(mode==='success'){
   assert.match(status,/without audio/);
@@ -257,4 +260,4 @@ async function scenario(mode){
  }
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek','source-switch-late','source-switch-play','invalid-canvas','streaming-oversize','pagehide-active','cleanup-fail'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek','source-switch-late','source-switch-play','invalid-canvas','streaming-oversize','pagehide-active','cleanup-fail','webm-only','actual-webm','invalid-mime'])await scenario(mode);
