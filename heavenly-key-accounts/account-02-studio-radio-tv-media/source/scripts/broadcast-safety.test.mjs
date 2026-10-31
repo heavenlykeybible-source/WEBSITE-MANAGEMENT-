@@ -128,4 +128,6 @@ assert.ok(entry.includes('sessionId<=0'), 'Reject nonpositive publisher session 
 assert.ok(entry.includes("identity,publish),200,{'Cache-Control':'no-store'}"), 'Viewer token responses must not be cached');
 assert.ok(entry.includes("return json(token,200,{'Cache-Control':'no-store'})"), 'Publisher token responses must not be cached');
 assert.ok(entry.includes("error:'Live transport unavailable'"), 'LiveKit errors must not disclose provider details');
+assert.ok(restream.includes("redirect:'manual'"), 'Upstream LiveKit redirects must remain disabled');
+assert.ok(restream.includes('AbortSignal.timeout(15000)'), 'Upstream LiveKit requests must have a timeout');
 console.log('Account 2 broadcast safety regression checks passed');
