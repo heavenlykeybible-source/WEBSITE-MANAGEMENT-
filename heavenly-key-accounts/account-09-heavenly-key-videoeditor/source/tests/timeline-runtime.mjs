@@ -8,7 +8,7 @@ async function scenario(mode){
  const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='overlap'){this.playCount=(this.playCount||0)+1;if(this.playCount===1)return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=0;return}if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));if(mode==='source-switch-late')return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=mode==='cancel-play'||mode==='source-switch-play'?0:mode==='early-ended'?.1:1;if(mode==='early-ended')this.ended=true}});
  const videoEvents=new Map();video.addEventListener=(type,listener)=>videoEvents.set(type,listener);video.removeEventListener=(type,listener)=>{if(videoEvents.get(type)===listener)videoEvents.delete(type)};
  Object.assign(node('cv'),{width:1920,height:1080});
- const track={stop(){}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
+ const track={stop(){if(mode==='cleanup-fail')throw Error('Track cleanup failed')}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
  class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='streaming-oversize'){this.ondataavailable({data:{size:256*1024*1024+1}});this.ondataavailable({data:{get size(){throw Error('Late encoder data should be ignored')}}})}if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode==='cancel-encoder')setTimeout(()=>node('clipCancel').onclick(),0);if(mode!=='timeout'&&mode!=='cancel-encoder'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
  const winEvents=new Map();let revokedURLs=0;
  const window={MediaRecorder:Recorder,addEventListener:(event,handler)=>winEvents.set(event,handler)};
@@ -238,6 +238,7 @@ async function scenario(mode){
  if(mode==='cancel-seek'||mode==='cancel-play'||mode==='cancel-start')assert.match(status,/Timeline operation stopped/);
  if(mode==='play-timeout'||mode==='late-play')assert.match(status,/Video playback did not start within 15 seconds/);
  if(mode==='late-play'){const count=video.pauseCount;await new Promise(resolve=>setTimeout(resolve,40));assert.ok(video.pauseCount>count,'Late playback is paused after timeout')}
+ if(mode==='cleanup-fail'){assert.equal(node('clipCancel').disabled,true,'Track cleanup failure must release editor controls');assert.equal(node('vf').disabled,false,'Track cleanup failure must unlock source input')}
  if(mode==='success'){
   assert.match(status,/without audio/);
   assert.ok(statuses.some(text=>/\d+% complete\./.test(text)),'Timeline reports percent progress during export');
@@ -256,4 +257,4 @@ async function scenario(mode){
  }
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek','source-switch-late','source-switch-play','invalid-canvas','streaming-oversize','pagehide-active'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek','source-switch-late','source-switch-play','invalid-canvas','streaming-oversize','pagehide-active','cleanup-fail'])await scenario(mode);
