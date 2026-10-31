@@ -3,7 +3,7 @@
   "short_name": "Hymn Library",
   "description": "Hymn Library — Heavenly Key Evangelistic Movement",
   "id": "/installed/hymns",
-  "start_url": "/hymns.html",
+  "start_url": "/old-time-gospel-revival-hymn-book.html",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
