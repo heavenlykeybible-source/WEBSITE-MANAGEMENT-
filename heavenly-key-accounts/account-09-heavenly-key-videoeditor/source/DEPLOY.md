@@ -11,7 +11,7 @@ Target: `heavenlykey-studio` (Cloudflare Pages), using direct GitHub integration
 ## Prerequisites
 - Review `OWNER-ADMIN-SETUP.md` and `AUDIT.md`.
 - Cloudflare account must contain D1 `heavenlykey-studio` and R2 `heavenlykey-media`; confirm binding IDs and account ownership.
-- Run `schema.sql` for a NEW D1 database. For an EXISTING database, back it up, then apply the applicable one-time migrations in order: `0001_user_roles.sql`, `0002_storage_usage.sql`, `0003_audit_event_index.sql`, `0004_session_user_expiry_index.sql`, and `0005_password_hash_iterations.sql`. Do not apply a migration twice or apply `0005` to a fresh database created from the current schema.
+- Run `schema.sql` for a NEW D1 database. For an EXISTING database, back it up, then apply the applicable one-time migrations in order: `0001_user_roles.sql`, `0002_storage_usage.sql`, `0003_audit_event_index.sql`, `0004_session_user_expiry_index.sql`, and `0005_password_hash_iterations.sql`, `0006_session_inactivity_timeout.sql`. Do not apply a migration twice or apply `0005` to a fresh database created from the current schema.
 - Confirm the Cloudflare Pages project's production branch, custom domain, D1, R2 and Workers AI bindings.
 
 ## GitHub direct deployment
@@ -27,7 +27,7 @@ Target: `heavenlykey-studio` (Cloudflare Pages), using direct GitHub integration
 ## Corrected deployment root and D1 registration fix
 For the packaged folder, the **repository root directory** is `heavenlykey-studio` only when the ZIP contents are committed under that exact directory. For a repository folder at `heavenly-key-accounts/account-09-heavenly-key-videoeditor/source`, use that exact root instead. Pages build command: none; output directory: `public`. Do not configure a Worker deploy action for a Pages Functions project.
 
-A fresh database must apply `schema.sql`, which includes `role`, `storage_used`, session indexes, and `password_iterations` (600,000 for new accounts). Existing databases must apply applicable one-time migrations `0001` through `0005` in order after a verified backup. Migration `0005` preserves the legacy 100,000 iteration value for verification; successful login upgrades that account to 600,000. Do not run migrations on a fresh database already created from the current schema.
+A fresh database must apply `schema.sql`, which includes `role`, `storage_used`, session indexes, and `password_iterations` (600,000 for new accounts). Existing databases must apply applicable one-time migrations `0001` through `0006` in order after a verified backup. Migration `0005` preserves the legacy 100,000 iteration value for verification; successful login upgrades that account to 600,000. Do not run migrations on a fresh database already created from the current schema.
 
 No live deployment was made while creating this ZIP. Real credentials and bindings must be configured in the correct Cloudflare account before enabling production.
 
@@ -65,3 +65,8 @@ Release requirements: current successful quality gate, real Cloudflare authentic
 ## Password-hash strengthening — 31 October 2026
 
 New registrations and provisioned Owner/Admin accounts use PBKDF2-HMAC-SHA-256 with 600,000 iterations. Existing accounts retain their recorded legacy work factor until their next successful login, when the API re-hashes their password with a fresh salt and 600,000 iterations. Apply `migrations/0005_password_hash_iterations.sql` once to an existing database before deploying this API. Back up D1 first. Fresh databases already contain the column in `schema.sql`; do not apply migration 0005 to them.
+
+
+## Session lifetime controls — 31 October 2026
+
+Sessions now enforce a 30-minute inactivity timeout and a fixed 30-day absolute maximum lifetime. Activity refreshes `last_seen_at` at most once every five minutes to reduce D1 writes. New databases include this column in `schema.sql`; existing databases must be backed up and apply `migrations/0006_session_inactivity_timeout.sql` once after the prior applicable migrations. Existing sessions receive a migration-time baseline derived from their existing 30-day expiry; the inactivity timeout then applies. Users must sign in again after either timeout.
