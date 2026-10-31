@@ -488,3 +488,9 @@ test('staff GET permissions use explicit endpoint allowlists and no wildcard rea
  assert.equal(can('operator','GET','/api/future-route'),false);
  assert.equal(can('owner','GET','/api/operators'),true);
 });
+
+test('API JSON media type validation is anchored', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes('application\\/json(?:\\s*;|\\s*$)'));
+ assert.ok(!source.includes("startsWith('application/json')"));
+});
