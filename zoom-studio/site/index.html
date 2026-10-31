@@ -314,7 +314,7 @@ cvEl.onpointermove=e=>{if(!dwn)return;const[x,y]=pt(e);dx.beginPath();dx.moveTo(
 cvEl.onpointerup=cvEl.onpointercancel=()=>{dwn=false};
 $('dcl').onclick=()=>dx.clearRect(0,0,W,H);
 const cover=(c,e,iw,ih,x,y,w,h)=>{const k=Math.max(w/iw,h/ih),dw=iw*k,dh=ih*k;c.drawImage(e,x+(w-dw)/2,y+(h-dh)/2,dw,dh)};
-let seg=null,segBusy=false,segCur=null,segIndex=0,segLoading=false,segWait=[],bgImg=null,curBg=0,bgFn=null;
+let seg=null,segBusy=false,segCur=null,segIndex=0,segLoading=false,segWait=[],bgImg=null,curBg=0,bgPick=0,bgFn=null;
 function loadSeg(cb){if(seg)return cb(true);segWait.push(cb);if(segLoading)return;segLoading=true;const done=ok=>{segLoading=false;for(const fn of segWait.splice(0))fn(ok)};const B='https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/',sc=document.createElement('script');sc.src=B+'selfie_segmentation.js';
  sc.onload=()=>{try{seg=new SelfieSegmentation({locateFile:f=>B+f});seg.setOptions({modelSelection:1});
   seg.onResults(r=>{const s=segCur;if(!s||!s.oc||!s.blur)return;const iw=r.image.width,ih=r.image.height,limit=$('lite').checked?720:1280,k=Math.min(1,limit/Math.max(iw,ih)),w=Math.max(1,Math.round(iw*k)),h=Math.max(1,Math.round(ih*k));
@@ -334,9 +334,11 @@ function proc(n,c1,c2,c3){const c=document.createElement('canvas');c.width=1280;
  g.fillStyle='rgba(242,193,78,.9)';g.fillRect(0,692,1280,6);T.push({n,c,u:c.toDataURL('image/jpeg',.6)})}
 proc('Royal blue and gold','#0b1f4d','#143a8c','#061233');proc('Crimson glory','#4a0d18','#8c1b2c','#1d0409');proc('Midnight worship','#05060f','#101a3a','#050810');proc('Golden dawn','#1b3a6b','#d9973f','#fbe4a1');
 function gal(){$('gal').innerHTML=T.map((t,i)=>`<button data-a="bgsel" data-i="${i}" class="${i==curBg?'cur':''}"><img src="${t.th||t.u}" alt="${esc(t.n)}" loading="lazy"><span>${esc(t.n)}</span></button>`).join('')}
-function setBg(i){const t=T[i];curBg=i;
- const go=()=>{bgImg=t.c||t.img;bgFn=t.fn||null;let b=S.find(s=>s.isBg);if(!b)b=mk('image','Background',{isBg:true,cover:true});b.img=bgImg;b.fn=bgFn;b.tn=t.n;
-  const it=SC[ed()].items;if(!it.some(x=>x.id===b.id))it.unshift({id:b.id,p:'full',on:true});gal();ui()};
+function setBg(i){const t=T[i];if(!t)return;curBg=i;const request=++bgPick,scene=SC[ed()];
+ const go=()=>{if(request!==bgPick||!SC.includes(scene))return;bgImg=t.c||t.img;bgFn=t.fn||null;
+  const it=scene.items;let b=it.map(x=>src(x.id)).find(s=>s&&s.isBg);
+  if(!b)b=mk('image','Background',{isBg:true,cover:true});b.img=bgImg;b.fn=bgFn;b.tn=t.n;
+  if(!it.some(x=>x.id===b.id))it.unshift({id:b.id,p:'full',on:true});gal();ui()};
  if(t.p&&W>=H)msg('This template is made for Portrait. Change Screen shape under Start.');
  if(t.fn||t.c||(t.img&&t.img.complete&&t.img.naturalWidth))return go();t.img=t.img||new Image();t.img.onload=go;t.img.onerror=()=>msg('This studio background could not be loaded. Select another background.');t.img.src=t.u}
 function newScene(name){SC.push({name,items:[]});const i=SC.length-1;if(studio)pvw=i;else take(i);return i}
