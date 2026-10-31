@@ -24,7 +24,7 @@ input[type=range]{accent-color:#f3c957;flex:1;min-width:60px}
 <div class="track" id="track">Ready to listen</div>
 <p id="status" role="status" aria-live="polite">Press Play to begin. The radio uses no continuously running playout server.</p>
 <div class="controls">
-<button id="play" type="button" aria-label="Play radio">▶ Play Radio</button>
+<button id="play" type="button" aria-label="Play radio" disabled>▶ Play Radio</button>
 <button id="next" type="button" class="secondary" disabled>Next track</button>
 <button id="retry" type="button" class="secondary">Refresh playlist</button>
 </div>
@@ -43,6 +43,7 @@ const say=message=>{status.textContent=message};
 const validItem=item=>item&&item.type==='audio'&&typeof item.url==='string'&&/^\\/api\\/broadcast\\/media\\/\\d+\\/object$/.test(item.url);
 async function refresh(){
  const generation=++loadGeneration;
+ play.disabled=true;next.disabled=true;
  say('Loading approved radio recordings…');
  try{
  const response=await fetch('/api/broadcast/programme?channel=radio&delivery=on-demand',{headers:{'X-Heavenly-Key-Internal':'media-engine-public-v1'},cache:'no-store'});
@@ -51,11 +52,11 @@ async function refresh(){
  if(generation!==loadGeneration)return;
  const items=Array.isArray(result.items)?result.items.filter(validItem):[];
  ++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');
- playlist=items;position=0;next.disabled=!items.length;
+ playlist=items;position=0;play.disabled=!items.length;next.disabled=!items.length;
  if(!items.length){title.textContent='No radio recordings available';say('The radio playlist is currently empty.');return;}
  title.textContent=items[0].title||'Radio programme';
  say('Playlist ready. Press Play to listen.');
- }catch(error){if(generation!==loadGeneration)return;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');playlist=[];next.disabled=true;title.textContent='Playlist unavailable';say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
+ }catch(error){if(generation!==loadGeneration)return;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');playlist=[];play.disabled=true;next.disabled=true;title.textContent='Playlist unavailable';say('Could not load radio: '+(error instanceof Error?error.message:'Try again.'));}
 }
 function select(index){
  if(!playlist.length)return false;
@@ -69,8 +70,8 @@ async function start(){
  generation=++playGeneration;await audio.play();if(generation!==playGeneration)return;playing=true;play.textContent='⏸ Pause';play.setAttribute('aria-label','Pause radio');say('Playing • '+(position+1)+' of '+playlist.length);}
  catch{if(generation===playGeneration)setPaused('Audio could not play. Check your connection, audio output, or try the next recording.');}
 }
-play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
-next.addEventListener('click',async()=>{if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
+play.addEventListener('click',async()=>{if(play.disabled)return;if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
+next.addEventListener('click',async()=>{if(next.disabled)return;if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
 retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
 audio.addEventListener('ended',()=>{if(!playlist.length)return;const continuePlaying=playing;select(position+1);if(continuePlaying)void start()});
 audio.addEventListener('pause',()=>{if(playing&&audio.paused&&!audio.ended)setPaused('Paused.');});
