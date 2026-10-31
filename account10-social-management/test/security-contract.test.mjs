@@ -158,3 +158,18 @@ test('Ministry policy refuses invented theological attribution and missing websi
     assert.ok(profile.includes(phrase), 'Missing safeguard: '+phrase);
   }
 });
+
+test('WhatsApp human contact request pauses Gemini without sending or claiming notification', () => {
+  assert.match(source, /from '\.\/human-handover'/);
+  assert.match(source, /if\(requestsHumanMinistryContact\(item\.body\)\)statements\.push/);
+  assert.match(source, /UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=\?/);
+  assert.match(source, /messageInsertPositions\.push\(statements\.length\)/);
+  assert.match(source, /results\.filter\(\(result,index\)=>messageInsertPositions\.includes\(index\)\)/);
+  const start=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'");
+  const end=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'",start);
+  const handler=source.slice(start,end);
+  const human=handler.indexOf('if(requestsHumanMinistryContact(data.message))');
+  const gemini=handler.indexOf("if(!env.GEMINI_API_KEY)");
+  assert.ok(human>=0 && gemini>human,'explicit human request must bypass Gemini even without an API key');
+  assert.match(handler, /humanRequested:true,automationPaused:true,suggestion:null,sent:false,externalNotificationsSent:false/);
+});
