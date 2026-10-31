@@ -219,3 +219,23 @@ test('failed viewer connection is retried and stopping removes the peer', async(
  assert.equal(peers[1].connectionState,'closed');
  assert.equal(signals.filter(m=>m.t==='view-sig').length,2);
 });
+
+test('room alarm removes a stage participant after account revocation', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  h.users['member@example.com'].tv=3;
+  await h.r.alarm();
+  assert.equal(h.guest.readyState,3);
+  assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
+
+test('room alarm removes a stage participant after identity expiry', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  h.guest.attachment.identity.expires=Date.now()-1000;
+  await h.r.alarm();
+  assert.equal(h.guest.readyState,3);
+  assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
