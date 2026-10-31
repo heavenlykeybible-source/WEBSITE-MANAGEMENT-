@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {runInNewContext} from 'node:vm';
 import ts from 'typescript';
 const root=fileURLToPath(new URL('../',import.meta.url));
-const load=p=>readFileSync(new URL(p,root),'utf8');
+const load=p=>readFileSync(resolve(root,p),'utf8');
 const source=load('src/radio-upload-security.ts');
 const js=ts.transpileModule(source.replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 const {validRadioObjectKey,validRadioRetentionHours}=runInNewContext(js+';({validRadioObjectKey,validRadioRetentionHours})',{});
