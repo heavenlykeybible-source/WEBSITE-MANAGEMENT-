@@ -12,7 +12,7 @@ const [html, headers, worker, wrangler, player, css] = await Promise.all([
 ]);
 const requireText = (condition, message) => { if (!condition) fail.push(message); };
 
-for (const h of ["Strict-Transport-Security", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy", "Content-Security-Policy"]) requireText(headers.includes(h), "Missing response header: " + h);
+for (const h of ["Strict-Transport-Security", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy", "Cross-Origin-Opener-Policy", "Cross-Origin-Resource-Policy", "Content-Security-Policy"]) requireText(headers.includes(h), "Missing response header: " + h);
 for (const d of ["object-src 'none'", "base-uri 'none'", "frame-ancestors 'none'"]) requireText(headers.includes(d), "CSP missing " + d);
 const inlineScripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 for (const script of inlineScripts) {
