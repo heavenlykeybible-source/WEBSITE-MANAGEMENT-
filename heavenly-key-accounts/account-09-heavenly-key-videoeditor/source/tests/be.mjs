@@ -462,6 +462,7 @@ const foreignRead=await request('media/foreign-record',{cookie:login.cookie});
 const foreignDelete=await request('media/foreign-record',{method:'DELETE',cookie:login.cookie});
 check('Foreign storage reference blocks media download',foreignRead.status===409);
 check('Foreign storage reference blocks media deletion',foreignDelete.status===409&&objects.has(foreignObjectKey));
+check('Rejected foreign storage deletion leaves record unchanged',db.prepare('SELECT deleted FROM media WHERE id=?').get('foreign-record')?.deleted===0);
 db.prepare('DELETE FROM media WHERE id=?').run('foreign-record');
 const originalMediaDelete = env.MEDIA.delete;
 let mediaDeleteAttempts = 0;
