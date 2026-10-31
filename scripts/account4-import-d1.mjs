@@ -34,6 +34,11 @@ export async function loadImportSession(db, actor, id) {
     .bind(id,actor.id).first();
   if (!row || row.owner_id !== actor.id || row.state !== 'uploading' ||
       row.expires_at_ms <= Date.now() ||
+      !Number.isSafeInteger(row.size_bytes) || row.size_bytes < 1 ||
+      row.size_bytes > 1073741824 ||
+      !Number.isSafeInteger(row.part_count) ||
+      row.part_count !== Math.ceil(row.size_bytes / (10 * 1024 * 1024)) ||
+      typeof row.upload_id !== 'string' || !row.upload_id ||
       typeof row.object_key !== 'string' ||
       !row.object_key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`))
     throw new Error('Import session unavailable');
