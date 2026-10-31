@@ -50,6 +50,7 @@ export async function publicProgramme(request:Request,env:BroadcastEnv):Promise<
 export async function serveBroadcastMedia(request:Request,env:BroadcastEnv,id:number,adminPreview=false):Promise<Response>{
  const media=adminPreview?await env.DB.prepare("SELECT * FROM media_objects WHERE media_id=? AND status IN ('approved','published') AND (status='published' OR keep_media=1 OR retention_until IS NULL OR julianday(retention_until)>julianday('now'))").bind(id).first<any>():await eligibleMedia(env,id);
  if(!media||!['audio','video','image'].includes(media.media_type))return json({error:'Media unavailable'},404);
+ if(TV_LOCKED&&!adminPreview&&media.media_type==='video')return json({error:TV_LOCK_MESSAGE,code:'TELEVISION_LOCKED',locked:true},423);
  const range=request.headers.get('Range');
  if(range&&!/^bytes=(\d+-\d*|-\d+)$/.test(range))return new Response(null,{status:416});
  const head=await env.MEDIA_R2.head(media.object_key);
