@@ -222,6 +222,10 @@ export async function onRequest({ request: req, env, params }) {
       const entries = parseAIConnections(env);
       const chosen = entries.find(x => x.id === b.connectionId && x.enabled !== false);
       if (!chosen) return J({error:'Select a configured AI connection.'},400);
+      const attempts = await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='ai_gateway_attempt' AND at>?").bind(u.id,Date.now()-DAY).first();
+      if (attempts.c >= 60) return J({error:'Daily AI gateway attempt limit reached.'},429);
+      // Count unsuccessful provider calls too, preventing unlimited costly retries.
+      await log(env,u.id,'ai_gateway_attempt');
       // One explicit connection per request: no quota-bypass key rotation.
       try {
         const result = await invokeAIConnection(chosen, b.task, b.prompt, env);
