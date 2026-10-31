@@ -577,10 +577,14 @@ test('operator mutations reject cross-site browser fetch metadata before origin 
  const fetchGuard=source.indexOf("req.headers.get('sec-fetch-site')==='cross-site'");
  const originGuard=source.indexOf("operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin)");
  assert.ok(fetchGuard>=0&&originGuard>fetchGuard);
- assert.match(source,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)&&req\.headers\.get\('sec-fetch-site'\)==='cross-site'/);
- assert.match(source,/Cross-site operator mutations are forbidden/);
+ assert.match(source,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)&&\['cross-site','same-site'\]\.includes\(req\.headers\.get\('sec-fetch-site'\)\|\|''\)/);
+ assert.match(source,/Cross-origin operator mutations are forbidden/);
 });
 
 test('API JSON responses vary on browser origin and fetch metadata', () => {
  assert.match(source,/const reply=\(body:unknown,status=200\)=>new Response\(JSON\.stringify\(body\),\{status,headers:\{[^\n]*'cache-control':'no-store','vary':'Origin, Sec-Fetch-Site'/);
+});
+
+test('sibling subdomains cannot mutate protected operator API through same-site browser requests', () => {
+ assert.match(source,/\['cross-site','same-site'\]\.includes\(req\.headers\.get\('sec-fetch-site'\)\|\|''\)/);
 });
