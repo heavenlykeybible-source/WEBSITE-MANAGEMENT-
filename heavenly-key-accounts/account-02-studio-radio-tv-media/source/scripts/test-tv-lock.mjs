@@ -28,6 +28,7 @@ assert.ok(index.includes("if(TV_LOCKED&&String(b.channel??'video')!=='radio')ret
 assert.ok(index.includes("if(TV_LOCKED&&channel==='video')return tvLockedResponse()"),'TV playlist changes must be blocked');
 assert.ok(index.includes("if(TV_LOCKED&&b?.channel==='video')return tvLockedResponse()"),'TV playlist settings must be blocked');
 assert.ok(index.includes("if(TV_LOCKED&&mr.media_type==='video')return tvLockedResponse()"),'Video playout scheduling must be blocked');
+assert.ok(index.includes("media_id IN (SELECT media_id FROM media_objects WHERE media_type='audio')"),'Scheduled television programmes must not be activated by automatic cron processing');
 assert.ok(restream.includes("if(TV_LOCKED&&input.channel!=='radio')"),'Core egress layer must block TV independently of the HTTP route');
 assert.ok(broadcast.includes("if(channel==='video'&&TV_LOCKED)"),'Public TV programme must return locked status');
 assert.ok(broadcast.includes("if(TV_LOCKED&&!adminPreview&&media.media_type==='video')"),'TV public video files must be blocked while editing previews remain available');
