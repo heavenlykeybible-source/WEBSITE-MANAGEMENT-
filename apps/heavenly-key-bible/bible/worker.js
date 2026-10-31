@@ -113,7 +113,8 @@ export default {
            typeof topic.prayer==="string"&&topic.prayer.trim()&&topic.prayer.length<=160)))return deny();
     const dates=data.entries.map(entry=>entry.date);
     if(new Set(dates).size!==dates.length)return deny();
-    const today=new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Lagos'});
+    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
+    const today=parts.year+'-'+parts.month+'-'+parts.day;
     if(dates.some(date=>date>today))return deny();
     const headers=new Headers(assetResponse.headers);
     headers.set("Cache-Control","no-store");
