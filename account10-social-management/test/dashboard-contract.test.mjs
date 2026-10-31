@@ -132,3 +132,11 @@ test('operator takeover button resolves pending human request before resuming Ge
   assert.match(html, /else\{await api\('\/api\/takeover'/);
   assert.equal((html.match(/selected='';paused=false;requestedHuman=false/g)||[]).length,2);
 });
+
+test('human request queue visibly distinguishes ministry agent and Evangelist handovers', () => {
+  assert.match(html, /item\.human_contact_target==='speak_to_evangelist'/);
+  assert.match(html, /For Evangelist Emmanuel Ogheneochuko Adiohwo/);
+  assert.match(html, /item\.human_contact_target==='ministry_agent'/);
+  assert.match(html, /For Heavenly Key Evangelistic Movement agent/);
+  assert.match(html, /Human contact target unverified/);
+});
