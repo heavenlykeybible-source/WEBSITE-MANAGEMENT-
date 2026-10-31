@@ -98,7 +98,7 @@ assert.match(entry, /setDestinationEnabled\(env,String\(b\.destination\?\?'\),b\
 // Invalid streaming controls must fail closed instead of silently starting 'live'.
 assert.match(entry, /!\['live','247'\]\.includes\(requestedSource\)/, 'Reject unsupported streaming sources');
 assert.match(entry, /!\['radio','video'\]\.includes\(requestedChannel\)/, 'Reject unsupported channels');
-assert.match(entry, /Number\.isSafeInteger\(Number\(b\.session_id\)\)/, 'Require a valid live session identifier');
+assert.ok(entry.includes("typeof b.session_id==='string'"), 'Require a canonical string session identifier');
 assert.match(entry, /A valid live session ID is required/, 'Invalid live session IDs must return a client error');
 
 // Egress destinations must never target private infrastructure.
