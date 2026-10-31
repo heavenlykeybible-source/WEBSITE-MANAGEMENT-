@@ -1,0 +1,118 @@
+name: Promote Reviewed Account 5 Native Installer to Private R2
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Which platform has a successful signed release candidate?'
+        required: true
+        type: choice
+        options: [android, windows, mac]
+      release_run_id:
+        description: 'Successful manually approved release workflow run ID from main'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: account5-native-release-promotion
+  cancel-in-progress: false
+jobs:
+  promote:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    environment: production-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PLATFORM: ${{ inputs.platform }}
+      RELEASE_RUN: ${{ inputs.release_run_id }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.ACCOUNT5_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.ACCOUNT5_R2_SECRET_ACCESS_KEY }}
+      CF_ACCOUNT_ID: ${{ secrets.ACCOUNT5_CLOUDFLARE_ACCOUNT_ID }}
+      AWS_DEFAULT_REGION: auto
+      AWS_EC2_METADATA_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm reviewer-approved release and isolated R2 credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$PLATFORM" =~ ^(android|windows|mac)$ ]] || exit 1
+          [[ "$RELEASE_RUN" =~ ^[1-9][0-9]{5,15}$ ]] || { echo '::error::Invalid release run ID'; exit 1; }
+          for name in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY CF_ACCOUNT_ID; do
+            test -n "${!name}" || { echo "::error::Missing Account 5 R2 publishing secret: $name"; exit 1; }
+          done
+          info="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RELEASE_RUN")"
+          test "$(jq -r '.conclusion' <<<"$info")" = success
+          test "$(jq -r '.event' <<<"$info")" = workflow_dispatch
+          test "$(jq -r '.head_branch' <<<"$info")" = main
+          test "$(jq -r '.head_repository.full_name' <<<"$info")" = "$GITHUB_REPOSITORY"
+          case "$PLATFORM" in
+            android) expected='Package Account 5 Signed Android Release'; artifact=heavenly-key-account5-signed-android-release ;;
+            windows) expected='Package Account 5 Signed Windows Release Candidate'; artifact=heavenly-key-account5-windows-signed-candidate ;;
+            mac) expected='Package Account 5 Signed and Notarized Mac Release Candidate'; artifact=heavenly-key-account5-mac-notarized-candidate ;;
+          esac
+          test "$(jq -r '.name' <<<"$info")" = "$expected" || { echo '::error::Wrong release workflow'; exit 1; }
+          echo "RELEASE_ARTIFACT=$artifact" >> "$GITHUB_ENV"
+      - name: Retrieve exactly the signed release artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/approved-release"
+          gh run download "$RELEASE_RUN" --repo "$GITHUB_REPOSITORY" --name "$RELEASE_ARTIFACT" --dir "$RUNNER_TEMP/approved-release"
+      - name: Reverify original bytes, signature attestation and hash before publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$PLATFORM" in
+            android) name=app-release.apk; ext=apk ;;
+            windows) name=HeavenlyKeyWindows.msix; ext=msix ;;
+            mac) name=HeavenlyKeyMac.dmg; ext=dmg ;;
+          esac
+          mapfile -d '' candidates < <(find "$RUNNER_TEMP/approved-release" -type f -name "$name" -print0)
+          test "${#candidates[@]}" -eq 1 || { echo '::error::One signed installer file required'; exit 1; }
+          file="${candidates[0]}"
+          test -s "$file"
+          checksum="$file.sha256"
+          test -s "$checksum"
+          actual="$(sha256sum "$file" | cut -d ' ' -f 1)"
+          expected="$(awk 'NR==1 {print $1}' "$checksum" | tr 'A-F' 'a-f')"
+          test "$actual" = "$expected" || { echo '::error::Release checksum mismatch'; exit 1; }
+          [[ "$actual" =~ ^[a-f0-9]{64}$ ]] || exit 1
+          if [ "$PLATFORM" != mac ]; then
+            evidence="$file.security.txt"
+            test -s "$evidence"
+            grep -qx 'malwareScan=passed' "$evidence"
+          fi
+          if [ "$PLATFORM" = android ]; then
+            grep -qx 'signatureVerified=true' "$evidence"
+            grep -qx "scannedSha256=$actual" "$evidence"
+          fi
+          size="$(stat -c %s "$file")"
+          test "$size" -gt 0 && test "$size" -le 2147483648
+          echo "APPROVED_INSTALLER=$file" >> "$GITHUB_ENV"
+          echo "APPROVED_DIGEST=$actual" >> "$GITHUB_ENV"
+          echo "APPROVED_SIZE=$size" >> "$GITHUB_ENV"
+          echo "APPROVED_EXTENSION=$ext" >> "$GITHUB_ENV"
+      - name: Upload owner-approved release to private Account 5 R2
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v aws || { echo '::error::AWS CLI unavailable on runner'; exit 1; }
+          endpoint="https://$CF_ACCOUNT_ID.r2.cloudflarestorage.com"
+          key="all-in-one/$PLATFORM/release.$APPROVED_EXTENSION"
+          aws --endpoint-url "$endpoint" s3api put-object \
+            --bucket heavenly-key-native-releases --key "$key" \
+            --body "$APPROVED_INSTALLER" \
+            --content-type application/octet-stream \
+            --metadata "sha256=$APPROVED_DIGEST,scannedsha256=$APPROVED_DIGEST,malwarescan=passed,signatureverified=true,appid=all-in-one,platform=$PLATFORM"
+          verify="$(aws --endpoint-url "$endpoint" s3api head-object --bucket heavenly-key-native-releases --key "$key")"
+          test "$(jq -r '.ContentLength' <<<"$verify")" = "$APPROVED_SIZE"
+          test "$(jq -r '.Metadata.sha256' <<<"$verify")" = "$APPROVED_DIGEST"
+          test "$(jq -r '.Metadata.scannedsha256' <<<"$verify")" = "$APPROVED_DIGEST"
+          test "$(jq -r '.Metadata.signatureverified' <<<"$verify")" = true
+          test "$(jq -r '.Metadata.appid' <<<"$verify")" = all-in-one
+          test "$(jq -r '.Metadata.platform' <<<"$verify")" = "$PLATFORM"
+          echo "Approved package stored in PRIVATE R2 under $key."
+          echo 'This does not deploy the Worker or prove public device installation. Run the independent live-release gate after approved Worker publication.'
