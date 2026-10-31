@@ -19,7 +19,7 @@ const flag=(date,code,details)=>flags.push({date,code,details});
 const days=new Set();const refl=new Map();const pray=new Map();const lead=new Map();
 const verseTextByReference=new Map();
 const validDate = value => typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
- !Number.isNaN(Date.parse(value)) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+ !Number.isNaN(Date.parse(value+'T00:00:00Z')) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
 const references=Array.from({length:12},()=>new Set());
 let topicCount=0;let approved=0;
 for(let i=0;i<entries.length;i++){
@@ -32,6 +32,7 @@ for(let i=0;i<entries.length;i++){
  if(e.status!=='draft-not-published')flag(e.date,'PUBLICATION_STATUS','Requires separate documented editorial approval');
  for(let j=0;j<12;j++){
   const t=e.topics[j];topicCount++;
+  if(!t||typeof t!=='object'||Array.isArray(t)){flag(e.date,'INCOMPLETE','Invalid topic object at '+j);continue;}
   if(t.topic!==topicNames[j])flag(e.date,'TOPIC_ORDER',String(j));
   if(![t.reference,t.bibleText,t.reflection,t.prayer].every(v=>typeof v==='string'&&v.trim()))flag(e.date,'INCOMPLETE',t.topic);
   references[j].add(t.reference);
