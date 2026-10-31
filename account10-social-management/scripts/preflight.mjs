@@ -36,6 +36,8 @@ for(const [name,script] of Object.entries(pkg.scripts)){
 const assetSections=[...config.matchAll(/^\s*\[assets\]\s*$([\s\S]*?)(?=^\s*\[|$(?![\s\S]))/gm)];
 if(assetSections.length!==1)fail.push('Exactly one assets section is required');
 const assetConfig=assetSections[0]?.[1]||'';
+if(!/^directory\s*=\s*"\.\/public"\s*$/m.test(assetConfig))fail.push('Assets section must specify ./public directory');
+if(!/^binding\s*=\s*"ASSETS"\s*$/m.test(assetConfig))fail.push('Assets section must declare ASSETS binding');
 if(!/^run_worker_first\s*=\s*true\s*$/m.test(assetConfig))fail.push('Static asset requests must pass through Worker security headers');
 const args=process.argv.slice(2);
 if(args.includes('--production'))fail.push('Production readiness cannot be certified by a static preflight: verify Cloudflare zone ownership, D1 migrations, secrets, asset upload and live integration tests manually.');
