@@ -14,7 +14,23 @@ function requireSession(session, actor) {
       !Number.isSafeInteger(session.expiresAt) ||
       Date.now() >= session.expiresAt ||
       typeof session.key !== 'string' ||
-      !session.key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`) ||
+      !new RegExp(`^private-imports/${actor.id}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}import {validateImportMetadata, validatePart} from './account4-upload-policy.mjs';
+
+// Storage adapter only. Caller must authenticate every request and load the
+// session from a durable owner-scoped database before invoking these functions.
+// Objects remain private in R2; completion never publishes or deploys them.
+function requireSession(session, actor) {
+  if (actor?.authenticated !== true || actor.canImport !== true ||
+      !Number.isSafeInteger(actor.id) || actor.id <= 0 ||
+      !session || session.ownerId !== actor.id ||
+      session.state !== 'uploading' ||
+      !Number.isSafeInteger(session.size) || session.size < 1 || session.size > 1073741824 ||
+      !Number.isSafeInteger(session.partCount) ||
+      session.partCount !== Math.ceil(session.size / (10 * 1024 * 1024)) ||
+      !Number.isSafeInteger(session.expiresAt) ||
+      Date.now() >= session.expiresAt ||
+      typeof session.key !== 'string' ||
+,'i').test(session.key) ||
       typeof session.uploadId !== 'string' || !session.uploadId)
     throw new Error('Upload permission or session invalid');
   return session;
