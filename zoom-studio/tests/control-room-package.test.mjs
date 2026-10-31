@@ -811,3 +811,20 @@ test('room admission reclaims stale previous-session participants before connect
  assert.ok(cleanup>0&&capacity>cleanup,'outdated guest connections must be closed before capacity enforcement');
  assert.match(source,/if\(activeKey\)for\(const guest of this\.guests\(\)\)if\(this\.data\(guest\)\.session!==activeKey\)this\.close/);
 });
+
+test('disconnected socket cannot become a host after asynchronous token verification',async()=>{
+ const s=meeting(),candidate=s.add();
+ const pending=message(s.room,candidate,{t:'host',token:roomToken()});
+ candidate.readyState=3;
+ await pending;
+ assert.notEqual(candidate.d.role,'host','a disconnected pending socket cannot become host');
+ assert.equal(candidate.messages.filter(m=>m.t==='created').length,0);
+ assert.equal(s.room.hostAuthPending,false);
+});
+test('host authorization checks token expiration against verification completion',()=>{
+ const code=fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8');
+ assert.match(code,/const verifiedAt=Date\.now\(\)/);
+ assert.match(code,/a\.pe<=verifiedAt/);
+ assert.match(code,/if\(ws\.readyState!==1\)return/);
+ assert.match(code,/catch\{return this\.close\(ws,\{t:'error',msg:'Unable to verify meeting authorization\.'\}\)\}/);
+});
