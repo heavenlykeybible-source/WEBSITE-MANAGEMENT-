@@ -102,6 +102,7 @@ export class MeetingRooms {
     // TURN signing may yield: never announce a disconnected guest or ended meeting.
     if(ws.readyState!==1||this.host()!==host)return;
     h=this.data(host);if(h.until<=Date.now())return this.close(ws,{t:'closed',why:'The meeting has ended.'});
+    if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     this.send(ws,{t:'welcome',ice,watch:h.watch,chat:h.audChat,slow:h.slow,stageEligible:!!identity,audience:aud});
     if(d.ok)this.send(ws,{t:'admitted'});
     if(aud)this.send(host,{t:'viewer-join',gid:d.id});
