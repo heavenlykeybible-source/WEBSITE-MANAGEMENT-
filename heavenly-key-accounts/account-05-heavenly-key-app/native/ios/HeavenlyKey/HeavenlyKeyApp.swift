@@ -42,6 +42,7 @@ struct HeavenlyKeyWebView: UIViewRepresentable {
             windowFeatures: WKWindowFeatures
         ) -> WKWebView? {
             guard navigationAction.targetFrame == nil,
+                  navigationAction.navigationType == .linkActivated,
                   let url = navigationAction.request.url,
                   let scheme = url.scheme?.lowercased(),
                   ["https", "mailto", "tel"].contains(scheme),
