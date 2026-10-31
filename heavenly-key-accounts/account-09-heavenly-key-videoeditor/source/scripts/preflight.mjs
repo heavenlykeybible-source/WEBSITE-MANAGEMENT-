@@ -6,6 +6,10 @@ const staticHeaders=readFileSync('_headers','utf8');
 const deployHeaders=readFileSync('public/_headers','utf8');
 if(staticHeaders!==deployHeaders) throw Error('Security header configurations must match');
 if(!deployHeaders.includes("manifest-src 'self'")) throw Error('Manifest source policy missing');
+if(!deployHeaders.includes("script-src 'self'; script-src-attr 'none'") || /script-src[^;]*'unsafe-inline'/.test(deployHeaders)) throw Error('Strict script CSP must block inline scripts and event attributes');
+for (const path of ['editor.js','public/editor.js']) { if(!existsSync(path)) throw Error('Missing '+path); execFileSync(process.execPath,['--check',path],{stdio:'inherit'}); }
+if(readFileSync('editor.js','utf8')!==readFileSync('public/editor.js','utf8')) throw Error('Editor script copies must match');
+if((readFileSync('public/index.html','utf8').match(/<script\\b(?![^>]*\\bsrc=)[^>]*>/gi)||[]).length) throw Error('Inline scripts are forbidden by the enforced CSP');
 
 for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 const apiSource=readFileSync('functions/api/[[path]].js','utf8');
