@@ -4,7 +4,8 @@ import {validateImportMetadata, validatePart} from './account4-upload-policy.mjs
 // session from a durable owner-scoped database before invoking these functions.
 // Objects remain private in R2; completion never publishes or deploys them.
 function requireSession(session, actor) {
-  if (!actor?.authenticated || !actor.canImport || !actor.id ||
+  if (actor?.authenticated !== true || actor.canImport !== true ||
+      !Number.isSafeInteger(actor.id) || actor.id <= 0 ||
       !session || session.ownerId !== actor.id ||
       session.state !== 'uploading' || !Number.isFinite(session.expiresAt) ||
       Date.now() >= session.expiresAt ||
@@ -15,7 +16,9 @@ function requireSession(session, actor) {
   return session;
 }
 export async function beginPrivateImport(bucket, actor, file) {
-  if (!actor?.id) throw new Error('Authenticated user required');
+  if (actor?.authenticated !== true || actor.canImport !== true ||
+      !Number.isSafeInteger(actor.id) || actor.id <= 0)
+    throw new Error('Authenticated import permission required');
   const meta = validateImportMetadata(file, actor);
   const key = `private-imports/${encodeURIComponent(String(actor.id))}/${crypto.randomUUID()}`;
   const upload = await bucket.createMultipartUpload(key);
