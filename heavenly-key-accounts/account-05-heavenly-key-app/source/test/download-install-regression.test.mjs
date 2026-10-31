@@ -134,3 +134,10 @@ test('sharing URLs are restricted to approved secure ministry destinations', () 
  assert.match(source, /destination\.username/);
  assert.match(source, /Sharing link unavailable/);
 });
+
+test('device guide must not inject a misleading PWA installation manifest', () => {
+  const js = publicFile('app-device-guide.js');
+  assert.doesNotMatch(js, /manifest\.rel\s*=\s*['"]manifest['"]/);
+  assert.doesNotMatch(js, /document\.head\.append\(manifest\)/);
+  assert.match(js, /destination app/);
+});
