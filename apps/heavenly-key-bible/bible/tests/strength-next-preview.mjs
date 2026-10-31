@@ -30,7 +30,7 @@ assert.ok(js.includes('readFontScale()'));
 assert.ok(js.includes('saveFontScale(textScale)'));
 assert.ok(js.includes('Math.min(2,Math.max(.85'));
 assert.ok(js.includes("$('font-reset').onclick"));
-assert.ok(js.includes('try{localStorage.getItem'));
+assert.ok(js.includes('try{const value=Number(localStorage.getItem'));
 assert.ok(js.includes('try{localStorage.setItem'));
 assert.ok(html.includes('overflow-wrap:anywhere'));
 assert.doesNotMatch(js,/innerHTML\s*=/);
