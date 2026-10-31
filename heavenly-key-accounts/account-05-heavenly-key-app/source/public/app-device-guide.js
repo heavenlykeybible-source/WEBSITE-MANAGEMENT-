@@ -2,8 +2,9 @@
 (() => {
   'use strict';
   const params = new URLSearchParams(location.search);
-  const appId = params.get('app') || 'all-in-one';
-  const validAppId = /^[a-z0-9-]{1,64}$/.test(appId) && params.getAll('app').length <= 1;
+  const suppliedAppIds = params.getAll('app');
+  const appId = suppliedAppIds.length ? suppliedAppIds[0] : 'all-in-one';
+  const validAppId = /^[a-z0-9-]{1,64}$/.test(appId) && suppliedAppIds.length <= 1;
   const open = document.getElementById('open');
   const install = document.getElementById('install');
   const info = document.querySelector('.small');
@@ -95,7 +96,7 @@
           const expectedTypes = {android:'application/vnd.android.package-archive',windows:'application/msix',mac:'application/x-apple-diskimage'};
           const size = Number(available.headers.get('content-length'));
           const digest = available.headers.get('x-release-sha256') || '';
-          nativeAvailable = available.ok && contentType.split(';',1)[0].trim() === expectedTypes[platform] && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
+          nativeAvailable = available.status === 200 && !available.headers.has('content-range') && contentType.split(';',1)[0].trim() === expectedTypes[platform] && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
           // Do not initiate software downloads on QR scans or page navigation.
           // Show the package only on the matching platform and require a click.
           nativeLink.hidden = !(nativeAvailable && matchesDevice());
