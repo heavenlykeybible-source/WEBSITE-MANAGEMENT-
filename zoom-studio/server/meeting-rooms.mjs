@@ -111,8 +111,9 @@ export class MeetingRooms {
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),identity,ok:aud,aud,stage:false,invited:false,ao:!!m.ao,last:0});
     if(!aud&&d.pass&&!guests.some(w=>{const x=this.data(w);return x.pass===d.pass&&x.stage;})&&h.admitted.some(a=>a&&a.pass===d.pass&&a.email===d.identity.email)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<capacityForStage(this.env)){d.ok=true;d.stage=true;}
     this.save(ws,d);const ice=await meetingICE(this.env,d.room);
-    // TURN signing may yield: never announce a disconnected guest or ended meeting.
+    // TURN signing may yield: never admit a disconnected or expired handshake.
     if(ws.readyState!==1||this.host()!==host)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'error',msg:'Please reconnect.'});
     h=this.data(host);if(h.until<=Date.now())return this.close(ws,{t:'closed',why:'The meeting has ended.'});
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     // A verified stage credential may expire while TURN signing is pending.
