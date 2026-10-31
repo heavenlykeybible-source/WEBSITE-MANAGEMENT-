@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -9,10 +10,15 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const source=readFileSync(resolve(root,'src/radio-player.ts'),'utf8');
 const index=readFileSync(resolve(root,'src/index.ts'),'utf8');
 const compiled=ts.transpileModule(source.replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
-const response=runInNewContext(compiled+';radioPlayerHtml()',{Response});
+const response=runInNewContext(compiled+';radioPlayerHtml()',{Response,crypto:webcrypto});
 assert.match(response.headers.get('Content-Security-Policy')||'',/media-src 'self'/);
+assert.doesNotMatch(response.headers.get('Content-Security-Policy')||'',/unsafe-inline/);
+const nonce=(response.headers.get('Content-Security-Policy')||'').match(/script-src 'nonce-([a-f0-9]{32})'/)?.[1];
+assert.ok(nonce,'CSP must have cryptographically generated script nonce');
 const html=await response.text();
 assert.match(html,/<audio id="audio" preload="none"/);
+assert.ok(html.includes('<script nonce="'+nonce+'">'));
+assert.ok(html.includes('<style nonce="'+nonce+'">'));
 assert.match(html,/Bluetooth \/ audio output/);
 assert.match(html,/selectAudioOutput/);
 assert.match(html,/setSinkId/);
@@ -33,7 +39,7 @@ assert.match(html,/audio\.addEventListener\('waiting'/,'Buffering status must be
 assert.match(html,/if\(generation===playGeneration\)setPaused/,'Old async playback failures cannot alter current controls');
 assert.match(html,/setAttribute\('aria-label','Pause radio'\)/,'Accessible pause state must be announced');
 
-const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+const script=html.match(/<script[^>]*>([\\s\\S]*?)<\\/script>/)?.[1];
 assert.ok(script,'Radio player script must be present');
 new Script(script,{filename:'radio-player.js'}); // Validate emitted browser JavaScript, not the TS template.
 const match=script.match(/const validItem=item=>([^;]+);/);
