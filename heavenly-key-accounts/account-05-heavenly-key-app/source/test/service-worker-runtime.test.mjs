@@ -59,6 +59,7 @@ function harness(network = async () => publicResponse()) {
 function publicResponse(headers = {}, extra = {}) {
   return {
     ok: true,
+    status: 200,
     type: 'basic',
     redirected: false,
     headers: { get: key => headers[key] ?? null },
@@ -124,4 +125,37 @@ test('offline Bible chapter requests remain isolated', async () => {
   assert.equal(response.response.marker, 'John 3');
   const other = await runner.request('/bible.html?book=John&chapter=4', { mode: 'navigate', destination: 'document' });
   assert.equal(other.response.type, 'error');
+});
+
+test('a partial response cannot poison the offline shell cache', async () => {
+  const examples = [
+    publicResponse({ 'content-range': 'bytes 0-99/500' }),
+    publicResponse({}, { status: 206 }),
+  ];
+  for (const partial of examples) {
+    const runner = harness(async () => partial);
+    await runner.request('/app.js');
+    assert.equal(runner.entries.size, 0);
+    await assert.rejects(runner.install(), /Essential app shell unavailable/);
+  }
+});
+
+test('byte-range fetches are delegated without cache interception', async () => {
+  const listeners = new Map();
+  const self = {
+    location: { origin },
+    addEventListener: (name, callback) => listeners.set(name, callback),
+  };
+  runInNewContext(source, { self, caches: {}, fetch: async () => publicResponse(), URL, Response });
+  for (const header of ['Range', 'If-Range']) {
+    let handled = false;
+    listeners.get('fetch')({
+      request: {
+        url: origin + '/app.js', method: 'GET',
+        headers: { has: key => key === header }, mode: 'same-origin',
+      },
+      respondWith: () => { handled = true; },
+    });
+    assert.equal(handled, false, header);
+  }
 });
