@@ -179,3 +179,17 @@ test('native downloads require a real approved app entry, not only a matching ke
   assert.equal(calls.objects,0,'Unverified catalogue entry accessed release storage');
  }
 });
+
+test('invalid and excessive R2 native release sizes cannot be served or counted',async()=>{
+ for(const size of [-1,0,1.5,NaN,Infinity,2147483649,'4']){
+  const {env,calls}=environment();
+  const original=await env.NATIVE_RELEASES.get('all-in-one/android/release.apk');
+  env.NATIVE_RELEASES.get=async()=>({...original,size});
+  env.NATIVE_RELEASES.head=async()=>({...original,size});
+  for(const method of ['HEAD','GET']){
+   const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android',{method}),env);
+   assert.equal(response.status,403,'Accepted invalid release size: '+String(size));
+  }
+  assert.equal(calls.writes,0);
+ }
+});
