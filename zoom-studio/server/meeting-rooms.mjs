@@ -93,8 +93,9 @@ export class MeetingRooms {
     if(typeof m.accountToken==='string'&&m.accountToken.length<=4096){
      try{const claim=await check(this.env.AUTH_SECRET,m.accountToken);if(claim&&typeof claim.e==='string'&&claim.e.length>0&&claim.e.length<=254&&!claim.k&&Number.isFinite(claim.exp)&&claim.exp>Date.now()){const u=await getUser(this.env,claim.e);if(claim.exp>Date.now()&&u&&!u.banned&&(u.tv||0)===(claim.t||0)&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,claim.e,u)!=='user'||u.terms==='private-approved'))identity={email:claim.e,version:claim.t||0,expires:claim.exp};}}catch{}
     }
-    // Account checks can yield while the host locks or ends the room.
+    // Account checks can yield while the host locks, ends, or the handshake expires.
     if(ws.readyState!==1||this.data(ws).role)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'error',msg:'Please reconnect.'});
     if(this.host()!==host)return this.close(ws,{t:'error',msg:'This meeting has ended.'});
     h=this.data(host);if(h.until<=Date.now()||m.key!==h.key)return this.close(ws,{t:'error',msg:'This meeting has ended.'});
     const aud=m.aud===true||!identity,guests=this.guests();
