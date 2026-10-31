@@ -707,3 +707,11 @@ test('meeting expiration during delayed alarm verification closes every particip
  assert.notEqual(h.guest.readyState,1);
  assert.equal(h.guest.messages.some(m=>m.t==='closed'),true);
 });
+
+test('alarm closes orphaned guest when host connection is missing',async()=>{
+ const h=setup();await h.join('valid');
+ h.host.close();
+ await h.r.alarm();
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='closed'&&m.why==='The host left.'),true);
+});
