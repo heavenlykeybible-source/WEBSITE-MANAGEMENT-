@@ -26,7 +26,7 @@ test('Radio CSP blocks framing, plugins and untrusted inline scripts', () => {
   assert.match(csp, /frame-ancestors 'none'/);
   assert.match(csp, /form-action 'self'/);
   assert.match(csp, /upgrade-insecure-requests/);
-  assert.match(csp, /script-src 'self' https:\/\/cdn\.jsdelivr\.net/);
+  assert.match(csp, /script-src 'self' https:\/\/cdn\.jsdelivr\.net\/npm\/livekit-client@2\.22\.3\//);
   assert.doesNotMatch(csp, /script-src[^;]*'unsafe-inline'/);
 });
 
