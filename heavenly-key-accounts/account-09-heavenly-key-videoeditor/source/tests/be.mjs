@@ -11,7 +11,7 @@ db.exec(readFileSync(new URL('../migrations/0003_audit_event_index.sql',import.m
 db.exec(readFileSync(new URL('../migrations/0004_session_user_expiry_index.sql',import.meta.url),'utf8'));
 // Verify session migration against the pre-inactivity-timeout schema.
 const legacySessionDb = new DatabaseSync(':memory:');
-legacySessionDb.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8').replace(',last_seen_at INTEGER NOT NULL', '').replace(',password_iterations INTEGER NOT NULL DEFAULT 600000', ''));
+legacySessionDb.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8').replace(',last_seen_at INTEGER NOT NULL', '').replace('CREATE INDEX IF NOT EXISTS idx_sessions_user_last_seen ON sessions(user_id,last_seen_at);\n', '').replace(',password_iterations INTEGER NOT NULL DEFAULT 600000', ''));
 legacySessionDb.exec(readFileSync(new URL('../migrations/0005_password_hash_iterations.sql', import.meta.url), 'utf8'));
 const legacySessionExpiry=Date.now()+30*86400000;
 legacySessionDb.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)').run('legacy-token-hash','legacy-user',legacySessionExpiry);
