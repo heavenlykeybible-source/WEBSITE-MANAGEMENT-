@@ -9,9 +9,8 @@
   const heading = document.querySelector('h1');
   const platform = location.pathname.split('/')[2] || 'your device';
   let promptEvent = null;
-  // A scan is a navigation to this device guide. Start a real attachment download
-  // only after HEAD verifies a signed and scanned package is published.
-  // Never trigger a package for a different type of device.
+  // A scan opens installation guidance only. Native package metadata is inspected
+  // before showing a platform-matched download button; no signature is verified here.
   const agent = navigator.userAgent || '';
   function matchesDevice() {
     const isIPad = /iPad/i.test(agent) || (/Macintosh/i.test(agent) && navigator.maxTouchPoints > 1);
@@ -88,7 +87,7 @@
         nativeLink.setAttribute('rel', 'noopener noreferrer');
         if (open) open.insertAdjacentElement('afterend', nativeLink);
         try {
-          const available = await fetch(nativeLink.href, {method:'HEAD', cache:'no-store'});
+          const available = await fetch(nativeLink.href, {method:'HEAD', cache:'no-store', credentials:'omit', redirect:'error'});
           const contentType = (available.headers.get('content-type') || '').toLowerCase();
           const expectedTypes = {android:'application/vnd.android.package-archive',windows:'application/msix',mac:'application/x-apple-diskimage'};
           const size = Number(available.headers.get('content-length'));
