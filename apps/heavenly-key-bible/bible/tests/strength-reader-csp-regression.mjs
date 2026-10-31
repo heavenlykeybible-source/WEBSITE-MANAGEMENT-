@@ -8,6 +8,7 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../heavenly-key-w
 const html=readFileSync(resolve(root,'strength-for-today.html'),'utf8');
 const js=readFileSync(resolve(root,'strength-for-today.js'),'utf8');
 const css=readFileSync(resolve(root,'strength-for-today.css'),'utf8');
+const shareStudio=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
 const shareJs=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
 assert.ok(html.includes('href="./strength-for-today.css"'),'External stylesheet must be linked');
 assert.ok(html.includes('src="./strength-for-today.js"'),'External reader script must be linked');
@@ -30,7 +31,8 @@ assert.ok(css.length>1000,'External stylesheet appears unexpectedly incomplete')
 assert.match(html,/<title>OUR DAILY MANNA — STRENGTH FOR TODAY/i,'OUR DAILY MANNA must lead the page title');
 assert.match(html,/<h1>OUR DAILY MANNA<\/h1>/,'OUR DAILY MANNA must lead the visible masthead');
 assert.ok(html.includes('id="daily-central-message"')&&html.includes('id="daily-spiritual-focus"'),'Daily central message and spiritual focus must have dedicated fields');
-assert.ok(js.includes("typeof entry.centralMessage==='string'")&&js.includes("typeof entry.spiritualFocus==='string'"),'A dated edition must not render without an approved central message and spiritual focus');
+assert.ok(shareStudio.includes('OUR DAILY MANNA  •  KJV')&&shareStudio.includes('OUR DAILY MANNA — STRENGTH FOR TODAY'),'Scripture cards and share metadata must use the approved title');
+assert.ok(js.includes("Our Daily Manna — Strength for Today")&&js.includes("typeof entry.centralMessage==='string'")&&js.includes("typeof entry.spiritualFocus==='string'"),'A dated edition must not render without an approved central message and spiritual focus');
 
 const batchFiles=[
  'strength-devotionals-2026.json','strength-devotionals-2027-batch01.json',
