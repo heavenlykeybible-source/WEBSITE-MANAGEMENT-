@@ -22,6 +22,8 @@ const broadcast=load('src/public-broadcast.ts');
 const index=load('src/index.ts');
 assert.ok(broadcast.includes("import { onDemandRadioMetadata } from './radio-on-demand'"));
 assert.ok(broadcast.includes("channel==='audio'?{...data,playback:onDemandRadioMetadata()}:data"),'Radio responses must advertise on-demand delivery');
+assert.ok(broadcast.includes("AND (destination=? OR (destination='both' AND ?='video'))"),'Radio must ignore television-only and mixed live sessions');
+assert.ok(broadcast.includes(".bind(channel==='audio'?'radio':'video',channel).first<any>()"),'Live channel restriction must use bound parameters');
 assert.ok(broadcast.includes('return reply({mode:entries.length?'), 'Playlist must supply listener-activated contract');
 assert.ok(broadcast.includes("const object=request.method==='HEAD'?head:await env.MEDIA_R2.get"),'Audio must be loaded only on listener request');
 assert.ok(broadcast.includes("'Accept-Ranges':'bytes'"),'Seek/range audio delivery must remain available');
