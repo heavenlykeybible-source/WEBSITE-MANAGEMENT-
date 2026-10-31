@@ -581,3 +581,25 @@ test('health endpoint is read-only and HEAD responses have no body', () => {
  assert.match(route,/req.method!=='GET'&&req.method!=='HEAD'/);
  assert.match(route,/req.method==='HEAD'\?new Response\(null/);
 });
+
+
+test('private API authentication throttles failed credentials per hashed edge address', () => {
+  assert.match(source,/SELECT blocked_until FROM auth_rate_limits WHERE client_hash=\? AND window_start=\?/);
+  assert.match(source,/cf-connecting-ip/);
+  assert.match(source,/account10-auth:/);
+  assert.match(source,/failed_attempts\+1>=20/);
+  assert.match(source,/Too many failed authentication attempts/);
+  assert.match(source,/retry-after/);
+  assert.match(source,/DELETE FROM auth_rate_limits WHERE window_start<\?/);
+  assert.doesNotMatch(source,/INSERT INTO auth_rate_limits[^\n]*cf-connecting-ip/);
+});
+
+test('authentication throttling fails closed until migration 0013 is installed', () => {
+  assert.match(source,/Authentication throttling unavailable; apply migration 0013/);
+});
+test('launch diagnostics explicitly block shared-owner authentication without MFA', () => {
+  assert.match(source,/name:'owner_mfa',ok:false/);
+  assert.match(source,/individual owner identity, MFA and short-lived revocable sessions are not implemented/);
+  assert.match(source,/table_auth_rate_limits/);
+  assert.match(source,/table_operator_credentials/);
+});
