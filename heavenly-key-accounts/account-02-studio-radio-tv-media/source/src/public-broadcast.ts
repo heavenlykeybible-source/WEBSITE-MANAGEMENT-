@@ -57,7 +57,11 @@ export async function serveBroadcastMedia(request:Request,env:BroadcastEnv,id:nu
  if(TV_LOCKED&&!adminPreview&&media.media_type==='video')return json({error:TV_LOCK_MESSAGE,code:'TELEVISION_LOCKED',locked:true},423);
  const head=await env.MEDIA_R2.head(media.object_key);
  if(!head)return json({error:'Media unavailable'},404);
- const range=parseAudioRange(request.headers.get('Range'),head.size);
+ const ifNoneMatch=request.headers.get('If-None-Match');
+ if(ifNoneMatch&&ifNoneMatch.split(',').some(tag=>tag.trim()===head.httpEtag||tag.trim()==='*'))return new Response(null,{status:304,headers:{'ETag':head.httpEtag,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+ const requestedRange=request.headers.get('Range');
+ const ifRange=request.headers.get('If-Range');
+ const range=parseAudioRange(ifRange&&ifRange!==head.httpEtag?null:requestedRange,head.size);
  if(range===false)return new Response(null,{status:416,headers:{'Content-Range':'bytes */'+head.size,'Accept-Ranges':'bytes','Cache-Control':'no-store'}});
  const object=request.method==='HEAD'?head:await env.MEDIA_R2.get(media.object_key,range?{range}:undefined);
  if(!object)return json({error:'Media unavailable'},404);
