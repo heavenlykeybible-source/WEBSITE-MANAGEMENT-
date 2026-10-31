@@ -27,13 +27,30 @@ export function migrateLegacyEntry(entry) {
     }
   };
 }
+function isExplicitUnwrittenDatePlaceholder(entry) {
+  return entry?.status==='draft-not-published' &&
+    entry?.title==='EDITORIAL AUTHORING REQUIRED — NOT FOR PUBLICATION' &&
+    entry?.scripture==='' && entry?.reflection==='' && entry?.prayer==='' &&
+    Array.isArray(entry?.topics) && entry.topics.length===KINGDOM_CHALLENGE_COUNT &&
+    entry.topics.every(topic =>
+      typeof topic?.topic==='string' && topic.topic.trim() &&
+      topic.reference==='' && topic.bibleText==='' &&
+      topic.reflection==='' && topic.prayer==='' &&
+      topic.reviewStatus==='draft-original-editorial-and-doctrinal-approval-pending'
+    );
+}
 export function migrateLegacyBatch(batch) {
   if (!batch || !Array.isArray(batch.entries)) throw new TypeError('Legacy batch requires entries');
   const seen = new Set();
-  return batch.entries.map(entry=>{
+  const drafts=[];
+  for(const entry of batch.entries) {
+    // Missing dates are carried into the private export's missingDayDrafts list.
+    // Never convert an empty calendar placeholder into devotional content.
+    if(isExplicitUnwrittenDatePlaceholder(entry)) continue;
     const draft=migrateLegacyEntry(entry);
     if(seen.has(draft.date)) throw new Error('Duplicate devotional date '+draft.date);
     seen.add(draft.date);
-    return draft;
-  });
+    drafts.push(draft);
+  }
+  return drafts;
 }
