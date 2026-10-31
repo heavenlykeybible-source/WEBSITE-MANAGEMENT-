@@ -141,3 +141,11 @@ test('device guide must not inject a misleading PWA installation manifest', () =
   assert.doesNotMatch(js, /document\.head\.append\(manifest\)/);
   assert.match(js, /destination app/);
 });
+
+test('all app QR images stay on first-party infrastructure', () => {
+ const js = publicFile('app-pages.js');
+ assert.match(js, /img\.src='\/qr\/app-'/);
+ assert.doesNotMatch(js, /api\.qrserver\.com/);
+ assert.match(js, /recommended\.href='\/download\/'/);
+ assert.doesNotMatch(js, /onlinebible\.heavenlykey\.org\/install\//);
+});
