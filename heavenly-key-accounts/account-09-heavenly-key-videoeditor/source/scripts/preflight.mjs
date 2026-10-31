@@ -9,6 +9,7 @@ if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gatew
 for (const [name, limit] of [['ai_tools_attempt',30],['transcribe_attempt',120]]) {
   if (!apiSource.includes("'"+name+"'") || !apiSource.includes("at>?) < "+limit) || !apiSource.includes('meta.changes')) throw Error('Atomic AI resource quota missing: '+name);
 }
+if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'register_ip_attempt'") || !apiSource.includes("AND at>?) < 10") || !apiSource.includes('if (!reservation.meta.changes)')) throw Error('Atomic signup attempt throttle missing');
 const wrangler = readFileSync('wrangler.toml','utf8');
 for (const x of ['pages_build_output_dir = "public"','binding = "DB"','binding = "MEDIA"','binding = "AI"']) if (!wrangler.includes(x)) throw Error(`Missing binding ${x}`);
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) {
