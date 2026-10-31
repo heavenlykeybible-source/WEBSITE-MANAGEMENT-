@@ -15,7 +15,8 @@
     "test:radio-upload-security": "node scripts/test-radio-upload-security.mjs",
     "test:audio-signature": "node scripts/test-audio-signature.mjs",
     "test:radio-public-media": "node scripts/test-radio-public-media.mjs",
-    "test:radio-range": "node scripts/test-radio-range.mjs"
+    "test:radio-range": "node scripts/test-radio-range.mjs",
+    "test:radio-player-runtime": "node scripts/test-radio-player-runtime.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
