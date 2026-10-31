@@ -1296,3 +1296,26 @@ test('invalid scene indices cannot disrupt a live studio program',()=>{
  assert.equal(SC.length,2,'invalid deletion indices must not remove a studio scene');
  assert.equal(context.sceneVersion,2);
 });
+
+test('editing live scene layers invalidates background processing but editing preview stays isolated',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const start=html.indexOf(' ivis:j=>{'),end=html.indexOf('},',start);
+ assert.ok(start>0&&end>start,'scene visibility handler exists');
+ const handler=html.slice(start,end+1).replace(/^\s*ivis:/,'');
+ const SC=[{items:[{id:1,on:true}]},{items:[{id:2,on:true}]}],S=[{type:'camera',segReady:true},{type:'mic',segReady:true}];
+ const state={SC,S,pgm:0,pvw:0,studio:false,sceneVersion:1,uiCalls:0};
+ const act=new Function('state','with(state){const ed=()=>studio?pvw:pgm;const invalidateProgramBg=()=>{sceneVersion++;for(const camera of S)if(camera.type==="camera")camera.segReady=false};const ui=()=>uiCalls++;return ('+handler+')}')(state);
+ act(0);
+ assert.equal(SC[0].items[0].on,false);
+ assert.equal(state.sceneVersion,2);
+ assert.equal(S[0].segReady,false);
+ assert.equal(S[1].segReady,true);
+ S[0].segReady=true;state.studio=true;state.pvw=1;
+ act(0);
+ assert.equal(SC[1].items[0].on,false);
+ assert.equal(state.sceneVersion,2,'preview changes must not invalidate the on-air program');
+ assert.equal(S[0].segReady,true);
+ act(99);
+ assert.equal(state.uiCalls,2,'out-of-range visibility actions must not mutate the UI');
+ assert.match(html,/if\(scene===SC\[pgm\]\)invalidateProgramBg\(\);gal\(\);ui\(\)/,'live gallery background replacement invalidates processed camera');
+});
