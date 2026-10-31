@@ -68,4 +68,11 @@ for(const scenario of [
  assert.equal(response.status,404,scenario.label);
  assert.equal(response.headers.get('Cache-Control'),'no-store, private',scenario.label);
 }
+// A partial-content request cannot reveal unpublished devotional material.
+{
+ const env={ASSETS:{fetch:async()=>Response.json({schemaVersion:1,publicationStatus:'editorial-hold',publishedBatchFiles:[]})}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename,{headers:{Range:'bytes=0-20'}}),env);
+ assert.equal(response.status,404);
+ assert.equal(await response.text(),'');
+}
 console.log('Devotional embargo regression: future approved entries blocked; current approved allowed; editorial hold blocked.');
