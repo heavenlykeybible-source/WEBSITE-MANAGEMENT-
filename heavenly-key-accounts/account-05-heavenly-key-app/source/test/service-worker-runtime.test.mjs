@@ -186,3 +186,18 @@ test('header-varying responses cannot be replayed across offline cache keys', as
  await safe.request('/app.js');
  assert.ok(safe.entries.has(origin+'/app.js'));
 });
+
+test('session-setting and browser-state-clearing responses never enter the offline cache', async () => {
+ for(const headers of [
+  { 'set-cookie': '__Host-hk_session=unexpected; Secure; Path=/' },
+  { 'clear-site-data': '"cookies", "storage"' }
+ ]){
+  const runtime=harness(async()=>publicResponse(headers));
+  await runtime.request('/app.js');
+  assert.equal(runtime.entries.size,0,'Unsafe runtime headers: '+JSON.stringify(headers));
+  await assert.rejects(runtime.install(),/Essential app shell unavailable/, 'Unsafe core headers: '+JSON.stringify(headers));
+ }
+ const ordinary=harness(async()=>publicResponse({'cache-control':'public, max-age=60'}));
+ await ordinary.request('/app.js');
+ assert.ok(ordinary.entries.has(origin+'/app.js'));
+});
