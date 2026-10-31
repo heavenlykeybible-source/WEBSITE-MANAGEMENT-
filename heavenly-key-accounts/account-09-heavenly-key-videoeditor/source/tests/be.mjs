@@ -325,6 +325,9 @@ const noLengthUpload = await onRequest({
   }),env,params:{path:['media']}
 });
 check('Media supports absent content length',noLengthUpload.status===200);
+const mismatchedExt=await onRequest({request:new Request('https://studio.example/api/media?name=image.html',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'}}),env,params:{path:['media']}});
+check('Upload rejects mismatched filename extensions',mismatchedExt.status===415);
+
 for (const [label, payload] of [
   ['Truncated GIF header',new TextEncoder().encode('GIF89a')],
   ['Zero-width GIF',Uint8Array.from([71,73,70,56,57,97,0,0,1,0,128,0,0])],
