@@ -23,7 +23,7 @@ test('Public health response does not claim readiness', () => {
 });
 
 test('private media routes require authentication and validate image signatures', () => {
-  const auth = source.indexOf("if(provided!==`Bearer ${env.ADMIN_TOKEN}`)");
+  const auth = source.indexOf("if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN))");
   const upload = source.indexOf("if(u.pathname==='/api/media'&&req.method==='POST')");
   const retrieval = source.indexOf("if(u.pathname==='/api/media'&&req.method==='GET')");
   assert.ok(auth >= 0 && upload > auth && retrieval > auth, 'media endpoints must follow admin authentication');
@@ -217,7 +217,7 @@ test('Gemini ministry post suggestions do not publish or save automatically', ()
 });
 
 test('Gemini live connection check is authenticated, rate-limited and never sends messages', () => {
-  const auth=source.indexOf("if(provided!==`Bearer ${env.ADMIN_TOKEN}`)");
+  const auth=source.indexOf("if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN))");
   const start=source.indexOf("if(u.pathname==='/api/ai/connection-check'");
   const end=source.indexOf("if(u.pathname==='/api/ai/suggest-post'",start);
   assert.ok(start>auth && end>start,'smoke-test route must be behind operator authentication');
@@ -338,7 +338,7 @@ test('readiness endpoint inspects D1 migrations without falsely claiming provide
 });
 
 test('schema readiness cannot be accessed before bearer authorization', () => {
- const auth=source.indexOf("if(provided!==`Bearer ${env.ADMIN_TOKEN}`)");
+ const auth=source.indexOf("if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN))");
  const readiness=source.indexOf("if(u.pathname==='/api/automation/readiness'");
  assert.ok(auth>=0&&readiness>auth,'readiness must be after the shared authentication guard');
  const handler=source.slice(readiness,source.indexOf("if(u.pathname==='/api/accounts'",readiness));
@@ -382,7 +382,7 @@ test('operator access fails closed for weak or malformed ADMIN_TOKEN configurati
 });
 
 test('state-changing operator API requests use the checked same-origin guard', () => {
- const auth=source.indexOf("if(provided!==`Bearer ${env.ADMIN_TOKEN}`)");
+ const auth=source.indexOf("if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN))");
  const guard=source.indexOf("if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))");
  const database=source.indexOf("if(!env.DB)return reply",guard);
  assert.ok(auth>=0&&guard>auth&&database>guard);
@@ -405,4 +405,24 @@ test('operator browser-origin guard handles normal, absent, foreign and opaque O
   assert.equal(allowed(method,'null',same),false,method+' opaque origin');
  }
  assert.equal(allowed('GET','https://example.org',same),true);
+});
+
+test('administrator token verification helper uses bounded digest comparison', async () => {
+ const helper=readFileSync(new URL('../src/admin-auth.ts',import.meta.url),'utf8');
+ assert.match(helper,/authorization\.length>520/);
+ assert.match(helper,/crypto\.subtle\.digest\('SHA-256'/);
+ assert.match(helper,/diff\|=a\[i\]\^b\[i\]/);
+ assert.doesNotMatch(helper,/console\.log|console\.error/);
+ const js=helper.replace(
+  'export const administratorTokenMatches=async (authorization:string,secret:string):Promise<boolean>=>',
+  'const administratorTokenMatches=async (authorization,secret)=>'
+ );
+ const webcrypto=(await import('node:crypto')).webcrypto;
+ const match=new Function('crypto',js+';return administratorTokenMatches')(webcrypto);
+ const secret='r'.repeat(64);
+ assert.equal(await match('Bearer '+secret,secret),true);
+ assert.equal(await match('Bearer '+'r'.repeat(63)+'x',secret),false);
+ assert.equal(await match('Basic '+secret,secret),false);
+ assert.equal(await match('Bearer '+secret+'extra',secret),false);
+ assert.equal(await match('Bearer '+'r'.repeat(514),secret),false);
 });
