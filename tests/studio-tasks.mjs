@@ -44,7 +44,7 @@ try{
  assert.equal((await endpoint('studio/tasks/'+first.tasks[1].id+'/cancel','POST')).status,'cancelled');
  assert.equal((await studioAITask(env,a2,'my_studio_assignments',{})).tasks.length,1);
  // More than 100 assignments must not disappear behind a global database limit.
- for(let i=0;i<49;i++)await endpoint('studio/tasks','POST',{connection:4,worker:'social-network',instruction:'Independent task batch '+i,agents:[1,2,3]});
+ for(let i=0;i<51;i++)await endpoint('studio/tasks','POST',{connection:4,worker:'social-network',instruction:'Independent task batch '+i,agents:[1,2,3]});
  const ownerPage0=await endpoint('studio/tasks','GET');
  assert.equal(ownerPage0.tasks.length,50);assert.equal(ownerPage0.next_page,1);
  const ownPage1Response=await studioTaskRoutes(new Request('https://room.test/api/owner/studio/tasks?page=1'),env,owner,'studio/tasks','GET');
