@@ -72,10 +72,19 @@ async function studioAITask(env,actor,name,args){
    const t=JSON.parse(row.value_json);
    if(t.agent!==actor.agentId||t.status!=='assigned')fail('Not your active assignment',403);
    // Assignment is not a Cloudflare permission grant. Revalidate permission at submission time.
+   const freshAgent=await env.DB.prepare("SELECT id,status,can_read,can_propose,owner_id,site_id FROM agents WHERE id=?").bind(actor.agentId).first();
+   if(!freshAgent||freshAgent.status!=='active'||!freshAgent.can_read||!freshAgent.can_propose||freshAgent.owner_id||freshAgent.site_id)
+    fail('Assigned AI account has been revoked or lost permission',403);
+   // Reject stale in-memory grants: owner revocation takes effect immediately, even
+   // when an AI already has an authenticated session or an old task in its inbox.
+   const currentOwner=await env.DB.prepare("SELECT id FROM users WHERE id=? AND role='owner' AND kind='staff' AND status='active'").bind(t.owner).first();
+   if(!currentOwner)fail('Task owner is no longer active',403);
+   const currentPolicy=await aiPolicy(env,currentOwner),now=Date.now();
    const permitted=actor.aiPolicy
-    ? actor.aiPolicy.mode==='work'&&actor.aiPolicy.expires_at>Date.now()&&actor.aiPolicy.connections.includes(t.connection)
-    : await sharedAIGrant(env,actor.a,t.connection);
-   if(!permitted)fail('Cloudflare authorization is missing or expired; request exact-account owner approval',403);
+    ? actor.aiPolicy.mode==='work'&&actor.aiPolicy.expires_at>now&&actor.aiPolicy.connections.includes(t.connection)
+      &&currentPolicy.mode==='work'&&currentPolicy.expires_at>now&&currentPolicy.connections.includes(t.connection)
+    : currentPolicy.all_agents===true&&currentPolicy.mode==='work'&&currentPolicy.expires_at>now&&currentPolicy.connections.includes(t.connection);
+   if(!permitted)fail('Cloudflare authorization is missing, revoked or expired; request exact-account owner approval',403);
    const p=await env.DB.prepare("SELECT id,agent_id,status,kind,new_content_json FROM proposals WHERE id=? AND agent_id=? AND sealed=1").bind(proposal,actor.agentId).first();
    if(!p||p.status!=='waiting'||p.kind!=='worker')fail('Choose your own waiting Worker proposal',403);
    const meta=JSON.parse(p.new_content_json);
