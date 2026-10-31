@@ -43,11 +43,16 @@ function unsafeStreamHost(hostname:string):boolean{
  return false;
 }
 
+function safeStreamUrl(urlValue:string):URL|null{
+ try{
+  const u=new URL(urlValue.trim());
+  if(!['rtmp:','rtmps:'].includes(u.protocol)||!u.hostname||unsafeStreamHost(u.hostname)||u.username||u.password||u.href.length>2048)return null;
+  return u;
+ }catch{return null;}
+}
 export async function saveDestination(env:Env,destination:string,urlValue:string,enabled:boolean){
  if(!allowed.has(destination))throw new Error('Unsupported destination.');
- let u:URL;try{u=new URL(urlValue.trim());}catch{throw new Error('Enter the platform RTMP or RTMPS server URL including its stream key.');}
- if(!['rtmp:','rtmps:'].includes(u.protocol)||!u.hostname||unsafeStreamHost(u.hostname)||u.username||u.password)throw new Error('Use a valid RTMP or RTMPS streaming URL.');
- if(u.href.length>2048)throw new Error('Streaming URL is too long.');
+ const u=safeStreamUrl(urlValue);if(!u)throw new Error('Use a valid public RTMP or RTMPS streaming URL (maximum 2048 characters).');
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
  store[destination]={url:u.href,enabled,updatedAt:new Date().toISOString()};
  await env.LIVE_STATUS_KV.put(CONFIG_KEY,await seal(env,store));
@@ -65,12 +70,13 @@ export async function setDestinationEnabled(env:Env,destination:string,enabled:b
  if(!allowed.has(destination))throw new Error('Unsupported destination.');
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
  if(!store[destination]?.url)throw new Error('Connect this destination first.');
+ if(enabled&&!safeStreamUrl(store[destination].url))throw new Error('Reconnect this destination with a safe public RTMP or RTMPS URL.');
  store[destination].enabled=enabled;store[destination].updatedAt=new Date().toISOString();
  await env.LIVE_STATUS_KV.put(CONFIG_KEY,await seal(env,store));
 }
 async function enabledUrls(env:Env){
  const store=await open<Store>(env,await env.LIVE_STATUS_KV.get(CONFIG_KEY))??{};
- return Object.entries(store).filter(([name,v])=>allowed.has(name)&&v.enabled&&v.url).map(([destination,v])=>({destination,url:v.url}));
+ return Object.entries(store).filter(([name,v])=>allowed.has(name)&&v.enabled&&typeof v.url==='string'&&safeStreamUrl(v.url)!==null).map(([destination,v])=>({destination,url:v.url}));
 }
 async function callLiveKit(env:any,method:string,body:unknown){
  const config=await resolveLiveKitConfig(env);if(!config)throw new Error('LiveKit connection is not configured.');
