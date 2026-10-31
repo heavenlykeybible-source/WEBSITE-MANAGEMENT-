@@ -21,6 +21,6 @@ export async function inspectPrivateImportRecovery(db, bucket, actor, id) {
     object.size === row.size_bytes &&
     typeof object.version === 'string' && object.version.length > 0 &&
     typeof object.etag === 'string' && object.etag.length > 0;
-  return {id, state:row.state, objectPresent:object !== null,
+  return {id, state:row.state, expectedSize:row.size_bytes, objectPresent:object !== null,
     matchesExpectedSize, requiresOperatorReview:row.state === 'completing' || !matchesExpectedSize};
 }
