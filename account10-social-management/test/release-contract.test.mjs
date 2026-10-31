@@ -8,7 +8,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
 const checklist = readFileSync(resolve(root, 'DEPLOYMENT-VERIFICATION.md'), 'utf8');
 const wrangler = readFileSync(resolve(root, 'wrangler.toml'), 'utf8');
-const migrations = ['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql','0010_whatsapp_handover_dedupe.sql','0011_human_request_version.sql','0012_operator_credentials.sql'];
+const migrations = ['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql','0010_whatsapp_handover_dedupe.sql','0011_human_request_version.sql','0012_operator_credentials.sql','0013_auth_rate_limits.sql'];
 
 test('Every production migration is checked into source', () => {
   for (const migration of migrations) {
@@ -16,17 +16,11 @@ test('Every production migration is checked into source', () => {
   }
 });
 
-test('Migration scripts and release checklist include every migration in sequence', () => {
-  for (const scriptName of ['db:migrate:local','db:migrate:remote']) {
-    const script = packageJson.scripts[scriptName] || '';
-    let prior = -1;
-    for (const migration of migrations) {
-      const index = script.indexOf(migration);
-      assert.ok(index > prior, scriptName + ': missing or out-of-order ' + migration);
-      prior = index;
-    }
-  }
+test('Migration inventory is documented but bulk remote execution is deliberately disabled', () => {
   for (const migration of migrations) assert.ok(checklist.includes(migration), 'checklist omits ' + migration);
+  assert.equal(packageJson.scripts['db:migrate:remote'], undefined);
+  assert.equal(packageJson.scripts['db:init:remote'], undefined);
+  assert.equal(packageJson.scripts['db:migrate:local'], undefined);
 });
 
 test('Cloudflare config binds the expected database and assets', () => {
@@ -71,7 +65,9 @@ test('preflight validates the domain within one route block and every migration'
  assert.match(source,/socialRoutes.length!==1/);
  assert.match(source,/custom_domain/);
  assert.match(source,/migrations.map\(name=>'migrations\/'\+name\)/);
- assert.match(source,/position<=prior/);
+ assert.match(source,/Unsafe bulk database command must remain disabled/);
+ assert.match(source,/MIGRATION-SAFETY\.md/);
+ assert.ok(existsSync(resolve(root,'MIGRATION-SAFETY.md')));
 });
 
 test('preflight refuses wrong Worker identity and missing dashboard module', () => {
@@ -83,17 +79,75 @@ test('preflight refuses wrong Worker identity and missing dashboard module', () 
  assert.ok(existsSync(resolve(root,'public','editorial-studio.js')));
 });
 
-test('preflight isolates assets section', () => {
+test('preflight isolates assets section from later Worker configuration sections', () => {
  const script=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
- assert.ok(script.includes("const assetConfig="));
- assert.ok(script.includes('assetSections.length!==1'));
- assert.ok(script.includes('assetSections[0]?.[1]'));
+ assert.ok(script.includes("const configLines=config.split('\\n')"));
+ assert.ok(script.includes("item.line==='[assets]'"));
+ assert.ok(script.includes('assetHeaders.length!==1'));
+ assert.ok(script.includes('assetStart+1,assetEnd>=0?assetEnd:undefined'));
  assert.ok(script.includes('Assets section must specify ./public directory'));
  assert.ok(script.includes('Assets section must declare ASSETS binding'));
+ assert.ok(script.includes("assetValue('run_worker_first')"));
 });
 
 test('preflight rejects duplicate critical asset keys', () => {
  const source=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
  assert.match(source,/matches\.length!==1/);
  assert.match(source,/Assets section must declare/);
+});
+
+
+test('Account 10 strict script CSP has a same-origin external dashboard bundle', () => {
+ const html=readFileSync(resolve(root,'public','index.html'),'utf8');
+ const worker=readFileSync(resolve(root,'src','index.ts'),'utf8');
+ assert.ok(existsSync(resolve(root,'public','app.js')));
+ assert.match(html,/<script src="\/app\.js" defer><\/script>/);
+ assert.doesNotMatch(html,/<script\b(?![^>]*\bsrc=)[^>]*>/i);
+ assert.match(worker,/script-src 'self'; script-src-attr 'none'/);
+});
+
+
+test('preflight syntax-checks the external dashboard bundle without executing it', () => {
+ const preflight=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
+ assert.match(preflight,/new Script\(read\('public\/app\.js'\)/);
+ assert.match(preflight,/node:vm/);
+});
+
+test('D1 release instructions require schema inspection, backup and one-at-a-time migrations', () => {
+ const safety=readFileSync(resolve(root,'MIGRATION-SAFETY.md'),'utf8');
+ assert.match(safety,/Take and verify a D1 backup/);
+ assert.match(safety,/PRAGMA table_info/);
+ assert.match(safety,/one file at a time/);
+ assert.match(safety,/Do not infer migration state/);
+ assert.match(safety,/does not claim that any remote migration has been applied/);
+});
+
+
+test('ASVS/SSDF security register preserves explicit global-launch blockers', () => {
+ const register=readFileSync(resolve(root,'SECURITY-VERIFICATION.md'),'utf8');
+ assert.match(register,/OWASP Application Security Verification Standard \(ASVS\) 5\.0\.0/);
+ assert.match(register,/NIST Secure Software Development Framework/);
+ assert.match(register,/individual owner identity, MFA, short-lived server-side sessions/);
+ assert.match(register,/NOT APPROVED FOR GLOBAL PRODUCTION LAUNCH/);
+ assert.match(register,/independent authenticated penetration testing/);
+ assert.ok(existsSync(resolve(root,'SECURITY-VERIFICATION.md')));
+});
+
+
+test('Worker source maps are uploaded privately and required by preflight', () => {
+ assert.match(wrangler,/upload_source_maps\s*=\s*true/);
+ const preflight=readFileSync(resolve(root,'scripts/preflight.mjs'),'utf8');
+ assert.match(preflight,/Private Worker source-map upload/);
+ assert.match(preflight,/upload_source_maps/);
+});
+
+
+test('Worker runtime uses current compatibility date and production observability', () => {
+ assert.match(wrangler,/compatibility_date\s*=\s*"2026-10-31"/);
+ assert.match(wrangler,/\[observability\][\s\S]*?enabled\s*=\s*true/);
+ assert.match(wrangler,/head_sampling_rate\s*=\s*0\.1/);
+ assert.match(wrangler,/\[observability\.issues\][\s\S]*?enabled\s*=\s*true/);
+ const preflight=readFileSync(resolve(root,'scripts/preflight.mjs'),'utf8');
+ assert.match(preflight,/Current Worker compatibility date/);
+ assert.match(preflight,/Worker Issues monitoring/);
 });

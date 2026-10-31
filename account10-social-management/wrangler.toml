@@ -1,6 +1,9 @@
 name = "heavenly-key-social-management"
 main = "src/index.ts"
-compatibility_date = "2026-10-01"
+compatibility_date = "2026-10-31"
+# Upload private Worker source maps for actionable production error diagnostics.
+# Source maps are uploaded as Worker metadata, not published in the static assets directory.
+upload_source_maps = true
 
 # Account 10 official hostname. Activated only upon approved Wrangler deployment.
 [[routes]]
@@ -33,3 +36,12 @@ bucket_name = "heavenlykey-social-management-storage"
 directory = "./public"
 binding = "ASSETS"
 run_worker_first = true
+
+# Production observability: sampled logs and grouped Worker failures.
+# Keep request bodies, credentials and customer message contents out of logs.
+[observability]
+enabled = true
+head_sampling_rate = 0.1
+
+[observability.issues]
+enabled = true

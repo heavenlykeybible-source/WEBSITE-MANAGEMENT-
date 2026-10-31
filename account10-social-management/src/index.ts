@@ -4,7 +4,7 @@ import { operatorMutationOriginAllowed } from './operator-origin';
 import { administratorTokenMatches } from './admin-auth';
 import { operatorActionAllowed } from './operator-permissions';
 interface Env { DB: D1Database; MEDIA_BUCKET?: R2Bucket; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
-const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex','cross-origin-resource-policy':'same-origin','permissions-policy':'payment=(), usb=(), accelerometer=(), gyroscope=()','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
+const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','vary':'Origin, Sec-Fetch-Site','x-robots-tag':'noindex','cross-origin-resource-policy':'same-origin','permissions-policy':'payment=(), usb=(), accelerometer=(), gyroscope=()','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
 const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
@@ -74,7 +74,11 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   }
   return reply({received:true,signatureVerified:true,stored:true,duplicate:!newlyStored,processed:false,importQueued:autoProcess,eventEntries:count,eventCategories:[...new Set(types)],sent:false});
  }
- if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false,detail:'Public health response does not verify deployment readiness; run authenticated diagnostics and live provider tests.'});
+ if(u.pathname==='/health'){
+  if(req.method!=='GET'&&req.method!=='HEAD')return reply({error:'Method not allowed'},405);
+  const health=reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false,detail:'Public health response does not verify deployment readiness; run authenticated diagnostics and live provider tests.'});
+  return req.method==='HEAD'?new Response(null,{status:health.status,headers:health.headers}):health;
+ }
  if(u.pathname!=='/api'&&!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS){
   const asset=await env.ASSETS.fetch(req);
   const headers=new Headers(asset.headers);
@@ -87,7 +91,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   headers.set('cross-origin-resource-policy','same-origin');
   headers.delete('x-powered-by');
   headers.delete('x-aspnet-version');
-  headers.set('content-security-policy',"frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'; upgrade-insecure-requests");
+  headers.set('content-security-policy',"default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests");
   // Always fetch a fresh operator dashboard after releases; do not cache login UI HTML.
   if(headers.get('content-type')?.toLowerCase().includes('text/html')||u.pathname==='/service-worker.js'||u.pathname==='/sw.js')headers.set('cache-control','no-store');
   return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers});
@@ -101,23 +105,51 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(!env.ADMIN_TOKEN)return reply({error:'ADMIN_TOKEN is not configured'},503);
  if(env.ADMIN_TOKEN.length<32||env.ADMIN_TOKEN.length>512||/\s/.test(env.ADMIN_TOKEN))return reply({error:'Operator authentication secret must be a strong, whitespace-free token of 32–512 characters; rotate ADMIN_TOKEN in Cloudflare secrets before activation'},503);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
+ const authNow=Math.floor(Date.now()/1000);
+ const authWindow=Math.floor(authNow/900)*900;
+ // Hash the Cloudflare edge client address; never persist the raw IP address.
+ const clientAddress=(req.headers.get('cf-connecting-ip')||'unknown').slice(0,64);
+ const rateLimitKey=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.ADMIN_TOKEN),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+ const clientDigest=await crypto.subtle.sign('HMAC',rateLimitKey,new TextEncoder().encode(clientAddress));
+ const clientHash=Array.from(new Uint8Array(clientDigest)).map(x=>x.toString(16).padStart(2,'0')).join('');
+ let authLimit:{blocked_until:number}|null;
+ try{authLimit=await env.DB.prepare('SELECT blocked_until FROM auth_rate_limits WHERE client_hash=? AND window_start=?').bind(clientHash,authWindow).first<{blocked_until:number}>()}
+ catch{return reply({error:'Authentication throttling unavailable; apply migration 0013',authenticated:false},503)}
+ if(Number(authLimit?.blocked_until||0)>authNow){
+  const limited=reply({error:'Too many failed authentication attempts. Try again later.'},429);
+  const headers=new Headers(limited.headers);headers.set('retry-after',String(Number(authLimit!.blocked_until)-authNow));
+  return new Response(limited.body,{status:429,headers});
+ }
+ const rejectInvalidCredential=async():Promise<Response>=>{
+  try{
+   await env.DB.prepare("INSERT INTO auth_rate_limits(client_hash,window_start,failed_attempts,blocked_until) VALUES(?,?,1,0) ON CONFLICT(client_hash) DO UPDATE SET failed_attempts=CASE WHEN auth_rate_limits.window_start=excluded.window_start THEN auth_rate_limits.failed_attempts+1 ELSE 1 END,window_start=excluded.window_start,blocked_until=CASE WHEN auth_rate_limits.window_start=excluded.window_start AND auth_rate_limits.failed_attempts+1>=20 THEN excluded.window_start+900 ELSE CASE WHEN auth_rate_limits.window_start<>excluded.window_start THEN 0 ELSE auth_rate_limits.blocked_until END END").bind(clientHash,authWindow).run();
+   // Keep pseudonymous authentication-attempt records for no longer than 24 hours.
+   await env.DB.prepare('DELETE FROM auth_rate_limits WHERE window_start<?').bind(authNow-86400).run();
+  }catch{return reply({error:'Authentication throttling unavailable; apply migration 0013',authenticated:false},503)}
+  return reply({error:'Unauthorized'},401);
+ };
  const provided=req.headers.get('authorization')||'';
  let operatorRole:'owner'|'operator'|'viewer'='owner';
  let operatorId='owner';
  if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN)){
   const candidate=provided.startsWith('Bearer ')?provided.slice(7):'';
-  if(!/^[a-f0-9]{64}$/.test(candidate))return reply({error:'Unauthorized'},401);
+  if(!/^[a-f0-9]{64}$/.test(candidate))return rejectInvalidCredential();
   const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(candidate));
   const digest=Array.from(new Uint8Array(bytes)).map(x=>x.toString(16).padStart(2,'0')).join('');
   let operator;
   try{operator=await env.DB.prepare("SELECT id,role FROM operator_credentials WHERE token_hash=? AND active=1 AND expires_at>CURRENT_TIMESTAMP LIMIT 1").bind(digest).first<{id:string;role:'operator'|'viewer'}>()}
   catch{return reply({error:'Operator credential database unavailable; apply migration 0012',authenticated:false},503)}
-  if(!operator)return reply({error:'Unauthorized'},401);
+  if(!operator)return rejectInvalidCredential();
   operatorRole=operator.role;operatorId=operator.id;
  }
  // Read-only viewers cannot mutate; operators can work on conversations only.
  if(!operatorActionAllowed(operatorRole,req.method,u.pathname))return reply({error:'This staff role is not permitted to perform this action'},403);
  // Browser-origin validation is a second boundary for state-changing actions.
+ // Defense in depth: block browser cross-site mutations even if an Origin header is missing.
+ if(['POST','PUT','PATCH','DELETE'].includes(req.method)&&['cross-site','same-site'].includes(req.headers.get('sec-fetch-site')||''))return reply({error:'Cross-origin operator mutations are forbidden'},403);
+ // A browser's Fetch Metadata must prove same-origin if its Origin is absent;
+ // non-browser service clients without Fetch Metadata retain token-based access.
+ if(['POST','PUT','PATCH','DELETE'].includes(req.method)&&req.headers.get('origin')===null&&req.headers.has('sec-fetch-site')&&req.headers.get('sec-fetch-site')!=='same-origin')return reply({error:'Untrusted browser mutation origin'},403);
  if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  if(['POST','PUT','PATCH'].includes(req.method)){
   const contentType=req.headers.get('content-type')||'';
@@ -133,7 +165,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const dbBound=!!env.DB,mediaBound=!!env.MEDIA_BUCKET;
   let databaseQueryOk=false,mediaBucketReadOk=false;
   try{if(dbBound){await env.DB.prepare('SELECT 1 AS ok').first();databaseQueryOk=true}}catch{}
-  try{if(mediaBound){await env.MEDIA_BUCKET.head('account10-readiness-probe');mediaBucketReadOk=true}}catch{}
+  try{if(env.MEDIA_BUCKET){await env.MEDIA_BUCKET.head('account10-readiness-probe');mediaBucketReadOk=true}}catch{}
   return reply({account:10,dbBound,mediaBound,assetsBound:!!env.ASSETS,databaseQueryOk,mediaBucketReadOk,storageReady:databaseQueryOk&&mediaBucketReadOk,mediaOperationsEnabled:false,providerPublishingVerified:false,note:'Read-only probes; bucket head returning null counts as successful access. Schema migrations, write access and provider authorization remain unverified.'});
  }
  if(u.pathname==='/api/media'&&req.method==='POST'){
@@ -306,8 +338,8 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   return reply({integrityPassed:checks.every(x=>x.passed),checks,unverifiedAccounts:unverifiedAccounts?.total??0,waitingDrafts:waitingDrafts?.total??0,readOnly:true});
  }
  if(u.pathname==='/api/operations/diagnostics'&&req.method==='GET'){
-  const checks:{name:string;ok:boolean;detail:string}[]=[{name:'admin_token',ok:!!env.ADMIN_TOKEN,detail:'Administrative authentication configured'},{name:'database_binding',ok:!!env.DB,detail:'Cloudflare D1 binding configured'},{name:'official_provider_oauth',ok:false,detail:'Official provider authorization not implemented'},{name:'external_message_delivery',ok:false,detail:'Guarded WhatsApp sender implemented; live provider delivery unverified, other providers not implemented'},{name:'whatsapp_access_token',ok:!!env.META_WHATSAPP_ACCESS_TOKEN,detail:env.META_WHATSAPP_ACCESS_TOKEN?'WhatsApp token configured; live permissions unverified':'WhatsApp token missing'}, {name:'scheduled_publishing',ok:false,detail:'Scheduled publishing worker not implemented'},{name:'gemini_reply_suggestions',ok:!!env.GEMINI_API_KEY,detail:env.GEMINI_API_KEY?'AI operator suggestions configured; live request remains unverified':'Gemini API key not configured'}];
-  for(const [name,sql] of [['conversations','SELECT COUNT(*) AS total FROM conversations'],['messages','SELECT COUNT(*) AS total FROM messages'],['social_accounts','SELECT COUNT(*) AS total FROM social_accounts'],['automation_rules','SELECT COUNT(*) AS total FROM automation_rules'],['social_posts','SELECT COUNT(*) AS total FROM social_posts'],['webhook_events','SELECT COUNT(*) AS total FROM webhook_events'],['whatsapp_delivery_attempts','SELECT COUNT(*) AS total FROM whatsapp_delivery_attempts'],['whatsapp_receipt_inbox','SELECT COUNT(*) AS total FROM whatsapp_receipt_inbox'],['whatsapp_receipt_column','SELECT COUNT(delivery_status) AS total FROM whatsapp_delivery_attempts']] as const){try{const row=await env.DB.prepare(sql).first<{total:number}>();checks.push({name:'table_'+name,ok:true,detail:String(row?.total??0)+' records'})}catch{checks.push({name:'table_'+name,ok:false,detail:'Table unavailable or schema not migrated'})}}
+  const checks:{name:string;ok:boolean;detail:string}[]=[{name:'admin_token',ok:!!env.ADMIN_TOKEN,detail:'Administrative authentication configured'},{name:'owner_mfa',ok:false,detail:'Owner still uses the shared ADMIN_TOKEN; individual owner identity, MFA and short-lived revocable sessions are not implemented'},{name:'database_binding',ok:!!env.DB,detail:'Cloudflare D1 binding configured'},{name:'official_provider_oauth',ok:false,detail:'Official provider authorization not implemented'},{name:'external_message_delivery',ok:false,detail:'Guarded WhatsApp sender implemented; live provider delivery unverified, other providers not implemented'},{name:'whatsapp_access_token',ok:!!env.META_WHATSAPP_ACCESS_TOKEN,detail:env.META_WHATSAPP_ACCESS_TOKEN?'WhatsApp token configured; live permissions unverified':'WhatsApp token missing'}, {name:'scheduled_publishing',ok:false,detail:'Scheduled publishing worker not implemented'},{name:'gemini_reply_suggestions',ok:!!env.GEMINI_API_KEY,detail:env.GEMINI_API_KEY?'AI operator suggestions configured; live request remains unverified':'Gemini API key not configured'}];
+  for(const [name,sql] of [['conversations','SELECT COUNT(*) AS total FROM conversations'],['messages','SELECT COUNT(*) AS total FROM messages'],['social_accounts','SELECT COUNT(*) AS total FROM social_accounts'],['automation_rules','SELECT COUNT(*) AS total FROM automation_rules'],['social_posts','SELECT COUNT(*) AS total FROM social_posts'],['webhook_events','SELECT COUNT(*) AS total FROM webhook_events'],['whatsapp_delivery_attempts','SELECT COUNT(*) AS total FROM whatsapp_delivery_attempts'],['whatsapp_receipt_inbox','SELECT COUNT(*) AS total FROM whatsapp_receipt_inbox'],['whatsapp_receipt_column','SELECT COUNT(delivery_status) AS total FROM whatsapp_delivery_attempts'],['operator_credentials','SELECT COUNT(*) AS total FROM operator_credentials'],['auth_rate_limits','SELECT COUNT(*) AS total FROM auth_rate_limits']] as const){try{const row=await env.DB.prepare(sql).first<{total:number}>();checks.push({name:'table_'+name,ok:true,detail:String(row?.total??0)+' records'})}catch{checks.push({name:'table_'+name,ok:false,detail:'Table unavailable or schema not migrated'})}}
   return reply({launchReady:checks.every(x=>x.ok),checks,checkedAt:new Date().toISOString()});
  }
  if(u.pathname==='/api/dashboard'&&req.method==='GET'){
