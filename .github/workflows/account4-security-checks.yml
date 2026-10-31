@@ -46,6 +46,19 @@ jobs:
           assert len(cfg['r2_buckets']) >= 1
           print('Account 4 production configuration checks passed')
           PY
+      - name: Check for committed secrets and private keys
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          paths = [Path('wrangler.toml'), Path('control-room-worker.js')]
+          patterns = [r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----', r'(?i)\b(?:api_key|secret_key|access_token)\s*=\s*["\x27](?:sk-|ghp_|github_pat_|cf_)[A-Za-z0-9_-]{12,}']
+          for path in paths:
+              value = path.read_text()
+              for pattern in patterns:
+                  assert not re.search(pattern, value), f'Potential credential in {path}'
+          print('No matching embedded credentials found in checked files')
+          PY
       - name: Check Worker syntax
         run: node --check control-room-worker.js
       - name: Run Account 4 regression suite
