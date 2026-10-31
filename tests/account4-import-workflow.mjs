@@ -43,7 +43,7 @@ await assert.rejects(uploadPersistedPrivatePart(partBucket,partDb,{...actor,id:8
 assert.equal(partUploads,2,'Unauthorized actor must not upload a part');
 console.log('PASS Account 4 durable part receipt acknowledgement');
 
-let failTransition=false,deleteCount=0,completeCount=0;
+let failTransition=false,deleteCount=0,completeCount=0,claimCount=0;
 const completionBucket={
  resumeMultipartUpload(){return {async complete(parts){completeCount++;assert.deepEqual(parts,[{partNumber:1,etag:'abc123'}]);return {size:11}}}},
  async delete(){deleteCount++}
@@ -51,7 +51,7 @@ const completionBucket={
 const completionDb={prepare(sql){return {bind(){return {
  async first(){return persistedRow},
  async all(){return {results:[{part_number:1,etag:'abc123'}]}},
- async run(){return {meta:{changes:failTransition?0:1}}}
+ async run(){claimCount++;return {meta:{changes:failTransition && claimCount%2===0?0:1}}}
 }}}}};
 assert.deepEqual(await finishPersistedPrivateImport(completionBucket,completionDb,actor,started.id),{id:started.id,size:11,state:'private-awaiting-review'});
 assert.equal(deleteCount,0);
