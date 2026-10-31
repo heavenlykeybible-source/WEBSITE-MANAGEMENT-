@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 export const SECTION_KEYS=Object.freeze(['topic','bibleReading','hymn','bibleStory','worldStory','eternity','decision','warfare','propheticPrayer','healthPrayer','salvation','challenges']);
 export const CHALLENGE_COUNT=12;
 const nonempty=value=>typeof value==='string'&&value.trim().length>0;
+const validSourceUrl=value=>{if(!nonempty(value)||value.length>2048)return false;try{const u=new URL(value);return u.protocol==='https:'&&Boolean(u.hostname)&&!u.username&&!u.password&&!u.hash&&u.hostname.includes('.')}catch{return false}};
 const bibleReference=value=>nonempty(value)&&/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d+:\d+(?:-\d+)?$/.test(value);
 export function validateDailyDevotional(entry){
  const errors=[];
@@ -19,8 +20,9 @@ export function validateDailyDevotional(entry){
  }
  if(!nonempty(s.hymn?.collection)||!Number.isInteger(s.hymn?.number)||s.hymn.number<1||!nonempty(s.hymn?.title))errors.push('Hymn collection, number and title required');
  if(!bibleReference(s.bibleStory?.reference)||!nonempty(s.bibleStory?.summary))errors.push('Bible story and Scripture source required');
- if(!nonempty(s.worldStory?.summary)||!nonempty(s.worldStory?.sourceUrl)||!/^https:\/\//.test(s.worldStory.sourceUrl||''))errors.push('World story requires documented HTTPS source');
+ if(!nonempty(s.worldStory?.summary)||!nonempty(s.worldStory?.sourceUrl)||!validSourceUrl(s.worldStory.sourceUrl))errors.push('World story requires documented HTTPS source');
  if(!nonempty(s.worldStory?.publishedDate)||!/^\d{4}-\d{2}-\d{2}$/.test(s.worldStory.publishedDate)||!Number.isFinite(Date.parse(s.worldStory.publishedDate))||new Date(s.worldStory.publishedDate).toISOString().slice(0,10)!==s.worldStory.publishedDate)errors.push('World story requires a valid publication date');
+ if(typeof entry.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(entry.date)&&typeof s.worldStory?.publishedDate==='string'&&s.worldStory.publishedDate>entry.date)errors.push('World story publication cannot postdate the devotional');
  for(const key of ['eternity','decision','propheticPrayer','healthPrayer','salvation'])if(!nonempty(s[key]?.text))errors.push('Missing '+key+' text');
  if(!Array.isArray(s.warfare?.prayerPoints)||s.warfare.prayerPoints.length!==3||!s.warfare.prayerPoints.every(nonempty))errors.push('Three warfare prayer points required');
  if(!Array.isArray(s.warfare?.permanentReferences)||!['Matthew 11:12','Luke 18:1'].every(ref=>s.warfare.permanentReferences.includes(ref)))errors.push('Permanent warfare references missing');
