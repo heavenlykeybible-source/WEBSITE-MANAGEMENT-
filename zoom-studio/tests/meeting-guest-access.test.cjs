@@ -743,3 +743,18 @@ test('guest handshake expiring during TURN signing cannot receive welcome',async
  assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
  assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
 });
+
+test('revoked stage identity during TURN signing cannot enter meeting',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');await reached;
+ h.r.stageAllowed=async()=>false;
+ release({});await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
+});
