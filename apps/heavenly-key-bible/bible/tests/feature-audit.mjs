@@ -36,6 +36,7 @@ for(const page of cspPages){
  const html=fs.readFileSync(path.join(root,page),'utf8');
  assert(!/<script\b(?![^>]*\bsrc\s*=)[^>]*>[\s\S]*?<\/script>/i.test(html),page+' must not contain inline scripts under the enforced CSP');
 }
+assert(sw.includes('hk-bible-shell-v73'),'offline shell version must advance when shell assets change');
 for(const asset of ['./page-enhancements.js','./strength-data.js','./study-route.js']){
  assert(sw.includes(asset),asset+' must be included in the offline shell');
  assert(fs.existsSync(path.join(root,asset.slice(2))),asset+' must exist');
