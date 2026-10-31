@@ -271,7 +271,7 @@ try {
 } finally {globalThis.fetch=oldGatewayFetch;}
 const recordedAIAttempts=db.prepare("SELECT COUNT(*) count FROM audit WHERE user_id=? AND action='ai_gateway_attempt'").get(accountId).count;
 check('Failed external AI calls count towards daily attempt limit',recordedAIAttempts===3);
-for(let i=recordedAIAttempts;i<60;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'ai_gateway_attempt',Date.now());
+for(let i=recordedAIAttempts;i<30;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'ai_gateway_attempt',Date.now());
 const gatewayLimit=await onRequest({request:aiRequest(),env:aiEnv,params:{path:['ai-gateway']}});
 check('External AI gateway blocks excess attempted calls before provider dispatch',gatewayLimit.status===429);
 const aiToolsNormal=await request('ai-tools',{method:'POST',cookie:login.cookie,body:{task:'summary',text:'Create a meaningful summary of the supplied content.'}});
