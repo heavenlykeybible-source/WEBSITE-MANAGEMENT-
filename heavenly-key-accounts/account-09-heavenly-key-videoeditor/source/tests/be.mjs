@@ -449,6 +449,8 @@ check('Unrecoverable R2 deletion is audited',db.prepare("SELECT COUNT(*) c FROM 
 check('Media deletion succeeds for owned file',deletedMedia.status===200);
 const deletedMediaRead=await request('media/'+mediaCreated.id,{cookie:login.cookie});
 check('Logically deleted media cannot be downloaded after R2 cleanup failure',deletedMediaRead.status===404);
+check('R2 failure simulation leaves the object in storage',objects.size>0);
+check('Deleted media remains hidden from its owner',!(await request('media',{cookie:login.cookie})).data.items.some(item=>item.id===mediaCreated.id));
 const repeatedMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:login.cookie});
 check('Repeated media deletion reports not found',repeatedMediaDelete.status===404);
 const storageAfterDelete = await request('media',{cookie:login.cookie});
