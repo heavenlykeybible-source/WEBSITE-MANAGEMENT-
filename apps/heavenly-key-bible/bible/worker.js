@@ -99,6 +99,8 @@ export default {
        !Array.isArray(manifest.publishedBatchFiles)||!manifest.publishedBatchFiles.includes(draftMatch[1]))return deny();
     const assetResponse=await env.ASSETS.fetch(new Request(new URL("/"+draftMatch[1],url.origin),request));
     if(!assetResponse.ok)return deny();
+    // Never forward upstream partial-content headers or bytes to a public response.
+    if(assetResponse.status!==200)return deny();
     const data=await assetResponse.clone().json();
     const validDate=(date)=>typeof date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&
       !Number.isNaN(Date.parse(date))&&new Date(date+"T00:00:00Z").toISOString().slice(0,10)===date;
