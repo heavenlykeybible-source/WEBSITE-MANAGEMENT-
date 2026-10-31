@@ -26,13 +26,14 @@ function element(id){
  };
 }
 for(const id of ['audio','play','next','retry','track','status','volume','volumeValue','output','outputHelp'])elements.set(id,element(id));
-let shouldFail=false,holdFetch=false,pendingFetch=null;const pendingFetches=[];
+let shouldFail=false,holdFetch=false,pendingFetch=null;const pendingFetches=[],fetchSignals=[];
 let fetchResult={items:[{type:'audio',title:'First',url:'/api/broadcast/media/1/object'},{type:'audio',title:'Second',url:'/api/broadcast/media/2/object'}]};
 const task=runInNewContext(script,{
  document:{getElementById:id=>elements.get(id)},
  window:{addEventListener:(name,fn)=>events.set(name,fn)},
  navigator:{mediaSession:{setActionHandler:(name,fn)=>mediaActions.set(name,fn)}},
- fetch:async()=>{if(holdFetch)return await new Promise(resolve=>{pendingFetch=resolve;pendingFetches.push(resolve)});if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
+ AbortController,
+ fetch:async(_url,options)=>{fetchSignals.push(options.signal);if(holdFetch)return await new Promise(resolve=>{pendingFetch=resolve;pendingFetches.push(resolve)});if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
  MediaMetadata:undefined,
  console
 });
@@ -94,6 +95,8 @@ assert.equal(get('track').textContent,'Recovered');
 holdFetch=true;
 const first=get('retry').fire('click');
 const second=get('retry').fire('click');
+assert.equal(fetchSignals.at(-2).aborted,true,'Previous playlist fetch must be aborted');
+assert.equal(fetchSignals.at(-1).aborted,false);
 assert.equal(get('play').disabled,true);
 assert.equal(pendingFetches.length,3,'Should track both overlapping requests');
 const firstResult={items:[{type:'audio',title:'Outdated',url:'/api/broadcast/media/8/object'}]};
