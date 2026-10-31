@@ -27,7 +27,7 @@ const bind=window.HKRadioPlayback||function(audio,render){let playing=false;cons
 function safeUrl(item){const u=new URL(item.url,window.HK_RADIO_API_ORIGIN||location.origin);if(u.username||u.password||(u.protocol!=='https:'&&!(u.protocol==='http:'&&u.origin===location.origin)))throw Error('Radio source is unavailable.');return u.href}
 function disconnectLive(){const room=liveRoom;liveRoom=null;if(room)room.disconnect().catch(()=>{});audio.srcObject=null}
 function release(){disconnectLive();audio.pause();audio.removeAttribute('src');audio.load();display(false)}
-function pause(){desired=false;generation++;clearTimeout(poll);clearTimeout(retry);audio.pause();display(false);notice.textContent='Paused. Tap Play to resume.'}
+function pause(){desired=false;generation++;clearTimeout(poll);clearTimeout(retry);audio.pause();disconnectLive();display(false);notice.textContent='Paused. Tap Play to resume.'}
 function stop(){desired=false;generation++;clearTimeout(poll);clearTimeout(retry);release();notice.textContent='Stopped. Tap Play to listen.'}
 function schedule(){clearTimeout(poll);if(desired||mount)poll=setTimeout(()=>refresh(true).catch(()=>{if(desired)notice.textContent='Checking broadcast connection…'}).finally(schedule),30000)}
 function reconnect(){clearTimeout(retry);if(!desired||retries>=4){if(desired){desired=false;notice.textContent='Connection unavailable. Tap Play to retry.'}return}notice.textContent='Connection interrupted. Reconnecting…';const turn=generation;retry=setTimeout(()=>{if(desired&&turn===generation)startCurrent().catch(reconnect)},Math.min(16000,2000*2**retries++))}
