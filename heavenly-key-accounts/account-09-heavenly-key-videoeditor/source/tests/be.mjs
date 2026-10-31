@@ -13,8 +13,11 @@ db.exec(readFileSync(new URL('../migrations/0004_session_user_expiry_index.sql',
 const legacySessionDb = new DatabaseSync(':memory:');
 legacySessionDb.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8').replace(',last_seen_at INTEGER NOT NULL', '').replace(',password_iterations INTEGER NOT NULL DEFAULT 600000', ''));
 legacySessionDb.exec(readFileSync(new URL('../migrations/0005_password_hash_iterations.sql', import.meta.url), 'utf8'));
+const legacySessionExpiry=Date.now()+30*86400000;
+legacySessionDb.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)').run('legacy-token-hash','legacy-user',legacySessionExpiry);
 legacySessionDb.exec(readFileSync(new URL('../migrations/0006_session_inactivity_timeout.sql', import.meta.url), 'utf8'));
-if(!legacySessionDb.prepare("SELECT name FROM pragma_table_info('sessions') WHERE name='last_seen_at'").get()) throw Error('Session inactivity migration did not add last_seen_at');
+const migratedSession=legacySessionDb.prepare('SELECT last_seen_at,expires_at FROM sessions WHERE token_hash=?').get('legacy-token-hash');
+if(!legacySessionDb.prepare("SELECT name FROM pragma_table_info('sessions') WHERE name='last_seen_at'").get() || migratedSession.last_seen_at!==legacySessionExpiry-2592000000) throw Error('Session inactivity migration did not add and backfill last_seen_at');
 legacySessionDb.close();
 // Exercise migration 0005 against a legacy schema, not the fresh schema that already has the column.
 const legacyDb = new DatabaseSync(':memory:');
