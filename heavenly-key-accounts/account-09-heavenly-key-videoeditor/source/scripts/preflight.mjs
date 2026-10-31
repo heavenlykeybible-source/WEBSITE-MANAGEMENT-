@@ -31,7 +31,8 @@ if (!timeline.includes('if(record)invalidateExport();')) throw Error('Stale time
 if (!timeline.includes("window.addEventListener?.('pagehide',()=>{invalidateExport();if(session){session.cancelled=true") || !timeline.includes("session.abortEncoder?.();v.pause()}});")) throw Error('Active timeline session pagehide cleanup missing');
 if (!timeline.includes('session.abortSeek?.()') || !timeline.includes('await seek(c.start,state)')) throw Error('Timeline seek cancellation safeguard missing');
 if (!timeline.includes('if(!v.seeking&&Math.abs(v.currentTime-t)<.02)')) throw Error('Pending video seek guard missing');
-if (!timeline.includes("v.addEventListener('loadedmetadata',()=>{if(session){session.sourceChanged=true;session.cancelled=true") || !timeline.includes('if(!state.sourceChanged){v.pause();v.playbackRate=rate;')) throw Error('Timeline source switch isolation safeguard missing');
+if (!timeline.includes("v.addEventListener('loadedmetadata',()=>{if(session){session.sourceChanged=true;session.cancelled=true") || !timeline.includes('if(!state.sourceChanged){try{v.pause()}catch{}try{v.playbackRate=rate}catch{}')) throw Error('Timeline source switch isolation safeguard missing');
+if (!timeline.includes('for(const mediaStream of [stream,sourceStream])') || !timeline.includes('try{track.stop()}catch{}') || !timeline.includes('session=null;setBusy(false)')) throw Error('Timeline cleanup must unlock editor after track-stop failure');
 if (!timeline.includes('if(!state.sourceChanged)v.pause();')) throw Error('Old clip loop may pause replacement video');
 if (!timeline.includes('if(!state.sourceChanged)info(state.cancelled?')) throw Error('Stale export status isolation missing');
 if (!timeline.includes('session.abortPlayback?.()') || !timeline.includes('state.abortPlayback=()=>finish()')) throw Error('Timeline playback cancellation safeguard missing');
