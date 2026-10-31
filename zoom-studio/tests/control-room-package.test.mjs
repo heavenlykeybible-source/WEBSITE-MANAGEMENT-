@@ -851,3 +851,16 @@ test('meeting signalling enforces a 20 KB UTF-8 wire payload cap',async()=>{
  assert.equal(s.host.messages.length,before+1);
  assert.match(s.host.messages.at(-1).msg,/Invalid message/);
 });
+
+test('meeting signalling rejects multibyte SDP and ICE beyond their byte budgets',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,aud:false,name:'Speaker'});
+ await message(s.room,s.host,{t:'admit',gid:guest.d.id});
+ const before=guest.messages.length;
+ await message(s.room,s.host,{t:'sig',gid:guest.d.id,data:{c:{candidate:'🌍'.repeat(1100)}}});
+ assert.equal(guest.messages.length,before,'4,400-byte ICE candidate must be rejected');
+ await message(s.room,s.host,{t:'sig',gid:guest.d.id,data:{sdp:{type:'offer',sdp:'🌍'.repeat(4100)}}});
+ assert.equal(guest.messages.length,before,'16,400-byte SDP must be rejected');
+ await message(s.room,s.host,{t:'sig',gid:guest.d.id,data:{c:{candidate:'candidate:1 1 udp 2122260223 192.0.2.1 5000 typ host'}}});
+ assert.equal(guest.messages.at(-1).t,'sig','ordinary ICE candidates must still be relayed');
+});
