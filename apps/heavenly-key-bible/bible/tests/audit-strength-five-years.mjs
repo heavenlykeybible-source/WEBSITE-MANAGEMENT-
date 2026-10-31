@@ -55,11 +55,37 @@ const doctrine=[
  'Marriage doctrine: requires pastoral context and sensitivity','Pre-tribulation rapture and watchfulness without date-setting',
  'Resurrection, Great Tribulation, Second Coming, Millennium, Judgment, New Heaven and Earth, Hell'
 ];
+
+// Whole-library triage: flags for human reviewers, never automatic doctrinal approval.
+const titleOccurrences=new Map(), dailyReflections=new Map(), dailyPrayers=new Map();
+const keepFirst=(map,value,e,kind)=>{
+ const key=norm(value);
+ if(!key){flag(e.date,'MISSING_'+kind,e._file);return;}
+ if(map.has(key))flag(e.date,'DUPLICATE_'+kind,'First occurrence '+map.get(key));
+ else map.set(key,e.date);
+};
+for(let i=0;i<entries.length;i++){
+ const e=entries[i];
+ keepFirst(titleOccurrences,e.title,e,'DAY_TITLE');
+ keepFirst(dailyReflections,e.reflection,e,'DAY_REFLECTION');
+ keepFirst(dailyPrayers,e.prayer,e,'DAY_PRAYER');
+ if(!e.scripture||!e.title||!e.reflection||!e.prayer)flag(e.date,'INCOMPLETE_DAILY_ENTRY',e._file);
+ if(norm(e.reflection).split(' ').length<16)flag(e.date,'THIN_DAILY_REFLECTION',e._file);
+ if(i&&e.title===entries[i-1].title&&e.scripture===entries[i-1].scripture)
+  flag(e.date,'CONSECUTIVE_REUSED_THEME',e.title);
+ for(const t of e.topics||[]){
+  if(/consider how this truth shapes|on \d{1,2}\/\d{1,2}|let this teaching guide your response/i.test(t.reflection||''))
+   flag(e.date,'TEMPLATE_LANGUAGE',t.topic);
+ }
+}
+const requestedDayTarget=1828;
+const daysNeededToMeetRequest=Math.max(0,requestedDayTarget-entries.length);
+
 const result={
  title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
- files:names.length,days:entries.length,range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
+ files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:manifest.publishedBatchFiles.length,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
