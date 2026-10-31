@@ -80,14 +80,16 @@ jobs:
           expected="$(awk 'NR==1 {print $1}' "$checksum" | tr 'A-F' 'a-f')"
           test "$actual" = "$expected" || { echo '::error::Release checksum mismatch'; exit 1; }
           [[ "$actual" =~ ^[a-f0-9]{64}$ ]] || exit 1
-          if [ "$PLATFORM" != mac ]; then
-            evidence="$file.security.txt"
-            test -s "$evidence"
+          # Never mark a release as signed on R2 unless the platform-specific
+          # signing workflow supplied evidence tied to these exact bytes.
+          evidence="$file.security.txt"
+          test -s "$evidence" || { echo '::error::Signature attestation missing'; exit 1; }
+          grep -qx 'signatureVerified=true' "$evidence"
+          grep -qx "scannedSha256=$actual" "$evidence"
+          if [ "$PLATFORM" = mac ]; then
+            grep -qx 'notarizationVerified=true' "$evidence"
+          else
             grep -qx 'malwareScan=passed' "$evidence"
-          fi
-          if [ "$PLATFORM" = android ]; then
-            grep -qx 'signatureVerified=true' "$evidence"
-            grep -qx "scannedSha256=$actual" "$evidence"
           fi
           size="$(stat -c %s "$file")"
           test "$size" -gt 0 && test "$size" -le 2147483648
