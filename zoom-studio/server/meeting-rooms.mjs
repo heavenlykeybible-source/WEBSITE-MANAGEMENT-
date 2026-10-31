@@ -125,7 +125,7 @@ export class MeetingRooms {
     }
     // Never carry sockets from a previous host session into a newly created meeting.
     if(!currentHost)for(const guest of this.guests())this.close(guest,{t:'closed',why:'The previous meeting has ended.'});
-    Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,now+86400000),locked:false,watch:'',audChat:true,slow:0});
+    Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,verifiedAt+86400000),locked:false,watch:'',audChat:true,slow:0});
     this.save(ws,d);return this.send(ws,{t:'created',room:d.room,key:d.key,ice:roomICE});
    }
    if(m.t==='join'){
