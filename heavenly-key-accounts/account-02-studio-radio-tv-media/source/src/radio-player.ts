@@ -36,7 +36,7 @@ input[type=range]{accent-color:#f3c957;flex:1;min-width:60px}
 <script>
 (()=>{'use strict';
 const audio=document.getElementById('audio'),play=document.getElementById('play'),next=document.getElementById('next'),retry=document.getElementById('retry'),title=document.getElementById('track'),status=document.getElementById('status'),volume=document.getElementById('volume'),volumeValue=document.getElementById('volumeValue'),output=document.getElementById('output'),outputHelp=document.getElementById('outputHelp');
-let playlist=[],position=0,playing=false,loadGeneration=0;
+let playlist=[],position=0,playing=false,loadGeneration=0,playGeneration=0;
 const say=message=>{status.textContent=message};
 const validItem=item=>item&&item.type==='audio'&&typeof item.url==='string'&&/^\\/api\\/broadcast\\/media\\/\\d+\\/object$/.test(item.url);
 async function refresh(){
@@ -61,15 +61,16 @@ function select(index){
 }
 async function start(){
  try{if(!playlist.length){say('No radio recordings are available.');return;}
- if(!audio.src)select(position);
- await audio.play();playing=true;play.textContent='⏸ Pause';say('Playing • '+(position+1)+' of '+playlist.length);}
+ if(!audio.getAttribute('src'))select(position);
+ const generation=++playGeneration;await audio.play();if(generation!==playGeneration){audio.pause();return;}playing=true;play.textContent='⏸ Pause';say('Playing • '+(position+1)+' of '+playlist.length);}
  catch{playing=false;play.textContent='▶ Play Radio';say('Audio could not play. Check your connection, audio output, or try the next recording.');}
 }
-play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();playing=false;play.textContent='▶ Play Radio';say('Paused.');return;}await start()});
+play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){++playGeneration;audio.pause();playing=false;play.textContent='▶ Play Radio';say('Paused.');return;}await start()});
 next.addEventListener('click',async()=>{if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
-retry.addEventListener('click',async()=>{const resume=playing;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
+retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
 audio.addEventListener('ended',()=>{if(!playlist.length)return;select(position+1);if(playing)void start()});
-audio.addEventListener('error',()=>{if(audio.src)say('This recording cannot be loaded. Try Next or Refresh playlist.')});
+window.addEventListener('pagehide',()=>{++playGeneration;audio.pause();playing=false;});
+audio.addEventListener('error',()=>{if(audio.getAttribute('src')){playing=false;play.textContent='▶ Play Radio';say('This recording cannot be loaded. Try Next or Refresh playlist.')}});
 volume.addEventListener('input',()=>{audio.volume=Number(volume.value)/100;volumeValue.textContent=volume.value+'%'});
 audio.volume=.8;
 output.addEventListener('click',async()=>{
@@ -80,7 +81,7 @@ output.addEventListener('click',async()=>{
  catch{outputHelp.textContent='Audio output was not changed. You can choose a device in your system settings.';}
 });
 if(typeof navigator.mediaDevices?.selectAudioOutput!=='function'||typeof audio.setSinkId!=='function')output.textContent='🔊 Bluetooth setup help';
-if('mediaSession' in navigator){if(typeof MediaMetadata==='function')navigator.mediaSession.metadata=new MediaMetadata({title:'Online Revival Radio',artist:'Heavenly Key Evangelistic Movement'});try{navigator.mediaSession.setActionHandler('play',()=>{void start()});navigator.mediaSession.setActionHandler('pause',()=>{audio.pause();playing=false;play.textContent='▶ Play Radio'});navigator.mediaSession.setActionHandler('nexttrack',()=>next.click())}catch{}}
+if('mediaSession' in navigator){if(typeof MediaMetadata==='function')navigator.mediaSession.metadata=new MediaMetadata({title:'Online Revival Radio',artist:'Heavenly Key Evangelistic Movement'});try{navigator.mediaSession.setActionHandler('play',()=>{void start()});navigator.mediaSession.setActionHandler('pause',()=>{++playGeneration;audio.pause();playing=false;play.textContent='▶ Play Radio'});navigator.mediaSession.setActionHandler('nexttrack',()=>next.click())}catch{}}
 void refresh();
 })();
 </script></body></html>`;
