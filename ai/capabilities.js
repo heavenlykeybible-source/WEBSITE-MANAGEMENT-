@@ -53,7 +53,7 @@ async function extraAITool(env,actor,name,args){
   if(!current.single_file||!current.module_sha256)fail('Multi-module Worker revisions require the full-project Studio workflow',409);
   if(current.module_sha256!==supplied)fail('Cloudflare Worker changed since inspection. Read the latest version before proposing.',409);
   const code=String(args.code||'');if(!code.trim()||new TextEncoder().encode(code).byteLength>1400000)fail('Invalid Worker source size');
-  const proposal=await coreProposeWorker(env,actor,{connection:String(args.connection),name:args.worker,code,note:'Verified single-module baseline '+supplied+'. '+String(args.note||'').slice(0,650)});
+  const proposal=await coreProposeWorker(env,actor,{connection:String(args.connection),name:args.worker,code,base_sha256:supplied,note:'Verified single-module baseline '+supplied+'. '+String(args.note||'').slice(0,650)});
   return {...proposal,verified_base_sha256:supplied,preview_available:false,notice:'Saved to Waiting Room for owner review. This is source review, NOT an isolated executable preview; production remains unchanged.'};
  }
  case 'propose_attached_worker_deploy':{propose();const f=await attachedForAI(env,actor,args.attachment_id);if(f.kind!=='text'||!['js','mjs'].includes(ext(f.name)))fail('Attach a Worker .js or .mjs file');return await coreProposeWorker(env,actor,{...args,code:new TextDecoder().decode(f.bytes)});}
