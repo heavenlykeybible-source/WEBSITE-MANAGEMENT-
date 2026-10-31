@@ -437,7 +437,7 @@ export async function onRequest({ request: req, env, params }) {
         if (!imageValid) return J({ error: 'Media file contents do not match the declared format.' }, 415);
         const reservation = await env.DB.prepare('UPDATE users SET storage_used=storage_used+? WHERE id=? AND storage_used+?<=?').bind(size,u.id,size,QUOTA).run();
         if (!reservation.meta.changes) return J({ error: 'Storage allowance is full.' }, 413);
-        let id, key;
+        let id, key, saved = false;
         try {
           id = rnd(12); key = `${u.id}/${id}`;
           await env.MEDIA.put(key, payload, { httpMetadata: { contentType: type } });
