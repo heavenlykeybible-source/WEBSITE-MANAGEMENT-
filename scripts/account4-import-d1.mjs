@@ -1,3 +1,4 @@
+import {validateImportMetadata} from './account4-upload-policy.mjs';
 // D1 persistence for private multipart uploads. Not connected to production routes.
 // Only server-verified authentication may supply actor.id and actor.canImport.
 function authorized(actor) {
@@ -7,6 +8,9 @@ function authorized(actor) {
 export async function saveImportSession(db, actor, session) {
   authorized(actor);
   if (!session || typeof session !== 'object') throw new Error('Invalid import session');
+  // Recheck the original upload policy at the persistence boundary; callers
+  // cannot bypass filename and size validation by writing directly to D1.
+  validateImportMetadata({name:session.name,size:session.size},actor);
   if (session.ownerId !== actor.id || session.state !== 'uploading' ||
       typeof session.name !== 'string' || !session.name ||
       !Number.isSafeInteger(session.size) || session.size < 1 || session.size > 1073741824 ||
