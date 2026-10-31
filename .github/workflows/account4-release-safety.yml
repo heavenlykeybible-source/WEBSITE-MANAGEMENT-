@@ -97,6 +97,7 @@ jobs:
           node tests/worker-studio-policy.mjs
           node tests/worker-studio-preview.mjs
           node tests/worker-studio-ai.mjs
+          node tests/studio-tasks.mjs
           node tests/account4-unified-access.mjs
           node tests/owner-passkeys.mjs
           npm run test:cms-dom
