@@ -321,13 +321,13 @@ function loadSeg(cb){if(seg)return cb(true);segWait.push(cb);if(segLoading)retur
  sc.onload=()=>{if(finished)return;try{seg=new SelfieSegmentation({locateFile:f=>B+f});seg.setOptions({modelSelection:1});
   seg.onResults(r=>{const s=segCur;if(!s||!s.oc||!s.blur)return;if(!r?.image||!r.segmentationMask){s.segReady=false;return}const iw=r.image.width,ih=r.image.height;if(!Number.isFinite(iw)||!Number.isFinite(ih)||iw<1||ih<1){s.segReady=false;return}const limit=$('lite').checked?720:1280,k=Math.min(1,limit/Math.max(iw,ih)),w=Math.max(1,Math.round(iw*k)),h=Math.max(1,Math.round(ih*k));
    if(s.oc.width!==w||s.oc.height!==h){s.oc.width=w;s.oc.height=h}
-   const c=s.oc.getContext('2d');c.save();c.clearRect(0,0,w,h);c.drawImage(r.segmentationMask,0,0,w,h);c.globalCompositeOperation='source-in';c.drawImage(r.image,0,0,w,h);c.globalCompositeOperation='destination-over';
+   const c=s.oc.getContext('2d');if(!c){s.segReady=false;return}c.save();try{c.clearRect(0,0,w,h);c.drawImage(r.segmentationMask,0,0,w,h);c.globalCompositeOperation='source-in';c.drawImage(r.image,0,0,w,h);c.globalCompositeOperation='destination-over';
    // The camera must use the program scene's own virtual background, never a global selection from another scene.
    const scene=SC[pgm],sceneBg=scene&&scene.items.filter(it=>it.on).map(it=>src(it.id)).find(item=>item&&item.isBg);
    if(s.bgm==='tpl'&&sceneBg?.fn)sceneBg.fn(c,0,0,w,h,performance.now());
    else if(s.bgm==='tpl'&&sceneBg?.img){const img=sceneBg.img,iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;if(iw&&ih)cover(c,img,iw,ih,0,0,w,h);else c.drawImage(r.image,0,0,w,h)}
    else if(s.bgm==='tpl'){c.drawImage(r.image,0,0,w,h)}
-   else{c.filter='blur(14px)';c.drawImage(r.image,0,0,w,h)}c.restore();s.segReady=true});done(true)}catch(e){seg=null;done(false)}};
+   else{c.filter='blur(14px)';c.drawImage(r.image,0,0,w,h)}s.segReady=true}catch(e){s.segReady=false;console.error('Background frame rendering failed',e)}finally{c.restore()}});done(true)}catch(e){seg=null;done(false)}};
  sc.onerror=()=>done(false);document.head.appendChild(sc)}
 function setBgMode(s,v){const requested=Symbol();s.bgRequest=requested;if(v==='off'){s.blur=false;s.bgm='off';s.oc=null;s.segReady=false;ui();msg('Original camera restored without background processing.');return}msg('Loading background model...');
  loadSeg(ok=>{if(s.bgRequest!==requested)return;if(!ok){msg('Could not load the background model. Check your connection.');s.blur=false;s.bgm='off';ui();return}
