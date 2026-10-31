@@ -440,6 +440,13 @@ const rejectedOversize = await onRequest({
 check('Unknown-length upload exceeding 50 MB is rejected while streaming',rejectedOversize.status===413);
 const mediaCreated = await noLengthUpload.json();
 check('Uploaded media returns a nonempty identifier',Boolean(mediaCreated.id));
+const uploadQuotaBefore=db.prepare('SELECT storage_used FROM users WHERE id=?').get(accountId).storage_used;
+const realUploadPut=env.MEDIA.put;
+env.MEDIA.put=async()=>{throw Error('Simulated R2 upload outage');};
+const failedMediaUpload=await onRequest({request:new Request('https://studio.example/api/media?name=failure.png',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},body:Uint8Array.from([137,80,78,71])}),env,params:{path:['media']}});
+env.MEDIA.put=realUploadPut;
+check('Failed R2 upload returns service error',failedMediaUpload.status===500);
+check('Failed R2 upload releases reserved storage quota',db.prepare('SELECT storage_used FROM users WHERE id=?').get(accountId).storage_used===uploadQuotaBefore);
 const sanitizedMediaList=await request('media',{cookie:login.cookie});
 check('Unsafe upload filename is normalized in stored media',sanitizedMediaList.data?.items?.some(item=>item.id===mediaCreated.id && item.name==='sample.png'));
 const anonymousMediaRead=await request('media/'+mediaCreated.id);
