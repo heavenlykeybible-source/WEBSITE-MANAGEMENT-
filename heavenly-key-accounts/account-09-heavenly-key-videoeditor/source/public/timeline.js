@@ -93,7 +93,7 @@ async function runTimeline(record){
    info((stream.getAudioTracks().length?'':'Warning: this browser exported video without audio. ')+'Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
   }else info('Timeline preview complete.');
  }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}if(!state.sourceChanged)info(state.cancelled?'Timeline operation stopped.':'Timeline failed: '+e.message)}
- finally{if(!state.sourceChanged){v.pause();v.playbackRate=rate;if(ready())v.currentTime=Math.min(before,v.duration)}if(stream)stream.getTracks().forEach(t=>t.stop());if(sourceStream)sourceStream.getTracks().forEach(t=>t.stop());session=null;setBusy(false)}
+ finally{if(!state.sourceChanged){try{v.pause()}catch{}try{v.playbackRate=rate}catch{}try{if(ready())v.currentTime=Math.min(before,v.duration)}catch{}}for(const mediaStream of [stream,sourceStream]){if(!mediaStream)continue;try{for(const track of mediaStream.getTracks())try{track.stop()}catch{}}catch{}}session=null;setBusy(false)}
 }
 window.hkTimeline={
  getClips:()=>clips.map(c=>({...c})),
