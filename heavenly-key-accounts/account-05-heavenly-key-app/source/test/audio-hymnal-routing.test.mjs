@@ -31,3 +31,33 @@ test('local Audio Hymnal entry and controls remain present',()=>{
  assert.match(page,/rel="manifest" href="\/manifests\/audio-hymns\.webmanifest"/);
  assert.doesNotMatch(page,/http-equiv="refresh"/i);
 });
+
+test('independent app services cannot set main-site cookies or issue redirects',async()=>{
+ const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+  fetch:async()=>new Response('<h1>Reading</h1>',{status:200,headers:{
+   'X-HK-App-Service':'bible-reader','Content-Type':'text/html',
+   'Set-Cookie':'__Host-hk_session=malicious; Secure; Path=/',
+   'Location':'https://other.example/redirect',
+  }})
+ }};
+ const response=await routeIndependentApp(request('/bible.html'),env);
+ assert.equal(response.status,200);
+ assert.equal(await response.text(),'<h1>Reading</h1>');
+ assert.equal(response.headers.get('set-cookie'),null);
+ assert.equal(response.headers.get('location'),null);
+ assert.equal(response.headers.get('x-content-type-options'),'nosniff');
+ assert.equal(response.headers.get('referrer-policy'),'no-referrer');
+ assert.equal(response.headers.get('content-type'),'text/html');
+});
+
+test('independent HEAD and empty body statuses remain valid responses',async()=>{
+ const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+  fetch:async(request)=>request.method==='HEAD'
+   ?new Response(null,{status:200,headers:{'X-HK-App-Service':'bible-reader'}})
+   :new Response(null,{status:204,headers:{'X-HK-App-Service':'bible-reader'}})
+ }};
+ const head=await routeIndependentApp(new Request('https://apps.heavenlykey.org/bible.html',{method:'HEAD'}),env);
+ assert.equal(head.status,200);assert.equal(await head.text(),'');
+ const empty=await routeIndependentApp(request('/bible.html'),env);
+ assert.equal(empty.status,204);assert.equal(await empty.text(),'');
+});
