@@ -442,6 +442,7 @@ export async function onRequest({ request: req, env, params }) {
           id = rnd(12); key = `${u.id}/${id}`;
           await env.MEDIA.put(key, payload, { httpMetadata: { contentType: type } });
           await env.DB.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,0,?)').bind(id, u.id, name, type, size, key, Date.now()).run();
+          saved = true;
           return J({ id });
         } catch (e) {
           if (key) await env.MEDIA.delete(key).catch(() => {});
