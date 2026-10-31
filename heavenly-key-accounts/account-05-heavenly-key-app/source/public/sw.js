@@ -9,6 +9,13 @@ const SHELL=['/creation-to-eternity-presentation.css','/walk-integrations.css','
  '/audio-background-catalog.js','/audio-background-manifest.json','/audio-playlist.js',
  '/audio-hymn-catalog.js','/audio-hymn-manifest.json','/audio-hymns.js','/audio-hymns.css','/featured-main-hymn.js','/lock-screen-media.js','/walk-offline.html','/walk-offline.js','/walk-offline-content.js','/offline-vault.js','/offline-status.js','/creation-to-eternity.html','/walk-offline.css','/creation-to-eternity.js','/creation-to-eternity.css','/offline-noscript.css'];
 const PUBLIC=new Set(SHELL),READING=new Set(['/bible.html']);
+function isSafePublicResponse(response){
+ if(!response || !response.ok || response.type!=='basic' || response.redirected)return false;
+ const control=response.headers.get('cache-control')||'';
+ const vary=response.headers.get('vary')||'';
+ return !/(?:private|no-store|no-cache)/i.test(control) &&
+   !/(?:^|,)\s*(?:\*|cookie|authorization)\s*(?:,|$)/i.test(vary);
+}
 // Optional assets may be temporarily missing during deployment; never break the entire install.
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
@@ -16,7 +23,7 @@ self.addEventListener('install',event=>{
   for(const path of core){
    try{
     const response=await fetch(path,{cache:'no-store',credentials:'omit'});
-    if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
+    if(isSafePublicResponse(response)) await cache.put(path,response);
    }catch{}
   }
   // Fetch optional public assets with bounded concurrency instead of a long
@@ -28,7 +35,7 @@ self.addEventListener('install',event=>{
     const path=optional[cursor++];
     try{
      const response=await fetch(path,{cache:'no-store',credentials:'omit'});
-     if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
+     if(isSafePublicResponse(response)) await cache.put(path,response);
     }catch{}
    }
   }
@@ -54,13 +61,7 @@ self.addEventListener('fetch',event=>{
  // Keep each permitted Bible book/chapter URL isolated in offline cache.
  const key=url.origin+cachePath+(READING.has(url.pathname)?url.search:'');
  event.respondWith(fetch(request,{cache:"no-cache"}).then(response=>{
-  const cacheControl=response.headers.get('cache-control')||'';
-  const vary=response.headers.get('vary')||'';
-  // Never retain session-dependent pages, redirects or responses not suitable for offline reuse.
-  const cacheable=response.ok && response.type==='basic' && !response.redirected &&
-    !/(?:private|no-store|no-cache)/i.test(cacheControl) &&
-    !/(?:^|,)\s*(?:\*|cookie|authorization)\s*(?:,|$)/i.test(vary);
-  if(cacheable)event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
+  if(isSafePublicResponse(response))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
   return response;
  }).catch(async()=>{
   const cache=await caches.open(CACHE);
