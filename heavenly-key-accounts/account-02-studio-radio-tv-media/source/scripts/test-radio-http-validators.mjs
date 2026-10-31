@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {runInNewContext} from 'node:vm';
+import ts from 'typescript';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const raw=readFileSync(resolve(root,'src/radio-http-validators.ts'),'utf8');
+const compiled=ts.transpileModule(raw.replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+const {radioNotModified,radioCanResumeRange}=runInNewContext(compiled+';({radioNotModified,radioCanResumeRange})',{});
+const etag='"a1b2"';
+for(const h of [etag,'W/'+etag,'"unrelated", '+etag,'W/"unrelated", W/'+etag,'*'])assert.equal(radioNotModified(h,etag),true,h);
+for(const h of [null,'','"wrong"','W/"wrong"'])assert.equal(radioNotModified(h,etag),false,String(h));
+assert.equal(radioCanResumeRange(null,etag),true);
+assert.equal(radioCanResumeRange(etag,etag),true);
+for(const h of ['W/'+etag,'"wrong"','W/"wrong"','*'])assert.equal(radioCanResumeRange(h,etag),false,h);
+console.log('Account 2 HTTP validator weak ETag and strong If-Range compatibility passed');
