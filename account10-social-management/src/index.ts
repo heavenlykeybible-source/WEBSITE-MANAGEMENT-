@@ -109,7 +109,9 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  const authWindow=Math.floor(authNow/900)*900;
  // Hash the Cloudflare edge client address; never persist the raw IP address.
  const clientAddress=(req.headers.get('cf-connecting-ip')||'unknown').slice(0,64);
- const clientHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('account10-auth:'+clientAddress)))).map(x=>x.toString(16).padStart(2,'0')).join('');
+ const rateLimitKey=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.ADMIN_TOKEN),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+ const clientDigest=await crypto.subtle.sign('HMAC',rateLimitKey,new TextEncoder().encode(clientAddress));
+ const clientHash=Array.from(new Uint8Array(clientDigest)).map(x=>x.toString(16).padStart(2,'0')).join('');
  let authLimit:{blocked_until:number}|null;
  try{authLimit=await env.DB.prepare('SELECT blocked_until FROM auth_rate_limits WHERE client_hash=? AND window_start=?').bind(clientHash,authWindow).first<{blocked_until:number}>()}
  catch{return reply({error:'Authentication throttling unavailable; apply migration 0013',authenticated:false},503)}
