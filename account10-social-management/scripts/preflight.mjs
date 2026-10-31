@@ -36,6 +36,10 @@ for(const [name,script] of Object.entries(pkg.scripts)){
 const assetSections=[...config.matchAll(/^\s*\[assets\]\s*$([\s\S]*?)(?=^\s*\[|$(?![\s\S]))/gm)];
 if(assetSections.length!==1)fail.push('Exactly one assets section is required');
 const assetConfig=assetSections[0]?.[1]||'';
+for(const key of ['directory','binding','run_worker_first']){
+ const matches=[...assetConfig.matchAll(new RegExp('^\\s*'+key+'\\s*=','gm'))];
+ if(matches.length!==1)fail.push('Assets section must declare '+key+' exactly once');
+}
 if(!/^directory\s*=\s*"\.\/public"\s*$/m.test(assetConfig))fail.push('Assets section must specify ./public directory');
 if(!/^binding\s*=\s*"ASSETS"\s*$/m.test(assetConfig))fail.push('Assets section must declare ASSETS binding');
 if(!/^run_worker_first\s*=\s*true\s*$/m.test(assetConfig))fail.push('Static asset requests must pass through Worker security headers');
