@@ -17,6 +17,11 @@ test('native release promotion requires cryptographic identity evidence for Andr
  assert.match(source,/grep -qx 'malwareScan=passed' "\$evidence"/);
  assert.match(source,/test "\$current" = "\$APPROVED_DIGEST"/);
  assert.match(source,/--bucket heavenly-key-native-releases/);
+ assert.match(source,/s3api get-object/);
+ assert.match(source,/account5-r2-readback/);
+ assert.match(source,/sha256sum "\$stored_copy"/);
+ assert.match(source,/test "\$\(sha256sum "\$stored_copy"/);
+ assert.match(source,/test "\$\(stat -c %s "\$stored_copy"/);
 });
 
 test('Windows release workflow produces signed and hash-bound verification evidence',()=>{
