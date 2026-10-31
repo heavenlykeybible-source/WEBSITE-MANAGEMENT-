@@ -16,6 +16,7 @@ if (!apiSource.includes("DELETE FROM sessions WHERE user_id=? AND expires_at<=?"
 const sessionIndex='CREATE INDEX IF NOT EXISTS idx_sessions_user_expires ON sessions(user_id,expires_at)';
 if (!readFileSync('schema.sql','utf8').includes(sessionIndex) || !readFileSync('migrations/0004_session_user_expiry_index.sql','utf8').includes(sessionIndex)) throw Error('Session index missing from schema or migration');
 if (!apiSource.includes("if (a === 'logout-all' && m === 'POST')") || !apiSource.includes("await env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(u.id).run()") || !apiSource.includes("await log(env,u.id,'logout_all')")) throw Error('Account-wide session revocation safeguard missing');
+if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'voice_synthesize_attempt'") || !apiSource.includes("AND at>?) < 10") || !apiSource.includes('if(!voiceSlot.meta.changes)')) throw Error('Atomic voice synthesis attempt quota missing');
 const wrangler = readFileSync('wrangler.toml','utf8');
 for (const x of ['pages_build_output_dir = "public"','binding = "DB"','binding = "MEDIA"','binding = "AI"']) if (!wrangler.includes(x)) throw Error(`Missing binding ${x}`);
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) {
