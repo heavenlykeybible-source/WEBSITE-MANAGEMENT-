@@ -30,7 +30,7 @@ function setup(userOverrides = {}) {
   const host=new Socket({role:'host',room,key:'invite',until:now+60000,admitted:[],locked:false,audChat:true,slow:0});
   const guest=new Socket({role:'',room,until:now+15000});
   const sockets=[host,guest];
-  const r=new Room({getWebSockets:()=>sockets}, {AUTH_SECRET:'secret',MEETINGSPACE_PRIVATE_PREVIEW:'0'});
+  const r=new Room({getWebSockets:()=>sockets,storage:{setAlarm:async()=>{}}}, {AUTH_SECRET:'secret',MEETINGSPACE_PRIVATE_PREVIEW:'0'});
   const join = token => r.webSocketMessage(guest,JSON.stringify({t:'join',room,key:'invite',name:'Guest',pass:'pass',aud:false,accountToken:token}));
   return {r,host,guest,join,users,context,add(){const w=new Socket({role:'',room,until:Date.now()+15000});sockets.push(w);return w;}};
 }
