@@ -123,7 +123,7 @@ export class MeetingRooms {
      this.save(host,h);this.save(g,gd);this.send(g,{t:'admitted'});this.send(host,{t:'joined',gid:gd.id,name:gd.name,ao:gd.ao});
     }else if(m.t==='deny')this.close(g,{t:'denied'});
     else if(m.t==='kick'){h.admitted=h.admitted.filter(a=>!(a&&a.pass===gd.pass&&a.email===gd.identity?.email));this.save(host,h);this.close(g,{t:'kick'});}
-    else if(m.t==='mute')this.send(g,{t:'mute',on:!!m.on});
+    else if(m.t==='mute'&&typeof m.on==='boolean')this.send(g,{t:'mute',on:m.on});
     else if(m.t==='sig'&&gd.stage&&signalPayloadOk(m.data)){if(!await this.stageAllowed(gd,Date.now()))return this.close(g,{t:'error',msg:'Your stage access has expired. Please sign in again.'});if(ws.readyState===1&&g.readyState===1&&this.host()===host&&this.data(g).stage)this.send(g,{t:'sig',data:m.data});}
     else if(m.t==='view-sig'&&gd.aud&&gd.ok&&signalPayloadOk(m.data))this.send(g,{t:'view-sig',data:m.data});
     else if(m.t==='promote'&&gd.aud&&gd.ok){if(!await this.stageAllowed(gd,now))return this.send(host,{t:'note',text:'This participant needs to sign in and rejoin before appearing on stage.'});if(ws.readyState!==1||g.readyState!==1||this.host()!==host)return;gd=this.data(g);if(!gd.aud||!gd.ok)return;if(gd.invited&&gd.invitedAt&&now-gd.invitedAt<60000)return;const reserved=this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length;if(this.stage().length+reserved>=capacityForStage(this.env))return this.send(host,{t:'note',text:'The stage is full ('+capacityForStage(this.env)+').'});gd.invited=true;gd.invitedAt=now;this.save(g,gd);this.send(g,{t:'promoted'});}
