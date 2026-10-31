@@ -88,7 +88,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   headers.delete('x-aspnet-version');
   headers.set('content-security-policy',"frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'; upgrade-insecure-requests");
   // Always fetch a fresh operator dashboard after releases; do not cache login UI HTML.
-  if(headers.get('content-type')?.toLowerCase().includes('text/html'))headers.set('cache-control','no-store');
+  if(headers.get('content-type')?.toLowerCase().includes('text/html')||u.pathname==='/service-worker.js'||u.pathname==='/sw.js')headers.set('cache-control','no-store');
   return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers});
  }return reply({error:'Not found'},404)}
  if(req.method==='OPTIONS')return reply({error:'Cross-origin API access is disabled'},403);
