@@ -1254,3 +1254,23 @@ test('Twitch chat rejects multibyte frames exceeding the byte budget and throttl
  ws.onmessage({data:line});
  assert.equal(nodes.cl.children[0],before,'messages over the per-second budget must not update the UI');
 });
+
+test('deleting a studio scene invalidates pending virtual camera frames',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const begin=html.indexOf(' sdel:i=>{'),end=html.indexOf('},',begin);
+ assert.ok(begin>0&&end>begin,'scene delete action exists');
+ const handler=html.slice(begin,end+1).replace(/^\s*sdel:/,'');
+ const S=[{type:'camera',segReady:true},{type:'mic',segReady:true}];
+ const SC=[{name:'First',items:[]},{name:'Second',items:[]}];
+ const ctx={SC,S,pgm:1,pvw:1,from:0,sceneVersion:2,uiCount:0};
+ const action=new Function('ctx','msg','ui','with(ctx){return ('+handler+')}')(ctx,()=>{},()=>{ctx.uiCount++});
+ action(0);
+ assert.equal(ctx.SC.length,1);
+ assert.equal(ctx.pgm,0);
+ assert.equal(ctx.pvw,0);
+ assert.equal(ctx.from,null);
+ assert.equal(ctx.sceneVersion,3);
+ assert.equal(S[0].segReady,false,'cached virtual presenter frame must be invalidated');
+ assert.equal(S[1].segReady,true,'audio source should be unchanged');
+ assert.equal(ctx.uiCount,1);
+});
