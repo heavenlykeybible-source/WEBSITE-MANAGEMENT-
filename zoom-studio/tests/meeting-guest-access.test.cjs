@@ -803,3 +803,20 @@ test('delayed stage chat cannot bypass audience chat restriction after demotion'
  assert.equal(h.host.messages.some(m=>m.t==='chat'&&m.text==='stale-stage-message'),false);
  assert.equal(h.guest.readyState,1);
 });
+
+test('stage invitation expiring during async authorization is not accepted',async()=>{
+ const h=setup();const room=h.guest.attachment.room;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'join',room,key:'invite',name:'Member',aud:true,accountToken:'valid'}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'promote',gid:h.guest.attachment.id}));
+ assert.equal(h.guest.attachment.invited,true);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
+ const pending=h.r.webSocketMessage(h.guest,JSON.stringify({t:'ready'}));
+ await reached;
+ h.guest.attachment.invitedAt=Date.now()-61000;
+ release();await pending;
+ assert.equal(h.guest.attachment.stage,false);
+ assert.equal(h.guest.attachment.aud,true);
+ assert.equal(h.guest.messages.some(m=>m.t==='invitation-expired'),true);
+});
