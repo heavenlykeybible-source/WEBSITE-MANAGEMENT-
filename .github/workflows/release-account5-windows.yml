@@ -8,6 +8,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     environment: production-release
+    env:
+      HKEM_WINDOWS_MSIX_VERSION: ${{ format('1.0.{0}.0', github.run_number) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -47,7 +49,7 @@ jobs:
               throw 'Valid, non-expired code signing certificate required'
             }
             $msix = Join-Path (Resolve-Path '.').Path 'signed-candidate/HeavenlyKeyWindows.msix'
-            ./package-msix.ps1 -Publisher $certificate.Subject -OutputPath $msix
+            ./package-msix.ps1 -Publisher $certificate.Subject -OutputPath $msix -PackageVersion $env:HKEM_WINDOWS_MSIX_VERSION
             $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse -File | Where-Object { $_.FullName -match '\\x64\\' } | Sort-Object FullName -Descending | Select-Object -First 1).FullName
             if (-not $signtool) { throw 'Windows SDK signtool is not installed' }
             & $signtool sign /fd SHA256 /f $pfx /p $env:WINDOWS_CERT_PASSWORD /tr https://timestamp.digicert.com /td SHA256 $msix
