@@ -116,6 +116,8 @@ export default {
     const dates=data.entries.map(entry=>entry.date);
     if(new Set(dates).size!==dates.length)return deny();
     if(dates.some((date,index)=>index>0&&date<=dates[index-1]))return deny();
+    // Approved release batches must be complete consecutive calendar days, not sparse excerpts.
+    if(dates.some((date,index)=>index>0&&Date.parse(date+"T00:00:00Z")-Date.parse(dates[index-1]+"T00:00:00Z")!==86400000))return deny();
     const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
     const today=parts.year+'-'+parts.month+'-'+parts.day;
     if(dates.some(date=>date>today))return deny();
