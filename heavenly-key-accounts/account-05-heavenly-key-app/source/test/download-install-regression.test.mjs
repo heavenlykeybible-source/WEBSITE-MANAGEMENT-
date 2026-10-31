@@ -196,7 +196,7 @@ test('offline fallback can read only the current reviewed shell cache', () => {
 test('precache and runtime share a single safe public-response cache policy', () => {
  const sw=publicFile('sw.js');
  assert.match(sw,/function isSafePublicResponse\(response\)/);
- assert.equal((sw.match(/if\(isSafePublicResponse\(response\)\)/g)||[]).length,1);
+ assert.equal((sw.match(/if\(isSafePublicResponse\(response\)&&hasCompatibleAssetType\(path,response\)\)/g)||[]).length,1);
  assert.match(sw,/response\.status!==200/);
  assert.match(sw,/response\.redirected/);
  assert.match(sw,/no-store\|no-cache/);
@@ -206,7 +206,7 @@ test('precache and runtime share a single safe public-response cache policy', ()
 test('incomplete essential offline app shell rejects installation', () => {
  const sw=publicFile('sw.js');
  assert.match(sw,/Essential app shell unavailable/);
- assert.match(sw,/if\(!isSafePublicResponse\(response\)\) throw new Error/);
+ assert.match(sw,/if\(!isSafePublicResponse\(response\)\|\|!hasCompatibleAssetType\(path,response\)\) throw new Error/);
  assert.match(sw,/await cache\.put\(path,response\)/);
  assert.doesNotMatch(sw,/for\(const path of core\)\{\s*try\{/);
 });
@@ -267,4 +267,12 @@ test('offline runtime excludes partial responses and byte-range requests', () =>
  assert.match(sw,/response\.headers\.get\('content-range'\)/);
  assert.match(sw,/request\.headers\.has\('Range'\)/);
  assert.match(sw,/request\.headers\.has\('If-Range'\)/);
+});
+
+test('service worker rejects mismatched script and stylesheet MIME types', () => {
+ const sw=publicFile('sw.js');
+ assert.match(sw,/function hasCompatibleAssetType\(path,response\)/);
+ assert.match(sw,/path\.endsWith\('\.js'\)/);
+ assert.match(sw,/path\.endsWith\('\.css'\)/);
+ assert.match(sw,/hasCompatibleAssetType\(cachePath,response\)/);
 });
