@@ -41,14 +41,14 @@ for(let i=0;i<entries.length;i++){
   const hymn=e.sections[2];
   if(!hymn?.hymnTitle||!hymn?.hymnbookReference||hymn.verificationStatus!=='verified')flag(e.date,'HYMN_VERIFICATION','Hymn must be verified against the Heavenly Key hymnbook');
   const bibleStory=e.sections[3];
-  if(!bibleStory?.scriptureReference||bibleStory.verificationStatus!=='verified'||bibleStory.topicAlignmentReview!=='approved')flag(e.date,'BIBLE_STORY_VERIFICATION','Bible story requires verified Scripture and topic-alignment review');
+  if(!bibleStory?.scriptureReference||bibleStory.scriptureTranslation!=='KJV'||bibleStory.scriptureVerification!=='verified'||bibleStory.verificationStatus!=='verified'||bibleStory.topicAlignmentReview!=='approved')flag(e.date,'BIBLE_STORY_VERIFICATION','Bible story requires KJV-verified Scripture and topic-alignment review');
   const worldStory=e.sections[4];
   if(typeof worldStory?.sourceUrl!=='string'||!/^https:\/\//i.test(worldStory.sourceUrl)||!worldStory.sourcePublisher||!worldStory.sourceDate||worldStory.verificationStatus!=='verified'||worldStory.topicAlignmentReview!=='approved')flag(e.date,'WORLD_STORY_VERIFICATION','Contemporary story requires a dated credible source and approved topic alignment');
   const warfareRefs=Array.isArray(e.sections[7]?.scriptureReferences)?e.sections[7].scriptureReferences.map(x=>String(x).toLowerCase()):[];
   if(!warfareRefs.includes('matthew 11:12')||!warfareRefs.includes('luke 18:1'))flag(e.date,'WARFARE_SCRIPTURES','Warfare Prayer must include Matthew 11:12 and Luke 18:1');
   if(e.sections[9]?.medicalDisclaimer!==true)flag(e.date,'HEALTH_DISCLAIMER','Health and Wellness Prayer must not replace professional care');
   const challenges=e.sections[11]?.challenges;
-  if(!Array.isArray(challenges)||challenges.length!==12||!challenges.every(x=>typeof x==='string'&&x.trim().length>=8))flag(e.date,'KINGDOM_CHALLENGES','Require twelve practical Kingdom Challenges');
+  if(!Array.isArray(challenges)||challenges.length!==12||!challenges.every((x,index)=>x&&x.topic===e.topics?.[index]?.topic&&typeof x.text==='string'&&x.text.trim().length>=8&&x.reviewStatus==='approved'))flag(e.date,'KINGDOM_CHALLENGES','Require twelve approved practical challenges, one mapped to each daily theme');
  }
  if(!Array.isArray(e.topics)||e.topics.length!==12){flag(e.date,'TOPIC_COUNT','Expected 12');continue;}
  if(e.status!=='draft-not-published')flag(e.date,'PUBLICATION_STATUS','Requires separate documented editorial approval');
