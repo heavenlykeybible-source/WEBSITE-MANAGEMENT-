@@ -19,7 +19,7 @@ if (!timeline.includes('let completedSeconds=0') || !timeline.includes("+'% comp
 if (!timeline.includes('c.end<=86400')) throw Error('Restored timeline timestamp safety limit missing');
 if (!timeline.includes('const validSourceRange=()=>ready()&&v.duration<=86400') || (timeline.match(/validSourceRange\(\)/g)||[]).length<4) throw Error('Timeline source duration limit missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
-for (const id of ['clipAddFull','clipClear','clipFirst','clipLast']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
+for (const id of ['clipAddFull','clipClear','clipFirst','clipLast','clipReverse']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
 if (!timeline.includes('JSON.stringify({clips,selected:chosen()})') || !timeline.includes('paint(previous.selected)') || !timeline.includes('paint(next.selected)')) throw Error('Timeline undo/redo selection persistence missing');
 for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="'+control+'"') || !timeline.includes("$('"+control+"').onclick=")) throw Error('Timeline playhead trim control missing: '+control);
 if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
@@ -32,7 +32,7 @@ if (!timeline.includes('session.abortPlayback?.()') || !timeline.includes('state
 if (!timeline.includes('Source video ended before the clip finished.') || !timeline.includes('if(v.ended)return finish(Error(')) throw Error('Premature source-end validation missing');
 if (!timeline.includes('session.abortStart?.()') || !timeline.includes('Video playback did not start within 15 seconds.')) throw Error('Timeline playback startup cancellation safeguard missing');
 if (!timeline.includes('session.abortEncoder?.()') || !timeline.includes('state.abortEncoder=abort')) throw Error('Timeline encoder cancellation safeguard missing');
-if (!timeline.includes('if(finished&&session===state)v.pause()')) throw Error('Timeline session isolation safeguard missing');
+if (!timeline.includes('if(finished&&session===state&&!state.sourceChanged)v.pause()')) throw Error('Timeline session isolation safeguard missing');
 if (!timeline.includes("$('clipList').onkeydown=") || !timeline.includes("key==='delete'") || !timeline.includes("key==='z'")) throw Error('Timeline keyboard shortcuts missing');
 const html=readFileSync('public/index.html','utf8');
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) if (!html.includes('src="/'+name+'"')) throw Error('Script not loaded: '+name);
