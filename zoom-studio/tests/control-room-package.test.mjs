@@ -1154,3 +1154,25 @@ test('participant hand state suppresses repeated lowering and allows raising aft
  await message(s.room,viewer,{t:'hand',on:true});
  assert.deepEqual(s.host.messages.filter(m=>m.t==='hand').map(m=>m.on),[true,false,true]);
 });
+
+test('Twitch chat frames and rendered messages stay bounded under external message floods',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const start=html.indexOf('let cws=null;'),end=html.indexOf("const dl=document.createElement('canvas');",start);
+ const section=html.slice(start,end),sockets=[],chatLog=[];
+ const nodes={chn:{value:'mychannel'},chs:{textContent:''},chc:{},cl:{children:[],replaceChildren(){this.children=[]},prepend(node){this.children.unshift(node)},get lastChild(){return {remove:()=>this.children.pop()}}}};
+ const $=id=>nodes[id],FakeWebSocket=class {constructor(){this.sent=[];sockets.push(this)}send(x){this.sent.push(x)}close(){}};
+ new Function('$','WebSocket','chatLog','document',section)($,FakeWebSocket,chatLog,{createElement:()=>({textContent:''})});
+ nodes.chc.onclick();
+ const ws=sockets[0];ws.onopen();
+ const line='@display-name='+('N'.repeat(100))+';tag=x PRIVMSG #mychannel :'+('T'.repeat(500));
+ ws.onmessage({data:line+'\r\n'});
+ assert.equal(chatLog.length,1);
+ assert.equal(chatLog[0].n.length,40);
+ assert.equal(chatLog[0].t.length,300);
+ const before=chatLog.length;
+ ws.onmessage({data:'x'.repeat(16385)});
+ assert.equal(chatLog.length,before,'oversized chat frames must be discarded');
+ ws.onmessage({data:Array.from({length:60},()=>line).join('\r\n')});
+ assert.equal(chatLog.length,51,'only 50 IRC lines per network frame may be processed');
+ assert.equal(nodes.cl.children.length,30,'visible chat history remains bounded');
+});
