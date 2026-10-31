@@ -3,12 +3,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Script } from 'node:vm';
 
-const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(match => match[1]).filter(Boolean);
+const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8') + '\n' + readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
 
-test('inline dashboard JavaScript parses successfully', () => {
-  assert.ok(scripts.length > 0, 'expected inline dashboard JavaScript');
-  for (const source of scripts) assert.doesNotThrow(() => new Script(source));
+test('dashboard loads its external same-origin JavaScript bundle and it parses', () => {
+  const scripts = [...html.matchAll(/<script\b[^>]*>/gi)].map(match => match[0]);
+  assert.ok(scripts.some(tag => /src=["']\/app\.js["']/.test(tag) && /defer/.test(tag)));
+  assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)[^>]*>/i);
+  assert.doesNotMatch(html, /\son[a-z]+\s*=/i);
+  assert.doesNotThrow(() => new Script(app));
 });
 test('dashboard exposes the authenticated media upload interface', () => {
   assert.match(html, /function addMediaLibrary\(\)/);
