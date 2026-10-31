@@ -1,5 +1,6 @@
 import { resolveLiveKitConfig } from './livekit-config';
 import { signLiveKitGrant } from './livekit';
+import { TV_LOCKED } from './channel-lock';
 
 type Env={LIVE_STATUS_KV:KVNamespace;MEDIA_ENGINE_SHARED_SECRET:string};
 const CONFIG_KEY='restream-destinations-v1';
@@ -148,6 +149,7 @@ async function callLiveKit(env:any,method:string,body:unknown){
 export async function startRestream(env:any,input:{source:'live'|'247';sessionId?:number;programmeUrl?:string;format?:string;quality?:string;channel?:'radio'|'video'}){
  return withBroadcastLock(env,async()=>{
  if(input.source!=='live'&&input.source!=='247')throw new Error('Choose a valid live or 24/7 stream source.');
+ if(TV_LOCKED&&input.channel!=='radio')throw new Error('Television is locked. Select radio to distribute an approved radio programme.');
  const outputs=await enabledUrls(env);if(!outputs.length)throw new Error('Enable at least one connected streaming destination.');
  const format=String(input.format??'landscape-720');
  const presetByFormat:Record<string,string>={landscape_720:'H264_720P_30',landscape_1080:'H264_1080P_30',portrait_720:'PORTRAIT_H264_720P_30',portrait_1080:'PORTRAIT_H264_1080P_30'};
