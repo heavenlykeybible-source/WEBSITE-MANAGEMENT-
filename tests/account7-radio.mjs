@@ -57,4 +57,14 @@ let unsubscribed=false;roomInstance.events.track({kind:'video'},{setSubscribed:v
 roomInstance.events.track({kind:'audio',attach:()=>{}},{});await tick();assert.equal(p.audio().paused,false);
 p.document.querySelector('.hkr-stop').onclick();await tick();assert.equal(roomInstance.connected,false,'Stop disconnects live room');
 for(const name of ['approved-radio-display-20261017.webp','approved-radio-transparent-original.png'])assert.ok(fs.statSync(base+'assets/ministry/'+name).size>0);
-console.log('Account 7 tests passed: proxy restrictions, private key handling, media ranges, initial-load playback, track changes, live audio and stop cleanup.');
+const securityHeaders=fs.readFileSync(base+'_headers','utf8');
+for(const [name,value] of [
+ ['Strict-Transport-Security','max-age=31536000'],
+ ['X-Content-Type-Options','nosniff'],
+ ['X-Frame-Options','DENY'],
+ ['Referrer-Policy','strict-origin-when-cross-origin'],
+ ['Permissions-Policy','camera=(), microphone=(), geolocation=()'],
+ ['Cross-Origin-Opener-Policy','same-origin-allow-popups'],
+ ['Cross-Origin-Resource-Policy','same-origin']
+])assert.ok(securityHeaders.includes(name+': '+value),'Missing or incorrect security header: '+name);
+console.log('Account 7 tests passed: proxy restrictions, private key handling, media ranges, initial-load playback, track changes, live audio, stop cleanup and response security headers.');
