@@ -245,3 +245,22 @@ test('server rejects resuming AI while a visitor human request is unresolved', (
  assert.match(handler,/A human assistance request remains pending; resolve it explicitly before resuming Gemini/);
  assert.match(handler,/automationPaused:true\},409/);
 });
+
+test('ministry contact menu distinguishes ministry agent from Evangelist by full name', () => {
+  const welcome=source.slice(source.indexOf("if(u.pathname==='/api/welcome-menu'"),source.indexOf("if(u.pathname==='/api/automation/rules'"));
+  const policy=source.slice(source.indexOf("if(u.pathname==='/api/handover-policy'"),source.indexOf("if(u.pathname==='/api/automation/readiness'"));
+  for(const route of [welcome,policy]){
+    assert.match(route,/id:'ministry_agent',label:'I want to speak with a Heavenly Key Evangelistic Movement agent'/);
+    assert.match(route,/id:'speak_to_evangelist',label:'I want to speak with Evangelist Emmanuel Ogheneochuko Adiohwo'/);
+  }
+});
+
+test('operator human request stores validated destination and never claims notification', () => {
+ const begin=source.indexOf("if(u.pathname==='/api/human-requests'&&req.method==='POST')");
+ const end=source.indexOf("if(u.pathname==='/api/handover-policy'",begin);
+ const route=source.slice(begin,end);
+ assert.match(route,/\['ministry_agent','speak_to_evangelist'\]\.includes\(b\?\.target\)/);
+ assert.match(route,/SET requested_human=1,human_paused=1,human_contact_target=\?/);
+ assert.match(route,/contactTarget:b.target,automationPaused:true,externalNotificationsSent:false/);
+ assert.match(source,/SELECT id,channel,requested_human,human_paused,human_contact_target,updated_at FROM conversations/);
+});
