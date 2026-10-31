@@ -1,0 +1,13 @@
+name = "heavenlykeyradio"
+main = "_worker.js"
+compatibility_date = "2026-10-31"
+keep_vars = true
+workers_dev = true
+
+[assets]
+directory = "."
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+# Set MEDIA_PUBLIC_ORIGIN only after confirming Account 2's deployed HTTPS origin.
+# Do not commit credentials or bind Account 2 databases/storage to this Worker.
