@@ -77,8 +77,8 @@ check('Readiness detects missing R2 deletion capability',degradedStorage.status=
 env.MEDIA.delete=savedStorageDelete;
 const unauthenticatedMedia=await request('media');
 check('Private media rejects anonymous requests with security headers',unauthenticatedMedia.status===401 && unauthenticatedMedia.response.headers.get('cache-control')==='no-store' && unauthenticatedMedia.response.headers.get('cross-origin-resource-policy')==='same-origin' && unauthenticatedMedia.response.headers.get('x-content-type-options')==='nosniff');
-const healthy = await request('health');
-check('Health reports D1, media and AI bindings ready', healthy.status === 200 && healthy.data?.status === 'ready' && Object.keys(healthy.data).length === 1);
+const healthWithAllBindings = await request('health');
+check('Health reports D1, media and AI bindings ready', healthWithAllBindings.status === 200 && healthWithAllBindings.data?.status === 'ready' && Object.keys(healthWithAllBindings.data).length === 1);
 const missingAI = await onRequest({
   request:new Request('https://studio.example/api/health'),
   env:{...env,AI:null},
