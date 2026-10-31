@@ -224,3 +224,10 @@ test('service worker omits member cookies for public asset fetches', () => {
  assert.match(sw,/credentials:isDocument\?request\.credentials:'omit'/);
  assert.match(sw,/request\.mode!=='navigate' && request\.destination!=='document'/);
 });
+
+test('shared app page script tolerates missing directory widgets', () => {
+ const js=publicFile('app-pages.js');
+ assert.match(js,/if\(el\)for\(const \[icon,name,device,slug\] of options\)/);
+ assert.match(js,/if\(!help\)return/);
+ assert.match(js,/document\.querySelectorAll\('\[data-download-app\]'\)/);
+});
