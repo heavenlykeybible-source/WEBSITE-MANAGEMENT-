@@ -40,6 +40,12 @@ assert.ok(statements.at(-1).sql.includes('AND 1=1 ON CONFLICT'), 'SQLite SELECT 
 assert.equal(statements.at(-1).args.length,9,'Receipt statement must bind all nine parameters');
 parts=[{part_number:1,etag:'abc123'}];
 assert.equal((await loadImportSession(db,actor,id)).parts[1],'abc123');
+for (const badParts of [[{part_number:0,etag:'abc123'}],[{part_number:2,etag:'abc123'}],[{part_number:1,etag:''}],[{part_number:1,etag:'abc123'},{part_number:1,etag:'abc123'}]]) {
+  const validParts=parts;
+  parts=badParts;
+  await assert.rejects(loadImportSession(db,actor,id),/Invalid persisted upload receipts/);
+  parts=validParts;
+}
 await assert.rejects(recordImportPart(db,actor,id,{partNumber:2,etag:'abc123'}));
 assert.deepEqual(await transitionImportSession(db,actor,id,'uploading','private-awaiting-review'),{id,state:'private-awaiting-review'});
 assert.match(statements.at(-1).sql,/COUNT\(\*\)/,'Review transition must require complete part receipts');
