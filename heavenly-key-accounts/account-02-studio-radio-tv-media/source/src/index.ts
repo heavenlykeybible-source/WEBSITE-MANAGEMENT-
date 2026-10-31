@@ -262,7 +262,7 @@ export default {
   }
   m=url.pathname.match(/^\/api\/media\/(\d+)\/upload$/); if(m&&request.method==='PUT'){
     const mediaId=Number(m[1]); if(!Number.isInteger(mediaId))return json({error:'Invalid media id'},400);
-    const row=await env.DB.prepare('SELECT object_key,media_type,mime_type,status FROM media_objects WHERE media_id=?').bind(mediaId).first<{object_key:string,mime_type:string,status:string}>();
+    const row=await env.DB.prepare('SELECT object_key,media_type,mime_type,status FROM media_objects WHERE media_id=?').bind(mediaId).first<{object_key:string,media_type:string,mime_type:string,status:string}>();
     if(!row||row.status==='deleted')return json({error:'Media not found'},404);
     if(TV_LOCKED&&row.media_type!=='audio')return tvLockedResponse();
     if(!['pending','failed'].includes(row.status))return json({error:'This media is already uploaded'},409);
