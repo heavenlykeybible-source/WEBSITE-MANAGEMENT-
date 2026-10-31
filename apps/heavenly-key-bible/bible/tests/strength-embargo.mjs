@@ -40,6 +40,14 @@ await check(today,'editorial-hold',404);
  const response=await worker.fetch(new Request('https://example.org/'+filename),env);
  assert.equal(response.status,404);
 }
+// Published files with missing calendar days must never pass the release gate.
+{
+ const earlier=new Date(Date.parse(today+'T00:00:00Z')-2*86400000).toISOString().slice(0,10);
+ const entries=[earlier,today].map(date=>({date,status:'approved-for-publication',topics}));
+ const env={ASSETS:{fetch:async request=>new URL(request.url).pathname==='/strength-publication-status.json'?Response.json({schemaVersion:1,publicationStatus:'published',publishedBatchFiles:[filename]}):Response.json({timezone:'Africa/Lagos',entries})}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename),env);
+ assert.equal(response.status,404);
+}
 // Unrecognized filenames must not fall through to the public asset layer.
 {
  let called=false;
