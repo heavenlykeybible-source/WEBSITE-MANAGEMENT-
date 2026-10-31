@@ -18,14 +18,14 @@ async function api(url, init = {}) {
 const settings = await api(base + '/settings');
 const bindings = settings.bindings;
 if (!Array.isArray(bindings)) throw new Error('Existing Worker bindings unavailable; refusing upload');
-for (const [name, type] of [['DB', 'd1'], ['FILES', 'r2_bucket']]) {
+for (const [name, type] of [['DB', 'd1'], ['FILES', 'r2_bucket'], ['PRIVATE_IMPORTS', 'r2_bucket']]) {
   if (!bindings.some(b => b.name === name && b.type === type)) throw new Error('Existing Worker lacks required ' + name + ' binding; refusing to create or replace resources');
 }
 function signature(values) {
   return JSON.stringify(values.map(b => Object.fromEntries(Object.entries(b).sort(([a],[b]) => a.localeCompare(b)))).sort((a,b) => a.name.localeCompare(b.name)));
 }
 if (process.argv.includes('--check')) {
-  console.log('PASS: saved credentials can read existing Account 4 Worker; DB and FILES bindings found. No resources changed.');
+  console.log('PASS: saved credentials can read existing Account 4 Worker; DB, FILES and PRIVATE_IMPORTS bindings found. No resources changed.');
 } else {
   // Direct invocations must satisfy the same immutable approval gate as CI.
   if (process.env.ACCOUNT4_PRODUCTION_APPROVED !== '1') throw new Error('Account 4 production deployment requires explicit approval');
