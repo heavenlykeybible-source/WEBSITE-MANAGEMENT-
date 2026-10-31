@@ -18,6 +18,9 @@ for(const name of ["Today's Topic",'Bible Reading','Hymn of the Day','Bible Stor
  assert.ok(js.includes(name),'Missing devotional section '+name);
 }
 assert.match(js,/Awaiting approved daily challenge/);
+assert.match(js,/menu\.addEventListener\('keydown'/);
+for(const key of ['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'])assert.ok(js.includes("case '"+key+"'"),'Missing keyboard shortcut '+key);
+assert.match(js,/event\.preventDefault\(\);buttons\[target\]\.focus\(\)/);
 assert.ok(js.includes("$('section-title').focus()"));
 assert.ok(js.includes('DEVELOPMENT PREVIEW — NOT FOR PUBLICATION'));
 assert.doesNotMatch(js,/innerHTML\s*=/);
