@@ -22,8 +22,10 @@ export async function saveImportSession(db, actor, session) {
       !Number.isSafeInteger(session.expiresAt) || session.expiresAt <= Date.now())
     throw new Error('Invalid import owner or state');
   const id = crypto.randomUUID();
-  await db.prepare('INSERT INTO account4_import_sessions (id,owner_id,object_key,upload_id,filename,size_bytes,part_count,state,expires_at_ms) VALUES (?,?,?,?,?,?,?,?,?)')
+  const result = await db.prepare('INSERT INTO account4_import_sessions (id,owner_id,object_key,upload_id,filename,size_bytes,part_count,state,expires_at_ms) VALUES (?,?,?,?,?,?,?,?,?)')
     .bind(id,actor.id,session.key,session.uploadId,session.name,session.size,session.partCount,'uploading',session.expiresAt).run();
+  if (result?.success === false || result?.meta?.changes !== 1)
+    throw new Error('Import session was not persisted');
   return id;
 }
 export async function loadImportSession(db, actor, id) {
