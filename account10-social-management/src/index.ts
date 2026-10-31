@@ -497,6 +497,10 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const conversation=await env.DB.prepare('SELECT id,human_paused,requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{id:string;human_paused:number;requested_human:number}>();
   if(!conversation)return reply({error:'Conversation not found'},404);
   if(conversation.human_paused||conversation.requested_human)return reply({action:'human_review',draftCreated:false,sent:false});
+  if(requestsHumanMinistryContact(data.message)){
+   await env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(data.conversationId).run();
+   return reply({action:'human_review',humanRequested:true,automationPaused:true,draftCreated:false,sent:false,externalNotificationsSent:false});
+  }
   const rules=await env.DB.prepare('SELECT id,keyword,reply FROM automation_rules ORDER BY length(keyword) DESC,keyword ASC LIMIT 100').all<{id:string;keyword:string;reply:string}>();
   const message=data.message.toLocaleLowerCase();
   const match=rules.results.find(r=>r.keyword.trim()&&message.includes(r.keyword.trim().toLocaleLowerCase()));
