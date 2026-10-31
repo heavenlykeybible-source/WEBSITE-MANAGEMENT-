@@ -207,6 +207,11 @@ try {
   const normalProvider=await onRequest({request:aiRequest(),env:aiEnv,params:{path:['ai-gateway']}});
   check('Bounded external AI response still succeeds',normalProvider.status===200&&(await normalProvider.json()).result==='Provider works');
 } finally {globalThis.fetch=oldGatewayFetch;}
+const recordedAIAttempts=db.prepare("SELECT COUNT(*) count FROM audit WHERE user_id=? AND action='ai_gateway_attempt'").get(accountId).count;
+check('Failed external AI calls count towards daily attempt limit',recordedAIAttempts===3);
+for(let i=recordedAIAttempts;i<60;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'ai_gateway_attempt',Date.now());
+const gatewayLimit=await onRequest({request:aiRequest(),env:aiEnv,params:{path:['ai-gateway']}});
+check('External AI gateway blocks excess attempted calls before provider dispatch',gatewayLimit.status===429);
 const noVoice = await request('voice-config', { cookie: login.cookie });
 check('Voice configuration reports unavailable without secrets', noVoice.status === 200 && noVoice.data?.available === false);
 const noVoiceRequest = await request('voice-synthesize', { method: 'POST', cookie: login.cookie, body: { text: 'Hello world', consentConfirmed: true } });
