@@ -881,3 +881,11 @@ test('closed socket duplicate callbacks survive attachment serialization failure
  s.room.webSocketError(guest);
  assert.equal(s.host.messages.filter(m=>m.t==='left'&&m.gid===guest.d.id).length,1);
 });
+
+test('broadcast backgrounds are isolated to the selected scene and stale loads cannot overwrite selections',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/const request=\+\+bgPick,scene=SC\[ed\(\)\]/,'background loads must be bound to a scene and request');
+ assert.match(html,/if\(request!==bgPick\|\|!SC\.includes\(scene\)\)return/,'older image loads must be ignored');
+ assert.match(html,/const it=scene\.items;let b=it\.map\(x=>src\(x\.id\)\)\.find\(s=>s&&s\.isBg\)/,'background changes must not mutate an unrelated scene');
+ assert.doesNotMatch(html,/let b=S\.find\(s=>s\.isBg\)/,'global background source reuse changes previous scenes');
+});
