@@ -1,33 +1,44 @@
-# Account 7 — Heavenly Key Radio (recovery status)
+# Account 7 — Heavenly Key Radio
 
-Public listener domain intended: `https://radio.heavenlykey.org/`.
+Intended listener domain: `https://radio.heavenlykey.org/`.
+Dedicated Worker name: `heavenlykeyradio`.
+Broadcast source of truth: Account 2 — Heavenly Key Media & Broadcast Engine.
 
-## Current verified repository state
+## Implemented on the isolated mainline recovery branch
 
-The current `main` branch contains the approved radio page shell, player JavaScript, styling and ministry footer. The page references two approved radio artwork files that were missing from the current `main` branch; those exact approved assets have now been restored on the isolated branch `hardening/account7-mainline-security-20261031`.
+- Restored the two approved radio artwork files missing from current `main`.
+- Added static response headers including HSTS, nosniff, frame denial, Referrer-Policy, Permissions-Policy, COOP and CORP.
+- Added a Content Security Policy with a SHA-256 hash for the existing inline bootstrap script, explicit resource allowlists, `object-src 'none'`, `base-uri 'none'`, and `frame-ancestors 'none'`.
+- Added a dedicated Account 7 Cloudflare Worker edge proxy for the current Account 2 public API contract:
+  - `GET /api/broadcast/programme?channel=radio`
+  - `GET /api/broadcast/live`
+  - `GET|HEAD /api/broadcast/media/:id/object`
+  - `POST /api/media-engine/livekit/viewer-token`
+- The proxy sends the exact Account 2 public integration marker, rejects unknown paths/methods and unexpected query parameters, rejects redirects, applies request timeouts, forwards only media range headers, strips cookies and CORS permissions, and does not expose Account 2 credentials.
+- Added a dedicated `wrangler.toml` for Worker `heavenlykeyradio`, retaining saved Worker variables and avoiding Account 2 D1/R2/KV bindings.
+- Added a static source/security preflight and a fail-closed live verification script. They have been authored but have **not yet been executed**.
 
-A static-host `source/_headers` file has also been added on that branch with HSTS, MIME-sniffing protection, frame denial, referrer and permissions policies, and cross-origin isolation/resource headers.
+## Required Cloudflare configuration
 
-## Not yet a deployable release
+Set `MEDIA_PUBLIC_ORIGIN` as a non-secret Worker variable to the **verified HTTPS origin of the deployed Account 2 Worker**. The origin was not discoverable from the current repository configuration and must not be guessed. Confirm that Account 2 is deployed with its public broadcast routes and that the route contract matches this branch.
 
-The current `main` branch does **not** contain a verified Account 7 Worker entry point or Wrangler configuration. The Account 7 manifest still records the application as unidentified/unverified. The historical Worker and deployment files are not copied automatically because they must first be reconciled with the current Account 2 broadcast engine and its authentication contract.
+Preserve the existing `heavenlykeyradio` Worker, its saved bindings and secrets. Confirm the exact Cloudflare account, custom-domain route `radio.heavenlykey.org`, and asset deployment settings before release. No credentials belong in this repository.
 
-The current Account 2 source exposes public broadcast routes through the `X-Heavenly-Key-Internal: media-engine-public-v1` marker. The historical Account 7 proxy must be checked and aligned with this exact contract before restoring it. Do not assume that a successful static asset deployment means the broadcast connection works.
+## Remaining release blockers
 
-## Release blockers
+1. Confirm the exact Account 2 HTTPS origin and set `MEDIA_PUBLIC_ORIGIN` in the existing Account 7 Cloudflare Worker.
+2. Confirm the Cloudflare account/Worker identity, existing bindings, custom-domain route and production deployment configuration.
+3. Run `node scripts/preflight.mjs` and resolve every failure.
+4. Deploy only through the approved non-GitHub-Actions process, then run `node scripts/verify-live.mjs https://radio.heavenlykey.org`.
+5. The listener currently does not implement browser LiveKit playback. The live verification script deliberately fails if Account 2 returns a LiveKit transport rather than falsely reporting successful playback.
+6. Test real audio and reconnection on iPhone Safari, Android Chrome, desktop browsers, Bluetooth devices, background playback and low-bandwidth networks.
+7. Verify accessibility, performance, monitoring, incident recovery and production security headers.
 
-1. Reconcile and restore the Account 7 Worker/proxy against the current Account 2 source; preserve Account 2 DB, R2, KV and secrets.
-2. Add a current Wrangler Worker configuration and verify the existing `heavenlykeyradio` Worker bindings without deleting saved values.
-3. Verify the real Account 2 HTTPS origin and required secrets in Cloudflare; do not put secrets in browser assets or Git.
-4. Verify custom-domain routing and all static asset responses.
-5. Run repository tests, radio proxy tests and Account 2 type checks; record actual results.
-6. Test real audio, LiveKit, reconnection, background playback, Bluetooth and iOS/Android/desktop browsers.
+## Release safeguards
 
-## Security and deployment policy
-
-- Keep all secrets and production databases outside source control.
-- Do not deploy this recovery branch yet.
 - Do not use GitHub Actions for deployment.
-- Do not overwrite the latest Account 2 source or any production Cloudflare bindings.
-- A passing source-level check is not proof of live broadcast availability.
-- Global launch approval remains blocked until every release gate above is verified.
+- Do not deploy this branch until the Account 2 origin and existing Cloudflare configuration are confirmed.
+- Do not modify Account 2 production databases, storage, secrets or source as part of Account 7 recovery.
+- Do not merge the old divergent Account 7 branch wholesale.
+- Passing static preflight is not proof of live service or playback.
+- Global launch approval remains **blocked** until all release gates above pass.
