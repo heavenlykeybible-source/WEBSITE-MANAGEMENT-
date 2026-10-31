@@ -42,7 +42,7 @@ if(!worker.includes(studioToolDispatch)){
  worker=worker.replace(toolCallAnchor,studioToolDispatch+'\n  '+toolCallAnchor);
 }
 const studioToolDefs=[
- {name:'my_studio_assignments',description:'List my independently assigned AI Worker Studio tasks. Read-only; no production change.',inputSchema:{type:'object',properties:{},additionalProperties:false}},
+ {name:'my_studio_assignments',description:'List my independently assigned AI Worker Studio tasks, with page starting at 0. Read-only; no production change.',inputSchema:{type:'object',properties:{page:{type:'integer',minimum:0}},additionalProperties:false}},
  {name:'submit_studio_assignment',description:'Link my completed task to my exact existing waiting Worker proposal. Owner review and approval remain necessary.',inputSchema:{type:'object',properties:{task_id:{type:'string'},proposal_id:{type:'integer'}},required:['task_id','proposal_id'],additionalProperties:false}}
 ];
 const defsAnchor='const TOOLS = [';
