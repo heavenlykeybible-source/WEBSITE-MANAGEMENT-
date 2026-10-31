@@ -14,11 +14,12 @@ if ((timeline.match(/Math\.min\(end,v\.duration\)<=start/g)||[]).length!==2 || !
 for (const speed of ['.25','.5','.75','1','1.25','1.5','2','3','4']) if (!timeline.includes('<option value="'+speed+'"')) throw Error('Timeline speed option missing: '+speed);
 if (!timeline.includes('Estimated timeline:')) throw Error('Timeline duration display missing');
 if (!timeline.includes("else{$('clipStart').value='0';$('clipEnd').value=ready()?String(Math.min(v.duration,86400)):'0';$('clipSpeed').value='1'}")) throw Error('Timeline cleared-input reset missing');
-if ((timeline.match(/Enter both clip start and end times/g)||[]).length!==2) throw Error('Timeline empty timing validation missing');
+if ((timeline.match(/Enter both clip start and end times/g)||[]).length!==3) throw Error('Timeline empty timing validation missing');
 if (!timeline.includes('let completedSeconds=0') || !timeline.includes("+'% complete.'")) throw Error('Timeline progress indicator missing');
 if ((timeline.match(/c\.end<=86400/g)||[]).length<2) throw Error('Saved timeline and export timestamp safety limits missing');
 if (!timeline.includes("$('clipEnd').value=validSourceRange()?v.duration.toFixed(2):'0'") || !timeline.includes('Video exceeds the 24-hour timeline limit or has invalid duration.')) throw Error('Invalid source metadata display safeguard missing');
 if (!timeline.includes('const validSourceRange=()=>ready()&&v.duration<=86400') || (timeline.match(/validSourceRange\(\)/g)||[]).length<4) throw Error('Timeline source duration limit missing');
+if (!timeline.includes('id="clipInsert"') || !timeline.includes("$('clipInsert').onclick=()=>") || !timeline.includes('clips.splice(i+1,0,{start,end:Math.min(end,v.duration),speed})')) throw Error('Validated insert-after-selected command missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
 for (const id of ['clipAddFull','clipClear','clipFirst','clipLast','clipReverse','clipSort','clipCopy','clipPaste']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
 if (!timeline.includes('copiedClip=null;undo=[];redo=[];paint()') || !timeline.includes('copiedClip=null;pendingProjectMedia=true') || !timeline.includes("$('clipPaste').onclick=()=>")) throw Error('Source-safe clip clipboard missing');
