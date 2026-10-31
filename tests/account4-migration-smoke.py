@@ -18,10 +18,10 @@ db.execute("""INSERT INTO account4_import_sessions
     (ident,7,key,"upload-123","archive.zip",100,1,"private-awaiting-review",4102444800000))
 digest = "a" * 64
 db.execute("""INSERT INTO account4_import_release_attestations
-    (session_id,object_key,size_bytes,verdict,scanned_at,scanned_version,
+    (session_id,object_key,size_bytes,verdict,scanned_at,scanned_version,scanned_etag,
     scanned_sha256,approved_sha256,approved_by,approved_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?)""",
-    (ident,key,100,"clean","2026-10-31T11:00:00Z","version-123456",
+    VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+    (ident,key,100,"clean","2026-10-31T11:00:00Z","version-123456","a"*32,
      digest,digest,7,"2026-10-31T12:00:00Z"))
 
 def rejected(sql, params):
@@ -42,6 +42,7 @@ rejected("UPDATE account4_import_release_attestations SET scanned_sha256=? WHERE
 rejected("UPDATE account4_import_release_attestations SET approved_at=? WHERE session_id=?", ("2026-10-31T10:00:00Z",ident))
 rejected("UPDATE account4_import_release_attestations SET scanned_at=NULL WHERE session_id=?", (ident,))
 rejected("UPDATE account4_import_release_attestations SET scanned_version=NULL WHERE session_id=?", (ident,))
+rejected("UPDATE account4_import_release_attestations SET scanned_etag=NULL WHERE session_id=?", (ident,))
 
 db.execute("DELETE FROM account4_import_sessions WHERE id=?", (ident,))
 assert db.execute("SELECT COUNT(*) FROM account4_import_release_attestations").fetchone()[0] == 0
