@@ -22,11 +22,15 @@ if(!files.length)throw Error('No source batches found');
 const converted=[];const dates=new Set();
 const expectedStart='2026-10-30', expectedEnd='2031-10-31';
 for(const name of files){
- const drafts=migrateLegacyBatch(JSON.parse(readFileSync(join(root,name),'utf8')));
+ const sourcePath=join(root,name);
+ const sourceStats=lstatSync(sourcePath);
+ if(!sourceStats.isFile()||sourceStats.isSymbolicLink()||sourceStats.size>10*1024*1024)throw Error('Invalid or oversized legacy source batch: '+name);
+ const drafts=migrateLegacyBatch(JSON.parse(readFileSync(sourcePath,'utf8')));
  for(const draft of drafts){
   if(draft.date<expectedStart||draft.date>expectedEnd)throw Error('Date outside approved editorial coverage: '+draft.date);
   if(dates.has(draft.date))throw Error('Duplicate date across batches: '+draft.date);
   dates.add(draft.date);
+  draft.provenance.sourceBatch=name;
   if(draft.status!=='draft'||draft.review.doctrinalApproved||draft.review.sourcesVerified)throw Error('Unsafe editorial state');
   converted.push(draft);
  }
