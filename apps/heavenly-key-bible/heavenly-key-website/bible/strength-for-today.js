@@ -59,7 +59,7 @@ $('listen-strength').onclick=()=>{
  if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){$('audio-status').textContent='Audio reading is not supported by this browser. You can read or copy the devotional instead.';return;}
  stopStrengthAudio();
  const selected=items[current];
- const utterance=new SpeechSynthesisUtterance('Strength for Today. '+selected[0]+'. King James Version, '+selected[1]+'. '+selected[2]+'. Encouragement. '+selected[3]+'. Prayer. '+selected[4]);
+ const utterance=new SpeechSynthesisUtterance('Our Daily Manna — Strength for Today. '+selected[0]+'. King James Version, '+selected[1]+'. '+selected[2]+'. Encouragement. '+selected[3]+'. Prayer. '+selected[4]);
  utterance.lang='en-GB';utterance.rate=0.88;utterance.pitch=1;
  utterance.onstart=()=>{$('audio-status').textContent='Reading aloud…';};
  utterance.onend=()=>{$('audio-status').textContent='Reading finished.';strengthUtterance=null;};
