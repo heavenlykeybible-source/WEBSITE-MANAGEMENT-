@@ -771,7 +771,7 @@ test('repeated close and error callbacks notify host only once',async()=>{
 test('broadcast studio preserves sharp camera output and fails safely on background errors',()=>{
  const page=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
  assert.match(page,/limit=\$\('lite'\)\.checked\?720:1280/,'normal mode must use a higher-resolution segmentation canvas');
- assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\|\|!r\?\.image\|\|!r\.segmentationMask\)return/,'disabled or invalid segmentation must not keep processing the camera');
+ assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\)return;if\(!r\?\.image\|\|!r\.segmentationMask\)\{s\.segReady=false;return\}/,'disabled or invalid segmentation must not keep processing the camera');
  assert.match(page,/s\.oc=null;s\.segReady=false;ui\(\);msg\('Original camera restored/,'disabling backgrounds restores the unprocessed camera');
  assert.match(page,/t\.img\.onerror=\(\)=>\{if\(request===bgPick&&SC\.includes\(scene\)\)msg\('This studio background could not be loaded/,'only the active background load may report an error');
  for(const ratio of ['Landscape (16:9)','Portrait (9:16, phones)','Square (1:1)'])assert.ok(page.includes(ratio));
@@ -1079,4 +1079,11 @@ test('camera inference wrapper handles synchronous exceptions as rejected asynch
  assert.equal(camera.segReady,false);
  assert.equal(camera.segFails,1);
  assert.equal(busy,false,'inference failure must release processing lock');
+});
+
+test('invalid segmentation results immediately invalidate stale presenter frames',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/if\(!r\?\.image\|\|!r\.segmentationMask\)\{s\.segReady=false;return\}/);
+ assert.match(html,/if\(!Number\.isFinite\(iw\)\|\|!Number\.isFinite\(ih\)\|\|iw<1\|\|ih<1\)\{s\.segReady=false;return\}/);
+ assert.match(html,/else if\(s\.blur&&s\.oc&&s\.segReady\)/,'camera drawing falls back to the original frame');
 });
