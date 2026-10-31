@@ -13,6 +13,9 @@ function isSafePublicResponse(response){
  if(!response || !response.ok || response.status!==200 || response.type!=='basic' || response.redirected)return false;
  const control=response.headers.get('cache-control')||'';
  const vary=response.headers.get('vary')||'';
+ // Never persist a response that can set or clear a user's browser session.
+ // Even a credential-free request may receive Set-Cookie from a misconfigured edge.
+ if(response.headers.get('set-cookie') || response.headers.get('clear-site-data'))return false;
  // Partial content must never replace a complete offline shell asset.
  if(response.headers.get('content-range'))return false;
  // Cache keys omit request headers. Only content-encoding negotiation is safe
