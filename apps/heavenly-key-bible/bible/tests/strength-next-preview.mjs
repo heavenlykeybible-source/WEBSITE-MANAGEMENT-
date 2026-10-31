@@ -8,6 +8,12 @@ const js=readFileSync(resolve(root,'strength-for-today-next.js'),'utf8');
 const css=readFileSync(resolve(root,'strength-for-today-next.css'),'utf8');
 assert.match(html,/href="\.\/strength-for-today-next\.css"/);
 assert.doesNotMatch(html,/<style\b|\sstyle=/i);
+assert.match(html,/http-equiv="Content-Security-Policy"/);
+for(const directive of ["default-src 'none'","script-src 'self'","style-src 'self'","connect-src 'none'","object-src 'none'","base-uri 'none'","form-action 'none'"]){
+ assert.ok(html.includes(directive),'Missing CSP protection '+directive);
+}
+assert.doesNotMatch(html,/unsafe-inline|unsafe-eval/);
+
 assert.doesNotMatch(js,/\.style\.fontSize\s*=/);
 assert.match(html,/Development preview — not published devotional content/);
 assert.match(html,/strength-for-today-next\.js/);
