@@ -216,7 +216,8 @@ async function mic(){try{
 $('fm').onchange=e=>{if(e.target.files.length)addMedia(e.target.files);e.target.value=''};
 $('fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.src=URL.createObjectURL(f);place(mk('image',f.name.replace(/\.[^.]+$/,''),{img}));e.target.value='';ui()};
 
-function take(i){if(!Number.isInteger(i)||i<0||i>=SC.length||i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;sceneVersion++;for(const camera of S)if(camera.type==='camera')camera.segReady=false;t0=performance.now();if(studio)pvw=o}
+function invalidateProgramBg(){sceneVersion++;for(const camera of S)if(camera.type==='camera')camera.segReady=false}
+function take(i){if(!Number.isInteger(i)||i<0||i>=SC.length||i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;invalidateProgramBg();t0=performance.now();if(studio)pvw=o}
 $('take').onclick=()=>{take(pvw);ui()};
 $('stm').onchange=e=>{studio=e.target.checked;if(studio)pvw=SC.length>1?(pgm+1)%SC.length:pgm;$('cvs').classList.toggle('s',studio);$('pw').hidden=!studio;$('take').hidden=!studio;ui()};
 $('vol').oninput=e=>mon.gain.value=e.target.value;
@@ -228,11 +229,11 @@ const act={
  sren:i=>{const n=prompt('Scene name',SC[i].name);if(n)SC[i].name=n.slice(0,40);ui()},
  sdel:i=>{if(!Number.isInteger(i)||i<0||i>=SC.length)return;if(SC.length<2){msg('Keep at least one scene.');return}SC.splice(i,1);from=null;
   pgm=pgm>i?pgm-1:pgm===i?0:pgm;pvw=pvw>i?pvw-1:pvw===i?0:pvw;
-  sceneVersion++;for(const camera of S)if(camera.type==='camera')camera.segReady=false;ui()},
- iup:j=>{const a=SC[ed()].items;if(j>0)[a[j-1],a[j]]=[a[j],a[j-1]];ui()},
- idn:j=>{const a=SC[ed()].items;if(j<a.length-1)[a[j+1],a[j]]=[a[j],a[j+1]];ui()},
- ivis:j=>{const it=SC[ed()].items[j];it.on=!it.on;ui()},
- irm:j=>{SC[ed()].items.splice(j,1);ui()},
+  invalidateProgramBg();ui()},
+ iup:j=>{const a=SC[ed()].items;if(j>0&&j<a.length){[a[j-1],a[j]]=[a[j],a[j-1]];if(ed()===pgm)invalidateProgramBg()}ui()},
+ idn:j=>{const a=SC[ed()].items;if(j>=0&&j<a.length-1){[a[j+1],a[j]]=[a[j],a[j+1]];if(ed()===pgm)invalidateProgramBg()}ui()},
+ ivis:j=>{const it=SC[ed()].items[j];if(!it)return;it.on=!it.on;if(ed()===pgm)invalidateProgramBg();ui()},
+ irm:j=>{const items=SC[ed()].items;if(!Number.isInteger(j)||j<0||j>=items.length)return;items.splice(j,1);if(ed()===pgm)invalidateProgramBg();ui()},
  amed:()=>$('fm').click(),acam:cam,amic:mic,ascr:scr,aimg:()=>$('fi').click(),
  aticker:()=>{place(mk('ticker','Ticker '+uid,{text:'Welcome! Share this broadcast with a friend.',speed:120}));ui()},avbg:()=>$('fv').click(),ach:()=>{place(mk('chat','Chat '+uid,{}),'right');ui()},atxt:()=>{place(mk('text','Text '+uid,{text:'My Radio'}));ui()},
  mp:i=>nx(S[i],-1),mn:i=>nx(S[i],1),
@@ -347,7 +348,7 @@ function setBg(i){const t=T[i];if(!t)return;const request=++bgPick,scene=SC[ed()
  const go=()=>{if(request!==bgPick||!SC.includes(scene))return;curBg=i;bgImg=t.c||t.img;bgFn=t.fn||null;
   const it=scene.items;let b=it.map(x=>src(x.id)).find(s=>s&&s.isBg);
   if(!b)b=mk('image','Background',{isBg:true,cover:true});b.img=bgImg;b.fn=bgFn;b.tn=t.n;
-  const layer=it.find(x=>x.id===b.id);if(layer)layer.on=true;else it.unshift({id:b.id,p:'full',on:true});gal();ui()};
+  const layer=it.find(x=>x.id===b.id);if(layer)layer.on=true;else it.unshift({id:b.id,p:'full',on:true});if(scene===SC[pgm])invalidateProgramBg();gal();ui()};
  if(t.p&&W>=H)msg('This template is made for Portrait. Change Screen shape under Start.');
  if(t.fn||t.c||(t.img&&t.img.complete&&t.img.naturalWidth))return go();t.img=t.img||new Image();t.img.onload=go;t.img.onerror=()=>{if(request===bgPick&&SC.includes(scene))msg('This studio background could not be loaded. Select another background.');};t.img.src=t.u}
 function newScene(name){SC.push({name,items:[]});const i=SC.length-1;if(studio)pvw=i;else take(i);return i}
