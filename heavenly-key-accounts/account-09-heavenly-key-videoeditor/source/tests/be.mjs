@@ -639,6 +639,12 @@ const privacyUser=db.prepare('SELECT id FROM users WHERE email=?').get('privacy-
 const privacyKey=privacyUser+'/deleted-file';
 objects.set(privacyKey,Buffer.from('orphan media'));
 db.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,?,?)').run('privacy-tombstone',privacyUser,'deleted.png','image/png',12,privacyKey,1,Date.now());
+const crossAccountKey='other-account/protected-media';
+objects.set(crossAccountKey,Buffer.from('protected data'));
+db.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,?,?)').run('privacy-mismatch',privacyUser,'foreign.png','image/png',14,crossAccountKey,1,Date.now());
+const rejectedPrivacyDeletion=await request('account',{method:'DELETE',cookie:privacyLogin.cookie,body:{password:'correct horse battery'}});
+check('Account deletion rejects foreign-owner R2 references',rejectedPrivacyDeletion.status===409&&objects.has(crossAccountKey)&&!!db.prepare('SELECT id FROM users WHERE id=?').get(privacyUser));
+db.prepare('DELETE FROM media WHERE id=?').run('privacy-mismatch');
 const privacyDeletion=await request('account',{method:'DELETE',cookie:privacyLogin.cookie,body:{password:'correct horse battery'}});
 check('Account deletion succeeds with tombstoned media',privacyDeletion.status===200);
 check('Account deletion removes previously deleted R2 objects',!objects.has(privacyKey));
