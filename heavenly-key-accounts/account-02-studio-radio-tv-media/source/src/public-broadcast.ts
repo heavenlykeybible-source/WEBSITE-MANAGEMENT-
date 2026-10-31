@@ -11,6 +11,7 @@ const ready="m.status IN ('approved','published') AND (m.status='published' OR m
 
 /** Only media deliberately published or selected for an active programme is public. */
 export async function eligibleMedia(env:BroadcastEnv,id:number):Promise<any>{
+ if(!Number.isSafeInteger(id)||id<1)return null;
  return env.DB.prepare(`SELECT m.* FROM media_objects m WHERE m.media_id=? AND ${ready} AND
  (m.status='published' OR EXISTS (SELECT 1 FROM playout_items p WHERE p.media_id=m.media_id AND p.status IN ('scheduled','playing') AND julianday(p.starts_at)<=julianday('now') AND julianday(p.ends_at)>julianday('now'))
  OR EXISTS (SELECT 1 FROM live_sessions l WHERE ((l.status='live' AND julianday(l.last_heartbeat_at)>julianday('now','-180 seconds')) OR (l.status='reconnecting' AND julianday(l.reconnect_deadline)>julianday('now'))) AND (l.visual_media_id=m.media_id OR l.fallback_media_id=m.media_id OR l.source_ref='media:'||m.media_id) AND (l.destination='radio' OR (?=0 AND l.destination IN ('video','both')))))`).bind(id,TV_LOCKED?1:0).first();
@@ -54,6 +55,7 @@ export async function publicProgramme(request:Request,env:BroadcastEnv):Promise<
 }
 
 export async function serveBroadcastMedia(request:Request,env:BroadcastEnv,id:number,adminPreview=false):Promise<Response>{
+ if(!Number.isSafeInteger(id)||id<1)return json({error:'Media unavailable'},404);
  const media=adminPreview?await env.DB.prepare("SELECT * FROM media_objects WHERE media_id=? AND status IN ('approved','published') AND (status='published' OR keep_media=1 OR retention_until IS NULL OR julianday(retention_until)>julianday('now'))").bind(id).first<any>():await eligibleMedia(env,id);
  if(!media||!['audio','video','image'].includes(media.media_type))return json({error:'Media unavailable'},404);
  if(TV_LOCKED&&!adminPreview&&media.media_type==='video')return json({error:TV_LOCK_MESSAGE,code:'TELEVISION_LOCKED',locked:true},423);
