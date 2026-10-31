@@ -758,3 +758,18 @@ test('revoked stage identity during TURN signing cannot enter meeting',async()=>
  assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
  assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
 });
+
+test('delayed host signaling authorization does not kick a demoted guest',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(false);started();});
+ const pending=h.r.webSocketMessage(h.host,JSON.stringify({t:'sig',gid:h.guest.attachment.id,data:{c:{candidate:'candidate'}}}));
+ await reached;
+ h.guest.attachment.stage=false;h.guest.attachment.aud=true;
+ release();await pending;
+ assert.equal(h.guest.readyState,1);
+ assert.equal(h.guest.attachment.stage,false);
+ assert.equal(h.guest.messages.some(m=>m.t==='error'),false);
+});
