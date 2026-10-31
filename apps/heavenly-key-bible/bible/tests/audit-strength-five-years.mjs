@@ -157,7 +157,9 @@ const result={
  ],doctrinalCoverageChecklist:doctrine,
  publicationReady:false
 };
-console.log(JSON.stringify(result,null,2));
+if(process.env.STRENGTH_AUDIT_SUMMARY==='1') {
+ console.log(JSON.stringify({files:result.files,days:result.days,requestedDayTarget:result.requestedDayTarget,missingDates:result.missingDates,topicEntries:result.topicEntries,qualityBlockingFlagCount:result.qualityBlockingFlagCount,flagsByType:result.flagsByType,sampleFlags:result.sampleFlags,publicationReady:result.publicationReady},null,2));
+} else console.log(JSON.stringify(result,null,2));
 if(!automatedQualityPassed) {
  console.error('EDITORIAL QUALITY BLOCKED: unresolved duplicates, templated copy, incomplete data or missing requested dates. Human doctrinal and KJV approval still required.');
  process.exitCode=1;
