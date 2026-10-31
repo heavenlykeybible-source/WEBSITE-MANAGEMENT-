@@ -10,8 +10,9 @@ async function scenario(mode){
  Object.assign(node('cv'),{width:1920,height:1080});
  const track={stop(){}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
  class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='streaming-oversize')this.ondataavailable({data:{size:256*1024*1024+1}});if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode==='cancel-encoder')setTimeout(()=>node('clipCancel').onclick(),0);if(mode!=='timeout'&&mode!=='cancel-encoder'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
- const window={MediaRecorder:Recorder};
- runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
+ const winEvents=new Map();let revokedURLs=0;
+ const window={MediaRecorder:Recorder,addEventListener:(event,handler)=>winEvents.set(event,handler)};
+ runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){revokedURLs++}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
  const originalTimeline=JSON.stringify(window.hkTimeline.getClips());
  video.duration=0;
@@ -230,6 +231,10 @@ async function scenario(mode){
   assert.match(status,/without audio/);
   assert.ok(statuses.some(text=>/\d+% complete\./.test(text)),'Timeline reports percent progress during export');
   assert.equal(node('clipDownload').hidden,false);
+  assert.equal(typeof winEvents.get('pagehide'),'function','Pagehide cleanup is installed');
+  winEvents.get('pagehide')();
+  assert.equal(node('clipDownload').hidden,true,'Pagehide hides expired export download');
+  assert.equal(revokedURLs,1,'Pagehide revokes generated video object URL');
   video.play=async()=>new Promise(()=>{});
   video.currentTime=0;
   const nextExport=node('clipExport').onclick();
