@@ -27,7 +27,7 @@ export class MeetingRooms {
  host(){return this.sockets().find(w=>this.data(w).role==='host');}
  guests(){return this.sockets().filter(w=>this.data(w).role==='guest');}
  stage(){return this.guests().filter(w=>this.data(w).stage);}
- async stageAllowed(d,now){try{const i=d.identity;if(!i||!Number.isFinite(i.expires)||i.expires<=now)return false;const u=await getUser(this.env,i.email);return !!u&&!u.banned&&(u.tv||0)===i.version&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,i.email,u)!=='user'||u.terms==='private-approved');}catch{return false;}}
+ async stageAllowed(d,now){try{const i=d.identity;if(!i||typeof i.email!=='string'||i.email.length>254||!Number.isFinite(i.expires)||i.expires<=now)return false;const u=await getUser(this.env,i.email);return !!u&&!u.banned&&(u.tv||0)===i.version&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,i.email,u)!=='user'||u.terms==='private-approved');}catch{return false;}}
  broadcast(m){for(const w of this.sockets()){const d=this.data(w);if(d.role==='host'||d.ok)this.send(w,m);}}
  count(){this.send(this.host(),{t:'count',n:this.guests().filter(w=>this.data(w).aud).length});}
  close(w,m){this.send(w,m);try{w.close(1000,'Meeting closed');}catch{}}
@@ -81,7 +81,7 @@ export class MeetingRooms {
     // A login is required to appear on stage; anonymous guests remain audience members.
     let identity=null;
     if(typeof m.accountToken==='string'&&m.accountToken.length<=4096){
-     try{const claim=await check(this.env.AUTH_SECRET,m.accountToken);if(claim&&claim.e&&!claim.k&&Number.isFinite(claim.exp)&&claim.exp>Date.now()){const u=await getUser(this.env,claim.e);if(u&&!u.banned&&(u.tv||0)===(claim.t||0)&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,claim.e,u)!=='user'||u.terms==='private-approved'))identity={email:claim.e,version:claim.t||0,expires:claim.exp};}}catch{}
+     try{const claim=await check(this.env.AUTH_SECRET,m.accountToken);if(claim&&typeof claim.e==='string'&&claim.e.length>0&&claim.e.length<=254&&!claim.k&&Number.isFinite(claim.exp)&&claim.exp>Date.now()){const u=await getUser(this.env,claim.e);if(u&&!u.banned&&(u.tv||0)===(claim.t||0)&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,claim.e,u)!=='user'||u.terms==='private-approved'))identity={email:claim.e,version:claim.t||0,expires:claim.exp};}}catch{}
     }
     // Account checks can yield while the host locks or ends the room.
     if(ws.readyState!==1||this.data(ws).role)return;
