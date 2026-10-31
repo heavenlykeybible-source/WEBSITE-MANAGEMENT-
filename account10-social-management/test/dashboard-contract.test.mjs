@@ -103,8 +103,8 @@ test('switching conversations hides the previous customer message before loading
 });
 
 test('WhatsApp send refresh stays in the originating conversation', () => {
-  assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=selected/);
-  assert.match(html, /if\(selected===currentConversation\)\{status\(result\.sent/);
+  assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=conversationId;if\(selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return/);
+  assert.match(html, /if\(selected===currentConversation&&authEpoch===sessionEpoch\)\{status\(result\.sent/);
   assert.match(html, /await openChat\(currentConversation\)/);
 });
 
