@@ -7,6 +7,8 @@ on:
       - 'apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs'
       - 'apps/heavenly-key-bible/bible/tests/strength-next-content-contract-regression.mjs'
       - 'apps/heavenly-key-bible/bible/tests/strength-next-migration-audit.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-migration.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-migration-regression.mjs'
       - 'apps/heavenly-key-bible/bible/tests/strength-embargo.mjs'
       - 'apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/data/annotations/**'
@@ -74,6 +76,10 @@ jobs:
           node --check apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs
           node apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs
           node apps/heavenly-key-bible/bible/tests/strength-next-content-contract-regression.mjs
+      - name: Verify non-destructive one-topic migration
+        run: |
+          node --check apps/heavenly-key-bible/bible/tests/strength-next-migration.mjs
+          node apps/heavenly-key-bible/bible/tests/strength-next-migration-regression.mjs
       - name: Inventory legacy migration gaps (informational until migration)
         continue-on-error: true
         run: node apps/heavenly-key-bible/bible/tests/strength-next-migration-audit.mjs
