@@ -1059,3 +1059,9 @@ test('stalled background download releases every camera and permits a retry',()=
  timeouts[1].fn();
  assert.deepEqual(outcomes.at(-1),['retry',false]);
 });
+
+test('failed background processing stops showing stale virtual camera frames immediately',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/seg\.send\(\{image:s\.el\}\)\.then\(\(\)=>\{s\.segFails=0\}\)\.catch\(\(\)=>\{s\.segReady=false;if\(\+\+s\.segFails>=3\)/,'failure must clear stale compositing on the first error');
+ assert.match(html,/else if\(s\.blur&&s\.oc&&s\.segReady\)/,'camera output must fall back to raw image when composite is invalid');
+});
