@@ -2,6 +2,9 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 const temp=new URL('./workspace-test-worker.mjs',import.meta.url);fs.writeFileSync(temp,fs.readFileSync('control-room-worker.js','utf8')+'\nexport {requestAIWorkspaceAccess,aiWorkspaceRoutes,aiPolicy,ownerApprovalSession,aiPermissionRoutes,UI};');
+const generatedWorker=fs.readFileSync('control-room-worker.js','utf8');
+assert.equal(generatedWorker.split('const approvalSession=await ownerApprovalSession(req,env,user,sub,m);if(approvalSession)return approvalSession;').length-1,1,'Owner approval routes must be dispatched exactly once');
+assert.ok(generatedWorker.includes('approval-session/end'),'Owner revocation endpoint must be present');
 try{
 const {requestAIWorkspaceAccess,aiWorkspaceRoutes,aiPolicy,ownerApprovalSession,aiPermissionRoutes,UI}=await import(temp.href);
 const db=new DatabaseSync(':memory:');db.exec(fs.readFileSync('schema.sql','utf8'));db.exec("INSERT INTO users(id,username,role,status,kind)VALUES(1,'owner','owner','active','staff'),(2,'admin','admin','active','staff');INSERT INTO cf_connections(id,label,account_id,token_enc)VALUES(4,'Account 4','account4','encrypted'),(7,'Account 7','account7','encrypted')");
