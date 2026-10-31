@@ -37,6 +37,7 @@ input[type=range]{accent-color:#f3c957;flex:1;min-width:60px}
 (()=>{'use strict';
 const audio=document.getElementById('audio'),play=document.getElementById('play'),next=document.getElementById('next'),retry=document.getElementById('retry'),title=document.getElementById('track'),status=document.getElementById('status'),volume=document.getElementById('volume'),volumeValue=document.getElementById('volumeValue'),output=document.getElementById('output'),outputHelp=document.getElementById('outputHelp');
 let playlist=[],position=0,playing=false,loadGeneration=0,playGeneration=0;
+const setPaused=message=>{++playGeneration;playing=false;play.textContent='▶ Play Radio';play.setAttribute('aria-label','Play radio');if(message)say(message)};
 const say=message=>{status.textContent=message};
 const validItem=item=>item&&item.type==='audio'&&typeof item.url==='string'&&/^\\/api\\/broadcast\\/media\\/\\d+\\/object$/.test(item.url);
 async function refresh(){
@@ -56,21 +57,25 @@ async function refresh(){
 }
 function select(index){
  if(!playlist.length)return false;
- position=(index+playlist.length)%playlist.length;
- const item=playlist[position];audio.src=item.url;title.textContent=item.title||'Radio programme';return true;
+ ++playGeneration;position=(index+playlist.length)%playlist.length;
+ const item=playlist[position];audio.src=item.url;title.textContent=item.title||'Radio programme';if('mediaSession' in navigator&&typeof MediaMetadata==='function')navigator.mediaSession.metadata=new MediaMetadata({title:item.title||'Radio programme',artist:'Heavenly Key Evangelistic Movement'});return true;
 }
 async function start(){
  try{if(!playlist.length){say('No radio recordings are available.');return;}
  if(!audio.getAttribute('src'))select(position);
- const generation=++playGeneration;await audio.play();if(generation!==playGeneration){audio.pause();return;}playing=true;play.textContent='⏸ Pause';say('Playing • '+(position+1)+' of '+playlist.length);}
- catch{playing=false;play.textContent='▶ Play Radio';say('Audio could not play. Check your connection, audio output, or try the next recording.');}
+ const generation=++playGeneration;await audio.play();if(generation!==playGeneration)return;playing=true;play.textContent='⏸ Pause';play.setAttribute('aria-label','Pause radio');say('Playing • '+(position+1)+' of '+playlist.length);}
+ catch{setPaused('Audio could not play. Check your connection, audio output, or try the next recording.');}
 }
-play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){++playGeneration;audio.pause();playing=false;play.textContent='▶ Play Radio';say('Paused.');return;}await start()});
+play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
 next.addEventListener('click',async()=>{if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
 retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
 audio.addEventListener('ended',()=>{if(!playlist.length)return;select(position+1);if(playing)void start()});
 window.addEventListener('pagehide',()=>{++playGeneration;audio.pause();playing=false;});
-audio.addEventListener('error',()=>{if(audio.getAttribute('src')){playing=false;play.textContent='▶ Play Radio';say('This recording cannot be loaded. Try Next or Refresh playlist.')}});
+audio.addEventListener('error',()=>{if(audio.getAttribute('src'))setPaused('This recording cannot be loaded. Try Next or Refresh playlist.')});
+audio.addEventListener('waiting',()=>{if(playing)say('Buffering radio audio…')});
+audio.addEventListener('playing',()=>{if(playing)say('Playing • '+(position+1)+' of '+playlist.length)});
+window.addEventListener('offline',()=>{if(playing)say('Network connection lost. Audio will resume if the browser can reconnect.')});
+window.addEventListener('online',()=>{if(playing)say('Connection restored. If audio does not resume, press Pause then Play.')});
 volume.addEventListener('input',()=>{audio.volume=Number(volume.value)/100;volumeValue.textContent=volume.value+'%'});
 audio.volume=.8;
 output.addEventListener('click',async()=>{
