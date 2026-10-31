@@ -251,3 +251,8 @@ test('Gemini suggestion rejects viewer or disabled control and rechecks session 
  assert.ok(html.includes("$('suggestReply').onclick=async()=>{if(!selected||operatorAccessRole==='viewer'||$('suggestReply').disabled)return"));
  assert.ok(html.includes("selected!==targetConversation||authEpoch!==epoch||operatorAccessRole==='viewer'||$('suggestReply').disabled"));
 });
+
+test('takeover refuses viewer and stale confirmation state', () => {
+ assert.ok(html.includes("$('takeover').onclick=async()=>{if(!selected||operatorAccessRole==='viewer'||$('takeover').disabled)return"));
+ assert.ok(html.includes("if(selected!==targetConversation||authEpoch!==epoch||operatorAccessRole==='viewer'||button.disabled)return;button.disabled=true"));
+});
