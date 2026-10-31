@@ -201,3 +201,12 @@ test('limited operators cannot open owner-only dashboard tools', () => {
  assert.match(html,/operatorAccessRole=session\.role;refreshRoleNavigation\(\)/);
  assert.match(html,/This section requires owner authorization/);
 });
+
+
+test('post draft editor async work is bound to the current owner session and posts tab', () => {
+ assert.match(html,/function addDraftEditor\(\)\{const epoch=authEpoch;const current=\(\)=>epoch===authEpoch&&activeManagementTab==='posts'&&!!token&&operatorAccessRole==='owner'/);
+ assert.match(html,/async function load\(\)\{if\(!current\(\)\)return/);
+ assert.match(html,/if\(!current\(\)\)return;list\.replaceChildren\(\)/);
+ assert.match(html,/if\(!current\(\)\|\|remove\.disabled\)return/);
+ assert.match(html,/if\(!current\(\)\|\|save\.disabled\)return/);
+});
