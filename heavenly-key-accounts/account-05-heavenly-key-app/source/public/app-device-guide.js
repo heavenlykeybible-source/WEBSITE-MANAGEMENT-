@@ -75,15 +75,8 @@
       if (heading) heading.textContent = app.name + ' for ' + platform;
       document.title = app.name + ' — Installation for ' + platform;
       const sameOrigin = destination.origin === location.origin;
-      if (sameOrigin) {
-        const manifest = document.createElement('link');
-        manifest.rel = 'manifest';
-        manifest.href = '/manifests/' + encodeURIComponent(appId) + '.webmanifest';
-        document.head.append(manifest);
-        // Browser install prompts are only valid on the app's own origin and scope.
-        // A prompt received on this guide must not be presented as an install of another app.
-        // The guide URL is never the selected application's installation scope.
-      }
+      // Installation guides must never advertise their own manifest as the selected app.
+      // Users open the destination app, whose actual page owns its install identity.
       let nativeAvailable = false;
       if (/^(android|windows|mac)$/.test(platform)) {
         const nativeLink = document.createElement('a');
