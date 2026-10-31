@@ -70,4 +70,10 @@ assert.match(entry, /p\.nonce\.length>256/, 'Bound capability nonce length');
 assert.match(entry, /typeof b\.keep_recording!=='boolean'/, 'Create-recording retention must validate the boolean type');
 assert.match(entry, /const keep=b\.keep_recording===true/, 'Keep-recording must be explicitly true');
 
+// Deleting a recording must not leave distribution jobs attempting to post it.
+assert.match(entry, /recording\.retention\.update/, 'Retention changes must create audit events');
+assert.match(entry, /recording\.delete/, 'Recording deletions must create audit events');
+assert.match(entry, /Recording deleted by administrator/, 'Deletion must cancel outstanding distribution jobs');
+assert.match(entry, /status IN \('pending','processing','failed'\)/, 'Pending and failed distribution jobs must be cancellable');
+
 console.log('Account 2 broadcast safety regression checks passed');
