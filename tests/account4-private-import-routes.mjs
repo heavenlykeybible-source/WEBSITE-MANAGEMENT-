@@ -24,7 +24,7 @@ const bucket={
 const db={prepare(sql){let args=[];return {bind(...values){args=values;return this;},
  async all(){
   if(sql.includes('sqlite_master'))return {results:missingSchema?[]:[{name:'account4_import_sessions'},{name:'account4_import_parts'}]};
-  if(sql.includes('SELECT part_number,etag'))return {results:parts};
+  if(sql.includes('account4_import_parts'))return {results:parts};
   if(sql.includes('SELECT s.id,s.filename'))return {results:session?[{...session,uploaded_parts:parts.length}]:[]};
   return {results:[]};
  },
