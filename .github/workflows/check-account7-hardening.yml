@@ -5,6 +5,7 @@ on:
     paths:
       - 'heavenly-key-accounts/account-07-unverified/source/**'
       - 'tests/account7-security-headers.mjs'
+      - 'tests/account7-radio.mjs'
       - '.github/workflows/check-account7-hardening.yml'
 permissions:
   contents: read
