@@ -146,16 +146,16 @@ test('human requests attention counter shows authenticated pending count and res
   assert.match(html,/api\('\/api\/human-requests'\)\.then\(h=>/);
   assert.match(html,/if\(epoch===authEpoch\)updateHumanRequestCount\(h\.items\)/);
   assert.match(html,/if\(name==='requests'\)updateHumanRequestCount\(d\.items\)/);
-  assert.equal((html.match(/selected='';paused=false;requestedHuman=false;humanRequestVersion=0;operatorAccessRole='viewer';activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests';/g)||[]).length,2);
+  assert.equal((html.match(/selected='';paused=false;requestedHuman=false;humanRequestVersion=0;operatorAccessRole='viewer';activeManagementTab='chats';refreshRoleNavigation\(\);\$\('requestsTab'\)\.textContent='Human Requests';/g)||[]).length,2);
   assert.match(html,/count===100\?'\+':'/);
 });
 
 test('management tab requests never restore private data after logout or tab change', () => {
   assert.match(html,/activeManagementTab='chats'/);
-  assert.match(html,/function showTab\(name\)\{activeManagementTab=name;const epoch=authEpoch;/);
+  assert.match(html,/function showTab\(name\)\{if\(operatorAccessRole!=='owner'&&\['posts','rules','accounts','diagnostics'\]\.includes\(name\)\)\{status\('This section requires owner authorization\.'\);return;\}activeManagementTab=name;const epoch=authEpoch;/);
   assert.match(html,/if\(epoch!==authEpoch\|\|activeManagementTab!==name\|\|!token\)return;renderManagement\(name,d\)/);
   assert.match(html,/if\(epoch===authEpoch&&activeManagementTab===name&&token\)status\(e.message\)/);
-  assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;operatorAccessRole='viewer';activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests'/g)||[]).length,2);
+  assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;operatorAccessRole='viewer';activeManagementTab='chats';refreshRoleNavigation\(\);\$\('requestsTab'\)\.textContent='Human Requests'/g)||[]).length,2);
 });
 
 test('nested launch-diagnostics responses never render into a stale operator session', () => {
@@ -192,4 +192,12 @@ test('viewer role is read-only in the operator dashboard', () => {
  assert.match(html,/\$\('takeover'\)\.disabled=operatorAccessRole==='viewer'/);
  assert.match(html,/\$\('saveDraft'\)\.disabled=operatorAccessRole==='viewer'/);
  assert.match(html,/\$\('suggestReply'\)\.disabled=operatorAccessRole==='viewer'/);
+});
+
+test('limited operators cannot open owner-only dashboard tools', () => {
+ assert.match(html,/function refreshRoleNavigation\(\)/);
+ assert.match(html,/\['postsTab','rulesTab','accountsTab','diagnosticsTab'\]/);
+ assert.match(html,/\$\(id\)\.hidden=!owner/);
+ assert.match(html,/operatorAccessRole=session\.role;refreshRoleNavigation\(\)/);
+ assert.match(html,/This section requires owner authorization/);
 });
