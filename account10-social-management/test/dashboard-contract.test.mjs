@@ -306,3 +306,13 @@ test('dashboard has keyboard skip navigation, accessible focus and mobile touch 
  assert.match(html,/@media\(max-width:760px\)/);
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
 });
+
+
+test('owner account settings expose an explicit Gemini connection smoke test', () => {
+  assert.match(html,/function addGeminiReadiness\(\)/);
+  assert.match(html,/addGeminiReadiness\(\)/);
+  assert.match(html,/api\('\/api\/ai\/connection-check'/);
+  assert.match(html,/Test Gemini connection/);
+  assert.match(html,/No customer message/);
+  assert.match(html,/No messages were sent/);
+});
