@@ -915,8 +915,9 @@ test('rapid raise-hand toggles are throttled before reaching the host',async()=>
  await message(s.room,viewer,{t:'hand',on:false});
  await message(s.room,viewer,{t:'hand',on:true});
  const hands=s.host.messages.filter(m=>m.t==='hand');
- assert.equal(hands.length-before,1,'rapid toggles must generate only one host notification');
- assert.equal(hands.at(-1).on,true);
+ assert.equal(hands.length-before,2,'host must receive initial raise and immediate lowering, not rapid re-raise');
+ assert.deepEqual(hands.slice(before).map(m=>m.on),[true,false],'raised hand must not stay stuck after lowering');
+ assert.equal(viewer.d.handOn,false,'saved hand state must match the host notification');
  assert.ok(viewer.d.handAt>0,'throttle state must be stored on participant socket');
 });
 
@@ -1137,4 +1138,19 @@ test('switching Twitch chat channels ignores stale connection events and clears 
  assert.equal(first.sent.filter(x=>x==='JOIN #secondchannel').length,0,'stale channel must not join the new stream');
  second.onclose();
  assert.equal(nodes.chs.textContent,'Chat disconnected.');
+});
+
+test('participant hand state suppresses repeated lowering and allows raising after cooldown',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ await message(s.room,viewer,{t:'hand',on:false});
+ assert.equal(s.host.messages.filter(m=>m.t==='hand').length,0);
+ await message(s.room,viewer,{t:'hand',on:true});
+ await message(s.room,viewer,{t:'hand',on:true});
+ await message(s.room,viewer,{t:'hand',on:false});
+ await message(s.room,viewer,{t:'hand',on:false});
+ assert.deepEqual(s.host.messages.filter(m=>m.t==='hand').map(m=>m.on),[true,false]);
+ viewer.d.handAt=Date.now()-1000;
+ await message(s.room,viewer,{t:'hand',on:true});
+ assert.deepEqual(s.host.messages.filter(m=>m.t==='hand').map(m=>m.on),[true,false,true]);
 });
