@@ -176,7 +176,8 @@ test('WhatsApp human contact request pauses Gemini without sending or claiming n
 
 test('human contact detector recognizes explicit handover requests, not Bible questions', () => {
   const handover = readFileSync(new URL('../src/human-handover.ts', import.meta.url), 'utf8');
-  const match = new Function(handover.replace('export const requestsHumanMinistryContact=(input:string):boolean=>','const requestsHumanMinistryContact=(input)=>')+';return requestsHumanMinistryContact')();
+  const detectorOnly=handover.slice(0,handover.indexOf('export const contactTargetForMinistryMessage='));
+  const match = new Function(detectorOnly.replace('export const requestsHumanMinistryContact=(input:string):boolean=>','const requestsHumanMinistryContact=(input)=>')+';return requestsHumanMinistryContact')();
   for(const message of ['I want to talk to Evangelist Emmanuel','Please connect me with a human','Can I speak to the evangelist?','human takeover']) assert.equal(match(message),true,message);
   for(const message of ['Explain John 3:16 KJV','I love the evangelist preaching','Please pray for my family']) assert.equal(match(message),false,message);
   assert.match(source,/enabled:true,providerConnected:false,channels:\['whatsapp_business'/);
