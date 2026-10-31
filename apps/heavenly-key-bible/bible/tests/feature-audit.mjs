@@ -14,4 +14,23 @@ assert(txt('read-pray-reminder.js').includes('Notification.permission'));
 assert(!script.includes('i<3650'),'routine duration limit');
 const manifest=JSON.parse(txt('data/kjv/manifest.json'));assert.equal(manifest.books.length,66);
 for(const book of manifest.books){const data=JSON.parse(txt(`data/kjv/${book.code}.json`));assert(data.chapters&&Object.keys(data.chapters).length===book.chapters,book.code)}
+
+const headers=txt('_headers');
+assert(headers.includes("Content-Security-Policy: default-src 'self'"));
+assert(headers.includes("script-src 'self'"),'CSP must restrict scripts to same-origin files');
+const cspPages=[
+ 'index.html','study-extensions.html','strength-for-today.html',
+ 'old-time-gospel-revival-hymn-book.html','404.html','bible-champions-embed.html','bible-study-tools.html',
+ 'install/index.html','install/ipad/index.html','install/android/index.html',
+ 'install/iphone/index.html','install/mac/index.html','install/windows/index.html'
+];
+for(const page of cspPages){
+ const html=fs.readFileSync(path.join(root,page),'utf8');
+ assert(!/<script\\b(?![^>]*\\bsrc\\s*=)[^>]*>[\\s\\S]*?<\\/script>/i.test(html),page+' must not contain inline scripts under the enforced CSP');
+}
+for(const asset of ['./page-enhancements.js','./strength-data.js','./study-route.js']){
+ assert(sw.includes(asset),asset+' must be included in the offline shell');
+ assert(fs.existsSync(path.join(root,asset.slice(2))),asset+' must exist');
+}
+
 console.log('PASS: 160 dictionary entries, 53 subjects, 66 books, main app+study reminders, full index wiring, unsubscribe, no expiry cap');
