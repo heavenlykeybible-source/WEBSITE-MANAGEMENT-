@@ -99,3 +99,18 @@ test('independent app response cannot clear main-site data, refresh, or grant CO
  assert.equal(response.headers.get('content-type'),'text/html; charset=utf-8');
  assert.equal(await response.text(),'<h1>Reader</h1>');
 });
+
+test('conditional static app responses preserve HTTP 304 without redirecting',async()=>{
+ const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+  fetch:async()=>new Response(null,{status:304,headers:{
+   'X-HK-App-Service':'bible-reader',
+   'ETag':'"reviewed-release"',
+   'Location':'https://unapproved.example/'
+  }})
+ }};
+ const response=await routeIndependentApp(request('/bible.html'),env);
+ assert.equal(response.status,304);
+ assert.equal(response.headers.get('location'),null);
+ assert.equal(response.headers.get('etag'),'"reviewed-release"');
+ assert.equal(await response.text(),'');
+});
