@@ -1,6 +1,6 @@
 // One hibernating Durable Object per meeting. Media stays browser-to-browser;
 // this service carries admission, chat and WebRTC signalling only.
-const roomClean=(s,n)=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n);
+const roomClean=(s,n)=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u034f\u061c\u180e\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff<>]/g,'').trim().slice(0,n);
 const signalPayloadOk=data=>{if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).length!==1)return false;if(data.sdp){const s=data.sdp;return !!s&&typeof s==='object'&&!Array.isArray(s)&&['offer','answer'].includes(s.type)&&typeof s.sdp==='string'&&s.sdp.length>0&&s.sdp.length<=18000;}if(data.c){const c=data.c;return !!c&&typeof c==='object'&&!Array.isArray(c)&&typeof c.candidate==='string'&&c.candidate.length<=12000;}return false;};
 // TURN is optional: configure TURN_URLS and TURN_SHARED_SECRET for coturn REST auth.
 // Credentials are minted per room and expire automatically; never publish the shared secret.
@@ -9,10 +9,14 @@ async function meetingICE(env, room) {
  const urls=String(env.TURN_URLS||'').split(',').map(u=>u.trim()).filter(u=>/^turns?:[a-z0-9.-]+(?::[0-9]{1,5})?(?:\?transport=(?:udp|tcp))?$/i.test(u)&&!u.includes('..')&&(!u.match(/:(\d{1,5})(?:\?|$)/)||Number(u.match(/:(\d{1,5})(?:\?|$)/)[1])>=1&&Number(u.match(/:(\d{1,5})(?:\?|$)/)[1])<=65535)).slice(0,4);
  if(!urls.length||String(env.TURN_SHARED_SECRET||'').length<32)return ice;
  const username=Math.floor(Date.now()/1000)+3600+':'+room;
- const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.TURN_SHARED_SECRET),{name:'HMAC',hash:'SHA-1'},false,['sign']);
- const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(username)));
- const credential=btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
- ice.push({urls,username,credential});
+ try{
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.TURN_SHARED_SECRET),{name:'HMAC',hash:'SHA-1'},false,['sign']);
+  const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(username)));
+  const credential=btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
+  ice.push({urls,username,credential});
+ }catch{
+  // TURN credential generation is optional: do not abort meeting admission.
+ }
  return ice;
 }
 const capacityForRoom=env=>{const n=Number(env.MEETING_ROOM_CAP);return Number.isFinite(n)&&n>0?Math.max(2,Math.min(100,Math.floor(n))):25;};
@@ -27,7 +31,7 @@ export class MeetingRooms {
  host(){return this.sockets().find(w=>this.data(w).role==='host');}
  guests(){return this.sockets().filter(w=>this.data(w).role==='guest');}
  stage(){return this.guests().filter(w=>this.data(w).stage);}
- async stageAllowed(d,now){try{const i=d.identity;if(!i||i.expires<=now)return false;const u=await getUser(this.env,i.email);return !!u&&!u.banned&&(u.tv||0)===i.version&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,i.email,u)!=='user'||u.terms==='private-approved');}catch{return false;}}
+ async stageAllowed(d,now){try{const i=d.identity;if(!i||typeof i.email!=='string'||i.email.length>254||!Number.isFinite(i.expires)||i.expires<=now)return false;const u=await getUser(this.env,i.email);return i.expires>Date.now()&&!!u&&!u.banned&&(u.tv||0)===i.version&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,i.email,u)!=='user'||u.terms==='private-approved');}catch{return false;}}
  broadcast(m){for(const w of this.sockets()){const d=this.data(w);if(d.role==='host'||d.ok)this.send(w,m);}}
  count(){this.send(this.host(),{t:'count',n:this.guests().filter(w=>this.data(w).aud).length});}
  close(w,m){this.send(w,m);try{w.close(1000,'Meeting closed');}catch{}}
@@ -36,7 +40,7 @@ export class MeetingRooms {
   const url=new URL(request.url);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
   if(request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
-  const roomPath=url.pathname.match(/^\/meeting\/([a-f0-9-]{36})(?:\/room)?\/?$/i);
+  const roomPath=url.pathname.match(/^\/meeting\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(?:\/room)?\/?$/i);
   if(!roomPath||url.search)return new Response('Invalid meeting route',{status:404});
   // Direct browser-to-browser mesh grows quadratically; protect phones and free-tier signalling.
   const capacity=capacityForRoom(this.env);
@@ -51,27 +55,42 @@ export class MeetingRooms {
  }
  async alarm(){
   const host=this.host(),h=host&&this.data(host),now=Date.now();
-  if(h&&h.until<=now)this.end('The meeting time has ended.');
-  for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});}
-  if(this.sockets().length)await this.state.storage.setAlarm(now+60000);
+  if(!host&&this.guests().length){this.end('The host left.');return;}
+  if(h&&h.until<=now){this.end('The meeting time has ended.');return;}
+  for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});if(d.role==='guest'&&d.stage&&!(await this.stageAllowed(d,now))&&w.readyState===1&&this.data(w).stage)this.close(w,{t:'error',msg:'Your stage access has expired. Please sign in again.'});}
+  // Account lookups above may yield past the host deadline. End the room now,
+  // rather than keeping expired sessions active until the next alarm.
+  const currentHost=this.host();
+  if(!currentHost&&this.guests().length){this.end('The host left.');return;}
+  if(currentHost&&this.data(currentHost).until<=Date.now()){this.end('The meeting time has ended.');return;}
+  if(this.sockets().length)await this.state.storage.setAlarm(Date.now()+60000);
  }
  async webSocketMessage(ws,raw){
   if(typeof raw!=='string'||raw.length>20000)return this.close(ws,{t:'error',msg:'Invalid message.'});
-  let m;try{m=JSON.parse(raw);}catch{return;}
-  if(!m||typeof m!=='object'||Array.isArray(m))return;
+  // Count malformed frames too: parsing failures must not bypass the per-socket rate limit.
   const d=this.data(ws),now=Date.now();
   if(now-(d.stampAt||0)>=3000){d.stampAt=now;d.stampN=0;}
   // ICE candidates may arrive in bursts; chat has its own tighter limit below.
   if((d.stampN||0)>=100)return this.close(ws,{t:'error',msg:'Too many messages. Please reconnect.'});
   d.stampN=(d.stampN||0)+1;this.save(ws,d);
+  let m;try{m=JSON.parse(raw);}catch{return;}
+  if(!m||typeof m!=='object'||Array.isArray(m))return;
   if(!d.role){
    if(now>d.until)return this.close(ws,{t:'error',msg:'Please reconnect.'});
    if(m.t==='host'){
-    const a=await check(this.env.AUTH_SECRET,m.token);
-    if(!a||a.k!=='meeting'||a.r!==d.room||!a.u||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
+    if(typeof m.token!=='string'||m.token.length===0||m.token.length>4096)return this.close(ws,{t:'error',msg:'Invalid meeting token.'});
+    let a;try{a=await check(this.env.AUTH_SECRET,m.token);}catch{return this.close(ws,{t:'error',msg:'Unable to verify meeting access.'});}
+    if(!a||a.k!=='meeting'||a.r!==d.room||typeof a.u!=='string'||a.u.length===0||a.u.length>254||!Number.isFinite(a.pe)||a.pe<=Date.now())return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
+    // Authentication may yield; never activate a closed, expired or already-joined socket.
+    if(ws.readyState!==1||this.data(ws).role)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'error',msg:'Please reconnect.'});
     if(this.host())return this.close(ws,{t:'error',msg:'This room already has a host.'});
     Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,now+86400000),locked:false,watch:'',audChat:true,slow:0,admitted:[]});
-    this.save(ws,d);return this.send(ws,{t:'created',room:d.room,key:d.key,ice:await meetingICE(this.env,d.room)});
+    this.save(ws,d);const ice=await meetingICE(this.env,d.room);
+    // TURN credential generation may yield while the host disconnects or expires.
+    if(ws.readyState!==1||this.host()!==ws)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'closed',why:'The meeting has ended.'});
+    return this.send(ws,{t:'created',room:d.room,key:d.key,ice});
    }
    if(m.t==='join'){
     const host=this.host();let h=host&&this.data(host);
@@ -79,18 +98,31 @@ export class MeetingRooms {
     // A login is required to appear on stage; anonymous guests remain audience members.
     let identity=null;
     if(typeof m.accountToken==='string'&&m.accountToken.length<=4096){
-     try{const claim=await check(this.env.AUTH_SECRET,m.accountToken);if(claim&&claim.e&&!claim.k){const u=await getUser(this.env,claim.e);if(u&&!u.banned&&(u.tv||0)===(claim.t||0)&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,claim.e,u)!=='user'||u.terms==='private-approved'))identity={email:claim.e,version:claim.t||0,expires:claim.exp};}}catch{}
+     try{const claim=await check(this.env.AUTH_SECRET,m.accountToken);if(claim&&typeof claim.e==='string'&&claim.e.length>0&&claim.e.length<=254&&!claim.k&&Number.isFinite(claim.exp)&&claim.exp>Date.now()){const u=await getUser(this.env,claim.e);if(claim.exp>Date.now()&&u&&!u.banned&&(u.tv||0)===(claim.t||0)&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,claim.e,u)!=='user'||u.terms==='private-approved'))identity={email:claim.e,version:claim.t||0,expires:claim.exp};}}catch{}
     }
-    // Account checks can yield while the host locks or ends the room.
+    // Account checks can yield while the host locks, ends, or the handshake expires.
     if(ws.readyState!==1||this.data(ws).role)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'error',msg:'Please reconnect.'});
     if(this.host()!==host)return this.close(ws,{t:'error',msg:'This meeting has ended.'});
     h=this.data(host);if(h.until<=Date.now()||m.key!==h.key)return this.close(ws,{t:'error',msg:'This meeting has ended.'});
     const aud=m.aud===true||!identity,guests=this.guests();
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     if(guests.length>=capacityForRoom(this.env)-1||guests.filter(w=>this.data(w).aud===aud).length>=(aud?Math.max(1,capacityForRoom(this.env)-1):Math.min(20,capacityForRoom(this.env)-1)))return this.close(ws,{t:'error',msg:'This room is full.'});
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),pass:roomClean(m.pass,40),identity,ok:aud,aud,stage:false,invited:false,ao:!!m.ao,last:0});
-    if(!aud&&d.pass&&!guests.some(w=>{const x=this.data(w);return x.pass===d.pass&&x.stage;})&&h.admitted.includes(d.pass)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<capacityForStage(this.env)){d.ok=true;d.stage=true;}
-    this.save(ws,d);this.send(ws,{t:'welcome',ice:await meetingICE(this.env,d.room),watch:h.watch,chat:h.audChat,slow:h.slow,stageEligible:!!identity,audience:aud});
+    if(!aud&&d.pass&&!guests.some(w=>{const x=this.data(w);return x.pass===d.pass&&x.stage;})&&h.admitted.some(a=>a&&a.pass===d.pass&&a.email===d.identity.email)&&this.stage().length+guests.filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&Date.now()-x.invitedAt<60000;}).length<capacityForStage(this.env)){d.ok=true;d.stage=true;}
+    this.save(ws,d);const ice=await meetingICE(this.env,d.room);
+    // TURN signing may yield: never admit a disconnected or expired handshake.
+    if(ws.readyState!==1||this.host()!==host)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'error',msg:'Please reconnect.'});
+    h=this.data(host);if(h.until<=Date.now())return this.close(ws,{t:'closed',why:'The meeting has ended.'});
+    if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
+    // TURN signing may outlast a stage account revocation. Revalidate before admission.
+    if(d.identity&&!(await this.stageAllowed(d,Date.now())))return this.close(ws,{t:'error',msg:'Your meeting access expired. Please sign in and rejoin.'});
+    if(ws.readyState!==1||this.host()!==host)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'error',msg:'Please reconnect.'});
+    h=this.data(host);if(h.until<=Date.now())return this.close(ws,{t:'closed',why:'The meeting has ended.'});
+    if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
+    this.send(ws,{t:'welcome',ice,watch:h.watch,chat:h.audChat,slow:h.slow,stageEligible:!!identity,audience:aud});
     if(d.ok)this.send(ws,{t:'admitted'});
     if(aud)this.send(host,{t:'viewer-join',gid:d.id});
     if(d.stage)this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});
@@ -101,13 +133,15 @@ export class MeetingRooms {
   }
   const host=this.host();let h=host&&this.data(host);
   if(!h||h.until<=now){this.end('The meeting has ended.');return;}
+  // Expired stage credentials must not signal or interact while awaiting the next alarm.
+  if(d.role==='guest'&&d.stage&&(!d.identity||!Number.isFinite(d.identity.expires)||d.identity.expires<=now))return this.close(ws,{t:'error',msg:'Your stage access has expired. Please sign in again.'});
   const chat=()=>{const text=typeof m.text==='string'?roomClean(m.text,300):'';if(!text||now-(d.last||0)<800)return;d.last=now;this.save(ws,d);this.broadcast({t:'chat',from:d.id,name:d.role==='host'?'Host':d.name,text});};
   if(d.role==='host'){
    // h and d are separate attachment snapshots. Save room controls through h.
-   if(m.t==='lock'){h.locked=!!m.on;this.save(host,h);}
-   else if(m.t==='watch'){const u=String(m.url||'').trim();h.watch=/^https:\/\/[^\s<>"']{4,200}$/.test(u)?u:'';this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
-   else if(m.t==='audchat'){h.audChat=!!m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
-   else if(m.t==='slow'){h.slow=Math.max(0,Math.min(60,Number(m.sec)||0));this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
+   if(m.t==='lock'&&typeof m.on==='boolean'){h.locked=m.on;this.save(host,h);}
+   else if(m.t==='watch'){const u=String(m.url||'').trim();h.watch='';if(u.length<=200&&!/[\s<>"']/.test(u)){try{const parsed=new URL(u);if(parsed.protocol==='https:'&&parsed.hostname&&parsed.hostname.includes('.')&&!parsed.username&&!parsed.password&&parsed.port!=='0')h.watch=parsed.href;}catch{}}this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
+   else if(m.t==='audchat'&&typeof m.on==='boolean'){h.audChat=m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
+   else if(m.t==='slow'){h.slow=Math.max(0,Math.min(60,Math.floor(typeof m.sec==='number'&&Number.isFinite(m.sec)?m.sec:0)));this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
    else if(m.t==='chat')chat();
    else{
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;let gd=this.data(g);
@@ -115,25 +149,31 @@ export class MeetingRooms {
      if(!await this.stageAllowed(gd,now))return this.send(host,{t:'note',text:'This participant needs to sign in and rejoin before appearing on stage.'});
      if(ws.readyState!==1||g.readyState!==1||this.host()!==host)return;gd=this.data(g);h=this.data(host);if(gd.ok||gd.aud)return;
      if(this.stage().length+this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length>=capacityForStage(this.env))return this.send(host,{t:'note',text:'The stage is full ('+capacityForStage(this.env)+').'});
-     gd.ok=true;gd.stage=true;if(gd.pass&&!h.admitted.includes(gd.pass))h.admitted=h.admitted.concat(gd.pass).slice(-20);
+     gd.ok=true;gd.stage=true;if(gd.pass&&!h.admitted.some(a=>a&&a.pass===gd.pass&&a.email===gd.identity.email))h.admitted=h.admitted.concat({pass:gd.pass,email:gd.identity.email}).slice(-20);
      this.save(host,h);this.save(g,gd);this.send(g,{t:'admitted'});this.send(host,{t:'joined',gid:gd.id,name:gd.name,ao:gd.ao});
     }else if(m.t==='deny')this.close(g,{t:'denied'});
-    else if(m.t==='kick'){h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.close(g,{t:'kick'});}
-    else if(m.t==='mute')this.send(g,{t:'mute',on:!!m.on});
-    else if(m.t==='sig'&&gd.stage&&signalPayloadOk(m.data))this.send(g,{t:'sig',data:m.data});
+    else if(m.t==='kick'){h.admitted=h.admitted.filter(a=>!(a&&a.pass===gd.pass&&a.email===gd.identity?.email));this.save(host,h);this.close(g,{t:'kick'});}
+    else if(m.t==='mute'&&typeof m.on==='boolean')this.send(g,{t:'mute',on:m.on});
+    else if(m.t==='sig'&&gd.stage&&signalPayloadOk(m.data)){if(!await this.stageAllowed(gd,Date.now())){if(g.readyState===1&&this.data(g).stage)this.close(g,{t:'error',msg:'Your stage access has expired. Please sign in again.'});return;}if(ws.readyState===1&&g.readyState===1&&this.host()===host&&this.data(g).stage)this.send(g,{t:'sig',data:m.data});}
     else if(m.t==='view-sig'&&gd.aud&&gd.ok&&signalPayloadOk(m.data))this.send(g,{t:'view-sig',data:m.data});
     else if(m.t==='promote'&&gd.aud&&gd.ok){if(!await this.stageAllowed(gd,now))return this.send(host,{t:'note',text:'This participant needs to sign in and rejoin before appearing on stage.'});if(ws.readyState!==1||g.readyState!==1||this.host()!==host)return;gd=this.data(g);if(!gd.aud||!gd.ok)return;if(gd.invited&&gd.invitedAt&&now-gd.invitedAt<60000)return;const reserved=this.guests().filter(w=>{const x=this.data(w);return x.invited&&x.invitedAt&&now-x.invitedAt<60000;}).length;if(this.stage().length+reserved>=capacityForStage(this.env))return this.send(host,{t:'note',text:'The stage is full ('+capacityForStage(this.env)+').'});gd.invited=true;gd.invitedAt=now;this.save(g,gd);this.send(g,{t:'promoted'});}
-    else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;h.admitted=h.admitted.filter(p=>p!==gd.pass);this.save(host,h);this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.send(host,{t:'viewer-join',gid:gd.id});this.count();}
+    else if(m.t==='demote'&&gd.stage){gd.stage=false;gd.aud=true;gd.invited=false;h.admitted=h.admitted.filter(a=>!(a&&a.pass===gd.pass&&a.email===gd.identity?.email));this.save(host,h);this.save(g,gd);this.send(g,{t:'demoted'});this.send(host,{t:'left',gid:gd.id});this.send(host,{t:'viewer-join',gid:gd.id});this.count();}
    }
   }else if(d.ok){
-   if(m.t==='sig'&&d.stage&&signalPayloadOk(m.data))this.send(host,{t:'sig',from:d.id,data:m.data});
+   // Stage access can be revoked while the socket remains connected. Recheck before
+   // forwarding non-signaling interactions, not only during scheduled alarms.
+   if(d.stage&&['chat','hand','react'].includes(m.t)&&!(await this.stageAllowed(d,Date.now())))return this.close(ws,{t:'error',msg:'Your stage access has expired. Please sign in again.'});
+   // Authorization may yield while a participant is demoted or moved to audience.
+   // Drop the stale action rather than applying the old stage/audience permissions.
+   if(ws.readyState!==1||this.host()!==host||!this.data(ws).ok||this.data(ws).stage!==d.stage||this.data(ws).aud!==d.aud)return;
+   if(m.t==='sig'&&d.stage&&signalPayloadOk(m.data)){if(!await this.stageAllowed(d,Date.now())){if(ws.readyState===1&&this.data(ws).stage)this.close(ws,{t:'error',msg:'Your stage access has expired. Please sign in again.'});return;}if(ws.readyState===1&&this.host()===host&&this.data(ws).stage)this.send(host,{t:'sig',from:d.id,data:m.data});}
    else if(m.t==='view-sig'&&d.aud&&signalPayloadOk(m.data))this.send(host,{t:'view-sig',from:d.id,data:m.data});
-   else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt>=60000){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});}else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt<60000){if(!await this.stageAllowed(d,now)||this.stage().length>=capacityForStage(this.env)){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});return}if(ws.readyState!==1||this.host()!==host)return;const current=this.data(ws);if(!current.aud||!current.invited||current.invitedAt!==d.invitedAt)return;h=this.data(host);this.send(ws,{t:'viewer-end'});this.send(host,{t:'viewer-left',gid:d.id});d.invited=false;d.invitedAt=0;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.includes(d.pass)){h.admitted=h.admitted.concat(d.pass).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
+   else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt>=60000){d.invited=false;d.invitedAt=0;this.save(ws,d);this.send(ws,{t:'invitation-expired'});}else if(m.t==='ready'&&d.invited&&d.invitedAt&&now-d.invitedAt<60000){if(!await this.stageAllowed(d,Date.now())||this.stage().length>=capacityForStage(this.env)){if(ws.readyState!==1||this.host()!==host)return;const current=this.data(ws);if(!current.aud||!current.invited||current.invitedAt!==d.invitedAt)return;current.invited=false;current.invitedAt=0;this.save(ws,current);this.send(ws,{t:'invitation-expired'});return}if(ws.readyState!==1||this.host()!==host)return;const current=this.data(ws);if(!current.aud||!current.invited||current.invitedAt!==d.invitedAt)return;if(Date.now()-current.invitedAt>=60000){current.invited=false;current.invitedAt=0;this.save(ws,current);this.send(ws,{t:'invitation-expired'});return;}h=this.data(host);this.send(ws,{t:'viewer-end'});this.send(host,{t:'viewer-left',gid:d.id});d.invited=false;d.invitedAt=0;d.aud=false;d.stage=true;d.ao=!!m.ao;if(d.pass&&!h.admitted.some(a=>a&&a.pass===d.pass&&a.email===d.identity.email)){h.admitted=h.admitted.concat({pass:d.pass,email:d.identity.email}).slice(-20);this.save(host,h)}this.save(ws,d);this.send(host,{t:'joined',gid:d.id,name:d.name,ao:d.ao});this.count();}
    else if(m.t==='chat'){
     if(d.aud&&!h.audChat)return this.send(ws,{t:'note',text:'The host turned audience chat off.'});
     if(d.aud&&now-d.last<h.slow*1000)return this.send(ws,{t:'note',text:'Slow mode is on. Please wait a moment.'});chat();
-   }else if(m.t==='hand')this.send(host,{t:'hand',from:d.id,name:d.name,on:!!m.on,aud:d.aud});
-   else if(m.t==='react'&&now-(d.reacted||0)>800){d.reacted=now;this.save(ws,d);this.send(host,{t:'react',from:d.id,emoji:roomClean(m.emoji,4)});}
+   }else if(m.t==='hand'&&typeof m.on==='boolean'&&now-(d.handAt||0)>=800){d.handAt=now;this.save(ws,d);this.send(host,{t:'hand',from:d.id,name:d.name,on:!!m.on,aud:d.aud});}
+   else if(m.t==='react'&&now-(d.reacted||0)>800){if(!['❤️','👏','🙏'].includes(m.emoji))return;d.reacted=now;this.save(ws,d);this.broadcast({t:'react',from:d.id,emoji:m.emoji});}
   }
  }
  webSocketClose(ws){const d=this.data(ws);if(d.role==='host')this.end('The host left.');else if(d.role==='guest'){this.send(this.host(),{t:'left',gid:d.id});this.count();}}

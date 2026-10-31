@@ -67,6 +67,8 @@ input[type=text]{flex:1;min-width:150px}
 <button data-e="&#128079;" aria-label="Clap">&#128079;</button><button data-e="&#128591;" aria-label="Thank you">&#128591;</button><button data-e="&#10084;&#65039;" aria-label="Heart">&#10084;&#65039;</button>
 <button class="end" id="leave">Leave</button></div>
 <p class="mu" id="nt" role="status"></p>
+<div id="live-reactions" aria-hidden="true" style="position:fixed;right:12px;bottom:85px;width:72px;height:190px;overflow:hidden;pointer-events:none;z-index:50"></div>
+<style>@keyframes meetingReactionFloat{from{transform:translateY(35px);opacity:1}to{transform:translateY(-130px);opacity:0}}.meeting-reaction{position:absolute;bottom:0;right:20px;font-size:28px;animation:meetingReactionFloat 1.7s ease-out forwards}@media(prefers-reduced-motion:reduce){.meeting-reaction{animation:none}}</style>
 <div id="cl" aria-live="polite"></div>
 <div class="row"><input type="text" id="ct" maxlength="300" placeholder="Type a message" aria-label="Chat message"><button id="cs">Send</button></div>
 </section>
@@ -126,6 +128,13 @@ function setWatch(u){const w=$('wb');w.textContent='';if(!u)return;
  if(m){const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+m[1]+'?playsinline=1';f.allow='autoplay; encrypted-media; picture-in-picture';f.title='Live broadcast';f.referrerPolicy='strict-origin-when-cross-origin';w.appendChild(f)}
  else{const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Watch the live broadcast';w.appendChild(a)}}
 
+function showMeetingReaction(emoji){
+ if(!['❤️','👏','🙏'].includes(emoji))return;
+ const layer=$('live-reactions');if(!layer)return;
+ const el=document.createElement('span');el.className='meeting-reaction';el.textContent=emoji;layer.appendChild(el);
+ while(layer.children.length>10)layer.firstChild.remove();
+ el.addEventListener('animationend',()=>el.remove(),{once:true});setTimeout(()=>el.remove(),2000);
+}
 function onMsg(m){switch(m.t){
  case 'welcome':clearTimeout(joinAckTimer);joinAckTimer=null;ice=m.ice||[];if(m.audience&&!m.stageEligible){AUD=true;onStage=false;stopLocal()}setWatch(m.watch);break;
  case 'admitted':tries=0;connecting=false;joined=true;show('live');mode(!AUD||onStage);if(AUD&&!onStage)note(accountToken?'You joined the audience.':'You joined without signing in. Sign in and rejoin to appear on screen.');break;
@@ -135,6 +144,7 @@ function onMsg(m){switch(m.t){
  case 'error':end(m.msg||'Could not join.');break;
  case 'mute':if(local)setMic(false);note('The host muted your microphone. Tap Unmute when you are asked to speak.');break;
  case 'chat':addChat(m.name,m.text);break;
+ case 'react':showMeetingReaction(m.emoji);break;
  case 'note':note(m.text);break;
  case 'watch':setWatch(m.url);break;
  case 'audchat':note(m.on?'Audience chat is on.':'The host turned audience chat off.');break;

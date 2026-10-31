@@ -14,7 +14,7 @@ function setup(userOverrides = {}) {
     crypto: { subtle:webcrypto.subtle, getRandomValues:a=>webcrypto.getRandomValues(a), randomUUID },
     btoa:s=>Buffer.from(s,'binary').toString('base64'),
     hex: b=>Buffer.from(b).toString('hex'),
-    check: async (_secret,token) => token === 'valid' ? { e:'member@example.com', t:2, exp:now+60000 } : token === 'purpose' ? {e:'member@example.com',k:'verify',t:2,exp:now+60000} : null,
+    check: async (_secret,token) => token === 'valid' ? { e:'member@example.com', t:2, exp:now+60000 } : token === 'other-valid' ? { e:'other@example.com', t:2, exp:now+60000 } : token === 'expired' ? {e:'member@example.com',t:2,exp:now-1000} : token === 'missing-exp' ? {e:'member@example.com',t:2} : token === 'purpose' ? {e:'member@example.com',k:'verify',t:2,exp:now+60000} : null,
     getUser: async (_env,email) => users[email] || null,
     accountRole: (_env,_email,u) => u.role
   };
@@ -30,7 +30,7 @@ function setup(userOverrides = {}) {
   const host=new Socket({role:'host',room,key:'invite',until:now+60000,admitted:[],locked:false,audChat:true,slow:0});
   const guest=new Socket({role:'',room,until:now+15000});
   const sockets=[host,guest];
-  const r=new Room({getWebSockets:()=>sockets}, {AUTH_SECRET:'secret',MEETINGSPACE_PRIVATE_PREVIEW:'0'});
+  const r=new Room({getWebSockets:()=>sockets,storage:{setAlarm:async()=>{}}}, {AUTH_SECRET:'secret',MEETINGSPACE_PRIVATE_PREVIEW:'0'});
   const join = token => r.webSocketMessage(guest,JSON.stringify({t:'join',room,key:'invite',name:'Guest',pass:'pass',aud:false,accountToken:token}));
   return {r,host,guest,join,users,context,add(){const w=new Socket({role:'',room,until:Date.now()+15000});sockets.push(w);return w;}};
 }
@@ -218,4 +218,605 @@ test('failed viewer connection is retried and stopping removes the peer', async(
  assert.equal(context.viewers.size,0);
  assert.equal(peers[1].connectionState,'closed');
  assert.equal(signals.filter(m=>m.t==='view-sig').length,2);
+});
+
+test('room alarm removes a stage participant after account revocation', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  h.users['member@example.com'].tv=3;
+  await h.r.alarm();
+  assert.equal(h.guest.readyState,3);
+  assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
+
+test('room alarm removes a stage participant after identity expiry', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  h.guest.attachment.identity.expires=Date.now()-1000;
+  await h.r.alarm();
+  assert.equal(h.guest.readyState,3);
+  assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
+
+test('expired or malformed account tokens cannot enter the meeting stage', async()=>{
+  for(const token of ['expired','missing-exp']){
+    const h=setup();await h.join(token);
+    assert.equal(h.guest.attachment.aud,true);
+    assert.equal(h.guest.attachment.identity,null);
+    await h.r.webSocketMessage(h.host,JSON.stringify({t:'promote',gid:h.guest.attachment.id}));
+    assert.equal(h.guest.attachment.stage,false);
+  }
+});
+
+test('room alarm removes banned and deleted accounts from stage', async()=>{
+  for(const action of ['ban','delete']){
+    const h=setup();await h.join('valid');
+    await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+    assert.equal(h.guest.attachment.stage,true);
+    if(action==='ban')h.users['member@example.com'].banned=true;
+    else delete h.users['member@example.com'];
+    await h.r.alarm();
+    assert.equal(h.guest.readyState,3);
+    assert.match(h.guest.messages.at(-1).msg,/expired/i);
+  }
+});
+
+test('room alarm rejects malformed stage identity expiry', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  delete h.guest.attachment.identity.expires;
+  await h.r.alarm();
+  assert.equal(h.guest.readyState,3);
+});
+
+test('expired meeting closes sockets without rearming the room alarm', async()=>{
+  const h=setup();
+  h.host.attachment.until=Date.now()-1000;
+  let alarms=0;
+  h.r.state.storage.setAlarm=async()=>{alarms++;};
+  await h.r.alarm();
+  assert.equal(h.host.readyState,3);
+  assert.equal(h.guest.readyState,3);
+  assert.equal(alarms,0);
+});
+
+test('host rejects malformed or oversized tokens before authentication', async()=>{
+  for(const token of [null,42,'','x'.repeat(4097)]){
+    const h=setup();
+    const incoming=h.add();let checks=0;
+    h.context.check=async()=>{checks++;return null;};
+    await h.r.webSocketMessage(incoming,JSON.stringify({t:'host',token}));
+    assert.equal(incoming.readyState,3);
+    assert.equal(checks,0);
+    assert.match(incoming.messages.at(-1).msg,/invalid meeting token/i);
+  }
+});
+
+test('expired stage cannot send signaling or chat before alarm fires', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  h.guest.attachment.identity.expires=Date.now()-1000;
+  const before=h.host.messages.length;
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}}));
+  assert.equal(h.guest.readyState,3);
+  assert.equal(h.host.messages.length,before);
+  assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
+
+test('host cannot deliver a WebRTC offer to an expired stage connection', async()=>{
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  assert.equal(h.guest.attachment.stage,true);
+  h.guest.attachment.identity.expires=Date.now()-1000;
+  const count=h.guest.messages.filter(m=>m.t==='sig').length;
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'sig',gid:h.guest.attachment.id,data:{sdp:{type:'offer',sdp:'v=0'}}}));
+  assert.equal(h.guest.readyState,3);
+  assert.equal(h.guest.messages.filter(m=>m.t==='sig').length,count);
+  assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
+
+test('host live reactions have a counter, bounded animation and reduced-motion support',()=>{
+ const html=fs.readFileSync(require('node:path').join(__dirname,'../site/index.html'),'utf8');
+ assert.match(html,/id="greactions"/);
+ assert.match(html,/id="greaction-layer"/);
+ assert.match(html,/function showLiveReaction\(emoji\)/);
+ assert.match(html,/while\(layer.children.length>12\)/);
+ assert.match(html,/prefers-reduced-motion:reduce/);
+ assert.match(html,/showLiveReaction\(m.emoji\)/);
+});
+
+test('reactions reach admitted viewers and host, not pending connections', async()=>{
+ const h=setup();await h.join('');const pending=h.add();
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji:'❤️'}));
+ assert.ok(h.host.messages.some(m=>m.t==='react'&&m.emoji==='❤️'));
+ assert.ok(h.guest.messages.some(m=>m.t==='react'&&m.emoji==='❤️'));
+ assert.equal(pending.messages.some(m=>m.t==='react'),false);
+});
+test('audience live reaction display bounds animation and sanitizes emoji',()=>{
+ const html=fs.readFileSync(require('node:path').join(__dirname,'../site/join.html'),'utf8');
+ assert.match(html,/function showMeetingReaction\(emoji\)/);
+ assert.match(html,/while\(layer.children.length>10\)/);
+ assert.match(html,/case 'react':showMeetingReaction\(m.emoji\)/);
+ assert.match(html,/prefers-reduced-motion:reduce/);
+});
+
+test('revoked stage account cannot send WebRTC signaling before scheduled alarm',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ h.users['member@example.com'].tv=3;
+ const count=h.host.messages.filter(m=>m.t==='sig').length;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}}));
+ assert.equal(h.guest.readyState,3);
+ assert.equal(h.host.messages.filter(m=>m.t==='sig').length,count);
+});
+test('host cannot signal to a banned stage participant before scheduled alarm',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ h.users['member@example.com'].banned=true;
+ const count=h.guest.messages.filter(m=>m.t==='sig').length;
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'sig',gid:h.guest.attachment.id,data:{sdp:{type:'offer',sdp:'v=0'}}}));
+ assert.equal(h.guest.readyState,3);
+ assert.equal(h.guest.messages.filter(m=>m.t==='sig').length,count);
+});
+
+test('unsupported live reaction values are not broadcast',async()=>{
+ const h=setup();await h.join('');
+ const before=h.host.messages.filter(m=>m.t==='react').length;
+ for(const emoji of ['<script>','🔥','',42,'❤️❤️']){
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji}));
+ }
+ assert.equal(h.host.messages.filter(m=>m.t==='react').length,before);
+});
+
+test('same-account reconnect can reclaim stage only with matching reconnect secret',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ const next=h.add();await h.r.webSocketMessage(next,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Returning guest',pass:'pass',aud:false,accountToken:'valid'}));
+ assert.equal(next.attachment.stage,false,'a concurrent duplicate must not auto-admit');
+ h.guest.close();
+ const returning=h.add();await h.r.webSocketMessage(returning,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Returning guest',pass:'pass',aud:false,accountToken:'valid'}));
+ assert.equal(returning.attachment.stage,true,'same identity and secret can reconnect');
+});
+test('stage reconnect secret does not authorize a different signed-in account',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ h.guest.close();
+ h.users['other@example.com']={tv:2,banned:false,role:'user'};
+ const other=h.add();
+ await h.r.webSocketMessage(other,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Other user',pass:'pass',aud:false,accountToken:'other-valid'}));
+ assert.equal(other.attachment.stage,false,'another signed-in user cannot inherit stage');
+ assert.equal(other.attachment.aud,false,'different signed-in account remains in waiting room');
+ const admitted=h.host.attachment.admitted;
+ assert.ok(admitted.every(a=>a&&a.email==='member@example.com'&&a.pass==='pass'));
+});
+
+test('stage permissions are checked again before interactive messages',async()=>{
+ for(const message of [{t:'chat',text:'blocked'},{t:'hand',on:true},{t:'react',emoji:'❤️'}]){
+  const h=setup();await h.join('valid');
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+  h.users['member@example.com'].tv=3;
+  const before=h.host.messages.length;
+  await h.r.webSocketMessage(h.guest,JSON.stringify(message));
+  assert.equal(h.guest.readyState,3);
+  assert.equal(h.host.messages.length,before);
+ }
+});
+
+test('invalid reactions do not consume the valid reaction cooldown',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji:'invalid'}));
+ assert.equal(h.guest.attachment.reacted||0,0);
+ const before=h.host.messages.filter(m=>m.t==='react').length;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji:'👏'}));
+ assert.equal(h.host.messages.filter(m=>m.t==='react').length,before+1);
+});
+
+test('participant display names strip invisible direction controls',async()=>{
+ const h=setup();await h.join('');
+ const another=h.add();
+ await h.r.webSocketMessage(another,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Safe\u202eName\u200b',pass:'other',aud:true}));
+ assert.equal(another.attachment.name,'SafeName');
+});
+
+test('meeting watch links reject URL credentials',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url:'https://user:pass@example.com/video'}));
+ assert.equal(h.host.attachment.watch,'');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url:'https://example.com/video'}));
+ assert.equal(h.host.attachment.watch,'https://example.com/video');
+});
+
+test('host chat preserves meeting controls in the socket attachment',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'audchat',on:false}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'chat',text:'Welcome everyone'}));
+ assert.equal(h.host.attachment.locked,true);
+ assert.equal(h.host.attachment.audChat,false);
+ assert.ok(h.guest.messages.some(m=>m.t==='chat'&&m.text==='Welcome everyone'));
+});
+
+test('malformed meeting identifiers are rejected before WebSocket upgrade',async()=>{
+ const h=setup();
+ for(const path of ['/meeting/------------------------------------','/meeting/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','/meeting/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa-']){
+  const response=await h.r.fetch(new Request('https://example.com'+path,{headers:{upgrade:'websocket',origin:'https://example.com'}}));
+  assert.equal(response.status,404,path);
+ }
+});
+
+test('rapid hand-raise updates are throttled without closing the guest',async()=>{
+ const h=setup();await h.join('');
+ const before=h.host.messages.filter(m=>m.t==='hand').length;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'hand',on:true}));
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'hand',on:false}));
+ assert.equal(h.host.messages.filter(m=>m.t==='hand').length,before+1);
+ assert.equal(h.guest.readyState,1);
+});
+
+test('host chat cooldown persists without resetting meeting controls',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'chat',text:'First'}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'chat',text:'Second'}));
+ assert.equal(h.host.messages.filter(m=>m.t==='chat'&&['First','Second'].includes(m.text)).length,1);
+ assert.equal(h.host.attachment.locked,true);
+ assert.ok(h.host.attachment.last>0);
+});
+
+test('chat strips additional invisible Unicode formatting controls',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'chat',text:'A\u061cB\u206aC\u034fD'}));
+ assert.ok(h.host.messages.some(m=>m.t==='chat'&&m.text==='ABCD'));
+});
+
+test('slow mode accepts only finite integer seconds',async()=>{
+ const h=setup();await h.join('');
+ for(const [sec,expected] of [[1.8,1],[-4,0],[999,60],['Infinity',0],['not-a-number',0],['5',0],[[5],0],[true,0]]){
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'slow',sec}));
+  assert.equal(h.host.attachment.slow,expected);
+ }
+});
+
+test('watch links reject malformed and non-HTTPS destinations',async()=>{
+ const h=setup();await h.join('');
+ for(const url of ['https://not-a-valid-host','https://user:pass@example.com/video','https://example.com:0/video','javascript:alert(1)','https://example.com/space here']){
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url}));
+  assert.equal(h.host.attachment.watch,'',url);
+ }
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'watch',url:'https://example.com/video'}));
+ assert.equal(h.host.attachment.watch,'https://example.com/video');
+});
+
+test('malformed WebSocket frames count toward per-connection rate limit',async()=>{
+ const h=setup();await h.join('');
+ for(let i=0;i<101&&h.guest.readyState===1;i++)await h.r.webSocketMessage(h.guest,'{not-json');
+ assert.notEqual(h.guest.readyState,1);
+});
+
+test('host moderation rejects invalid switch values',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:'false'}));
+ assert.equal(h.host.attachment.locked,true);
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'audchat',on:false}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'audchat',on:'true'}));
+ assert.equal(h.host.attachment.audChat,false);
+});
+
+test('hand raise rejects nonboolean state without consuming cooldown',async()=>{
+ const h=setup();await h.join('');
+ const before=h.host.messages.filter(m=>m.t==='hand').length;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'hand',on:'false'}));
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'hand',on:true}));
+ const hands=h.host.messages.filter(m=>m.t==='hand').slice(before);
+ assert.equal(hands.length,1);
+ assert.equal(hands[0].on,true);
+});
+
+test('moderator mute accepts only boolean states',async()=>{
+ const h=setup();await h.join('');
+ const before=h.guest.messages.filter(m=>m.t==='mute').length;
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'mute',gid:h.guest.attachment.id,on:'false'}));
+ assert.equal(h.guest.messages.filter(m=>m.t==='mute').length,before);
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'mute',gid:h.guest.attachment.id,on:true}));
+ assert.equal(h.guest.messages.filter(m=>m.t==='mute').length,before+1);
+});
+
+test('oversized verified identity is not attached to a meeting socket',async()=>{
+ const h=setup();
+ h.context.check=async()=>({e:'x'.repeat(255),t:2,exp:Date.now()+60000});
+ h.context.getUser=async()=>({tv:2,banned:false,role:'user'});
+ await h.join('valid');
+ assert.equal(h.guest.attachment.identity,null);
+ assert.equal(h.guest.attachment.aud,true);
+ assert.equal(await h.r.stageAllowed({identity:{email:'x'.repeat(255),version:2,expires:Date.now()+60000}},Date.now()),false);
+});
+
+test('host token identity must be a bounded string',async()=>{
+ const h=setup();
+ h.host.close();
+ const newHost=h.add();
+ const room=h.guest.attachment.room;
+ h.context.check=async()=>({k:'meeting',r:room,u:'x'.repeat(255),pe:Date.now()+60000});
+ await h.r.webSocketMessage(newHost,JSON.stringify({t:'host',token:'host-valid'}));
+ assert.notEqual(newHost.attachment.role,'host');
+ assert.notEqual(newHost.readyState,1);
+});
+
+test('closed host socket cannot be activated after asynchronous token check',async()=>{
+ const h=setup();h.host.close();
+ const ws=h.add();let release;
+ const room=ws.attachment.room;
+ h.context.check=()=>new Promise(resolve=>{release=()=>resolve({k:'meeting',r:room,u:'host@example.com',pe:Date.now()+60000});});
+ const pending=h.r.webSocketMessage(ws,JSON.stringify({t:'host',token:'valid-host'}));
+ ws.close();release();await pending;
+ assert.notEqual(ws.attachment.role,'host');
+ assert.equal(h.r.host(),undefined);
+});
+
+test('host authentication verifier failure closes socket safely',async()=>{
+ const h=setup();h.host.close();
+ const ws=h.add();
+ h.context.check=async()=>{throw new Error('Temporary verifier failure');};
+ await h.r.webSocketMessage(ws,JSON.stringify({t:'host',token:'valid-host'}));
+ assert.notEqual(ws.readyState,1);
+ assert.notEqual(ws.attachment.role,'host');
+ assert.ok(ws.messages.some(m=>m.t==='error'));
+});
+
+test('meeting admission survives optional TURN credential signing failure',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ h.context.crypto.subtle={importKey:async()=>{throw new Error('TURN signing unavailable');}};
+ await h.join('valid');
+ const welcome=h.guest.messages.find(m=>m.t==='welcome');
+ assert.ok(welcome);
+ assert.equal(welcome.ice.length,1);
+ assert.match(welcome.ice[0].urls,/^stun:/);
+ assert.equal(h.guest.readyState,1);
+});
+
+test('meeting identity expiration is rechecked after asynchronous account lookup',async()=>{
+ const h=setup();
+ h.context.check=async()=>({e:'member@example.com',t:2,exp:Date.now()+10});
+ h.context.getUser=async()=>{await new Promise(resolve=>setTimeout(resolve,35));return {tv:2,banned:false,role:'user'};};
+ await h.join('valid');
+ assert.equal(h.guest.attachment.identity,null);
+ assert.equal(h.guest.attachment.aud,true);
+ const earlier=Date.now();
+ const allowed=await h.r.stageAllowed({identity:{email:'member@example.com',version:2,expires:earlier+10}},earlier);
+ assert.equal(allowed,false);
+});
+
+test('disconnected guest is not announced after slow TURN credential generation',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');
+ await reached;
+ h.guest.close();
+ release({});
+ await pending;
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
+});
+
+test('host lock during delayed TURN credential signing prevents guest admission',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');
+ await reached;
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+ release({});await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'),false);
+});
+
+test('stage token expiring during TURN signing cannot finish admission',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ h.context.check=async()=>({e:'member@example.com',t:2,exp:Date.now()+25});
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');
+ await reached;
+ await new Promise(resolve=>setTimeout(resolve,40));
+ release({});await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'),false);
+});
+
+test('disconnected host receives no creation acknowledgement after slow TURN signing',async()=>{
+ const h=setup();h.host.close();
+ const ws=h.add();const room=ws.attachment.room;
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ h.context.check=async()=>({k:'meeting',r:room,u:'host@example.com',pe:Date.now()+60000});
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.r.webSocketMessage(ws,JSON.stringify({t:'host',token:'valid-host'}));
+ await reached;ws.close();release({});await pending;
+ assert.equal(ws.messages.some(m=>m.t==='created'),false);
+ assert.equal(h.r.host(),undefined);
+});
+
+test('expired guest handshake cannot join after delayed account verification',async()=>{
+ const h=setup();
+ h.guest.attachment.until=Date.now()+10;
+ h.context.check=async()=>{await new Promise(resolve=>setTimeout(resolve,35));return {e:'member@example.com',t:2,exp:Date.now()+60000};};
+ await h.join('valid');
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
+});
+
+test('expired host handshake cannot create room after delayed token verification',async()=>{
+ const h=setup();h.host.close();
+ const ws=h.add();const room=ws.attachment.room;
+ ws.attachment.until=Date.now()+10;
+ h.context.check=async()=>{await new Promise(resolve=>setTimeout(resolve,35));return {k:'meeting',r:room,u:'host@example.com',pe:Date.now()+60000};};
+ await h.r.webSocketMessage(ws,JSON.stringify({t:'host',token:'valid-host'}));
+ assert.notEqual(ws.readyState,1);
+ assert.notEqual(ws.attachment.role,'host');
+ assert.equal(ws.messages.some(m=>m.t==='created'),false);
+ assert.equal(h.r.host(),undefined);
+});
+
+test('stage alarm does not disconnect guest demoted during delayed identity check',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ assert.equal(h.guest.attachment.stage,true);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(false);started();});
+ const pending=h.r.alarm();await reached;
+ h.guest.attachment.stage=false;h.guest.attachment.aud=true;
+ release();await pending;
+ assert.equal(h.guest.readyState,1);
+ assert.equal(h.guest.attachment.stage,false);
+});
+
+test('meeting expiration during delayed alarm verification closes every participant',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ assert.equal(h.guest.attachment.stage,true);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
+ const pending=h.r.alarm();await reached;
+ h.host.attachment.until=Date.now()-1;
+ release();await pending;
+ assert.notEqual(h.host.readyState,1);
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='closed'),true);
+});
+
+test('alarm closes orphaned guest when host connection is missing',async()=>{
+ const h=setup();await h.join('valid');
+ h.host.close();
+ await h.r.alarm();
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='closed'&&m.why==='The host left.'),true);
+});
+
+test('alarm closes guests when host disappears during async stage check',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
+ const pending=h.r.alarm();await reached;
+ h.host.close();release();await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='closed'&&m.why==='The host left.'),true);
+});
+
+test('guest handshake expiring during TURN signing cannot receive welcome',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ h.guest.attachment.until=Date.now()+10;
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');await reached;
+ await new Promise(resolve=>setTimeout(resolve,35));
+ release({});await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
+});
+
+test('revoked stage identity during TURN signing cannot enter meeting',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');await reached;
+ h.r.stageAllowed=async()=>false;
+ release({});await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
+});
+
+test('delayed host signaling authorization does not kick a demoted guest',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(false);started();});
+ const pending=h.r.webSocketMessage(h.host,JSON.stringify({t:'sig',gid:h.guest.attachment.id,data:{c:{candidate:'candidate'}}}));
+ await reached;
+ h.guest.attachment.stage=false;h.guest.attachment.aud=true;
+ release();await pending;
+ assert.equal(h.guest.readyState,1);
+ assert.equal(h.guest.attachment.stage,false);
+ assert.equal(h.guest.messages.some(m=>m.t==='error'),false);
+});
+
+test('delayed guest signaling authorization does not kick demoted participant',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(false);started();});
+ const pending=h.r.webSocketMessage(h.guest,JSON.stringify({t:'sig',data:{c:{candidate:'candidate'}}}));
+ await reached;
+ h.guest.attachment.stage=false;h.guest.attachment.aud=true;
+ release();await pending;
+ assert.equal(h.guest.readyState,1);
+ assert.equal(h.guest.attachment.stage,false);
+ assert.equal(h.host.messages.some(m=>m.t==='sig'),false);
+});
+
+test('delayed stage chat cannot bypass audience chat restriction after demotion',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'audchat',on:false}));
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
+ const pending=h.r.webSocketMessage(h.guest,JSON.stringify({t:'chat',text:'stale-stage-message'}));
+ await reached;
+ h.guest.attachment.stage=false;h.guest.attachment.aud=true;
+ release();await pending;
+ assert.equal(h.host.messages.some(m=>m.t==='chat'&&m.text==='stale-stage-message'),false);
+ assert.equal(h.guest.readyState,1);
+});
+
+test('stage invitation expiring during async authorization is not accepted',async()=>{
+ const h=setup();const room=h.guest.attachment.room;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'join',room,key:'invite',name:'Member',aud:true,accountToken:'valid'}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'promote',gid:h.guest.attachment.id}));
+ assert.equal(h.guest.attachment.invited,true);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
+ const pending=h.r.webSocketMessage(h.guest,JSON.stringify({t:'ready'}));
+ await reached;
+ h.context.Date={now:()=>Date.now()+61000};
+ release();await pending;
+ assert.equal(h.guest.attachment.stage,false);
+ assert.equal(h.guest.attachment.aud,true);
+ assert.equal(h.guest.messages.some(m=>m.t==='invitation-expired'),true);
 });

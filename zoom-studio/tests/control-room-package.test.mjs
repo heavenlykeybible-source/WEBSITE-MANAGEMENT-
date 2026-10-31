@@ -269,12 +269,12 @@ test('pending audience promotions reserve stage capacity',async()=>{
 test('promoted audience reconnects as an admitted speaker and demotion revokes the shortcut',async()=>{
  const s=await openRoom(),g=s.add();await message(s.room,g,{t:'join',room:s.host.d.room,key:s.key,aud:true,pass:'persistent-viewer'});
  await message(s.room,s.host,{t:'promote',gid:g.d.id});await message(s.room,g,{t:'ready',ao:true});
- assert.equal(g.d.stage,true);assert.ok(s.host.d.admitted.includes('persistent-viewer'));
+ assert.equal(g.d.stage,true);assert.ok(s.host.d.admitted.some(a=>a?.pass==='persistent-viewer'&&a.email===g.d.identity.email));
  g.readyState=3;s.room.webSocketClose(g);
  const reconnect=s.add();await message(s.room,reconnect,{t:'join',room:s.host.d.room,key:s.key,aud:false,pass:'persistent-viewer'});
  assert.equal(reconnect.d.stage,true);
  await message(s.room,s.host,{t:'demote',gid:reconnect.d.id});
- assert.equal(reconnect.d.stage,false);assert.ok(!s.host.d.admitted.includes('persistent-viewer'));
+ assert.equal(reconnect.d.stage,false);assert.ok(!s.host.d.admitted.some(a=>a?.pass==='persistent-viewer'&&a.email===g.d.identity.email));
 });
 test('empty and malformed meeting chat never reaches participants',async()=>{
  const s=await openRoom(),guest=s.add();
