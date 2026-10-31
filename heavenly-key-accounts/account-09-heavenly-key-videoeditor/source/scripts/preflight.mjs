@@ -2,6 +2,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 const required = ['index.html','_headers','public/index.html','public/_headers','schema.sql','wrangler.toml','functions/api/[[path]].js','tests/be.mjs'];
 for (const path of required) if (!existsSync(path)) throw Error(`Missing ${path}`);
+const staticHeaders=readFileSync('_headers','utf8');
+const deployHeaders=readFileSync('public/_headers','utf8');
+if(staticHeaders!==deployHeaders) throw Error('Security header configurations must match');
+if(!deployHeaders.includes("manifest-src 'self'")) throw Error('Manifest source policy missing');
+
 for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 const apiSource=readFileSync('functions/api/[[path]].js','utf8');
 if ((apiSource.match(/match\(\/\(\?:\^\|;\\s\*\)hk=/g)||[]).length!==2 || !apiSource.includes('(?=;|$)/)')) throw Error('Exact session cookie boundary enforcement missing');
