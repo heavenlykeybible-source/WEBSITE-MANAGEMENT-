@@ -13,6 +13,17 @@ async function scenario(mode){
  const winEvents=new Map();let revokedURLs=0;
  const window={MediaRecorder:Recorder,addEventListener:(event,handler)=>winEvents.set(event,handler)};
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){revokedURLs++}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
+ window.hkTimeline.restoreClips([{start:1,end:1.5,speed:1},{start:0,end:1,speed:1},{start:.5,end:1,speed:2}]);
+ node('clipList').value='0';
+ node('clipSort').onclick();
+ assert.deepEqual(window.hkTimeline.getClips().map(c=>c.start),[0,.5,1],'Chronological sort orders by source start time');
+ assert.equal(node('clipList').value,'2','Chronological sort preserves selected clip identity');
+ node('clipUndo').onclick();
+ assert.deepEqual(window.hkTimeline.getClips().map(c=>c.start),[1,0,.5],'Undo restores original clip ordering');
+ node('clipRedo').onclick();
+ assert.deepEqual(window.hkTimeline.getClips().map(c=>c.start),[0,.5,1],'Redo restores sorted order');
+ node('clipSort').onclick();
+ assert.match(node('clipStatus').textContent,/already sorted/,'Sorted timeline avoids unnecessary undo history');
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
  const originalTimeline=JSON.stringify(window.hkTimeline.getClips());
  video.duration=0;
