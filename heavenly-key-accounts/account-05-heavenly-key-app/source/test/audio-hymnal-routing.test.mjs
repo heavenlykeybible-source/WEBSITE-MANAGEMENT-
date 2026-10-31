@@ -178,3 +178,22 @@ test('anonymous public app responses retain reviewed offline cache policy',async
  assert.equal(response.headers.get('cache-control'),'public, max-age=120');
  assert.equal(await response.text(),'Public reader');
 });
+
+test('delegated upstream server errors cannot leak private stack traces or debug headers',async()=>{
+ for(const status of [500,502,503,504]){
+  const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+   fetch:async()=>new Response('Internal secret: database-password=hidden',{status,headers:{
+    'X-HK-App-Service':'bible-reader',
+    'X-Debug-Stack':'private-stack',
+    'Content-Type':'text/html',
+    'Cache-Control':'public, max-age=86400'
+   }})
+  }};
+  const response=await routeIndependentApp(request('/bible.html'),env);
+  assert.equal(response.status,503);
+  assert.equal(response.headers.get('x-debug-stack'),null);
+  assert.equal(response.headers.get('cache-control'),'no-store');
+  const body=await response.text();
+  assert.doesNotMatch(body,/database-password|private-stack|Internal secret/);
+ }
+});
