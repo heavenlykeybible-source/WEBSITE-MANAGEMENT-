@@ -756,3 +756,14 @@ test('scheduled alarm proactively closes stale guests without interrupting curre
  assert.equal(current.readyState,1,'active viewer must stay connected');
  assert.equal(s.host.readyState,1,'active host must stay connected');
 });
+
+test('repeated close and error callbacks notify host only once',async()=>{
+ const s=await openRoom(),guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ guest.readyState=3;
+ s.room.webSocketClose(guest);
+ s.room.webSocketClose(guest);
+ s.room.webSocketError(guest);
+ assert.equal(s.host.messages.filter(m=>m.t==='left'&&m.gid===guest.d.id).length,1);
+ assert.equal(guest.d.closeNotified,true);
+});
