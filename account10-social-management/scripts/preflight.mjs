@@ -23,12 +23,11 @@ const routeBlocks=[...config.matchAll(/\[\[routes\]\]([\s\S]*?)(?=\n\[|$)/g)].ma
 const socialRoutes=routeBlocks.filter(block=>/^pattern\s*=\s*"socialplus\.heavenlykey\.org"\s*$/m.test(block));
 if(socialRoutes.length!==1||!/^custom_domain\s*=\s*true\s*$/m.test(socialRoutes[0]))fail.push('SocialPlus hostname must be configured exactly once as a Custom Domain');
 const migrations=['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql','0010_whatsapp_handover_dedupe.sql','0011_human_request_version.sql','0012_operator_credentials.sql','0013_auth_rate_limits.sql'];
-for(const scriptName of ['db:migrate:local','db:migrate:remote']){
- const script=pkg.scripts[scriptName]||'';
- let prior=-1;
- for(const migration of migrations){const position=script.indexOf(migration);if(position<=prior)fail.push(scriptName+' missing or out of order: '+migration);prior=position;}
+for(const scriptName of ['db:migrate:local','db:migrate:remote','db:init:remote']){
+ if(pkg.scripts[scriptName])fail.push('Unsafe bulk database command must remain disabled: '+scriptName);
 }
-for(const file of ['public/index.html','public/app.js','public/editorial-studio.js','src/index.ts','schema.sql',...migrations.map(name=>'migrations/'+name)]){
+if(!existsSync(resolve(root,'MIGRATION-SAFETY.md')))fail.push('Controlled D1 migration procedure is missing');
+for(const file of ['public/index.html','public/app.js','public/editorial-studio.js','src/index.ts','schema.sql','MIGRATION-SAFETY.md',...migrations.map(name=>'migrations/'+name)]){
  if(!existsSync(resolve(root,file)))fail.push('Missing '+file);
 }
 for(const [name,script] of Object.entries(pkg.scripts)){
