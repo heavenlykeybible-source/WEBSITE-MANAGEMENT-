@@ -130,3 +130,11 @@ test('ASVS/SSDF security register preserves explicit global-launch blockers', ()
  assert.match(register,/independent authenticated penetration testing/);
  assert.ok(existsSync(resolve(root,'SECURITY-VERIFICATION.md')));
 });
+
+
+test('Worker source maps are uploaded privately and required by preflight', () => {
+ assert.match(wrangler,/upload_source_maps\s*=\s*true/);
+ const preflight=readFileSync(resolve(root,'scripts/preflight.mjs'),'utf8');
+ assert.match(preflight,/Private Worker source-map upload/);
+ assert.match(preflight,/upload_source_maps/);
+});
