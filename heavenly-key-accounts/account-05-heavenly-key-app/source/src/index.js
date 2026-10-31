@@ -23,7 +23,7 @@ async function publicCommunity(request, env, upstreamFetch) {
     const upstream=await upstreamFetch("https://heavenly-key-global-community.heavenlykeyglobal-cd095c09.workers.dev"+COMMUNITY_READS[url.pathname],{
       method:"GET",headers:{Accept:"application/json"},redirect:"manual",credentials:"omit",cache:"no-store",signal:controller.signal
     });
-    if(!upstream.ok||!(upstream.headers.get("content-type")||"").includes("application/json"))throw new Error("Unavailable");
+    if(upstream.status!==200||upstream.headers.has("content-range")||!/^application\/json(?:\s*;|\s*$)/i.test(upstream.headers.get("content-type")||""))throw new Error("Unavailable");
     const reader=upstream.body?.getReader();if(!reader)throw new Error("Empty");
     let total=0;const chunks=[];
     try{while(true){const {value,done}=await reader.read();if(done)break;total+=value.length;if(total>262144){await reader.cancel();throw new Error("Too large");}chunks.push(value);}}finally{reader.releaseLock();}
