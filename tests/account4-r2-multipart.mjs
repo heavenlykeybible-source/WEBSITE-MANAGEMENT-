@@ -15,6 +15,12 @@ const bucket={
 bucket.delete=async key=>{deleted.push(key)};
 const session=await beginPrivateImport(bucket,actor,{name:'backup.zip',size:11});
 assert.equal(session.state,'uploading');
+for (const invalidActor of [null, {}, {id:7,authenticated:true}, {id:7,canImport:true}, {...actor,id:0}, {...actor,id:-1}, {...actor,id:'7'}]) {
+  await assert.rejects(beginPrivateImport(bucket,invalidActor,{name:'backup.zip',size:11}));
+  await assert.rejects(uploadPrivatePart(bucket,invalidActor,session,1,new Uint8Array(11)));
+  await assert.rejects(completePrivateImport(bucket,invalidActor,session,[{partNumber:1,etag:'abc123'}]));
+  await assert.rejects(abortPrivateImport(bucket,invalidActor,session));
+}
 await assert.rejects(uploadPrivatePart(bucket,other,session,1,new Uint8Array(11)));
 assert.deepEqual(await uploadPrivatePart(bucket,actor,session,1,new Uint8Array(11)),{partNumber:1,etag:'abc123'});
 await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),/server-side upload record/);
