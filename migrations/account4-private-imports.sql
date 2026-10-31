@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS account4_import_sessions (
   size_bytes INTEGER NOT NULL CHECK(size_bytes BETWEEN 1 AND 1073741824),
   part_count INTEGER NOT NULL CHECK(part_count BETWEEN 1 AND 103),
   state TEXT NOT NULL DEFAULT 'uploading'
-    CHECK(state IN ('uploading','private-awaiting-review','aborted','expired')),
+    CHECK(state IN ('uploading','completing','private-awaiting-review','aborted','expired')),
   expires_at_ms INTEGER NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
