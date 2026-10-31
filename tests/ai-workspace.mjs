@@ -25,6 +25,12 @@ assert.ok((await aiPolicy(env,user)).connections.includes(4));
 await assert.rejects(api('ai/access-requests/decide',{id:renewed.permission_request.id,decision:'approve',approval_proof:proof}),e=>e.status===409);
 const denied=await requestAIWorkspaceAccess(env,actor,{connections:[4],hours:1,reason:'Check invalid proof blocks permission'});
 await assert.rejects(api('ai/access-requests/decide',{id:denied.permission_request.id,decision:'approve',approval_proof:'approval-session:invalid'}),e=>e.status===403);
+for(const approval_proof of ['no-session','approval-session:invalid',123,null,'approval-session:00000000-0000-4000-8000-000000000000']){
+ const q=await requestAIWorkspaceAccess(env,actor,{connections:[7],hours:1,reason:'Reject malformed owner proof '+String(approval_proof)});
+ await assert.rejects(api('ai/access-requests/decide',{id:q.permission_request.id,decision:'approve',approval_proof}),e=>e.status===403);
+ const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('ai:access-request:'+q.permission_request.id).first();
+ assert.equal(JSON.parse(row.value_json).status,'pending');
+}
 const deniedStatus=(await api('ai/access-requests')).requests.find(r=>r.id===denied.permission_request.id);
 assert.equal(deniedStatus.status,'pending');
 const permissionPost=body=>aiPermissionRoutes(new Request('https://room.example/api/owner/ai/permissions',{method:'POST',body:JSON.stringify(body)}),env,user,'ai/permissions','POST');
