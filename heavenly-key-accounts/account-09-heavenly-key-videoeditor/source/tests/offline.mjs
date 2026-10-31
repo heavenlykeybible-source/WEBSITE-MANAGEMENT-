@@ -45,6 +45,7 @@ const fire = async(type,request) => {
 };
 const swSource=readFileSync('public/sw.js','utf8');
 assert.ok(swSource.includes("'/hk-approved-footer.js'")&&swSource.includes("'/hk-approved-footer.css'"),'Approved footer code and styles must be available offline');
+assert.ok(swSource.includes("'/editor.js'")&&swSource.includes("'/editor.css'"),'Strict-CSP editor code and styles must be available offline');
 await fire('install');
 await fire('activate');
 const api = await fire('fetch',new Request('https://editor.test/api/me'));
@@ -69,6 +70,10 @@ const footer = await fire('fetch',new Request('https://editor.test/hk-approved-f
 assert.ok((await footer.text()).includes('offline'),'Approved footer must remain available offline');
 const style = await fire('fetch',new Request('https://editor.test/hk-approved-footer.css'));
 assert.ok((await style.text()).includes('offline'),'Approved footer styles must remain available offline');
+const editorScript = await fire('fetch',new Request('https://editor.test/editor.js'));
+assert.ok((await editorScript.text()).includes('function render()'),'External editor script must be available offline');
+const editorStyle = await fire('fetch',new Request('https://editor.test/editor.css'));
+assert.ok((await editorStyle.text()).includes(':root'),'External editor stylesheet must be available offline');
 const script = await fire('fetch',new Request('https://editor.test/timeline.js'));
 assert.ok((await script.text()).includes('offline'),'Offline module must load from cache');
 offline=false;
