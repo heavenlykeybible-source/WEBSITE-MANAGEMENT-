@@ -53,7 +53,21 @@ test('offline shell contains every dependency but never automatically downloads 
 });
 test('Android and Apple installation icon references and safe viewports are valid',()=>{
  const manifest=json('public/manifest.webmanifest');
- for(const icon of manifest.icons){const source=readFileSync(new URL('public'+icon.src,root),'utf8');const size=Number(icon.sizes.split('x')[0]);assert.equal(icon.type,'image/svg+xml');assert.ok(source.startsWith('<svg '));assert.match(source,new RegExp('width="'+size+'"'));assert.match(source,new RegExp('height="'+size+'"'));assert.match(source,/viewBox="0 0 \d+ \d+"/);}
+ for(const icon of manifest.icons){
+  const source=readFileSync(new URL('public'+icon.src,root));
+  const size=Number(icon.sizes.split('x')[0]);
+  if(icon.type==='image/svg+xml'){
+   const svg=source.toString('utf8');assert.ok(svg.startsWith('<svg '));
+   assert.match(svg,new RegExp('width="'+size+'"'));
+   assert.match(svg,new RegExp('height="'+size+'"'));
+   assert.match(svg,/viewBox="0 0 \d+ \d+"/);
+  }else if(icon.type==='image/png'){
+   assert.equal(source.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+   assert.equal(source.readUInt32BE(16),size);
+   assert.equal(source.readUInt32BE(20),size);
+  }else assert.fail('Unsupported installation icon format: '+icon.type);
+ }
+ for(const size of [192,512])assert.ok(manifest.icons.some(x=>x.type==='image/png' && x.sizes===size+'x'+size));
  for(const page of ['index.html','bible.html','devotional.html','hymns.html','audio-hymns.html'])assert.match(read('public/'+page),/viewport-fit=cover/);
  assert.match(read('public/experience.html'),/apple-touch-icon[^>]*href=|href="\/icons\/all-in-one-192\.png"/);
  assert.match(read('public/styles.css'),/min-height:44px/);
