@@ -21,6 +21,8 @@ test('device guide only advertises native download when the server confirms its 
 test('download guide restricts app destinations to secure HTTPS or local development', () => {
   const js = publicFile('app-device-guide.js');
   assert.match(js, /destination\.protocol !== 'https:'/);
+  assert.match(js, /trustedHosts\.has\(destination\.hostname\)/);
+  assert.match(js, /destination\.username \|\| destination\.password/);
   assert.match(js, /destination\.protocol === 'http:' && destination\.hostname === 'localhost'/);
 });
 
