@@ -110,7 +110,7 @@ test('WhatsApp send refresh stays in the originating conversation', () => {
 
 test('dashboard has an explicit sign-out that clears authorization and private session state', () => {
   assert.match(html, /id="logout">Sign out</);
-  assert.match(html, /\$\('logout'\)\.onclick=\(\)=>\{authEpoch\+\+;token='';selected='';paused=false/);
+  assert.match(html, /\$\('logout'\)\.onclick=\(\)=>\{sessionController\.abort\(\);sessionController=new AbortController\(\);authEpoch\+\+;token='';selected='';paused=false/);
   assert.match(html, /\$\('managementBody'\)\.replaceChildren\(\)/);
   assert.match(html, /\$\('messages'\)\.replaceChildren\(\)/);
   assert.match(html, /status\('Signed out\. Private conversation data cleared from the dashboard\.'\)/);
@@ -146,7 +146,7 @@ test('human requests attention counter shows authenticated pending count and res
   assert.match(html,/api\('\/api\/human-requests'\)\.then\(h=>/);
   assert.match(html,/if\(epoch===authEpoch\)updateHumanRequestCount\(h\.items\)/);
   assert.match(html,/if\(name==='requests'\)updateHumanRequestCount\(d\.items\)/);
-  assert.equal((html.match(/selected='';paused=false;requestedHuman=false;\$\('requestsTab'\)\.textContent='Human Requests';/g)||[]).length,2);
+  assert.equal((html.match(/selected='';paused=false;requestedHuman=false;humanRequestVersion=0;activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests';/g)||[]).length,2);
   assert.match(html,/count===100\?'\+':'/);
 });
 
@@ -155,7 +155,7 @@ test('management tab requests never restore private data after logout or tab cha
   assert.match(html,/function showTab\(name\)\{activeManagementTab=name;const epoch=authEpoch;/);
   assert.match(html,/if\(epoch!==authEpoch\|\|activeManagementTab!==name\|\|!token\)return;renderManagement\(name,d\)/);
   assert.match(html,/if\(epoch===authEpoch&&activeManagementTab===name&&token\)status\(e.message\)/);
-  assert.equal((html.match(/requestedHuman=false;activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests'/g)||[]).length,2);
+  assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests'/g)||[]).length,2);
 });
 
 test('nested launch-diagnostics responses never render into a stale operator session', () => {
