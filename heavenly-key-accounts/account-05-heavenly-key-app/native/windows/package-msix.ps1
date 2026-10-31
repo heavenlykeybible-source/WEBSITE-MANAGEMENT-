@@ -4,8 +4,13 @@ param(
  [Parameter(Mandatory=$false)][string]$PackageVersion = '1.0.0.0'
 )
 $ErrorActionPreference = 'Stop'
-# MSIX package updates must carry an increasing valid four-part version.
-if ($PackageVersion -notmatch '^(0|[1-9][0-9]{0,4})\.(0|[1-9][0-9]{0,4})\.(0|[1-9][0-9]{0,4})\.(0|[1-9][0-9]{0,4})
+# MSIX package updates must carry a valid, increasing four-part version.
+if ($PackageVersion -notmatch '^(0|[1-9][0-9]{0,4})\.(0|[1-9][0-9]{0,4})\.(0|[1-9][0-9]{0,4})\.(0|[1-9][0-9]{0,4})$') {
+ throw 'Invalid MSIX package version'
+}
+foreach ($component in $PackageVersion.Split('.')) {
+ if ([int]$component -gt 65535) { throw 'MSIX version component exceeds 65535' }
+}
 $projectRoot = $PSScriptRoot
 $stage = Join-Path $projectRoot 'msix-staging'
 $published = Join-Path $projectRoot 'signed-candidate'
