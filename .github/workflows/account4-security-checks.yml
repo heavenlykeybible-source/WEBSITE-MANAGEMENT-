@@ -10,6 +10,7 @@ on:
       - 'package-lock.json'
       - 'wrangler.toml'
       - '.github/workflows/account4-security-checks.yml'
+      - '.github/dependabot.yml'
   pull_request:
     paths:
       - 'control-room-worker.js'
@@ -19,6 +20,7 @@ on:
       - 'package-lock.json'
       - 'wrangler.toml'
       - '.github/workflows/account4-security-checks.yml'
+      - '.github/dependabot.yml'
   workflow_dispatch:
 permissions:
   contents: read
