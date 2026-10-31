@@ -13,6 +13,11 @@ async function scenario(mode){
  const winEvents=new Map();let revokedURLs=0;
  const window={MediaRecorder:Recorder,addEventListener:(event,handler)=>winEvents.set(event,handler)};
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){revokedURLs++}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
+ video.duration=86401;
+ videoEvents.get('loadedmetadata')();
+ assert.equal(node('clipEnd').value,'0','Invalid source duration cannot populate clip range');
+ assert.match(node('clipStatus').textContent,/24-hour timeline limit/,'Overlong video displays compatibility warning');
+ video.duration=2;
  window.hkTimeline.restoreClips([{start:1,end:1.5,speed:1},{start:0,end:1,speed:1},{start:.5,end:1,speed:2}]);
  node('clipList').value='0';
  node('clipSort').onclick();
