@@ -54,7 +54,13 @@ self.addEventListener('fetch',event=>{
  // Keep each permitted Bible book/chapter URL isolated in offline cache.
  const key=url.origin+cachePath+(READING.has(url.pathname)?url.search:'');
  event.respondWith(fetch(request,{cache:"no-cache"}).then(response=>{
-  if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||''))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
+  const cacheControl=response.headers.get('cache-control')||'';
+  const vary=response.headers.get('vary')||'';
+  // Never retain session-dependent pages, redirects or responses not suitable for offline reuse.
+  const cacheable=response.ok && response.type==='basic' && !response.redirected &&
+    !/(?:private|no-store|no-cache)/i.test(cacheControl) &&
+    !/(?:^|,)\s*(?:\*|cookie|authorization)\s*(?:,|$)/i.test(vary);
+  if(cacheable)event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
   return response;
  }).catch(async()=>{
   const cached=await caches.match(key);if(cached)return cached;
