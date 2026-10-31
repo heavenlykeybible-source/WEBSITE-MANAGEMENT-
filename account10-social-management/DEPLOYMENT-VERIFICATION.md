@@ -132,3 +132,10 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Switch among Accounts, Human Requests, Activity, and Launch Checks while requests are still loading. Responses from the previous tab must not replace the new tab's content.
 - [ ] Sign out or change credentials while Launch Checks is loading. Neither the first management request nor nested webhook/integrity requests may display confidential data afterward.
 - [ ] Verify the application still uses a shared admin token; client-side request cancellation is only a defense in depth. Individual revocable sessions, RBAC, idle timeouts, and server-side revocation remain global-launch blockers.
+
+## Handover generation / stale operator protection
+- [ ] Apply migration `0011_human_request_version.sql` after migration 0010 before deploying the new API or dashboard.
+- [ ] Generate an agent handover request, note its `human_request_version`, resolve it, then generate a new request for the same conversation. Confirm an older operator's resolution with the original version receives HTTP 409 without clearing the newer request.
+- [ ] Confirm operator dashboard resume and Mark Handled send the exact version from the corresponding conversation or queue item, and clear cached versions upon sign-out or credential change.
+- [ ] Verify authenticated `/api/automation/readiness` remains false if `human_request_version` is absent, and true only if all required handover and rate-limiting schema elements exist.
+- [ ] This version control prevents stale handover resolution but does not replace individual operator logins, auditable actor identities, or provider-side human notification.
