@@ -29,4 +29,4 @@ const missingDates=[];
 for(let t=Date.parse(expectedStart+'T00:00:00Z');t<=Date.parse(expectedEnd+'T00:00:00Z');t+=86400000){const date=new Date(t).toISOString().slice(0,10);if(!dates.has(date))missingDates.push(date)}
 const payload={schemaVersion:2,publicationStatus:'editorial-hold',generatedFor:'private-editorial-review-only',coverage:{start:expectedStart,end:expectedEnd,sourceDays:converted.length,missingDates,complete:missingDates.length===0},entries:converted};
 writeFileSync(join(out,'strength-next-private-drafts.json'),JSON.stringify(payload,null,2),{encoding:'utf8',flag:'wx',mode:0o600});
-console.log(JSON.stringify({status:'PRIVATE_DRAFTS_ONLY',days:converted.length,output:'strength-next-private-drafts.json',publication:'BLOCKED'},null,2));
+console.log(JSON.stringify({status:'PRIVATE_DRAFTS_ONLY',days:converted.length,missingDates,output:'strength-next-private-drafts.json',publication:'BLOCKED'},null,2));
