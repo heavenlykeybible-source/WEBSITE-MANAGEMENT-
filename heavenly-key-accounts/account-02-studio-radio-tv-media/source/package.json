@@ -8,7 +8,8 @@
     "test:broadcast": "node scripts/test-broadcast-handoff.mjs",
     "test:d1": "node --experimental-sqlite scripts/test-broadcast-d1.mjs",
     "test:stream-validation": "node scripts/test-stream-validation.mjs",
-    "test:capability-auth": "node scripts/test-capability-auth.mjs"
+    "test:capability-auth": "node scripts/test-capability-auth.mjs",
+    "test:tv-lock": "node scripts/test-tv-lock.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
