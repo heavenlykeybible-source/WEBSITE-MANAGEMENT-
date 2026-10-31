@@ -75,8 +75,9 @@ export class MeetingRooms {
     if(typeof m.token!=='string'||m.token.length===0||m.token.length>4096)return this.close(ws,{t:'error',msg:'Invalid meeting token.'});
     let a;try{a=await check(this.env.AUTH_SECRET,m.token);}catch{return this.close(ws,{t:'error',msg:'Unable to verify meeting access.'});}
     if(!a||a.k!=='meeting'||a.r!==d.room||typeof a.u!=='string'||a.u.length===0||a.u.length>254||!Number.isFinite(a.pe)||a.pe<=Date.now())return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
-    // Authentication may yield; never activate a closed or already-joined socket.
+    // Authentication may yield; never activate a closed, expired or already-joined socket.
     if(ws.readyState!==1||this.data(ws).role)return;
+    if(this.data(ws).until<=Date.now())return this.close(ws,{t:'error',msg:'Please reconnect.'});
     if(this.host())return this.close(ws,{t:'error',msg:'This room already has a host.'});
     Object.assign(d,{role:'host',id:'host',owner:a.u,key:hex(crypto.getRandomValues(new Uint8Array(16))),until:Math.min(a.pe,now+86400000),locked:false,watch:'',audChat:true,slow:0,admitted:[]});
     this.save(ws,d);const ice=await meetingICE(this.env,d.room);
