@@ -27,7 +27,7 @@ export class MeetingRooms {
  host(){return this.sockets().find(w=>this.data(w).role==='host');}
  guests(){return this.sockets().filter(w=>this.data(w).role==='guest');}
  stage(){return this.guests().filter(w=>this.data(w).stage);}
- async stageAllowed(d,now){try{const i=d.identity;if(!i||i.expires<=now)return false;const u=await getUser(this.env,i.email);return !!u&&!u.banned&&(u.tv||0)===i.version&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,i.email,u)!=='user'||u.terms==='private-approved');}catch{return false;}}
+ async stageAllowed(d,now){try{const i=d.identity;if(!i||!Number.isFinite(i.expires)||i.expires<=now)return false;const u=await getUser(this.env,i.email);return !!u&&!u.banned&&(u.tv||0)===i.version&&(this.env.MEETINGSPACE_PRIVATE_PREVIEW==='0'||accountRole(this.env,i.email,u)!=='user'||u.terms==='private-approved');}catch{return false;}}
  broadcast(m){for(const w of this.sockets()){const d=this.data(w);if(d.role==='host'||d.ok)this.send(w,m);}}
  count(){this.send(this.host(),{t:'count',n:this.guests().filter(w=>this.data(w).aud).length});}
  close(w,m){this.send(w,m);try{w.close(1000,'Meeting closed');}catch{}}
