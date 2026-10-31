@@ -217,3 +217,10 @@ test('runtime never retains personalized HTML navigation responses', () => {
  assert.match(sw,/request\.destination!=='document'/);
  assert.match(sw,/isSafePublicResponse\(response\)\)event\.waitUntil/);
 });
+
+test('service worker omits member cookies for public asset fetches', () => {
+ const sw=publicFile('sw.js');
+ assert.match(sw,/const isDocument=request\.mode==='navigate'\|\|request\.destination==='document'/);
+ assert.match(sw,/credentials:isDocument\?request\.credentials:'omit'/);
+ assert.match(sw,/request\.mode!=='navigate' && request\.destination!=='document'/);
+});
