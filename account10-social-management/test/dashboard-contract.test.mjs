@@ -246,3 +246,8 @@ test('internal notes block duplicate submissions and viewer form bypass', () => 
  assert.match(html,/const saveButton=\$\('saveDraft'\);saveButton\.disabled=true;try\{await api\('\/api\/messages'/);
  assert.match(html,/finally\{if\(selected===targetConversation&&authEpoch===epoch\)saveButton\.disabled=operatorAccessRole==='viewer'\}/);
 });
+
+test('Gemini suggestion rejects viewer or disabled control and rechecks session after prompt', () => {
+ assert.ok(html.includes("$('suggestReply').onclick=async()=>{if(!selected||operatorAccessRole==='viewer'||$('suggestReply').disabled)return"));
+ assert.ok(html.includes("selected!==targetConversation||authEpoch!==epoch||operatorAccessRole==='viewer'||$('suggestReply').disabled"));
+});
