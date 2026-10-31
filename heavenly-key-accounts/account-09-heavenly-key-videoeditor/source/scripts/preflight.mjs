@@ -14,6 +14,7 @@ if(!apiSource.includes(".replace(/[. ]+$/, '')"))throw Error('Trailing filename 
 if(!apiSource.includes("rawName.includes(':')"))throw Error('Colon filename rejection missing');
 if(!apiSource.includes('rawName.length > 255'))throw Error('Raw filename length limit missing');
 if(!apiSource.includes('let id, key, saved = false;') || !apiSource.includes('saved = true;') || !apiSource.includes('if (!saved) {'))throw Error('Media upload quota rollback tracking missing');
+if(!apiSource.includes('if (saved.meta.changes) await env.MEDIA.delete(r.r2_key).catch(() => {});'))throw Error('Media delete must confirm DB update before R2 cleanup');
 if(!apiSource.includes('c.charCodeAt(0) < 32') || !apiSource.includes('c.charCodeAt(0) === 127'))throw Error('Control-character filename rejection missing');
 if(!apiSource.includes('Filename extension does not match media type.') || !apiSource.includes('Unsafe filename extension.'))throw Error('Media extension validation missing');
 if(!apiSource.includes('if (!suffix || !extensions[type]?.includes(suffix))'))throw Error('Missing-extension upload protection absent');
