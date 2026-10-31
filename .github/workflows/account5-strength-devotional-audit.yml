@@ -108,6 +108,11 @@ jobs:
           test "$(cat "$output_dir/keep.txt")" = occupied
           ln -s "$PWD" "$output_dir/repository-link"
           if node "$script" "$output_dir/repository-link"; then echo "SECURITY FAILURE: symlink into repository accepted"; exit 1; fi
+          mkdir "$output_dir/isolated"
+          chmod 700 "$output_dir/isolated"
+          ln -s "$output_dir/isolated" "$output_dir/external-link"
+          if node "$script" "$output_dir/external-link"; then echo "SECURITY FAILURE: symbolic-link destination accepted"; exit 1; fi
+          test ! -e "$output_dir/isolated/strength-next-private-drafts.json"
           test ! -e strength-next-private-drafts.json
       - name: Inventory legacy migration gaps (informational until migration)
         continue-on-error: true
