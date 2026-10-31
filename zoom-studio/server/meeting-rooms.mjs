@@ -60,6 +60,8 @@ export class MeetingRooms {
  }
  async alarm(){
   const host=this.host(),h=host&&this.data(host),now=Date.now();
+  // Remove orphaned participants from prior host generations even if their close event was delayed.
+  if(h)for(const guest of this.guests())if(this.data(guest).session!==h.key)this.close(guest,{t:'closed',why:'The previous meeting has ended.'});
   if(h&&h.until<=now)this.end('The meeting time has ended.');
   else if(!host&&this.guests().length)this.end('The host is no longer connected.');
   for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});else if(d.role==='guest'&&!d.ok&&d.waitingUntil&&d.waitingUntil<=now)this.close(w,{t:'error',msg:'Waiting room expired. Please rejoin.'});}
