@@ -32,7 +32,7 @@ for(const name of files){
  }
 }
 // Verify each curated centre reference points to a real, non-placeholder KJV verse.
-const kjvFiles=readdirSync(resolve(root,'data/kjv')).filter(name=>/^[A-Z0-9]{3}\\.json$/.test(name));
+const kjvFiles=readdirSync(resolve(root,'data/kjv')).filter(name=>/^[A-Z0-9]{3}\.json$/.test(name));
 const kjvByBook=new Map();
 for(const name of kjvFiles){
  const data=JSON.parse(readFileSync(resolve(root,'data/kjv',name),'utf8'));
@@ -51,7 +51,7 @@ for(const [code,chapters] of Object.entries(references)){
    assert.ok(Array.isArray(targets)&&targets.length,code+' missing reference targets');
    assert.equal(new Set(targets).size,targets.length,code+' repeated reference targets');
    for(const target of targets){
-    const match=typeof target==='string'&&/^(.+?) (\\d+):(\\d+)$/.exec(target);
+    const match=typeof target==='string'&&/^(.+?) (\d+):(\d+)$/.exec(target);
     assert.ok(match,code+' malformed reference '+target);
     const destination=kjvByBook.get(match[1]);
     const destVerse=destination?.chapters[match[2]]?.[Number(match[3])-1];
