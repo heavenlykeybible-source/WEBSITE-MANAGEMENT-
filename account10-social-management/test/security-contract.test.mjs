@@ -228,3 +228,10 @@ test('Gemini live connection check is authenticated, rate-limited and never send
   assert.match(handler,/outboundMessagesSent:false,socialPostsPublished:false/);
   assert.doesNotMatch(handler,/\/messages['"]|videos\.insert|published:true/);
 });
+
+test('X account inventory stays unverified and cannot bypass draft-only publishing', () => {
+  assert.equal((source.match(/const channels=\['whatsapp_business','facebook_messenger','facebook_page','instagram_professional','youtube','tiktok','x'\]/g)||[]).length,2);
+  assert.match(source,/\{id:'x',inbox:'not_connected',publishing:'requires_x_developer_authorization'\}/);
+  assert.match(source,/const platforms=\['facebook_page','instagram_professional','youtube','tiktok'\]/);
+  assert.doesNotMatch(source,/['"]x['"]\s*,\s*status:'published'/);
+});
