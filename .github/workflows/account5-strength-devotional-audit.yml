@@ -86,6 +86,12 @@ jobs:
         run: |
           output_dir="$(mktemp -d)"
           trap 'rm -rf "$output_dir"' EXIT
+          chmod 755 "$output_dir"
+          if node apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs "$output_dir"; then
+            echo "ERROR: Insecure export directory was accepted"
+            exit 1
+          fi
+          chmod 700 "$output_dir"
           node apps/heavenly-key-bible/bible/tests/strength-next-private-export.mjs "$output_dir"
           test "$(stat -c '%a' "$output_dir/strength-next-private-drafts.json")" = 600
           test "$(stat -c '%a' "$output_dir")" = 700
