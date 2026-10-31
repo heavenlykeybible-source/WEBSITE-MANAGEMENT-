@@ -29,9 +29,13 @@ export async function assertPrivateImportPublishable(db, bucket, actor, id) {
       !Number.isSafeInteger(row.approved_by) || row.approved_by !== actor.id ||
       typeof row.scanned_at !== 'string' || !row.scanned_at ||
       typeof row.approved_at !== 'string' || !row.approved_at ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(row.scanned_at) ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(row.approved_at) ||
       !Number.isFinite(Date.parse(row.scanned_at)) ||
       !Number.isFinite(Date.parse(row.approved_at)) ||
-      Date.parse(row.approved_at) < Date.parse(row.scanned_at))
+      Date.parse(row.approved_at) < Date.parse(row.scanned_at) ||
+      Date.parse(row.scanned_at) > Date.now() ||
+      Date.parse(row.approved_at) > Date.now())
     throw new Error('Private import not cleared for publication');
   // R2 versions identify individual writes, including overwrites at the same key.
   // A clean verdict for an older version must never authorize a replacement.
