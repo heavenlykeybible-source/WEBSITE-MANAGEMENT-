@@ -263,7 +263,7 @@ test('operator human request stores validated destination and never claims notif
  assert.match(route,/\['ministry_agent','speak_to_evangelist'\]\.includes\(b\?\.target\)/);
  assert.match(route,/SET requested_human=1,human_paused=1,human_contact_target=\?/);
  assert.match(route,/contactTarget:b.target,automationPaused:true,externalNotificationsSent:false/);
- assert.match(source,/SELECT id,channel,requested_human,human_paused,human_contact_target,updated_at FROM conversations/);
+ assert.match(source,/SELECT id,channel,requested_human,human_paused,human_contact_target,human_request_version,updated_at FROM conversations/);
 });
 
 test('signed WhatsApp inbound chooses agent or Evangelist without overwriting pending handover', () => {
