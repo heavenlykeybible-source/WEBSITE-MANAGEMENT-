@@ -3,6 +3,7 @@ import { LiveKitConnectionError, resolveLiveKitConfig, validateCloudConnection, 
 import { publicProgramme, serveBroadcastMedia, isPlaybackURL } from "./public-broadcast";
 import { restreamStatus, saveDestination, setDestinationEnabled, removeDestination, startRestream, stopRestream } from './restream';
 import { TV_LOCKED,channelAvailability,tvLockedResponse } from './channel-lock';
+import { validRadioObjectKey,validRadioRetentionHours } from './radio-upload-security';
 import { radioPlayerHtml } from './radio-player';
 interface Env {
   MEDIA_ENGINE_SHARED_SECRET: string;
@@ -91,7 +92,7 @@ export default {
     }
     await env.LIVE_STATUS_KV.put('playlist-order-'+channel,JSON.stringify(ids));await audit(env,cap,'playlist.order','channel',channel);return json({ok:true,channel,media_ids:ids});
   }
-  if(url.pathname==='/api/broadcast/settings'&&request.method==='GET'){const r=await env.DB.prepare('SELECT channel,playlist_enabled FROM broadcast_settings ORDER BY channel').all();return json({items:r.results});}
+  if(url.pathname==='/api/broadcast/settings'&&request.method==='GET'){const r=await env.DB.prepare(TV_LOCKED?"SELECT channel,playlist_enabled FROM broadcast_settings WHERE channel='radio'":"SELECT channel,playlist_enabled FROM broadcast_settings ORDER BY channel").all();return json({items:r.results});}
   if(url.pathname==='/api/broadcast/settings'&&request.method==='POST'){
     const b=await requireJson(request);if(TV_LOCKED&&b?.channel==='video')return tvLockedResponse();if(!b||!['radio','video'].includes(String(b.channel))||typeof b.enabled!=='boolean')return json({error:'Choose a channel and playlist switch'},400);
     await env.DB.prepare('UPDATE broadcast_settings SET playlist_enabled=? WHERE channel=?').bind(b.enabled?1:0,String(b.channel)).run();await audit(env,cap,'playlist.switch','channel',String(b.channel));return json({ok:true});
@@ -238,11 +239,15 @@ export default {
     if(!objectKey||!['image','audio','video'].includes(type)||!mime||!Number.isSafeInteger(size)||size<0||size>MAX_MEDIA_BYTES)return json({error:'Invalid media metadata or size'},400);
     if(type==='audio'&&!['audio/mpeg','audio/mp4','audio/aac','audio/ogg','audio/wav','audio/x-wav','audio/webm','audio/flac'].includes(mime.toLowerCase()))return json({error:'Choose a supported audio file (MP3, M4A, AAC, OGG, WAV, WebM or FLAC)'},415);
     const keep=Boolean(b.keep_media); const retention=keep?null:expiryHours(Number(b.retention_hours??48));
+    if(!validRadioObjectKey(objectKey))return json({error:'Invalid storage key. Use a safe relative path and filename.'},400);
+    if(!keep && !validRadioRetentionHours(b.retention_hours??48))return json({error:'Retention must be a whole number of hours (1–8760)'},400);
+    if(await env.DB.prepare("SELECT media_id FROM media_objects WHERE object_key=? LIMIT 1").bind(objectKey).first())return json({error:'This radio upload name has already been registered. Choose a unique storage key.'},409);
+    if(await env.MEDIA_R2.head(objectKey))return json({error:'This storage key is already in use'},409);
     const r=await env.DB.prepare('INSERT INTO media_objects(object_key,media_type,mime_type,size_bytes,status,keep_media,retention_until,created_by) VALUES(?,?,?,?,\'pending\',?,?,?)').bind(objectKey,type,mime,size,keep?1:0,retention,cap.sub).run();
     const id=Number(r.meta.last_row_id); await audit(env,cap,'media.register','media',String(id)); return json({media_id:id,retention_until:retention,keep_media:keep},201);
   }
   if(url.pathname==='/api/media'&&request.method==='GET'){
-    const r=await env.DB.prepare('SELECT media_id,object_key,media_type,mime_type,size_bytes,status,keep_media,retention_until,created_at FROM media_objects WHERE status!=\'deleted\' ORDER BY created_at DESC LIMIT 50').all(); return json({items:r.results});
+    const r=await env.DB.prepare(TV_LOCKED?"SELECT media_id,object_key,media_type,mime_type,size_bytes,status,keep_media,retention_until,created_at FROM media_objects WHERE status!='deleted' AND media_type='audio' ORDER BY created_at DESC LIMIT 50":"SELECT media_id,object_key,media_type,mime_type,size_bytes,status,keep_media,retention_until,created_at FROM media_objects WHERE status!='deleted' ORDER BY created_at DESC LIMIT 50").all(); return json({items:r.results});
   }
   let m=url.pathname.match(/^\/api\/media\/(\d+)\/keep$/); if(m&&['GET','POST'].includes(request.method)){
     const media=await env.DB.prepare("SELECT object_key,media_type,status,keep_media,retention_until FROM media_objects WHERE media_id=? AND status!='deleted'").bind(Number(m[1])).first<{object_key:string;media_type:string;status:string;keep_media:number;retention_until:string|null}>();
@@ -259,7 +264,9 @@ export default {
     return json({ok:true,media_type:media.media_type,status:media.status,keep_media:b.keep});
   }
   m=url.pathname.match(/^\/api\/media\/(\d+)\/upload-url$/); if(m&&request.method==='POST'){
-    const row=await env.DB.prepare('SELECT object_key,status FROM media_objects WHERE media_id=?').bind(Number(m[1])).first<{object_key:string,status:string}>(); if(!row||row.status==='deleted')return json({error:'Media not found'},404);
+    const row=await env.DB.prepare('SELECT object_key,media_type,status FROM media_objects WHERE media_id=?').bind(Number(m[1])).first<{object_key:string,media_type:string,status:string}>(); if(!row||row.status==='deleted')return json({error:'Media not found'},404);
+    if(TV_LOCKED&&row.media_type!=='audio')return tvLockedResponse();
+    if(!['pending','failed'].includes(row.status))return json({error:'This file is already uploaded'},409);
     return json({media_id:Number(m[1]),object_key:row.object_key,upload_mode:'multipart-r2',max_bytes:MAX_MEDIA_BYTES,chunk_bytes:8388608});
   }
   m=url.pathname.match(/^\/api\/media\/(\d+)\/upload$/); if(m&&request.method==='PUT'){
