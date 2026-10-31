@@ -86,5 +86,6 @@ test('preflight refuses wrong Worker identity and missing dashboard module', () 
 test('preflight isolates assets section', () => {
  const script=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
  assert.ok(script.includes("const assetConfig="));
- assert.ok(script.includes(".split('\\n[')[0]"));
+ assert.ok(script.includes('assetSections.length!==1'));
+ assert.ok(script.includes('assetSections[0]?.[1]'));
 });
