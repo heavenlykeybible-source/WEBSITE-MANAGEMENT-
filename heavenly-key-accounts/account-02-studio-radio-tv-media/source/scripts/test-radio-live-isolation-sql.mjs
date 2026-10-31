@@ -10,8 +10,8 @@ const source=readFileSync(resolve(root,'src/public-broadcast.ts'),'utf8').replac
 const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 const eligible=runInNewContext(compiled+';eligibleMedia',{TV_LOCKED:true});
 const db=new DatabaseSync(':memory:');
-db.exec("CREATE TABLE media_objects(media_id INTEGER PRIMARY KEY,status TEXT,keep_media INTEGER,retention_until TEXT); CREATE TABLE playout_items(media_id INTEGER,status TEXT,starts_at TEXT,ends_at TEXT); CREATE TABLE live_sessions(status TEXT,last_heartbeat_at TEXT,reconnect_deadline TEXT,visual_media_id INTEGER,fallback_media_id INTEGER,source_ref TEXT,destination TEXT)");
-db.prepare("INSERT INTO media_objects(media_id,status,keep_media) VALUES(1,'approved',1)").run();
+db.exec("CREATE TABLE media_objects(media_id INTEGER PRIMARY KEY,media_type TEXT,status TEXT,keep_media INTEGER,retention_until TEXT); CREATE TABLE playout_items(media_id INTEGER,status TEXT,starts_at TEXT,ends_at TEXT); CREATE TABLE live_sessions(status TEXT,last_heartbeat_at TEXT,reconnect_deadline TEXT,visual_media_id INTEGER,fallback_media_id INTEGER,source_ref TEXT,destination TEXT)");
+db.prepare("INSERT INTO media_objects(media_id,media_type,status,keep_media) VALUES(1,'audio','approved',1)").run();
 const live=db.prepare("INSERT INTO live_sessions(status,last_heartbeat_at,visual_media_id,destination) VALUES('live',datetime('now'),1,?)");
 const env={DB:{prepare(sql){return {bind(...params){return {first:async()=>db.prepare(sql).get(...params)}}}}}};
 assert.equal(await eligible(env,1),undefined,'Unpublished media without live session must remain private');
@@ -23,6 +23,11 @@ assert.equal(await eligible(env,1),undefined,'Mixed TV session must not bypass T
 db.exec("DELETE FROM live_sessions");
 live.run('radio');
 assert.equal((await eligible(env,1))?.media_id,1,'Radio-directed live session may expose approved audio');
+db.exec("UPDATE media_objects SET media_type='video' WHERE media_id=1");
+assert.equal(await eligible(env,1),undefined,'Radio live session must never authorize an unpublished video object');
+db.exec("UPDATE media_objects SET media_type='image' WHERE media_id=1");
+assert.equal(await eligible(env,1),undefined,'Radio live session must never authorize an unpublished image object');
+db.exec("UPDATE media_objects SET media_type='audio' WHERE media_id=1");
 db.exec("DELETE FROM live_sessions");
 db.exec("UPDATE media_objects SET status='published' WHERE media_id=1");
 assert.equal((await eligible(env,1))?.media_id,1,'Deliberately published media remains public');
