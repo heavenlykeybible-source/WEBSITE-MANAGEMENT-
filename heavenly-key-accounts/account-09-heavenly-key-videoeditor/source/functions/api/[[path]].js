@@ -377,7 +377,11 @@ export async function onRequest({ request: req, env, params }) {
         for (const item of pending) {
           if (typeof item.r2_key !== 'string' || !item.r2_key.startsWith(u.id + '/')) { failed++; continue; }
           try {
-            await env.MEDIA.delete(item.r2_key);
+            try { await env.MEDIA.delete(item.r2_key); }
+            catch {
+              await new Promise(resolve => setTimeout(resolve, 200 + Math.floor(Math.random() * 150)));
+              await env.MEDIA.delete(item.r2_key);
+            }
             const removed=await env.DB.prepare('DELETE FROM media WHERE id=? AND user_id=? AND deleted=1').bind(item.id,u.id).run();
             cleaned+=Number(removed.meta.changes);
           } catch { failed++; }
