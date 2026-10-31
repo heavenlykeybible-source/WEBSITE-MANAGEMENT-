@@ -692,3 +692,18 @@ test('stage alarm does not disconnect guest demoted during delayed identity chec
  assert.equal(h.guest.readyState,1);
  assert.equal(h.guest.attachment.stage,false);
 });
+
+test('meeting expiration during delayed alarm verification closes every participant',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ assert.equal(h.guest.attachment.stage,true);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
+ const pending=h.r.alarm();await reached;
+ h.host.attachment.until=Date.now()-1;
+ release();await pending;
+ assert.notEqual(h.host.readyState,1);
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='closed'),true);
+});
