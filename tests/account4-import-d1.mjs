@@ -38,6 +38,11 @@ for (const [field,bad] of [['size_bytes',0],['size_bytes',1073741825],['part_cou
   row[field]=original;
 }
 await assert.rejects(saveImportSession(db,other,session));
+const previousPrepare=db.prepare;
+db.prepare=sql=>({bind:()=>({run:async()=>({success:false,meta:{changes:1}}),first:async()=>row,all:async()=>({results:parts})})});
+await assert.rejects(recordImportPart(db,actor,id,{partNumber:1,etag:'abc123'}),/not persisted/);
+await assert.rejects(transitionImportSession(db,actor,id,'uploading','aborted'),/transition denied/);
+db.prepare=previousPrepare;
 await recordImportPart(db,actor,id,{partNumber:1,etag:'abc123'});
 assert.ok(statements.at(-1).sql.includes('ON CONFLICT'));
 assert.ok(statements.at(-1).sql.includes('AND 1=1 ON CONFLICT'), 'SQLite SELECT UPSERT parsing guard must be present');
