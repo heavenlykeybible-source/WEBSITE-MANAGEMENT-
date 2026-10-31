@@ -1228,3 +1228,29 @@ test('late background inference from a prior program scene is discarded',()=>{
  assert.match(html,/segCur=s;segScene=sceneVersion;/,'each inference must record its scene generation');
  assert.match(html,/pgm=i;sceneVersion\+\+;/,'program scene changes must advance the generation');
 });
+
+test('Twitch chat rejects multibyte frames exceeding the byte budget and throttles a live flood',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const start=html.indexOf('let cws=null,'),end=html.indexOf("const dl=document.createElement('canvas');",start);
+ assert.ok(start>0&&end>start);
+ const section=html.slice(start,end),sockets=[],chatLog=[];
+ const nodes={chn:{value:'channel'},chs:{textContent:''},chc:{},cl:{children:[],replaceChildren(){this.children=[]},prepend(node){this.children.unshift(node)},get lastChild(){return {remove:()=>this.children.pop()}}}};
+ const $=id=>nodes[id],FakeWebSocket=class {constructor(){this.sent=[];sockets.push(this)}send(x){this.sent.push(x)}close(){}};
+ new Function('$','WebSocket','chatLog','document','performance','TextEncoder',section)(
+  $,FakeWebSocket,chatLog,{createElement:()=>({textContent:''})},{now:()=>1234},TextEncoder
+ );
+ nodes.chc.onclick();const ws=sockets[0];ws.onopen();
+ const line='@display-name=Viewer;tag=x PRIVMSG #channel :hello';
+ const utf8Oversize='🙂'.repeat(4500);
+ assert.ok(utf8Oversize.length<16384&&new TextEncoder().encode(utf8Oversize).byteLength>16384);
+ ws.onmessage({data:utf8Oversize});
+ assert.equal(chatLog.length,0,'short UTF-16 strings with oversized UTF-8 payloads must be rejected');
+ for(let i=0;i<3;i++)ws.onmessage({data:Array.from({length:50},()=>line).join('\r\n')});
+ assert.equal(chatLog.length,60,'stored message history remains bounded');
+ assert.equal(nodes.cl.children.length,30);
+ assert.equal(nodes.cl.children[0].textContent,'Viewer: hello');
+ assert.equal(chatLog[0].n,'Viewer');
+ const before=nodes.cl.children[0];
+ ws.onmessage({data:line});
+ assert.equal(nodes.cl.children[0],before,'messages over the per-second budget must not update the UI');
+});
