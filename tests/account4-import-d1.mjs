@@ -27,6 +27,12 @@ const originalKey=row.object_key;
 row.object_key='private-imports/8/forged';
 await assert.rejects(loadImportSession(db,actor,id),/unavailable/);
 row.object_key=originalKey;
+for (const [field,bad] of [['size_bytes',0],['size_bytes',1073741825],['part_count',2],['upload_id','']]) {
+  const original=row[field];
+  row[field]=bad;
+  await assert.rejects(loadImportSession(db,actor,id),/unavailable/);
+  row[field]=original;
+}
 await assert.rejects(saveImportSession(db,other,session));
 await recordImportPart(db,actor,id,{partNumber:1,etag:'abc123'});
 assert.ok(statements.at(-1).sql.includes('ON CONFLICT'));
