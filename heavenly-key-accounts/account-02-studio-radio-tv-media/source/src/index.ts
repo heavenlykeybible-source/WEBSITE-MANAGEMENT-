@@ -97,8 +97,9 @@ export default {
   {const match=url.pathname.match(/^\/api\/playout\/(\d+)\/cancel$/);if(match&&request.method==='POST'){const r=await env.DB.prepare("UPDATE playout_items SET status='cancelled' WHERE playout_id=? AND status IN ('scheduled','playing')").bind(Number(match[1])).run();if(!r.meta.changes)return json({error:'Active programme not found'},404);await audit(env,cap,'playout.cancel','playout',match[1]);return json({ok:true});}}
   if(url.pathname==='/api/media-engine/studio/preferences'&&['GET','POST'].includes(request.method)){
     const key='studio-preset-v1:'+cap.sub;
-    if(request.method==='GET'){const stored=await env.LIVE_STATUS_KV.get(key);return json({preferences:stored?JSON.parse(stored):null});}
+    if(request.method==='GET'){const stored=await env.LIVE_STATUS_KV.get(key);const preferences=stored?JSON.parse(stored):null;return json({preferences:TV_LOCKED&&preferences?{...preferences,destination:'radio',scene:'media',cameraVisible:false,backgroundMode:'none'}:preferences,mode:TV_LOCKED?'radio-only':'studio'});}
     const body=await requireJson(request),value=body?.preferences;if(!value||typeof value!=='object'||Array.isArray(value)||JSON.stringify(value).length>8000)return json({error:'Enter a studio preset up to 8 KB'},400);
+    if(TV_LOCKED&&Object.keys(value).some(k=>['cameraVisible','facing','scene','backgroundMode','backgroundPreset','backgroundVideoId','mirror','subjectProtection','format','screenGain'].includes(k)))return tvLockedResponse();
     const prefs:Record<string,unknown>={};const textLimits:Record<string,number>={title:200,presenter:150,lowerThird:240,ticker:500,scripture:1000};
     for(const [k,max]of Object.entries(textLimits)){if(k in value){const v=(value as any)[k];if(typeof v!=='string'||v.length>max)return json({error:'Invalid studio text field: '+k},400);prefs[k]=v;}}
     const choices:Record<string,string[]>={format:['landscape-480','landscape-720','landscape-1080','portrait-720','portrait-1080','portrait-3-4','square-720','square-1080'],destination:['both','radio','video'],facing:['user','environment'],scene:['camera','screen','media','starting','break','ending'],backgroundMode:['none','blur','virtual','video'],backgroundPreset:['hkem-global','hkem-stage','nations-wall','world-map','sanctuary','prayer','europe-paris','europe-london','europe-rome','europe-alps','america-newyork','america-washington','america-coast','america-city','world-night','mission-clouds','royal-blue','wine-gold','clean-white','media-wall'],voicePreset:['condenser','speech','natural'],qualityPreset:['data','balanced','high']};
@@ -183,7 +184,7 @@ export default {
     catch(e){ return json({error:e instanceof Error?e.message:'Live transport unavailable'},503); }
   }
 
-  if(url.pathname==='/api/media-engine/livekit/publisher-token'&&request.method==='POST'){
+  if(url.pathname==='/api/media-engine/livekit/publisher-token'&&request.method==='POST'){if(TV_LOCKED)return tvLockedResponse();
     const b=await requireJson(request); const sessionId=Number(b?.session_id); if(!Number.isInteger(sessionId))return json({error:'session_id is required'},400);
     const live=await env.DB.prepare("SELECT session_id,status,source_type,source_ref FROM live_sessions WHERE session_id=? AND status IN ('live','reconnecting')").bind(sessionId).first<any>();
     if(!live)return json({error:'Live session not active'},404);
@@ -194,6 +195,7 @@ export default {
     catch(e){return json({error:e instanceof Error?e.message:'Live transport unavailable'},503);}
   }
 
+  if(url.pathname==='/api/media-engine/studio/capabilities'&&request.method==='GET'&&TV_LOCKED)return json({mode:'radio-only',television_locked:true,channels:['radio'],sources:['microphone','audio','playlist'],destinations:['website_radio'],features:{audio_upload:true,resumable_upload:true,audio_playlist:true,scheduled_audio:true,radio_live:true,radio_24_7:true}});
   if(url.pathname==='/api/media-engine/studio/capabilities'&&request.method==='GET') return json({
     formats:[
       {key:'landscape-480',label:'Low data 480p',width:854,height:480},
@@ -230,7 +232,9 @@ export default {
   if(url.pathname==='/api/media'&&request.method==='POST'){
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400);
     const objectKey=String(b.object_key??''); const type=String(b.media_type??''); const mime=String(b.mime_type??''); const size=Number(b.size_bytes??0);
+    if(TV_LOCKED&&type!=='audio')return tvLockedResponse();
     if(!objectKey||!['image','audio','video'].includes(type)||!mime||!Number.isSafeInteger(size)||size<0||size>MAX_MEDIA_BYTES)return json({error:'Invalid media metadata or size'},400);
+    if(type==='audio'&&!['audio/mpeg','audio/mp4','audio/aac','audio/ogg','audio/wav','audio/x-wav','audio/webm','audio/flac'].includes(mime.toLowerCase()))return json({error:'Choose a supported audio file (MP3, M4A, AAC, OGG, WAV, WebM or FLAC)'},415);
     const keep=Boolean(b.keep_media); const retention=keep?null:expiryHours(Number(b.retention_hours??48));
     const r=await env.DB.prepare('INSERT INTO media_objects(object_key,media_type,mime_type,size_bytes,status,keep_media,retention_until,created_by) VALUES(?,?,?,?,\'pending\',?,?,?)').bind(objectKey,type,mime,size,keep?1:0,retention,cap.sub).run();
     const id=Number(r.meta.last_row_id); await audit(env,cap,'media.register','media',String(id)); return json({media_id:id,retention_until:retention,keep_media:keep},201);
@@ -299,6 +303,7 @@ export default {
     const row=await env.DB.prepare("SELECT object_key,media_type,status,keep_media,retention_until FROM media_objects WHERE media_id=?").bind(Number(m[1])).first<any>();
     if(!row||!['approved','published'].includes(row.status))return json({error:'Upload media before publishing'},400);
     if(b.published && (!await env.MEDIA_R2.head(row.object_key) || (row.keep_media===0&&row.retention_until&&new Date(row.retention_until)<=new Date())))return json({error:'Media file is missing or expired'},400);
+    if(TV_LOCKED&&b.published&&row.media_type!=='audio')return tvLockedResponse();
     if(b.published&&!['audio','video'].includes(row.media_type))return json({error:'Only audio or video belongs in the broadcast playlist'},400);
     await env.DB.prepare("UPDATE media_objects SET status=?,keep_media=1,retention_until=NULL,updated_at=CURRENT_TIMESTAMP WHERE media_id=?").bind(b.published?'published':'approved',Number(m[1])).run();
     await audit(env,cap,b.published?'media.publish':'media.unpublish','media',m[1]);return json({ok:true});
