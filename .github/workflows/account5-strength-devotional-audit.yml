@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-embargo.mjs'
+      - 'apps/heavenly-key-bible/bible/worker.js'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-devotionals-*.json'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/strength-publication-status.json'
       - '.github/workflows/account5-strength-devotional-audit.yml'
@@ -23,6 +25,8 @@ jobs:
           node-version: '22'
       - name: Check audit script syntax
         run: node --check apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs
+      - name: Test server-side devotional embargo
+        run: node apps/heavenly-key-bible/bible/tests/strength-embargo.mjs
       - name: Audit all devotional JSON data (read-only)
         env:
           STRENGTH_AUDIT_SUMMARY: '1'
