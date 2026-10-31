@@ -46,7 +46,7 @@ async function runTimeline(record){
  if(record&&totalSeconds>600)return info('Browser export is limited to ten minutes. Shorten the timeline.');
  if(record&&(!Number.isFinite(canvas.width)||!Number.isFinite(canvas.height)||canvas.width<1||canvas.height<1||canvas.width>4096||canvas.height>4096||canvas.width*canvas.height>8847360))return info('Invalid export canvas size. Choose a supported resolution up to 4K and try again.');
  if(record&&(!canvas.captureStream||!window.MediaRecorder||typeof MediaRecorder.isTypeSupported!=='function'))return info('Video export is unavailable in this browser.');
- const mime=record?['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t)):null;
+ const mime=record?['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t)):null;
  if(record&&!mime)return info('Browser does not support WebM or MP4 encoding.');
  if(record)invalidateExport();
  const state={cancelled:false};session=state;setBusy(true);
@@ -87,10 +87,10 @@ async function runTimeline(record){
   if(rec&&rec.state!=='inactive'){rec.stop();await new Promise((resolve,reject)=>{let settled=false;const cleanup=()=>{clearTimeout(timeout);if(state.abortEncoder===abort)state.abortEncoder=null};const done=(error)=>{if(settled)return;settled=true;cleanup();error?reject(error):resolve()};const abort=()=>done();state.abortEncoder=abort;const timeout=setTimeout(()=>done(Error('Timeline encoder did not finish within 15 seconds')),15000);finished.then(()=>done());if(state.cancelled)abort()})}if(encoderError)throw encoderError;
   if(state.cancelled)return state.sourceChanged?undefined:info('Timeline operation stopped.');
   if(record){
-   const blob=new Blob(fragments,{type:mime});if(!blob.size)throw Error('Encoder generated an empty video.');
+   const outputMime=rec.mimeType||mime;if(!/^video\/(mp4|webm)(;|$)/i.test(outputMime))throw Error('Encoder returned an unexpected video format.');const blob=new Blob(fragments,{type:outputMime});if(!blob.size)throw Error('Encoder generated an empty video.');
    if(exportUrl)URL.revokeObjectURL(exportUrl);exportUrl=URL.createObjectURL(blob);
-   $('clipDownload').href=exportUrl;$('clipDownload').download='heavenly-key-timeline.'+(mime.startsWith('video/mp4')?'mp4':'webm');$('clipDownload').hidden=false;
-   info((stream.getAudioTracks().length?'':'Warning: this browser exported video without audio. ')+'Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(mime.startsWith('video/mp4')?'MP4':'WebM')+' file.');
+   $('clipDownload').href=exportUrl;$('clipDownload').download='heavenly-key-timeline.'+(outputMime.toLowerCase().startsWith('video/mp4')?'mp4':'webm');$('clipDownload').hidden=false;
+   info((stream.getAudioTracks().length?'':'Warning: this browser exported video without audio. ')+'Timeline export ready ('+(blob.size/1048576).toFixed(1)+' MB). Download the '+(outputMime.toLowerCase().startsWith('video/mp4')?'MP4':'WebM')+' file.');
   }else info('Timeline preview complete.');
  }catch(e){if(rec&&rec.state!=='inactive')try{rec.stop()}catch{}if(!state.sourceChanged)info(state.cancelled?'Timeline operation stopped.':'Timeline failed: '+e.message)}
  finally{if(!state.sourceChanged){try{v.pause()}catch{}try{v.playbackRate=rate}catch{}try{if(ready())v.currentTime=Math.min(before,v.duration)}catch{}}for(const mediaStream of [stream,sourceStream]){if(!mediaStream)continue;try{for(const track of mediaStream.getTracks())try{track.stop()}catch{}}catch{}}session=null;setBusy(false)}
