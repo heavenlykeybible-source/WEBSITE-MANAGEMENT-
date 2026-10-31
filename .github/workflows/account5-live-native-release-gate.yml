@@ -1,0 +1,33 @@
+name: Account 5 Live Native Installer Release Gate
+on:
+  workflow_dispatch:
+    inputs:
+      full_download:
+        description: 'Download entire APK, MSIX and DMG; verify all bytes against published SHA-256'
+        required: true
+        type: boolean
+        default: true
+  push:
+    branches: [account5-share-url-hardening-20261031]
+    paths:
+      - 'heavenly-key-accounts/account-05-heavenly-key-app/source/scripts/verify-live-native-downloads.mjs'
+      - '.github/workflows/account5-live-native-release-gate.yml'
+permissions:
+  contents: read
+jobs:
+  public-native-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-05-heavenly-key-app/source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check production installer URLs and metadata
+        run: node scripts/verify-live-native-downloads.mjs
+      - name: Download and cryptographically hash complete installers
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_download }}
+        run: node scripts/verify-live-native-downloads.mjs --full
