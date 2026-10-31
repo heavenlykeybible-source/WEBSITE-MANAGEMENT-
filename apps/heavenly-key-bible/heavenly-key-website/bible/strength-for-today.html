@@ -58,7 +58,7 @@ async function loadDailyDrafts(){const date=previewDate||lagosDayKey(),token=++d
   try{
    const approval=await fetchDevotionalJson('./strength-publication-status.json',16384);
    if(approval){
-    published=approval?.schemaVersion===1&&approval?.publicationStatus==='published'&&Array.isArray(approval.publishedBatchFiles)&&approval.publishedBatchFiles.length<=24&&approval.publishedBatchFiles.every(name=>typeof name==='string'&&name.length<=100&&name.startsWith('strength-')&&name.endsWith('.json')&&!name.includes('/')&&!name.includes('..'))&&approval.publishedBatchFiles.includes(batch[2]);
+    published=approval?.schemaVersion===1&&approval?.publicationStatus==='published'&&Array.isArray(approval.publishedBatchFiles)&&approval.publishedBatchFiles.length<=DEVOTIONAL_BATCHES.length&&new Set(approval.publishedBatchFiles).size===approval.publishedBatchFiles.length&&approval.publishedBatchFiles.every(name=>typeof name==='string'&&DEVOTIONAL_BATCHES.some(known=>known[2]===name))&&approval.publishedBatchFiles.includes(batch[2]);
    }
   }catch{}
  }
