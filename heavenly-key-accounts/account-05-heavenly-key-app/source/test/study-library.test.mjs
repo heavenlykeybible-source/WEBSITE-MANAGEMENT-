@@ -55,6 +55,6 @@ test('Android and Apple installation icon references and safe viewports are vali
  const manifest=json('public/manifest.webmanifest');
  for(const icon of manifest.icons){const source=readFileSync(new URL('public'+icon.src,root),'utf8');const size=Number(icon.sizes.split('x')[0]);assert.equal(icon.type,'image/svg+xml');assert.ok(source.startsWith('<svg '));assert.match(source,new RegExp('width="'+size+'"'));assert.match(source,new RegExp('height="'+size+'"'));assert.match(source,/viewBox="0 0 \d+ \d+"/);}
  for(const page of ['index.html','bible.html','devotional.html','hymns.html','audio-hymns.html'])assert.match(read('public/'+page),/viewport-fit=cover/);
- assert.match(read('public/experience.html'),/apple-touch-icon.svg/);
+ assert.match(read('public/experience.html'),/apple-touch-icon[^>]*href=|href="\/icons\/all-in-one-192\.png"/);
  assert.match(read('public/styles.css'),/min-height:44px/);
 });
