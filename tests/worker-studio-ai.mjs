@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 const fixture=new URL('./worker-studio-ai-fixture.mjs',import.meta.url);
-fs.writeFileSync(fixture,fs.readFileSync('control-room-worker.js','utf8')+'\nexport {extraAITool,seal,sha256,checkAIToolPermission,verifyPinnedStudioWorker};');
+fs.writeFileSync(fixture,fs.readFileSync('control-room-worker.js','utf8')+'\nexport {extraAITool,seal,sha256,checkAIToolPermission,verifyPinnedStudioWorker,requirePinnedExistingWorker};');
 const previousFetch=globalThis.fetch;
 try{
- const {extraAITool,seal,sha256,checkAIToolPermission,verifyPinnedStudioWorker}=await import(fixture.href);
+ const {extraAITool,seal,sha256,checkAIToolPermission,verifyPinnedStudioWorker,requirePinnedExistingWorker}=await import(fixture.href);
  const raw=new DatabaseSync(':memory:');raw.exec(fs.readFileSync('schema.sql','utf8'));
  raw.exec("INSERT INTO users(id,username,role,kind,status) VALUES(1,'owner','owner','staff','active'); INSERT INTO agents(id,name,token_hash,can_read,can_propose,status) VALUES(1,'Worker Studio AI','test',1,1,'active'); INSERT INTO cf_connections(id,label,account_id,token_enc) VALUES(4,'Account 4','account-4','unused')");
  const DB={prepare(sql){let values=[];return {bind(...args){values=args;return this},async first(){return raw.prepare(sql).get(...values)||null},async all(){return {results:raw.prepare(sql).all(...values)}},async run(){const r=raw.prepare(sql).run(...values);return {meta:{changes:r.changes,last_row_id:r.lastInsertRowid}}}}}};
@@ -26,6 +26,12 @@ try{
  await assert.rejects(checkAIToolPermission(env,{aiPolicy:policy},'list_workers',{connection:9}),e=>e.status===404);
  await assert.rejects(checkAIToolPermission(env,{aiPolicy:{...policy,connections:[]}},'read_worker_source',{connection:4}),e=>e.status===403);
  await assert.rejects(checkAIToolPermission(env,{aiPolicy:{...policy,expires_at:1}},'read_worker_source',{connection:4}),e=>e.status===403);
+ assert.equal(requirePinnedExistingWorker({name:'worker-one',base_sha256:'a'.repeat(64)},true),true);
+ for(const invalid of [{name:'worker-one'},{name:'worker-one',base_sha256:'invalid'},{name:'worker-one',base_sha256:''}]){
+  assert.throws(()=>requirePinnedExistingWorker(invalid,true),e=>e.status===409);
+ }
+ assert.equal(requirePinnedExistingWorker({name:'new-worker'},false),true);
+ assert.throws(()=>requirePinnedExistingWorker({name:'deleted-worker',base_sha256:'a'.repeat(64)},false),e=>e.status===409);
  const actor={kind:'agent',agentId:1,a:{id:1,can_read:1,can_propose:1}};
  const args={connection:4,worker:'worker-one',base_sha256:await sha256(live),code:'export default {fetch(){return new Response("new")}}'};
  const result=await extraAITool(env,actor,'propose_existing_worker_revision',args);
