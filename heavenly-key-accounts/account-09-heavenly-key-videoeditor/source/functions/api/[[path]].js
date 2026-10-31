@@ -217,7 +217,7 @@ export async function onRequest({ request: req, env, params }) {
       if (!deleteSlot.meta.changes)return J({ error: 'Too many confirmation attempts. Try again in 15 minutes.' },429);
       const row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
       if (!row || await pbkdf2(b.password, row.salt) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
-      const files = (await env.DB.prepare('SELECT r2_key FROM media WHERE user_id=? AND deleted=0').bind(u.id).all()).results;
+      const files = (await env.DB.prepare('SELECT r2_key FROM media WHERE user_id=?').bind(u.id).all()).results;
       for (const x of files) await env.MEDIA.delete(x.r2_key);
       for (const t of ['media', 'projects', 'sessions']) await env.DB.prepare(`DELETE FROM ${t} WHERE user_id=?`).bind(u.id).run();
       await env.DB.prepare('DELETE FROM audit WHERE user_id=?').bind(u.id).run();
