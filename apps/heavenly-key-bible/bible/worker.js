@@ -111,7 +111,7 @@ export default {
    "strength-devotionals-year5-batch01.json":["2030-10-30","2031-01-28"],
    "strength-devotionals-year5-batch02.json":["2031-01-29","2031-04-29"],
    "strength-devotionals-year5-batch03.json":["2031-04-30","2031-07-29"],
-   "strength-devotionals-year5-batch04.json":["2031-07-30","2031-10-29"]
+   "strength-devotionals-year5-batch04.json":["2031-07-30","2031-10-31"]
    };
    if(!draftMatch||!batchRanges[draftMatch[1]])return deny();
    try{
