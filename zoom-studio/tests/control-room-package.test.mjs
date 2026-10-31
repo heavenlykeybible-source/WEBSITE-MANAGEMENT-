@@ -1111,3 +1111,30 @@ test('WebSocket initialization failure closes the accepted socket rather than le
  assert.equal(accepted.closed,true,'the accepted WebSocket must be closed on initialization error');
  assert.equal(accepted.readyState,3);
 });
+
+test('switching Twitch chat channels ignores stale connection events and clears previous chat',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const start=html.indexOf('let cws=null;'),end=html.indexOf("const dl=document.createElement('canvas');",start);
+ assert.ok(start>0&&end>start);
+ const section=html.slice(start,end),sockets=[],chatLog=[{n:'Previous',t:'old'}];
+ const nodes={chn:{value:'firstchannel'},chs:{textContent:''},chc:{},cl:{children:[],replaceChildren(){this.children=[]},prepend(n){this.children.unshift(n)},get lastChild(){return {remove:()=>{this.children.pop()}}}}};
+ const $=id=>nodes[id];
+ const FakeWebSocket=class {constructor(url){this.url=url;this.sent=[];this.closed=false;sockets.push(this)}send(data){this.sent.push(data)}close(){this.closed=true}};
+ new Function('$','WebSocket','chatLog','document',section)($,FakeWebSocket,chatLog,{createElement:()=>({textContent:''})});
+ nodes.chc.onclick();const first=sockets[0];first.onopen();
+ assert.match(nodes.chs.textContent,/firstchannel/);
+ chatLog.push({n:'First',t:'hello'});
+ nodes.chn.value='secondchannel';nodes.chc.onclick();
+ const second=sockets[1];second.onopen();
+ assert.equal(first.closed,true);
+ assert.equal(chatLog.length,0,'changing channels must clear old on-screen messages');
+ first.onclose();
+ assert.equal(nodes.chs.textContent,'Connected to #secondchannel','old socket close must not overwrite current status');
+ const messages=nodes.cl.children.length;
+ first.onmessage({data:'@display-name=Old;id=1 PRIVMSG #firstchannel :obsolete\\r\\n'});
+ assert.equal(nodes.cl.children.length,messages,'old socket messages must not leak into new channel');
+ first.onopen();
+ assert.equal(first.sent.filter(x=>x==='JOIN #secondchannel').length,0,'stale channel must not join the new stream');
+ second.onclose();
+ assert.equal(nodes.chs.textContent,'Chat disconnected.');
+});
