@@ -74,3 +74,13 @@ test('live native installer release gate checks public packages after approved d
  assert.match(source,/node scripts\/verify-live-native-downloads\.mjs --full/);
  assert.match(source,/workflow_dispatch:/);
 });
+
+test('Android release versions increase across signed releases and reject invalid codes',()=>{
+ const gradle=readFileSync(new URL('../../native/android/app/build.gradle',import.meta.url),'utf8');
+ const source=workflow('release-account5-android.yml');
+ assert.match(source,/HKEM_ANDROID_VERSION_CODE: \$\{\{ github.run_number \}\}/);
+ assert.match(gradle,/System.getenv\('HKEM_ANDROID_VERSION_CODE'\)/);
+ assert.match(gradle,/Invalid Android version code/);
+ assert.match(gradle,/versionCode Integer.parseInt\(codeValue\)/);
+ assert.match(gradle,/versionName '1.0.' \+ codeValue/);
+});
