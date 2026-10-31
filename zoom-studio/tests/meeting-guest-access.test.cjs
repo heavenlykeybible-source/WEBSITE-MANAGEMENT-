@@ -678,3 +678,17 @@ test('expired host handshake cannot create room after delayed token verification
  assert.equal(ws.messages.some(m=>m.t==='created'),false);
  assert.equal(h.r.host(),undefined);
 });
+
+test('stage alarm does not disconnect guest demoted during delayed identity check',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ assert.equal(h.guest.attachment.stage,true);
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(false);started();});
+ const pending=h.r.alarm();await reached;
+ h.guest.attachment.stage=false;h.guest.attachment.aud=true;
+ release();await pending;
+ assert.equal(h.guest.readyState,1);
+ assert.equal(h.guest.attachment.stage,false);
+});
