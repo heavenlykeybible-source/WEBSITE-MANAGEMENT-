@@ -374,6 +374,11 @@ export async function onRequest({ request: req, env, params }) {
         const name = (new URL(req.url).searchParams.get('name') || 'file').replace(/[^\w.\- ]/g, '_').replace(/^[.\- ]+/, '').replace(/\.{2,}/g, '.').slice(0, 120).replace(/[. ]+$/, '') || 'file';
         const type = (req.headers.get('content-type') || 'application/octet-stream').split(';')[0];
         if (!/^(video\/(mp4|webm|quicktime|ogg)|audio\/(mpeg|wav|x-wav|webm|ogg|mp4|aac|flac|x-m4a)|image\/(png|jpeg|gif|webp))$/.test(type)) return J({ error: 'Only MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC, PNG, JPG, GIF, or WebP files are allowed.' }, 415);
+        const suffix=name.includes('.') ? name.slice(name.lastIndexOf('.')+1).toLowerCase() : '';
+        const extensions={'video/mp4':['mp4'],'video/webm':['webm'],'video/quicktime':['mov'],'video/ogg':['ogg','ogv'],'audio/mpeg':['mp3','mpeg'],'audio/wav':['wav'],'audio/x-wav':['wav'],'audio/webm':['webm'],'audio/ogg':['ogg','oga'],'audio/mp4':['m4a','mp4'],'audio/aac':['aac'],'audio/flac':['flac'],'audio/x-m4a':['m4a'],'image/png':['png'],'image/jpeg':['jpg','jpeg'],'image/gif':['gif'],'image/webp':['webp']};
+        if (suffix && !extensions[type]?.includes(suffix)) return J({error:'Filename extension does not match media type.'},415);
+        const segments=name.toLowerCase().split('.');
+        if (segments.slice(0,-1).some(part=>['html','htm','svg','js','mjs','php','phtml','asp','aspx','jsp','exe','bat','cmd','sh'].includes(part))) return J({error:'Unsafe filename extension.'},415);
         const announced = req.headers.get('content-length');
         if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > MAXFILE)) return J({ error: 'File must be under 50 MB.' }, 413);
         // Atomically reserve an upload attempt before buffering up to 50 MB into memory.
