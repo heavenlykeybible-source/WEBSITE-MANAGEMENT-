@@ -20,6 +20,7 @@ export function validateDailyDevotional(entry){
  if(!nonempty(s.hymn?.collection)||!Number.isInteger(s.hymn?.number)||s.hymn.number<1||!nonempty(s.hymn?.title))errors.push('Hymn collection, number and title required');
  if(!bibleReference(s.bibleStory?.reference)||!nonempty(s.bibleStory?.summary))errors.push('Bible story and Scripture source required');
  if(!nonempty(s.worldStory?.summary)||!nonempty(s.worldStory?.sourceUrl)||!/^https:\/\//.test(s.worldStory.sourceUrl||''))errors.push('World story requires documented HTTPS source');
+ if(!nonempty(s.worldStory?.publishedDate)||!/^\d{4}-\d{2}-\d{2}$/.test(s.worldStory.publishedDate)||!Number.isFinite(Date.parse(s.worldStory.publishedDate))||new Date(s.worldStory.publishedDate).toISOString().slice(0,10)!==s.worldStory.publishedDate)errors.push('World story requires a valid publication date');
  for(const key of ['eternity','decision','propheticPrayer','healthPrayer','salvation'])if(!nonempty(s[key]?.text))errors.push('Missing '+key+' text');
  if(!Array.isArray(s.warfare?.prayerPoints)||s.warfare.prayerPoints.length!==3||!s.warfare.prayerPoints.every(nonempty))errors.push('Three warfare prayer points required');
  if(!Array.isArray(s.warfare?.permanentReferences)||!['Matthew 11:12','Luke 18:1'].every(ref=>s.warfare.permanentReferences.includes(ref)))errors.push('Permanent warfare references missing');
