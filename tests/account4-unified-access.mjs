@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 const fixture=new URL('./unified-access-fixture.mjs',import.meta.url);
-fs.writeFileSync(fixture,fs.readFileSync('control-room-worker.js','utf8')+'\nexport {sharedAIGrant,requestAIWorkspaceAccess,aiWorkspaceRoutes,ownerApprovalSession,checkOwnerApprovalSession,checkNewWorkerDomain,domainApprovalRoutes,prepareWorkerDomain,seal,mcp,sha256};');
+fs.writeFileSync(fixture,fs.readFileSync('control-room-worker.js','utf8').replace("from './scripts/account4-private-import-routes.mjs'","from '../scripts/account4-private-import-routes.mjs'")+'\nexport {sharedAIGrant,requestAIWorkspaceAccess,aiWorkspaceRoutes,ownerApprovalSession,checkOwnerApprovalSession,checkNewWorkerDomain,domainApprovalRoutes,prepareWorkerDomain,seal,mcp,sha256};');
 try{
 const w=await import(fixture.href),raw=new DatabaseSync(':memory:');raw.exec(fs.readFileSync('schema.sql','utf8'));
 raw.exec("INSERT INTO users(id,username,role,kind,status) VALUES(1,'owner','owner','staff','active'); INSERT INTO agents(id,name,token_hash,can_read,can_propose,status) VALUES(1,'AI One','one',1,1,'active'),(2,'AI Two','two',1,1,'active'); INSERT INTO cf_connections(id,label,account_id,token_enc) VALUES(5,'Account 4','account-four','unused'),(6,'Account 1','account-one','unused');");

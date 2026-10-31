@@ -24,3 +24,9 @@ bucket_name = "website-management-files"
 
 [ai]
 binding = "AI"
+
+# Separate storage for owner-only website package staging. Create this bucket
+# with public access disabled and no public custom domain before deployment.
+[[r2_buckets]]
+binding = "PRIVATE_IMPORTS"
+bucket_name = "website-management-private-imports"

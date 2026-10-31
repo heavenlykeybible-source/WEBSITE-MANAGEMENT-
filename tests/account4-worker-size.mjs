@@ -1,5 +1,5 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';
-const fixture=new URL('./worker-size-fixture.mjs',import.meta.url);fs.writeFileSync(fixture,fs.readFileSync('control-room-worker.js','utf8')+'\nexport {body,coreProposeWorker,WORKER_CODE_LIMIT,LARGE_JSON_LIMIT};');
+const fixture=new URL('./worker-size-fixture.mjs',import.meta.url);fs.writeFileSync(fixture,fs.readFileSync('control-room-worker.js','utf8').replace("from './scripts/account4-private-import-routes.mjs'","from '../scripts/account4-private-import-routes.mjs'")+'\nexport {body,coreProposeWorker,WORKER_CODE_LIMIT,LARGE_JSON_LIMIT};');
 try{const {body,coreProposeWorker,WORKER_CODE_LIMIT,LARGE_JSON_LIMIT}=await import(fixture.href);assert.equal(WORKER_CODE_LIMIT,1_400_000*5);assert.equal(LARGE_JSON_LIMIT,6*1024*1024*5);
 const code='x'.repeat(WORKER_CODE_LIMIT);for(const path of ['/mcp','/api/owner/propose-worker','/api/agent/propose-worker'])assert.equal((await body(new Request('https://room'+path,{method:'POST',body:JSON.stringify({code})}))).code.length,WORKER_CODE_LIMIT);
 await assert.rejects(body(new Request('https://room/api/login',{method:'POST',body:JSON.stringify({code})})),e=>e.status===413);

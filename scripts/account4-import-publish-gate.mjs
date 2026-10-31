@@ -1,0 +1,52 @@
+// Staging-only guard for a FUTURE publication pipeline. No scanner or route wired.
+// A database row is not a scanner: only a trusted backend scanner integration
+// may write the attestation; owner approval must come from a separate workflow.
+export async function assertPrivateImportPublishable(db, bucket, actor, id) {
+  if (actor?.authenticated !== true || actor?.canPublish !== true || actor?.role !== 'owner' ||
+      !Number.isSafeInteger(actor.id) || actor.id < 1)
+    throw new Error('Publication permission required');
+  if (typeof id !== 'string' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+    throw new Error('Invalid import identifier');
+  const row = await db.prepare(
+    'SELECT s.owner_id,s.state,s.object_key,s.size_bytes,a.verdict,a.object_key AS scanned_key,a.size_bytes AS scanned_size,a.approved_by,a.approved_at,a.scanned_at,a.scanned_sha256,a.approved_sha256,a.scanned_version,a.scanned_etag FROM account4_import_sessions s LEFT JOIN account4_import_release_attestations a ON a.session_id=s.id WHERE s.id=? AND s.owner_id=?'
+  ).bind(id,actor.id).first();
+  // No release on missing rows, failed/unknown scans, modified objects,
+  // missing owner approval.
+  if (!row || row.owner_id !== actor.id ||
+      row.state !== 'private-awaiting-review' ||
+      !new RegExp('^private-imports/' + actor.id +
+        '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$','i').test(row.object_key || '') ||
+      row.verdict !== 'clean' ||
+      row.object_key.toLowerCase() !== ('private-imports/' + actor.id + '/' + id).toLowerCase() ||
+      row.scanned_key !== row.object_key ||
+      !Number.isSafeInteger(row.size_bytes) || row.size_bytes < 1 ||
+      row.scanned_size !== row.size_bytes ||
+      typeof row.scanned_sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(row.scanned_sha256) ||
+      row.approved_sha256 !== row.scanned_sha256 ||
+      typeof row.scanned_etag !== 'string' || !/^[0-9a-f]{32}(?:-[1-9][0-9]{0,2})?$/i.test(row.scanned_etag) ||
+      typeof row.scanned_version !== 'string' || !/^[a-zA-Z0-9_-]{8,256}$/.test(row.scanned_version) ||
+      !Number.isSafeInteger(row.approved_by) || row.approved_by !== actor.id ||
+      typeof row.scanned_at !== 'string' || !row.scanned_at ||
+      typeof row.approved_at !== 'string' || !row.approved_at ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(row.scanned_at) ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(row.approved_at) ||
+      !Number.isFinite(Date.parse(row.scanned_at)) ||
+      !Number.isFinite(Date.parse(row.approved_at)) ||
+      Date.parse(row.approved_at) < Date.parse(row.scanned_at) ||
+      Date.parse(row.scanned_at) > Date.now() ||
+      Date.parse(row.approved_at) > Date.now())
+    throw new Error('Private import not cleared for publication');
+  // R2 versions identify individual writes, including overwrites at the same key.
+  // A clean verdict for an older version must never authorize a replacement.
+  if (!bucket || typeof bucket.head !== 'function')
+    throw new Error('Private import not cleared for publication');
+  const live = await bucket.head(row.object_key);
+  if (!live || live.key !== row.object_key || live.size !== row.size_bytes ||
+      live.version !== row.scanned_version || live.etag !== row.scanned_etag)
+    throw new Error('Private import not cleared for publication');
+  // This is an eligibility check only, not an atomic publish operation.
+  // Future publication must use a version-conditional read/copy to avoid TOCTOU.
+  return Object.freeze({id, state:'cleared-for-publication', version:live.version,
+    key:row.object_key, size:row.size_bytes, etag:row.scanned_etag});
+}
