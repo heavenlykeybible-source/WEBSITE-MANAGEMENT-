@@ -422,7 +422,12 @@ const brokenWav=await onRequest({
 check('Malformed audio is rejected before AI usage',brokenWav.status===415);
 
 check('Successful transcription reserves one attempted AI operation',db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe_attempt'").get(accountId).c===1);
-for(let i=1;i<120;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'transcribe_attempt',Date.now());
+const failedTranscription=await onRequest({
+  request:new Request('https://studio.example/api/transcribe',{method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},body:validWav}),
+  env:{...env,AI:{run:async()=>{throw Error('Simulated transcription outage')}}},params:{path:['transcribe']}
+});
+check('Failed transcription provider still consumes one reserved attempt',failedTranscription.status===500&&db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe_attempt'").get(accountId).c===2);
+for(let i=2;i<120;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'transcribe_attempt',Date.now());
 const tooManyTranscriptions=await onRequest({
   request:new Request('https://studio.example/api/transcribe',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},body:validWav
