@@ -60,6 +60,15 @@ test('invalid calendar date denies a supposedly published batch',async()=>{
  const {env}=fixtures(published,[{...approvedEntry,date:'2026-02-30'}]);
  assert.equal((await worker.fetch(request(),env)).status,404);
 });
+test('valid leap date remains eligible for approved publication',async()=>{
+ const {env}=fixtures(published,[{...approvedEntry,date:'2028-02-29'}]);
+ const response=await worker.fetch(request(),env);
+ assert.equal(response.status,200);
+});
+test('invalid non-leap February date is rejected',async()=>{
+ const {env}=fixtures(published,[{...approvedEntry,date:'2027-02-29'}]);
+ assert.equal((await worker.fetch(request(),env)).status,404);
+});
 test('empty Scripture and unbounded topic text deny public access',async()=>{
  const incomplete=approvedEntry.topics.map(t=>({...t}));
  incomplete[0].bibleText=' ';
