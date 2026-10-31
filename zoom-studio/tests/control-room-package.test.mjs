@@ -767,3 +767,12 @@ test('repeated close and error callbacks notify host only once',async()=>{
  assert.equal(s.host.messages.filter(m=>m.t==='left'&&m.gid===guest.d.id).length,1);
  assert.equal(guest.d.closeNotified,true);
 });
+
+test('broadcast studio preserves sharp camera output and fails safely on background errors',()=>{
+ const page=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(page,/limit=\$\('lite'\)\.checked\?720:1280/,'normal mode must use a higher-resolution segmentation canvas');
+ assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\)return/,'disabled segmentation must not keep processing the camera');
+ assert.match(page,/s\.oc=null;ui\(\);msg\('Original camera restored/,'disabling backgrounds restores the unprocessed camera');
+ assert.match(page,/t\.img\.onerror=\(\)=>msg\('This studio background could not be loaded/,'missing studio assets must be reported');
+ for(const ratio of ['Landscape (16:9)','Portrait (9:16, phones)','Square (1:1)'])assert.ok(page.includes(ratio));
+});
