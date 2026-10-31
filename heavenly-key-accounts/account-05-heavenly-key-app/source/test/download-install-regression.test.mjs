@@ -253,3 +253,10 @@ test('sharing tolerates non-element click targets and install errors are accessi
  assert.match(js,/Installation options are temporarily unavailable/);
  assert.doesNotMatch(js,/alert\(e\.message\)/);
 });
+
+test('install dialog does not claim unaudited native packages are verified', () => {
+ const js=publicFile('app-pages.js');
+ assert.doesNotMatch(js,/verified native packages appear only after release security checks/i);
+ assert.doesNotMatch(js,/Verified native install if available/);
+ assert.match(js,/Native option if available/);
+});
