@@ -472,3 +472,11 @@ test('chat strips additional invisible Unicode formatting controls',async()=>{
  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'chat',text:'A\u061cB\u206aC\u034fD'}));
  assert.ok(h.host.messages.some(m=>m.t==='chat'&&m.text==='ABCD'));
 });
+
+test('slow mode accepts only finite integer seconds',async()=>{
+ const h=setup();await h.join('');
+ for(const [sec,expected] of [[1.8,1],[-4,0],[999,60],['Infinity',0],['not-a-number',0]]){
+  await h.r.webSocketMessage(h.host,JSON.stringify({t:'slow',sec}));
+  assert.equal(h.host.attachment.slow,expected);
+ }
+});
