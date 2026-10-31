@@ -19,7 +19,8 @@ if (!timeline.includes('let completedSeconds=0') || !timeline.includes("+'% comp
 if (!timeline.includes('c.end<=86400')) throw Error('Restored timeline timestamp safety limit missing');
 if (!timeline.includes('const validSourceRange=()=>ready()&&v.duration<=86400') || (timeline.match(/validSourceRange\(\)/g)||[]).length<4) throw Error('Timeline source duration limit missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
-for (const id of ['clipAddFull','clipClear','clipFirst','clipLast','clipReverse']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
+for (const id of ['clipAddFull','clipClear','clipFirst','clipLast','clipReverse','clipCopy','clipPaste']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
+if (!timeline.includes('copiedClip=null;undo=[];redo=[];paint()') || !timeline.includes('copiedClip=null;pendingProjectMedia=true') || !timeline.includes("$('clipPaste').onclick=()=>")) throw Error('Source-safe clip clipboard missing');
 if (!timeline.includes('JSON.stringify({clips,selected:chosen()})') || !timeline.includes('paint(previous.selected)') || !timeline.includes('paint(next.selected)')) throw Error('Timeline undo/redo selection persistence missing');
 for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="'+control+'"') || !timeline.includes("$('"+control+"').onclick=")) throw Error('Timeline playhead trim control missing: '+control);
 if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
