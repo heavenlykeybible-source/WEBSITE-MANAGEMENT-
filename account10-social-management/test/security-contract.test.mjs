@@ -563,3 +563,21 @@ test('Meta challenge response blocks cross-origin embedding and active content',
  assert.ok(response.includes("'cross-origin-resource-policy':'same-origin'"));
  assert.ok(response.includes("default-src 'none'; frame-ancestors 'none'; base-uri 'none'"));
 });
+
+
+test('state-changing browser requests reject cross-site Fetch Metadata before origin fallback', () => {
+ const fetchGuard=source.indexOf("['cross-site','same-site'].includes(req.headers.get('sec-fetch-site')||'')");
+ const originGuard=source.indexOf("operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin)");
+ assert.ok(fetchGuard>=0&&originGuard>fetchGuard,'Fetch Metadata guard must run before the Origin fallback');
+ assert.match(source,/vary':'Origin, Sec-Fetch-Site/);
+ assert.match(source,/Untrusted browser mutation origin/);
+});
+
+test('health endpoint is read-only and HEAD responses have no body', () => {
+ const begin=source.indexOf("if(u.pathname==='/health'){");
+ const end=source.indexOf("if(u.pathname!=='/api'",begin);
+ assert.ok(begin>=0&&end>begin);
+ const route=source.slice(begin,end);
+ assert.match(route,/req.method!=='GET'&&req.method!=='HEAD'/);
+ assert.match(route,/req.method==='HEAD'\?new Response\(null/);
+});
