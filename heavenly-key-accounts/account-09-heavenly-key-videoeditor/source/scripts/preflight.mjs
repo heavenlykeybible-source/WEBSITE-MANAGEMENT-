@@ -23,6 +23,7 @@ for (const id of ['clipAddFull','clipClear','clipFirst','clipLast','clipReverse'
 if (!timeline.includes('copiedClip=null;undo=[];redo=[];paint()') || !timeline.includes('copiedClip=null;pendingProjectMedia=true') || !timeline.includes("$('clipPaste').onclick=()=>")) throw Error('Source-safe clip clipboard missing');
 if (!timeline.includes('JSON.stringify({clips,selected:chosen()})') || !timeline.includes('paint(previous.selected)') || !timeline.includes('paint(next.selected)')) throw Error('Timeline undo/redo selection persistence missing');
 for (const control of ['clipTrimIn','clipTrimOut']) if (!timeline.includes('id="'+control+'"') || !timeline.includes("$('"+control+"').onclick=")) throw Error('Timeline playhead trim control missing: '+control);
+if (!timeline.includes("['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm") || !timeline.includes('const outputMime=rec.mimeType||mime') || !timeline.includes("(outputMime.toLowerCase().startsWith('video/mp4')?'mp4':'webm')")) throw Error('Compatible MP4 preference and recorder MIME export validation missing');
 if (!timeline.includes('recordedBytes>256*1024*1024')) throw Error('Timeline export size safeguard missing');
 if (!timeline.includes('state.abortPlayback?.();state.abortStart?.();return') || !timeline.includes('if(encoderError)throw encoderError;')) throw Error('Oversized encoder stream early-abort safeguard missing');
 if (!timeline.includes('rec.ondataavailable=e=>{if(state.cancelled||encoderError||!e.data?.size)return;')) throw Error('Late encoder data discard missing');
