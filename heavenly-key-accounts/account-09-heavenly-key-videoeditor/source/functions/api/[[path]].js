@@ -294,7 +294,7 @@ export async function onRequest({ request: req, env, params }) {
       if (!transcribeReserved.meta.changes) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' },429);
       const r = await env.AI.run('@cf/openai/whisper', { audio: [...new Uint8Array(audio)] });
       await log(env, u.id, 'transcribe');
-      return J({ text: r.text || '', words: (r.words || []).map(w => ({ word: String(w.word), start: +w.start, end: +w.end })) });
+      return J({ text: String(r?.text || '').slice(0,12000), words: (Array.isArray(r?.words) ? r.words : []).slice(0,2000).filter(w=>w&&Number.isFinite(Number(w.start))&&Number.isFinite(Number(w.end))&&Number(w.start)>=0&&Number(w.end)>=Number(w.start)).map(w => ({ word: String(w.word || '').slice(0,160), start: Number(w.start), end: Number(w.end) })) });
     }
     if (a === 'projects') {
       if (!p[1] && m === 'GET') return J((await env.DB.prepare('SELECT id,name,updated_at FROM projects WHERE user_id=? ORDER BY updated_at DESC LIMIT 200').bind(u.id).all()).results);
