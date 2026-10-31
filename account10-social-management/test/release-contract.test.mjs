@@ -119,3 +119,14 @@ test('D1 release instructions require schema inspection, backup and one-at-a-tim
  assert.match(safety,/Do not infer migration state/);
  assert.match(safety,/does not claim that any remote migration has been applied/);
 });
+
+
+test('ASVS/SSDF security register preserves explicit global-launch blockers', () => {
+ const register=readFileSync(resolve(root,'SECURITY-VERIFICATION.md'),'utf8');
+ assert.match(register,/OWASP Application Security Verification Standard \(ASVS\) 5\.0\.0/);
+ assert.match(register,/NIST Secure Software Development Framework/);
+ assert.match(register,/individual owner identity, MFA, short-lived server-side sessions/);
+ assert.match(register,/NOT APPROVED FOR GLOBAL PRODUCTION LAUNCH/);
+ assert.match(register,/independent authenticated penetration testing/);
+ assert.ok(existsSync(resolve(root,'SECURITY-VERIFICATION.md')));
+});
