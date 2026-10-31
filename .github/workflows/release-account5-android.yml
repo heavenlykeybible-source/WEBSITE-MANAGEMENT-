@@ -87,6 +87,35 @@ jobs:
           sha256sum "$apk" >> "$apk.security.txt"
           printf 'scannedSha256=' >> "$apk.security.txt"
           sha256sum "$apk" | cut -d ' ' -f 1 >> "$apk.security.txt"
+      - name: Install and launch the actual signed APK on Android 15 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_3a
+          disable-animations: true
+          working-directory: heavenly-key-accounts/account-05-heavenly-key-app/native/android
+          script: |
+            set -euo pipefail
+            apk=app/build/outputs/apk/release/app-release.apk
+            test -s "$apk"
+            adb install -r "$apk"
+            adb shell pm path org.heavenlykey.apps | grep -q '^package:'
+            adb shell am start -W -n org.heavenlykey.apps/.MainActivity
+            sleep 8
+            adb shell pidof org.heavenlykey.apps | grep -Eq '[0-9]+'
+            adb shell dumpsys activity activities | grep -q org.heavenlykey.apps
+      - name: Reconfirm installer SHA-256 after device testing
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          expected="$(awk 'NR==1 {print $1}' "$apk.sha256")"
+          actual="$(sha256sum "$apk" | cut -d ' ' -f 1)"
+          test "$actual" = "$expected" || {
+            echo "::error::Signed APK changed during emulator verification"
+            exit 1
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: heavenly-key-account5-signed-android-release
