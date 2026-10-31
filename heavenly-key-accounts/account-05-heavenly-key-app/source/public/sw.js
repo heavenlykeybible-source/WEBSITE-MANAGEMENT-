@@ -10,7 +10,7 @@ const SHELL=['/creation-to-eternity-presentation.css','/walk-integrations.css','
  '/audio-hymn-catalog.js','/audio-hymn-manifest.json','/audio-hymns.js','/audio-hymns.css','/featured-main-hymn.js','/lock-screen-media.js','/walk-offline.html','/walk-offline.js','/walk-offline-content.js','/offline-vault.js','/offline-status.js','/creation-to-eternity.html','/walk-offline.css','/creation-to-eternity.js','/creation-to-eternity.css','/offline-noscript.css'];
 const PUBLIC=new Set(SHELL),READING=new Set(['/bible.html']);
 function isSafePublicResponse(response){
- if(!response || response.status!==200 || response.type!=='basic' || response.redirected)return false;
+ if(!response || !response.ok || response.status!==200 || response.type!=='basic' || response.redirected)return false;
  const control=response.headers.get('cache-control')||'';
  const vary=response.headers.get('vary')||'';
  // Partial content must never replace a complete offline shell asset.
