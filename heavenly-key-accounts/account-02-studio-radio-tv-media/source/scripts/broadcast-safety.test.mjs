@@ -81,6 +81,7 @@ assert.match(entry, /Viewer token issuance failed/, 'Internal failure must be lo
 assert.match(entry, /return json\(\{error:'Live transport unavailable'\},503\)/, 'Return a generic viewer error');
 const publicViewerRoute = entry.slice(entry.indexOf("if(url.pathname==='/api/media-engine/livekit/viewer-token'"), entry.indexOf("if(marker!=='media-engine-v1'"));
 assert.ok(publicViewerRoute.length > 0, 'Public viewer route must exist');
+assert.match(publicViewerRoute, /'Cache-Control':'no-store'/, 'Do not cache time-sensitive viewer credentials');
 assert.doesNotMatch(publicViewerRoute, /error:e instanceof Error\?e\.message/, 'Public viewer endpoint must not expose provider exception messages');
 
 console.log('Account 2 broadcast safety regression checks passed');
