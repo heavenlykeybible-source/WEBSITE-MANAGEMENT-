@@ -89,5 +89,5 @@ Verification boundary:
 - Added a 30-minute inactivity timeout and a fixed 30-day absolute maximum session lifetime.
 - Session activity refreshes `last_seen_at` no more than once every five minutes, limiting D1 writes while retaining a sliding idle window.
 - New sessions store `last_seen_at`; `user()` rejects expired or idle sessions before returning an authenticated user.
-- Added migration `0006_session_inactivity_timeout.sql` for existing databases and regression coverage for active, refreshed, idle-expired and absolute-expiry behavior.
+- Added migration `0006_session_inactivity_timeout.sql` for existing databases and regression coverage for active, refreshed, idle-expired and legacy timestamp backfill behavior.
 - This is committed source-level work only; the full suite and live D1 migration have not yet been executed. Back up existing D1 before applying migrations.
