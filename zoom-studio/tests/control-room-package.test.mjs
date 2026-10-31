@@ -964,3 +964,14 @@ test('slow WebSocket consumer is disconnected without blocking healthy meeting p
  assert.equal(healthy.messages.filter(m=>m.t==='chat').length,before+1,'healthy browser must still receive chat');
  assert.equal(slow.messages.filter(m=>m.t==='chat').length,0,'oversubscribed browser must not receive another frame');
 });
+
+test('orphan guests are disconnected before pending connection slots are counted',async()=>{
+ const s=meeting(),old=s.add({role:'guest',session:'ended-session',id:'orphan',ok:true,aud:true});
+ s.add();s.add();
+ const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
+ const response=await s.room.fetch(req);
+ assert.equal(old.readyState,3,'orphan guest must be disconnected when there is no active host');
+ assert.equal(response.status,429,'two pending handshakes still trigger admission limits');
+ assert.equal(await response.text(),'Too many pending connections');
+ assert.ok(old.messages.some(m=>m.t==='closed'&&/host is no longer connected/.test(m.why)));
+});
