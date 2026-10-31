@@ -5,7 +5,8 @@ export const PART_BYTES = 10 * 1024 * 1024;
 const SAFE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._ -]{0,199}$/;
 const BLOCKED_EXT = /\.(?:exe|dll|bat|cmd|ps1|sh|php|jsp|aspx|cgi|env|pem|key)$/i;
 export function validateImportMetadata({name, size}, actor) {
-  if (!actor || actor.authenticated !== true || actor.canImport !== true)
+  if (!actor || actor.authenticated !== true || actor.canImport !== true ||
+      !Number.isSafeInteger(actor.id) || actor.id <= 0)
     throw new Error('Authenticated import permission required');
   if (typeof name !== 'string' || !SAFE_NAME.test(name) || name === '.' || name === '..' ||
       name.includes('..') || BLOCKED_EXT.test(name))
