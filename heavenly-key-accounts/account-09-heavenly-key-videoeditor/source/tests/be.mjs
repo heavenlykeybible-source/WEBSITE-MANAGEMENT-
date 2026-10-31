@@ -416,6 +416,8 @@ const rejectedOversize = await onRequest({
 check('Unknown-length upload exceeding 50 MB is rejected while streaming',rejectedOversize.status===413);
 const mediaCreated = await noLengthUpload.json();
 check('Uploaded media returns a nonempty identifier',Boolean(mediaCreated.id));
+const sanitizedMediaList=await request('media',{cookie:login.cookie});
+check('Unsafe upload filename is normalized in stored media',sanitizedMediaList.data?.items?.some(item=>item.id===mediaCreated.id && item.name==='sample.png'));
 const anonymousMediaRead=await request('media/'+mediaCreated.id);
 check('Anonymous requests cannot download private media by guessing its ID',anonymousMediaRead.status===401 && anonymousMediaRead.response.headers.get('cache-control')==='no-store');
 const anonymousMediaDelete=await request('media/'+mediaCreated.id,{method:'DELETE'});
