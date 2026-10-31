@@ -19,6 +19,14 @@ test('native release promotion requires cryptographic identity evidence for Andr
  assert.match(source,/--bucket heavenly-key-native-releases/);
  assert.match(source,/s3api get-object/);
  assert.match(source,/account5-r2-readback/);
+ assert.match(source,/stage_key="staging\/\$GITHUB_RUN_ID\/\$PLATFORM\/release\.\$APPROVED_EXTENSION"/);
+ assert.match(source,/--key "\$stage_key"/);
+ assert.match(source,/account5-r2-staged/);
+ assert.match(source,/Staged installer SHA-256 mismatch/);
+ assert.match(source,/s3api copy-object/);
+ assert.match(source,/--metadata-directive COPY/);
+ assert.ok(source.indexOf('s3api copy-object')>source.indexOf('Staged installer SHA-256 mismatch'),'Public key must only be updated after staged bytes verify');
+ assert.match(source,/trap cleanup_stage EXIT/);
  assert.match(source,/sha256sum "\$stored_copy"/);
  assert.match(source,/test "\$\(sha256sum "\$stored_copy"/);
  assert.match(source,/test "\$\(stat -c %s "\$stored_copy"/);
