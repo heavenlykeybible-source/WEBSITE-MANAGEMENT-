@@ -122,5 +122,6 @@ test('offline Bible chapter requests remain isolated', async () => {
   runner.entries.set(first, publicResponse({}, { marker: 'John 3' }));
   const response = await runner.request('/bible.html?book=John&chapter=3', { mode: 'navigate', destination: 'document' });
   assert.equal(response.response.marker, 'John 3');
-  await assert.rejects(runner.request('/bible.html?book=John&chapter=4', { mode: 'navigate', destination: 'document' }));
+  const other = await runner.request('/bible.html?book=John&chapter=4', { mode: 'navigate', destination: 'document' });
+  assert.equal(other.response.type, 'error');
 });
