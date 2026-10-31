@@ -79,6 +79,7 @@ retry.addEventListener('click',async()=>{const resume=playing;const previousGene
 audio.addEventListener('ended',()=>{if(!playlist.length)return;const continuePlaying=playing;select(position+1);if(continuePlaying)void start()});
 audio.addEventListener('pause',()=>{if(playing&&audio.paused&&!audio.ended)setPaused('Paused.');});
 window.addEventListener('pagehide',()=>{++loadGeneration;playlistAbort?.abort();playlistAbort=null;audio.pause();setPaused();});
+window.addEventListener('pageshow',event=>{if(event.persisted){audio.pause();setPaused();void refresh();}});
 audio.addEventListener('error',()=>{if(audio.getAttribute('src'))setPaused('This recording cannot be loaded. Try Next or Refresh playlist.')});
 audio.addEventListener('waiting',()=>{if(playing)say('Buffering radio audio…')});
 audio.addEventListener('playing',()=>{if(playing)say('Playing • '+(position+1)+' of '+playlist.length)});
