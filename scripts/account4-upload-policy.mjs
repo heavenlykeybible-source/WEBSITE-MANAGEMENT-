@@ -21,7 +21,10 @@ export function validateImportMetadata(file, actor) {
   return Object.freeze({name, size, partSize: PART_BYTES, partCount: Math.ceil(size / PART_BYTES)});
 }
 export function validatePart({partNumber, byteLength}, metadata) {
-  if (!metadata || !Number.isSafeInteger(metadata.size) || !Number.isSafeInteger(metadata.partCount))
+  if (!metadata || !Number.isSafeInteger(metadata.size) || metadata.size < 1 ||
+      metadata.size > MAX_UPLOAD_BYTES || !Number.isSafeInteger(metadata.partCount) ||
+      metadata.partCount !== Math.ceil(metadata.size / PART_BYTES) ||
+      metadata.partSize !== PART_BYTES)
     throw new Error('Validated upload metadata required');
   if (!Number.isSafeInteger(partNumber) || partNumber < 1 || partNumber > metadata.partCount)
     throw new Error('Invalid part number');
