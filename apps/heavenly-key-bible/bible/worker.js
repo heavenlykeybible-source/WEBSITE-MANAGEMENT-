@@ -123,6 +123,8 @@ export default {
     headers.delete("Content-Range");
     headers.delete("Accept-Ranges");
     headers.delete("Content-Length");
+    headers.set("Content-Type","application/json; charset=utf-8");
+    headers.set("X-Robots-Tag","noindex, noarchive");
     headers.set("Cache-Control","no-store");
     headers.set("X-Content-Type-Options","nosniff");
     return new Response(request.method==="HEAD"?null:assetResponse.body,{status:assetResponse.status,headers});
