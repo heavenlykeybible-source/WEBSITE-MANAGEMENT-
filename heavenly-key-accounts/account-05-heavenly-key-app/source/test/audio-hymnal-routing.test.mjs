@@ -160,7 +160,7 @@ test('independent services cannot opt their pages into browser or shared caching
     'Cache-Control':upstreamCache
    }})
   }};
-  const response=await routeIndependentApp(request('/bible.html'),env);
+  const response=await routeIndependentApp(new Request('https://apps.heavenlykey.org/bible.html',{headers:{cookie:'session=test'}}),env);
   assert.equal(response.status,200);
   assert.equal(response.headers.get('cache-control'),'no-store');
   assert.equal(await response.text(),'<h1>Reader</h1>');
