@@ -91,7 +91,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   headers.set('cross-origin-resource-policy','same-origin');
   headers.delete('x-powered-by');
   headers.delete('x-aspnet-version');
-  headers.set('content-security-policy',"frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'; upgrade-insecure-requests");
+  headers.set('content-security-policy',"default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests");
   // Always fetch a fresh operator dashboard after releases; do not cache login UI HTML.
   if(headers.get('content-type')?.toLowerCase().includes('text/html')||u.pathname==='/service-worker.js'||u.pathname==='/sw.js')headers.set('cache-control','no-store');
   return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers});
