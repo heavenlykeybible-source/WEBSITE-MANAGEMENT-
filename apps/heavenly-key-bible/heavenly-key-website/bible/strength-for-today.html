@@ -75,7 +75,8 @@ const updateLagosDate=()=>{const selected=previewDate||lagosDayKey();const day=n
  if(method==='GET'&&body!==undefined)throw Error('GET member requests cannot contain a body');
  if(method==='POST'&&(!body||typeof body!=='object'||Array.isArray(body)))throw Error('Invalid member request payload');
  const payload=method==='POST'?JSON.stringify(body):undefined;
- if(payload!==undefined&&(payload.length>32768||payload.length<2))throw Error('Member request payload exceeds limit');
+ if(payload===undefined&&method==='POST')throw Error('Invalid member request payload');
+ if(payload!==undefined&&(new TextEncoder().encode(payload).byteLength>32768||payload.length<2))throw Error('Member request payload exceeds limit');
  const controller=new AbortController();
  const timeout=setTimeout(()=>controller.abort(),15000);
  try{
