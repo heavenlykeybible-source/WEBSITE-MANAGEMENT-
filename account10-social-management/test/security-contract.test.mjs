@@ -168,10 +168,10 @@ test('WhatsApp human contact request pauses Gemini without sending or claiming n
   const start=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'");
   const end=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'",start);
   const handler=source.slice(start,end);
-  const human=handler.indexOf('if(requestsHumanMinistryContact(data.message))');
+  const human=handler.indexOf('if(contactTarget){');
   const gemini=handler.indexOf("if(!env.GEMINI_API_KEY)");
   assert.ok(human>=0 && gemini>human,'explicit human request must bypass Gemini even without an API key');
-  assert.match(handler, /humanRequested:true,automationPaused:true,suggestion:null,sent:false,externalNotificationsSent:false/);
+  assert.match(handler, /humanRequested:true,contactTarget,automationPaused:true,suggestion:null,sent:false,externalNotificationsSent:false/);
 });
 
 test('human contact detector recognizes explicit handover requests, not Bible questions', () => {
@@ -271,4 +271,15 @@ test('signed WhatsApp inbound chooses agent or Evangelist without overwriting pe
   assert.match(source, /\.bind\(target,conversationId\)/);
   assert.match(source, /Human request already pending; resolve it before changing the selected contact/);
   assert.match(source, /Human request not pending or already resolved/);
+});
+
+test('Gemini human-contact suggestion saves the selected destination without notifying or replying', () => {
+ const begin=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'");
+ const end=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'",begin);
+ const handler=source.slice(begin,end);
+ assert.match(handler, /contactTargetForMinistryMessage\(data\.message\)/);
+ assert.match(handler, /human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
+ assert.match(handler, /Human-contact routing unavailable; apply migration 0009/);
+ assert.match(handler, /externalNotificationsSent:false/);
+ assert.ok(handler.indexOf('if(contactTarget){')<handler.indexOf('if(!env.GEMINI_API_KEY)'));
 });
