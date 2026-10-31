@@ -666,3 +666,15 @@ test('expired guest handshake cannot join after delayed account verification',as
  assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
  assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
 });
+
+test('expired host handshake cannot create room after delayed token verification',async()=>{
+ const h=setup();h.host.close();
+ const ws=h.add();const room=ws.attachment.room;
+ ws.attachment.until=Date.now()+10;
+ h.context.check=async()=>{await new Promise(resolve=>setTimeout(resolve,35));return {k:'meeting',r:room,u:'host@example.com',pe:Date.now()+60000};};
+ await h.r.webSocketMessage(ws,JSON.stringify({t:'host',token:'valid-host'}));
+ assert.notEqual(ws.readyState,1);
+ assert.notEqual(ws.attachment.role,'host');
+ assert.equal(ws.messages.some(m=>m.t==='created'),false);
+ assert.equal(h.r.host(),undefined);
+});
