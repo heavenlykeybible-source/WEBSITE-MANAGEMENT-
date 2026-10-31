@@ -13,9 +13,18 @@ requireMatch('Static assets directory',/^directory\s*=\s*"\.\/public"/m);
 requireMatch('ASSETS binding',/^binding\s*=\s*"ASSETS"/m);
 requireMatch('D1 binding',/^binding\s*=\s*"DB"/m);
 requireMatch('R2 binding',/^binding\s*=\s*"MEDIA_BUCKET"/m);
-requireMatch('Custom domain',/^pattern\s*=\s*"socialplus\.heavenlykey\.org"/m);
-requireMatch('Custom domain flag',/^custom_domain\s*=\s*true/m);
-for(const file of ['public/index.html','src/index.ts','schema.sql','migrations/0012_operator_credentials.sql']){
+// Verify the hostname and custom_domain flag are in the SAME route table.
+// Separate regex checks could otherwise pass for two unrelated routes.
+const routeBlocks=[...config.matchAll(/\\[\\[routes\\]\\]([\\s\\S]*?)(?=\\n\\[|$)/g)].map(m=>m[1]);
+const socialRoutes=routeBlocks.filter(block=>/^pattern\\s*=\\s*"socialplus\\.heavenlykey\\.org"\\s*$/m.test(block));
+if(socialRoutes.length!==1||!/^custom_domain\\s*=\\s*true\\s*$/m.test(socialRoutes[0]))fail.push('SocialPlus hostname must be configured exactly once as a Custom Domain');
+const migrations=['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql','0010_whatsapp_handover_dedupe.sql','0011_human_request_version.sql','0012_operator_credentials.sql'];
+for(const scriptName of ['db:migrate:local','db:migrate:remote']){
+ const script=pkg.scripts[scriptName]||'';
+ let prior=-1;
+ for(const migration of migrations){const position=script.indexOf(migration);if(position<=prior)fail.push(scriptName+' missing or out of order: '+migration);prior=position;}
+}
+for(const file of ['public/index.html','src/index.ts','schema.sql',...migrations.map(name=>'migrations/'+name)]){
  if(!existsSync(resolve(root,file)))fail.push('Missing '+file);
 }
 for(const [name,script] of Object.entries(pkg.scripts)){
