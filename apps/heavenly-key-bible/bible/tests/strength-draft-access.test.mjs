@@ -65,7 +65,7 @@ test('unknown publication manifest fails closed',async()=>{
 
 test('Cloudflare routes devotional JSON through Worker first',()=>{
  const config=readFileSync(fileURLToPath(new URL('../wrangler.toml',import.meta.url)),'utf8');
- const routeLine=config.split('\\n').find(line=>line.trim().startsWith('run_worker_first ='));
+ const routeLine=config.split(String.fromCharCode(10)).find(line=>line.trim().startsWith('run_worker_first ='));
  assert.ok(routeLine,'Worker-first route configuration required');
  assert.ok(routeLine.includes('"/strength-devotionals-*"'),'Draft JSON must be routed through worker');
 });
