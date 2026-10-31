@@ -14,7 +14,7 @@ const html=await response.text();
 const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Standalone player script should exist');
 const events=new Map(),elements=new Map(),mediaActions=new Map();
-let holdPlay=false,resolvePendingPlay=null;
+let holdPlay=false,resolvePendingPlay=null,simulateAbort=false;const timers=new Map();let timerId=0;
 function element(id){
  const listeners=new Map(),attributes=new Map();
  return {id,textContent:'',value:'80',disabled:false,paused:true,volume:0,
@@ -33,8 +33,8 @@ const task=runInNewContext(script,{
  window:{addEventListener:(name,fn)=>events.set(name,fn)},
  navigator:{mediaSession:{setActionHandler:(name,fn)=>mediaActions.set(name,fn)}},
  AbortController,
- setTimeout,
- clearTimeout,
+ setTimeout:(fn,ms)=>{assert.equal(ms,12000);const id=++timerId;timers.set(id,fn);return id;},
+ clearTimeout:id=>timers.delete(id),
  fetch:async(_url,options)=>{fetchSignals.push(options.signal);if(holdFetch)return await new Promise(resolve=>{pendingFetch=resolve;pendingFetches.push(resolve)});if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
  MediaMetadata:undefined,
  console
