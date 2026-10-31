@@ -16,7 +16,8 @@
     "test:audio-signature": "node scripts/test-audio-signature.mjs",
     "test:radio-public-media": "node scripts/test-radio-public-media.mjs",
     "test:radio-range": "node scripts/test-radio-range.mjs",
-    "test:radio-player-runtime": "node scripts/test-radio-player-runtime.mjs"
+    "test:radio-player-runtime": "node scripts/test-radio-player-runtime.mjs",
+    "test:radio-http-validators": "node scripts/test-radio-http-validators.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
