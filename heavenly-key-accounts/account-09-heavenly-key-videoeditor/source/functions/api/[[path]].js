@@ -177,6 +177,9 @@ export async function onRequest({ request: req, env, params }) {
       if (!u || h !== u.pass_hash) { await log(env, email, 'login_fail'); if (ipKey) await log(env, ipKey, 'login_fail_ip'); return J({ error: 'Wrong email or password.' }, 401); }
       const t = rnd(32);
       await env.DB.prepare('INSERT INTO sessions VALUES(?,?,?)').bind(await sha(t), u.id, Date.now() + 30 * DAY).run();
+      // Do not retain unlimited sessions when a member uses multiple browsers.
+      await env.DB.prepare('DELETE FROM sessions WHERE user_id=? AND expires_at<=?').bind(u.id,Date.now()).run();
+      await env.DB.prepare('DELETE FROM sessions WHERE user_id=? AND token_hash NOT IN (SELECT token_hash FROM sessions WHERE user_id=? ORDER BY expires_at DESC, rowid DESC LIMIT 20)').bind(u.id,u.id).run();
       await log(env, u.id, 'login');
       await env.DB.prepare("DELETE FROM audit WHERE user_id=? AND action='login_fail' AND at<?").bind(email, Date.now() - 900000).run();
       return J({ ok: true, email: u.email, role: u.role || 'member' }, 200, { 'set-cookie': cookie(t, 30 * 86400) });
