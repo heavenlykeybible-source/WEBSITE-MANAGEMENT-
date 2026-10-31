@@ -256,3 +256,8 @@ test('takeover refuses viewer and stale confirmation state', () => {
  assert.ok(html.includes("$('takeover').onclick=async()=>{if(!selected||operatorAccessRole==='viewer'||$('takeover').disabled)return"));
  assert.ok(html.includes("if(selected!==targetConversation||authEpoch!==epoch||operatorAccessRole==='viewer'||button.disabled)return;button.disabled=true"));
 });
+
+test('webhook import protects against stale or duplicate actions', () => {
+ assert.ok(html.includes('process.disabled=true'));
+ assert.ok(html.includes("if(!current()||operatorAccessRole==='viewer'||process.disabled)return"));
+});
