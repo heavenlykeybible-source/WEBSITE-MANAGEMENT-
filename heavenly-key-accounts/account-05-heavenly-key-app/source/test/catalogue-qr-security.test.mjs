@@ -33,9 +33,9 @@ test('every official catalogue destination is HTTPS and belongs to an approved h
   }
 });
 
-test('Android and iPhone install QR assets exist for every catalogue app', () => {
+test('all five platform QR assets exist for every catalogue app', () => {
   for (const id of Object.keys(apps)) {
-    for (const platform of ['android', 'iphone']) {
+    for (const platform of ['android', 'iphone', 'ipad', 'windows', 'mac']) {
       const svg = publicFile('qr/app-' + id + '-' + platform + '.svg');
       assert.match(svg, /^<svg\s/, id + ' ' + platform);
       assert.match(svg, /<\/svg>\s*$/, id + ' ' + platform);
