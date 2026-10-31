@@ -316,12 +316,12 @@ const cover=(c,e,iw,ih,x,y,w,h)=>{const k=Math.max(w/iw,h/ih),dw=iw*k,dh=ih*k;c.
 let seg=null,segBusy=false,segCur=null,bgImg=null,curBg=0,bgFn=null;
 function loadSeg(cb){if(seg)return cb(true);const B='https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/',sc=document.createElement('script');sc.src=B+'selfie_segmentation.js';
  sc.onload=()=>{try{seg=new SelfieSegmentation({locateFile:f=>B+f});seg.setOptions({modelSelection:1});
-  seg.onResults(r=>{const s=segCur;if(!s||!s.oc)return;const iw=r.image.width,ih=r.image.height,k=Math.min(1,960/Math.max(iw,ih)),w=Math.round(iw*k),h=Math.round(ih*k);
+  seg.onResults(r=>{const s=segCur;if(!s||!s.oc||!s.blur)return;const iw=r.image.width,ih=r.image.height,limit=$('lite').checked?720:1280,k=Math.min(1,limit/Math.max(iw,ih)),w=Math.max(1,Math.round(iw*k)),h=Math.max(1,Math.round(ih*k));
    if(s.oc.width!==w||s.oc.height!==h){s.oc.width=w;s.oc.height=h}
    const c=s.oc.getContext('2d');c.save();c.clearRect(0,0,w,h);c.drawImage(r.segmentationMask,0,0,w,h);c.globalCompositeOperation='source-in';c.drawImage(r.image,0,0,w,h);c.globalCompositeOperation='destination-over';
    if(s.bgm==='tpl'&&bgFn)bgFn(c,0,0,w,h,performance.now());else if(s.bgm==='tpl'&&bgImg)cover(c,bgImg,bgImg.naturalWidth||bgImg.width,bgImg.naturalHeight||bgImg.height,0,0,w,h);else{c.filter='blur(14px)';c.drawImage(r.image,0,0,w,h)}c.restore()});cb(true)}catch(e){cb(false)}};
  sc.onerror=()=>cb(false);document.head.appendChild(sc)}
-function setBgMode(s,v){if(v==='off'){s.blur=false;s.bgm='off';return}msg('Loading background model...');
+function setBgMode(s,v){if(v==='off'){s.blur=false;s.bgm='off';s.oc=null;ui();msg('Original camera restored without background processing.');return}msg('Loading background model...');
  loadSeg(ok=>{if(!ok){msg('Could not load the background model. Check your connection.');s.blur=false;s.bgm='off';ui();return}
   s.oc=s.oc||document.createElement('canvas');s.bgm=v;s.blur=true;msg(v==='tpl'?'Template background is on. Pick a template under Start.':'Background blur is on.');ui()})}
 
@@ -337,7 +337,7 @@ function setBg(i){const t=T[i];curBg=i;
  const go=()=>{bgImg=t.c||t.img;bgFn=t.fn||null;let b=S.find(s=>s.isBg);if(!b)b=mk('image','Background',{isBg:true,cover:true});b.img=bgImg;b.fn=bgFn;b.tn=t.n;
   const it=SC[ed()].items;if(!it.some(x=>x.id===b.id))it.unshift({id:b.id,p:'full',on:true});gal();ui()};
  if(t.p&&W>=H)msg('This template is made for Portrait. Change Screen shape under Start.');
- if(t.fn||t.c||(t.img&&t.img.complete))return go();t.img=t.img||new Image();t.img.onload=go;t.img.src=t.u}
+ if(t.fn||t.c||(t.img&&t.img.complete&&t.img.naturalWidth))return go();t.img=t.img||new Image();t.img.onload=go;t.img.onerror=()=>msg('This studio background could not be loaded. Select another background.');t.img.src=t.u}
 function newScene(name){SC.push({name,items:[]});const i=SC.length-1;if(studio)pvw=i;else take(i);return i}
 function pick(acc){$('fm').accept=acc;$('fm').click();setTimeout(()=>$('fm').accept='video/*,audio/*',500)}
 async function quick(m){const N={radio:'24/7 Radio',camtpl:'Camera + background',cam:'Camera',pic:'Picture only',pre:'Pre-recorded 24/7',pres:'Presenter + chat'};
