@@ -776,3 +776,12 @@ test('broadcast studio preserves sharp camera output and fails safely on backgro
  assert.match(page,/t\.img\.onerror=\(\)=>msg\('This studio background could not be loaded/,'missing studio assets must be reported');
  for(const ratio of ['Landscape (16:9)','Portrait (9:16, phones)','Square (1:1)'])assert.ok(page.includes(ratio));
 });
+
+test('studio background processing rotates fairly and restores original camera after repeated errors',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/const cameras=S\.filter\(s=>s\.type==='camera'&&s\.blur&&s\.oc/);
+ assert.match(html,/const s=cameras\[segIndex\+\+\]/,'multiple cameras should get processing turns');
+ assert.match(html,/if\(\+\+s\.segFails>=3\)/,'segmentation errors must have a bounded fallback');
+ assert.match(html,/s\.blur=false;s\.bgm='off';s\.oc=null;msg\('Background processing failed/);
+ assert.match(html,/segBusy=false;segCur=null/,'the processing lock must be released');
+});
