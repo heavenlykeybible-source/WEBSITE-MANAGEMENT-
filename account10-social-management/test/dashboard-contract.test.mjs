@@ -240,3 +240,9 @@ test('WhatsApp send guard checks owner role and duplicate submission both before
 test('WhatsApp send confirmation cannot repaint another chat after asynchronous refresh', () => {
  assert.match(html, /if\(selected===currentConversation&&authEpoch===sessionEpoch\)\{await openChat\(currentConversation\);if\(selected===currentConversation&&authEpoch===sessionEpoch\)status\(result\.sent\?/);
 });
+
+test('internal notes block duplicate submissions and viewer form bypass', () => {
+ assert.match(html,/\$\('draftForm'\)\.onsubmit=async e=>\{e\.preventDefault\(\);if\(!selected\|\|operatorAccessRole==='viewer'\|\|\$\('saveDraft'\)\.disabled\)return/);
+ assert.match(html,/const saveButton=\$\('saveDraft'\);saveButton\.disabled=true;try\{await api\('\/api\/messages'/);
+ assert.match(html,/finally\{if\(selected===targetConversation&&authEpoch===epoch\)saveButton\.disabled=operatorAccessRole==='viewer'\}/);
+});
