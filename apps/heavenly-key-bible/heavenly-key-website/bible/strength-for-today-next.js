@@ -44,7 +44,7 @@ $('print').onclick=()=>window.print();
 $('font-larger').onclick=()=>adjustText(1);
 $('font-smaller').onclick=()=>adjustText(-1);
 let textScale=readFontScale();
-function applyTextScale(){body.style.fontSize=textScale+'rem';$('font-smaller').disabled=textScale<=.85;$('font-larger').disabled=textScale>=2;$('font-reset').disabled=textScale===1;status.textContent='Reading text size '+Math.round(textScale*100)+'%';}
+function applyTextScale(){body.className=body.className.replace(/(?:^|\s)font-scale-\d+/g,'').trim();body.classList.add('font-scale-'+Math.round(textScale*100));$('font-smaller').disabled=textScale<=.85;$('font-larger').disabled=textScale>=2;$('font-reset').disabled=textScale===1;status.textContent='Reading text size '+Math.round(textScale*100)+'%';}
 function adjustText(direction){textScale=Math.min(2,Math.max(.85,Math.round((textScale+direction*.1)*100)/100));applyTextScale();saveFontScale(textScale);}
 $('font-reset').onclick=()=>{textScale=1;applyTextScale();saveFontScale(textScale)};
 render();applyTextScale();
