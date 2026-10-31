@@ -390,6 +390,14 @@ const providerOutput=await onRequest({
 });
 const boundedProviderOutput=await providerOutput.json();
 check('Oversized Whisper output is bounded',providerOutput.status===200&&boundedProviderOutput.text.length===12000&&boundedProviderOutput.words.length===2000&&boundedProviderOutput.words[0].word.length===160);
+const oddProviderOutput=await onRequest({
+ request:new Request('https://studio.example/api/transcribe',{method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},body:validWav}),
+ env:{...env,AI:{run:async()=>({text:42,words:[null,{word:'invalid',start:-1,end:1},{word:'valid',start:0,end:1}]})}},
+ params:{path:['transcribe']}
+});
+const oddTranscription=await oddProviderOutput.json();
+check('Invalid Whisper word timestamps safely removed',oddProviderOutput.status===200&&oddTranscription.text==='42'&&oddTranscription.words.length===1&&oddTranscription.words[0].word==='valid');
+
 
 for (const [label, mutate] of [
   ['RIFF length mismatch', b => new DataView(b.buffer).setUint32(4,999,true)],
