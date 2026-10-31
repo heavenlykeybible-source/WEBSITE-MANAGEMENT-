@@ -79,6 +79,8 @@ assert.match(entry, /status IN \('pending','processing','failed'\)/, 'Pending an
 // Public LiveKit viewer-token errors must not expose provider or secret details.
 assert.match(entry, /Viewer token issuance failed/, 'Internal failure must be logged without exposing its message');
 assert.match(entry, /return json\(\{error:'Live transport unavailable'\},503\)/, 'Return a generic viewer error');
-assert.doesNotMatch(entry, /error:e instanceof Error\?e\.message:'Live transport unavailable'/, 'Never return raw provider exception messages');
+const publicViewerRoute = entry.slice(entry.indexOf("if(url.pathname==='/api/media-engine/livekit/viewer-token'"), entry.indexOf("if(marker!=='media-engine-v1'"));
+assert.ok(publicViewerRoute.length > 0, 'Public viewer route must exist');
+assert.doesNotMatch(publicViewerRoute, /error:e instanceof Error\?e\.message/, 'Public viewer endpoint must not expose provider exception messages');
 
 console.log('Account 2 broadcast safety regression checks passed');
