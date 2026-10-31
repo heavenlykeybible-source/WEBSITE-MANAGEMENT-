@@ -5,7 +5,7 @@ export const FAITH_STATEMENT_URL='https://heavenlykey.org/what-we-believe/';
 const nonempty=value=>typeof value==='string'&&value.trim().length>0;
 const OLD_TESTAMENT_BOOKS=new Set(['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra','Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Solomon','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos','Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah','Malachi']);
 const NEW_TESTAMENT_BOOKS=new Set(['Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians','2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians','2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James','1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation']);
-const referenceBook=value=>{const match=typeof value==='string'&&/^((?:[1-3]\\s)?[A-Za-z][A-Za-z ]+)\\s+\\d+:\\d+(?:-\\d+)?$/.exec(value.trim());return match?.[1]?.replace(/\\s+/g,' ').trim()??null;};
+const referenceBook=value=>{const match=typeof value==='string'&&/^((?:[1-3]\s)?[A-Za-z][A-Za-z ]+)\s+\d+:\d+(?:-\d+)?$/.exec(value.trim());return match?.[1]?.replace(/\s+/g,' ').trim()??null;};
 const validSourceUrl=value=>{if(!nonempty(value)||value.length>2048)return false;try{const u=new URL(value);return u.protocol==='https:'&&Boolean(u.hostname)&&!u.username&&!u.password&&!u.hash&&u.hostname.includes('.')}catch{return false}};
 const bibleReference=value=>nonempty(value)&&/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d+:\d+(?:-\d+)?$/.test(value);
 export function validateDailyDevotional(entry){
