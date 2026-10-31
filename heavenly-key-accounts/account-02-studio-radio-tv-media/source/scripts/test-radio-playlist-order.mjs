@@ -11,4 +11,8 @@ expect('[3,1,3,2]',[3,1,2]);
 for(const raw of [null,undefined,'','{bad}','{"ids":[1]}','[1,"2"]','[-1]','[0]','[1.5]','[null]','[true]','['+Array(51).fill(1).join(',')+']',' '.repeat(4097),'[9007199254740992]'])expect(raw,[]);
 const broadcast=readFileSync(fileURLToPath(new URL('../src/public-broadcast.ts',import.meta.url)),'utf8');
 assert.ok(broadcast.includes('readRadioPlaylistOrder(await env.LIVE_STATUS_KV?.get(orderKey))'),'Public playlist must use bounded parser');
+const index=readFileSync(fileURLToPath(new URL('../src/index.ts',import.meta.url)),'utf8');
+assert.ok(index.includes('result[channel]=readRadioPlaylistOrder(raw);'),'Administrative read must share defensive playlist parser');
+assert.ok(index.includes('ids=Array.isArray(b?.media_ids)?b.media_ids:null;'),'Admin updates must not coerce numeric-looking strings into IDs');
+assert.ok(!index.includes('b!.media_ids.map(Number)'),'Unsafe identifier coercion must not return');
 console.log('Account 2 playlist order sanitization, bounds, duplicates and optional KV safety passed');
