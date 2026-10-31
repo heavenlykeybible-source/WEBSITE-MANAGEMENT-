@@ -20,7 +20,7 @@ for(const file of files(join(root,'public')).filter(f=>f.endsWith('.html'))){
 console.log('All app scripts, module dependencies and local page/assets links verified.');
 
 // Enforce the Account 5 strict-CSP contract on primary public entry points.
-for(const name of ['walk-offline.html','experience.html','devotional.html','creation-to-eternity.html']){
+for(const name of ['walk-offline.html','experience.html','devotional.html','creation-to-eternity.html','old-time-gospel-revival-hymn-book.html']){
  const file=join(root,'public',name);const html=readFileSync(file,'utf8');
  if(/<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/i.test(html))throw Error('Inline script violates strict CSP in '+name);
  if(/\sstyle\s*=/i.test(html))throw Error('Inline style violates strict CSP in '+name);
