@@ -206,7 +206,7 @@ test('Gemini ministry post suggestions do not publish or save automatically', ()
   const end=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'",begin);
   assert.ok(begin>=0 && end>begin,'ministry social caption route should exist');
   const handler=source.slice(begin,end);
-  for(const platform of ['facebook_page','instagram_professional','youtube','tiktok']) assert.ok(handler.includes("'"+platform+"'"),platform+' omitted');
+  for(const platform of ['facebook_page','instagram_professional','youtube','tiktok','x']) assert.ok(handler.includes("'"+platform+"'"),platform+' omitted');
   assert.match(handler, /text:originalAssistantInstruction/);
   assert.match(handler, /requiresOperatorApproval:true/);
   assert.match(handler, /sent:false,published:false,saved:false/);
