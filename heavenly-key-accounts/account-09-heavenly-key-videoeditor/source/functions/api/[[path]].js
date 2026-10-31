@@ -197,6 +197,9 @@ export async function onRequest({ request: req, env, params }) {
       const b = await body(req);
       if (!b || typeof b.password !== 'string' || b.password.length > 200)
         return J({ error: 'Password confirmation required.' }, 400);
+      const reauthAt=Date.now();
+      const reauthSlot=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'logout_all_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='logout_all_attempt' AND at>?) < 10").bind(u.id,reauthAt,u.id,reauthAt-900000).run();
+      if (!reauthSlot.meta.changes)return J({ error: 'Too many confirmation attempts. Try again in 15 minutes.' },429);
       const row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
       if (!row || await pbkdf2(b.password, row.salt) !== row.pass_hash)
         return J({ error: 'Wrong password.' }, 401);
