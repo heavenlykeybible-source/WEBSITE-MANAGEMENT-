@@ -19,6 +19,8 @@ assert.deepEqual(await reconcileCompletedPrivateImport(db,bucket,actor,id),{
 assert.equal(writes,1);
 row.state='private-awaiting-review';
 await assert.rejects(reconcileCompletedPrivateImport(db,bucket,actor,id),/cannot be reconciled/);
+row.state='completing';object=undefined;
+await assert.rejects(reconcileCompletedPrivateImport(db,bucket,actor,id),/cannot be reconciled/);
 row.state='completing';object=null;
 await assert.rejects(reconcileCompletedPrivateImport(db,bucket,actor,id),/cannot be reconciled/);
 object={key,size:99,version:'v123',etag:'abc'};
