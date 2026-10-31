@@ -127,3 +127,8 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Open Human Requests and resolve a consented test request; the count must refresh without sending any third-party notification.
 - [ ] Sign out or change access credentials; the count must immediately clear and any in-flight request for the old session must not restore it.
 - [ ] The counter is a dashboard aid, not a push alert, assignment to a specific operator, or evidence that Evangelist Emmanuel received a message.
+
+## Dashboard stale-response privacy regression
+- [ ] Switch among Accounts, Human Requests, Activity, and Launch Checks while requests are still loading. Responses from the previous tab must not replace the new tab's content.
+- [ ] Sign out or change credentials while Launch Checks is loading. Neither the first management request nor nested webhook/integrity requests may display confidential data afterward.
+- [ ] Verify the application still uses a shared admin token; client-side request cancellation is only a defense in depth. Individual revocable sessions, RBAC, idle timeouts, and server-side revocation remain global-launch blockers.
