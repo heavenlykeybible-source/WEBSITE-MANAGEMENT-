@@ -624,3 +624,20 @@ test('host lock during delayed TURN credential signing prevents guest admission'
  assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
  assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'),false);
 });
+
+test('stage token expiring during TURN signing cannot finish admission',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ h.context.check=async()=>({e:'member@example.com',t:2,exp:Date.now()+25});
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');
+ await reached;
+ await new Promise(resolve=>setTimeout(resolve,40));
+ release({});await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'),false);
+});
