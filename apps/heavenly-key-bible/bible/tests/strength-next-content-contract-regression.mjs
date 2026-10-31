@@ -8,4 +8,6 @@ check({date:'2026-10-31',status:'approved-for-publication',sections:{}},'Doctrin
 check({date:'2026-10-31',status:'approved-for-publication',sections:{}},'Source verification required');
 check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'http://example.com'}}},'World story requires documented HTTPS source');
 check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story'}}},'World story requires a valid publication date');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://user:pass@example.org/story',publishedDate:'2026-10-30'}}},'World story requires documented HTTPS source');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'https://example.org/story',publishedDate:'2026-11-01'}}},'World story publication cannot postdate the devotional');
 console.log('Additional devotional editorial contract regressions passed');
