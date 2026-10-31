@@ -42,7 +42,7 @@ export async function loadImportSession(db, actor, id) {
       row.part_count !== Math.ceil(row.size_bytes / (10 * 1024 * 1024)) ||
       typeof row.upload_id !== 'string' || !row.upload_id ||
       typeof row.object_key !== 'string' ||
-      !new RegExp(`^private-imports/${actor.id}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`, 'i').test(row.object_key))
+      row.object_key.toLowerCase() !== ('private-imports/' + actor.id + '/' + id).toLowerCase())
     throw new Error('Import session unavailable');
   const {results} = await db.prepare('SELECT part_number,etag FROM account4_import_parts WHERE session_id=? ORDER BY part_number')
     .bind(id).all();
