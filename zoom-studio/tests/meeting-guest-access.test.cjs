@@ -343,3 +343,22 @@ test('audience live reaction display bounds animation and sanitizes emoji',()=>{
  assert.match(html,/case 'react':showMeetingReaction\(m.emoji\)/);
  assert.match(html,/prefers-reduced-motion:reduce/);
 });
+
+test('revoked stage account cannot send WebRTC signaling before scheduled alarm',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ h.users['member@example.com'].tv=3;
+ const count=h.host.messages.filter(m=>m.t==='sig').length;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'sig',data:{sdp:{type:'offer',sdp:'v=0'}}}));
+ assert.equal(h.guest.readyState,3);
+ assert.equal(h.host.messages.filter(m=>m.t==='sig').length,count);
+});
+test('host cannot signal to a banned stage participant before scheduled alarm',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ h.users['member@example.com'].banned=true;
+ const count=h.guest.messages.filter(m=>m.t==='sig').length;
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'sig',gid:h.guest.attachment.id,data:{sdp:{type:'offer',sdp:'v=0'}}}));
+ assert.equal(h.guest.readyState,3);
+ assert.equal(h.guest.messages.filter(m=>m.t==='sig').length,count);
+});
