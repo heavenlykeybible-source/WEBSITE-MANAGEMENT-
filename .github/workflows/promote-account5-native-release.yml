@@ -95,6 +95,21 @@ jobs:
           echo "APPROVED_DIGEST=$actual" >> "$GITHUB_ENV"
           echo "APPROVED_SIZE=$size" >> "$GITHUB_ENV"
           echo "APPROVED_EXTENSION=$ext" >> "$GITHUB_ENV"
+      - name: Scan the exact promoted binary before publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y clamav clamav-freshclam
+          sudo systemctl stop clamav-freshclam || true
+          sudo freshclam
+          clamscan --version
+          clamscan --infected --no-summary -- "$APPROVED_INSTALLER"
+          current="$(sha256sum "$APPROVED_INSTALLER" | cut -d ' ' -f 1)"
+          test "$current" = "$APPROVED_DIGEST" || {
+            echo '::error::Installer bytes changed during release scan'
+            exit 1
+          }
       - name: Upload owner-approved release to private Account 5 R2
         shell: bash
         run: |
