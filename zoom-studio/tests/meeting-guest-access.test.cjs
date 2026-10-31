@@ -516,3 +516,12 @@ test('hand raise rejects nonboolean state without consuming cooldown',async()=>{
  assert.equal(hands.length,1);
  assert.equal(hands[0].on,true);
 });
+
+test('moderator mute accepts only boolean states',async()=>{
+ const h=setup();await h.join('');
+ const before=h.guest.messages.filter(m=>m.t==='mute').length;
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'mute',gid:h.guest.attachment.id,on:'false'}));
+ assert.equal(h.guest.messages.filter(m=>m.t==='mute').length,before);
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'mute',gid:h.guest.attachment.id,on:true}));
+ assert.equal(h.guest.messages.filter(m=>m.t==='mute').length,before+1);
+});
