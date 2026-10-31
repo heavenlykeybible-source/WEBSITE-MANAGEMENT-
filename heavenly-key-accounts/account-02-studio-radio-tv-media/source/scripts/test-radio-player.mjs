@@ -9,7 +9,9 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const source=readFileSync(resolve(root,'src/radio-player.ts'),'utf8');
 const index=readFileSync(resolve(root,'src/index.ts'),'utf8');
 const compiled=ts.transpileModule(source.replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
-const html=await runInNewContext(compiled+';radioPlayerHtml()',{Response}).text();
+const response=runInNewContext(compiled+';radioPlayerHtml()',{Response});
+assert.match(response.headers.get('Content-Security-Policy')||'',/media-src 'self'/);
+const html=await response.text();
 assert.match(html,/<audio id="audio" preload="none"/);
 assert.match(html,/Bluetooth \/ audio output/);
 assert.match(html,/selectAudioOutput/);
@@ -20,7 +22,6 @@ assert.match(html,/\.addEventListener\('click'/);
 assert.match(html,/audio\.pause\(\)/);
 assert.match(html,/media-engine-public-v1/);
 assert.match(html,/channel=radio/);
-assert.match(html,/Content-Security-Policy|Content-Security/i);
 const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Radio player script must be present');
 new Script(script,{filename:'radio-player.js'}); // Validate emitted browser JavaScript, not the TS template.
