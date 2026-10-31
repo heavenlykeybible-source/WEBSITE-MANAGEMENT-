@@ -16,7 +16,7 @@ if (!timeline.includes('Estimated timeline:')) throw Error('Timeline duration di
 if (!timeline.includes("else{$('clipStart').value='0';$('clipEnd').value=ready()?String(Math.min(v.duration,86400)):'0';$('clipSpeed').value='1'}")) throw Error('Timeline cleared-input reset missing');
 if ((timeline.match(/Enter both clip start and end times/g)||[]).length!==2) throw Error('Timeline empty timing validation missing');
 if (!timeline.includes('let completedSeconds=0') || !timeline.includes("+'% complete.'")) throw Error('Timeline progress indicator missing');
-if (!timeline.includes('c.end<=86400')) throw Error('Restored timeline timestamp safety limit missing');
+if ((timeline.match(/c\.end<=86400/g)||[]).length<2) throw Error('Saved timeline and export timestamp safety limits missing');
 if (!timeline.includes('const validSourceRange=()=>ready()&&v.duration<=86400') || (timeline.match(/validSourceRange\(\)/g)||[]).length<4) throw Error('Timeline source duration limit missing');
 if (!timeline.includes('id="clipDuplicate"') || !timeline.includes("$('clipDuplicate').onclick=")) throw Error('Timeline clip duplication control missing');
 for (const id of ['clipAddFull','clipClear','clipFirst','clipLast','clipReverse','clipCopy','clipPaste']) if (!timeline.includes('id="'+id+'"') || !timeline.includes("$('"+id+"').onclick=")) throw Error('Timeline editing command missing: '+id);
@@ -34,7 +34,7 @@ if (!timeline.includes('Source video ended before the clip finished.') || !timel
 if (!timeline.includes('session.abortStart?.()') || !timeline.includes('Video playback did not start within 15 seconds.')) throw Error('Timeline playback startup cancellation safeguard missing');
 if (!timeline.includes('session.abortEncoder?.()') || !timeline.includes('state.abortEncoder=abort')) throw Error('Timeline encoder cancellation safeguard missing');
 if (!timeline.includes('if(finished&&session===state&&!state.sourceChanged)v.pause()')) throw Error('Timeline session isolation safeguard missing');
-if (!timeline.includes("$('clipList').onkeydown=") || !timeline.includes("key==='delete'") || !timeline.includes("key==='z'")) throw Error('Timeline keyboard shortcuts missing');
+if (!timeline.includes("$('clipList').onkeydown=") || !timeline.includes("key==='delete'") || !timeline.includes("key==='z'") || !timeline.includes("key==='c'") || !timeline.includes("key==='v'")) throw Error('Timeline keyboard shortcuts missing');
 const html=readFileSync('public/index.html','utf8');
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) if (!html.includes('src="/'+name+'"')) throw Error('Script not loaded: '+name);
 if (html !== readFileSync('index.html','utf8')) throw Error('Public page not synchronized with editor source');
