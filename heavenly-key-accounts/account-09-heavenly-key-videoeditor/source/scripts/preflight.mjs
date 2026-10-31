@@ -15,6 +15,7 @@ if(!apiSource.includes('Filename extension does not match media type.') || !apiS
 if(!apiSource.includes('if (!suffix || !extensions[type]?.includes(suffix))'))throw Error('Missing-extension upload protection absent');
 if((apiSource.match(/const suffix=name\.includes/g)||[]).length!==1)throw Error('Media filename validation must occur in one route only');
 if(apiSource.indexOf('const suffix=name.includes') < apiSource.indexOf("if (a === 'media')"))throw Error('Media filename validation misplaced before media route');
+if(apiSource.indexOf('const suffix=name.includes') > apiSource.indexOf("if (p[1] && m === 'GET')",apiSource.indexOf("if (a === 'media')")))throw Error('Media filename validation misplaced after upload handler');
 if(!apiSource.includes("'image/png':['png']") || !apiSource.includes("'image/jpeg':['jpg','jpeg']"))throw Error('Approved image extension mappings missing');
 if(!apiSource.includes("'php5','php7'") || !apiSource.includes("'jsp','jspx'"))throw Error('Alternate script extension protections missing');
 // Binary API responses bypass the JSON response helper; require their own isolation headers.
