@@ -162,7 +162,7 @@ test('Ministry policy refuses invented theological attribution and missing websi
 test('WhatsApp human contact request pauses Gemini without sending or claiming notification', () => {
   assert.match(source, /from '\.\/human-handover'/);
   assert.match(source, /if\(target\)\{/);
-  assert.match(source, /UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0/);
+  assert.match(source, /UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=\?,human_request_version=human_request_version\+1,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0/);
   assert.match(source, /messageInsertPositions\.push\(statements\.length\)/);
   assert.match(source, /results\.filter\(\(result,index\)=>messageInsertPositions\.includes\(index\)\)/);
   const start=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'");
@@ -198,7 +198,7 @@ test('explicit human requests bypass all keyword-based automation before any dra
   const rules=handler.indexOf("SELECT id,keyword,reply FROM automation_rules");
   const insert=handler.indexOf("INSERT OR IGNORE INTO messages");
   assert.ok(handover>=0 && rules>handover && insert>handover, 'human takeover must precede rules and draft writes');
-  assert.match(handler, /UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
+  assert.match(handler, /UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=\?,human_request_version=human_request_version\+1,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
   assert.match(handler, /humanRequested:true,contactTarget:requestedTarget,automationPaused:true,draftCreated:false,sent:false,externalNotificationsSent:false/);
 });
 
@@ -268,10 +268,10 @@ test('operator human request stores validated destination and never claims notif
 
 test('signed WhatsApp inbound chooses agent or Evangelist without overwriting pending handover', () => {
   assert.match(source, /contactTargetForMinistryMessage\(item\.body\)/);
-  assert.match(source, /human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0/);
+  assert.match(source, /human_contact_target=\?,human_request_version=human_request_version\+1,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0/);
   assert.match(source, /\.bind\(target,conversationId,inboundId,conversationId\)/);
   assert.match(source, /Human request already pending; resolve it before changing the selected contact/);
-  assert.match(source, /Human request not pending or already resolved/);
+  assert.match(source, /Human request version is stale, not pending or already resolved/);
 });
 
 test('Gemini human-contact suggestion saves the selected destination without notifying or replying', () => {
@@ -279,7 +279,7 @@ test('Gemini human-contact suggestion saves the selected destination without not
  const end=source.indexOf("if(u.pathname==='/api/automation/evaluate-and-draft'",begin);
  const handler=source.slice(begin,end);
  assert.match(handler, /contactTargetForMinistryMessage\(data\.message\)/);
- assert.match(handler, /human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
+ assert.match(handler, /human_contact_target=\?,human_request_version=human_request_version\+1,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
  assert.match(handler, /Human-contact routing unavailable; apply migration 0009/);
  assert.match(handler, /externalNotificationsSent:false/);
  assert.ok(handler.indexOf('if(contactTarget){')<handler.indexOf('if(!env.GEMINI_API_KEY)'));
@@ -291,7 +291,7 @@ test('automation rule draft preserves human-contact destination before keyword m
  const handler=source.slice(begin,end);
  assert.ok(handler.indexOf('contactTargetForMinistryMessage(data.message)')>=0);
  assert.ok(handler.indexOf('if(requestedTarget){')<handler.indexOf('SELECT id,keyword,reply FROM automation_rules'));
- assert.match(handler,/human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
+ assert.match(handler,/human_contact_target=\?,human_request_version=human_request_version\+1,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0 AND human_paused=0/);
  assert.match(handler,/contactTarget:requestedTarget,automationPaused:true/);
 });
 
@@ -355,4 +355,16 @@ test('readiness requires the real handover ledger and limiter columns, not just 
  assert.match(handler,/\['message_id','conversation_id','contact_target','consumed'\]/);
  assert.match(handler,/\['scope','window_kind','window_start','request_count'\]/);
  assert.match(handler,/migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits/);
+});
+
+test('human request resolution is versioned and rejects stale operator tabs', () => {
+ const start=source.indexOf("if(u.pathname==='/api/human-requests/resolve'");
+ const end=source.indexOf("if(u.pathname==='/api/handover-policy'",start);
+ const handler=source.slice(start,end);
+ assert.match(handler,/Number\.isSafeInteger\(data\?\.requestVersion\)/);
+ assert.match(handler,/WHERE id=\? AND requested_human=1 AND human_request_version=\?/);
+ assert.match(handler,/\.bind\(data\.resumeAutomation\?0:1,data\.conversationId,data\.requestVersion\)/);
+ assert.match(handler,/human_request_version,updated_at FROM conversations/);
+ assert.match(handler,/human_request_version=human_request_version\+1/);
+ assert.match(handler,/Human request version is stale/);
 });
