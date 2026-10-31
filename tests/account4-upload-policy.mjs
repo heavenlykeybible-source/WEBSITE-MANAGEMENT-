@@ -9,6 +9,8 @@ for(const bad of [{},{authenticated:true,canImport:false},{authenticated:true,ca
   assert.throws(()=>validateImportMetadata({name:'archive.zip',size:100},bad));
 for(const name of ['../secret','config.env','run.sh','a/b.zip',''])
   assert.throws(()=>validateImportMetadata({name,size:100},actor));
+for(const file of [null,undefined,[],false,'archive.zip'])
+  assert.throws(()=>validateImportMetadata(file,actor));
 for(const size of [0,-1,MAX_UPLOAD_BYTES+1,1.5,NaN])
   assert.throws(()=>validateImportMetadata({name:'file.zip',size},actor));
 assert.throws(()=>validatePart({partNumber:1,byteLength:1},meta));
