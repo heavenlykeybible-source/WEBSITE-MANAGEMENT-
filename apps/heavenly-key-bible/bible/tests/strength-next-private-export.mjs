@@ -1,7 +1,7 @@
 // Offline-only conversion of original legacy data into unapproved editorial drafts.
 // Usage: node strength-next-private-export.mjs /private/empty/output-directory
 // Never write to the public web root or overwrite any existing file.
-import {readFileSync,readdirSync,writeFileSync,realpathSync,statSync} from 'node:fs';
+import {readFileSync,readdirSync,writeFileSync,realpathSync,statSync,lstatSync} from 'node:fs';
 import {resolve,dirname,join,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {migrateLegacyBatch} from './strength-next-migration.mjs';
@@ -9,7 +9,9 @@ const root=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'../../h
 const repositoryRoot=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'../../../..'));
 const targetArg=process.argv[2];
 if(!targetArg)throw Error('Provide a private, existing, empty output directory');
-const out=realpathSync(resolve(targetArg));
+const requestedOutput=resolve(targetArg);
+if(lstatSync(requestedOutput).isSymbolicLink())throw Error('Private output directory must not be a symbolic link');
+const out=realpathSync(requestedOutput);
 if(out===repositoryRoot||out.startsWith(repositoryRoot+sep)||repositoryRoot.startsWith(out+sep))throw Error('Private export must be outside the repository and its ancestors');
 const destinationStats=statSync(out);
 if(!destinationStats.isDirectory()||readdirSync(out).length)throw Error('Output directory must exist and be empty');
