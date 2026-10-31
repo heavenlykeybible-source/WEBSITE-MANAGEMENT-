@@ -503,5 +503,17 @@ check('Other device can sign out independently',secondLogout.status===200);
 const secondExpired=await request('me',{cookie:recoveredLogin.cookie});
 check('Other device session is revoked after its own logout',secondExpired.status===401);
 
+const revokerLogin1=await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
+const revokerLogin2=await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
+check('Session revocation test has two active devices',revokerLogin1.status===200&&revokerLogin2.status===200);
+const rejectedRevoke=await request('logout-all',{method:'POST',cookie:revokerLogin1.cookie,body:{password:'incorrect password'}});
+const stillAuthorized=await request('me',{cookie:revokerLogin2.cookie});
+check('Incorrect logout-all confirmation preserves existing devices',rejectedRevoke.status===401&&stillAuthorized.status===200);
+const confirmedRevoke=await request('logout-all',{method:'POST',cookie:revokerLogin1.cookie,body:{password:'correct horse battery'}});
+const deviceOneExpired=await request('me',{cookie:revokerLogin1.cookie});
+const deviceTwoExpired=await request('me',{cookie:revokerLogin2.cookie});
+const otherMemberUnaffected=await request('me',{cookie:secondLogin.cookie});
+check('Confirmed logout-all revokes every active session and clears cookie',confirmedRevoke.status===200&&confirmedRevoke.response.headers.get('set-cookie')?.includes('Max-Age=0')&&deviceOneExpired.status===401&&deviceTwoExpired.status===401);
+check('Account-wide session revocation does not affect another member',otherMemberUnaffected.status===200);
 console.log('RESULT', passed, '/', total);
 if (passed !== total) process.exitCode = 1;
