@@ -70,5 +70,6 @@ if (!api.includes("Voice provider returned invalid MP3 audio.") || !api.includes
 if (!api.includes('readBoundedMedia(response, 1024*1024)')) throw Error('AI provider response-size limit missing');
 if (!api.includes("providerType!=='application/json'")) throw Error('AI provider response content type safeguard missing');
 for (const x of ['const ROLES','content-security-policy','await env.MEDIA.delete(key)']) if (!api.includes(x)) throw Error(`Missing server safeguard ${x}`);
+if (!api.includes("String(r?.text || '').slice(0,12000)") || !api.includes('.slice(0,2000).filter(w=>') || !api.includes("String(w.word || '').slice(0,160)")) throw Error('Whisper result size and timestamp validation missing');
 for (const guard of ['const validWav = wavHeader','wavHeader.getUint32(4,true) === wave.length - 8','wavHeader.getUint32(40,true) === wave.length - 44']) if (!api.includes(guard)) throw Error('PCM WAV validation safeguard missing: '+guard);
 console.log('Account 9 preflight: source, route, editor controls and Cloudflare bindings present.');
