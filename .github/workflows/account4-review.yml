@@ -25,6 +25,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm audit --audit-level=high
       - run: node tests/account4-upload-policy.mjs
+      - run: node tests/account4-r2-multipart.mjs
       - run: npm test
       - run: npm run test:cms-dom
       - run: npm run test:cms-browser
