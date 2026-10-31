@@ -55,6 +55,8 @@ jobs:
         run: npm run test:radio-player-runtime
       - name: HTTP ETag and conditional range validators
         run: npm run test:radio-http-validators
+      - name: Actual public radio HTTP handler and denial tests
+        run: npm run test:radio-media-http-runtime
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
