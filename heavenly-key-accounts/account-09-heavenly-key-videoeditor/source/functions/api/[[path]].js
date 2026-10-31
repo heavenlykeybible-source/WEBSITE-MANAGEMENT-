@@ -474,7 +474,13 @@ export async function onRequest({ request: req, env, params }) {
           saved = true;
           return J({ id });
         } catch (e) {
-          if (key) await env.MEDIA.delete(key).catch(() => {});
+          if (key) {
+            try { await env.MEDIA.delete(key); }
+            catch {
+              await new Promise(resolve => setTimeout(resolve, 200 + Math.floor(Math.random() * 150)));
+              await env.MEDIA.delete(key).catch(async () => { await log(env, u.id, 'media_upload_rollback_delete_failed').catch(() => {}); });
+            }
+          }
           return J({ error: 'Upload failed; no storage was charged.' }, 500);
         } finally {
           if (!saved) {
