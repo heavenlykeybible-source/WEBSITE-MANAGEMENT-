@@ -1,0 +1,7 @@
+_worker.js
+_headers
+wrangler.toml
+*.map
+.DS_Store
+node_modules
+.git
