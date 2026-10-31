@@ -814,7 +814,7 @@ test('stage invitation expiring during async authorization is not accepted',asyn
  h.r.stageAllowed=()=>new Promise(resolve=>{release=()=>resolve(true);started();});
  const pending=h.r.webSocketMessage(h.guest,JSON.stringify({t:'ready'}));
  await reached;
- h.guest.attachment.invitedAt=Date.now()-61000;
+ h.context.Date={now:()=>Date.now()+61000};
  release();await pending;
  assert.equal(h.guest.attachment.stage,false);
  assert.equal(h.guest.attachment.aud,true);
