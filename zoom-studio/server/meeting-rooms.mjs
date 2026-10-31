@@ -105,8 +105,12 @@ export class MeetingRooms {
     if(this.hostAuthPending)return this.close(ws,{t:'error',msg:'Host authorization is in progress. Please reconnect.'});
     this.hostAuthPending=true;
     let a;
-    try{a=await check(this.env.AUTH_SECRET,m.token)}finally{this.hostAuthPending=false}
-    if(!a||a.k!=='meeting'||a.r!==d.room||typeof a.u!=='string'||!a.u.trim()||a.u.length>128||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
+    try{a=await check(this.env.AUTH_SECRET,m.token)}catch{return this.close(ws,{t:'error',msg:'Unable to verify meeting authorization.'})}finally{this.hostAuthPending=false}
+    // Crypto verification may complete after a socket disconnect or token expiry.
+    const verifiedAt=Date.now();
+    if(ws.readyState!==1)return;
+    if(verifiedAt>d.until)return this.close(ws,{t:'error',msg:'Please reconnect.'});
+    if(!a||a.k!=='meeting'||a.r!==d.room||typeof a.u!=='string'||!a.u.trim()||a.u.length>128||!Number.isFinite(a.pe)||a.pe<=verifiedAt)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
     const currentHost=this.host();
     if(currentHost){
      const old=this.data(currentHost);
