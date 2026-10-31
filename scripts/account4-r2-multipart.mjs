@@ -32,6 +32,7 @@ export async function uploadPrivatePart(bucket, actor, session, number, bytes) {
   validatePart({partNumber:number,byteLength:bytes.byteLength},session);
   const upload = bucket.resumeMultipartUpload(session.key, session.uploadId);
   const part = await upload.uploadPart(number, bytes);
+  // Persist this receipt to D1 before acknowledging the chunk to the client.
   return {partNumber: part.partNumber, etag: part.etag};
 }
 export async function completePrivateImport(bucket, actor, session, parts) {
@@ -54,7 +55,11 @@ export async function completePrivateImport(bucket, actor, session, parts) {
       ordered.some(p => session.parts[p.partNumber] !== p.etag))
     throw new Error('Part receipt does not match server-side upload record');
   const result = await bucket.resumeMultipartUpload(session.key,session.uploadId).complete(ordered);
-  if (result.size !== session.size) throw new Error('Completed object size mismatch');
+  if (result.size !== session.size) {
+    // A completed object with the wrong size must not be retained as an import.
+    await bucket.delete(session.key);
+    throw new Error('Completed object size mismatch');
+  }
   return {key:session.key,size:result.size,state:'private-awaiting-review'};
 }
 export async function abortPrivateImport(bucket, actor, session) {
