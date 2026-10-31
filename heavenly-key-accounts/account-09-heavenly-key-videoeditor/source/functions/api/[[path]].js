@@ -241,7 +241,7 @@ export async function onRequest({ request: req, env, params }) {
       const frame=new Uint8Array(audio);const mp3=frame.length>=4&&((frame[0]===73&&frame[1]===68&&frame[2]===51)||(frame[0]===255&&(frame[1]&224)===224));
       if(!mp3)return J({error:'Voice provider returned invalid MP3 audio.'},502);
       await log(env,u.id,'voice_synthesize');
-      return new Response(audio,{headers:{'content-type':'audio/mpeg','cache-control':'no-store','x-content-type-options':'nosniff'}});
+      return new Response(audio,{headers:{'content-type':'audio/mpeg','cache-control':'private, no-store','x-content-type-options':'nosniff','cross-origin-resource-policy':'same-origin','x-frame-options':'DENY','referrer-policy':'no-referrer'}});
     }
     if (a === 'ai-connections' && m === 'GET') {
       const entries = parseAIConnections(env);
@@ -449,7 +449,7 @@ export async function onRequest({ request: req, env, params }) {
         const r = await env.DB.prepare('SELECT * FROM media WHERE id=? AND user_id=? AND deleted=0').bind(p[1], u.id).first();
         if (!r) return J({ error: 'Not found' }, 404);
         const o = await env.MEDIA.get(r.r2_key);
-        return o ? new Response(o.body, { headers: { 'content-type': r.type, 'content-disposition': `inline; filename="${String(r.name).replace(/[\r\n"\\]/g, '_')}"`, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-security-policy': "sandbox; default-src 'none'" } }) : J({ error: 'Missing file' }, 404);
+        return o ? new Response(o.body, { headers: { 'content-type': r.type, 'content-disposition': `inline; filename="${String(r.name).replace(/[\r\n"\\]/g, '_')}"`, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'cross-origin-resource-policy': 'same-origin', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer', 'content-security-policy': "sandbox; default-src 'none'" } }) : J({ error: 'Missing file' }, 404);
       }
       if (p[1] && m === 'DELETE') {
         const r = await env.DB.prepare('SELECT r2_key FROM media WHERE id=? AND user_id=? AND deleted=0').bind(p[1], u.id).first();
