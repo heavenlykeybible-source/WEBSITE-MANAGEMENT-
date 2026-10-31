@@ -1,5 +1,11 @@
 // Regression tests for server-side devotional publication embargo.
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {dirname,resolve} from 'node:path';
+// Cloudflare serves matching assets before Worker unless routing explicitly opts in.
+const wrangler=readFileSync(resolve(dirname(fileURLToPath(import.meta.url)),'../wrangler.toml'),'utf8');
+assert.match(wrangler,/run_worker_first\s*=\s*\[[^\]]*"\/strength-devotionals-\*"/s,'Devotional asset requests must always reach the Worker first');
 import worker from '../worker.js';
 const filename='strength-devotionals-2026.json';
 const topicNames=['Revival & Spiritual Fire','Holiness & Righteousness','Hope & Encouragement','Prayer & Intercession','Salvation & Repentance','Faith & Trust','The Holy Spirit','Evangelism & Soul Winning','Love & Christian Unity','The Word & Obedience','Wisdom & Discernment','End-time & Rapture Readiness'];
