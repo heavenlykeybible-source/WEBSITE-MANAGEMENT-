@@ -106,7 +106,7 @@ test('WhatsApp free-form send requires a real recent inbound timestamp, not a fu
 });
 
 test('HTML dashboard responses disable caching to prevent stale operator UI', () => {
-  const staticStart=source.indexOf("if(!u.pathname.startsWith('/api/'))");
+  const staticStart=source.indexOf("if(u.pathname!=='/api'&&!u.pathname.startsWith('/api/'))");
   const apiStart=source.indexOf("if(req.method==='OPTIONS')", staticStart);
   assert.ok(staticStart>=0 && apiStart>staticStart);
   const staticHandler=source.slice(staticStart,apiStart);
@@ -378,7 +378,7 @@ test('operator access fails closed for weak or malformed ADMIN_TOKEN configurati
  assert.match(auth,/env\.ADMIN_TOKEN\.length>512/);
  assert.match(auth,/\/\\s\/\.test\(env\.ADMIN_TOKEN\)/);
  assert.match(auth,/return reply\(\{error:'Operator authentication secret must be a strong/);
- assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')<auth.indexOf('const provided=req.headers.get'));
+ assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')>=0 && end>begin);
 });
 
 test('state-changing operator API requests use the checked same-origin guard', () => {
@@ -562,4 +562,78 @@ test('Meta challenge response blocks cross-origin embedding and active content',
  const response=source.slice(start,start+600);
  assert.ok(response.includes("'cross-origin-resource-policy':'same-origin'"));
  assert.ok(response.includes("default-src 'none'; frame-ancestors 'none'; base-uri 'none'"));
+});
+
+test('public health route rejects mutations and serves bodyless HEAD responses', () => {
+ const begin=source.indexOf("if(u.pathname==='/health'){");
+ const end=source.indexOf("if(u.pathname!=='/api'",begin);
+ assert.ok(begin>=0&&end>begin);
+ const route=source.slice(begin,end);
+ assert.match(route,/if\(req\.method!=='GET'&&req\.method!=='HEAD'\)return reply\(\{error:'Method not allowed'\},405\)/);
+ assert.match(route,/req\.method==='HEAD'\?new Response\(null,\{status:health\.status,headers:health\.headers\}\):health/);
+});
+
+test('operator mutations reject cross-site browser fetch metadata before origin fallback', () => {
+ const fetchGuard=source.indexOf("['cross-site','same-site'].includes(req.headers.get('sec-fetch-site')||'')");
+ const originGuard=source.indexOf("operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin)");
+ assert.ok(fetchGuard>=0&&originGuard>fetchGuard);
+ assert.match(source,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)&&\['cross-site','same-site'\]\.includes\(req\.headers\.get\('sec-fetch-site'\)\|\|''\)/);
+ assert.match(source,/Cross-origin operator mutations are forbidden/);
+});
+
+test('API JSON responses vary on browser origin and fetch metadata', () => {
+ assert.match(source,/const reply=\(body:unknown,status=200\)=>new Response\(JSON\.stringify\(body\),\{status,headers:\{[^\n]*'cache-control':'no-store','vary':'Origin, Sec-Fetch-Site'/);
+});
+
+test('sibling subdomains cannot mutate protected operator API through same-site browser requests', () => {
+ assert.match(source,/\['cross-site','same-site'\]\.includes\(req\.headers\.get\('sec-fetch-site'\)\|\|''\)/);
+});
+
+test('missing browser origin metadata has an explicit rejection path', () => {
+ assert.ok(source.includes('Untrusted browser mutation origin'));
+ assert.ok(source.includes("req.headers.has('sec-fetch-site')"));
+});
+
+
+test('private API authentication throttles failed credentials per hashed edge address', () => {
+  assert.match(source,/SELECT blocked_until FROM auth_rate_limits WHERE client_hash=\? AND window_start=\?/);
+  assert.match(source,/cf-connecting-ip/);
+  assert.match(source,/account10-auth:/);
+  assert.match(source,/failed_attempts\+1>=20/);
+  assert.match(source,/Too many failed authentication attempts/);
+  assert.match(source,/retry-after/);
+  assert.match(source,/DELETE FROM auth_rate_limits WHERE window_start<\?/);
+  assert.doesNotMatch(source,/INSERT INTO auth_rate_limits[^\n]*cf-connecting-ip/);
+});
+
+test('authentication throttling fails closed until migration 0013 is installed', () => {
+  assert.match(source,/Authentication throttling unavailable; apply migration 0013/);
+});
+test('launch diagnostics explicitly block shared-owner authentication without MFA', () => {
+  assert.match(source,/name:'owner_mfa',ok:false/);
+  assert.match(source,/individual owner identity, MFA and short-lived revocable sessions are not implemented/);
+  assert.match(source,/table_auth_rate_limits/);
+  assert.match(source,/table_operator_credentials/);
+});
+
+
+test('Account 10 dashboard uses an external same-origin application script with strict CSP', () => {
+ const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
+ assert.match(html,/<script src="\/app\.js" defer><\/script>/);
+ assert.doesNotMatch(html,/<script\b(?![^>]*\bsrc=)[^>]*>/i);
+ assert.doesNotMatch(html,/\son[a-z]+\s*=/i);
+ const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+ assert.doesNotMatch(app,/\b(?:eval|Function)\s*\(/);
+ assert.doesNotMatch(app,/\b(?:innerHTML|outerHTML|insertAdjacentHTML)\s*=/);
+ assert.match(source,/script-src 'self'; script-src-attr 'none'/);
+ assert.match(source,/default-src 'self'; base-uri 'self'; object-src 'none'/);
+ assert.match(source,/frame-ancestors 'none'/);
+});
+
+
+test('Gemini API key remains server-side and is never embedded in dashboard assets', () => {
+ const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+ assert.match(source,/GEMINI_API_KEY\?:string/);
+ assert.match(source,/x-goog-api-key/);
+ assert.doesNotMatch(app,/GEMINI_API_KEY|x-goog-api-key|generativelanguage\.googleapis\.com/);
 });
