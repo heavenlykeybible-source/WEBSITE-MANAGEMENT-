@@ -53,3 +53,14 @@ test('Account 10 GitHub workflow performs only verification, never deployment', 
   assert.match(workflow, /contents: read/);
   assert.doesNotMatch(workflow, /\bwrangler deploy\b|\bwrangler d1 execute\b|CLOUDFLARE_API_TOKEN|\bnpx wrangler deploy\b/);
 });
+
+test('preflight is mandatory, read-only, and never claims production readiness', () => {
+ const preflightPath=resolve(root,'scripts','preflight.mjs');
+ assert.ok(existsSync(preflightPath),'preflight script missing');
+ const source=readFileSync(preflightPath,'utf8');
+ assert.match(packageJson.scripts['verify:local'],/^npm run preflight &&/);
+ assert.equal(packageJson.scripts.preflight,'node scripts/preflight.mjs');
+ assert.match(source,/NOT proof of a live deployment/);
+ assert.match(source,/Production readiness cannot be certified/);
+ assert.doesNotMatch(source,/execSync|spawnSync|wrangler deploy|wrangler d1 execute/);
+});
