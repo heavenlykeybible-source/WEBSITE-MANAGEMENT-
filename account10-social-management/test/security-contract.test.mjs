@@ -523,3 +523,8 @@ test('JSON API responses include a nonindexing header', () => {
  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
  assert.ok(source.includes("'x-robots-tag':'noindex'"));
 });
+
+test('JSON API responses disallow cross-origin resource embedding', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("'cross-origin-resource-policy':'same-origin'"));
+});
