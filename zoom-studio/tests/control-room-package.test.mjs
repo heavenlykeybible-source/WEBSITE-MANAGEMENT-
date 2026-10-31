@@ -905,3 +905,16 @@ test('virtual backgrounds fail open to the original camera until first valid seg
  assert.match(html,/c\.restore\(\);s\.segReady=true\}\);done\(true\)/,'camera composite becomes visible after a successful render');
  assert.match(html,/s\.oc=s\.oc\|\|document\.createElement\('canvas'\);s\.segReady=false/,'enabling or changing effects resets the fallback readiness');
 });
+
+test('rapid raise-hand toggles are throttled before reaching the host',async()=>{
+ const s=await openRoom(),viewer=s.add();
+ await message(s.room,viewer,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Viewer'});
+ const before=s.host.messages.filter(m=>m.t==='hand').length;
+ await message(s.room,viewer,{t:'hand',on:true});
+ await message(s.room,viewer,{t:'hand',on:false});
+ await message(s.room,viewer,{t:'hand',on:true});
+ const hands=s.host.messages.filter(m=>m.t==='hand');
+ assert.equal(hands.length-before,1,'rapid toggles must generate only one host notification');
+ assert.equal(hands.at(-1).on,true);
+ assert.ok(viewer.d.handAt>0,'throttle state must be stored on participant socket');
+});
