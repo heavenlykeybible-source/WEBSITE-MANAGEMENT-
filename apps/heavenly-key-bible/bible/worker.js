@@ -113,6 +113,8 @@ export default {
            typeof topic.prayer==="string"&&topic.prayer.trim()&&topic.prayer.length<=160)))return deny();
     const dates=data.entries.map(entry=>entry.date);
     if(new Set(dates).size!==dates.length)return deny();
+    const today=new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Lagos'});
+    if(dates.some(date=>date>today))return deny();
     const headers=new Headers(assetResponse.headers);
     headers.set("Cache-Control","no-store");
     headers.set("X-Content-Type-Options","nosniff");
