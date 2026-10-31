@@ -29,3 +29,20 @@ test('Windows embedded WebView and download handoff reject alternate HTTPS ports
  assert.match(code,/e\.Cancel = true/);
  assert.match(code,/IsFirstParty\(e\.Uri\)/);
 });
+
+test('Apple native shells open user-clicked target-blank links in the system browser',()=>{
+ const cases=[
+  ['ios/HeavenlyKey/HeavenlyKeyApp.swift','webView','UIApplication.shared.open'],
+  ['macos/HeavenlyKeyMac/HeavenlyKeyMacApp.swift','browser','NSWorkspace.shared.open']
+ ];
+ for(const [file,view,opener] of cases){
+  const swift=native(file);
+  assert.match(swift,/final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate/);
+  assert.ok(swift.includes(view+'.uiDelegate = context.coordinator'));
+  assert.match(swift,/createWebViewWith configuration: WKWebViewConfiguration/);
+  assert.match(swift,/navigationAction.targetFrame == nil/);
+  assert.match(swift,/navigationAction.navigationType == .linkActivated/);
+  assert.ok(swift.includes(opener+'(url'));
+  assert.match(swift,/return nil/);
+ }
+});
