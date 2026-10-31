@@ -828,3 +828,14 @@ test('host authorization checks token expiration against verification completion
  assert.match(code,/if\(ws\.readyState!==1\)return/);
  assert.match(code,/catch\{return this\.close\(ws,\{t:'error',msg:'Unable to verify meeting authorization\.'\}\)\}/);
 });
+
+test('queued socket role change cannot be promoted into a host by delayed verification',async()=>{
+ const s=meeting(),candidate=s.add();
+ const pending=message(s.room,candidate,{t:'host',token:roomToken()});
+ candidate.d.role='guest';
+ candidate.d.session='unrelated-session';
+ await pending;
+ assert.notEqual(candidate.d.role,'host');
+ assert.ok(!candidate.messages.some(m=>m.t==='created'));
+ assert.equal(candidate.readyState,3,'role mutation closes the conflicting connection');
+});
