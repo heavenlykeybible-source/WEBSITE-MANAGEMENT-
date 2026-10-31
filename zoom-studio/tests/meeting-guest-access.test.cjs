@@ -641,3 +641,18 @@ test('stage token expiring during TURN signing cannot finish admission',async()=
  assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
  assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'),false);
 });
+
+test('disconnected host receives no creation acknowledgement after slow TURN signing',async()=>{
+ const h=setup();h.host.close();
+ const ws=h.add();const room=ws.attachment.room;
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ h.context.check=async()=>({k:'meeting',r:room,u:'host@example.com',pe:Date.now()+60000});
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.r.webSocketMessage(ws,JSON.stringify({t:'host',token:'valid-host'}));
+ await reached;ws.close();release({});await pending;
+ assert.equal(ws.messages.some(m=>m.t==='created'),false);
+ assert.equal(h.r.host(),undefined);
+});
