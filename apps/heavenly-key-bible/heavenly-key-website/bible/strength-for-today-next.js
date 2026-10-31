@@ -2,6 +2,11 @@
 const sections=[["Today's Topic","One central topic will guide all 12 sections. Today's editorially approved topic is not available yet."],["Bible Reading","Six verified KJV passages will appear here: three from the Old Testament and three from the New Testament. Every verse will be displayed with its reference."],["Hymn of the Day","The matching hymn title and verified number from the Heavenly Key Old Time Gospel Revival Hymn Book will appear after editorial review."],["Bible Story","A short, Scripture-verified Bible account related to the day's central topic, with the source passage for further reading."],["Life Stories Around the World","A dated, verifiable contemporary account with source attribution and a practical lesson. No fictional testimony will be presented as fact."],["Eternity in View","A concise reflection connecting today's subject to obedience, Christ and eternity."],["Destiny Decision & Action","Thoughtful questions, a personal decision and one achievable action for today."],["Warfare Prayer","Permanent KJV references: Matthew 11:12 and Luke 18:1. Three spiritually focused prayer points will be written for the day's topic."],["Prophetic Prayer","A short, Scripture-consistent pastoral prayer for readers. This section will not guarantee specific outcomes."],["Health & Wellness Prayer","A brief evidence-informed health reminder and compassionate prayer. Prayer does not replace appropriate medical care."],["Salvation Prayer","A clear invitation to repentance and faith in Jesus Christ, with the existing I Say Yes to Jesus steps and voluntary follow-up."],["12 Kingdom Challenges for Today","The original 12 ministry themes will remain here as twelve distinct, very short daily challenges."]];
 const names=['Revival & Spiritual Fire','Holiness & Righteousness','Hope & Encouragement','Prayer & Intercession','Salvation & Repentance','Faith & Trust','The Holy Spirit','Evangelism & Soul Winning','Love & Christian Unity','The Word & Obedience','Wisdom & Discernment','End-time & Rapture Readiness'];
 const $=id=>document.getElementById(id);
+// Device-local display preference only; no devotional drafts or identity data are stored.
+const fontSettingKey='hkem-strength-preview-font-v1';
+function readFontScale(){try{const value=Number(localStorage.getItem(fontSettingKey));return Number.isFinite(value)&&value>=.85&&value<=2?value:1}catch{return 1}}
+function saveFontScale(value){try{localStorage.setItem(fontSettingKey,String(value))}catch{/* Private browsing and blocked storage are supported. */}}
+
 let current=0;
 // Shareable section navigation never loads or exposes unapproved devotional content.
 const sectionFromHash=()=>{const match=/^#section-(\d{1,2})$/.exec(window.location.hash);return match&&Number(match[1])>=1&&Number(match[1])<=12?Number(match[1])-1:0};
@@ -38,7 +43,9 @@ $('share').onclick=async()=>{if(!navigator.share){await copy(allText());return}t
 $('print').onclick=()=>window.print();
 $('font-larger').onclick=()=>adjustText(1);
 $('font-smaller').onclick=()=>adjustText(-1);
-let textScale=1;
-function adjustText(direction){textScale=Math.min(1.5,Math.max(.85,Math.round((textScale+direction*.1)*100)/100));body.style.fontSize=textScale+'rem';status.textContent='Reading text size '+Math.round(textScale*100)+'%';}
-render();
+let textScale=readFontScale();
+function applyTextScale(){body.style.fontSize=textScale+'rem';$('font-smaller').disabled=textScale<=.85;$('font-larger').disabled=textScale>=2;$('font-reset').disabled=textScale===1;status.textContent='Reading text size '+Math.round(textScale*100)+'%';}
+function adjustText(direction){textScale=Math.min(2,Math.max(.85,Math.round((textScale+direction*.1)*100)/100));applyTextScale();saveFontScale(textScale);}
+$('font-reset').onclick=()=>{textScale=1;applyTextScale();saveFontScale(textScale)};
+render();applyTextScale();
 })();
