@@ -119,4 +119,8 @@ window.addEventListener("message",event=>{if(event.origin!=="https://global.heav
 $("share-community").onclick=()=>{const s=songs.find(x=>x.id===current);if(!s)return;const payload={type:"hk-hymn-share",action:"post",title:s.title,text:selectedHymnText()};if(window.parent!==window)window.parent.postMessage(payload,"https://global.heavenlykey.org");else{copySelectedHymn().then(()=>{if(confirm("Open Global Christian Community to share this hymn? The hymn is copied for your post."))window.open("https://global.heavenlykey.org/","_blank","noopener");});}};
 $("send-member").onclick=()=>{const s=songs.find(x=>x.id===current);if(!s)return;const payload={type:"hk-hymn-share",action:"message",title:s.title,text:selectedHymnText()};if(window.parent!==window)window.parent.postMessage(payload,"https://global.heavenlykey.org");else{copySelectedHymn().then(()=>alert("Open Messages in Global Christian Community and paste the hymn."));}};
 const requested=new URLSearchParams(location.search).get("search");if(requested){$("q").value=requested;let hit=songs.find(s=>String(s.id)===requested.trim()||s.title.toLowerCase().includes(requested.toLowerCase())||s.subject.toLowerCase().includes(requested.toLowerCase()));if(hit)current=hit.id}let match=location.hash.match(/hymn-(\d+)/);if(match&&songs.some(s=>s.id===+match[1]))current=+match[1];render();loadHistoricalTexts();if(location.hash==="#about")showAbout(true);
+</script><script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 </script></html>
