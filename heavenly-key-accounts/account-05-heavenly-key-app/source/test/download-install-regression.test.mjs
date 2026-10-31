@@ -288,7 +288,7 @@ test('download catalogue selection rejects prototype-inherited and malformed IDs
 
 test('device guide rejects duplicate, malformed and non-HTTPS catalogue destinations', () => {
  const js=publicFile('app-device-guide.js');
- assert.match(js,/params\.getAll\('app'\)\.length <= 1/);
+ assert.match(js,/suppliedAppIds\.length <= 1/);
  assert.match(js,/const validAppId =/);
  assert.match(js,/credentials: 'omit', redirect: 'error'/);
  assert.match(js,/destination\.port/);
@@ -309,4 +309,12 @@ test('download dialog validates destinations before advertising an official app'
  assert.match(js,/destination\.protocol!=='https:'/);
  assert.match(js,/destination\.port\|\|destination\.username\|\|destination\.password/);
  assert.match(js,/destination\.hostname/);
+});
+
+test('install guides reject empty application IDs and partial native installers', () => {
+ const js=publicFile('app-device-guide.js');
+ assert.match(js,/suppliedAppIds\.length \? suppliedAppIds\[0\] : 'all-in-one'/);
+ assert.match(js,/available\.status === 200/);
+ assert.match(js,/!available\.headers\.has\('content-range'\)/);
+ assert.doesNotMatch(js,/nativeAvailable = available\.ok &&/);
 });
