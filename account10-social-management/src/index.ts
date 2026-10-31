@@ -368,18 +368,21 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   let humanContactColumn=false;
   let whatsappReplayLedger=false;
   let aiUsageLimits=false;
+  let operatorCredentialsReady=false;
   try{
    const columns=await env.DB.prepare("PRAGMA table_info(conversations)").all<{name:string}>();
    const tables=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('whatsapp_handover_events','ai_rate_limits')").all<{name:string}>();
    const ledgerColumns=await env.DB.prepare("PRAGMA table_info(whatsapp_handover_events)").all<{name:string}>();
    const limitColumns=await env.DB.prepare("PRAGMA table_info(ai_rate_limits)").all<{name:string}>();
+   const operatorColumns=await env.DB.prepare("PRAGMA table_info(operator_credentials)").all<{name:string}>();
    humanContactColumn=['human_contact_target','human_request_version'].every(name=>columns.results.some(c=>c.name===name));
    whatsappReplayLedger=tables.results.some(t=>t.name==='whatsapp_handover_events')&&['message_id','conversation_id','contact_target','consumed'].every(name=>ledgerColumns.results.some(c=>c.name===name));
    aiUsageLimits=tables.results.some(t=>t.name==='ai_rate_limits')&&['scope','window_kind','window_start','request_count'].every(name=>limitColumns.results.some(c=>c.name===name));
-   migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits;
+   operatorCredentialsReady=['id','display_name','token_hash','role','active','expires_at','revoked_at'].every(name=>operatorColumns.results.some(c=>c.name===name));
+   migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits&&operatorCredentialsReady;
   }catch{return reply({error:'Database readiness inspection failed; verify D1 binding and migrations',migrationReady:false},503)}
   const r=await env.DB.prepare('SELECT channel,status,COUNT(*) AS total FROM social_accounts GROUP BY channel,status').all();
-  return reply({account:10,accounts:r.results,migrationReady,humanContactColumn,whatsappReplayLedger,aiUsageLimits,providerWebhooks:false,providerPublishing:false,geminiConfigured:!!env.GEMINI_API_KEY,account2MigrationComplete:false,note:'Schema presence does not prove webhook delivery, Gemini responses or provider authorization.'})
+  return reply({account:10,accounts:r.results,migrationReady,humanContactColumn,whatsappReplayLedger,aiUsageLimits,operatorCredentialsReady,providerWebhooks:false,providerPublishing:false,geminiConfigured:!!env.GEMINI_API_KEY,account2MigrationComplete:false,note:'Schema presence does not prove webhook delivery, Gemini responses or provider authorization.'})
  }
  if(u.pathname==='/api/accounts'&&req.method==='GET'){const r=await env.DB.prepare('SELECT id,channel,status,created_at FROM social_accounts ORDER BY created_at DESC LIMIT 100').all();return reply({items:r.results,connected:false})}
  if(u.pathname==='/api/accounts'&&req.method==='POST'){let b:any;try{b=await req.json()}catch{return reply({error:'Invalid JSON'},400)}const channels=['whatsapp_business','facebook_messenger','facebook_page','instagram_professional','youtube','tiktok','x'];if(!channels.includes(b?.channel)||typeof b?.providerAccountRef!=='string'||!b.providerAccountRef.trim()||b.providerAccountRef.length>255)return reply({error:'Invalid social account'},400);const id=crypto.randomUUID();await env.DB.prepare('INSERT INTO social_accounts(id,channel,provider_account_ref,status) VALUES(?,?,?,?)').bind(id,b.channel,b.providerAccountRef.trim(),'unverified').run();return reply({id,status:'unverified',connected:false},201)}
