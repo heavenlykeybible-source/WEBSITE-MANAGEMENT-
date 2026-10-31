@@ -17,10 +17,14 @@ const topicNames=['Revival & Spiritual Fire','Holiness & Righteousness','Hope & 
 const flags=[];
 const flag=(date,code,details)=>flags.push({date,code,details});
 const days=new Set();const refl=new Map();const pray=new Map();const lead=new Map();
+const verseTextByReference=new Map();
+const validDate = value => typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+ !Number.isNaN(Date.parse(value)) && new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
 const references=Array.from({length:12},()=>new Set());
 let topicCount=0;let approved=0;
 for(let i=0;i<entries.length;i++){
  const e=entries[i];
+ if(!validDate(e.date))flag(e.date,'INVALID_DATE',e._file);
  if(days.has(e.date))flag(e.date,'DUPLICATE_DATE',e._file); days.add(e.date);
  if(i&&Date.parse(e.date)-Date.parse(entries[i-1].date)!==86400000)flag(e.date,'DATE_GAP','Previous: '+entries[i-1].date);
  if(e.status==='approved-for-publication')approved++;
@@ -31,6 +35,13 @@ for(let i=0;i<entries.length;i++){
   if(t.topic!==topicNames[j])flag(e.date,'TOPIC_ORDER',String(j));
   if(!t.reference||!t.bibleText||!t.reflection||!t.prayer)flag(e.date,'INCOMPLETE',t.topic);
   references[j].add(t.reference);
+  const keyRef=norm(t.reference);
+  const keyVerse=norm(t.bibleText);
+  if(keyRef&&keyVerse){
+   if(verseTextByReference.has(keyRef)&&verseTextByReference.get(keyRef)!==keyVerse)
+    flag(e.date,'INCONSISTENT_VERSE_TEXT',t.reference+' differs between devotional entries');
+   else verseTextByReference.set(keyRef,keyVerse);
+  }
   if(t.reflection?.length>280||t.prayer?.length>160)flag(e.date,'LENGTH_LIMIT',t.topic);
   if(t.reviewStatus!=='draft-original-editorial-and-doctrinal-approval-pending')flag(e.date,'REVIEW_STATUS',t.topic);
   for(const [field,value,dict] of [['reflection',t.reflection,refl],['prayer',t.prayer,pray]]){
@@ -79,6 +90,10 @@ for(let i=0;i<entries.length;i++){
  }
 }
 const requestedDayTarget=1828;
+const expectedStartDate='2026-10-30';
+const expectedEndDate='2031-10-31';
+if(entries[0]?.date!==expectedStartDate)flag('GLOBAL','DATE_RANGE','Expected start '+expectedStartDate);
+if(entries.at(-1)?.date!==expectedEndDate)flag('GLOBAL','DATE_RANGE','Expected end '+expectedEndDate);
 const daysNeededToMeetRequest=Math.max(0,requestedDayTarget-entries.length);
 
 
@@ -86,20 +101,25 @@ const daysNeededToMeetRequest=Math.max(0,requestedDayTarget-entries.length);
 const qualityBlockingCodes=new Set([
  'DUPLICATE_DATE','DATE_GAP','INCOMPLETE','TOPIC_COUNT','TOPIC_ORDER',
  'INCOMPLETE_DAILY_ENTRY','MISSING_DAY_TITLE','MISSING_DAY_REFLECTION',
- 'MISSING_DAY_PRAYER','DUPLICATE_DAY_REFLECTION','DUPLICATE_DAY_PRAYER',
- 'EXACT_DUPLICATE_REFLECTION','EXACT_DUPLICATE_PRAYER',
+ 'MISSING_DAY_PRAYER','DUPLICATE_DAY_TITLE','DUPLICATE_DAY_REFLECTION','DUPLICATE_DAY_PRAYER',
+ 'EXACT_DUPLICATE_REFLECTION','EXACT_DUPLICATE_PRAYER','REPEATED_REFLECTION_OPENING',
+ 'INCONSISTENT_VERSE_TEXT','INVALID_DATE','DATE_RANGE','CONSECUTIVE_REUSED_THEME',
+ 'UNSUPPORTED_PROMISE','END_TIME_DATE_SETTING',
+ 'PUBLICATION_STATUS','REVIEW_STATUS','LENGTH_LIMIT',
  'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','RELEASE_GATE'
 ]);
 const qualityBlockingFlags=flags.filter(f=>qualityBlockingCodes.has(f.code));
 const automatedQualityPassed=qualityBlockingFlags.length===0 &&
  entries.length===requestedDayTarget &&
- topicCount===requestedDayTarget*12;
+ topicCount===requestedDayTarget*12 &&
+ entries.every(e=>e.status==='draft-not-published') &&
+ manifest.publicationStatus==='editorial-hold' && manifest.publishedBatchFiles.length===0;
 
 const result={
  title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
- files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
+ files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:manifest.publishedBatchFiles.length,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
