@@ -158,6 +158,12 @@ export async function onRequest({ request: req, env, params }) {
       if (!email || email.length > 200 || typeof b.password !== 'string' || b.password.length > 200) return J({ error: 'Wrong email or password.' }, 401);
       const clientIp = req.headers.get('cf-connecting-ip');
       const ipKey = clientIp ? 'ip:' + await sha(clientIp) : null;
+      // Reserve a per-IP login attempt before expensive password hashing.
+      if (ipKey) {
+        const loginAt = Date.now();
+        const loginSlot = await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'login_attempt_ip',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='login_attempt_ip' AND at>?) < 100").bind(ipKey,loginAt,ipKey,loginAt-900000).run();
+        if (!loginSlot.meta.changes) return J({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
+      }
       const windowStart = Date.now() - 900000;
       const fails = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='login_fail' AND at>?").bind(email, windowStart).first()).c;
       const ipFails = ipKey ? (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='login_fail_ip' AND at>?").bind(ipKey, windowStart).first()).c : 0;
