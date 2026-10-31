@@ -141,10 +141,10 @@ test('Worker source maps are uploaded privately and required by preflight', () =
 
 
 test('Worker runtime uses current compatibility date and production observability', () => {
- assert.match(wrangler,/compatibility_date\\s*=\\s*"2026-10-31"/);
- assert.match(wrangler,/\\[observability\\][\\s\\S]*?enabled\\s*=\\s*true/);
- assert.match(wrangler,/head_sampling_rate\\s*=\\s*0\\.1/);
- assert.match(wrangler,/\\[observability\\.issues\\][\\s\\S]*?enabled\\s*=\\s*true/);
+ assert.match(wrangler,/compatibility_date\s*=\s*"2026-10-31"/);
+ assert.match(wrangler,/\[observability\][\s\S]*?enabled\s*=\s*true/);
+ assert.match(wrangler,/head_sampling_rate\s*=\s*0\.1/);
+ assert.match(wrangler,/\[observability\.issues\][\s\S]*?enabled\s*=\s*true/);
  const preflight=readFileSync(resolve(root,'scripts/preflight.mjs'),'utf8');
  assert.match(preflight,/Current Worker compatibility date/);
  assert.match(preflight,/Worker Issues monitoring/);
