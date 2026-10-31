@@ -32,7 +32,12 @@ export async function handleNativeDownloads(request,env) {
   const match=/^\/api\/native-download\/([a-z0-9-]+)\/(android|windows|mac)$/.exec(url.pathname);
   if(!match) return null;
   if(request.method!=='GET' && request.method!=='HEAD') return reply({error:'Method not allowed'},405);
+  // Installer packages contain executable code; never distribute over insecure transport.
+  if(url.protocol!=='https:' || url.username || url.password) return reply({error:'HTTPS required'},400);
   if(url.search) return reply({error:'Query parameters not accepted'},400);
+  // This endpoint only offers complete, reviewed binaries; it has no byte-range support.
+  if(request.headers.has('range') || request.headers.has('if-range'))
+    return reply({error:'Partial installer downloads are not supported'},416);
   const [,appId,platform]=match;
   if(!idPattern.test(appId)) return reply({error:'Invalid app'},400);
   // Never distribute an arbitrary object merely because its path matches.
