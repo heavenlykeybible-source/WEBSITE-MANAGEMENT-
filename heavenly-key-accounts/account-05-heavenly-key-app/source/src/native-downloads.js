@@ -76,7 +76,10 @@ export async function handleNativeDownloads(request,env) {
   const key=appId+'/'+platform+'/release.'+meta.extension;
   try {
     const object=request.method==='HEAD' ? await env.NATIVE_RELEASES.head(key) : await env.NATIVE_RELEASES.get(key);
-    if(!object || !object.size) return reply({error:'Native installation package not available for this app and device'},404);
+    if(!object) return reply({error:'Native installation package not available for this app and device'},404);
+    // Reject malformed or implausibly large R2 object sizes before constructing download headers.
+    if(!Number.isSafeInteger(object.size) || object.size<=0 || object.size>2147483648)
+      return reply({error:'Native release size is invalid'},403);
     // A release is publishable only after the trusted release pipeline records its SHA-256.
     // This metadata is set by the publisher after malware scanning and signing checks.
     const sha256=object.customMetadata?.sha256;
