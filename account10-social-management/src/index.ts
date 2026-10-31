@@ -509,9 +509,13 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const conversation=await env.DB.prepare('SELECT id,human_paused,requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{id:string;human_paused:number;requested_human:number}>();
   if(!conversation)return reply({error:'Conversation not found'},404);
   if(conversation.human_paused||conversation.requested_human)return reply({action:'human_review',suggestion:null,sent:false,reason:'Human takeover active'});
-  if(requestsHumanMinistryContact(data.message)){
-   await env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(data.conversationId).run();
-   return reply({action:'human_review',humanRequested:true,automationPaused:true,suggestion:null,sent:false,externalNotificationsSent:false,reason:'Request to speak to a ministry representative recorded for human follow-up'});
+  const contactTarget=contactTargetForMinistryMessage(data.message);
+  if(contactTarget){
+   try{
+    const reservation=await env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND requested_human=0 AND human_paused=0').bind(contactTarget,data.conversationId).run();
+    if(!reservation.meta.changes)return reply({action:'human_review',humanRequested:true,automationPaused:true,suggestion:null,sent:false,externalNotificationsSent:false,reason:'Conversation already paused or human request pending'});
+   }catch{return reply({error:'Human-contact routing unavailable; apply migration 0009',sent:false},503)}
+   return reply({action:'human_review',humanRequested:true,contactTarget,automationPaused:true,suggestion:null,sent:false,externalNotificationsSent:false,reason:'Request recorded for an authorized ministry operator; no direct connection or notification has occurred'});
   }
   if(!env.GEMINI_API_KEY)return reply({error:'Gemini API key is not configured'},503);
   // Reserve usage in D1 before contacting Gemini. Each atomic UPSERT prevents
