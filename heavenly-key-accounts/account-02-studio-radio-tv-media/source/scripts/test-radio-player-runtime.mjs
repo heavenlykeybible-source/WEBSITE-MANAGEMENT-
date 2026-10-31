@@ -33,6 +33,8 @@ const task=runInNewContext(script,{
  window:{addEventListener:(name,fn)=>events.set(name,fn)},
  navigator:{mediaSession:{setActionHandler:(name,fn)=>mediaActions.set(name,fn)}},
  AbortController,
+ setTimeout,
+ clearTimeout,
  fetch:async(_url,options)=>{fetchSignals.push(options.signal);if(holdFetch)return await new Promise(resolve=>{pendingFetch=resolve;pendingFetches.push(resolve)});if(shouldFail)throw Error('Offline');return {ok:true,json:async()=>fetchResult}},
  MediaMetadata:undefined,
  console
