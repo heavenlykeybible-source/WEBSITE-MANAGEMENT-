@@ -42,11 +42,12 @@ for(const [name,script] of Object.entries(pkg.scripts)){
 }
 // A deploy from the wrong Cloudflare account can strand the hostname.
 // Do not silently infer the zone account from a successful build or DNS resolution.
-const assetStart=config.indexOf('[assets]');
-const assetEnd=config.indexOf('\n[',assetStart+1);
-const assetConfig=assetStart>=0?config.slice(assetStart,assetEnd>=0?assetEnd:undefined):'';
-if((config.match(/^\\[assets\\]$/gm)||[]).length!==1)fail.push('Exactly one assets section is required');
-const assetLines=assetConfig.split(/\\r?\\n/).slice(1);
+const configLines=config.split('\n');
+const assetHeaders=configLines.map((line,index)=>({line:line.trim(),index})).filter(item=>item.line==='[assets]');
+if(assetHeaders.length!==1)fail.push('Exactly one assets section is required');
+const assetStart=assetHeaders[0]?.index??-1;
+const assetEnd=configLines.findIndex((line,index)=>index>assetStart&&line.trim().startsWith('['));
+const assetLines=assetStart>=0?configLines.slice(assetStart+1,assetEnd>=0?assetEnd:undefined):[];
 const assetValue=key=>{
  const matches=assetLines.filter(line=>line.trim()&&!line.trim().startsWith('#')&&line.includes('=')&&line.split('=')[0].trim()===key);
  if(matches.length!==1)fail.push('Assets section must declare '+key+' exactly once');
