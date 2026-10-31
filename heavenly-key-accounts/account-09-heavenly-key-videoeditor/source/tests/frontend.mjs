@@ -8,6 +8,7 @@ assert.ok(html.includes('id="deleteAccount"')&&html.includes("api('account','DEL
 assert.ok(html.includes('id="logoutAll"')&&html.includes("$('logoutAll').onclick=async()=>")&&html.includes("api('logout-all','POST',{password})")&&html.includes("$('password').value='';"),'Sign out on all devices must require password and clear the field');
 assert.ok(html.includes('<script defer src="hk-approved-footer.js"></script><script>'),'Screen recording handlers must execute in an inline script, not inside an external script tag');
 const module=readFileSync('public/integrations.js','utf8');
+assert.ok(module.includes("text:'Retry pending media cleanup'")&&module.includes("mediaCleanup.onclick=async()=>")&&module.includes("json('media/cleanup','POST')"),'Cloud media recovery must have an actionable authenticated control');
 assert.ok(html.includes("if(screenURL){URL.revokeObjectURL(screenURL);screenURL=''}$('screendl').removeAttribute('href')"),'New screen capture must invalidate the prior recording download');
 assert.ok(html.includes("const mime=['video/webm;codecs=vp8,opus','video/webm','video/mp4;")&&html.includes("$('screendl').download=mime.startsWith('video/mp4')"),'Screen recording codec and download extension must match');
 assert.ok(html.includes("$('vf').disabled=true")&&html.includes("exportStream.getTracks().forEach(t=>t.stop())")&&html.includes("exportRecorder.state!=='inactive'"),'Video exports must block source switching and clean up media tracks');
