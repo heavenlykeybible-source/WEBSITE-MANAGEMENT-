@@ -383,6 +383,14 @@ const noLengthWav = await onRequest({
   }),env,params:{path:['transcribe']}
 });
 check('Transcription supports absent content length',noLengthWav.status===200);
+const providerOutput=await onRequest({
+ request:new Request('https://studio.example/api/transcribe',{method:'POST',headers:{cookie:login.cookie,'content-type':'audio/wav','x-requested-with':'hk'},body:validWav}),
+ env:{...env,AI:{run:async()=>({text:'x'.repeat(15000),words:Array.from({length:2100},(_,i)=>({word:'w'.repeat(200),start:i,end:i+1}))})}},
+ params:{path:['transcribe']}
+});
+const boundedProviderOutput=await providerOutput.json();
+check('Oversized Whisper output is bounded',providerOutput.status===200&&boundedProviderOutput.text.length===12000&&boundedProviderOutput.words.length===2000&&boundedProviderOutput.words[0].word.length===160);
+
 for (const [label, mutate] of [
   ['RIFF length mismatch', b => new DataView(b.buffer).setUint32(4,999,true)],
   ['Payload declares more audio than present', b => new DataView(b.buffer).setUint32(40,999,true)],
