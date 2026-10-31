@@ -157,3 +157,11 @@ test('management tab requests never restore private data after logout or tab cha
   assert.match(html,/if\(epoch===authEpoch&&activeManagementTab===name&&token\)status\(e.message\)/);
   assert.equal((html.match(/requestedHuman=false;activeManagementTab='chats';\$\('requestsTab'\)\.textContent='Human Requests'/g)||[]).length,2);
 });
+
+test('nested launch-diagnostics responses never render into a stale operator session', () => {
+ assert.match(html,/function renderManagement\(name,d\)\{const epoch=authEpoch;const current=\(\)=>epoch===authEpoch&&activeManagementTab===name&&!!token;/);
+ assert.match(html,/api\('\/api\/webhooks\/events\?limit=20'\)\.then\(d=>\{if\(!current\(\)\)return;/);
+ assert.match(html,/api\('\/api\/operations\/data-integrity'\)\.then\(result=>\{if\(!current\(\)\)return;/);
+ assert.match(html,/Webhook inbox unavailable/);
+ assert.match(html,/Integrity check unavailable/);
+});
