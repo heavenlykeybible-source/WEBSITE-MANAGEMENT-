@@ -193,3 +193,20 @@ test('invalid and excessive R2 native release sizes cannot be served or counted'
   assert.equal(calls.writes,0);
  }
 });
+
+test('download statistics reject HTTP and query parameters even with a valid administrator token',async()=>{
+ const {env,calls}=environment();
+ const authorization='Bearer '+'a'.repeat(40);
+ for(const address of [
+  'http://apps.heavenlykey.org/api/admin/download-counts',
+  origin+'/api/admin/download-counts?format=json',
+  origin+'/api/admin/download-counts?token=not-allowed'
+ ]){
+  const response=await handleNativeDownloads(new Request(address,{headers:{authorization}}),env);
+  assert.equal(response.status,400,address);
+ }
+ assert.equal(calls.reads,0);
+ const valid=await handleNativeDownloads(request('/api/admin/download-counts',{headers:{authorization}}),env);
+ assert.equal(valid.status,200);
+ assert.equal(calls.reads,1);
+});
