@@ -8,7 +8,7 @@ function environment({packageExists=true,db=true,token='a'.repeat(40)}={}) {
  const verified={size:4,customMetadata:{sha256:'b'.repeat(64),malwareScan:'passed',signatureVerified:'true',scannedSha256:'b'.repeat(64),appId:'all-in-one',platform:'android'}};
  const env={
   DOWNLOAD_ADMIN_TOKEN:token,
-  ASSETS:{fetch:async()=>new Response(JSON.stringify({'all-in-one':{name:'All-in-One',url:origin+'/experience.html'}}),{status:200})},
+  ASSETS:{fetch:async()=>new Response(JSON.stringify({'all-in-one':{name:'All-in-One',url:origin+'/experience.html'}}),{status:200,headers:{'content-type':'application/json'}})},
   NATIVE_RELEASES:{
    head:async()=>{calls.objects++;return packageExists?verified:null},
    get:async()=>{calls.objects++;return packageExists?{...verified,body:new Uint8Array([1,2,3,4])}:null}
@@ -132,4 +132,32 @@ test('download is rejected when installer metadata belongs to another app or dev
  base.customMetadata.platform='windows';
  assert.equal((await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env)).status,403);
  assert.equal(calls.writes,0);
+});
+
+test('installer catalogue rejects partial, non-JSON and overlarge responses before R2 access',async()=>{
+ const cases=[
+  new Response('{"all-in-one":{}}',{status:206,headers:{'content-type':'application/json','content-range':'bytes 0-16/99'}}),
+  new Response('{"all-in-one":{}}',{status:200,headers:{'content-type':'text/html; application/json'}}),
+  new Response('{"all-in-one":{}}',{status:200,headers:{'content-type':'application/json','content-range':'bytes 0-16/99'}}),
+  new Response('{"all-in-one":{}}',{status:200,headers:{'content-type':'application/json','content-length':'70000'}}),
+  new Response('x'.repeat(65537),{status:200,headers:{'content-type':'application/json'}}),
+ ];
+ for(const catalog of cases){
+  const {env,calls}=environment();
+  env.ASSETS.fetch=async()=>catalog;
+  const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env);
+  assert.equal(response.status,503,'Untrusted catalogue was used');
+  assert.equal(calls.objects,0,'R2 must not be read from untrusted catalogue');
+ }
+});
+
+test('native catalogue fetch isolates cookies and prohibits redirects',async()=>{
+ const {env}=environment();
+ const original=env.ASSETS.fetch;
+ let assetRequest;
+ env.ASSETS.fetch=async request=>{assetRequest=request;return original(request)};
+ const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env);
+ assert.equal(response.status,200);
+ assert.equal(assetRequest.redirect,'manual');
+ assert.equal(assetRequest.credentials,'omit');
 });
