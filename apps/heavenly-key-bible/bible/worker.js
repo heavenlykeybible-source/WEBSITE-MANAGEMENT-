@@ -85,9 +85,12 @@ export default {
   }
   // Fail closed: unreleased dated devotionals must never be publicly downloadable.
   // Client-side hiding and service-worker cache exclusions alone do not protect draft JSON.
+  const isDevotionalPath=url.pathname.startsWith("/strength-devotionals-");
   const draftMatch=url.pathname.match(/^\/(strength-devotionals-(?:2026|2027|year[1-5])(?:-batch\d+)?\.json)$/);
-  if(draftMatch){
+  if(isDevotionalPath){
    const deny=()=>new Response(null,{status:404,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff"}});
+   // Reject unexpected filenames instead of passing them to the public asset layer.
+   if(!draftMatch)return deny();
    try{
     const manifestResponse=await env.ASSETS.fetch(new Request(new URL("/strength-publication-status.json",url.origin)));
     if(!manifestResponse.ok)return deny();
