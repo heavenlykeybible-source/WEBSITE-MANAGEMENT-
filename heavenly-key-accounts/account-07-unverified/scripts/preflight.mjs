@@ -6,9 +6,9 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../source");
 const failures = [];
 const read = (path) => readFile(resolve(root, path), "utf8");
-const [html, headers, worker, wrangler, player, css] = await Promise.all([
+const [html, headers, worker, wrangler, player, css, assetsIgnore] = await Promise.all([
   read("index.html"), read("_headers"), read("_worker.js"), read("wrangler.toml"),
-  read("js/approved-widget-system.js"), read("css/radio-approved-number-one.css")
+  read("js/approved-widget-system.js"), read("css/radio-approved-number-one.css"), read(".assetsignore")
 ]);
 const check = (condition, message) => { if (!condition) failures.push(message); };
 
@@ -28,9 +28,12 @@ check(worker.includes("media-engine-public-v1"), "Account 2 public API marker mi
 check(worker.includes("MEDIA_PUBLIC_ORIGIN"), "Account 2 origin validation missing.");
 check(worker.includes('redirect: "manual"'), "Upstream redirects must be rejected.");
 check(worker.includes("AbortSignal.timeout"), "Upstream request timeout missing.");
+check(worker.includes('redirect: "manual"'), "Redirect policy must be explicit.");
+check(worker.includes("new Headers({ \"X-Heavenly-Key-Internal\": PUBLIC_MARKER"), "Account 2 public marker must be sent server-to-server.");
 check(worker.includes("access-control-allow-origin"), "CORS response-header stripping missing.");
 check(wrangler.includes('name = "heavenlykeyradio"'), "Wrong Cloudflare Worker name.");
 check(wrangler.includes('run_worker_first = ["/api/*"]'), "API Worker-first route configuration missing.");
+for (const entry of ["_worker.js", "_headers", "wrangler.toml", "*.map"]) check(assetsIgnore.split(/\\r?\\n/).map(x => x.trim()).includes(entry), "Static asset ignore list must exclude " + entry + ".");
 check(!/MEDIA_ENGINE_SHARED_SECRET|LIVEKIT_API_SECRET|Authorization:\s*Bearer/.test(worker + wrangler), "Backend credentials must never be committed to Account 7.");
 check(player.includes("/api/broadcast/programme?channel=radio"), "Player does not call the same-origin programme endpoint.");
 check(css.includes("prefers-reduced-motion"), "Reduced-motion support missing.");
