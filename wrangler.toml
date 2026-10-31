@@ -3,6 +3,13 @@ main = "control-room-worker.js"
 compatibility_date = "2026-10-18"
 workers_dev = true
 
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 0.1
+
 [previews]
 enabled = true
 
