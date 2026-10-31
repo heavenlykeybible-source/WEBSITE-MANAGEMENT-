@@ -143,6 +143,9 @@ a{color:var(--ac)}
 <h2>Waiting room</h2><ul id="gwl"></ul>
 <h2>In the room</h2><ul id="gli"></ul>
 <div class="row"><button id="gar">Arrange camera and guests in a grid</button><button id="ghost20">Host and guest gallery</button></div>
+<div class="row" aria-live="polite"><span>Live reactions: <b id="greactions">0</b></span></div>
+<div id="greaction-layer" aria-hidden="true" style="position:fixed;right:16px;bottom:80px;z-index:120;pointer-events:none;overflow:hidden;width:100px;height:240px"></div>
+<style>@keyframes hkHeartFloat{from{transform:translateY(50px) scale(.75);opacity:1}to{transform:translateY(-145px) scale(1.35);opacity:0}}.hk-live-reaction{position:absolute;bottom:0;right:24px;font-size:32px;animation:hkHeartFloat 1.9s ease-out forwards}@media(prefers-reduced-motion:reduce){.hk-live-reaction{animation:none;opacity:1}}</style>
 <h2>Room chat</h2><div id="gcl" class="mu" style="max-height:220px;overflow:auto"></div>
 <div class="row"><input type="text" id="gct" maxlength="300" placeholder="Message to everyone" aria-label="Chat message"><button id="gcs">Send</button></div>
 <label class="mu"><input type="checkbox" id="gcv" checked> Show room chat on the stream (needs a Chat overlay in the scene)</label></section>
@@ -516,7 +519,7 @@ function gmsg(m){
  else if(m.t==='sig'){const g=guests.get(m.from);if(g)gsig(g,m.data)}
  else if(m.t==='chat')gchat(m.name,m.text)
  else if(m.t==='hand'){const g=guests.get(m.from);if(g){g.hand=m.on;renderG();if(m.on)gchat('Room',g.name+' raised a hand')}else{m.on?hands.set(m.from,m.name):hands.delete(m.from);if(m.on)gchat('Room',m.name+' raised a hand');renderG()}}
- else if(m.t==='react'){const g=guests.get(m.from);gchat(g?g.name:'Guest',m.emoji)}
+ else if(m.t==='react'){const g=guests.get(m.from);gchat(g?g.name:'Guest',m.emoji);showLiveReaction(m.emoji)}
  else if(m.t==='error'||m.t==='closed')gStop(m.msg||m.why||'The room closed.')}
 function viewRemove(id){const v=viewers.get(id);if(!v)return;viewers.delete(id);clearTimeout(v.timer);try{v.pc.close()}catch(e){}}
 async function viewAdd(id,attempt=0){if(viewers.has(id))return;try{
@@ -580,6 +583,15 @@ Object.assign(act,{
  gprom:(i,b)=>{gsend({t:'promote',gid:b.dataset.m});hands.delete(b.dataset.m);renderG()},
  gdem:(i,b)=>{gsend({t:'demote',gid:b.dataset.m});gRemove(b.dataset.m)},
  gstage:(i,b)=>{const g=guests.get(b.dataset.m);if(!g||!g.src)return;const it=SC[ed()].items,k=it.findIndex(x=>x.id===g.src.id);k>=0?it.splice(k,1):place(g.src,'full');ui()}});
+let liveReactionCount=0;
+function showLiveReaction(emoji){
+ const allowed=new Set(['❤️','👏','🙏']);if(!allowed.has(emoji))return;
+ $('greactions').textContent=String(++liveReactionCount);
+ const layer=$('greaction-layer');if(!layer)return;
+ const glyph=document.createElement('span');glyph.className='hk-live-reaction';glyph.textContent=emoji;layer.appendChild(glyph);
+ while(layer.children.length>12)layer.firstChild.remove();
+ if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){setTimeout(()=>glyph.remove(),1200)}else{glyph.addEventListener('animationend',()=>glyph.remove(),{once:true});setTimeout(()=>glyph.remove(),2400)}
+}
 function gchat(n,t){const d=document.createElement('div');d.textContent=n+': '+t;$('gcl').appendChild(d);while($('gcl').children.length>80)$('gcl').firstChild.remove();$('gcl').scrollTop=1e9;
  if($('gcv').checked&&n!=='Room'){chatLog.push({n,t});if(chatLog.length>60)chatLog.shift()}}
 $('gcs').onclick=()=>{const t=$('gct').value.trim();if(!t)return;gsend({t:'chat',text:t});$('gct').value=''};
