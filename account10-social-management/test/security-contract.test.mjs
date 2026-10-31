@@ -639,3 +639,12 @@ test('Gemini API key remains server-side and is never embedded in dashboard asse
  assert.match(source,/x-goog-api-key/);
  assert.doesNotMatch(app,/GEMINI_API_KEY|x-goog-api-key|generativelanguage\.googleapis\.com/);
 });
+
+
+test('Operator credentials are hashed, active-only and expiry-checked on every request', () => {
+ assert.match(source,/SELECT id,role FROM operator_credentials WHERE token_hash=\? AND active=1 AND expires_at>CURRENT_TIMESTAMP LIMIT 1/);
+ assert.match(source,/crypto\.subtle\.digest\('SHA-256',new TextEncoder\(\)\.encode\(candidate\)\)/);
+ assert.match(source,/token_hash,role,expires_at/);
+ assert.match(source,/rawTokensStored:false/);
+ assert.match(source,/showOnlyOnce:true/);
+});
