@@ -368,3 +368,15 @@ test('human request resolution is versioned and rejects stale operator tabs', ()
  assert.match(handler,/human_request_version=human_request_version\+1/);
  assert.match(handler,/Human request version is stale/);
 });
+
+test('operator access fails closed for weak or malformed ADMIN_TOKEN configuration', () => {
+ const begin=source.indexOf("if(!env.ADMIN_TOKEN)return reply");
+ const end=source.indexOf("if(!env.DB)return reply",begin);
+ const auth=source.slice(begin,end);
+ assert.ok(begin>0&&end>begin,'operator guard should be present');
+ assert.match(auth,/env\.ADMIN_TOKEN\.length<32/);
+ assert.match(auth,/env\.ADMIN_TOKEN\.length>512/);
+ assert.match(auth,/\/\\s\/\.test\(env\.ADMIN_TOKEN\)/);
+ assert.match(auth,/return reply\(\{error:'Operator authentication secret must be a strong/);
+ assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')<auth.indexOf('const provided=req.headers.get'));
+});
