@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { createHash } from 'node:crypto';
+import { createHash, pbkdf2Sync } from 'node:crypto';
 import { onRequest } from '../functions/api/[[path]].js';
 
 const db = new DatabaseSync(':memory:');
@@ -9,7 +9,9 @@ const auditIndex=db.prepare("SELECT name FROM sqlite_master WHERE type='index' A
 if(!auditIndex)throw Error('Missing audit event query index');
 db.exec(readFileSync(new URL('../migrations/0003_audit_event_index.sql',import.meta.url),'utf8'));
 db.exec(readFileSync(new URL('../migrations/0004_session_user_expiry_index.sql',import.meta.url),'utf8'));
+db.exec(readFileSync(new URL('../migrations/0005_password_hash_iterations.sql',import.meta.url),'utf8'));
 if(!db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_sessions_user_expires'").get())throw Error('Missing session user expiry index');
+if(!db.prepare("SELECT name FROM pragma_table_info('users') WHERE name='password_iterations'").get())throw Error('Missing password hash iteration metadata');
 
 const objects = new Map();
 const env = {
@@ -159,6 +161,13 @@ check('Atomic signup quota blocks IP after ten attempts including duplicates',re
 
 const created = await request('register', { method: 'POST', body: { email: 'smoke@example.com', password: 'correct horse battery' } });
 check('Account registration succeeds', created.status === 200);
+check('New account hashes use 600,000 PBKDF2 iterations',db.prepare('SELECT password_iterations FROM users WHERE email=?').get('smoke@example.com')?.password_iterations===600000);
+const legacySalt='legacy-salt-0000000000000000';
+const legacyHash=pbkdf2Sync('legacy long passphrase',legacySalt,100000,32,'sha256').toString('hex');
+db.prepare('INSERT INTO users(id,email,pass_hash,salt,created_at,password_iterations) VALUES(?,?,?,?,?,100000)').run('legacy-user','legacy@example.com',legacyHash,legacySalt,Date.now());
+const migratedLogin=await request('login',{method:'POST',body:{email:'legacy@example.com',password:'legacy long passphrase'}});
+const migratedHash=db.prepare('SELECT pass_hash,password_iterations FROM users WHERE id=?').get('legacy-user');
+check('Legacy account can sign in and is upgraded to 600,000 PBKDF2 iterations',migratedLogin.status===200&&migratedHash.password_iterations===600000&&migratedHash.pass_hash!==legacyHash);
 const targetedEmail='distributed-attempts@example.com';
 for(let i=0;i<40;i++)db.prepare('INSERT INTO audit(user_id,action,at) VALUES(?,?,?)').run(targetedEmail,'login_attempt_account',Date.now());
 const distributedLogin=await request('login',{method:'POST',headers:{'cf-connecting-ip':'203.0.113.88'},body:{email:targetedEmail,password:'not the real password'}});
