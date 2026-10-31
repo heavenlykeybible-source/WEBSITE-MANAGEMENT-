@@ -12,6 +12,7 @@ const apiSource=readFileSync('functions/api/[[path]].js','utf8');
 if(!apiSource.includes(".replace(/^[.\\- ]+/, '').replace(/\\.{2,}/g, '.')"))throw Error('Uploaded filename normalization missing');
 if(!apiSource.includes(".replace(/[. ]+$/, '')"))throw Error('Trailing filename cleanup missing');
 if(!apiSource.includes('Filename extension does not match media type.') || !apiSource.includes('Unsafe filename extension.'))throw Error('Media extension validation missing');
+if(!apiSource.includes("'php5','php7'") || !apiSource.includes("'jsp','jspx'"))throw Error('Alternate script extension protections missing');
 // Binary API responses bypass the JSON response helper; require their own isolation headers.
 for(const header of ["'cross-origin-resource-policy':'same-origin'", "'cross-origin-resource-policy': 'same-origin'"]){
   if(!apiSource.includes(header))throw Error('Missing binary response resource isolation: '+header);
