@@ -951,3 +951,16 @@ test('one virtual-background load callback failure cannot prevent other waiting 
  assert.match(html,/const done=ok=>\{segLoading=false;for\(const fn of segWait\.splice\(0\)\)\{try\{fn\(ok\)\}catch\(e\)/);
  assert.match(html,/console\.error\('Background initialization callback failed',e\)/);
 });
+
+test('slow WebSocket consumer is disconnected without blocking healthy meeting participants',async()=>{
+ const s=await openRoom(),slow=s.add(),healthy=s.add();
+ await message(s.room,slow,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Slow viewer'});
+ await message(s.room,healthy,{t:'join',room:s.host.d.room,key:s.key,aud:true,name:'Healthy viewer'});
+ slow.bufferedAmount=1048577;
+ const before=healthy.messages.filter(m=>m.t==='chat').length;
+ s.room.broadcast({t:'chat',from:'host',name:'Host',text:'Live message'});
+ assert.equal(slow.readyState,3,'unresponsive browser must be disconnected when its outbound queue exceeds 1 MiB');
+ assert.equal(healthy.readyState,1,'healthy browser must remain connected');
+ assert.equal(healthy.messages.filter(m=>m.t==='chat').length,before+1,'healthy browser must still receive chat');
+ assert.equal(slow.messages.filter(m=>m.t==='chat').length,0,'oversubscribed browser must not receive another frame');
+});
