@@ -19,7 +19,7 @@ requireMatch('R2 binding',/^binding\s*=\s*"MEDIA_BUCKET"/m);
 const routeBlocks=[...config.matchAll(/\[\[routes\]\]([\s\S]*?)(?=\n\[|$)/g)].map(m=>m[1]);
 const socialRoutes=routeBlocks.filter(block=>/^pattern\s*=\s*"socialplus\.heavenlykey\.org"\s*$/m.test(block));
 if(socialRoutes.length!==1||!/^custom_domain\s*=\s*true\s*$/m.test(socialRoutes[0]))fail.push('SocialPlus hostname must be configured exactly once as a Custom Domain');
-const migrations=['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql','0010_whatsapp_handover_dedupe.sql','0011_human_request_version.sql','0012_operator_credentials.sql'];
+const migrations=['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql','0010_whatsapp_handover_dedupe.sql','0011_human_request_version.sql','0012_operator_credentials.sql','0013_auth_rate_limits.sql'];
 for(const scriptName of ['db:migrate:local','db:migrate:remote']){
  const script=pkg.scripts[scriptName]||'';
  let prior=-1;
