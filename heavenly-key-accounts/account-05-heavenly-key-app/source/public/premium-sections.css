@@ -1,0 +1,13 @@
+/* Account 5 premium resource sections; external styles preserve strict CSP. */
+.hk-premium-section{padding:1.5rem 1rem;max-width:1100px;margin:1rem auto;background:#fff;border:1px solid #d8a43d;border-radius:18px}
+.hk-premium-hymns{background:#fff6df;border:2px solid #d8a43d}
+.hk-premium-title{color:#1039b6}
+.hk-premium-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:1rem}
+.hk-premium-resource{padding:1rem;border:1px solid #b8c7d9;border-radius:12px;background:#fff}
+.hk-premium-launch-link{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:.75rem 1rem;border-radius:10px;background:#123fcb;color:#fff;font-weight:750;text-decoration:none}
+.hk-premium-launch-link:focus-visible{outline:3px solid #d8a43d;outline-offset:3px}
+.hk-premium-note{font-size:13px;color:#334b6a}
+.hk-premium-resource-nav{text-align:center;padding:14px 12px;font-size:.9rem}
+.walk-manna-launch,.walk-study-launch{padding:clamp(18px,3vw,28px);margin:12px 0;border:1px solid #c5d5ea;border-radius:14px;background:#fff;line-height:1.7}
+.walk-manna-launch a,.walk-study-launch a{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 18px;border-radius:11px;text-decoration:none;font-weight:850}
+@media(max-width:600px){.hk-premium-section{padding:1rem .75rem}.hk-premium-launch-link{width:100%}}
