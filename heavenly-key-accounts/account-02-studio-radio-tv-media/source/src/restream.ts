@@ -94,7 +94,8 @@ export async function startRestream(env:any,input:{source:'live'|'247';sessionId
  const format=String(input.format??'landscape-720');
  const presetByFormat:Record<string,string>={landscape_720:'H264_720P_30',landscape_1080:'H264_1080P_30',portrait_720:'PORTRAIT_H264_720P_30',portrait_1080:'PORTRAIT_H264_1080P_30'};
  const normalized=format.replace(/-/g,'_');
- const preset=presetByFormat[normalized]??(normalized.startsWith('portrait_')?'PORTRAIT_H264_720P_30':'H264_720P_30');
+ const preset=presetByFormat[normalized];
+ if(!preset)throw new Error('Unsupported streaming format.');
  let body:any;
  if(input.source==='live'){
   if(!Number.isSafeInteger(input.sessionId)||Number(input.sessionId)<=0)throw new Error('An active live session is required.');
