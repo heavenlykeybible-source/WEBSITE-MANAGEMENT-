@@ -8,7 +8,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
 const checklist = readFileSync(resolve(root, 'DEPLOYMENT-VERIFICATION.md'), 'utf8');
 const wrangler = readFileSync(resolve(root, 'wrangler.toml'), 'utf8');
-const migrations = ['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql'];
+const migrations = ['0002_webhook_events.sql','0003_conversation_lookup.sql','0004_whatsapp_delivery.sql','0005_whatsapp_receipts.sql','0006_whatsapp_receipt_inbox.sql','0007_post_media.sql','0008_ai_rate_limits.sql','0009_human_contact_target.sql'];
 
 test('Every production migration is checked into source', () => {
   for (const migration of migrations) {
