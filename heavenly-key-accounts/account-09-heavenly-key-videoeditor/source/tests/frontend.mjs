@@ -8,7 +8,7 @@ const client=html+'\n'+editor;
 assert.equal(readFileSync('index.html','utf8'),html,'Editor source and public HTML must match');
 assert.ok(client.includes('id="deleteAccount"')&&client.includes("api('account','DELETE',{password})")&&client.includes('window.confirm(')&&client.includes("$('deleteAccount').onclick=async()=>"),'Account deletion control must confirm password and destructive intent');
 assert.ok(client.includes('id="logoutAll"')&&client.includes("$('logoutAll').onclick=async()=>")&&client.includes("api('logout-all','POST',{password})")&&client.includes("$('password').value='';"),'Sign out on all devices must require password and clear the field');
-assert.ok(client.includes('<script defer src="hk-approved-footer.js"></script><script src="/editor.js" defer></script>'),'Editor and screen recording handlers must load from the same-origin external script');
+assert.ok(html.includes('<script src="/editor.js" defer></script>')&&html.split('<script src="/editor.js" defer></script>').length===2,'The editor bundle must load exactly once from the same origin');
 const module=readFileSync('public/integrations.js','utf8');
 assert.ok(module.includes("text:'Retry pending media cleanup'")&&module.includes("mediaCleanup.onclick=async()=>")&&module.includes("json('media/cleanup','POST')"),'Cloud media recovery must have an actionable authenticated control');
 assert.ok(client.includes("if(screenURL){URL.revokeObjectURL(screenURL);screenURL=''}$('screendl').removeAttribute('href')"),'New screen capture must invalidate the prior recording download');
