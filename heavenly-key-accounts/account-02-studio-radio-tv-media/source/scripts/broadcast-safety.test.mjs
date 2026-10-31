@@ -125,4 +125,7 @@ assert.ok(restream.includes("v.enabled===true&&typeof v.url==='string'&&safeStre
 
 assert.ok(entry.includes("typeof b?.session_id==='number'"), 'Require numeric or canonical string publisher session IDs');
 assert.ok(entry.includes('sessionId<=0'), 'Reject nonpositive publisher session IDs');
+assert.ok(entry.includes("identity,publish),200,{'Cache-Control':'no-store'}"), 'Viewer token responses must not be cached');
+assert.ok(entry.includes("return json(token,200,{'Cache-Control':'no-store'})"), 'Publisher token responses must not be cached');
+assert.ok(entry.includes("error:'Live transport unavailable'"), 'LiveKit errors must not disclose provider details');
 console.log('Account 2 broadcast safety regression checks passed');
