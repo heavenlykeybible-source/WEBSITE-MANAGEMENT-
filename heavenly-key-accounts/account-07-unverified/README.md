@@ -9,6 +9,7 @@ Independent listener site at `radio.heavenlykey.org`. Account 2 is the broadcast
 - Same-origin server proxy authenticates to Account 2 without exposing the server key, cookies or private admin endpoints. Media byte-range responses are preserved.
 - Account 2 filters live programmes by destination before choosing the latest programme, supports radio audio during reconnects, and accepts the radio server key for listener-only LiveKit tokens.
 - GitHub Actions runs tests, checks existing Account 7 Worker access and preserves saved variables/secrets, deploys the radio, then verifies assets and authenticated programme/media responses.
+- **31 October security hardening branch:** static asset responses now include a restrictive Content Security Policy, HSTS, clickjacking protection, MIME sniffing protection, referrer policy and a least-privilege Permissions Policy. The only inline shell bootstrap is authorized by its exact SHA-256 CSP hash; arbitrary inline scripts are not enabled. A dedicated regression test checks the headers and hash.
 
 ## Required production configuration
 
@@ -40,8 +41,11 @@ From the repository root:
 node tests/run.mjs
 node --experimental-vm-modules tests/account7-radio.mjs
 node --experimental-strip-types tests/account2-radio.mjs
+node tests/account7-security-headers.mjs
 ```
 
-Run **Deploy Account 7 Heavenly Key Radio**. Deployment source is `prepare/account-07-radio-20261023`. Fix the credentials/origin if preflight stops; do not substitute Account 4 or another account's token.
+The isolated `account7-security-hardening-20261031` branch adds a non-deploying GitHub Actions verification workflow. It does not push to the production deployment branch. The security header regression test and the full workflow still require a successful CI run before this hardening is release-certified.
 
-The Worker initially has no broadcast bindings. If they remain missing, the deployment summary explicitly says AUDIO NOT ACTIVE; a green code deployment does not confirm live audio. `ACCOUNT_2_TOKEN` is absent from this repository, so source-side activation cannot be performed with that credential here.
+The production deployment source remains `prepare/account-07-radio-20261023`. Do not merge or deploy the hardening branch until its tests pass and the owner approves the exact release. Fix the credentials/origin if preflight stops; do not substitute Account 4 or another account's token.
+
+The Worker initially had no broadcast bindings. If they remain missing, the deployment summary explicitly says AUDIO NOT ACTIVE; a green code deployment does not confirm live audio. `ACCOUNT_2_TOKEN` is absent from this repository, so source-side activation cannot be performed with that credential here.
