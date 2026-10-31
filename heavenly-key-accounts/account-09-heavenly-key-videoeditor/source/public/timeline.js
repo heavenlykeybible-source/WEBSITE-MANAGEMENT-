@@ -57,15 +57,17 @@ async function runTimeline(record){
    try{if(v.captureStream){sourceStream=v.captureStream();for(const track of sourceStream.getAudioTracks())stream.addTrack(track)}}catch{}
    rec=new MediaRecorder(stream,{mimeType:mime});
    finished=new Promise(resolve=>{rec.onstop=resolve;rec.onerror=e=>{encoderError=e.error||Error('Encoder failed');resolve()}});
-   rec.ondataavailable=e=>{if(!e.data?.size)return;recordedBytes+=e.data.size;if(recordedBytes>256*1024*1024){encoderError=Error('Timeline export exceeded the 256 MB browser memory limit. Shorten the project or reduce output resolution.');return}fragments.push(e.data)};
+   rec.ondataavailable=e=>{if(!e.data?.size)return;recordedBytes+=e.data.size;if(recordedBytes>256*1024*1024){encoderError=Error('Timeline export exceeded the 256 MB browser memory limit. Shorten the project or reduce output resolution.');state.abortPlayback?.();state.abortStart?.();return}fragments.push(e.data)};
    $('clipDownload').hidden=true;
   }
   let completedSeconds=0;
   for(let i=0;i<clips.length;i++){
+   if(encoderError)throw encoderError;
    if(state.cancelled)break;
    const c=clips[i];v.pause();if(rec&&rec.state==='recording')rec.pause();await seek(c.start,state);v.playbackRate=c.speed;
    if(state.cancelled)break;
    if(rec&&rec.state==='inactive')rec.start(250);
+   if(encoderError)throw encoderError;
    info((record?'Exporting':'Previewing')+' clip '+(i+1)+' of '+clips.length+' — 0% complete.');
    await new Promise((resolve,reject)=>{let finished=false;const cleanup=()=>{clearTimeout(timer);if(state.abortStart===abort)state.abortStart=null};const complete=(error)=>{if(finished)return;finished=true;cleanup();error?reject(error):resolve()};const abort=()=>complete(Error('Timeline operation stopped.'));state.abortStart=abort;const timer=setTimeout(()=>complete(Error('Video playback did not start within 15 seconds.')),15000);Promise.resolve().then(()=>{if(state.cancelled)throw Error('Timeline operation stopped.');return v.play()}).then(()=>{if(finished&&session===state&&!state.sourceChanged)v.pause();complete()},e=>complete(e));if(state.cancelled)abort()});
    if(state.cancelled){v.pause();break;}
