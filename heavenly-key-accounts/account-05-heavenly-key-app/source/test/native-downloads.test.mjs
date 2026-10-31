@@ -161,3 +161,21 @@ test('native catalogue fetch isolates cookies and prohibits redirects',async()=>
  assert.equal(assetRequest.redirect,'manual');
  assert.equal(assetRequest.credentials,'omit');
 });
+
+test('native downloads require a real approved app entry, not only a matching key',async()=>{
+ const invalid=[
+  {'all-in-one':{}},
+  {'all-in-one':{name:'Test',url:'https://unapproved.example/'}},
+  {'all-in-one':{name:'Test',url:'http://apps.heavenlykey.org/'}},
+  {'all-in-one':{name:'Test',url:'https://apps.heavenlykey.org:4443/'}},
+  {'all-in-one':{name:'Test',url:'https://user:pass@apps.heavenlykey.org/'}},
+  {'all-in-one':{name:'Test',url:'https://apps.heavenlykey.org.evil.test/'}},
+ ];
+ for(const catalog of invalid){
+  const {env,calls}=environment();
+  env.ASSETS.fetch=async()=>new Response(JSON.stringify(catalog),{status:200,headers:{'content-type':'application/json'}});
+  const response=await handleNativeDownloads(request('/api/native-download/all-in-one/android'),env);
+  assert.equal(response.status,503,'Malformed official catalogue entry allowed');
+  assert.equal(calls.objects,0,'Unverified catalogue entry accessed release storage');
+ }
+});
