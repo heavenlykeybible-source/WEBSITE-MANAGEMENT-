@@ -380,3 +380,14 @@ test('operator access fails closed for weak or malformed ADMIN_TOKEN configurati
  assert.match(auth,/return reply\(\{error:'Operator authentication secret must be a strong/);
  assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')<auth.indexOf('const provided=req.headers.get'));
 });
+
+test('state-changing operator API requests reject foreign browser Origin', () => {
+ const a=source.indexOf("const origin=req.headers.get('origin')");
+ const b=source.indexOf("if(!env.DB)return reply",a);
+ const auth=source.indexOf("if(provided!==`Bearer ${env.ADMIN_TOKEN}`)");
+ assert.ok(auth>=0&&a>auth&&b>a);
+ const handler=source.slice(a-100,b);
+ assert.match(handler,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)/);
+ assert.match(handler,/origin!==null&&origin!==u\.origin/);
+ assert.match(handler,/Cross-origin operator mutations are forbidden/);
+});
