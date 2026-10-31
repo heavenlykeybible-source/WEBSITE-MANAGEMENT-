@@ -90,7 +90,7 @@ export default {
   if(isDevotionalPath){
    const deny=()=>new Response(null,{status:404,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex, noarchive"}});
    // Reject unexpected filenames instead of passing them to the public asset layer.
-   if(!draftMatch)return deny();
+   if(!draftMatch||!(request.method==="GET"||request.method==="HEAD"))return deny();
    try{
     const manifestResponse=await env.ASSETS.fetch(new Request(new URL("/strength-publication-status.json",url.origin)));
     if(!manifestResponse.ok)return deny();
