@@ -367,6 +367,7 @@ export async function onRequest({ request: req, env, params }) {
         const pending=(await env.DB.prepare('SELECT id,r2_key FROM media WHERE user_id=? AND deleted=1 ORDER BY created_at ASC LIMIT 10').bind(u.id).all()).results;
         let cleaned=0, failed=0;
         for (const item of pending) {
+          if (typeof item.r2_key !== 'string' || !item.r2_key.startsWith(u.id + '/')) { failed++; continue; }
           try {
             await env.MEDIA.delete(item.r2_key);
             const removed=await env.DB.prepare('DELETE FROM media WHERE id=? AND user_id=? AND deleted=1').bind(item.id,u.id).run();
