@@ -13,8 +13,8 @@ export async function reconcileCompletedPrivateImport(db, bucket, actor, id) {
       !inspection.matchesExpectedSize)
     throw new Error('Private import cannot be reconciled');
   const result = await db.prepare(
-    "UPDATE account4_import_sessions SET state='private-awaiting-review' WHERE id=? AND owner_id=? AND state='completing' AND object_key=?"
-  ).bind(id,actor.id,'private-imports/' + actor.id + '/' + id).run();
+    "UPDATE account4_import_sessions SET state='private-awaiting-review' WHERE id=? AND owner_id=? AND state='completing' AND object_key=? AND size_bytes=?"
+  ).bind(id,actor.id,'private-imports/' + actor.id + '/' + id,inspection.expectedSize).run();
   if (result?.success === false || result?.meta?.changes !== 1)
     throw new Error('Private import reconciliation failed');
   return {id,state:'private-awaiting-review',published:false,scanned:false};
