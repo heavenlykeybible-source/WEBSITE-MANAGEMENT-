@@ -8,8 +8,8 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../heavenly-key-w
 const html=readFileSync(resolve(root,'strength-for-today.html'),'utf8');
 const js=readFileSync(resolve(root,'strength-for-today.js'),'utf8');
 const css=readFileSync(resolve(root,'strength-for-today.css'),'utf8');
-const shareStudio=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
 const shareJs=readFileSync(resolve(root,'strength-share-studio.js'),'utf8');
+const shareStudio=shareJs;
 assert.ok(html.includes('href="./strength-for-today.css"'),'External stylesheet must be linked');
 assert.match(html,/http-equiv="Content-Security-Policy"[^>]*style-src \'self\'/,'Reader must enforce a page-level no-inline-style CSP');
 assert.doesNotMatch(html,/unsafe-inline|unsafe-eval/i,'Reader CSP must not weaken style or script policy');
