@@ -14,7 +14,7 @@ const hostCall=(method,params={},session)=>w.mcp(new Request('https://control.te
 const initialized=await hostCall('initialize',{capabilities:{elicitation:{url:{}}}}),hostSession=initialized.headers.get('mcp-session-id');
 const hostPermission=await(await hostCall('tools/call',{name:'request_workspace_access',arguments:{connections:[5,6],hours:1,reason:'Inspect saved accounts from ChatGPT'}},hostSession)).json();
 assert.equal(hostPermission.result.isError,true,'External MCP sessions cannot impersonate an internal owner conversation');
-assert.match(hostPermission.result.content[0].text,/signed-in owner/i);
+assert.match(hostPermission.result.content[0].text,/authenticated dashboard chat/i);
 assert.equal(await w.sharedAIGrant(env,a,5),false,'MCP request cannot grant itself access');
 const fallback=await(await hostCall('tools/call',{name:'request_workspace_access',arguments:{connections:[5,6],hours:1,reason:'Inspect saved accounts from ChatGPT'}})).json();
 assert.equal(fallback.result.isError,true,'Missing MCP session must also fail closed');
