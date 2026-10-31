@@ -325,7 +325,6 @@ const noLengthUpload = await onRequest({
   }),env,params:{path:['media']}
 });
 check('Media supports absent content length',noLengthUpload.status===200);
-check('Uploaded media returns a nonempty identifier',Boolean((await noLengthUpload.json()).id));
 for (const [label, payload] of [
   ['Truncated GIF header',new TextEncoder().encode('GIF89a')],
   ['Zero-width GIF',Uint8Array.from([71,73,70,56,57,97,0,0,1,0,128,0,0])],
@@ -416,6 +415,7 @@ const rejectedOversize = await onRequest({
 });
 check('Unknown-length upload exceeding 50 MB is rejected while streaming',rejectedOversize.status===413);
 const mediaCreated = await noLengthUpload.json();
+check('Uploaded media returns a nonempty identifier',Boolean(mediaCreated.id));
 const anonymousMediaRead=await request('media/'+mediaCreated.id);
 check('Anonymous requests cannot download private media by guessing its ID',anonymousMediaRead.status===401 && anonymousMediaRead.response.headers.get('cache-control')==='no-store');
 const anonymousMediaDelete=await request('media/'+mediaCreated.id,{method:'DELETE'});
