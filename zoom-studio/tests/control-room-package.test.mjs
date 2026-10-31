@@ -1196,3 +1196,18 @@ test('failed scene background drawing restores the canvas and invalidates the pr
  assert.equal(restoreCount,1,'canvas save must always be balanced by restore');
  assert.equal(camera.segReady,false,'failed composite must not hide the original presenter video');
 });
+
+test('switching program scenes invalidates stale virtual camera background frames',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const begin=html.indexOf('function take(i){'),end=html.indexOf("\n$('take').onclick",begin);
+ assert.ok(begin>=0&&end>begin,'studio take function exists');
+ const source=html.slice(begin,end);
+ const S=[{type:'camera',segReady:true},{type:'camera',segReady:true},{type:'mic',segReady:true}];
+ let pgm=0,from=null,t0=0,pvw=1,studio=true;
+ const state=new Function('S','$','performance','vars',source+';take(1);return {S,pgm,from,t0,pvw}')(
+  S,()=>({value:'cut'}),{now:()=>42},{});
+ assert.equal(state.pgm,1);
+ assert.deepEqual(S.slice(0,2).map(s=>s.segReady),[false,false],'scene change must invalidate all processed camera frames');
+ assert.equal(S[2].segReady,true,'unrelated audio source state must remain intact');
+ assert.equal(state.pvw,0,'preview returns to the previous program scene');
+});
