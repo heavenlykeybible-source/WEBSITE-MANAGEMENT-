@@ -298,13 +298,15 @@ function drawChat(c,x,y,w,h){c.fillStyle='rgba(13,22,32,.78)';c.fillRect(x,y,w,h
  c.save();c.fillStyle='#f2c14e';c.font='700 '+Math.round(fs*.8)+'px system-ui,sans-serif';c.fillText(chatLog.length?'LIVE CHAT':'LIVE CHAT - messages appear here',x+12,y+10);c.restore();let yy=y+h-8;for(let i=chatLog.length-1;i>=0&&yy>y+fs*2.6;i--){yy-=fs*1.4;const n=chatLog[i].n+': ';c.fillStyle='#3fa7d6';c.fillText(n,x+12,yy);const nw=c.measureText(n).width;c.fillStyle='#fff';c.fillText(chatLog[i].t,x+12+nw,yy,Math.max(10,w-nw-24))}}
 let cws=null;
 $('chc').onclick=()=>{const ch=$('chn').value.trim().replace(/^#/,'').toLowerCase();if(!/^\w{3,25}$/.test(ch)){$('chs').textContent='Enter a valid Twitch channel name.';return}
- if(cws)cws.close();cws=new WebSocket('wss://irc-ws.chat.twitch.tv:443');
- cws.onopen=()=>{cws.send('CAP REQ :twitch.tv/tags');cws.send('NICK justinfan'+(10000+Math.floor(Math.random()*80000)));cws.send('JOIN #'+ch);$('chs').textContent='Connected to #'+ch};
- cws.onmessage=e=>e.data.split('\r\n').forEach(l=>{if(l.startsWith('PING'))cws.send('PONG :tmi.twitch.tv');
+ if(cws)cws.close();const socket=new WebSocket('wss://irc-ws.chat.twitch.tv:443');cws=socket;
+ chatLog.length=0;$('cl').replaceChildren();$('chs').textContent='Connecting to #'+ch+'...';
+ socket.onopen=()=>{if(cws!==socket)return;socket.send('CAP REQ :twitch.tv/tags');socket.send('NICK justinfan'+(10000+Math.floor(Math.random()*80000)));socket.send('JOIN #'+ch);$('chs').textContent='Connected to #'+ch};
+ socket.onmessage=e=>{if(cws!==socket)return;e.data.split('\r\n').forEach(l=>{if(l.startsWith('PING')){socket.send('PONG :tmi.twitch.tv');return}
   const m=l.match(/display-name=([^;]*);.*? PRIVMSG #\S+ :(.*)$/);if(!m)return;
   chatLog.push({n:m[1],t:m[2]});if(chatLog.length>60)chatLog.shift();
-  const li=document.createElement('li');li.textContent=m[1]+': '+m[2];$('cl').prepend(li);while($('cl').children.length>30)$('cl').lastChild.remove()});
- cws.onclose=()=>{$('chs').textContent='Chat disconnected.'}};
+  const li=document.createElement('li');li.textContent=m[1]+': '+m[2];$('cl').prepend(li);while($('cl').children.length>30)$('cl').lastChild.remove()})};
+ socket.onerror=()=>{if(cws===socket)$('chs').textContent='Chat connection failed. Try again.'};
+ socket.onclose=()=>{if(cws===socket){cws=null;$('chs').textContent='Chat disconnected.'}}};
 const dl=document.createElement('canvas');dl.width=W;dl.height=H;const dx=dl.getContext('2d');dx.lineCap='round';dx.lineJoin='round';
 let dwn=false,lx=0,ly=0;const cvEl=$('cv');
 const pt=e=>{const r=cvEl.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
