@@ -65,7 +65,7 @@ async function start(){
  await audio.play();playing=true;play.textContent='⏸ Pause';say('Playing • '+(position+1)+' of '+playlist.length);}
  catch{playing=false;play.textContent='▶ Play Radio';say('Audio could not play. Check your connection, audio output, or try the next recording.');}
 }
-play.addEventListener('click',async()=>{if(!playlist.length){await refresh();if(!playlist.length)return;}if(!audio.paused){audio.pause();playing=false;play.textContent='▶ Play Radio';say('Paused.');return;}await start()});
+play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();playing=false;play.textContent='▶ Play Radio';say('Paused.');return;}await start()});
 next.addEventListener('click',async()=>{if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
 retry.addEventListener('click',async()=>{const resume=playing;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
 audio.addEventListener('ended',()=>{if(!playlist.length)return;select(position+1);if(playing)void start()});
