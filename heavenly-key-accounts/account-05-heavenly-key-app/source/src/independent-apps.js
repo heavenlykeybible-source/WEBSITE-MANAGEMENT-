@@ -19,6 +19,15 @@ export async function routeIndependentApp(request,env){
  const path=binding==='ETERNITY_APP'?'/eternity-in-view/':url.pathname;
  try{const safeHeaders=new Headers();for(const name of ['accept','if-none-match','if-modified-since'])if(request.headers.has(name))safeHeaders.set(name,request.headers.get(name));
  const response=await env[binding].fetch(new Request('https://app.internal'+path,{method:request.method,headers:safeHeaders,signal:AbortSignal.timeout(10000)}));
- if(response.headers.get('X-HK-App-Service')!==id)return new Response('Application identity mismatch.',{status:502,headers});return response;
+ if(response.headers.get('X-HK-App-Service')!==id)return new Response('Application identity mismatch.',{status:502,headers});
+ // Independent static apps must not set Account 5 session cookies or redirect
+ // browsers through an unreviewed Location header.
+ const safe=new Headers(response.headers);
+ safe.delete('set-cookie');
+ safe.delete('location');
+ safe.set('x-content-type-options','nosniff');
+ safe.set('referrer-policy','no-referrer');
+ const noBody=request.method==='HEAD'||[204,205,304].includes(response.status);
+ return new Response(noBody?null:response.body,{status:response.status,statusText:response.statusText,headers:safe});
  }catch{return new Response('This application is temporarily unavailable. Please try again.',{status:503,headers});}
 }
