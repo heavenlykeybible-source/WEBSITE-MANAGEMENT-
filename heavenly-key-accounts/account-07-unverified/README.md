@@ -11,7 +11,7 @@ Independent listener site intended for `radio.heavenlykey.org`. Account 2 is the
 - Static assets include a restrictive Content Security Policy, HSTS, clickjacking protection, MIME sniffing protection, referrer policy and least-privilege Permissions Policy. The one inline shell bootstrap is authorized by its exact SHA-256 CSP hash; arbitrary inline scripts are not enabled.
 - Radio API proxy applies no-store, nosniff, frame denial, no-referrer, HSTS and a non-executable CSP to API success/error responses, while stripping upstream cookies, CORS and server-disclosure headers.
 - LiveKit pause disconnects the viewer room so a paused listener does not keep receiving an inaudible live stream; resume requests a fresh viewer connection.
-- Regression coverage includes radio proxy restrictions, byte-range forwarding, pause/resume/stop, CSP hash, and security headers.
+- Regression coverage includes radio proxy restrictions, byte-range forwarding, pause/resume/stop, CSP hash, security headers, and an assertion that the LiveKit SDK import exactly matches the pinned CSP package path.
 
 ## Test evidence
 
