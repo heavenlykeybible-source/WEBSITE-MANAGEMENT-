@@ -73,3 +73,12 @@ test('preflight validates the domain within one route block and every migration'
  assert.match(source,/migrations.map\(name=>'migrations\/'\+name\)/);
  assert.match(source,/position<=prior/);
 });
+
+test('preflight refuses wrong Worker identity and missing dashboard module', () => {
+ const source=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
+ assert.match(source,/Expected Worker identity/);
+ assert.match(source,/heavenly-key-social-management/);
+ assert.match(source,/public\/editorial-studio\.js/);
+ assert.match(source,/run_worker_first/);
+ assert.ok(existsSync(resolve(root,'public','editorial-studio.js')));
+});
