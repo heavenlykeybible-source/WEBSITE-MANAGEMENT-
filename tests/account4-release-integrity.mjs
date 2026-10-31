@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {assertReviewedAccount4Source} from '../scripts/account4-release-integrity.mjs';
 
-const source='export default { fetch(){ return new Response("reviewed"); } };';
+const source='export default { fetch(){ return new Response("reviewed"); } };'+' '.repeat(10001);
 const sha=createHash('sha256').update(source,'utf8').digest('hex');
 const metadata={after_sha256:sha,built_sha256:'f'.repeat(64)};
 assert.equal(assertReviewedAccount4Source(source,metadata),sha);
