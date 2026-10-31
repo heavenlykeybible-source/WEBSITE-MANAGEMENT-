@@ -16,7 +16,7 @@ const safeSignal=data=>{
  return null;
 };
 export class MeetingRooms {
- constructor(state,env){this.state=state;this.env=env;}
+ constructor(state,env){this.state=state;this.env=env;this.hostAuthPending=false;}
  sockets(){return this.state.getWebSockets().filter(w=>w.readyState===1);}
  data(w){return w.deserializeAttachment()||{};}
  save(w,d){w.serializeAttachment(d);}
@@ -98,7 +98,11 @@ export class MeetingRooms {
    if(now>d.until)return this.close(ws,{t:'error',msg:'Please reconnect.'});
    if(m.t==='host'){
     if(typeof m.token!=='string'||m.token.length>4096)return this.close(ws,{t:'error',msg:'Invalid meeting authorization.'});
-    const a=await check(this.env.AUTH_SECRET,m.token);
+    // Serialize host authorization across asynchronous signature checks.
+    if(this.hostAuthPending)return this.close(ws,{t:'error',msg:'Host authorization is in progress. Please reconnect.'});
+    this.hostAuthPending=true;
+    let a;
+    try{a=await check(this.env.AUTH_SECRET,m.token)}finally{this.hostAuthPending=false}
     if(!a||a.k!=='meeting'||a.r!==d.room||typeof a.u!=='string'||!a.u.trim()||a.u.length>128||!Number.isFinite(a.pe)||a.pe<=now)return this.close(ws,{t:'error',msg:'Not allowed. Open the room again from your account.'});
     const currentHost=this.host();
     if(currentHost){
