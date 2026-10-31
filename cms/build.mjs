@@ -12,6 +12,12 @@ else worker=operations+'\n'+worker;
 const screens='// BEGIN CONTROL SCREENS\n'+(fs.readFileSync(new URL('../workspace/screens.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/apps-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END CONTROL SCREENS';
 if(worker.includes('// BEGIN CONTROL SCREENS'))worker=worker.replace(/\/\/ BEGIN CONTROL SCREENS[\s\S]*?\/\/ END CONTROL SCREENS/,()=>screens);
 else worker=worker.replace('var CURRENT_NAV=',screens+'\nvar CURRENT_NAV=');
+const approvalCall='const approvalSession=await ownerApprovalSession(req,env,user,sub,m);if(approvalSession)return approvalSession;';
+const permissionRoute='const permission=await aiPermissionRoutes(req,env,user,sub,m);if(permission)return permission;';
+if(!worker.includes(approvalCall)){
+  if(worker.split(permissionRoute).length!==2)throw new Error('Refusing build: missing or duplicate owner permission dispatch');
+  worker=worker.replace(permissionRoute,approvalCall+'\n  '+permissionRoute);
+}
 const passkeys=await build({entryPoints:[new URL('../security/owner-passkeys.js',import.meta.url).pathname],bundle:true,write:false,format:'iife',globalName:'OwnerPasskeys',platform:'browser',target:'es2022',minify:true});
 const passkeyServer='// BEGIN OWNER PASSKEY SERVER\n'+passkeys.outputFiles[0].text.replace(/[ \t]+$/gm,'')+'\nconst ownerPasskeys=OwnerPasskeys.createOwnerPasskeyRoutes({json:(...a)=>json(...a),fail,body,reauthenticate,audit,withOperationLock,createLoginSession:async(env,user)=>withCookie({ok:true},await sessionCookie(env,user.id,user.pass_ver))});\n// END OWNER PASSKEY SERVER';
 if(worker.includes('// BEGIN OWNER PASSKEY SERVER'))worker=worker.replace(/\/\/ BEGIN OWNER PASSKEY SERVER[\s\S]*?\/\/ END OWNER PASSKEY SERVER/,()=>passkeyServer);
