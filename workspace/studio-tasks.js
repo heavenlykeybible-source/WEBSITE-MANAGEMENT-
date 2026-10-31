@@ -71,6 +71,11 @@ async function studioAITask(env,actor,name,args){
    if(!row)fail('Assignment not found',404);
    const t=JSON.parse(row.value_json);
    if(t.agent!==actor.agentId||t.status!=='assigned')fail('Not your active assignment',403);
+   // Assignment is not a Cloudflare permission grant. Revalidate permission at submission time.
+   const permitted=actor.aiPolicy
+    ? actor.aiPolicy.mode==='work'&&actor.aiPolicy.expires_at>Date.now()&&actor.aiPolicy.connections.includes(t.connection)
+    : await sharedAIGrant(env,actor.a,t.connection);
+   if(!permitted)fail('Cloudflare authorization is missing or expired; request exact-account owner approval',403);
    const p=await env.DB.prepare("SELECT id,agent_id,status,kind,new_content_json FROM proposals WHERE id=? AND agent_id=? AND sealed=1").bind(proposal,actor.agentId).first();
    if(!p||p.status!=='waiting'||p.kind!=='worker')fail('Choose your own waiting Worker proposal',403);
    const meta=JSON.parse(p.new_content_json);
