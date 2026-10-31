@@ -24,4 +24,6 @@ jobs:
       - name: Check audit script syntax
         run: node --check apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs
       - name: Audit all devotional JSON data (read-only)
+        env:
+          STRENGTH_AUDIT_SUMMARY: '1'
         run: node apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs
