@@ -111,7 +111,7 @@ export class MeetingRooms {
    if(m.t==='lock'){h.locked=!!m.on;this.save(host,h);}
    else if(m.t==='watch'){const u=String(m.url||'').trim();h.watch='';if(u.length<=200&&!/[\s<>"']/.test(u)){try{const parsed=new URL(u);if(parsed.protocol==='https:'&&parsed.hostname&&parsed.hostname.includes('.')&&!parsed.username&&!parsed.password&&parsed.port!=='0')h.watch=parsed.href;}catch{}}this.save(host,h);this.broadcast({t:'watch',url:h.watch});}
    else if(m.t==='audchat'){h.audChat=!!m.on;this.save(host,h);this.broadcast({t:'audchat',on:h.audChat});}
-   else if(m.t==='slow'){h.slow=Math.max(0,Math.min(60,Math.floor(Number.isFinite(Number(m.sec))?Number(m.sec):0)));this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
+   else if(m.t==='slow'){h.slow=Math.max(0,Math.min(60,Math.floor(typeof m.sec==='number'&&Number.isFinite(m.sec)?m.sec:0)));this.save(host,h);this.broadcast({t:'slow',sec:h.slow});}
    else if(m.t==='chat')chat();
    else{
     const g=this.guests().find(w=>this.data(w).id===(m.gid||m.to));if(!g)return;let gd=this.data(g);
