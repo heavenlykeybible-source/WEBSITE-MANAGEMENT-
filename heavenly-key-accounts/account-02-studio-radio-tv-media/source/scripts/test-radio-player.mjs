@@ -22,6 +22,7 @@ assert.match(html,/\.addEventListener\('click'/);
 assert.match(html,/audio\.pause\(\)/);
 assert.match(html,/media-engine-public-v1/);
 assert.match(html,/channel=radio/);
+assert.match(html,/channel=radio&delivery=on-demand/,'Standalone player requests listener-activated playlist');
 assert.match(html,/window\.addEventListener\('pagehide'/,'Playback must stop when the radio page closes');
 assert.match(html,/playGeneration/,'Async playback generation must avoid stale state');
 assert.match(html,/audio\.getAttribute\('src'\)/,'Missing player source must be detected reliably');
