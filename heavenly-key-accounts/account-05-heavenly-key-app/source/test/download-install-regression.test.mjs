@@ -202,3 +202,11 @@ test('precache and runtime share a single safe public-response cache policy', ()
  assert.match(sw,/no-store\|no-cache/);
  assert.match(sw,/cookie\|authorization/);
 });
+
+test('incomplete essential offline app shell rejects installation', () => {
+ const sw=publicFile('sw.js');
+ assert.match(sw,/Essential app shell unavailable/);
+ assert.match(sw,/if\(!isSafePublicResponse\(response\)\) throw new Error/);
+ assert.match(sw,/await cache\.put\(path,response\)/);
+ assert.doesNotMatch(sw,/for\(const path of core\)\{\s*try\{/);
+});
