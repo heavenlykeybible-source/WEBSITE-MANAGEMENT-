@@ -57,7 +57,11 @@ export class MeetingRooms {
   const host=this.host(),h=host&&this.data(host),now=Date.now();
   if(h&&h.until<=now){this.end('The meeting time has ended.');return;}
   for(const w of this.sockets()){const d=this.data(w);if(!d.role&&d.until<=now)this.close(w,{t:'error',msg:'Please reconnect.'});if(d.role==='guest'&&d.stage&&!(await this.stageAllowed(d,now))&&w.readyState===1&&this.data(w).stage)this.close(w,{t:'error',msg:'Your stage access has expired. Please sign in again.'});}
-  if(this.sockets().length)await this.state.storage.setAlarm(now+60000);
+  // Account lookups above may yield past the host deadline. End the room now,
+  // rather than keeping expired sessions active until the next alarm.
+  const currentHost=this.host();
+  if(currentHost&&this.data(currentHost).until<=Date.now()){this.end('The meeting time has ended.');return;}
+  if(this.sockets().length)await this.state.storage.setAlarm(Date.now()+60000);
  }
  async webSocketMessage(ws,raw){
   if(typeof raw!=='string'||raw.length>20000)return this.close(ws,{t:'error',msg:'Invalid message.'});
