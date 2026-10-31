@@ -62,7 +62,9 @@ self.addEventListener('fetch',event=>{
  // Keep each permitted Bible book/chapter URL isolated in offline cache.
  const key=url.origin+cachePath+(READING.has(url.pathname)?url.search:'');
  event.respondWith(fetch(request,{cache:"no-cache"}).then(response=>{
-  if(isSafePublicResponse(response))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
+  // Navigation responses can contain member-specific HTML even if misconfigured as public.
+  // Do not persist them during runtime; only the credential-free install shell is cached.
+  if(request.mode!=='navigate' && request.destination!=='document' && isSafePublicResponse(response))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
   return response;
  }).catch(async()=>{
   const cache=await caches.open(CACHE);
