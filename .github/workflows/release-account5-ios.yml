@@ -90,7 +90,7 @@ jobs:
           shasum -a 256 "$ipa" > "$ipa.sha256"
           rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/hkem-account5.mobileprovision"
       - name: Retain signed IPA for manual TestFlight submission and device review
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: heavenly-key-account5-ios-signed-candidate
           path: |
