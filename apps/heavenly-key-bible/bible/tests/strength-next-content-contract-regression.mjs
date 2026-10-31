@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {validateDailyDevotional,SECTION_KEYS} from './strength-next-content-contract.mjs';
+assert.equal(SECTION_KEYS.length,12);
+const check=(entry,expected)=>assert.ok(validateDailyDevotional(entry).includes(expected),expected);
+check({date:'2026-02-30',status:'draft',sections:{}},'Invalid ISO date');
+check({date:'2026-10-31',status:'draft',sections:{bibleReading:{oldTestament:'wrong',newTestament:null}}},'Require exactly three Old Testament readings');
+check({date:'2026-10-31',status:'approved-for-publication',sections:{}},'Doctrinal approval required');
+check({date:'2026-10-31',status:'approved-for-publication',sections:{}},'Source verification required');
+check({date:'2026-10-31',status:'draft',sections:{worldStory:{summary:'Sample',sourceUrl:'http://example.com'}}},'World story requires documented HTTPS source');
+console.log('Additional devotional editorial contract regressions passed');
