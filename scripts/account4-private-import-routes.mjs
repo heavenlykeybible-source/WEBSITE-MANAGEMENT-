@@ -39,7 +39,7 @@ function publicSession(row){
   return {id:row.id,name:row.filename,size:row.size_bytes,partCount:row.part_count,
     uploadedParts:row.uploaded_parts,state:row.state,expiresAt:row.expires_at_ms,createdAt:row.created_at};
 }
-export async function account4PrivateImportRoutes(request,env,user,sub,method,withLock){
+export async function account4PrivateImportRoutes(request,env,user,sub,method,withLock,auditEvent){
   if(!sub.startsWith('workspace/imports'))return null;
   const actor=ownerActor(user);
   if(!env?.DB||!env?.FILES)problem('Private import storage is not configured',503);
@@ -58,6 +58,7 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
       return startPersistedPrivateImport(env.FILES,env.DB,actor,{name:input.name,size:input.size});
     };
     const result=withLock?await withLock('account4-private-import-start:'+actor.id,create):await create();
+    if(auditEvent)await auditEvent('private-import-started',result.id+' '+result.name+' '+result.size+' bytes');
     return Response.json({...result,notice:'Private staging only. Malware scanning and explicit release approval are still required.'},{status:201,headers:{'cache-control':'no-store'}});
   }
   let match=sub.match(/^workspace\/imports\/([0-9a-f-]{36})(?:\/(parts\/(\d+)|complete|recovery|reconcile))?$/i);
@@ -81,6 +82,7 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
   }
   if(action==='complete'&&method==='POST'){
     const result=await finishPersistedPrivateImport(env.FILES,env.DB,actor,id);
+    if(auditEvent)await auditEvent('private-import-completed',id+' private-awaiting-review');
     return Response.json({...result,notice:'The object remains private and awaits separate security review.'},{headers:{'cache-control':'no-store'}});
   }
   if(action==='recovery'&&method==='GET'){
@@ -89,6 +91,7 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
   }
   if(action==='reconcile'&&method==='POST'){
     const result=await reconcileCompletedPrivateImport(env.DB,env.FILES,actor,id);
+    if(auditEvent)await auditEvent('private-import-reconciled',id+' private-awaiting-review');
     return Response.json({...result,notice:'Reconciled to private review only. Not scanned, published or deployed.'},{headers:{'cache-control':'no-store'}});
   }
   problem('Method not allowed',405);
