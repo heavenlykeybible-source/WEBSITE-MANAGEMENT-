@@ -371,3 +371,25 @@ test('unsupported live reaction values are not broadcast',async()=>{
  }
  assert.equal(h.host.messages.filter(m=>m.t==='react').length,before);
 });
+
+test('same-account reconnect can reclaim stage only with matching reconnect secret',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ const next=h.add();await h.r.webSocketMessage(next,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Returning guest',pass:'pass',aud:false,accountToken:'valid'}));
+ assert.equal(next.attachment.stage,false,'a concurrent duplicate must not auto-admit');
+ h.guest.close();
+ const returning=h.add();await h.r.webSocketMessage(returning,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Returning guest',pass:'pass',aud:false,accountToken:'valid'}));
+ assert.equal(returning.attachment.stage,true,'same identity and secret can reconnect');
+});
+test('stage reconnect secret does not authorize a different signed-in account',async()=>{
+ const h=setup();await h.join('valid');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'admit',gid:h.guest.attachment.id}));
+ h.guest.close();
+ h.users['other@example.com']={tv:2,banned:false,role:'user'};
+ h.context.check=async()=>null;
+ const other=h.add();
+ await h.r.webSocketMessage(other,JSON.stringify({t:'join',room:h.host.attachment.room,key:'invite',name:'Other user',pass:'pass',aud:false,accountToken:''}));
+ assert.equal(other.attachment.stage,false,'anonymous visitor cannot inherit stage');
+ const admitted=h.host.attachment.admitted;
+ assert.ok(admitted.every(a=>a&&a.email==='member@example.com'&&a.pass==='pass'));
+});
