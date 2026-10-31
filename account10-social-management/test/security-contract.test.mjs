@@ -533,3 +533,8 @@ test('API response headers disable unnecessary browser capabilities', () => {
  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
  assert.ok(source.includes("'permissions-policy':'payment=(), usb=(), accelerometer=(), gyroscope=()'"));
 });
+
+test('exact API root stays outside static asset handling', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("u.pathname!=='/api'&&!u.pathname.startsWith('/api/')"));
+});
