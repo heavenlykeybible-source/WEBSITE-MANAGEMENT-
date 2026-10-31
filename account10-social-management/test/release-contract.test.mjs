@@ -108,3 +108,12 @@ test('preflight syntax-checks the external dashboard bundle without executing it
  assert.match(preflight,/new Script\(read\('public\/app\.js'\)/);
  assert.match(preflight,/node:vm/);
 });
+
+test('D1 release instructions require schema inspection, backup and one-at-a-time migrations', () => {
+ const safety=readFileSync(resolve(root,'MIGRATION-SAFETY.md'),'utf8');
+ assert.match(safety,/Take and verify a D1 backup/);
+ assert.match(safety,/PRAGMA table_info/);
+ assert.match(safety,/one file at a time/);
+ assert.match(safety,/Do not infer migration state/);
+ assert.match(safety,/does not claim that any remote migration has been applied/);
+});
