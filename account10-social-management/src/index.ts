@@ -1,5 +1,5 @@
 import { originalAssistantInstruction } from './assistant-profile';
-import { requestsHumanMinistryContact } from './human-handover';
+import { requestsHumanMinistryContact, contactTargetForMinistryMessage } from './human-handover';
 interface Env { DB: D1Database; MEDIA_BUCKET?: R2Bucket; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
@@ -229,7 +229,8 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
     statements.push(env.DB.prepare("INSERT OR IGNORE INTO conversations(id,channel,sender_id) VALUES(?,'whatsapp_business',?)").bind(conversationId,item.account+':'+item.sender));
     messageInsertPositions.push(statements.length);
     statements.push(env.DB.prepare("INSERT OR IGNORE INTO messages(id,conversation_id,direction,body,created_at) VALUES(?,?,'inbound',?,datetime(?,'unixepoch'))").bind('wa_msg_'+messageKey,conversationId,item.body,item.timestamp));
-    if(requestsHumanMinistryContact(item.body))statements.push(env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
+    const target=contactTargetForMinistryMessage(item.body);
+    if(target)statements.push(env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND requested_human=0').bind(target,conversationId));
     statements.push(env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
    }
    for(const item of receipts){
