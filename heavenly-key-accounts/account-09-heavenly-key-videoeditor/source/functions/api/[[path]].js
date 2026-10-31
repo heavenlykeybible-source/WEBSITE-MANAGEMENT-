@@ -219,7 +219,10 @@ export async function onRequest({ request: req, env, params }) {
       if (!row || await pbkdf2(b.password, row.salt) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
       const files = (await env.DB.prepare('SELECT r2_key FROM media WHERE user_id=?').bind(u.id).all()).results;
       if (files.some(x => typeof x.r2_key !== 'string' || !x.r2_key.startsWith(u.id + '/'))) return J({ error: 'Media ownership check failed. Please contact support.' }, 409);
-      for (const x of files) await env.MEDIA.delete(x.r2_key);
+      for (const x of files) {
+        try { await env.MEDIA.delete(x.r2_key); }
+        catch { return J({ error: 'Media storage is temporarily unavailable. Account deletion was not completed; please retry.' }, 503); }
+      }
       for (const t of ['media', 'projects', 'sessions']) await env.DB.prepare(`DELETE FROM ${t} WHERE user_id=?`).bind(u.id).run();
       await env.DB.prepare('DELETE FROM audit WHERE user_id=?').bind(u.id).run();
       await env.DB.prepare('DELETE FROM users WHERE id=?').bind(u.id).run();
