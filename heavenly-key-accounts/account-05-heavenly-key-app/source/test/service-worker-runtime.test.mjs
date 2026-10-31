@@ -175,3 +175,14 @@ test('an HTML error page is never cached as JavaScript', async () => {
  await acceptable.install();
  assert.ok(acceptable.entries.has('/app.js'));
 });
+
+test('header-varying responses cannot be replayed across offline cache keys', async () => {
+ for (const vary of ['Origin', 'User-Agent', 'Accept-Language', 'Accept', 'Accept-Encoding, Origin', '*', 'Cookie']) {
+  const runner=harness(async()=>publicResponse({vary}));
+  await runner.request('/app.js');
+  assert.equal(runner.entries.size,0,'Unsafe Vary: '+vary);
+ }
+ const safe=harness(async()=>publicResponse({vary:'Accept-Encoding'}));
+ await safe.request('/app.js');
+ assert.ok(safe.entries.has(origin+'/app.js'));
+});
