@@ -16,6 +16,12 @@ const bucket={
 bucket.delete=async key=>{deleted.push(key)};
 const session=await beginPrivateImport(bucket,actor,{name:'backup.zip',size:11});
 assert.equal(session.state,'uploading');
+for (const invalidUploadId of [undefined,'',null,23]) {
+  const originalCreate=bucket.createMultipartUpload;
+  bucket.createMultipartUpload=async()=>({uploadId:invalidUploadId});
+  await assert.rejects(beginPrivateImport(bucket,actor,{name:'backup.zip',size:11}),/valid upload identifier/);
+  bucket.createMultipartUpload=originalCreate;
+}
 for (const invalidActor of [null, {}, {id:7,authenticated:true}, {id:7,canImport:true}, {...actor,id:0}, {...actor,id:-1}, {...actor,id:'7'}]) {
   await assert.rejects(beginPrivateImport(bucket,invalidActor,{name:'backup.zip',size:11}));
   await assert.rejects(uploadPrivatePart(bucket,invalidActor,session,1,new Uint8Array(11)));
