@@ -27,7 +27,8 @@ export async function listDestinations(env:Env){
  return Array.from(allowed).map(destination=>{
   const row=store[destination];
   let host:string|null=null;try{host=row?new URL(row.url).hostname:null;}catch{}
-  return {destination,configured:!!row?.url,enabled:!!row?.enabled,host,updatedAt:row?.updatedAt??null};
+  const safe=typeof row?.url==='string'&&safeStreamUrl(row.url)!==null;
+  return {destination,configured:typeof row?.url==='string'&&row.url.length>0,enabled:row?.enabled===true&&safe,requiresReconnect:!!row?.url&&!safe,host:safe?host:null,updatedAt:row?.updatedAt??null};
  });
 }
 function unsafeStreamHost(hostname:string):boolean{
