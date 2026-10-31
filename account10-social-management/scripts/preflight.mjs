@@ -14,11 +14,11 @@ const requireMatch=(name,re)=>{if(!re.test(config))fail.push(name)};
 requireMatch('Expected Worker identity',/^name\s*=\s*"heavenly-key-social-management"\s*$/m);
 requireMatch('Worker entry point',/^main\s*=\s*"src\/index\.ts"/m);
 requireMatch('Private Worker source-map upload',/^upload_source_maps\s*=\s*true\s*$/m);
-requireMatch('Current Worker compatibility date',/^compatibility_date\\s*=\\s*"2026-10-31"\\s*$/m);
-const observabilityBlocks=[...config.matchAll(/\\[observability\\]([\\s\\S]*?)(?=\\n\\[|$)/g)].map(m=>m[1]);
-if(observabilityBlocks.length!==1||!/^enabled\\s*=\\s*true\\s*$/m.test(observabilityBlocks[0])||!/^head_sampling_rate\\s*=\\s*0\\.1\\s*$/m.test(observabilityBlocks[0]))fail.push('Sampled Worker observability must be enabled at 10 percent');
-const issueBlocks=[...config.matchAll(/\\[observability\\.issues\\]([\\s\\S]*?)(?=\\n\\[|$)/g)].map(m=>m[1]);
-if(issueBlocks.length!==1||!/^enabled\\s*=\\s*true\\s*$/m.test(issueBlocks[0]))fail.push('Cloudflare Worker Issues monitoring must be enabled');
+requireMatch('Current Worker compatibility date',/^compatibility_date\s*=\s*"2026-10-31"\s*$/m);
+const observabilityBlocks=[...config.matchAll(/\[observability\]([\s\S]*?)(?=\n\[|$)/g)].map(m=>m[1]);
+if(observabilityBlocks.length!==1||!/^enabled\s*=\s*true\s*$/m.test(observabilityBlocks[0])||!/^head_sampling_rate\s*=\s*0\.1\s*$/m.test(observabilityBlocks[0]))fail.push('Sampled Worker observability must be enabled at 10 percent');
+const issueBlocks=[...config.matchAll(/\[observability\.issues\]([\s\S]*?)(?=\n\[|$)/g)].map(m=>m[1]);
+if(issueBlocks.length!==1||!/^enabled\s*=\s*true\s*$/m.test(issueBlocks[0]))fail.push('Cloudflare Worker Issues monitoring must be enabled');
 
 requireMatch('Static assets directory',/^directory\s*=\s*"\.\/public"/m);
 requireMatch('ASSETS binding',/^binding\s*=\s*"ASSETS"/m);
@@ -46,7 +46,7 @@ const assetSections=[...config.matchAll(/^\s*\[assets\]\s*$([\s\S]*?)(?=^\s*\[|$
 if(assetSections.length!==1)fail.push('Exactly one assets section is required');
 const assetConfig=assetSections[0]?.[1]||'';
 for(const key of ['directory','binding','run_worker_first']){
- const matches=[...assetConfig.matchAll(new RegExp('^\\s*'+key+'\\s*=','gm'))];
+ const matches=[...assetConfig.matchAll(new RegExp('^\s*'+key+'\s*=','gm'))];
  if(matches.length!==1)fail.push('Assets section must declare '+key+' exactly once');
 }
 if(!/^directory\s*=\s*"\.\/public"\s*$/m.test(assetConfig))fail.push('Assets section must specify ./public directory');
