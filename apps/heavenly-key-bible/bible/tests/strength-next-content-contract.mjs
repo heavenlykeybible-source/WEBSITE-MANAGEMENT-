@@ -3,6 +3,9 @@ export const SECTION_KEYS=Object.freeze(['topic','bibleReading','hymn','bibleSto
 export const CHALLENGE_COUNT=12;
 export const FAITH_STATEMENT_URL='https://heavenlykey.org/what-we-believe/';
 const nonempty=value=>typeof value==='string'&&value.trim().length>0;
+const OLD_TESTAMENT_BOOKS=new Set(['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra','Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Solomon','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos','Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah','Malachi']);
+const NEW_TESTAMENT_BOOKS=new Set(['Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians','2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians','2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James','1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation']);
+const referenceBook=value=>{const match=typeof value==='string'&&/^((?:[1-3]\\s)?[A-Za-z][A-Za-z ]+)\\s+\\d+:\\d+(?:-\\d+)?$/.exec(value.trim());return match?.[1]?.replace(/\\s+/g,' ').trim()??null;};
 const validSourceUrl=value=>{if(!nonempty(value)||value.length>2048)return false;try{const u=new URL(value);return u.protocol==='https:'&&Boolean(u.hostname)&&!u.username&&!u.password&&!u.hash&&u.hostname.includes('.')}catch{return false}};
 const bibleReference=value=>nonempty(value)&&/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d+:\d+(?:-\d+)?$/.test(value);
 export function validateDailyDevotional(entry){
@@ -18,10 +21,14 @@ export function validateDailyDevotional(entry){
  if(!Array.isArray(s.bibleReading?.newTestament)||s.bibleReading.newTestament.length!==3)errors.push('Require exactly three New Testament readings');
  for(const group of ['oldTestament','newTestament'])for(const item of (Array.isArray(s.bibleReading?.[group])?s.bibleReading[group]:[])){
   if(!bibleReference(item?.reference)||!nonempty(item?.kjvText))errors.push('Missing reference or displayed KJV text in '+group);
+  const book=referenceBook(item?.reference);
+  if(book&&(group==='oldTestament'?!OLD_TESTAMENT_BOOKS.has(book):!NEW_TESTAMENT_BOOKS.has(book)))errors.push('Scripture book belongs to the wrong testament in '+group+': '+book);
  }
  if(!nonempty(s.hymn?.collection)||!Number.isInteger(s.hymn?.number)||s.hymn.number<1||!nonempty(s.hymn?.title))errors.push('Hymn collection, number and title required');
  if(!bibleReference(s.bibleStory?.reference)||!nonempty(s.bibleStory?.summary))errors.push('Bible story and Scripture source required');
+ if(nonempty(s.topic?.title)&&s.bibleStory?.relatedTopic!==s.topic.title)errors.push('Bible story must explicitly align with the daily topic');
  if(!nonempty(s.worldStory?.summary)||!nonempty(s.worldStory?.sourceUrl)||!validSourceUrl(s.worldStory.sourceUrl))errors.push('World story requires documented HTTPS source');
+ if(nonempty(s.topic?.title)&&s.worldStory?.relatedTopic!==s.topic.title)errors.push('Contemporary life story must explicitly align with the daily topic');
  if(!nonempty(s.worldStory?.publisher)||s.worldStory.publisher.length>200)errors.push('World story requires named publisher');
  if(!nonempty(s.worldStory?.publishedDate)||!/^\d{4}-\d{2}-\d{2}$/.test(s.worldStory.publishedDate)||!Number.isFinite(Date.parse(s.worldStory.publishedDate))||new Date(s.worldStory.publishedDate).toISOString().slice(0,10)!==s.worldStory.publishedDate)errors.push('World story requires a valid publication date');
  if(typeof entry.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(entry.date)&&typeof s.worldStory?.publishedDate==='string'&&s.worldStory.publishedDate>entry.date)errors.push('World story publication cannot postdate the devotional');
