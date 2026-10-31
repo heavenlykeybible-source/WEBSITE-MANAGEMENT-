@@ -93,6 +93,23 @@ for(let i=0;i<entries.length;i++){
    flag(e.date,'TEMPLATE_LANGUAGE',t.topic);
  }
 }
+// Conservative doctrinal triage: these patterns flag claims for pastoral review.
+// They are not automatic theological verdicts and do not substitute for reading in context.
+const doctrinalRiskPatterns=[
+ ['SALVATION_BY_WORKS', /(?:earn|purchase|buy|deserve)\\s+(?:your\\s+)?salvation|saved\\s+(?:solely\\s+)?by\\s+(?:good\\s+)?works/i],
+ ['DENIAL_OF_CHRIST_RESURRECTION', /(?:jesus|christ)\\s+(?:did\\s+not|never)\\s+rise\\s+from\\s+the\\s+dead/i],
+ ['DENIAL_OF_CHRIST_DEITY', /(?:jesus|christ)\\s+is\\s+not\\s+(?:god|divine)/i],
+ ['GUARANTEED_HEALING', /(?:every|all)\\s+(?:believer|christian|person|sick\\s+person)s?\\s+(?:will|must)\\s+be\\s+healed/i],
+ ['RAPTURE_DATE_CLAIM', /(?:rapture|christ.s\\s+return|second\\s+coming)\\s+(?:will\\s+be|is\\s+on|happens\\s+on)\\s+\\d{1,2}[\\/ -]/i],
+ ['DISCOURAGE_MEDICAL_CARE', /(?:stop|avoid|refuse)\\s+(?:all\\s+)?(?:medical\\s+)?(?:treatment|medication|medicine|doctors?)\\s+(?:because|to\\s+prove)/i]
+];
+for(const e of entries){
+ for(const [scope,item] of [['daily',e],...(e.topics||[]).map(t=>[t.topic,t])]){
+  const content=[item.title,item.reflection,item.prayer].filter(Boolean).join(' ');
+  for(const [code,re] of doctrinalRiskPatterns)if(re.test(content))
+   flag(e.date,'DOCTRINAL_REVIEW_'+code,scope+' — human contextual review required');
+ }
+}
 const requestedDayTarget=1828;
 const expectedStartDate='2026-10-30';
 const expectedEndDate='2031-10-31';
@@ -113,7 +130,7 @@ const qualityBlockingCodes=new Set([
  'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','MECHANICAL_REFLECTION_FORMULA',
  'INCONSISTENT_PRAYER_PERSON','RELEASE_GATE'
 ]);
-const qualityBlockingFlags=flags.filter(f=>qualityBlockingCodes.has(f.code));
+const qualityBlockingFlags=flags.filter(f=>qualityBlockingCodes.has(f.code)||f.code.startsWith('DOCTRINAL_REVIEW_'));
 const automatedQualityPassed=qualityBlockingFlags.length===0 &&
  entries.length===requestedDayTarget &&
  topicCount===requestedDayTarget*12 &&
@@ -124,7 +141,7 @@ const result={
  title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
- files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
+ files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,doctrinalReviewFlagCount:flags.filter(f=>f.code.startsWith('DOCTRINAL_REVIEW_')).length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:manifest.publishedBatchFiles.length,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
