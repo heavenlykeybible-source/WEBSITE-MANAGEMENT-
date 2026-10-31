@@ -315,7 +315,7 @@ cvEl.onpointerup=cvEl.onpointercancel=()=>{dwn=false};
 $('dcl').onclick=()=>dx.clearRect(0,0,W,H);
 const cover=(c,e,iw,ih,x,y,w,h)=>{const k=Math.max(w/iw,h/ih),dw=iw*k,dh=ih*k;c.drawImage(e,x+(w-dw)/2,y+(h-dh)/2,dw,dh)};
 let seg=null,segBusy=false,segCur=null,segIndex=0,segLoading=false,segWait=[],bgImg=null,curBg=0,bgPick=0,bgFn=null;
-function loadSeg(cb){if(seg)return cb(true);segWait.push(cb);if(segLoading)return;segLoading=true;const done=ok=>{segLoading=false;for(const fn of segWait.splice(0))fn(ok)};const B='https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/',sc=document.createElement('script');sc.src=B+'selfie_segmentation.js';
+function loadSeg(cb){if(seg)return cb(true);segWait.push(cb);if(segLoading)return;segLoading=true;const done=ok=>{segLoading=false;for(const fn of segWait.splice(0)){try{fn(ok)}catch(e){console.error('Background initialization callback failed',e)}}};const B='https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/',sc=document.createElement('script');sc.src=B+'selfie_segmentation.js';
  sc.onload=()=>{try{seg=new SelfieSegmentation({locateFile:f=>B+f});seg.setOptions({modelSelection:1});
   seg.onResults(r=>{const s=segCur;if(!s||!s.oc||!s.blur)return;const iw=r.image.width,ih=r.image.height,limit=$('lite').checked?720:1280,k=Math.min(1,limit/Math.max(iw,ih)),w=Math.max(1,Math.round(iw*k)),h=Math.max(1,Math.round(ih*k));
    if(s.oc.width!==w||s.oc.height!==h){s.oc.width=w;s.oc.height=h}
