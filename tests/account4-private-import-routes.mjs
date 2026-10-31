@@ -36,17 +36,22 @@ const db={prepare(sql){let args=[];return {bind(...values){args=values;return th
 };}},env={DB:db,FILES:bucket};
 const lockKeys=[];
 const withLock=(key,fn)=>{lockKeys.push(key);return fn();};
+const lockKeys=[];
+const withLock=(key,fn)=>{lockKeys.push(key);return fn();};
 const call=(sub,method='GET',body,actor=owner,headers={})=>account4PrivateImportRoutes(
  new Request('https://control.test/api/owner/'+sub,{method,headers:{...(body===undefined?{}:{'content-type':'application/json'}),...headers},...(body===undefined?{}:{body:typeof body==='string'?body:JSON.stringify(body)})}),
  env,actor,sub,method,withLock);
 
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,role:'admin'}),e=>e.status===403);
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,status:'suspended'}),e=>e.status===403);
+await assert.rejects(call('workspace/imports','GET',undefined,{...owner,status:'suspended'}),e=>e.status===403);
 await assert.rejects(call('workspace/imports','GET',undefined,{...owner,kind:'member'}),e=>e.status===403);
 missingSchema=true;
 await assert.rejects(call('workspace/imports','GET'),e=>e.status===503);
 missingSchema=false;
 await assert.rejects(call('workspace/imports','POST',{name:'backup.zip',size:1073741825}),/1 GiB/);
+await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'backup.zip',size:11})}),env,owner,'workspace/imports','POST'),e=>e.status===503);
+assert.equal(creates,0,'Upload admission must fail closed without an owner-level lock');
 await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'backup.zip',size:11})}),env,owner,'workspace/imports','POST'),e=>e.status===503);
 assert.equal(creates,0,'Upload admission must fail closed without an owner-level lock');
 const startedResponse=await call('workspace/imports','POST',{name:'backup.zip',size:11});
@@ -65,6 +70,8 @@ assert.deepEqual(await partResponse.json(),{partNumber:1,stored:true});
 assert.equal(uploaded,1);
 await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(11)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT'),e=>e.status===503);
 assert.equal(uploaded,1,'A part must not mutate R2 without the session lock');
+await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(11)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT'),e=>e.status===503);
+assert.equal(uploaded,1,'A part must not mutate R2 without the session lock');
 await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/parts/1',{method:'PUT',body:new Uint8Array(10)}),env,owner,'workspace/imports/'+started.id+'/parts/1','PUT'));
 
 const status=await call('workspace/imports/'+started.id);
@@ -72,6 +79,8 @@ assert.equal((await status.json()).import.uploadedParts,1);
 const wrongOwner=await call('workspace/imports/'+started.id,'GET',undefined,other);
 assert.equal(wrongOwner.status,404);
 
+await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/complete',{method:'POST'}),env,owner,'workspace/imports/'+started.id+'/complete','POST'),e=>e.status===503);
+assert.equal(completed,0,'Completion must not race uploads without the session lock');
 await assert.rejects(account4PrivateImportRoutes(new Request('https://control.test/api/owner/workspace/imports/'+started.id+'/complete',{method:'POST'}),env,owner,'workspace/imports/'+started.id+'/complete','POST'),e=>e.status===503);
 assert.equal(completed,0,'Completion must not race uploads without the session lock');
 const completedResponse=await call('workspace/imports/'+started.id+'/complete','POST');
