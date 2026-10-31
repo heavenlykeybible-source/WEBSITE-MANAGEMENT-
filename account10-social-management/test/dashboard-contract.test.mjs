@@ -213,3 +213,8 @@ test('WhatsApp send errors cannot repaint a different conversation or authentica
 test('WhatsApp delivery ledger failures do not expose stale status across chats or sessions', () => {
  assert.match(html, /catch\(err\)\{if\(selected===id&&authEpoch===epoch\)status\('WhatsApp delivery ledger unavailable; sending disabled until migrations are applied\.'\)\}/);
 });
+
+test('WhatsApp send control is visible only to owners, matching server-side role authorization', () => {
+ assert.match(html, /if\(operatorAccessRole==='owner'&&m\.direction==='outbound'&&m\.id&&currentChannel==='whatsapp_business'&&deliveryAttempts&&!attempt\)/);
+ assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=conversationId/);
+});
