@@ -134,6 +134,8 @@ export class MeetingRooms {
     const aud=m.aud===true,guests=this.guests().filter(w=>this.data(w).session===h.key);
     if(h.locked)return this.close(ws,{t:'error',msg:'The host has locked this room.'});
     if(guests.filter(w=>this.data(w).aud===aud).length>=(aud?100:18))return this.close(ws,{t:'error',msg:'This room is full.'});
+    // The socket must belong to the room in its own verified WebSocket route.
+    if(d.room!==h.room)return this.close(ws,{t:'error',msg:'Meeting route mismatch.'});
     Object.assign(d,{role:'guest',id:crypto.randomUUID(),name:roomClean(m.name,30)||(aud?'Viewer':'Guest'),ok:aud,aud,session:h.key,stage:false,invited:false,ao:m.ao===true,last:0,waitingUntil:aud?0:now+30*60*1000});
     // Host authorization is required for each join; client-supplied pass values cannot grant admission.
     this.save(ws,d);this.send(ws,{t:'welcome',ice:roomICE,watch:h.watch,chat:h.audChat,slow:h.slow});
