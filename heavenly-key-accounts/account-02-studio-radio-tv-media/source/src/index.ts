@@ -6,6 +6,7 @@ import { TV_LOCKED,channelAvailability,tvLockedResponse } from './channel-lock';
 import { validRadioObjectKey,validRadioRetentionHours } from './radio-upload-security';
 import { supportedAudioSignature } from './audio-signature';
 import { radioPlayerHtml } from './radio-player';
+import { readRadioPlaylistOrder } from './radio-playlist-order';
 interface Env {
   MEDIA_ENGINE_SHARED_SECRET: string;
   MEDIA_ENGINE_VERSION?: string;
@@ -77,13 +78,13 @@ export default {
   if(url.pathname==='/api/broadcast/playlist-order'&&request.method==='GET'){
     const result:Record<string,number[]>={radio:[],video:[]};
     for(const channel of ['radio','video']){
-      const raw=await env.LIVE_STATUS_KV.get('playlist-order-'+channel);let ids:number[]=[];try{ids=raw?JSON.parse(raw):[];}catch(e){console.warn('Invalid playlist order state for '+channel,e);ids=[];}
-      if(!Array.isArray(ids))ids=[];result[channel]=ids.filter(x=>Number.isSafeInteger(x)&&x>0).slice(0,50);
+      const raw=await env.LIVE_STATUS_KV.get('playlist-order-'+channel);
+      result[channel]=readRadioPlaylistOrder(raw);
     }
     return json(result);
   }
   if(url.pathname==='/api/broadcast/playlist-order'&&request.method==='POST'){
-    const b=await requireJson(request),channel=String(b?.channel??''),ids=Array.isArray(b?.media_ids)?b!.media_ids.map(Number):null;
+    const b=await requireJson(request),channel=String(b?.channel??''),ids=Array.isArray(b?.media_ids)?b.media_ids:null;
     if(TV_LOCKED&&channel==='video')return tvLockedResponse();
     if(!['radio','video'].includes(channel)||!ids||ids.length>50||ids.some(x=>!Number.isSafeInteger(x)||x<1)||new Set(ids).size!==ids.length)return json({error:'Enter a valid unique playlist order'},400);
     if(ids.length){
