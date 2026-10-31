@@ -91,6 +91,7 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
     return Response.json(result,{headers:{'cache-control':'no-store'}});
   }
   if(action==='complete'&&method==='POST'){
+    await boundedBytes(request,1024);
     const result=await mutateSession(()=>finishPersistedPrivateImport(env.PRIVATE_IMPORTS,env.DB,actor,id));
     if(auditEvent)await auditEvent('private-import-completed',id+' private-awaiting-review');
     return Response.json({...result,notice:'The object remains private and awaits separate security review.'},{headers:{'cache-control':'no-store'}});
@@ -100,6 +101,7 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
     return Response.json(result,{headers:{'cache-control':'no-store'}});
   }
   if(action==='reconcile'&&method==='POST'){
+    await boundedBytes(request,1024);
     const result=await mutateSession(()=>reconcileCompletedPrivateImport(env.DB,env.PRIVATE_IMPORTS,actor,id));
     if(auditEvent)await auditEvent('private-import-reconciled',id+' private-awaiting-review');
     return Response.json({...result,notice:'Reconciled to private review only. Not scanned, published or deployed.'},{headers:{'cache-control':'no-store'}});
