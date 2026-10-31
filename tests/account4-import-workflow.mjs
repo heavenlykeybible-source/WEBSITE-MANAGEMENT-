@@ -62,3 +62,15 @@ assert.equal(completeCount,2);
 await assert.rejects(finishPersistedPrivateImport(completionBucket,completionDb,{...actor,id:8},started.id));
 assert.equal(completeCount,2,'Unauthorized actor cannot complete upload');
 console.log('PASS Account 4 private completion D1 rollback');
+
+// A lost/failed R2 completion response must leave the D1 claim held for review.
+let uncertainClaims=0;
+const uncertainDb={prepare(){return {bind(){return {
+ async first(){return persistedRow},
+ async all(){return {results:[{part_number:1,etag:'abc123'}]}},
+ async run(){uncertainClaims++;return {meta:{changes:1}}}
+}}}}};
+const uncertainBucket={resumeMultipartUpload(){return {async complete(){throw new Error('R2 network timeout')}}}};
+await assert.rejects(finishPersistedPrivateImport(uncertainBucket,uncertainDb,actor,started.id),/outcome uncertain/);
+assert.equal(uncertainClaims,1,'Completion failure must not release the exclusive claim');
+console.log('PASS ambiguous R2 completion remains held for reconciliation');
