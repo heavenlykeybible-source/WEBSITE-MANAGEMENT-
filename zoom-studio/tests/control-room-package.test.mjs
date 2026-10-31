@@ -1007,3 +1007,22 @@ test('hidden scene backgrounds cannot be selected for presenter compositing',()=
  assert.match(html,/scene\.items\.filter\(it=>it\.on\)\.map\(it=>src\(it\.id\)\)/,'only visible scene layers may supply the studio background');
  assert.doesNotMatch(html,/scene\.items\.map\(it=>src\(it\.id\)\)\.find\(item=>item&&item\.isBg\)/);
 });
+
+test('parallel connection requests cannot bypass pending-handshake quotas while alarm storage yields',async()=>{
+ const source=fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8').replace('export class MeetingRooms','class MeetingRooms');
+ let release,started=0,notify;
+ const gates=new Promise(resolve=>{release=resolve});
+ const ready=new Promise(resolve=>{notify=resolve});
+ const sockets=[];
+ const ResponseMock=class {constructor(body,{status,webSocket}={}){this.status=status;this.body=body;this.webSocket=webSocket}};
+ const PairMock=class {constructor(){const ws={readyState:1,d:{},deserializeAttachment(){return this.d},serializeAttachment(d){this.d=d},send(){},close(){this.readyState=3}};return {0:{},1:ws}}};
+ const Room=new Function('Response','WebSocketPair',source+';return MeetingRooms')(ResponseMock,PairMock);
+ const room=new Room({getWebSockets:()=>sockets,acceptWebSocket:ws=>sockets.push(ws),storage:{async getAlarm(){if(++started===3)notify();await gates;return null},async setAlarm(){}}},{});
+ const req=()=>new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
+ const requests=[room.fetch(req()),room.fetch(req()),room.fetch(req())];
+ await ready;release();
+ const responses=await Promise.all(requests);
+ assert.equal(responses.filter(r=>r.status===101).length,2,'only two pending connections may be accepted');
+ assert.equal(responses.filter(r=>r.status===429).length,1,'one concurrent request must be rejected');
+ assert.equal(sockets.length,2,'connection capacity must be enforced after asynchronous scheduling');
+});
