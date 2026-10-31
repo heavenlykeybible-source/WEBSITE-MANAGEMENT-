@@ -39,6 +39,8 @@ jobs:
           cache-dependency-path: account10-social-management/package-lock.json
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
+      - name: Audit dependency vulnerabilities
+        run: npm audit --audit-level=high
       - name: Verify source, tests and bundle
         run: npm run verify:local
       - name: Confirm no Cloudflare deploy credentials are needed

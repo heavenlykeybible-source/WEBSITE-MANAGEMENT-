@@ -62,23 +62,23 @@ test('post draft editor supports private image attachments', () => {
 });
 
 test('rapid conversation switching cannot display stale Gemini suggestions or history', () => {
-  assert.match(html, /const targetConversation=selected;const message=prompt/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch;const message=prompt/);
   assert.match(html, /conversationId:targetConversation,message:message\.trim\(\)/);
-  assert.match(html, /if\(selected!==targetConversation\)return;if\(result\.suggestion\)/);
-  assert.match(html, /const d=await api\('\/api\/conversation\?id='\+encodeURIComponent\(id\)\);if\(selected!==id\)return/);
-  assert.match(html, /if\(selected!==id\)return;renderMessages\(/);
+  assert.match(html, /if\(selected!==targetConversation\|\|authEpoch!==epoch\)return;if\(result\.suggestion\)/);
+  assert.match(html, /const d=await api\('\/api\/conversation\?id='\+encodeURIComponent\(id\)\);if\(selected!==id\|\|authEpoch!==epoch\)return/);
+  assert.match(html, /if\(selected!==id\|\|authEpoch!==epoch\)return;renderMessages\(/);
 });
 
 test('operator notes are saved only to the conversation selected at submission time', () => {
-  assert.match(html, /const targetConversation=selected;const body=\$\('draftText'\)\.value\.trim\(\)/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch;const body=\$\('draftText'\)\.value\.trim\(\)/);
   assert.match(html, /conversationId:targetConversation,body/);
-  assert.match(html, /if\(selected===targetConversation\)\{\$\('draftText'\)\.value=''/);
+  assert.match(html, /if\(selected===targetConversation&&authEpoch===epoch\)\{\$\('draftText'\)\.value=''/);
 });
 
 test('human takeover request preserves its original conversation when operators switch chats', () => {
-  assert.match(html, /const targetConversation=selected;const targetPaused=!paused/);
+  assert.match(html, /const targetConversation=selected,epoch=authEpoch,wasHumanRequested=requestedHuman,targetRequestVersion=humanRequestVersion;const targetPaused=!paused/);
   assert.match(html, /conversationId:targetConversation,paused:targetPaused/);
-  assert.match(html, /if\(selected===targetConversation\)\{await openChat\(targetConversation\)/);
+  assert.match(html, /if\(selected===targetConversation&&authEpoch===epoch\)\{await openChat\(targetConversation\)/);
 });
 
 test('changing operator credentials clears private messages and drafts', () => {
@@ -103,8 +103,8 @@ test('switching conversations hides the previous customer message before loading
 });
 
 test('WhatsApp send refresh stays in the originating conversation', () => {
-  assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=selected/);
-  assert.match(html, /if\(selected===currentConversation\)\{status\(result\.sent/);
+  assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=conversationId;if\(send\.disabled\|\|operatorAccessRole!=='owner'\|\|selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return/);
+  assert.match(html, /if\(selected===currentConversation&&authEpoch===sessionEpoch\)\{await openChat\(currentConversation\);if\(selected===currentConversation&&authEpoch===sessionEpoch\)status\(result\.sent/);
   assert.match(html, /await openChat\(currentConversation\)/);
 });
 
@@ -201,3 +201,84 @@ test('limited operators cannot open owner-only dashboard tools', () => {
  assert.match(html,/operatorAccessRole=session\.role;refreshRoleNavigation\(\)/);
  assert.match(html,/This section requires owner authorization/);
 });
+
+test('Gemini suggestion button remains disabled after role, conversation or session changes', () => {
+ assert.match(html, /finally\{button\.disabled=!selected\|\|operatorAccessRole==='viewer'\|\|selected!==targetConversation\|\|authEpoch!==epoch\}/);
+});
+
+test('WhatsApp send errors cannot repaint a different conversation or authentication session', () => {
+ assert.match(html, /catch\(err\)\{if\(selected===currentConversation&&authEpoch===sessionEpoch\)status\(err\.message\)\}finally\{send\.disabled=false\}/);
+});
+
+test('WhatsApp delivery ledger failures do not expose stale status across chats or sessions', () => {
+ assert.match(html, /catch\(err\)\{if\(selected===id&&authEpoch===epoch\)status\('WhatsApp delivery ledger unavailable; sending disabled until migrations are applied\.'\)\}/);
+});
+
+test('WhatsApp send control is visible only to owners, matching server-side role authorization', () => {
+ assert.match(html, /if\(operatorAccessRole==='owner'&&m\.direction==='outbound'&&m\.id&&currentChannel==='whatsapp_business'&&deliveryAttempts&&!attempt\)/);
+ assert.match(html, /send\.onclick=async\(\)=>\{const currentConversation=conversationId/);
+});
+
+test('human takeover action cannot repaint stale sessions or reenable read-only controls', () => {
+ assert.match(html, /catch\(e\)\{if\(selected===targetConversation&&authEpoch===epoch\)status\(e\.message\)\}finally\{if\(selected===targetConversation&&authEpoch===epoch\)button\.disabled=operatorAccessRole==='viewer'\}/);
+});
+
+test('operator note failures never update another chat or signed-out session', () => {
+ assert.match(html, /catch\(err\)\{if\(selected===targetConversation&&authEpoch===epoch\)status\(err\.message\)\}finally\{if\(selected===targetConversation&&authEpoch===epoch\)saveButton\.disabled=operatorAccessRole==='viewer'\}\};\$\('suggestReply'\)\.onclick/);
+});
+
+test('async chat refresh cannot post stale operator success messages after switching sessions', () => {
+ assert.match(html, /await openChat\(targetConversation\);if\(selected===targetConversation&&authEpoch===epoch\)status\('Internal note saved\. Not delivered to any provider\.'\)/);
+ assert.match(html, /await openChat\(targetConversation\);if\(selected===targetConversation&&authEpoch===epoch\)status\(wasHumanRequested\?/);
+});
+
+test('WhatsApp send guard checks owner role and duplicate submission both before and after confirmation', () => {
+ assert.match(html, /const currentConversation=conversationId;if\(send\.disabled\|\|operatorAccessRole!=='owner'\|\|selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return/);
+ assert.match(html, /if\(operatorAccessRole!=='owner'\|\|selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return;send\.disabled=true;try/);
+});
+
+test('WhatsApp send confirmation cannot repaint another chat after asynchronous refresh', () => {
+ assert.match(html, /if\(selected===currentConversation&&authEpoch===sessionEpoch\)\{await openChat\(currentConversation\);if\(selected===currentConversation&&authEpoch===sessionEpoch\)status\(result\.sent\?/);
+});
+
+test('internal notes block duplicate submissions and viewer form bypass', () => {
+ assert.match(html,/\$\('draftForm'\)\.onsubmit=async e=>\{e\.preventDefault\(\);if\(!selected\|\|operatorAccessRole==='viewer'\|\|\$\('saveDraft'\)\.disabled\)return/);
+ assert.match(html,/const saveButton=\$\('saveDraft'\);saveButton\.disabled=true;try\{await api\('\/api\/messages'/);
+ assert.match(html,/finally\{if\(selected===targetConversation&&authEpoch===epoch\)saveButton\.disabled=operatorAccessRole==='viewer'\}/);
+});
+
+test('Gemini suggestion rejects viewer or disabled control and rechecks session after prompt', () => {
+ assert.ok(html.includes("$('suggestReply').onclick=async()=>{if(!selected||operatorAccessRole==='viewer'||$('suggestReply').disabled)return"));
+ assert.ok(html.includes("selected!==targetConversation||authEpoch!==epoch||operatorAccessRole==='viewer'||$('suggestReply').disabled"));
+});
+
+test('takeover refuses viewer and stale confirmation state', () => {
+ assert.ok(html.includes("$('takeover').onclick=async()=>{if(!selected||operatorAccessRole==='viewer'||$('takeover').disabled)return"));
+ assert.ok(html.includes("if(selected!==targetConversation||authEpoch!==epoch||operatorAccessRole==='viewer'||button.disabled)return;button.disabled=true"));
+});
+
+test('webhook import protects against stale or duplicate actions', () => {
+ assert.ok(html.includes('process.disabled=true'));
+ assert.ok(html.includes("if(!current()||operatorAccessRole==='viewer'||process.disabled)return"));
+});
+
+test('webhook ignore action prevents duplicate and stale-session submissions', () => {
+ assert.ok(html.includes("btn.onclick=async()=>{if(!current()||operatorAccessRole==='viewer'||btn.disabled)return"));
+ assert.ok(html.includes("btn.disabled=true;try{await api('/api/webhooks/events/review'"));
+ assert.ok(html.includes("finally{if(current())btn.disabled=operatorAccessRole==='viewer'"));
+});
+
+test('human request resolve action has session and duplicate guards', () => {
+ assert.ok(html.includes('resolve.disabled=true'));
+ assert.ok(html.includes('resolve.disabled=operatorAccessRole'));
+});
+
+test('draft queue blocks viewer actions and stale sessions', () => {
+ assert.ok(html.includes("activeManagementTab==='chats'&&!!token"));
+ assert.ok(html.includes("operatorAccessRole==='viewer'||discard.disabled"));
+ assert.ok(html.includes("operatorAccessRole==='viewer'||approve.disabled"));
+ assert.ok(html.includes("discard.disabled=true;try{await api('/api/drafts/discard'"));
+ assert.ok(html.includes("approve.disabled=true;try{await api('/api/drafts/approve-internal'"));
+});
+
+test('post editor session guard exists',()=>{assert.ok(html.includes("activeManagementTab==='posts'&&!!token&&operatorAccessRole==='owner'"))});

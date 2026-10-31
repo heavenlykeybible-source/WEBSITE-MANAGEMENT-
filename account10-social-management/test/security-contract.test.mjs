@@ -106,7 +106,7 @@ test('WhatsApp free-form send requires a real recent inbound timestamp, not a fu
 });
 
 test('HTML dashboard responses disable caching to prevent stale operator UI', () => {
-  const staticStart=source.indexOf("if(!u.pathname.startsWith('/api/'))");
+  const staticStart=source.indexOf("if(u.pathname!=='/api'&&!u.pathname.startsWith('/api/'))");
   const apiStart=source.indexOf("if(req.method==='OPTIONS')", staticStart);
   assert.ok(staticStart>=0 && apiStart>staticStart);
   const staticHandler=source.slice(staticStart,apiStart);
@@ -378,7 +378,7 @@ test('operator access fails closed for weak or malformed ADMIN_TOKEN configurati
  assert.match(auth,/env\.ADMIN_TOKEN\.length>512/);
  assert.match(auth,/\/\\s\/\.test\(env\.ADMIN_TOKEN\)/);
  assert.match(auth,/return reply\(\{error:'Operator authentication secret must be a strong/);
- assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')<auth.indexOf('const provided=req.headers.get'));
+ assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')>=0 && end>begin);
 });
 
 test('state-changing operator API requests use the checked same-origin guard', () => {
@@ -562,4 +562,34 @@ test('Meta challenge response blocks cross-origin embedding and active content',
  const response=source.slice(start,start+600);
  assert.ok(response.includes("'cross-origin-resource-policy':'same-origin'"));
  assert.ok(response.includes("default-src 'none'; frame-ancestors 'none'; base-uri 'none'"));
+});
+
+test('public health route rejects mutations and serves bodyless HEAD responses', () => {
+ const begin=source.indexOf("if(u.pathname==='/health'){");
+ const end=source.indexOf("if(u.pathname!=='/api'",begin);
+ assert.ok(begin>=0&&end>begin);
+ const route=source.slice(begin,end);
+ assert.match(route,/if\(req\.method!=='GET'&&req\.method!=='HEAD'\)return reply\(\{error:'Method not allowed'\},405\)/);
+ assert.match(route,/req\.method==='HEAD'\?new Response\(null,\{status:health\.status,headers:health\.headers\}\):health/);
+});
+
+test('operator mutations reject cross-site browser fetch metadata before origin fallback', () => {
+ const fetchGuard=source.indexOf("['cross-site','same-site'].includes(req.headers.get('sec-fetch-site')||'')");
+ const originGuard=source.indexOf("operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin)");
+ assert.ok(fetchGuard>=0&&originGuard>fetchGuard);
+ assert.match(source,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)&&\['cross-site','same-site'\]\.includes\(req\.headers\.get\('sec-fetch-site'\)\|\|''\)/);
+ assert.match(source,/Cross-origin operator mutations are forbidden/);
+});
+
+test('API JSON responses vary on browser origin and fetch metadata', () => {
+ assert.match(source,/const reply=\(body:unknown,status=200\)=>new Response\(JSON\.stringify\(body\),\{status,headers:\{[^\n]*'cache-control':'no-store','vary':'Origin, Sec-Fetch-Site'/);
+});
+
+test('sibling subdomains cannot mutate protected operator API through same-site browser requests', () => {
+ assert.match(source,/\['cross-site','same-site'\]\.includes\(req\.headers\.get\('sec-fetch-site'\)\|\|''\)/);
+});
+
+test('missing browser origin metadata has an explicit rejection path', () => {
+ assert.ok(source.includes('Untrusted browser mutation origin'));
+ assert.ok(source.includes("req.headers.has('sec-fetch-site')"));
 });

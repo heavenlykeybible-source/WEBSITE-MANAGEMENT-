@@ -4,7 +4,7 @@ import { operatorMutationOriginAllowed } from './operator-origin';
 import { administratorTokenMatches } from './admin-auth';
 import { operatorActionAllowed } from './operator-permissions';
 interface Env { DB: D1Database; MEDIA_BUCKET?: R2Bucket; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
-const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex','cross-origin-resource-policy':'same-origin','permissions-policy':'payment=(), usb=(), accelerometer=(), gyroscope=()','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
+const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','vary':'Origin, Sec-Fetch-Site','x-robots-tag':'noindex','cross-origin-resource-policy':'same-origin','permissions-policy':'payment=(), usb=(), accelerometer=(), gyroscope=()','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
 const idOk=(s:unknown):s is string=>typeof s==='string'&&/^[a-zA-Z0-9:_-]{1,120}$/.test(s);
 const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
@@ -74,7 +74,11 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   }
   return reply({received:true,signatureVerified:true,stored:true,duplicate:!newlyStored,processed:false,importQueued:autoProcess,eventEntries:count,eventCategories:[...new Set(types)],sent:false});
  }
- if(u.pathname==='/health')return reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false,detail:'Public health response does not verify deployment readiness; run authenticated diagnostics and live provider tests.'});
+ if(u.pathname==='/health'){
+  if(req.method!=='GET'&&req.method!=='HEAD')return reply({error:'Method not allowed'},405);
+  const health=reply({service:'Heavenly Key Social Management',account:10,status:'setup_required',providerConnected:false,detail:'Public health response does not verify deployment readiness; run authenticated diagnostics and live provider tests.'});
+  return req.method==='HEAD'?new Response(null,{status:health.status,headers:health.headers}):health;
+ }
  if(u.pathname!=='/api'&&!u.pathname.startsWith('/api/')){if((req.method==='GET'||req.method==='HEAD')&&env.ASSETS){
   const asset=await env.ASSETS.fetch(req);
   const headers=new Headers(asset.headers);
@@ -117,7 +121,12 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  }
  // Read-only viewers cannot mutate; operators can work on conversations only.
  if(!operatorActionAllowed(operatorRole,req.method,u.pathname))return reply({error:'This staff role is not permitted to perform this action'},403);
+ // Defense in depth: block browser cross-site mutations even if an Origin header is missing.
+ if(['POST','PUT','PATCH','DELETE'].includes(req.method)&&['cross-site','same-site'].includes(req.headers.get('sec-fetch-site')||''))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  // Browser-origin validation is a second boundary for state-changing actions.
+ // A browser's Fetch Metadata must prove same-origin if its Origin is absent;
+ // non-browser service clients without Fetch Metadata retain token-based access.
+ if(['POST','PUT','PATCH','DELETE'].includes(req.method)&&req.headers.get('origin')===null&&req.headers.has('sec-fetch-site')&&req.headers.get('sec-fetch-site')!=='same-origin')return reply({error:'Untrusted browser mutation origin'},403);
  if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  if(['POST','PUT','PATCH'].includes(req.method)){
   const contentType=req.headers.get('content-type')||'';
@@ -133,7 +142,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const dbBound=!!env.DB,mediaBound=!!env.MEDIA_BUCKET;
   let databaseQueryOk=false,mediaBucketReadOk=false;
   try{if(dbBound){await env.DB.prepare('SELECT 1 AS ok').first();databaseQueryOk=true}}catch{}
-  try{if(mediaBound){await env.MEDIA_BUCKET.head('account10-readiness-probe');mediaBucketReadOk=true}}catch{}
+  try{if(env.MEDIA_BUCKET){await env.MEDIA_BUCKET.head('account10-readiness-probe');mediaBucketReadOk=true}}catch{}
   return reply({account:10,dbBound,mediaBound,assetsBound:!!env.ASSETS,databaseQueryOk,mediaBucketReadOk,storageReady:databaseQueryOk&&mediaBucketReadOk,mediaOperationsEnabled:false,providerPublishingVerified:false,note:'Read-only probes; bucket head returning null counts as successful access. Schema migrations, write access and provider authorization remain unverified.'});
  }
  if(u.pathname==='/api/media'&&req.method==='POST'){
