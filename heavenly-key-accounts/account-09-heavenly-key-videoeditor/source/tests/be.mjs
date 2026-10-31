@@ -416,7 +416,7 @@ const rejectedOversize = await onRequest({
 check('Unknown-length upload exceeding 50 MB is rejected while streaming',rejectedOversize.status===413);
 const mediaCreated = await noLengthUpload.json();
 const ownedMediaRead = await request('media/'+mediaCreated.id,{cookie:login.cookie});
-check('Owned media download has private caching and sandbox protections',ownedMediaRead.status===200 && ownedMediaRead.response.headers.get('cache-control')==='private, no-store' && ownedMediaRead.response.headers.get('cross-origin-resource-policy')==='same-origin' && ownedMediaRead.response.headers.get('content-security-policy')==="sandbox; default-src 'none'" && ownedMediaRead.response.headers.get('x-content-type-options')==='nosniff');
+check('Owned media download has private caching and sandbox protections',ownedMediaRead.status===200 && ownedMediaRead.response.headers.get('cache-control')==='private, no-store' && ownedMediaRead.response.headers.get('cross-origin-resource-policy')==='same-origin' && ownedMediaRead.response.headers.get('content-security-policy')==="sandbox; default-src 'none'" && ownedMediaRead.response.headers.get('x-content-type-options')==='nosniff' && ownedMediaRead.response.headers.get('content-disposition')?.startsWith('inline; filename='));
 const otherMediaRead = await request('media/'+mediaCreated.id,{cookie:secondLogin.cookie});
 check('Members cannot read another member media',otherMediaRead.status===404);
 const otherMediaDelete = await request('media/'+mediaCreated.id,{method:'DELETE',cookie:secondLogin.cookie});
