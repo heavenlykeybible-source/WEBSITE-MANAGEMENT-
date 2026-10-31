@@ -8,7 +8,8 @@ let changes=1, writes=0, object={key,size:100,version:'v123',etag:'abc'};
 const db={prepare(sql){return {bind(...args){
  if(sql.startsWith('SELECT')){assert.deepEqual(args,[id,7]);return {async first(){return row}};}
  assert.match(sql,/state='completing'/);
- assert.deepEqual(args,[id,7]);
+ assert.deepEqual(args,[id,7,key]);
+ assert.match(sql,/object_key=\?/);
  return {async run(){writes++;return {meta:{changes}}}};
 }}}};
 const bucket={async head(requested){assert.equal(requested,key);return object;}};
