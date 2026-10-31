@@ -31,7 +31,7 @@ for(let i=0;i<entries.length;i++){
  if(!validDate(e.date))flag(e.date,'INVALID_DATE',e._file);
  if(!Array.isArray(e.topics))flag(e.date,'INVALID_TOPICS_TYPE',e._file);
  if(days.has(e.date))flag(e.date,'DUPLICATE_DATE',e._file); days.add(e.date);
- if(i&&Date.parse(e.date)-Date.parse(entries[i-1].date)!==86400000)flag(e.date,'DATE_GAP','Previous: '+entries[i-1].date);
+ if(i&&validDate(e.date)&&validDate(entries[i-1].date)&&Date.parse(e.date)-Date.parse(entries[i-1].date)!==86400000)flag(e.date,'DATE_GAP','Previous: '+entries[i-1].date);
  if(e.status==='approved-for-publication')approved++;
  if(!Array.isArray(e.topics)||e.topics.length!==12){flag(e.date,'TOPIC_COUNT','Expected 12');continue;}
  if(e.status!=='draft-not-published')flag(e.date,'PUBLICATION_STATUS','Requires separate documented editorial approval');
