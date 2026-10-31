@@ -5,6 +5,7 @@ on:
       - 'control-room-worker.js'
       - 'cms/**'
       - 'scripts/**'
+      - 'migrations/**'
       - 'tests/**'
       - 'package*.json'
       - 'wrangler.toml'
@@ -44,6 +45,8 @@ jobs:
       - run: node tests/account4-import-workflow.mjs
       - run: node tests/account4-import-recovery.mjs
       - run: node tests/account4-import-publish-gate.mjs
+      - name: Validate Account 4 D1 migration constraints in SQLite
+        run: python3 tests/account4-migration-smoke.py
       - run: npm test
       - run: npm run test:cms-dom
       - name: Install isolated browser-test dependencies
