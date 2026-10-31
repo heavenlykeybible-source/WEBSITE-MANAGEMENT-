@@ -16,6 +16,7 @@ if(!apiSource.includes('rawName.length > 255'))throw Error('Raw filename length 
 if(!apiSource.includes('let id, key, saved = false;') || !apiSource.includes('saved = true;') || !apiSource.includes('if (!saved) {'))throw Error('Media upload quota rollback tracking missing');
 if(!apiSource.includes("await env.MEDIA.delete(r.r2_key).catch(async () => { await log(env, u.id, 'media_r2_delete_failed').catch(() => {}); });"))throw Error('Media deletion retry and failure audit missing');
 if(!apiSource.includes('SELECT r2_key,size FROM media') || !apiSource.includes('bind(r.size,u.id).run()'))throw Error('Media delete size reuse missing');
+if(!apiSource.includes("p[1] === 'cleanup' && !p[2] && m === 'POST'") || !apiSource.includes("SELECT id,r2_key FROM media WHERE user_id=? AND deleted=1 ORDER BY created_at ASC LIMIT 10") || !apiSource.includes("DELETE FROM media WHERE id=? AND user_id=? AND deleted=1"))throw Error('Authenticated bounded R2 cleanup route missing');
 if((apiSource.match(/env\.MEDIA\.delete\(r\.r2_key\)/g)||[]).length!==2)throw Error('Media deletion must have a retry attempt');
 if(!apiSource.includes('setTimeout(resolve, 200 + Math.floor(Math.random() * 150))'))throw Error('R2 retry backoff with jitter missing');
 if(!apiSource.includes('c.charCodeAt(0) < 32') || !apiSource.includes('c.charCodeAt(0) === 127'))throw Error('Control-character filename rejection missing');
