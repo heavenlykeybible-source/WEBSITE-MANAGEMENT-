@@ -10,7 +10,7 @@ const names = readdirSync(root).filter(n => /^strength-devotionals-(2026|2027|ye
 const ignoredDevotionalFiles=allDevotionalFiles.filter(n=>!names.includes(n));
 const entries = names.flatMap(name => {
  const data=JSON.parse(readFileSync(resolve(root,name),'utf8'));
- if(!Array.isArray(data.entries))throw Error('Missing entries: '+name);
+ if(!data||typeof data!=='object'||Array.isArray(data)||!Array.isArray(data.entries))throw Error('Missing or invalid entries array: '+name);
  return data.entries.map((entry,index)=>{
   if(!entry||typeof entry!=='object'||Array.isArray(entry))throw Error('Invalid entry in '+name+' at index '+index);
   if(typeof entry.date!=='string')throw Error('Missing or invalid date in '+name+' at index '+index);
