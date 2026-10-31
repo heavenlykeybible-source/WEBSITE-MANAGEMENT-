@@ -5,6 +5,7 @@ on:
     paths:
       - 'apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs'
       - 'apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs'
+      - 'apps/heavenly-key-bible/bible/tests/strength-next-content-contract-regression.mjs'
       - 'apps/heavenly-key-bible/bible/tests/strength-embargo.mjs'
       - 'apps/heavenly-key-bible/bible/tests/audit-scripture-colors.mjs'
       - 'apps/heavenly-key-bible/heavenly-key-website/bible/data/annotations/**'
@@ -71,6 +72,7 @@ jobs:
         run: |
           node --check apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs
           node apps/heavenly-key-bible/bible/tests/strength-next-content-contract.mjs
+          node apps/heavenly-key-bible/bible/tests/strength-next-content-contract-regression.mjs
       - name: Check section structure and safe preview labels
         run: node apps/heavenly-key-bible/bible/tests/strength-next-preview.mjs
   editorial-quality-gate:
