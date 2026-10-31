@@ -466,3 +466,9 @@ test('host chat cooldown persists without resetting meeting controls',async()=>{
  assert.equal(h.host.attachment.locked,true);
  assert.ok(h.host.attachment.last>0);
 });
+
+test('chat strips additional invisible Unicode formatting controls',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'chat',text:'A\u061cB\u206aC\u034fD'}));
+ assert.ok(h.host.messages.some(m=>m.t==='chat'&&m.text==='ABCD'));
+});
