@@ -21,6 +21,8 @@ if(!mediaHeaders.includes("'cross-origin-resource-policy': 'same-origin'"))throw
 if(!voiceHeaders.includes("'cache-control':'private, no-store'"))throw Error('Voice response must disable shared caching');
 if(!mediaHeaders.includes("'cache-control': 'private, no-store'"))throw Error('Media response must disable shared caching');
 if(!mediaHeaders.includes("'content-security-policy': \"sandbox; default-src 'none'\""))throw Error('Private media response must enforce sandbox CSP');
+if(!voiceHeaders.includes("'content-type':'audio/mpeg'"))throw Error('Voice response must use audio/mpeg');
+if(!mediaHeaders.includes("'content-disposition'"))throw Error('Private media response must include content disposition');
 for(const [name,headers] of [['voice',voiceHeaders],['media',mediaHeaders]]){
   for(const key of ['x-content-type-options','x-frame-options','referrer-policy']){
     if(!headers.includes(key))throw Error(name+' response missing '+key);
