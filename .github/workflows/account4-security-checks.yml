@@ -14,7 +14,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'wrangler.toml'
-      - '.github/workflows/account4-security-checks.yml'
+      - '.github/workflows/**'
       - '.github/dependabot.yml'
   pull_request:
     paths:
@@ -29,7 +29,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'wrangler.toml'
-      - '.github/workflows/account4-security-checks.yml'
+      - '.github/workflows/**'
       - '.github/dependabot.yml'
   workflow_dispatch:
 permissions:
@@ -113,6 +113,8 @@ jobs:
           assert 'persist-credentials: false' in workflow, 'Checkout credentials must not persist'
           assert '      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' in workflow, 'Checkout must be SHA pinned'
           assert '  push:\n    branches: [main]' in workflow, 'Main branch must be tested'
+          for path in ('control-room-worker.js', 'workspace/**', 'security/**', 'cms/**', 'ai/**', 'scripts/**', 'tests/**', '.github/workflows/**'):
+              assert workflow.count("      - '" + path + "'") == 2, 'Push and PR triggers must cover ' + path
           print('CI least-privilege and main-branch safeguards passed')
           PY
       - name: Check Worker syntax
