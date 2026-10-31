@@ -241,8 +241,9 @@ export async function onRequest({ request: req, env, params }) {
       const allowed = new Set(['script', 'titles', 'description', 'captions', 'rewrite', 'hashtags', 'summary', 'outline']);
       if (!b || !allowed.has(b.task) || typeof b.text !== 'string' || b.text.length > 4000 || b.text.trim().length < 3)
         return J({ error: 'Select a supported task and enter 3–4000 characters.' }, 400);
-      const count = await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='ai_tools' AND at>?").bind(u.id, Date.now() - DAY).first();
-      if (count.c >= 30) return J({ error: 'Daily AI request limit reached. Try again tomorrow.' }, 429);
+      const aiAt=Date.now();
+      const aiReserved=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_tools_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='ai_tools_attempt' AND at>?) < 30").bind(u.id,aiAt,u.id,aiAt-DAY).run();
+      if (!aiReserved.meta.changes) return J({ error: 'Daily AI request limit reached. Try again tomorrow.' }, 429);
       const tasks = {
         script: 'Create a concise, practical video or podcast script from this topic. Include hook, body and closing.',
         titles: 'Suggest 8 clear engaging, accurate titles. Avoid clickbait.',
@@ -267,8 +268,8 @@ export async function onRequest({ request: req, env, params }) {
       const announced = req.headers.get('content-length');
       if ((req.headers.get('content-type') || '').split(';')[0] !== 'audio/wav') return J({ error: 'Send a WAV file.' }, 415);
       if (announced !== null && (!/^\d+$/.test(announced) || Number(announced) > 3 * 1024 * 1024)) return J({ error: 'Audio chunk too large.' }, 413);
-      const n = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe' AND at>?").bind(u.id, Date.now() - DAY).first()).c;
-      if (n >= 120) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' }, 429);
+      const transcriptionCount = (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='transcribe_attempt' AND at>?").bind(u.id, Date.now() - DAY).first()).c;
+      if (transcriptionCount >= 120) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' }, 429);
       const audio = await readBoundedMedia(req, 3 * 1024 * 1024);
       if (!audio) return J({ error: 'Audio chunk too large.' }, 413);
       if (!audio.byteLength || audio.byteLength > 3 * 1024 * 1024 || (announced !== null && Number(announced) !== audio.byteLength)) return J({ error: 'Audio size mismatch or chunk too large.' }, 413);
@@ -288,6 +289,9 @@ export async function onRequest({ request: req, env, params }) {
         wavHeader.getUint32(40,true) % wavHeader.getUint16(32,true) === 0 &&
         wavHeader.getUint32(40,true) === wave.length - 44;
       if (!validWav) return J({error:'Invalid or unsupported PCM WAV audio.'},415);
+      const transcribeAt=Date.now();
+      const transcribeReserved=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'transcribe_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='transcribe_attempt' AND at>?) < 120").bind(u.id,transcribeAt,u.id,transcribeAt-DAY).run();
+      if (!transcribeReserved.meta.changes) return J({ error: 'Daily transcription limit reached. Try again tomorrow.' },429);
       const r = await env.AI.run('@cf/openai/whisper', { audio: [...new Uint8Array(audio)] });
       await log(env, u.id, 'transcribe');
       return J({ text: r.text || '', words: (r.words || []).map(w => ({ word: String(w.word), start: +w.start, end: +w.end })) });
