@@ -19,12 +19,13 @@ for(const file of files(join(root,'public')).filter(f=>f.endsWith('.html'))){
 }
 console.log('All app scripts, module dependencies and local page/assets links verified.');
 
-// Enforce the Account 5 strict-CSP contract on primary public entry points.
-for(const name of ['walk-offline.html','experience.html','devotional.html','creation-to-eternity.html','old-time-gospel-revival-hymn-book.html']){
- const file=join(root,'public',name);const html=readFileSync(file,'utf8');
- for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){const attrs=match[1],type=attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();if(!/\bsrc=/i.test(attrs)&&(!type||/^(?:text|application)\/(?:javascript|ecmascript)$/i.test(type)))throw Error('Inline executable script violates strict CSP in '+name);}
- if(/\sstyle\s*=/i.test(html))throw Error('Inline style violates strict CSP in '+name);
- if(/<iframe\b/i.test(html))throw Error('Nested frame is not allowed by Account 5 frame policy in '+name);
+// Enforce the Account 5 strict-CSP contract across every shipped HTML entry point.
+for(const file of files(join(root,'public')).filter(f=>f.endsWith('.html'))){
+ const html=readFileSync(file,'utf8');
+ if(/<style\b/i.test(html))throw Error('Inline style block violates strict CSP in '+file);
+ if(/\sstyle\s*=/i.test(html))throw Error('Inline style attribute violates strict CSP in '+file);
+ if(/<iframe\b/i.test(html))throw Error('Nested frame is not allowed by Account 5 frame policy in '+file);
+ for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){const attrs=match[1],type=attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();if(!/\bsrc=/i.test(attrs)&&(!type||/^(?:text|application)\/(?:javascript|ecmascript)$/i.test(type)))throw Error('Inline executable script violates strict CSP in '+file);}
 }
 const policy=readFileSync(join(root,'public','_headers'),'utf8');
 for(const directive of ["script-src 'self'","style-src 'self'","frame-src 'none'","frame-ancestors 'none'","object-src 'none'","base-uri 'none'","upgrade-insecure-requests"]){if(!policy.includes(directive))throw Error('Missing required CSP directive: '+directive)}
