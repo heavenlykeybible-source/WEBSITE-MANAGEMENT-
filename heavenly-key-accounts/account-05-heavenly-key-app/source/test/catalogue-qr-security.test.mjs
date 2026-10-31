@@ -49,3 +49,26 @@ test('catalogue download links have matching controls in directory', () => {
     assert.ok(directory.includes('data-download-app="' + id + '"'), id);
   }
 });
+
+test('all nine installable web apps retain unique same-origin identities and safe launch paths', () => {
+  const names = [
+    'all-in-one', 'public-assistant', 'walk-with-god',
+    'eternity-in-view', 'bible-study-portal', 'bible-reader',
+    'hymns', 'audio-hymns', 'daily-reading',
+  ];
+  const identities = new Set();
+  for (const name of names) {
+    const manifest = JSON.parse(publicFile('manifests/' + name + '.webmanifest'));
+    assert.equal(manifest.id, '/installed/' + name);
+    assert.ok(!identities.has(manifest.id), 'Duplicate installation ID: ' + name);
+    identities.add(manifest.id);
+    assert.match(manifest.start_url, /^\/[a-z0-9/-]+(?:\.html)?\/$|^\/[a-z0-9/-]+(?:\.html)?$/);
+    assert.equal(manifest.scope, '/');
+    assert.equal(manifest.display, 'standalone');
+    assert.ok(Array.isArray(manifest.icons) && manifest.icons.length >= 2);
+    for (const icon of manifest.icons) {
+      assert.match(icon.src, /^\/icons\/[a-z0-9-]+\.(?:png|svg)$/);
+      assert.match(icon.sizes, /^\d+x\d+$/);
+    }
+  }
+});
