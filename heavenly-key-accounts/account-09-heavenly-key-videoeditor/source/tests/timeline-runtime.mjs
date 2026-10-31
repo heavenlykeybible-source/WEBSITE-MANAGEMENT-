@@ -5,7 +5,7 @@ async function scenario(mode){
  const nodes=new Map();
  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,hidden:true,textContent:'',style:{},append(){},replaceChildren(){},removeAttribute(){},addEventListener(){},removeEventListener(){}});return nodes.get(id)};
  const statuses=[];const statusNode=node('clipStatus');let statusText='';Object.defineProperty(statusNode,'textContent',{get(){return statusText},set(value){statusText=value;statuses.push(String(value))}});
- const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='overlap'){this.playCount=(this.playCount||0)+1;if(this.playCount===1)return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=0;return}if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));this.currentTime=mode==='cancel-play'?0:mode==='early-ended'?.1:1;if(mode==='early-ended')this.ended=true}});
+ const video=node('v');Object.assign(video,{duration:2,currentTime:0,playbackRate:1,pause(){this.pauseCount=(this.pauseCount||0)+1},async play(){if(mode==='overlap'){this.playCount=(this.playCount||0)+1;if(this.playCount===1)return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=0;return}if(mode==='cancel-start'||mode==='play-timeout')return new Promise(()=>{});if(mode==='late-play')return new Promise(resolve=>setTimeout(()=>{this.currentTime=1;resolve()},25));if(mode==='source-switch-late')return new Promise(resolve=>setTimeout(resolve,25));this.currentTime=mode==='cancel-play'?0:mode==='early-ended'?.1:1;if(mode==='early-ended')this.ended=true}});
  const videoEvents=new Map();video.addEventListener=(type,listener)=>videoEvents.set(type,listener);video.removeEventListener=(type,listener)=>{if(videoEvents.get(type)===listener)videoEvents.delete(type)};
  const track={stop(){}};node('cv').captureStream=()=>({getTracks:()=>[track],getAudioTracks:()=>[],addTrack(){}});
  class Recorder{static isTypeSupported(){return true}constructor(){this.state='inactive'}start(){this.state='recording';if(mode==='error')this.onerror({error:Error('Encoder broke')});if(mode==='premature')this.state='inactive'}pause(){this.state='paused'}resume(){this.state='recording'}stop(){this.state='inactive';if(mode==='cancel-encoder')setTimeout(()=>node('clipCancel').onclick(),0);if(mode!=='timeout'&&mode!=='cancel-encoder'){this.ondataavailable({data:mode==='oversize'?{size:256*1024*1024+1}:new Blob(['video'])});this.onstop()}}}
@@ -108,6 +108,19 @@ async function scenario(mode){
    console.log('PASS timeline encoder '+mode);
    return;
  }
+ if(mode==='source-switch-late'){
+   const operation=node('clipExport').onclick();
+   await new Promise(resolve=>setTimeout(resolve,0));
+   video.currentTime=.25;video.playbackRate=1.5;
+   videoEvents.get('loadedmetadata')();
+   await operation;
+   const pauseCount=video.pauseCount;
+   await new Promise(resolve=>setTimeout(resolve,35));
+   assert.equal(video.pauseCount,pauseCount,'Late playback resolution must not pause replacement source');
+   assert.match(node('clipStatus').textContent,/Video ready\. Add a clip\./,'Replacement status remains visible after late playback');
+   console.log('PASS timeline encoder '+mode);
+   return;
+ }
  if(mode==='source-switch'){
    const operation=node('clipExport').onclick();
    const metadata=videoEvents.get('loadedmetadata');
@@ -165,4 +178,4 @@ async function scenario(mode){
  }
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek','source-switch-late'])await scenario(mode);
