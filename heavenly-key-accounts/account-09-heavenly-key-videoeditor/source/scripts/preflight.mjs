@@ -34,7 +34,8 @@ if (!timeline.includes('Source video ended before the clip finished.') || !timel
 if (!timeline.includes('session.abortStart?.()') || !timeline.includes('Video playback did not start within 15 seconds.')) throw Error('Timeline playback startup cancellation safeguard missing');
 if (!timeline.includes('session.abortEncoder?.()') || !timeline.includes('state.abortEncoder=abort')) throw Error('Timeline encoder cancellation safeguard missing');
 if (!timeline.includes('if(finished&&session===state&&!state.sourceChanged)v.pause()')) throw Error('Timeline session isolation safeguard missing');
-if (!timeline.includes("$('clipList').onkeydown=") || !timeline.includes("key==='delete'") || !timeline.includes("key==='z'") || !timeline.includes("key==='c'") || !timeline.includes("key==='v'")) throw Error('Timeline keyboard shortcuts missing');
+if (!timeline.includes('Load the matching video to seek.') || !timeline.includes('try{v.currentTime=c.start}catch')) throw Error('Safe restored clip selection missing');
+if (!timeline.includes("$('clipList').onkeydown=") || !timeline.includes("key==='delete'") || !timeline.includes("key==='z'") || !timeline.includes("key==='c'") || !timeline.includes("key==='v'") || !timeline.includes("key==='y'")) throw Error('Timeline keyboard shortcuts missing');
 const html=readFileSync('public/index.html','utf8');
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) if (!html.includes('src="/'+name+'"')) throw Error('Script not loaded: '+name);
 if (html !== readFileSync('index.html','utf8')) throw Error('Public page not synchronized with editor source');
