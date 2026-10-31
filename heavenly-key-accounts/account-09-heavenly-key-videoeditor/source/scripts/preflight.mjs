@@ -13,6 +13,7 @@ if(!apiSource.includes(".replace(/^[.\\- ]+/, '').replace(/\\.{2,}/g, '.')"))thr
 if(!apiSource.includes(".replace(/[. ]+$/, '')"))throw Error('Trailing filename cleanup missing');
 if(!apiSource.includes('Filename extension does not match media type.') || !apiSource.includes('Unsafe filename extension.'))throw Error('Media extension validation missing');
 if(!apiSource.includes('if (!suffix || !extensions[type]?.includes(suffix))'))throw Error('Missing-extension upload protection absent');
+if(!apiSource.includes("'image/png':['png']") || !apiSource.includes("'image/jpeg':['jpg','jpeg']"))throw Error('Approved image extension mappings missing');
 if(!apiSource.includes("'php5','php7'") || !apiSource.includes("'jsp','jspx'"))throw Error('Alternate script extension protections missing');
 // Binary API responses bypass the JSON response helper; require their own isolation headers.
 for(const header of ["'cross-origin-resource-policy':'same-origin'", "'cross-origin-resource-policy': 'same-origin'"]){
