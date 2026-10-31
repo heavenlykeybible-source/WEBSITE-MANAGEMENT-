@@ -34,6 +34,7 @@ Every manuscript must remain consistent with these articles, and the editorial c
 
 ## Audit findings and corrections required
 - All five years were assembled as daily dated drafts with 12 repeated theme headings. **Twelve headings are not equivalent to all 22 articles of the faith.**
+- The initial corpus contained 1,826 entries and ended on 2031-10-29. Two additional draft editions for 2031-10-30 and 2031-10-31 have now been added to complete the requested 1,828-day calendar. Both remain unpublished and require full KJV, doctrinal, originality and pastoral review.
 - The existing validation source expects **one fixed verse/reference per theme across every day**, creating 12 repeated verse anchors for the entire library. This is a serious editorial weakness: varied daily KJV passages and context-specific explanation are needed, but changing these requires a planned schema and validation update.
 - Automated no-exact-duplicate checks cannot ensure originality or spiritual substance. Reordered generic sentences, repeated prayers with swapped situations, and mismatches between devotional title and teaching require individual rewriting.
 - Doctrinal-risk items requiring human review: sanctification as grace versus works, salvation by faith, Holy Ghost baptism, restitution, healing claims, end-time date setting, and warnings framed without the gospel.
@@ -42,7 +43,7 @@ Every manuscript must remain consistent with these articles, and the editorial c
 - Editorial hold MUST remain in effect. Do not approve any batch because a script passes.
 
 ## Per-day approval gate
-For **each of 1,826 dates**, the responsible reviewer must:
+For **each of 1,828 dates**, the responsible reviewer must:
 1. Read all 12 topic entries aloud for coherence, grammar, distinctiveness and spiritual substance.
 2. Verify KJV references and quoted verses individually, including context.
 3. Check the relevant Heavenly Key faith articles, handling comparison references without copying.

@@ -8,9 +8,9 @@ const docs=names.map(n=>JSON.parse(readFileSync(resolve(root,n),'utf8')));
 for(const doc of docs){assert.equal(doc.timezone,'Africa/Lagos');assert.deepEqual(doc.topics,docs[0].topics)}
 const entries=docs.flatMap(d=>d.entries).sort((a,b)=>a.date.localeCompare(b.date));
 assert.equal(new Set(entries.map(e=>e.date)).size,entries.length,'Duplicate dates');
-assert.equal(entries.length,1826);
+assert.equal(entries.length,1828);
 assert.equal(entries[0].date,'2026-10-30');
-assert.equal(entries.at(-1).date,'2031-10-29');
+assert.equal(entries.at(-1).date,'2031-10-31');
 for(let i=0;i<entries.length;i++){
  const e=entries[i];
  assert.match(e.date,/^\d{4}-\d{2}-\d{2}$/);
@@ -53,8 +53,8 @@ const year4Topics=year4.flatMap(e=>e.topics);
 assert.equal(new Set(year4Topics.map(t=>normalize(t.reflection))).size,year4Topics.length,'Year 4 repeated reflections');
 assert.equal(new Set(year4Topics.map(t=>normalize(t.prayer))).size,year4Topics.length,'Year 4 repeated prayers');
 console.log('YEAR 4 DRAFT AUDIT:',year4.length,'days; exact reflections and prayers unique; editorial approval pending.');
-const year5=entries.filter(e=>e.date>='2030-10-30'&&e.date<='2031-10-29');
-assert.equal(year5.length,365,'Year 5 must contain exactly 365 dates');
+const year5=entries.filter(e=>e.date>='2030-10-30'&&e.date<='2031-10-31');
+assert.equal(year5.length,367,'Year 5 must cover the requested final 367 calendar days through 2031-10-31');
 assert(year5.every(e=>e.status==='draft-not-published'),'Year 5 must remain in editorial hold');
 const year5Topics=year5.flatMap(e=>e.topics);
 assert.equal(new Set(year5Topics.map(t=>normalize(t.reflection))).size,year5Topics.length,'Repeated Year 5 reflections');

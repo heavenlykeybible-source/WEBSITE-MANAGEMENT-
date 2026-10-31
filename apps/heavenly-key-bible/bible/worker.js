@@ -86,37 +86,72 @@ export default {
   // Fail closed: unreleased dated devotionals must never be publicly downloadable.
   // Client-side hiding and service-worker cache exclusions alone do not protect draft JSON.
   const isDevotionalPath=url.pathname.startsWith("/strength-devotionals-");
-  const draftMatch=url.pathname.match(/^\/(strength-devotionals-(?:2026|2027|year[1-5])(?:-batch\d+)?\.json)$/);
+  const draftMatch=url.pathname.match(/^\\/(strength-devotionals-(?:2026|2027|year[1-5])(?:-batch\\d+)?\\.json)$/);
   if(isDevotionalPath){
    const deny=()=>new Response(null,{status:404,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff"}});
-   // Reject unexpected filenames instead of passing them to the public asset layer.
-   if(!draftMatch)return deny();
+   // The file name, exact date window, and publication allowlist must all agree.
+   const batchRanges={
+   "strength-devotionals-2026.json":["2026-10-30","2026-11-12"],
+   "strength-devotionals-2027-batch01.json":["2026-11-13","2027-01-12"],
+   "strength-devotionals-year1-batch02.json":["2027-01-13","2027-04-22"],
+   "strength-devotionals-year1-batch03.json":["2027-04-23","2027-07-31"],
+   "strength-devotionals-year1-batch04.json":["2027-08-01","2027-10-29"],
+   "strength-devotionals-year2-batch01.json":["2027-10-30","2028-01-27"],
+   "strength-devotionals-year2-batch02.json":["2028-01-28","2028-05-01"],
+   "strength-devotionals-year2-batch03.json":["2028-05-02","2028-08-04"],
+   "strength-devotionals-year2-batch04.json":["2028-08-05","2028-10-29"],
+   "strength-devotionals-year3-batch01.json":["2028-10-30","2029-01-28"],
+   "strength-devotionals-year3-batch02.json":["2029-01-29","2029-04-29"],
+   "strength-devotionals-year3-batch03.json":["2029-04-30","2029-07-29"],
+   "strength-devotionals-year3-batch04.json":["2029-07-30","2029-10-29"],
+   "strength-devotionals-year4-batch01.json":["2029-10-30","2030-01-28"],
+   "strength-devotionals-year4-batch02.json":["2030-01-29","2030-04-29"],
+   "strength-devotionals-year4-batch03.json":["2030-04-30","2030-07-29"],
+   "strength-devotionals-year4-batch04.json":["2030-07-30","2030-10-29"],
+   "strength-devotionals-year5-batch01.json":["2030-10-30","2031-01-28"],
+   "strength-devotionals-year5-batch02.json":["2031-01-29","2031-04-29"],
+   "strength-devotionals-year5-batch03.json":["2031-04-30","2031-07-29"],
+   "strength-devotionals-year5-batch04.json":["2031-07-30","2031-10-31"]
+   };
+   if(!draftMatch||!batchRanges[draftMatch[1]])return deny();
    try{
     const manifestResponse=await env.ASSETS.fetch(new Request(new URL("/strength-publication-status.json",url.origin)));
     if(!manifestResponse.ok)return deny();
     const manifest=await manifestResponse.json();
     if(manifest?.schemaVersion!==1||manifest.publicationStatus!=="published"||
        !Array.isArray(manifest.publishedBatchFiles)||!manifest.publishedBatchFiles.includes(draftMatch[1]))return deny();
-    const assetResponse=await env.ASSETS.fetch(new Request(new URL("/"+draftMatch[1],url.origin),request));
+    const assetResponse=await env.ASSETS.fetch(new Request(new URL("/"+draftMatch[1],url.origin),{method:"GET"}));
     if(!assetResponse.ok)return deny();
     const data=await assetResponse.clone().json();
-    const validDate=(date)=>typeof date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&
+    const [batchStart,batchEnd]=batchRanges[draftMatch[1]];
+    const validDate=(date)=>typeof date==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(date)&&
       !Number.isNaN(Date.parse(date))&&new Date(date+"T00:00:00Z").toISOString().slice(0,10)===date;
     const requiredTopics=["Revival & Spiritual Fire","Holiness & Righteousness","Hope & Encouragement","Prayer & Intercession","Salvation & Repentance","Faith & Trust","The Holy Spirit","Evangelism & Soul Winning","Love & Christian Unity","The Word & Obedience","Wisdom & Discernment","End-time & Rapture Readiness"];
-    if(data?.timezone!=="Africa/Lagos"||!Array.isArray(data.entries)||!data.entries.length||
-       data.entries.length>366||!data.entries.every(entry=>entry&&validDate(entry.date)&&
-         entry.status==="approved-for-publication"&&Array.isArray(entry.topics)&&
-         entry.topics.length===requiredTopics.length&&entry.topics.every((topic,index)=>topic&&topic.topic===requiredTopics[index]&&topic.reviewStatus==="approved"&&
-           typeof topic.reference==="string"&&topic.reference.trim()&&topic.reference.length<=100&&
-           typeof topic.bibleText==="string"&&topic.bibleText.trim()&&topic.bibleText.length<=1200&&
-           typeof topic.reflection==="string"&&topic.reflection.trim()&&topic.reflection.length<=280&&
-           typeof topic.prayer==="string"&&topic.prayer.trim()&&topic.prayer.length<=160)))return deny();
-    const dates=data.entries.map(entry=>entry.date);
-    if(new Set(dates).size!==dates.length)return deny();
+    if(data?.timezone!=="Africa/Lagos"||!Array.isArray(data.entries)||!data.entries.length||data.entries.length>366)return deny();
+    for(let index=0;index<data.entries.length;index++){
+     const entry=data.entries[index];
+     const expectedDate=new Date(Date.parse(batchStart+"T00:00:00Z")+index*86400000).toISOString().slice(0,10);
+     if(!entry||!validDate(entry.date)||entry.date!==expectedDate||
+        !["draft-not-published","approved-for-publication"].includes(entry.status)||
+        !Array.isArray(entry.topics)||entry.topics.length!==requiredTopics.length||
+        !entry.topics.every((topic,topicIndex)=>topic&&topic.topic===requiredTopics[topicIndex]&&
+          typeof topic.reference==="string"&&topic.reference.trim()&&topic.reference.length<=100&&
+          typeof topic.bibleText==="string"&&topic.bibleText.trim()&&topic.bibleText.length<=1200&&
+          typeof topic.reflection==="string"&&topic.reflection.trim()&&topic.reflection.length<=280&&
+          typeof topic.prayer==="string"&&topic.prayer.trim()&&topic.prayer.length<=160))return deny();
+     if(entry.status==="approved-for-publication"&&!entry.topics.every(topic=>topic.reviewStatus==="approved"))return deny();
+    }
+    // Never expose a future edition, even when its batch has been allowlisted.
+    const todayParts=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+    const today=Object.fromEntries(todayParts.filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
+    const todayKey=today.year+"-"+today.month+"-"+today.day;
+    const available=data.entries.filter(entry=>entry.date<=todayKey&&entry.status==="approved-for-publication"&&entry.topics.every(topic=>topic.reviewStatus==="approved"));
+    if(!available.length)return deny();
     const headers=new Headers(assetResponse.headers);
-    headers.set("Cache-Control","no-store");
+    headers.set("Cache-Control","no-store, private");
     headers.set("X-Content-Type-Options","nosniff");
-    return new Response(request.method==="HEAD"?null:assetResponse.body,{status:assetResponse.status,headers});
+    headers.set("Content-Type","application/json; charset=utf-8");
+    return new Response(request.method==="HEAD"?null:JSON.stringify({timezone:"Africa/Lagos",entries:available}),{status:200,headers});
    }catch{return deny();}
   }
   // Canonical extensionless devotional URL; preserve legacy links with a permanent redirect.
