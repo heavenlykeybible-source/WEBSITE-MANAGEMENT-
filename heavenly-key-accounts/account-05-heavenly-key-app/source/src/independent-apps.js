@@ -14,6 +14,9 @@ export async function routeIndependentApp(request,env){
  if(env.INDEPENDENT_APPS_ENABLED!=='true')return null;
  const url=new URL(request.url),route=ROUTES[url.pathname];if(!route)return null;
  const [binding,id]=route,headers={'Cache-Control':'no-store','X-HK-App-Service':id,'Content-Type':'text/plain; charset=utf-8'};
+ // Reject ambiguous or insecure entry points before contacting another account.
+ if(url.protocol!=='https:' || url.username || url.password || url.search)
+  return new Response('Secure app URL without parameters required.',{status:400,headers});
  if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405,headers});
  if(!env[binding]?.fetch)return new Response('This application service is unavailable.',{status:503,headers});
  const path=binding==='ETERNITY_APP'?'/eternity-in-view/':url.pathname;
