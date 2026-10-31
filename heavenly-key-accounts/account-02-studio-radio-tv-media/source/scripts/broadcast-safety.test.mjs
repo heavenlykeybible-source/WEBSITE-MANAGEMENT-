@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const restream = await readFile(join(root, 'src/restream.ts'), 'utf8');
@@ -105,6 +106,17 @@ assert.match(restream, /function unsafeStreamHost\(/, 'Stream destinations must 
 assert.match(restream, /unsafeStreamHost\(u\.hostname\)/, 'Host validation must run on save');
 for(const fragment of ["host==='localhost'","a===127","a===10","a===172&&b>=16&&b<=31","a===192&&b===168","a===169&&b===254","host.startsWith('fc')","host.startsWith('fd')"]){
  assert.ok(restream.includes(fragment), 'Missing private-host guard: '+fragment);
+}
+
+// Execute the actual stream-host validator (with only TypeScript annotations stripped).
+const hostValidatorSource=restream.match(/function unsafeStreamHost\(hostname:string\):boolean\{[\s\S]*?\n\}/)?.[0];
+assert.ok(hostValidatorSource, 'Host validator implementation must be present');
+const unsafeHost=runInNewContext('('+hostValidatorSource.replace('(hostname:string):boolean','(hostname)')+')',Object.create(null),{timeout:1000});
+for(const host of ['localhost','localhost.','stream.local','127.0.0.1','10.0.0.5','172.16.10.20','192.168.1.2','169.254.1.2','[::1]','[fd00::1]']){
+ assert.equal(unsafeHost(host),true,'Must block private streaming host: '+host);
+}
+for(const host of ['stream.youtube.com','rtmp.example.com','8.8.8.8']){
+ assert.equal(unsafeHost(host),false,'Must permit public streaming host: '+host);
 }
 
 console.log('Account 2 broadcast safety regression checks passed');
