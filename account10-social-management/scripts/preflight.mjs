@@ -8,6 +8,7 @@ const config=read('wrangler.toml');
 const pkg=JSON.parse(read('package.json'));
 const fail=[];
 const requireMatch=(name,re)=>{if(!re.test(config))fail.push(name)};
+requireMatch('Expected Worker identity',/^name\s*=\s*"heavenly-key-social-management"\s*$/m);
 requireMatch('Worker entry point',/^main\s*=\s*"src\/index\.ts"/m);
 requireMatch('Static assets directory',/^directory\s*=\s*"\.\/public"/m);
 requireMatch('ASSETS binding',/^binding\s*=\s*"ASSETS"/m);
@@ -24,12 +25,15 @@ for(const scriptName of ['db:migrate:local','db:migrate:remote']){
  let prior=-1;
  for(const migration of migrations){const position=script.indexOf(migration);if(position<=prior)fail.push(scriptName+' missing or out of order: '+migration);prior=position;}
 }
-for(const file of ['public/index.html','src/index.ts','schema.sql',...migrations.map(name=>'migrations/'+name)]){
+for(const file of ['public/index.html','public/editorial-studio.js','src/index.ts','schema.sql',...migrations.map(name=>'migrations/'+name)]){
  if(!existsSync(resolve(root,file)))fail.push('Missing '+file);
 }
 for(const [name,script] of Object.entries(pkg.scripts)){
  if(name==='deploy'&&/--dry-run/.test(script))fail.push('Deploy script is unexpectedly dry-run only');
 }
+// A deploy from the wrong Cloudflare account can strand the hostname.
+// Do not silently infer the zone account from a successful build or DNS resolution.
+if(!/^run_worker_first\s*=\s*true\s*$/m.test(config))fail.push('Static asset requests must pass through Worker security headers');
 const args=process.argv.slice(2);
 if(args.includes('--production'))fail.push('Production readiness cannot be certified by a static preflight: verify Cloudflare zone ownership, D1 migrations, secrets, asset upload and live integration tests manually.');
 if(fail.length){for(const message of fail)console.error('FAIL:',message);process.exitCode=1;}
