@@ -2,9 +2,11 @@
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 0
   X-DNS-Prefetch-Control: off
+  X-Robots-Tag: noindex, nofollow
   X-Frame-Options: DENY
   X-Permitted-Cross-Domain-Policies: none
   Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: microphone=(self), camera=(), geolocation=()
   Strict-Transport-Security: max-age=31536000
