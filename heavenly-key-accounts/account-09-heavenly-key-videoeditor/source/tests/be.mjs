@@ -447,6 +447,16 @@ const failedMediaUpload=await onRequest({request:new Request('https://studio.exa
 env.MEDIA.put=realUploadPut;
 check('Failed R2 upload returns service error',failedMediaUpload.status===500);
 check('Failed R2 upload releases reserved storage quota',db.prepare('SELECT storage_used FROM users WHERE id=?').get(accountId).storage_used===uploadQuotaBefore);
+let failedRollbackDeletes=0;
+const originalRollbackDelete=env.MEDIA.delete;
+env.MEDIA.put=async()=>{throw Error('Simulated failed upload');};
+env.MEDIA.delete=async()=>{failedRollbackDeletes++;throw Error('Simulated failed cleanup');};
+const rollbackFailureResponse=await onRequest({request:new Request('https://studio.example/api/media?name=rollback.png',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},body:Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+X9uSAAAAAElFTkSuQmCC','base64'))}),env,params:{path:['media']}});
+env.MEDIA.put=realUploadPut;
+env.MEDIA.delete=originalRollbackDelete;
+check('Failed upload rollback retries object cleanup twice',rollbackFailureResponse.status===500&&failedRollbackDeletes===2);
+check('Failed rollback emits audit event',!!db.prepare("SELECT id FROM audit WHERE user_id=? AND action='media_upload_rollback_delete_failed'").get(accountId));
+check('Failed rollback does not charge storage quota',db.prepare('SELECT storage_used FROM users WHERE id=?').get(accountId).storage_used===uploadQuotaBefore);
 const sanitizedMediaList=await request('media',{cookie:login.cookie});
 check('Unsafe upload filename is normalized in stored media',sanitizedMediaList.data?.items?.some(item=>item.id===mediaCreated.id && item.name==='sample.png'));
 const anonymousMediaRead=await request('media/'+mediaCreated.id);
