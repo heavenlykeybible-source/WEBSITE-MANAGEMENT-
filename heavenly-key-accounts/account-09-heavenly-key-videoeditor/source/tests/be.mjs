@@ -656,6 +656,12 @@ db.prepare('INSERT INTO media VALUES(?,?,?,?,?,?,?,?)').run('privacy-mismatch',p
 const rejectedPrivacyDeletion=await request('account',{method:'DELETE',cookie:privacyLogin.cookie,body:{password:'correct horse battery'}});
 check('Account deletion rejects foreign-owner R2 references',rejectedPrivacyDeletion.status===409&&objects.has(crossAccountKey)&&!!db.prepare('SELECT id FROM users WHERE id=?').get(privacyUser));
 db.prepare('DELETE FROM media WHERE id=?').run('privacy-mismatch');
+const savedPrivacyDelete=env.MEDIA.delete;
+env.MEDIA.delete=async()=>{throw Error('Temporary R2 outage');};
+const interruptedPrivacyDeletion=await request('account',{method:'DELETE',cookie:privacyLogin.cookie,body:{password:'correct horse battery'}});
+env.MEDIA.delete=savedPrivacyDelete;
+check('Account deletion returns service unavailable on R2 failure',interruptedPrivacyDeletion.status===503);
+check('Account survives interrupted storage deletion',!!db.prepare('SELECT id FROM users WHERE id=?').get(privacyUser));
 const privacyDeletion=await request('account',{method:'DELETE',cookie:privacyLogin.cookie,body:{password:'correct horse battery'}});
 check('Account deletion succeeds with tombstoned media',privacyDeletion.status===200);
 check('Account deletion removes previously deleted R2 objects',!objects.has(privacyKey));
