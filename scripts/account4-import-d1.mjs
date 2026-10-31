@@ -21,7 +21,7 @@ export async function saveImportSession(db, actor, session) {
       typeof session.uploadId !== 'string' || !session.uploadId ||
       !Number.isSafeInteger(session.expiresAt) || session.expiresAt <= Date.now())
     throw new Error('Invalid import owner or state');
-  const id = crypto.randomUUID();
+  const id = session.key.split('/').pop();
   const result = await db.prepare('INSERT INTO account4_import_sessions (id,owner_id,object_key,upload_id,filename,size_bytes,part_count,state,expires_at_ms) VALUES (?,?,?,?,?,?,?,?,?)')
     .bind(id,actor.id,session.key,session.uploadId,session.name,session.size,session.partCount,'uploading',session.expiresAt).run();
   if (result?.success === false || result?.meta?.changes !== 1)
