@@ -80,7 +80,7 @@ output.addEventListener('click',async()=>{
  catch{outputHelp.textContent='Audio output was not changed. You can choose a device in your system settings.';}
 });
 if(typeof navigator.mediaDevices?.selectAudioOutput!=='function'||typeof audio.setSinkId!=='function')output.textContent='🔊 Bluetooth setup help';
-if('mediaSession' in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:'Online Revival Radio',artist:'Heavenly Key Evangelistic Movement'});try{navigator.mediaSession.setActionHandler('play',()=>{void start()});navigator.mediaSession.setActionHandler('pause',()=>{audio.pause();playing=false;play.textContent='▶ Play Radio'});navigator.mediaSession.setActionHandler('nexttrack',()=>next.click())}catch{}}
+if('mediaSession' in navigator){if(typeof MediaMetadata==='function')navigator.mediaSession.metadata=new MediaMetadata({title:'Online Revival Radio',artist:'Heavenly Key Evangelistic Movement'});try{navigator.mediaSession.setActionHandler('play',()=>{void start()});navigator.mediaSession.setActionHandler('pause',()=>{audio.pause();playing=false;play.textContent='▶ Play Radio'});navigator.mediaSession.setActionHandler('nexttrack',()=>next.click())}catch{}}
 void refresh();
 })();
 </script></body></html>`;
