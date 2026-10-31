@@ -340,7 +340,7 @@ function setBg(i){const t=T[i];if(!t)return;curBg=i;const request=++bgPick,scene
   if(!b)b=mk('image','Background',{isBg:true,cover:true});b.img=bgImg;b.fn=bgFn;b.tn=t.n;
   if(!it.some(x=>x.id===b.id))it.unshift({id:b.id,p:'full',on:true});gal();ui()};
  if(t.p&&W>=H)msg('This template is made for Portrait. Change Screen shape under Start.');
- if(t.fn||t.c||(t.img&&t.img.complete&&t.img.naturalWidth))return go();t.img=t.img||new Image();t.img.onload=go;t.img.onerror=()=>msg('This studio background could not be loaded. Select another background.');t.img.src=t.u}
+ if(t.fn||t.c||(t.img&&t.img.complete&&t.img.naturalWidth))return go();t.img=t.img||new Image();t.img.onload=go;t.img.onerror=()=>{if(request===bgPick&&SC.includes(scene))msg('This studio background could not be loaded. Select another background.');};t.img.src=t.u}
 function newScene(name){SC.push({name,items:[]});const i=SC.length-1;if(studio)pvw=i;else take(i);return i}
 function pick(acc){$('fm').accept=acc;$('fm').click();setTimeout(()=>$('fm').accept='video/*,audio/*',500)}
 async function quick(m){const N={radio:'24/7 Radio',camtpl:'Camera + background',cam:'Camera',pic:'Picture only',pre:'Pre-recorded 24/7',pres:'Presenter + chat'};
