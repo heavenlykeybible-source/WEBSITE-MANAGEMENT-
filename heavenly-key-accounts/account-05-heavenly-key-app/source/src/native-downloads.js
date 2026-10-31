@@ -59,6 +59,17 @@ export async function handleNativeDownloads(request,env) {
     if(!catalogue || typeof catalogue!=='object' || Array.isArray(catalogue))
       throw new Error('Invalid catalogue');
     if(!Object.prototype.hasOwnProperty.call(catalogue,appId)) return reply({error:'Unknown app'},404);
+    const entry=catalogue[appId];
+    if(!entry || typeof entry!=='object' || Array.isArray(entry) ||
+       typeof entry.name!=='string' || !entry.name.trim() ||
+       typeof entry.url!=='string')throw new Error('Invalid catalogue app');
+    const destination=new URL(entry.url);
+    const approvedHosts=new Set(['heavenlykey.org','www.heavenlykey.org',
+      'apps.heavenlykey.org','onlinebible.heavenlykey.org','global.heavenlykey.org',
+      'radio.heavenlykey.org','meeting.heavenlykey.org']);
+    if(destination.protocol!=='https:' || !approvedHosts.has(destination.hostname) ||
+       destination.port || destination.username || destination.password)
+      throw new Error('Unapproved catalogue destination');
   } catch { return reply({error:'Download catalogue unavailable'},503); }
   if(!env.NATIVE_RELEASES) return reply({error:'Native downloads are not yet published'},503);
   const meta=platforms[platform];
