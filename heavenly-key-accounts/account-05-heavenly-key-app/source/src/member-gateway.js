@@ -83,7 +83,7 @@ export async function memberGateway(request,env,upstreamFetch=fetch) {
       // session first so an expired cookie cannot masquerade as signed-in progress.
       const check=await upstreamFetch(ORIGIN+'/api/me',{method:'GET',headers:{Accept:'application/json',Cookie:'gc_session='+id},redirect:'manual',credentials:'omit',cache:'no-store',signal:controller.signal});
       if(check.status===401)return reply({error:'Please sign in.'},401,true);
-      if(!check.ok||!(check.headers.get('content-type')||'').includes('application/json'))throw Error('Session unavailable');
+      if(check.status!==200||check.headers.has('content-range')||!/^application\/json(?:\s*;|\s*$)/i.test(check.headers.get('content-type')||''))throw Error('Session unavailable');
       const verified=shape(await jsonBody(check,262144),'session');
       if(verified.member.status!=='active')return reply({error:'Learning actions are unavailable for your restricted account.'},403);
     }
@@ -93,7 +93,7 @@ export async function memberGateway(request,env,upstreamFetch=fetch) {
       const message=status===401?'Email or password is incorrect, or your session has ended.':status===403?'This action is unavailable for your account.':status===429?'Too many attempts. Please wait before trying again.':'The member service could not complete this request.';
       return reply({error:message},status,status===401||target.kind==='logout');
     }
-    if(!(result.headers.get('content-type')||'').toLowerCase().includes('application/json'))throw Error('Invalid content type');
+    if(result.status!==200||result.headers.has('content-range')||!/^application\/json(?:\s*;|\s*$)/i.test(result.headers.get('content-type')||''))throw Error('Invalid upstream response');
     const data=await jsonBody(result,1048576);
     const response=reply(shape(data,target.kind),200,target.kind==='logout');
     if(target.kind==='login'){
