@@ -245,3 +245,11 @@ test('native installer HEAD metadata rejects redirects and member credentials', 
  assert.match(js, /method:'HEAD', cache:'no-store', credentials:'omit', redirect:'error'/);
  assert.doesNotMatch(js, /HEAD verifies a signed and scanned package/);
 });
+
+test('sharing tolerates non-element click targets and install errors are accessible', () => {
+ const js=publicFile('app-pages.js');
+ assert.match(js,/event\.target\?\.closest\?\.\('\.share-to-bless'\)/);
+ assert.match(js,/message\.setAttribute\('role','alert'\)/);
+ assert.match(js,/Installation options are temporarily unavailable/);
+ assert.doesNotMatch(js,/alert\(e\.message\)/);
+});
