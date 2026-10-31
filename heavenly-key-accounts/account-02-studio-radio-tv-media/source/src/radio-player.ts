@@ -44,7 +44,7 @@ async function refresh(){
  const generation=++loadGeneration;
  say('Loading approved radio recordings…');
  try{
- const response=await fetch('/api/broadcast/programme?channel=radio',{headers:{'X-Heavenly-Key-Internal':'media-engine-public-v1'},cache:'no-store'});
+ const response=await fetch('/api/broadcast/programme?channel=radio&delivery=on-demand',{headers:{'X-Heavenly-Key-Internal':'media-engine-public-v1'},cache:'no-store'});
  if(!response.ok)throw Error('Radio playlist is unavailable ('+response.status+').');
  const result=await response.json();
  if(generation!==loadGeneration)return;
