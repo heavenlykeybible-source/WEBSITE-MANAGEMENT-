@@ -1,5 +1,6 @@
 import { originalAssistantInstruction } from './assistant-profile';
 import { contactTargetForMinistryMessage } from './human-handover';
+import { operatorMutationOriginAllowed } from './operator-origin';
 interface Env { DB: D1Database; MEDIA_BUCKET?: R2Bucket; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
@@ -96,10 +97,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(provided!==`Bearer ${env.ADMIN_TOKEN}`)return reply({error:'Unauthorized'},401);
  // Browser-origin validation is an extra boundary for state-changing operator actions.
  // Service-to-service clients without an Origin header still require authorization.
- if(['POST','PUT','PATCH','DELETE'].includes(req.method)){
-  const origin=req.headers.get('origin');
-  if(origin!==null&&origin!==u.origin)return reply({error:'Cross-origin operator mutations are forbidden'},403);
- }
+ if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  if(!env.DB)return reply({error:'D1 database binding missing'},503);
  if(['POST','PUT','PATCH'].includes(req.method)){
   const contentType=req.headers.get('content-type')||'';
