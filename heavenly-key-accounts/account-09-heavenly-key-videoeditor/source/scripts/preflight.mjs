@@ -9,6 +9,12 @@ if(!deployHeaders.includes("manifest-src 'self'")) throw Error('Manifest source 
 
 for (const path of ['functions/api/[[path]].js','scripts/provision-roles.mjs']) execFileSync(process.execPath,['--check',path],{stdio:'inherit'});
 const apiSource=readFileSync('functions/api/[[path]].js','utf8');
+// Binary API responses bypass the JSON response helper; require their own isolation headers.
+for(const header of ["'cross-origin-resource-policy':'same-origin'", "'cross-origin-resource-policy': 'same-origin'"]){
+  if(!apiSource.includes(header))throw Error('Missing binary response resource isolation: '+header);
+}
+if(!apiSource.includes("'cache-control':'private, no-store'"))throw Error('Private voice audio must not be cached');
+
 if ((apiSource.match(/match\(\/\(\?:\^\|;\\s\*\)hk=/g)||[]).length!==2 || !apiSource.includes('(?=;|$)/)')) throw Error('Exact session cookie boundary enforcement missing');
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gateway_attempt'") || !apiSource.includes("AND at>?) < 60") || !apiSource.includes("if (!reserved.meta.changes)")) throw Error('Atomic external AI gateway attempt quota safeguard missing');
 for (const [name, limit] of [['ai_tools_attempt',30],['transcribe_attempt',120]]) {
