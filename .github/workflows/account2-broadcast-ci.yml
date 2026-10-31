@@ -59,6 +59,8 @@ jobs:
         run: npm run test:radio-media-http-runtime
       - name: SQLite public media and live TV isolation checks
         run: npm run test:radio-live-isolation-sql
+      - name: Radio playlist KV validation and capacity bounds
+        run: npm run test:radio-playlist-order
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
