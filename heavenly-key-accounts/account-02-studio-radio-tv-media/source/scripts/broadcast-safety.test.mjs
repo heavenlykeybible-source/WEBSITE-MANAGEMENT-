@@ -84,4 +84,9 @@ assert.ok(publicViewerRoute.length > 0, 'Public viewer route must exist');
 assert.match(publicViewerRoute, /'Cache-Control':'no-store'/, 'Do not cache time-sensitive viewer credentials');
 assert.doesNotMatch(publicViewerRoute, /error:e instanceof Error\?e\.message/, 'Public viewer endpoint must not expose provider exception messages');
 
+// Social publishing accounts require bounded metadata and explicit automation flags.
+assert.match(entry, /ch\.length>100\|\|ref\.length>300/, 'Limit social account metadata lengths');
+assert.match(entry, /typeof b\.automatable!=='boolean'/, 'Validate social automation flag type');
+assert.match(entry, /social\.account\.create/, 'Audit creation of social destination accounts');
+
 console.log('Account 2 broadcast safety regression checks passed');
