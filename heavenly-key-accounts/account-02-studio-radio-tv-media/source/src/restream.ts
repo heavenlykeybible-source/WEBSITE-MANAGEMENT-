@@ -85,7 +85,7 @@ async function callLiveKit(env:any,method:string,body:unknown){
  const endpoint=config.LIVEKIT_URL.replace('wss:','https:')+'/twirp/livekit.Egress/'+method;
  const r=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(15000)});
  const text=await r.text();let data:any={};try{data=text?JSON.parse(text):{};}catch{}
- if(!r.ok)throw new Error(data?.msg||data?.message||('LiveKit Egress returned HTTP '+r.status));
+ if(!r.ok)throw new Error('LiveKit Egress request failed (HTTP '+r.status+').');
  return data;
 }
 export async function startRestream(env:any,input:{source:'live'|'247';sessionId?:number;programmeUrl?:string;format?:string;quality?:string;channel?:'radio'|'video'}){
