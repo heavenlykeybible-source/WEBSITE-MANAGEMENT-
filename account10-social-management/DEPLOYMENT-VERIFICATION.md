@@ -90,3 +90,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] At the API level, POST /api/takeover with paused=false must return HTTP 409 while requested_human=1. The human-request resolution route remains the only authorized way for the operator to clear requested_human and resume Gemini.
 - [ ] Test concurrent inbound WhatsApp human requests versus operator resume, using consented test conversations, and confirm no automated content is sent.
 - [ ] This follows OWASP server-side authorization and deny-by-default guidance and WhatsApp Business Policy's clear human-escalation requirement.
+
+## Ministry account human-contact choices
+- [ ] Apply `0009_human_contact_target.sql` after migration 0008 before using the updated human-contact API.
+- [ ] Confirm the welcome menu offers **Heavenly Key Evangelistic Movement agent** and **Evangelist Emmanuel Ogheneochuko Adiohwo** as separate options.
+- [ ] POST /api/human-requests with an authorized conversation ID and target `ministry_agent` or `speak_to_evangelist` must pause Gemini and preserve the selected target. Reject any other target with HTTP 400.
+- [ ] GET /api/human-requests must show the selected destination to the authorized ministry operator; no automated claim of direct notification or conversation initiation.
