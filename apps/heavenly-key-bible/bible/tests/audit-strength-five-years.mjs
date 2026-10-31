@@ -62,7 +62,8 @@ for(let i=0;i<entries.length;i++){
   if(/(date|day|month|year) (of|for) (the )?(rapture|second coming)/i.test(t.reflection))flag(e.date,'END_TIME_DATE_SETTING',t.topic);
  }
 }
-const manifest=JSON.parse(readFileSync(resolve(root,'strength-publication-status.json'),'utf8'));
+const parsedManifest=JSON.parse(readFileSync(resolve(root,'strength-publication-status.json'),'utf8'));
+const manifest=parsedManifest&&typeof parsedManifest==='object'&&!Array.isArray(parsedManifest)?parsedManifest:{};
 if(manifest.publicationStatus!=='editorial-hold'||!Array.isArray(manifest.publishedBatchFiles)||manifest.publishedBatchFiles.length)flag('GLOBAL','RELEASE_GATE','Publication must stay on editorial hold with an empty approved-file list during review');
 const doctrine=[
  'Scripture as final authority','Trinity and Christ’s virgin birth, atonement and resurrection',
@@ -90,7 +91,8 @@ for(let i=0;i<entries.length;i++){
  if(norm(e.reflection).split(' ').length<16)flag(e.date,'THIN_DAILY_REFLECTION',e._file);
  if(i&&e.title===entries[i-1].title&&e.scripture===entries[i-1].scripture)
   flag(e.date,'CONSECUTIVE_REUSED_THEME',e.title);
- for(const t of e.topics||[]){
+ for(const t of (Array.isArray(e.topics)?e.topics:[])){
+  if(!t||typeof t!=='object'||Array.isArray(t))continue;
   if(/consider\s+.{4,140}\s+in the light of this truth/i.test(t.reflection||'')) flag(e.date,'MECHANICAL_REFLECTION_FORMULA',t.topic);
   if(/\bas i face\s+(?:a|an|the)\s+.{2,70}\byou (?:have|are|will)\b/i.test(t.prayer||'')) flag(e.date,'INCONSISTENT_PRAYER_PERSON',t.topic);
   if(/consider how this truth shapes|on \d{1,2}\/\d{1,2}|let this teaching guide your response/i.test(t.reflection||''))
