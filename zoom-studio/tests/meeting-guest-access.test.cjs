@@ -456,3 +456,13 @@ test('rapid hand-raise updates are throttled without closing the guest',async()=
  assert.equal(h.host.messages.filter(m=>m.t==='hand').length,before+1);
  assert.equal(h.guest.readyState,1);
 });
+
+test('host chat cooldown persists without resetting meeting controls',async()=>{
+ const h=setup();await h.join('');
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'lock',on:true}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'chat',text:'First'}));
+ await h.r.webSocketMessage(h.host,JSON.stringify({t:'chat',text:'Second'}));
+ assert.equal(h.host.messages.filter(m=>m.t==='chat'&&['First','Second'].includes(m.text)).length,1);
+ assert.equal(h.host.attachment.locked,true);
+ assert.ok(h.host.attachment.last>0);
+});
