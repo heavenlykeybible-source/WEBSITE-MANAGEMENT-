@@ -475,7 +475,7 @@ test('chat strips additional invisible Unicode formatting controls',async()=>{
 
 test('slow mode accepts only finite integer seconds',async()=>{
  const h=setup();await h.join('');
- for(const [sec,expected] of [[1.8,1],[-4,0],[999,60],['Infinity',0],['not-a-number',0]]){
+ for(const [sec,expected] of [[1.8,1],[-4,0],[999,60],['Infinity',0],['not-a-number',0],['5',0],[[5],0],[true,0]]){
   await h.r.webSocketMessage(h.host,JSON.stringify({t:'slow',sec}));
   assert.equal(h.host.attachment.slow,expected);
  }
