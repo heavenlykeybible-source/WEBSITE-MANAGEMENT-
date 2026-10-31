@@ -165,3 +165,11 @@ test('nested launch-diagnostics responses never render into a stale operator ses
  assert.match(html,/Webhook inbox unavailable/);
  assert.match(html,/Integrity check unavailable/);
 });
+
+test('operator handover resolution sends the exact request generation', () => {
+ assert.match(html,/humanRequestVersion=Number\(d\.conversation\.human_request_version\)\|\|0/);
+ assert.match(html,/targetRequestVersion=humanRequestVersion/);
+ assert.match(html,/resumeAutomation:true,requestVersion:targetRequestVersion/);
+ assert.match(html,/resumeAutomation:false,requestVersion:item\.human_request_version/);
+ assert.equal((html.match(/requestedHuman=false;humanRequestVersion=0;activeManagementTab='chats';/g)||[]).length,2);
+});
