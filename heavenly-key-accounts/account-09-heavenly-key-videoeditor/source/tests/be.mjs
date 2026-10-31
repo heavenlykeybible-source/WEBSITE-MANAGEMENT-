@@ -455,6 +455,13 @@ const repeatedMediaDelete = await request('media/'+mediaCreated.id,{method:'DELE
 check('Repeated media deletion reports not found',repeatedMediaDelete.status===404);
 const storageAfterDelete = await request('media',{cookie:login.cookie});
 check('Media deletion returns storage quota',storageAfterDelete.status===200&&storageAfterDelete.data.used===0);
+const orphanKey=db.prepare('SELECT r2_key FROM media WHERE id=?').get(mediaCreated.id).r2_key;
+const unauthorizedCleanup=await request('media/cleanup',{method:'POST',cookie:secondLogin.cookie});
+check('Other members cannot clean another owner media',unauthorizedCleanup.status===200&&unauthorizedCleanup.data.cleaned===0);
+const cleanedMedia=await request('media/cleanup',{method:'POST',cookie:login.cookie});
+check('Owner cleanup recovers failed R2 deletion',cleanedMedia.status===200&&cleanedMedia.data.cleaned===1&&cleanedMedia.data.failed===0);
+check('Orphaned R2 object removed after cleanup',!objects.has(orphanKey));
+check('Recovered tombstone removed from DB',!db.prepare('SELECT id FROM media WHERE id=?').get(mediaCreated.id));
 const uploadAttempts=db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='media_upload_attempt'").get(accountId).c;
 check('Media upload attempts are recorded even for unsupported content',uploadAttempts>0);
 for(let i=uploadAttempts;i<120;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'media_upload_attempt',Date.now());
