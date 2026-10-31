@@ -78,6 +78,22 @@ jobs:
                   assert not re.search(pattern, value), f'Potential credential in {path}'
           print('No matching embedded credentials found in checked files')
           PY
+      - name: Reject committed environment and credential files
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          from pathlib import PurePosixPath
+          tracked = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          forbidden = []
+          for name in filter(None, tracked):
+              base = PurePosixPath(name).name
+              if (base == '.env' or base.startswith('.env.') or base == '.dev.vars' or base.startswith('.dev.vars.')) and base not in ('.env.example', '.dev.vars.example'):
+                  forbidden.append(name)
+              if base in ('id_rsa', 'id_ed25519', 'credentials.json', 'service-account.json'):
+                  forbidden.append(name)
+          assert not forbidden, 'Sensitive filenames committed: ' + ', '.join(forbidden)
+          print('No forbidden credential or environment files are tracked')
+          PY
       - name: Check Worker syntax
         run: node --check control-room-worker.js
       - name: Run Account 4 regression suite
