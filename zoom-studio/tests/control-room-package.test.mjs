@@ -722,3 +722,25 @@ test('room broadcasts and audience counts exclude guests from a previous meeting
  assert.equal(s.host.messages.at(-1).t,'count');
  assert.equal(s.host.messages.at(-1).n,1,'old guest must not count as current audience');
 });
+
+test('stale participants cannot exhaust the active stage or audience quota',async()=>{
+ const s=await openRoom();
+ for(let i=0;i<6;i++)s.add({role:'guest',id:'stale-stage-'+i,session:'old-host-key',stage:true,ok:true,aud:false});
+ for(let i=0;i<9;i++)s.add({role:'guest',id:'stale-viewer-'+i,session:'old-host-key',stage:false,ok:true,aud:true});
+ assert.equal(s.room.stage().length,0,'only current-host stage members count toward stage capacity');
+ const guest=s.add();
+ await message(s.room,guest,{t:'join',room:s.host.d.room,key:s.key,aud:false,name:'New speaker'});
+ assert.equal(guest.d.role,'guest','previous-session viewers must not exhaust room limits');
+ await message(s.room,s.host,{t:'admit',gid:guest.d.id});
+ assert.equal(guest.d.ok,true,'host may admit current speaker despite stale stage sockets');
+ assert.equal(guest.d.stage,true);
+ assert.equal(s.room.stage().length,1);
+});
+test('host cannot moderate a stale participant from a previous meeting session',async()=>{
+ const s=await openRoom();
+ const old=s.add({role:'guest',id:'old-speaker',session:'previous-meeting',stage:true,ok:true,aud:false});
+ const sent=old.messages.length;
+ await message(s.room,s.host,{t:'kick',gid:'old-speaker'});
+ assert.equal(old.readyState,1,'active host must not target an old session');
+ assert.equal(old.messages.length,sent);
+});
