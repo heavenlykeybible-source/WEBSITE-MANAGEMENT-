@@ -349,7 +349,7 @@ export default {
     const objectKey=String(b.object_key??''); const title=String(b.title??'Live Recording'); const sessionId=b.live_session_id==null?null:Number(b.live_session_id);
     if(!objectKey||!title||title.length>200)return json({error:'Invalid recording metadata'},400);
     const head=await env.MEDIA_R2.head(objectKey); if(!head)return json({error:'Recording object not found in Media R2'},400);
-    const keep=Boolean(b.keep_recording); const retention=keep?null:expiryHours(Number(b.retention_hours??48));
+    const keep=Boolean(b.keep_recording); const retentionHours=Number(b.retention_hours??48); if(!Number.isFinite(retentionHours)||retentionHours<1||retentionHours>48)return json({error:'Retention must be between 1 and 48 hours'},400); const retention=keep?null:expiryHours(retentionHours);
     const r=await env.DB.prepare('INSERT INTO recordings(object_key,title,live_session_id,keep_recording,retention_until,created_by) VALUES(?,?,?,?,?,?)').bind(objectKey,title,sessionId,keep?1:0,retention,cap.sub).run();
     const id=Number(r.meta.last_row_id);
     const accounts=await env.DB.prepare("SELECT account_id,channel_name FROM social_accounts WHERE status='connected' AND automatable=1").all<{account_id:number,channel_name:string}>();
@@ -357,7 +357,7 @@ export default {
     await audit(env,cap,'recording.register','recording',String(id)); return json({recording_id:id,retention_until:retention,distribution_jobs:accounts.results.length},201);
   }
   let rm=url.pathname.match(/^\/api\/recordings\/(\d+)\/keep$/); if(rm&&request.method==='POST'){
-    const b=await requireJson(request); const keep=Boolean(b?.keep); const retention=keep?null:expiryHours(Number(b?.retention_hours??48)); const r=await env.DB.prepare("UPDATE recordings SET keep_recording=?,retention_until=? WHERE recording_id=? AND status!='deleted'").bind(keep?1:0,retention,Number(rm[1])).run(); if(!r.meta.changes)return json({error:'Recording not found'},404); return json({ok:true});
+    const b=await requireJson(request); if(!b||typeof b.keep!=='boolean')return json({error:'Specify whether to keep this recording'},400); const keep=b.keep; const retentionHours=Number(b.retention_hours??48); if(!Number.isFinite(retentionHours)||retentionHours<1||retentionHours>48)return json({error:'Retention must be between 1 and 48 hours'},400); const retention=keep?null:expiryHours(retentionHours); const r=await env.DB.prepare("UPDATE recordings SET keep_recording=?,retention_until=? WHERE recording_id=? AND status!='deleted'").bind(keep?1:0,retention,Number(rm[1])).run(); if(!r.meta.changes)return json({error:'Recording not found'},404); return json({ok:true});
   }
   rm=url.pathname.match(/^\/api\/recordings\/(\d+)$/); if(rm&&request.method==='DELETE'){
     const row=await env.DB.prepare("SELECT object_key FROM recordings WHERE recording_id=? AND status!='deleted'").bind(Number(rm[1])).first<{object_key:string}>(); if(!row)return json({error:'Recording not found'},404); try{await env.MEDIA_R2.delete(row.object_key);}catch{return json({error:'Recording storage deletion failed'},502);} await env.DB.prepare("UPDATE recordings SET status='deleted',retention_until=CURRENT_TIMESTAMP WHERE recording_id=?").bind(Number(rm[1])).run(); return json({ok:true});
