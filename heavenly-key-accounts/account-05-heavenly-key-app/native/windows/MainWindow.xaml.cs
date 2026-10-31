@@ -74,6 +74,7 @@ public partial class MainWindow : Window
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri)
             && uri.Scheme == Uri.UriSchemeHttps
             && uri.Host.Equals("apps.heavenlykey.org", StringComparison.OrdinalIgnoreCase)
+            && uri.IsDefaultPort
             && uri.AbsolutePath.StartsWith("/api/native-download/", StringComparison.OrdinalIgnoreCase))
             OpenInSystemBrowser(url);
     }
