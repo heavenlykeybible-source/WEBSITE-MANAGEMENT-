@@ -892,7 +892,7 @@ test('broadcast backgrounds are isolated to the selected scene and stale loads c
 
 test('live presenter virtual background follows the program scene and never leaks between scenes',()=>{
  const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
- assert.match(html,/const scene=SC\[pgm\],sceneBg=scene&&scene\.items\.map\(it=>src\(it\.id\)\)\.find\(item=>item&&item\.isBg\)/);
+ assert.match(html,/const scene=SC\[pgm\],sceneBg=scene&&scene\.items\.filter\(it=>it\.on\)\.map\(it=>src\(it\.id\)\)\.find\(item=>item&&item\.isBg\)/);
  assert.match(html,/s\.bgm==='tpl'&&sceneBg\?\.fn/,'draw the chosen program scene template');
  assert.match(html,/s\.bgm==='tpl'&&sceneBg\?\.img/,'use the scene image for camera compositing');
  assert.match(html,/else if\(s\.bgm==='tpl'\)\{c\.drawImage\(r\.image/,'keep the original presenter visible if no template exists');
@@ -1000,4 +1000,10 @@ test('malformed segmentation frames leave original presenter camera visible',()=
  assert.match(html,/!r\?\.image\|\|!r\.segmentationMask/,'missing image or segmentation mask must not be drawn');
  assert.match(html,/!Number\.isFinite\(iw\)\|\|!Number\.isFinite\(ih\)\|\|iw<1\|\|ih<1/,'invalid camera dimensions must be ignored');
  assert.match(html,/else if\(s\.blur&&s\.oc&&s\.segReady\)/,'raw presenter video remains available before a valid composite');
+});
+
+test('hidden scene backgrounds cannot be selected for presenter compositing',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/scene\.items\.filter\(it=>it\.on\)\.map\(it=>src\(it\.id\)\)/,'only visible scene layers may supply the studio background');
+ assert.doesNotMatch(html,/scene\.items\.map\(it=>src\(it\.id\)\)\.find\(item=>item&&item\.isBg\)/);
 });
