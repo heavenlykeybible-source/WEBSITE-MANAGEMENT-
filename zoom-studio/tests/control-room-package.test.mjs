@@ -936,3 +936,15 @@ test('host meeting expiry is capped from the completed verification timestamp',(
  assert.match(source,/until:Math\.min\(a\.pe,verifiedAt\+86400000\)/,'host expiry must use verification completion time');
  assert.doesNotMatch(source,/until:Math\.min\(a\.pe,now\+86400000\)/,'stale message timestamps must not limit renewed sessions');
 });
+
+test('expired meeting host and its previous guests are closed before capacity enforcement',async()=>{
+ const s=meeting(),expired=s.add({role:'host',id:'host',room:'11111111-1111-4111-8111-111111111111',key:'expired-host',until:Date.now()-1000});
+ const previous=s.add({role:'guest',session:'expired-host',id:'former-viewer',ok:true,aud:true});
+ for(let i=0;i<7;i++)s.add();
+ const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
+ const result=await s.room.fetch(req);
+ assert.equal(expired.readyState,3,'expired host must not occupy a room slot');
+ assert.equal(previous.readyState,3,'participants of the expired meeting must be disconnected');
+ assert.equal(result.status,429,'new connection still obeys the unauthenticated handshake limit');
+ assert.equal(await result.text(),'Too many pending connections');
+});
