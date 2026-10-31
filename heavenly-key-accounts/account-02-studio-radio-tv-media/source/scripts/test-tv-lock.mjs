@@ -11,7 +11,7 @@ const lock=load('src/channel-lock.ts');
 const index=load('src/index.ts');
 const broadcast=load('src/public-broadcast.ts');
 const restream=load('src/restream.ts');
-const transpiled=ts.transpileModule(lock,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText.replace(/export /g,'');
+const transpiled=ts.transpileModule(lock.replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 const lockExports=runInNewContext(transpiled+';({TV_LOCKED,TV_LOCK_MESSAGE,channelAvailability,tvLockedResponse})',{Response});
 assert.equal(lockExports.TV_LOCKED,true);
 const availability=lockExports.channelAvailability();
