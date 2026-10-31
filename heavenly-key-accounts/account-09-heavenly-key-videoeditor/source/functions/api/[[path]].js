@@ -448,7 +448,7 @@ export async function onRequest({ request: req, env, params }) {
           if (key) await env.MEDIA.delete(key).catch(() => {});
           return J({ error: 'Upload failed; no storage was charged.' }, 500);
         } finally {
-          if (!id || !key || !(await env.DB.prepare('SELECT 1 x FROM media WHERE id=? AND user_id=?').bind(id||'',u.id).first())) {
+          if (!saved) {
             await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(size,u.id).run();
           }
         }
