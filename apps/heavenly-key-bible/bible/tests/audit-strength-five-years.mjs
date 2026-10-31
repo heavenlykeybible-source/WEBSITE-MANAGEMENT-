@@ -29,6 +29,7 @@ let topicCount=0;let approved=0;
 for(let i=0;i<entries.length;i++){
  const e=entries[i];
  if(!validDate(e.date))flag(e.date,'INVALID_DATE',e._file);
+ if(!Array.isArray(e.topics))flag(e.date,'INVALID_TOPICS_TYPE',e._file);
  if(days.has(e.date))flag(e.date,'DUPLICATE_DATE',e._file); days.add(e.date);
  if(i&&Date.parse(e.date)-Date.parse(entries[i-1].date)!==86400000)flag(e.date,'DATE_GAP','Previous: '+entries[i-1].date);
  if(e.status==='approved-for-publication')approved++;
@@ -109,7 +110,7 @@ const daysNeededToMeetRequest=Math.max(0,requestedDayTarget-entries.length);
 
 // Publication quality gate: automate completeness and originality checks without claiming theological approval.
 const qualityBlockingCodes=new Set([
- 'DUPLICATE_DATE','DATE_GAP','INCOMPLETE','TOPIC_COUNT','TOPIC_ORDER',
+ 'DUPLICATE_DATE','DATE_GAP','INCOMPLETE','TOPIC_COUNT','TOPIC_ORDER','INVALID_TOPICS_TYPE',
  'INCOMPLETE_DAILY_ENTRY','MISSING_DAY_TITLE','MISSING_DAY_REFLECTION',
  'MISSING_DAY_PRAYER','DUPLICATE_DAY_TITLE','DUPLICATE_DAY_REFLECTION','DUPLICATE_DAY_PRAYER',
  'EXACT_DUPLICATE_REFLECTION','EXACT_DUPLICATE_PRAYER','REPEATED_REFLECTION_OPENING',
