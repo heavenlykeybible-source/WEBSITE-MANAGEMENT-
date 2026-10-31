@@ -7,6 +7,11 @@ const deployHeaders=readFileSync('public/_headers','utf8');
 if(staticHeaders!==deployHeaders) throw Error('Security header configurations must match');
 if(!deployHeaders.includes("manifest-src 'self'")) throw Error('Manifest source policy missing');
 if(!deployHeaders.includes("script-src 'self'; script-src-attr 'none'") || /script-src[^;]*'unsafe-inline'/.test(deployHeaders)) throw Error('Strict script CSP must block inline scripts and event attributes');
+if(!deployHeaders.includes("style-src 'self'; style-src-attr 'none'") || /style-src[^;]*'unsafe-inline'/.test(deployHeaders)) throw Error('Strict style CSP must block inline styles and style attributes');
+for (const path of ['editor.css','public/editor.css']) if(!existsSync(path)) throw Error('Missing '+path);
+if(readFileSync('editor.css','utf8')!==readFileSync('public/editor.css','utf8')) throw Error('Editor stylesheet copies must match');
+const htmlForCsp=readFileSync('public/index.html','utf8');
+if(/<style\\b/i.test(htmlForCsp) || /\\sstyle\\s*=/.test(htmlForCsp)) throw Error('Inline styles are forbidden by the enforced CSP');
 for (const path of ['editor.js','public/editor.js']) { if(!existsSync(path)) throw Error('Missing '+path); execFileSync(process.execPath,['--check',path],{stdio:'inherit'}); }
 if(readFileSync('editor.js','utf8')!==readFileSync('public/editor.js','utf8')) throw Error('Editor script copies must match');
 if((readFileSync('public/index.html','utf8').match(/<script\b(?![^>]*\bsrc=)[^>]*>/gi)||[]).length) throw Error('Inline scripts are forbidden by the enforced CSP');
