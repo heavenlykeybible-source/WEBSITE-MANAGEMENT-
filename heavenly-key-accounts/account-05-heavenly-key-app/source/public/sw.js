@@ -15,8 +15,10 @@ function isSafePublicResponse(response){
  const vary=response.headers.get('vary')||'';
  // Partial content must never replace a complete offline shell asset.
  if(response.headers.get('content-range'))return false;
- return !/(?:private|no-store|no-cache)/i.test(control) &&
-   !/(?:^|,)\s*(?:\*|cookie|authorization)\s*(?:,|$)/i.test(vary);
+ // Cache keys omit request headers. Only content-encoding negotiation is safe
+ // to ignore; any other Vary header could replay the wrong representation.
+ const safeVary=vary.split(',').every(value=>!value.trim()||value.trim().toLowerCase()==='accept-encoding');
+ return !/(?:private|no-store|no-cache)/i.test(control) && safeVary;
 }
 // Reject wrongly typed error pages masquerading as application assets.
 function hasCompatibleAssetType(path,response){
