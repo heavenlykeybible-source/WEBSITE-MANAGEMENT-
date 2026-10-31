@@ -17,8 +17,8 @@ async function studioTaskRoutes(req,env,user,sub,method){
  if(sub==='studio/tasks'&&method==='GET'){
   const page=Number(new URL(req.url).searchParams.get('page')||0);
   if(!Number.isSafeInteger(page)||page<0||page>100000)fail('Invalid task page');
-  const rows=await env.DB.prepare("SELECT key,value_json FROM settings WHERE key LIKE 'studio:task:%' ORDER BY updated_at DESC,key DESC LIMIT 50 OFFSET ?").bind(page*50).all();
-  return json({tasks:rows.results.map(x=>JSON.parse(x.value_json)).filter(x=>x.owner===user.id),page,next_page:rows.results.length===50?page+1:null});
+  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'studio:task:%' AND json_extract(value_json,'$.owner')=? ORDER BY updated_at DESC,key DESC LIMIT 51 OFFSET ?").bind(user.id,page*50).all();
+  return json({tasks:rows.results.slice(0,50).map(x=>JSON.parse(x.value_json)),page,next_page:rows.results.length>50?page+1:null});
  }
  if(sub==='studio/tasks'&&method==='POST'){
   const input=studioTaskInput(await body(req));
@@ -56,8 +56,10 @@ async function studioTaskRoutes(req,env,user,sub,method){
 async function studioAITask(env,actor,name,args){
  if(actor.ow||actor.a?.owner_id||actor.a?.site_id||!actor.a?.can_read)fail('Unscoped staff AI required',403);
  if(name==='my_studio_assignments'){
-  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'studio:task:%' ORDER BY updated_at DESC LIMIT 100").all();
-  return {tasks:rows.results.map(x=>JSON.parse(x.value_json)).filter(x=>x.agent===actor.agentId&&x.status==='assigned').slice(0,30),notice:'These are assignments, not automatically running jobs. Proposals still enter Waiting for owner approval.'};
+  const page=Number(args?.page||0);
+  if(!Number.isSafeInteger(page)||page<0||page>100000)fail('Invalid task page');
+  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'studio:task:%' AND json_extract(value_json,'$.agent')=? AND json_extract(value_json,'$.status')='assigned' ORDER BY updated_at DESC,key DESC LIMIT 51 OFFSET ?").bind(actor.agentId,page*50).all();
+  return {tasks:rows.results.slice(0,50).map(x=>JSON.parse(x.value_json)),page,next_page:rows.results.length>50?page+1:null,notice:'These are assignments, not automatically running jobs. Proposals still enter Waiting for owner approval.'};
  }
  if(name==='submit_studio_assignment'){
   if(!actor.a.can_propose)fail('Proposal permission required',403);
