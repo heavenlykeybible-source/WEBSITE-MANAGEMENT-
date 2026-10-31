@@ -29,6 +29,7 @@ try{
  const list=await endpoint('studio/tasks','GET');assert.equal(list.tasks.length,6);
  await assert.rejects(endpoint('studio/tasks','POST',{connection:4,worker:'social-network',instruction:'Test',agents:[99]}),e=>e.status===403);
  await assert.rejects(endpoint('studio/tasks','GET',null,{id:2,role:'admin',kind:'staff'}),e=>e.status===403);
+ raw.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').run('ai:permissions:1',JSON.stringify({mode:'work',connections:[4],expires_at:Date.now()+3600000,all_agents:true,max_tools:12}));
  const grant={mode:'work',connections:[4],expires_at:Date.now()+3600000};
  const a1={agentId:1,a:{id:1,can_read:1,can_propose:1},aiPolicy:grant};
  const a2={agentId:2,a:{id:2,can_read:1,can_propose:1},aiPolicy:grant};
@@ -42,6 +43,15 @@ try{
  await assert.rejects(studioAITask(env,{...a1,aiPolicy:{...grant,connections:[7]}},'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
  await assert.rejects(studioAITask(env,{...a1,aiPolicy:{...grant,mode:'read'}},'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
  await assert.rejects(studioAITask(env,{...a1,aiPolicy:undefined},'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
+ const policyRow=raw.prepare("SELECT value_json FROM settings WHERE key='ai:permissions:1'").get();
+ raw.prepare("UPDATE settings SET value_json=? WHERE key='ai:permissions:1'").run(JSON.stringify({...JSON.parse(policyRow.value_json),mode:'chat',connections:[]}));
+ await assert.rejects(studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
+ raw.prepare("UPDATE settings SET value_json=? WHERE key='ai:permissions:1'").run(policyRow.value_json);
+ raw.prepare("UPDATE agents SET status='revoked' WHERE id=1").run();
+ await assert.rejects(studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
+ raw.prepare("UPDATE agents SET status='active',can_propose=0 WHERE id=1").run();
+ await assert.rejects(studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
+ raw.prepare("UPDATE agents SET can_propose=1 WHERE id=1").run();
  const submitted=await studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100});
  assert.equal(submitted.status,'submitted');assert.equal(submitted.proposal_id,100);
  await assert.rejects(studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
