@@ -144,6 +144,17 @@ async function scenario(mode){
    console.log('PASS timeline encoder '+mode);
    return;
  }
+ if(mode==='pagehide-active'){
+   video.currentTime=.7;
+   const operation=node('clipExport').onclick();
+   assert.equal(node('clipCancel').disabled,false,'Export has started');
+   winEvents.get('pagehide')();
+   await operation;
+   assert.equal(node('clipCancel').disabled,true,'Pagehide cancellation restores controls');
+   assert.equal(node('clipDownload').hidden,true,'Pagehide cancellation does not offer partial export');
+   console.log('PASS timeline encoder '+mode);
+   return;
+ }
  if(mode==='pending-seek'){
    video.seeking=true;
    video.currentTime=0;
@@ -245,4 +256,4 @@ async function scenario(mode){
  }
  console.log('PASS timeline encoder '+mode);
 }
-for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek','source-switch-late','source-switch-play','invalid-canvas','streaming-oversize'])await scenario(mode);
+for(const mode of ['success','timeout','error','premature','oversize','cancel-seek','cancel-play','cancel-start','play-timeout','late-play','overlap','cancel-encoder','source-switch','early-ended','pending-seek','source-switch-late','source-switch-play','invalid-canvas','streaming-oversize','pagehide-active'])await scenario(mode);
