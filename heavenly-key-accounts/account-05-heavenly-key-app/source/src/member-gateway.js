@@ -58,7 +58,7 @@ export async function memberGateway(request,env,upstreamFetch=fetch) {
   if(target.kind!=='login'&&!id)return reply({error:'Please sign in.'},401,true);
   let body;
   if(request.method==='POST'){
-    if(!(request.headers.get('content-type')||'').toLowerCase().startsWith('application/json'))return reply({error:'Send application/json.'},415);
+    if(!/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get('content-type')||''))return reply({error:'Send application/json.'},415);
     try {
       const data=await jsonBody(request,8192);
       if(target.kind==='login'){
