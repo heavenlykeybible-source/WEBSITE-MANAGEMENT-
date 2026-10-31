@@ -362,3 +362,12 @@ test('host cannot signal to a banned stage participant before scheduled alarm',a
  assert.equal(h.guest.readyState,3);
  assert.equal(h.guest.messages.filter(m=>m.t==='sig').length,count);
 });
+
+test('unsupported live reaction values are not broadcast',async()=>{
+ const h=setup();await h.join('');
+ const before=h.host.messages.filter(m=>m.t==='react').length;
+ for(const emoji of ['<script>','🔥','',42,'❤️❤️']){
+  await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji}));
+ }
+ assert.equal(h.host.messages.filter(m=>m.t==='react').length,before);
+});
