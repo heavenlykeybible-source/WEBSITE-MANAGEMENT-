@@ -347,7 +347,7 @@ export default {
   if(url.pathname==='/api/recordings'&&request.method==='POST'){
     const b=await requireJson(request); if(!b)return json({error:'Invalid JSON'},400);
     const objectKey=String(b.object_key??''); const title=String(b.title??'Live Recording'); const sessionId=b.live_session_id==null?null:Number(b.live_session_id);
-    if(!objectKey||!title||title.length>200)return json({error:'Invalid recording metadata'},400);
+    if(!objectKey||objectKey.length>1024||!title||title.length>200||(sessionId!==null&&(!Number.isSafeInteger(sessionId)||sessionId<=0)))return json({error:'Invalid recording metadata'},400);
     const head=await env.MEDIA_R2.head(objectKey); if(!head)return json({error:'Recording object not found in Media R2'},400);
     const keep=Boolean(b.keep_recording); const retentionHours=Number(b.retention_hours??48); if(!Number.isFinite(retentionHours)||retentionHours<1||retentionHours>48)return json({error:'Retention must be between 1 and 48 hours'},400); const retention=keep?null:expiryHours(retentionHours);
     const r=await env.DB.prepare('INSERT INTO recordings(object_key,title,live_session_id,keep_recording,retention_until,created_by) VALUES(?,?,?,?,?,?)').bind(objectKey,title,sessionId,keep?1:0,retention,cap.sub).run();
