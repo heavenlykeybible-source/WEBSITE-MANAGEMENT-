@@ -47,7 +47,7 @@ export async function publicProgramme(request:Request,env:BroadcastEnv):Promise<
  if(settings?.playlist_enabled===0)return reply({mode:'offline',title:channel==='audio'?'ONLINE REVIVAL RADIO':'FAITH OF OUR FATHERS TV',items:[]});
  const playlist=await env.DB.prepare(`SELECT m.* FROM media_objects m WHERE ${channelFilter} AND m.status='published' AND ${ready} ORDER BY CASE WHEN m.media_type='audio' THEN 0 ELSE 1 END,m.media_id LIMIT 50`).all();
  let entries=playlist.results;
- const orderKey='playlist-order-'+(channel==='audio'?'radio':'video');let order:number[]=[];try{const raw=await env.LIVE_STATUS_KV.get(orderKey);order=raw?JSON.parse(raw):[];}catch(e){console.warn('Invalid public playlist order state',orderKey,e);order=[];}
+ const orderKey='playlist-order-'+(channel==='audio'?'radio':'video');let order:number[]=[];try{const raw=await env.LIVE_STATUS_KV?.get(orderKey);order=raw?JSON.parse(raw):[];}catch{order=[];}
  if(Array.isArray(order)&&order.length){const rank=new Map(order.map((id:any,index:number)=>[Number(id),index]));entries=[...entries].sort((a:any,b:any)=>(rank.get(a.media_id)??10000+a.media_id)-(rank.get(b.media_id)??10000+b.media_id));}
  return reply({mode:entries.length?'playlist':'offline',title:channel==='audio'?'ONLINE REVIVAL RADIO':'FAITH OF OUR FATHERS TV',items:entries.map(mediaItem)});
 }
