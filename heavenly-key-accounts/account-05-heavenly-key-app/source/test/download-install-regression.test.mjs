@@ -45,7 +45,7 @@ test('every device guide has exactly one installation event controller', () => {
 
 test('native package status remains visible after browser install guidance updates', () => {
   const js = publicFile('app-device-guide.js');
-  assert.match(js, /nativeAvailable = available\.ok/);
+  assert.match(js, /nativeAvailable = available\.status === 200/);
   assert.match(js, /else if \(nativeAvailable\)/);
 });
 
@@ -70,7 +70,7 @@ test('native download button requires a security digest and a positive package l
  const js = publicFile('app-device-guide.js');
  assert.match(js, /x-release-sha256/);
  assert.match(js, /Number\.isSafeInteger\(size\) && size > 0/);
- assert.match(js, /nativeAvailable = available\.ok/);
+ assert.match(js, /nativeAvailable = available\.status === 200/);
 });
 
 test('device guide never offers an installation prompt for the wrong app scope', () => {
