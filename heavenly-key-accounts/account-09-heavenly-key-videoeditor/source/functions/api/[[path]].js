@@ -464,7 +464,7 @@ export async function onRequest({ request: req, env, params }) {
         if (!r) return J({ error: 'Not found' }, 404);
         if (r) {
           const saved = await env.DB.prepare('UPDATE media SET deleted=1 WHERE id=? AND user_id=? AND deleted=0').bind(p[1],u.id).run();
-          if (saved.meta.changes) await env.MEDIA.delete(r.r2_key).catch(async () => { await env.MEDIA.delete(r.r2_key).catch(async () => { await log(env, u.id, 'media_r2_delete_failed').catch(() => {}); }); });
+          if (saved.meta.changes) await env.MEDIA.delete(r.r2_key).catch(async () => { await new Promise(resolve => setTimeout(resolve, 200 + Math.floor(Math.random() * 150))); await env.MEDIA.delete(r.r2_key).catch(async () => { await log(env, u.id, 'media_r2_delete_failed').catch(() => {}); }); });
           if (saved.meta.changes) {
             await env.DB.prepare('UPDATE users SET storage_used=MAX(0,storage_used-?) WHERE id=?').bind(r.size,u.id).run();
           }
