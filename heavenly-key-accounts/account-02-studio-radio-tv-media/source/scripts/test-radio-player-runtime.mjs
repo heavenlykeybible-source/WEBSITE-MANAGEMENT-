@@ -132,4 +132,13 @@ pendingFetches[n-2]({ok:true,json:async()=>({items:[{type:'audio',title:'Stale',
 await staleResume;
 assert.equal(get('status').textContent,statusBeforeStale,'Old refresh completion must not overwrite current playback guidance');
 assert.equal(get('track').textContent,'Current');
+holdFetch=false;
+fetchResult={items:[{type:'audio',title:'Restored Session',url:'/api/broadcast/media/13/object'}]};
+await events.get('pageshow')({persisted:false});
+assert.equal(get('track').textContent,'Current','Normal pageshow must not reload playlist');
+await events.get('pageshow')({persisted:true});
+await Promise.resolve();await new Promise(resolve=>setImmediate(resolve));
+assert.equal(get('track').textContent,'Restored Session','BFCache restoration must reload playlist');
+assert.equal(audio.paused,true,'Restored page must not autoplay');
+assert.equal(get('play').disabled,false,'Restored page must allow listener to resume manually');
 console.log('Account 2 radio runtime play, pause, next, end, refresh, and page-exit tests passed');
