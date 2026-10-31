@@ -10,6 +10,7 @@ Independent listener site at `radio.heavenlykey.org`. Account 2 is the broadcast
 - Account 2 filters live programmes by destination before choosing the latest programme, supports radio audio during reconnects, and accepts the radio server key for listener-only LiveKit tokens.
 - GitHub Actions runs tests, checks existing Account 7 Worker access and preserves saved variables/secrets, deploys the radio, then verifies assets and authenticated programme/media responses.
 - **31 October security hardening branch:** static asset responses now include a restrictive Content Security Policy, HSTS, clickjacking protection, MIME sniffing protection, referrer policy and a least-privilege Permissions Policy. The only inline shell bootstrap is authorized by its exact SHA-256 CSP hash; arbitrary inline scripts are not enabled. A dedicated regression test checks the headers and hash.
+- LiveKit pause now disconnects the viewer room so a paused listener does not keep receiving an inaudible live stream; resume requests a fresh viewer connection. The Account 7 player regression suite now covers pause, resume and stop.
 
 ## Required production configuration
 
