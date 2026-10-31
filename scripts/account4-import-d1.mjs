@@ -74,10 +74,15 @@ export async function recordImportPart(db, actor, id, receipt) {
 }
 export async function transitionImportSession(db, actor, id, fromState, toState) {
   authorized(actor);
-  if (fromState !== 'uploading' || !['private-awaiting-review','aborted'].includes(toState))
+  if (!((fromState === 'uploading' && ['completing','aborted'].includes(toState)) || (fromState === 'completing' && toState === 'private-awaiting-review')))
     throw new Error('Invalid import transition');
   const result = await db.prepare('UPDATE account4_import_sessions SET state=? WHERE id=? AND owner_id=? AND state=? AND expires_at_ms>? AND (? = ? OR (SELECT COUNT(*) FROM account4_import_parts p WHERE p.session_id=account4_import_sessions.id)=part_count AND (SELECT MIN(part_number) FROM account4_import_parts p WHERE p.session_id=account4_import_sessions.id)=1 AND (SELECT MAX(part_number) FROM account4_import_parts p WHERE p.session_id=account4_import_sessions.id)=part_count)')
     .bind(toState,id,actor.id,fromState,Date.now(),toState,'aborted').run();
   if (result?.success === false || result?.meta?.changes !== 1) throw new Error('Import session transition denied');
   return {id,state:toState};
+}
+
+// Atomic compare-and-swap: only one caller can claim an upload for completion.
+export async function claimImportCompletion(db, actor, id) {
+  return transitionImportSession(db, actor, id, 'uploading', 'completing');
 }
