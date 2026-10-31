@@ -29,4 +29,8 @@ jobs:
       - run: node tests/account4-import-d1.mjs
       - run: npm test
       - run: npm run test:cms-dom
+      - name: Install isolated browser-test dependencies
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
       - run: npm run test:cms-browser
