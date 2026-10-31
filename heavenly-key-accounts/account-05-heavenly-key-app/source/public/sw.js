@@ -18,6 +18,16 @@ function isSafePublicResponse(response){
  return !/(?:private|no-store|no-cache)/i.test(control) &&
    !/(?:^|,)\s*(?:\*|cookie|authorization)\s*(?:,|$)/i.test(vary);
 }
+// Reject wrongly typed error pages masquerading as application assets.
+function hasCompatibleAssetType(path,response){
+ const type=(response.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
+ if(!type)return true; // Header correctness is enforced separately at the HTTP edge.
+ if(path.endsWith('.js'))return type==='text/javascript'||type==='application/javascript';
+ if(path.endsWith('.css'))return type==='text/css';
+ if(path.endsWith('.html')||path==='/')return type==='text/html';
+ if(path.endsWith('.json')||path.endsWith('.webmanifest'))return type==='application/json'||type==='application/manifest+json';
+ return true;
+}
 // Optional assets may be temporarily missing during deployment; never break the entire install.
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
@@ -26,7 +36,7 @@ self.addEventListener('install',event=>{
   // Preserve the previous working service worker if any core asset fails.
   for(const path of core){
    const response=await fetch(path,{cache:'no-store',credentials:'omit'});
-   if(!isSafePublicResponse(response)) throw new Error('Essential app shell unavailable: '+path);
+   if(!isSafePublicResponse(response)||!hasCompatibleAssetType(path,response)) throw new Error('Essential app shell unavailable: '+path);
    await cache.put(path,response);
   }
   // Fetch optional public assets with bounded concurrency instead of a long
@@ -38,7 +48,7 @@ self.addEventListener('install',event=>{
     const path=optional[cursor++];
     try{
      const response=await fetch(path,{cache:'no-store',credentials:'omit'});
-     if(isSafePublicResponse(response)) await cache.put(path,response);
+     if(isSafePublicResponse(response)&&hasCompatibleAssetType(path,response)) await cache.put(path,response);
     }catch{}
    }
   }
@@ -69,7 +79,7 @@ self.addEventListener('fetch',event=>{
  event.respondWith(fetch(request,{cache:"no-cache",credentials:isDocument?request.credentials:'omit'}).then(response=>{
   // Navigation responses can contain member-specific HTML even if misconfigured as public.
   // Do not persist them during runtime; only the credential-free install shell is cached.
-  if(request.mode!=='navigate' && request.destination!=='document' && isSafePublicResponse(response))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
+  if(request.mode!=='navigate' && request.destination!=='document' && isSafePublicResponse(response) && hasCompatibleAssetType(cachePath,response))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
   return response;
  }).catch(async()=>{
   const cache=await caches.open(CACHE);
