@@ -14,6 +14,9 @@ for(const header of ["'cross-origin-resource-policy':'same-origin'", "'cross-ori
   if(!apiSource.includes(header))throw Error('Missing binary response resource isolation: '+header);
 }
 if(!apiSource.includes("'cache-control':'private, no-store'"))throw Error('Private voice audio must not be cached');
+const voiceHeaders=apiSource.split("return new Response(audio,{headers:")[1]?.split("});")[0] || '';
+if(!voiceHeaders.includes("'cross-origin-resource-policy':'same-origin'"))throw Error('Voice response missing same-origin policy');
+
 
 if ((apiSource.match(/match\(\/\(\?:\^\|;\\s\*\)hk=/g)||[]).length!==2 || !apiSource.includes('(?=;|$)/)')) throw Error('Exact session cookie boundary enforcement missing');
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'ai_gateway_attempt'") || !apiSource.includes("AND at>?) < 60") || !apiSource.includes("if (!reserved.meta.changes)")) throw Error('Atomic external AI gateway attempt quota safeguard missing');
