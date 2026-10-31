@@ -139,7 +139,7 @@ const result={
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:Array.isArray(manifest.publishedBatchFiles)?manifest.publishedBatchFiles.length:null,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
- sampleFlags:flags.slice(0,100),
+ sampleFlags:[...new Map(flags.map(f=>[f.code,f])).values()].slice(0,100),
  manualReviewRequirements:[
   'Every devotional requires Scripture quotation verified against the KJV and contextual reading',
   'Compare meaning to Heavenly Key’s full 22-point Statement of Faith, not just topic labels',
