@@ -41,7 +41,7 @@ test('lock-screen controls support play/pause/seek and clean up supported handle
 });
 test('offline shell contains every dependency but never automatically downloads Bible books or media',()=>{
  const listeners={},installed=[];
- vm.runInNewContext(read('public/sw.js'),{self:{location:{origin:'https://app.test'},addEventListener:(n,f)=>listeners[n]=f,clients:{claim:async()=>{}}},URL,Set,Promise,Response,caches:{open:async()=>({put:async path=>installed.push(path)})},fetch:async()=>{const r=new Response('public');Object.defineProperty(r,'type',{value:'basic'});return r}});
+ vm.runInNewContext(read('public/sw.js'),{self:{location:{origin:'https://app.test'},addEventListener:(n,f)=>listeners[n]=f,clients:{claim:async()=>{}}},URL,Set,Promise,Response,caches:{open:async()=>({put:async path=>installed.push(path)})},fetch:async path=>{const type=String(path).endsWith('.js')?'text/javascript':String(path).endsWith('.css')?'text/css':String(path).endsWith('.webmanifest')?'application/manifest+json':'text/html';const r=new Response('public',{headers:{'content-type':type}});Object.defineProperty(r,'type',{value:'basic'});return r}});
  let promise;listeners.install({waitUntil:p=>promise=p});return promise.then(()=>{
   for(const path of installed)assert.ok(existsSync(new URL('public'+(path==='/'?'/index.html':path),root)),path);
   assert.equal(installed.some(path=>path.includes('/reading/kjv/')||/\.(?:mp3|m4a|ogg)$/.test(path)),false);
