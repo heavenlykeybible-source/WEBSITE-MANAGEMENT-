@@ -14,7 +14,7 @@ function setup(userOverrides = {}) {
     crypto: { subtle:webcrypto.subtle, getRandomValues:a=>webcrypto.getRandomValues(a), randomUUID },
     btoa:s=>Buffer.from(s,'binary').toString('base64'),
     hex: b=>Buffer.from(b).toString('hex'),
-    check: async (_secret,token) => token === 'valid' ? { e:'member@example.com', t:2, exp:now+60000 } : token === 'purpose' ? {e:'member@example.com',k:'verify',t:2,exp:now+60000} : null,
+    check: async (_secret,token) => token === 'valid' ? { e:'member@example.com', t:2, exp:now+60000 } : token === 'expired' ? {e:'member@example.com',t:2,exp:now-1000} : token === 'missing-exp' ? {e:'member@example.com',t:2} : token === 'purpose' ? {e:'member@example.com',k:'verify',t:2,exp:now+60000} : null,
     getUser: async (_env,email) => users[email] || null,
     accountRole: (_env,_email,u) => u.role
   };
@@ -238,4 +238,14 @@ test('room alarm removes a stage participant after identity expiry', async()=>{
   await h.r.alarm();
   assert.equal(h.guest.readyState,3);
   assert.match(h.guest.messages.at(-1).msg,/expired/i);
+});
+
+test('expired or malformed account tokens cannot enter the meeting stage', async()=>{
+  for(const token of ['expired','missing-exp']){
+    const h=setup();await h.join(token);
+    assert.equal(h.guest.attachment.aud,true);
+    assert.equal(h.guest.attachment.identity,null);
+    await h.r.webSocketMessage(h.host,JSON.stringify({t:'promote',gid:h.guest.attachment.id}));
+    assert.equal(h.guest.attachment.stage,false);
+  }
 });
