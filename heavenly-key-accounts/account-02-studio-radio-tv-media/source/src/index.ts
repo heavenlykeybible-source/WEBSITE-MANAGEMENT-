@@ -19,7 +19,7 @@ async function verifyCapability(token:string, secret:string):Promise<Capability|
   let p:Capability; try{p=JSON.parse(atob(encoded)) as Capability;if(!p||typeof p!=='object'||Array.isArray(p))return null;}catch{return null;}
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
   let valid=false; try{valid=await crypto.subtle.verify('HMAC',key,fromHex(signature) as unknown as BufferSource,new TextEncoder().encode(encoded));}catch{return null;}
-  const now=Math.floor(Date.now()/1000); if(!valid||!p.sub||!p.nonce||!Number.isInteger(p.exp)||!Number.isInteger(p.iat)||p.iat>now+30||p.iat<now-300||p.exp<=now||p.exp<=p.iat||p.exp-p.iat>300||!ADMIN_ROLES.has(p.role))return null; return p;
+  const now=Math.floor(Date.now()/1000); if(!valid||typeof p.sub!=='string'||p.sub.length===0||p.sub.length>256||typeof p.nonce!=='string'||p.nonce.length===0||p.nonce.length>256||!Number.isInteger(p.exp)||!Number.isInteger(p.iat)||p.iat>now+30||p.iat<now-300||p.exp<=now||p.exp<=p.iat||p.exp-p.iat>300||!ADMIN_ROLES.has(p.role))return null; return p;
 }
 function audit(env:Env, cap:Capability, action:string, type:string, id?:string){ return env.DB.prepare('INSERT INTO audit_events(actor_id,action,resource_type,resource_id) VALUES(?,?,?,?)').bind(cap.sub,action,type,id??null).run(); }
 async function requireJson(request:Request):Promise<Record<string,unknown>|null>{
