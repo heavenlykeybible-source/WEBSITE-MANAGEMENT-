@@ -185,7 +185,7 @@ test('owner can provision, list and revoke expiring staff credentials without di
  assert.match(html,/api\('\/api\/operators'\)/);
  assert.match(html,/api\('\/api\/operators\/revoke'/);
  assert.match(html,/showOnlyOnce|ONE-TIME TOKEN/);
- assert.match(html,/addAccountForm\(\);addWhatsAppReadiness\(\);addOperatorManagement\(\)/);
+ assert.match(html,/addAccountForm\(\);addWhatsAppReadiness\(\);addGeminiReadiness\(\);addOperatorManagement\(\)/);
 });
 
 test('viewer role is read-only in the operator dashboard', () => {
