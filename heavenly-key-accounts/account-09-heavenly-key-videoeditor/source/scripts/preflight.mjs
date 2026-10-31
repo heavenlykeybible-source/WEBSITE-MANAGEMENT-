@@ -18,6 +18,11 @@ const voiceHeaders=apiSource.split("return new Response(audio,{headers:")[1]?.sp
 if(!voiceHeaders.includes("'cross-origin-resource-policy':'same-origin'"))throw Error('Voice response missing same-origin policy');
 const mediaHeaders=apiSource.split("return o ? new Response(o.body, { headers:")[1]?.split("}) : J(")[0] || '';
 if(!mediaHeaders.includes("'cross-origin-resource-policy': 'same-origin'"))throw Error('Private media response missing same-origin policy');
+for(const [name,headers] of [['voice',voiceHeaders],['media',mediaHeaders]]){
+  for(const key of ['x-content-type-options','x-frame-options','referrer-policy']){
+    if(!headers.includes(key))throw Error(name+' response missing '+key);
+  }
+}
 
 
 
