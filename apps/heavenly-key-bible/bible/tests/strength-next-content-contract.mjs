@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+export const SECTION_KEYS=Object.freeze(['topic','bibleReading','hymn','bibleStory','worldStory','eternity','decision','warfare','propheticPrayer','healthPrayer','salvation','challenges']);
+export const CHALLENGE_COUNT=12;
+const nonempty=value=>typeof value==='string'&&value.trim().length>0;
+const bibleReference=value=>nonempty(value)&&/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d+:\d+(?:-\d+)?$/.test(value);
+export function validateDailyDevotional(entry){
+ const errors=[];
+ if(!entry||typeof entry!=='object'||Array.isArray(entry))return ['Entry must be an object'];
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(entry.date||''))errors.push('Invalid ISO date');
+ if(entry.status!=='draft'&&entry.status!=='approved-for-publication')errors.push('Invalid publication status');
+ if(!entry.sections||typeof entry.sections!=='object'||Array.isArray(entry.sections))return errors.concat('Missing sections');
+ const s=entry.sections;
+ for(const key of SECTION_KEYS)if(!Object.hasOwn(s,key))errors.push('Missing section: '+key);
+ if(!nonempty(s.topic?.title))errors.push('Missing daily topic title');
+ if(!Array.isArray(s.bibleReading?.oldTestament)||s.bibleReading.oldTestament.length!==3)errors.push('Require exactly three Old Testament readings');
+ if(!Array.isArray(s.bibleReading?.newTestament)||s.bibleReading.newTestament.length!==3)errors.push('Require exactly three New Testament readings');
+ for(const group of ['oldTestament','newTestament'])for(const item of s.bibleReading?.[group]||[]){
+  if(!bibleReference(item?.reference)||!nonempty(item?.kjvText))errors.push('Missing reference or displayed KJV text in '+group);
+ }
+ if(!nonempty(s.hymn?.collection)||!Number.isInteger(s.hymn?.number)||s.hymn.number<1||!nonempty(s.hymn?.title))errors.push('Hymn collection, number and title required');
+ if(!bibleReference(s.bibleStory?.reference)||!nonempty(s.bibleStory?.summary))errors.push('Bible story and Scripture source required');
+ if(!nonempty(s.worldStory?.summary)||!nonempty(s.worldStory?.sourceUrl)||!/^https:\/\//.test(s.worldStory.sourceUrl||''))errors.push('World story requires documented HTTPS source');
+ for(const key of ['eternity','decision','propheticPrayer','healthPrayer','salvation'])if(!nonempty(s[key]?.text))errors.push('Missing '+key+' text');
+ if(!Array.isArray(s.warfare?.prayerPoints)||s.warfare.prayerPoints.length!==3||!s.warfare.prayerPoints.every(nonempty))errors.push('Three warfare prayer points required');
+ if(!Array.isArray(s.warfare?.permanentReferences)||!['Matthew 11:12','Luke 18:1'].every(ref=>s.warfare.permanentReferences.includes(ref)))errors.push('Permanent warfare references missing');
+ if(!Array.isArray(s.challenges)||s.challenges.length!==CHALLENGE_COUNT||!s.challenges.every(c=>nonempty(c?.theme)&&nonempty(c?.text)))errors.push('Twelve named daily challenges required');
+ if(entry.status==='approved-for-publication'&&entry.review?.doctrinalApproved!==true)errors.push('Doctrinal approval required');
+ if(entry.status==='approved-for-publication'&&entry.review?.sourcesVerified!==true)errors.push('Source verification required');
+ return errors;
+}
+if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
+ const empty={date:'2026-10-31',status:'draft',sections:{}};
+ const errors=validateDailyDevotional(empty);
+ assert.ok(errors.includes('Missing section: bibleReading'));
+ assert.ok(errors.includes('Missing section: challenges'));
+ assert.equal(SECTION_KEYS.length,12);
+ console.log('Strength for Today: 12-section content contract checks passed');
+}
