@@ -209,8 +209,14 @@ export async function onRequest({ request: req, env, params }) {
     }
     if (a === 'account' && m === 'DELETE') {
       if (ROLES.has(u.role)) return J({ error: 'Privileged accounts require an administrator-assisted deletion.' }, 403);
-      const b = await body(req), row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
-      if (!row || !b || typeof b.password !== 'string' || b.password.length > 200 || await pbkdf2(b.password, row.salt) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
+      const b = await body(req);
+      if (!b || typeof b.password !== 'string' || b.password.length > 200) return J({ error: 'Wrong password.' }, 401);
+      // Password-confirmed deletion must not permit unlimited guesses or concurrent bypass.
+      const deleteAt=Date.now();
+      const deleteSlot=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'account_delete_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='account_delete_attempt' AND at>?) < 10").bind(u.id,deleteAt,u.id,deleteAt-900000).run();
+      if (!deleteSlot.meta.changes)return J({ error: 'Too many confirmation attempts. Try again in 15 minutes.' },429);
+      const row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
+      if (!row || await pbkdf2(b.password, row.salt) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
       const files = (await env.DB.prepare('SELECT r2_key FROM media WHERE user_id=? AND deleted=0').bind(u.id).all()).results;
       for (const x of files) await env.MEDIA.delete(x.r2_key);
       for (const t of ['media', 'projects', 'sessions']) await env.DB.prepare(`DELETE FROM ${t} WHERE user_id=?`).bind(u.id).run();
