@@ -13,7 +13,7 @@ async function scenario(mode){
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
  const originalTimeline=JSON.stringify(window.hkTimeline.getClips());
- window.hkTimeline.restoreClips([{start:0,end:1000000,speed:1}]);
+ window.hkTimeline.restoreClips([{start:0,end:86401,speed:1}]);
  assert.equal(JSON.stringify(window.hkTimeline.getClips()),originalTimeline,'Reject excessive saved clip timestamps without changing clips');
  assert.match(node('clipStatus').textContent,/invalid clips/,'Oversized restored timeline reports validation failure');
  video.duration=86401;
@@ -84,6 +84,16 @@ async function scenario(mode){
  node('clipStart').value='0';
  node('clipEnd').value='1';
  const hotkey=(key,opts={})=>node('clipList').onkeydown({key,preventDefault(){},...opts});
+ hotkey('c',{ctrlKey:true});
+ hotkey('v',{ctrlKey:true});
+ assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+C then Ctrl+V pastes a clip');
+ assert.equal(window.hkTimeline.getClips()[1].end,1,'Keyboard paste retains clip end');
+ hotkey('z',{ctrlKey:true});
+ assert.equal(window.hkTimeline.getClips().length,1,'Keyboard paste supports undo');
+ hotkey('v',{metaKey:true});
+ assert.equal(window.hkTimeline.getClips().length,2,'Command+V pastes clipboard on macOS');
+ hotkey('z',{metaKey:true});
+ assert.equal(window.hkTimeline.getClips().length,1,'Command+Z undoes keyboard paste');
  hotkey('d',{ctrlKey:true});
  assert.equal(window.hkTimeline.getClips().length,2,'Ctrl+D duplicates selected clip');
  hotkey('z',{ctrlKey:true});
