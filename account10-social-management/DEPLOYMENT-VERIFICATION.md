@@ -121,3 +121,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Remove or simulate each required D1 object in a disposable test database and verify readiness returns false; never use a production database for destructive testing.
 - [ ] Treat `providerWebhooks=false` and `providerPublishing=false` as launch blockers even when schema checks pass. Schema presence is not proof of live provider acceptance.
 - [ ] Confirm documented migrations through `0010_whatsapp_handover_dedupe.sql` were applied in order to the selected D1 environment.
+
+## Operator human-request attention counter
+- [ ] After authenticated sign-in, verify the Human Requests tab shows the number of pending handovers currently returned by the server (at most 100 are listed; `100+` denotes a capped count).
+- [ ] Open Human Requests and resolve a consented test request; the count must refresh without sending any third-party notification.
+- [ ] Sign out or change access credentials; the count must immediately clear and any in-flight request for the old session must not restore it.
+- [ ] The counter is a dashboard aid, not a push alert, assignment to a specific operator, or evidence that Evangelist Emmanuel received a message.
