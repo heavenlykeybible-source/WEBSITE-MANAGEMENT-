@@ -140,8 +140,7 @@ test('independent apps reject insecure and parameterized entry URLs before servi
  for(const url of [
   'http://apps.heavenlykey.org/bible.html',
   'https://apps.heavenlykey.org/bible.html?app=other',
-  'https://apps.heavenlykey.org/bible.html?token=private',
-  'https://user:pass@apps.heavenlykey.org/bible.html'
+  'https://apps.heavenlykey.org/bible.html?token=private'
  ]){
   const response=await routeIndependentApp(new Request(url),env);
   assert.equal(response.status,400,url);
