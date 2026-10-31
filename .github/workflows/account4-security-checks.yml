@@ -42,6 +42,10 @@ jobs:
           assert 0 < cfg['observability']['traces']['head_sampling_rate'] <= 0.1
           rate = cfg['observability']['logs']['head_sampling_rate']
           assert 0 < rate <= 1
+          assert cfg['d1_databases'][0]['binding'] == 'DB'
+          assert cfg['d1_databases'][0]['database_name'] == 'website-management-db'
+          assert cfg['d1_databases'][0]['database_id'] == '897d585c-ced1-4b08-a478-603547f242e5'
+          assert cfg['r2_buckets'][0]['bucket_name'] == 'website-management-files'
           assert len(cfg['d1_databases']) >= 1
           assert len(cfg['r2_buckets']) >= 1
           print('Account 4 production configuration checks passed')
