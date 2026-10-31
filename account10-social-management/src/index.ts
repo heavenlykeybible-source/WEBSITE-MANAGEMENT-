@@ -122,7 +122,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  // Read-only viewers cannot mutate; operators can work on conversations only.
  if(!operatorActionAllowed(operatorRole,req.method,u.pathname))return reply({error:'This staff role is not permitted to perform this action'},403);
  // Defense in depth: block browser cross-site mutations even if an Origin header is missing.
- if(['POST','PUT','PATCH','DELETE'].includes(req.method)&&req.headers.get('sec-fetch-site')==='cross-site')return reply({error:'Cross-site operator mutations are forbidden'},403);
+ if(['POST','PUT','PATCH','DELETE'].includes(req.method)&&['cross-site','same-site'].includes(req.headers.get('sec-fetch-site')||''))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  // Browser-origin validation is a second boundary for state-changing actions.
  if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))return reply({error:'Cross-origin operator mutations are forbidden'},403);
  if(['POST','PUT','PATCH'].includes(req.method)){
