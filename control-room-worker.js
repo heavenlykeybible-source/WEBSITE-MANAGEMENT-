@@ -1,3 +1,4 @@
+import {account4PrivateImportRoutes} from './scripts/account4-private-import-routes.mjs';
 // BEGIN MCP OWNER REVIEW
 // Host approval prompts are navigation requests only. They can never authorize or execute a release.
 const MCP_OWNER_REVIEW_TOOL={name:'request_owner_review',description:'Request owner review of one proposal created by this AI. Compatible MCP clients can display a native approval handoff; other clients receive a secure review link. Approval occurs only in the signed-in Control Room, after exact preview and owner verification. Repeating this tool checks the same proposal and never creates or publishes work.',inputSchema:{type:'object',properties:{proposal_id:{type:'integer',minimum:1}},required:['proposal_id'],additionalProperties:false}};
@@ -203,7 +204,7 @@ async function stageConnectedSource(env,user,b){
  });
 }
 async function importWorkspaceRoutes(req,env,user,sub,m){
- if(!sub.startsWith('workspace/'))return null;if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);const u=new URL(req.url);
+ if(!sub.startsWith('workspace/'))return null;if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);const privateImport=await account4PrivateImportRoutes(req,env,user,sub,m,(key,fn)=>withOperationLock(env,key,fn));if(privateImport)return privateImport;const u=new URL(req.url);
  if(sub==='workspace/catalog'&&m==='GET')return json({sources:(await env.DB.prepare('SELECT id,label,repo,branch,dir FROM github_sites WHERE owner_id IS NULL').all()).results,sites:(await env.DB.prepare('SELECT slug,name FROM sites ORDER BY name').all()).results,accounts:(await env.DB.prepare('SELECT id,label FROM cf_connections ORDER BY label').all()).results});
  if(sub==='workspace/candidates'&&m==='GET')return json(await sourceCandidates(env,user,u.searchParams.get('source')));
  if(sub==='workspace/workers'&&m==='GET'){const c=await connById(env,u.searchParams.get('connection')),d=await cf(env,c,'GET','/workers/scripts');return json({workers:(d.result||[]).map(w=>({name:w.id}))});}
