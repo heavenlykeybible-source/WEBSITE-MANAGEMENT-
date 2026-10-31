@@ -1,0 +1,67 @@
+name: Account 2 Studio Broadcast Checks
+on:
+  push:
+    branches:
+      - 'fix/account2-*'
+    paths:
+      - 'heavenly-key-accounts/account-02-studio-radio-tv-media/**'
+      - '.github/workflows/account2-broadcast-ci.yml'
+  pull_request:
+    paths:
+      - 'heavenly-key-accounts/account-02-studio-radio-tv-media/**'
+      - '.github/workflows/account2-broadcast-ci.yml'
+permissions:
+  contents: read
+jobs:
+  studio-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: heavenly-key-accounts/account-02-studio-radio-tv-media/source
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Broadcast safety checks
+        run: npm run test:broadcast
+      - name: Streaming destination security tests
+        run: npm run test:stream-validation
+      - name: D1 concurrency and state integrity tests
+        run: npm run test:d1
+      - name: Administrator capability authentication security tests
+        run: npm run test:capability-auth
+      - name: Television lock and radio availability checks
+        run: npm run test:tv-lock
+      - name: On-demand radio delivery tests
+        run: npm run test:radio-on-demand
+      - name: Bluetooth and radio player safety checks
+        run: npm run test:radio-player
+      - name: Radio media upload security checks
+        run: npm run test:radio-upload-security
+      - name: Audio file signature validation
+        run: npm run test:audio-signature
+      - name: Public browser radio audio delivery checks
+        run: npm run test:radio-public-media
+      - name: Radio HTTP range and seek checks
+        run: npm run test:radio-range
+      - name: Runtime radio player lifecycle checks
+        run: npm run test:radio-player-runtime
+      - name: HTTP ETag and conditional range validators
+        run: npm run test:radio-http-validators
+      - name: Actual public radio HTTP handler and denial tests
+        run: npm run test:radio-media-http-runtime
+      - name: SQLite public media and live TV isolation checks
+        run: npm run test:radio-live-isolation-sql
+      - name: Radio playlist KV validation and capacity bounds
+        run: npm run test:radio-playlist-order
+      - name: TypeScript validation
+        run: npm run check
+      - name: Deployment preflight
+        run: npm run preflight

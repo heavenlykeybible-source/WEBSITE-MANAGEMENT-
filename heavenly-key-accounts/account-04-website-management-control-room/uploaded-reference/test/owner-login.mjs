@@ -1,0 +1,87 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+import {fileURLToPath} from 'node:url';
+import {resolve} from 'node:path';
+
+const root=fileURLToPath(new URL('../',import.meta.url));
+const html=readFileSync(resolve(root,'public/login.html'),'utf8');
+const js=readFileSync(resolve(root,'public/owner-login.js'),'utf8');
+assert.match(html,/autocomplete="current-password"/);
+assert.match(html,/autocomplete="username"/);
+assert.match(html,/aria-live="polite"/);
+assert.doesNotMatch(js,/Apostolic|password\s*:\s*['"][^'"]{8,}/i,'Never commit actual credentials into login script');
+const handlers={};
+const username={value:'owner'};
+const password={value:'testpassword',type:'password',focus(){}};
+const submit={disabled:false};
+const status={textContent:''};
+const toggle={checked:false,addEventListener(event,handler){handlers['toggle:'+event]=handler}};
+const form={addEventListener(event,handler){handlers[event]=handler},querySelector(){return submit}};
+const nodes={'#owner-login':form,'#login-status':status,'#password':password,'#username':username,'#show-password':toggle};
+let request;
+let response={ok:true,status:200,json:async()=>({ok:true})};
+const location={assigned:null,assign(path){this.assigned=path}};
+runInNewContext(js,{
+ document:{querySelector:q=>nodes[q]??null},fetch:async(url,options)=>{if(url==='/api/owner/session')return {ok:true,json:async()=>({signedIn:false})};request={url,options};return response},
+ location,AbortController,clearTimeout,setTimeout,JSON,Error
+});
+assert.equal(typeof handlers.submit,'function');
+handlers['toggle:change']();assert.equal(password.type,'password');
+toggle.checked=true;handlers['toggle:change']();assert.equal(password.type,'text');
+await handlers.submit({preventDefault(){}});
+assert.equal(request.url,'/api/owner/login');
+assert.equal(request.options.credentials,'same-origin');
+assert.equal(request.options.cache,'no-store');
+assert.equal(request.options.redirect,'error');
+assert.equal(location.assigned,'/');
+password.value='wrong';
+location.assigned=null;
+response={ok:false,status:401,json:async()=>({error:'Sign-in failed'})};
+await handlers.submit({preventDefault(){}});
+assert.equal(location.assigned,null);
+assert.equal(password.value,'');
+assert.match(status.textContent,/Sign-in failed/);
+const server=readFileSync(resolve(root,'src/owner-auth.ts'),'utf8');
+assert.match(server,/DELETE FROM cms_ai_limits WHERE bucket_key=\?/,'Successful login must clear rate-limit counter');
+assert.match(server,/Max-Age=43200/,'Server must issue a 12-hour secure owner cookie');
+assert.match(server,/now\+43200/,'Server session lifetime must match cookie lifetime');
+assert.match(server,/Secure; HttpOnly; SameSite=Strict/,'Owner session cookies must be protected');
+assert.match(server,/DELETE FROM cms_owner_sessions/,'Password resets must revoke existing sessions');
+const activeRoot=resolve(root,'../source');
+const activeIndex=readFileSync(resolve(activeRoot,'public/index.html'),'utf8');
+const activeServer=readFileSync(resolve(activeRoot,'src/index.ts'),'utf8');
+assert.ok(activeServer.includes("u.pathname==='/api/owner/session'&&request.method==='GET'"),'Session check must be GET only and limited to owner host');
+assert.ok(activeServer.includes("ownerHost&&['GET','HEAD'].includes(request.method)&&!actor"),'Signed-out visitors must not receive owner dashboard assets');
+assert.ok(activeServer.includes("'/login.html','/owner-login.js','/control.css'"),'Owner sign-in resources must remain accessible');
+assert.ok(activeServer.includes("Response.redirect(u.origin+'/login.html',302)"),'Signed-out owner visitors must be redirected to login');
+assert.ok(activeServer.includes("new URL(request.url).hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev')response.headers.set('Cache-Control','no-store')"),'Owner dashboard assets must not be stored in browser caches');
+assert.ok(js.includes("fetch('/api/owner/session'"),'Login page must reuse existing owner sessions');
+const ownerHost='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
+assert.ok(activeIndex.includes('https://'+ownerHost+'/login.html'),'Owner link must use the supported authentication hostname');
+assert.ok(activeServer.includes("u.hostname==='"+ownerHost+"'"),'Owner auth host must match the public sign-in link');
+assert.ok(activeServer.includes("OWNER_ACCESS_EMAIL?.trim()"),'Access administrators must not be allowed to reset owner passwords without verified owner identity');
+
+// Evaluate the exact owner identity predicate used by the active server against
+// owner, admin and unauthenticated combinations; reject an unset owner mapping.
+const identityLine=activeServer.split('\n').find(line=>line.includes(' const verifiedOwner='));
+assert.ok(identityLine,'Verified owner identity predicate must exist');
+const identify=(actor,ownerHost,accessActor,ownerEmail)=>runInNewContext(
+ identityLine+';verifiedOwner',
+ {actor,ownerHost,accessActor,env:{OWNER_ACCESS_EMAIL:ownerEmail}}
+);
+assert.equal(identify('owner',true,null,undefined),true);
+assert.equal(identify(null,true,null,undefined),false);
+assert.equal(identify('admin@example.org',false,'admin@example.org','owner@example.org'),false);
+assert.equal(identify('owner@example.org',false,'owner@example.org','owner@example.org'),true);
+assert.equal(identify('owner@example.org',false,'owner@example.org',undefined),false);
+assert.equal(identify('OWNER@example.org',false,'OWNER@example.org','owner@example.org'),true);
+assert.ok(activeServer.includes("role:verifiedOwner?'owner':'administrator'"),'Owner and administrator roles must be based on verified identity');
+assert.ok(activeServer.includes("if(!verifiedOwner)return fail('Verified owner approval is required to publish.',403)"),'Only verified owners may publish content');
+assert.ok(activeServer.includes("if(!verifiedOwner)return fail('Verified owner access is required to change the owner password.',403)"),'Only verified owners may rotate the owner password');
+assert.ok(activeServer.includes("Verified owner access is required to change the owner password."),'Unauthorized password changes must return a clear denial');
+for(const file of ['public/login.html','public/owner-login.js','public/control.css','src/owner-auth.ts']){
+ assert.ok(readFileSync(resolve(activeRoot,file),'utf8').length>200,'Active Control Room missing '+file);
+}
+assert.equal(readFileSync(resolve(activeRoot,'src/owner-auth.ts'),'utf8'),server,'Active owner authentication must match tested implementation');
+console.log('Owner login client and server security checks passed');

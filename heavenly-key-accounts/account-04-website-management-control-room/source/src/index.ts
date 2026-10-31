@@ -3,7 +3,7 @@ import {SITES,planDeployment} from './deployment-engine.ts';
 import {AI_MODEL,PUBLIC_CMS_ORIGIN,validateDocument} from './cms-schema.ts';
 import {saveDraft,publishDraft,restoreDraft} from './cms-storage.ts';
 import {ownerSession,ownerLogin,ownerLogout,setOwnerPassword,generatedPassword} from './owner-auth.ts';
-interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string}
+interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string;OWNER_ACCESS_EMAIL?:string}
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 const fail=(message:string,status=400)=>json({error:message},status);
 // Harden browser-delivered Control Room pages without changing authentication or cached media.
@@ -16,23 +16,56 @@ async function secureAsset(request:Request,env:Env):Promise<Response>{
  response.headers.set('Content-Security-Policy',"frame-ancestors 'none'; object-src 'none'; base-uri 'self'");
  response.headers.set('Permissions-Policy','camera=(), microphone=(), geolocation=()');
  response.headers.set('Strict-Transport-Security','max-age=31536000; includeSubDomains');
- if((response.headers.get('content-type')||'').includes('text/html'))response.headers.set('Cache-Control','no-store');
+ if((response.headers.get('content-type')||'').includes('text/html')||new URL(request.url).hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev')response.headers.set('Cache-Control','no-store');
  return response;
 }
+// Cache only public Access verification keys per Worker isolate for five minutes.
+// Never cache identities or bearer tokens; unknown kids always trigger a fresh lookup.
+const accessPublicKeys=new Map<string,{key:CryptoKey;expiresAt:number}>();
+async function accessVerificationKey(domain:string,kid:string):Promise<CryptoKey|null>{
+ if(!/^[a-zA-Z0-9_-]{1,160}$/.test(kid))return null;
+ const cacheKey=domain+'|'+kid,now=Date.now();
+ const cached=accessPublicKeys.get(cacheKey);
+ if(cached&&cached.expiresAt>now)return cached.key;
+ const response=await fetch('https://'+domain+'/cdn-cgi/access/certs',{
+  redirect:'error',signal:AbortSignal.timeout(5000),
+  headers:{Accept:'application/json'}
+ });
+ if(!response.ok)return null;
+ if(Number(response.headers.get('content-length')||0)>65536)return null;
+ const raw=await response.text();
+ if(raw.length>65536)return null;
+ const keys=(JSON.parse(raw) as {keys?:JsonWebKey[]}).keys;
+ if(!Array.isArray(keys))return null;
+ const jwk=keys.find(k=>(k as JsonWebKey&{kid?:string}).kid===kid&&k.kty==='RSA'&&k.alg==='RS256');
+ if(!jwk)return null;
+ const key=await crypto.subtle.importKey('jwk',jwk,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);
+ if(accessPublicKeys.size>=20)accessPublicKeys.clear();
+ accessPublicKeys.set(cacheKey,{key,expiresAt:Date.now()+300000});
+ return key;
+}
 function b64url(s:string){const p=s.replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from(atob(p+"=".repeat((4-p.length%4)%4)),c=>c.charCodeAt(0))}
+function validAccessClaims(header:any,claims:any,aud:string,issuer:string,now:number):boolean{
+ if(!header||typeof header!=='object'||header.alg!=='RS256'||typeof header.kid!=='string'||!header.kid)return false;
+ if(!claims||typeof claims!=='object'||Array.isArray(claims))return false;
+ if(!Array.isArray(claims.aud)||!claims.aud.includes(aud)||claims.iss!==issuer)return false;
+ if(typeof claims.exp!=='number'||!Number.isSafeInteger(claims.exp)||claims.exp<=now)return false;
+ if(typeof claims.iat!=='number'||!Number.isSafeInteger(claims.iat)||claims.iat>now+60||claims.iat>claims.exp)return false;
+ if(claims.nbf!==undefined&&(typeof claims.nbf!=='number'||!Number.isSafeInteger(claims.nbf)||claims.nbf>now+60))return false;
+ return typeof claims.email==='string'&&claims.email.length>3&&claims.email.length<=320&&claims.email.includes('@');
+}
 async function authenticate(request:Request,env:Env):Promise<string|null>{
  const token=request.headers.get("Cf-Access-Jwt-Assertion");if(!token||!env.ACCESS_AUD||!env.ACCESS_TEAM_DOMAIN||env.ACCESS_AUD.startsWith("REPLACE_"))return null;
  const parts=token.split(".");if(parts.length!==3)return null;
  try{
  const header=JSON.parse(new TextDecoder().decode(b64url(parts[0]))),claims=JSON.parse(new TextDecoder().decode(b64url(parts[1])));
- if(header.alg!=="RS256"||!header.kid||!Array.isArray(claims.aud)||!claims.aud.includes(env.ACCESS_AUD)||claims.exp<=Date.now()/1000||(typeof claims.nbf==="number"&&claims.nbf>Date.now()/1000))return null;
  const domain=env.ACCESS_TEAM_DOMAIN.replace(/^https?:\/\//,"").replace(/\/$/,"");
- if(!/^[a-z0-9.-]+\.cloudflareaccess\.com$/i.test(domain)||claims.iss!=="https://"+domain)return null;
- const jwks=await fetch("https://"+domain+"/cdn-cgi/access/certs");if(!jwks.ok)return null;
- const keys=(await jwks.json() as {keys:JsonWebKey[]}).keys;const key=keys.find(k=>(k as JsonWebKey & {kid?:string}).kid===header.kid);if(!key)return null;
- const cryptoKey=await crypto.subtle.importKey("jwk",key,{name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},false,["verify"]);
+ if(!/^[a-z0-9.-]+\.cloudflareaccess\.com$/i.test(domain))return null;
+ if(!validAccessClaims(header,claims,env.ACCESS_AUD,"https://"+domain,Math.floor(Date.now()/1000)))return null;
+ const cryptoKey=await accessVerificationKey(domain,header.kid);
+ if(!cryptoKey)return null;
  if(!await crypto.subtle.verify("RSASSA-PKCS1-v1_5",cryptoKey,b64url(parts[2]),new TextEncoder().encode(parts[0]+"."+parts[1])))return null;
- return String(claims.email||claims.sub||"unknown");
+ return claims.email;
  }catch{return null}
 }
 
@@ -43,20 +76,31 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
  const u=new URL(request.url);
  const ownerHost=u.hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
  if(!ownerHost&&!u.pathname.startsWith('/api/'))return secureAsset(request,env);
+ // A lightweight same-origin session check lets returning owners reuse an existing
+ // secure cookie instead of repeatedly typing their password.
+ if(ownerHost&&u.pathname==='/api/owner/session'&&request.method==='GET'){
+  try{return json({signedIn:!!(await ownerSession(request,env.DB))});}
+  catch{return fail('Session verification is temporarily unavailable.',503);}
+ }
  if(ownerHost&&u.pathname==='/api/owner/login'&&request.method==='POST'){
   if(request.headers.get('Origin')!==u.origin)return fail('Invalid sign-in origin.',403);
   try{const data=await body(request,4096);if(data.username!==undefined&&data.username!=='owner')return fail('Sign-in failed. Check your username and password.',401);const result=await ownerLogin(request,env.DB,data.password);return result.ok?new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','cache-control':'no-store','set-cookie':result.cookie!}}):fail(result.error!,result.status)}catch{return fail('Sign-in is temporarily unavailable.',503)}
  }
  const accessActor=ownerHost?null:await authenticate(request,env);
  const actor=accessActor||(ownerHost?await ownerSession(request,env.DB):null);
+ const verifiedOwner=!!actor&&(ownerHost?true:!!(accessActor&&env.OWNER_ACCESS_EMAIL?.trim()&&accessActor.toLowerCase()===env.OWNER_ACCESS_EMAIL.trim().toLowerCase()));
  if(!u.pathname.startsWith('/api/')){
+  // Never serve the owner dashboard to a signed-out visitor. Static login
+  // resources remain available so a new owner can authenticate normally.
+  if(ownerHost&&['GET','HEAD'].includes(request.method)&&!actor&&!['/login.html','/owner-login.js','/control.css'].includes(u.pathname))
+   return Response.redirect(u.origin+'/login.html',302);
   return secureAsset(request,env);
  }
  if(!actor)return fail('Administrator sign-in required',401);
  if(!['GET','HEAD','OPTIONS'].includes(request.method)&&(request.headers.get('Origin')!==u.origin||request.headers.get('Sec-Fetch-Site')==='cross-site'))return fail('Use the Control Room to make this change.',403);
  try{
   const location=()=>keyOf(u);
-  if(u.pathname==='/api/owner/password'&&request.method==='POST'){if(!accessActor&&!ownerHost)return fail('Owner sign-in required.',403);const data=await body(request,4096),password=data.generate===true?generatedPassword():data.password;await setOwnerPassword(env.DB,password,actor);return json({ok:true,password:data.generate===true?password:undefined,signInUrl:'https://heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev/'})}
+  if(u.pathname==='/api/owner/password'&&request.method==='POST'){if(!verifiedOwner)return fail('Verified owner access is required to change the owner password.',403);const data=await body(request,4096),password=data.generate===true?generatedPassword():data.password;await setOwnerPassword(env.DB,password,actor);return json({ok:true,password:data.generate===true?password:undefined,signInUrl:'https://heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev/'})}
   if(u.pathname==='/api/owner/logout'&&request.method==='POST')return new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','cache-control':'no-store','set-cookie':await ownerLogout(request,env.DB)}});
   if(u.pathname==='/api/cloudflare/connections/verify'&&request.method==='POST'){
    const data=await body(request,6000);
@@ -65,7 +109,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    await env.DB.prepare('INSERT INTO cms_audit(actor,action,target) VALUES(?,?,?)').bind(actor,'cloudflare-connection-check',result.ok?'verified':'failed').run();
    return json(result,result.ok?200:400);
   }
-  if(u.pathname==='/api/me')return json({actor,role:'administrator'});
+  if(u.pathname==='/api/me')return json({actor,role:verifiedOwner?'owner':'administrator'});
   if(u.pathname==='/api/system/health'&&request.method==='GET'){
    let cms='unavailable',publishing='unavailable';
    try{await env.DB.prepare('SELECT 1 FROM cms_entries LIMIT 1').first();cms='ready';await env.DB.prepare('SELECT 1 FROM cms_publications LIMIT 1').first();publishing='ready'}catch{}
@@ -81,7 +125,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
   }
   if(u.pathname==='/api/revisions'&&request.method==='GET'){const {site,kind,key}=location();return json({items:(await env.DB.prepare('SELECT id,version,editor,created_at FROM cms_revisions WHERE site=? AND kind=? AND entry_key=? ORDER BY id DESC LIMIT 30').bind(site,kind,key).all()).results})}
   if(u.pathname==='/api/save'&&request.method==='POST'){const data=await body(request);return json(await saveDraft(env.DB,location(),data.content,data.expectedVersion,actor))}
-  if(u.pathname==='/api/publish'&&request.method==='POST'){const data=await body(request,4096);return json(await publishDraft(env.DB,location(),data.expectedVersion,actor))}
+  if(u.pathname==='/api/publish'&&request.method==='POST'){if(!verifiedOwner)return fail('Verified owner approval is required to publish.',403);const data=await body(request,4096);return json(await publishDraft(env.DB,location(),data.expectedVersion,actor))}
   if(u.pathname==='/api/restore'&&request.method==='POST'){const data=await body(request,4096);if(!Number.isSafeInteger(data.revisionId)||data.revisionId<1)return fail('Choose a revision.');return json({...await restoreDraft(env.DB,location(),data.revisionId,data.expectedVersion,actor),published:false})}
   if(u.pathname==='/api/media'&&request.method==='POST'){
    if(Number(request.headers.get('content-length')||0)>5000000)return fail('Image exceeds 5 MB',413);

@@ -6,7 +6,7 @@ const CONFIG_KEY='livekit-connection-v1';
 async function cipherKey(env:ConfigEnv){const seed=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.MEDIA_ENGINE_SHARED_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);const bytes=await crypto.subtle.sign('HMAC',seed,new TextEncoder().encode('heavenlykey-livekit-credential-encryption-v1'));return crypto.subtle.importKey('raw',bytes,'AES-GCM',false,['encrypt','decrypt']);}
 export async function resolveLiveKitConfig(env:ConfigEnv):Promise<LiveKitConfig|null>{
  const stored=await env.LIVE_STATUS_KV?.get(CONFIG_KEY);if(!stored)return env.LIVEKIT_URL&&env.LIVEKIT_API_KEY&&env.LIVEKIT_API_SECRET?{LIVEKIT_URL:env.LIVEKIT_URL,LIVEKIT_API_KEY:env.LIVEKIT_API_KEY,LIVEKIT_API_SECRET:env.LIVEKIT_API_SECRET}:null;
- if(JSON.parse(stored).disabled===true)return null;
+ try{if(JSON.parse(stored).disabled===true)return null;}catch{throw new Error('Stored broadcast connection is invalid. Reconnect it in Settings.');}
  try{const {iv,data}=JSON.parse(stored);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Uint8Array.from(iv)},await cipherKey(env),Uint8Array.from(data));return JSON.parse(new TextDecoder().decode(plain));}catch{throw new Error('Stored broadcast connection cannot be decrypted. Reconnect it in Settings.');}
 }
 export function validateCloudConnection(body:Record<string,unknown>):LiveKitConfig{
@@ -27,7 +27,7 @@ export async function saveLiveKitConnection(env:ConfigEnv,config:LiveKitConfig){
 
 const STATUS_KEY='livekit-connection-status-v1';
 export async function liveKitConnectionStatus(env:ConfigEnv){
- const meta=JSON.parse(await env.LIVE_STATUS_KV.get(STATUS_KEY)||'{}');
+ let meta:any={};try{meta=JSON.parse(await env.LIVE_STATUS_KV.get(STATUS_KEY)||'{}');}catch{meta={};}
  try{const config=await resolveLiveKitConfig(env);return {configured:!!config,state:config?(meta.state||'saved'):(meta.state==='reset'?'reset':env.LIVEKIT_API_KEY||env.LIVEKIT_API_SECRET||env.LIVEKIT_URL?'incomplete':'not_configured'),url:meta.state==='reset'?null:config?.LIVEKIT_URL??env.LIVEKIT_URL??null,keyMasked:config?'••••'+(config.LIVEKIT_API_KEY.length>4?config.LIVEKIT_API_KEY.slice(-4):''):null,secretSaved:!!config,verifiedAt:meta.verifiedAt??null,checkedAt:meta.checkedAt??null,errorCode:meta.errorCode??null,source:await env.LIVE_STATUS_KV.get(CONFIG_KEY)?'dashboard':'environment'};}catch{return {configured:false,state:'unreadable',url:null,keyMasked:null,secretSaved:false,verifiedAt:meta.verifiedAt??null,errorCode:'connection_unreadable'};}
 }
 export async function recordLiveKitVerification(env:ConfigEnv,ok:boolean,errorCode?:string){const old=JSON.parse(await env.LIVE_STATUS_KV.get(STATUS_KEY)||'{}'),now=new Date().toISOString();await env.LIVE_STATUS_KV.put(STATUS_KEY,JSON.stringify({state:ok?'connected':'attention',verifiedAt:ok?now:old.verifiedAt??null,checkedAt:now,errorCode:ok?null:errorCode||'connection_check_failed'}));}
