@@ -20,6 +20,7 @@ export async function routeIndependentApp(request,env){
  try{const safeHeaders=new Headers();for(const name of ['accept','if-none-match','if-modified-since'])if(request.headers.has(name))safeHeaders.set(name,request.headers.get(name));
  const response=await env[binding].fetch(new Request('https://app.internal'+path,{method:request.method,headers:safeHeaders,signal:AbortSignal.timeout(10000)}));
  if(response.headers.get('X-HK-App-Service')!==id)return new Response('Application identity mismatch.',{status:502,headers});
+ if(response.status>=300 && response.status<400)return new Response('Application redirect denied.',{status:502,headers});
  // Independent static apps must not set Account 5 session cookies or redirect
  // browsers through an unreviewed Location header.
  const safe=new Headers(response.headers);
