@@ -6,7 +6,12 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../heavenly-key-w
 const html=readFileSync(resolve(root,'strength-for-today-next.html'),'utf8');
 const js=readFileSync(resolve(root,'strength-for-today-next.js'),'utf8');
 const css=readFileSync(resolve(root,'strength-for-today-next.css'),'utf8');
+const doctrine=JSON.parse(readFileSync(resolve(root,'strength-doctrinal-audit-framework.json'),'utf8'));
 assert.match(html,/href="\.\/strength-for-today-next\.css"/);
+assert.equal(doctrine.scope.expectedDailyEditions,1828);
+assert.equal(doctrine.auditStandards.length,3);
+assert.equal(doctrine.hierarchy.primary.includes('final authority'),true);
+assert.ok(doctrine.publicationRule.includes('human doctrinal/editorial approval'));
 assert.doesNotMatch(html,/<style\b|\sstyle=/i);
 assert.match(html,/http-equiv="Content-Security-Policy"/);
 for(const directive of ["default-src 'none'","script-src 'self'","style-src 'self'","connect-src 'none'","object-src 'none'","base-uri 'none'","form-action 'none'"]){
