@@ -1,4 +1,4 @@
-// STRENGTH FOR TODAY — five-year conservative doctrinal/editorial audit.
+// OUR DAILY MANNA — STRENGTH FOR TODAY: five-year conservative editorial audit.
 // Usage: node apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs
 // Read-only; never changes publication approval or data files.
 import { readFileSync, readdirSync } from 'node:fs';
@@ -14,6 +14,9 @@ const entries = names.flatMap(name => {
 const norm = value => String(value??'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
 const normalizeLead = value => norm(value).split(' ').slice(0,12).join(' ');
 const topicNames=['Revival & Spiritual Fire','Holiness & Righteousness','Hope & Encouragement','Prayer & Intercession','Salvation & Repentance','Faith & Trust','The Holy Spirit','Evangelism & Soul Winning','Love & Christian Unity','The Word & Obedience','Wisdom & Discernment','End-time & Rapture Readiness'];
+const sectionDefinitions=[
+ ['todays-topic',"Today's Topic"],['bible-reading','Bible Reading'],['hymn-of-the-day','Hymn of the Day'],['bible-story','Bible Story'],['world-stories','Life Stories Around the World'],['eternity-in-view','Eternity in View'],['destiny-decision','Destiny Decision & Action'],['warfare-prayer','Warfare Prayer'],['prophetic-prayer','Prophetic Prayer'],['health-wellness-prayer','Health & Wellness Prayer'],['salvation-prayer','Salvation Prayer'],['kingdom-challenges','Kingdom Challenges']
+];
 const flags=[];
 const flag=(date,code,details)=>flags.push({date,code,details});
 const days=new Set();const refl=new Map();const pray=new Map();const lead=new Map();
@@ -28,6 +31,25 @@ for(let i=0;i<entries.length;i++){
  if(days.has(e.date))flag(e.date,'DUPLICATE_DATE',e._file); days.add(e.date);
  if(i&&Date.parse(e.date)-Date.parse(entries[i-1].date)!==86400000)flag(e.date,'DATE_GAP','Previous: '+entries[i-1].date);
  if(e.status==='approved-for-publication')approved++;
+ if(typeof e.centralMessage!=='string'||e.centralMessage.trim().length<8)flag(e.date,'MISSING_CENTRAL_MESSAGE','Daily edition requires its own central message');
+ if(typeof e.spiritualFocus!=='string'||e.spiritualFocus.trim().length<8)flag(e.date,'MISSING_SPIRITUAL_FOCUS','Daily edition requires its own spiritual focus');
+ if(!Array.isArray(e.sections)||e.sections.length!==12)flag(e.date,'DAILY_SECTION_COUNT','Expected all twelve daily sections');
+ else{
+  if(!e.sections.every((section,index)=>section&&section.id===sectionDefinitions[index][0]&&section.title===sectionDefinitions[index][1]&&section.reviewStatus==='approved'&&typeof section.content==='string'&&section.content.trim().length>=20))flag(e.date,'DAILY_SECTION_REVIEW','Sections must be complete, correctly ordered and individually approved');
+  const reading=e.sections[1],passages=reading?.passages;
+  if(!Array.isArray(passages)||passages.length!==6||!passages.every(p=>p&&p.translation==='KJV'&&p.reference&&p.text&&p.reviewStatus==='approved')||passages.filter(p=>p.testament==='old').length!==3||passages.filter(p=>p.testament==='new').length!==3)flag(e.date,'BIBLE_READING_STRUCTURE','Require six approved KJV passages: three Old Testament and three New Testament');
+  const hymn=e.sections[2];
+  if(!hymn?.hymnTitle||!hymn?.hymnbookReference||hymn.verificationStatus!=='verified')flag(e.date,'HYMN_VERIFICATION','Hymn must be verified against the Heavenly Key hymnbook');
+  const bibleStory=e.sections[3];
+  if(!bibleStory?.scriptureReference||bibleStory.verificationStatus!=='verified'||bibleStory.topicAlignmentReview!=='approved')flag(e.date,'BIBLE_STORY_VERIFICATION','Bible story requires verified Scripture and topic-alignment review');
+  const worldStory=e.sections[4];
+  if(typeof worldStory?.sourceUrl!=='string'||!/^https:\/\//i.test(worldStory.sourceUrl)||!worldStory.sourcePublisher||!worldStory.sourceDate||worldStory.verificationStatus!=='verified'||worldStory.topicAlignmentReview!=='approved')flag(e.date,'WORLD_STORY_VERIFICATION','Contemporary story requires a dated credible source and approved topic alignment');
+  const warfareRefs=Array.isArray(e.sections[7]?.scriptureReferences)?e.sections[7].scriptureReferences.map(x=>String(x).toLowerCase()):[];
+  if(!warfareRefs.includes('matthew 11:12')||!warfareRefs.includes('luke 18:1'))flag(e.date,'WARFARE_SCRIPTURES','Warfare Prayer must include Matthew 11:12 and Luke 18:1');
+  if(e.sections[9]?.medicalDisclaimer!==true)flag(e.date,'HEALTH_DISCLAIMER','Health and Wellness Prayer must not replace professional care');
+  const challenges=e.sections[11]?.challenges;
+  if(!Array.isArray(challenges)||challenges.length!==12||!challenges.every(x=>typeof x==='string'&&x.trim().length>=8))flag(e.date,'KINGDOM_CHALLENGES','Require twelve practical Kingdom Challenges');
+ }
  if(!Array.isArray(e.topics)||e.topics.length!==12){flag(e.date,'TOPIC_COUNT','Expected 12');continue;}
  if(e.status!=='draft-not-published')flag(e.date,'PUBLICATION_STATUS','Requires separate documented editorial approval');
  for(let j=0;j<12;j++){
@@ -106,7 +128,10 @@ const qualityBlockingCodes=new Set([
  'INCONSISTENT_VERSE_TEXT','INVALID_DATE','DATE_RANGE','CONSECUTIVE_REUSED_THEME',
  'UNSUPPORTED_PROMISE','END_TIME_DATE_SETTING',
  'PUBLICATION_STATUS','REVIEW_STATUS','LENGTH_LIMIT',
- 'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','RELEASE_GATE'
+ 'THIN_DAILY_REFLECTION','TEMPLATE_LANGUAGE','RELEASE_GATE',
+ 'MISSING_CENTRAL_MESSAGE','MISSING_SPIRITUAL_FOCUS','DAILY_SECTION_COUNT','DAILY_SECTION_REVIEW',
+ 'BIBLE_READING_STRUCTURE','HYMN_VERIFICATION','BIBLE_STORY_VERIFICATION','WORLD_STORY_VERIFICATION',
+ 'WARFARE_SCRIPTURES','HEALTH_DISCLAIMER','KINGDOM_CHALLENGES'
 ]);
 const qualityBlockingFlags=flags.filter(f=>qualityBlockingCodes.has(f.code));
 const automatedQualityPassed=qualityBlockingFlags.length===0 &&
@@ -116,12 +141,15 @@ const automatedQualityPassed=qualityBlockingFlags.length===0 &&
  manifest.publicationStatus==='editorial-hold' && manifest.publishedBatchFiles.length===0;
 
 const result={
- title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
+ title:'OUR DAILY MANNA — STRENGTH FOR TODAY: five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
  files:names.length,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:manifest.publishedBatchFiles.length,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
+ entriesWithCentralMessage:entries.filter(e=>typeof e.centralMessage==='string'&&e.centralMessage.trim()).length,
+ entriesWithSpiritualFocus:entries.filter(e=>typeof e.spiritualFocus==='string'&&e.spiritualFocus.trim()).length,
+ entriesWithTwelveSections:entries.filter(e=>Array.isArray(e.sections)&&e.sections.length===12).length,
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),
  sampleFlags:flags.slice(0,100),
  manualReviewRequirements:[
