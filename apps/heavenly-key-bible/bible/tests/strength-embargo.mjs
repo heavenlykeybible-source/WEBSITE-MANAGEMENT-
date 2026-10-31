@@ -92,4 +92,15 @@ for(const invalidDate of ['2026-02-30','2026-13-01','2027-02-29']){
  const response=await worker.fetch(new Request('https://example.org/'+filename),env);
  assert.equal(response.status,404,invalidDate);
 }
+// A batch cannot be served if any entry is unreviewed or its topic sequence is altered.
+for(const scenario of ['unapproved entry','unapproved topic','reordered topics']){
+ const manifest={schemaVersion:1,publicationStatus:'published',publishedBatchFiles:[filename]};
+ const entry={date:today,status:'approved-for-publication',topics:topics.map(topic=>({...topic}))};
+ if(scenario==='unapproved entry')entry.status='draft';
+ if(scenario==='unapproved topic')entry.topics[0].reviewStatus='draft';
+ if(scenario==='reordered topics')entry.topics.reverse();
+ const env={ASSETS:{fetch:async request=>new URL(request.url).pathname==='/strength-publication-status.json'?Response.json(manifest):Response.json({timezone:'Africa/Lagos',entries:[entry]})}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename),env);
+ assert.equal(response.status,404,scenario);
+}
 console.log('Devotional embargo regression: future approved entries blocked; current approved allowed; editorial hold blocked.');
