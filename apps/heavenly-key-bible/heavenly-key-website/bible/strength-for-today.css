@@ -65,3 +65,17 @@ article h3{color:var(--manna-middle)!important}
 
 #manna-image-preview[data-image-size="vertical"]{aspect-ratio:9/16}
 #manna-image-preview[data-image-size="facebook"]{aspect-ratio:3/4}
+
+/* Twelve verified sections of each Daily Manna edition */
+.daily-sections{margin:26px 0;padding:22px;border:1px solid #dce5f3;border-radius:20px;background:#f7f9ff}
+.daily-sections>h2{margin:0 0 16px;color:var(--manna-middle,#a72142);font-size:clamp(18px,3vw,25px)}
+.daily-section-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.daily-section-card{min-width:0;padding:18px;border:1px solid #e1e8f4;border-radius:15px;background:#fff;box-shadow:0 5px 18px #102d6010}
+.daily-section-card h3{margin:0 0 9px;color:var(--manna-middle,#a72142);font-size:15px}
+.daily-section-card p{margin:0 0 10px;line-height:1.75;overflow-wrap:anywhere}
+.daily-section-meta{font-size:13px;color:#405b82;font-weight:650}
+.daily-section-source{display:inline-block;margin-top:6px;color:#1649b9;font-weight:750;overflow-wrap:anywhere}
+.daily-section-points{padding-left:22px;line-height:1.7}
+.daily-section-points li{margin:0 0 8px;overflow-wrap:anywhere}
+.daily-sections[hidden]{display:none}
+@media(max-width:680px){.daily-section-list{grid-template-columns:1fr}.daily-sections{padding:15px}}
