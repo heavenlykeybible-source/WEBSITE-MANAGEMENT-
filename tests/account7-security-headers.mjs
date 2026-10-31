@@ -30,6 +30,14 @@ test('Radio CSP blocks framing, plugins and untrusted inline scripts', () => {
   assert.doesNotMatch(csp, /script-src[^;]*'unsafe-inline'/);
 });
 
+
+test('Radio player imports only the exact LiveKit SDK version permitted by CSP', () => {
+  const player = readFileSync(new URL('js/approved-widget-system.js', root), 'utf8');
+  const sdk = player.match(/import\(['"]([^'"]*livekit-client[^'"]*)['"]\)/)?.[1];
+  assert.equal(sdk, 'https://cdn.jsdelivr.net/npm/livekit-client@2.22.3/+esm');
+  assert.ok(csp.includes('https://cdn.jsdelivr.net/npm/livekit-client@2.22.3/'));
+});
+
 test('Radio CSP hash authorizes only the approved inline shell configuration', () => {
   const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map(match => match[1])
