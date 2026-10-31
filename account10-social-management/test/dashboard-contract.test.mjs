@@ -222,3 +222,7 @@ test('WhatsApp send control is visible only to owners, matching server-side role
 test('human takeover action cannot repaint stale sessions or reenable read-only controls', () => {
  assert.match(html, /catch\(e\)\{if\(selected===targetConversation&&authEpoch===epoch\)status\(e\.message\)\}finally\{if\(selected===targetConversation&&authEpoch===epoch\)button\.disabled=operatorAccessRole==='viewer'\}/);
 });
+
+test('operator note failures never update another chat or signed-out session', () => {
+ assert.match(html, /catch\(err\)\{if\(selected===targetConversation&&authEpoch===epoch\)status\(err\.message\)\}\};\$\('suggestReply'\)\.onclick/);
+});
