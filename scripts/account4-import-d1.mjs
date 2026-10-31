@@ -30,7 +30,7 @@ export async function saveImportSession(db, actor, session) {
 }
 export async function loadImportSession(db, actor, id) {
   authorized(actor);
-  if (typeof id !== 'string' || !/^[a-f0-9-]{36}$/i.test(id))
+  if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
     throw new Error('Invalid import session identifier');
   const row = await db.prepare('SELECT * FROM account4_import_sessions WHERE id=? AND owner_id=?')
     .bind(id,actor.id).first();
