@@ -328,3 +328,18 @@ test('host live reactions have a counter, bounded animation and reduced-motion s
  assert.match(html,/prefers-reduced-motion:reduce/);
  assert.match(html,/showLiveReaction\(m.emoji\)/);
 });
+
+test('reactions reach admitted viewers and host, not pending connections', async()=>{
+ const h=setup();await h.join('');const pending=h.add();
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'react',emoji:'❤️'}));
+ assert.ok(h.host.messages.some(m=>m.t==='react'&&m.emoji==='❤️'));
+ assert.ok(h.guest.messages.some(m=>m.t==='react'&&m.emoji==='❤️'));
+ assert.equal(pending.messages.some(m=>m.t==='react'),false);
+});
+test('audience live reaction display bounds animation and sanitizes emoji',()=>{
+ const html=fs.readFileSync(require('node:path').join(__dirname,'../site/join.html'),'utf8');
+ assert.match(html,/function showMeetingReaction\(emoji\)/);
+ assert.match(html,/while\(layer.children.length>10\)/);
+ assert.match(html,/case 'react':showMeetingReaction\(m.emoji\)/);
+ assert.match(html,/prefers-reduced-motion:reduce/);
+});
