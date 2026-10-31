@@ -17,4 +17,11 @@ assert.deepEqual(await uploadPrivatePart(bucket,actor,session,1,new Uint8Array(1
 await assert.rejects(completePrivateImport(bucket,actor,session,[]));
 assert.deepEqual(await completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'abc123'}]),{key:session.key,size:11,state:'private-awaiting-review'});
 assert.deepEqual(await abortPrivateImport(bucket,actor,session),{state:'aborted'});
+
+// An expired or completed session must not allow another part or completion.
+await assert.rejects(uploadPrivatePart(bucket,actor,{...session,expiresAt:0},1,new Uint8Array(11)));
+await assert.rejects(completePrivateImport(bucket,actor,{...session,state:'private-awaiting-review'},[{partNumber:1,etag:'abc123'}]));
+await assert.rejects(completePrivateImport(bucket,actor,session,[{partNumber:1,etag:'invalid etag'}]));
+// All parts must be present exactly once; client-controlled duplicate metadata is rejected.
+await assert.rejects(completePrivateImport(bucket,actor,{...session,partCount:2},[{partNumber:1,etag:'abc123'},{partNumber:1,etag:'abc123'}]));
 console.log('PASS owner-scoped private multipart R2 adapter');
