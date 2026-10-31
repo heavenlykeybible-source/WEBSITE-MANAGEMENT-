@@ -40,6 +40,9 @@ export class MeetingRooms {
   if(url.protocol!=='https:'||request.headers.get('origin')!==url.origin)return new Response('Forbidden',{status:403});
   // Validate the room path inside the Durable Object as well as in the outer Worker router.
   if(!/^\/meeting\/[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}\/room$/.test(url.pathname))return new Response('Invalid meeting route',{status:404});
+  // Clear an expired meeting before counting sockets; a delayed alarm must not strand capacity.
+  const previousHost=this.host();
+  if(previousHost&&this.data(previousHost).until<=Date.now())this.end('The meeting time has ended.');
   // Reclaim capacity from previous host generations before applying the socket cap.
   const active=this.host(),activeKey=active&&this.data(active).key;
   if(activeKey)for(const guest of this.guests())if(this.data(guest).session!==activeKey)this.close(guest,{t:'closed',why:'The previous meeting has ended.'});
