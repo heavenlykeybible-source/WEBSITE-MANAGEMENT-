@@ -271,3 +271,14 @@ test('room alarm rejects malformed stage identity expiry', async()=>{
   await h.r.alarm();
   assert.equal(h.guest.readyState,3);
 });
+
+test('expired meeting closes sockets without rearming the room alarm', async()=>{
+  const h=setup();
+  h.host.attachment.until=Date.now()-1000;
+  let alarms=0;
+  h.r.state.storage.setAlarm=async()=>{alarms++;};
+  await h.r.alarm();
+  assert.equal(h.host.readyState,3);
+  assert.equal(h.guest.readyState,3);
+  assert.equal(alarms,0);
+});
