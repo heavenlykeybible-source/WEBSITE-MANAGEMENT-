@@ -130,4 +130,5 @@ assert.ok(entry.includes("return json(token,200,{'Cache-Control':'no-store'})"),
 assert.ok(entry.includes("error:'Live transport unavailable'"), 'LiveKit errors must not disclose provider details');
 assert.ok(restream.includes("redirect:'manual'"), 'Upstream LiveKit redirects must remain disabled');
 assert.ok(restream.includes('AbortSignal.timeout(15000)'), 'Upstream LiveKit requests must have a timeout');
+assert.ok(restream.includes("if(!preset)throw new Error('Unsupported streaming format.')"), 'Invalid streaming presets must fail instead of silently downgrading');
 console.log('Account 2 broadcast safety regression checks passed');
