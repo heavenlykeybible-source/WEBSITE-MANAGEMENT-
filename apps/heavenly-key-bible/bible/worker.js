@@ -88,9 +88,9 @@ export default {
   const isDevotionalPath=url.pathname.startsWith("/strength-devotionals-");
   const draftMatch=url.pathname.match(/^\/(strength-devotionals-(?:2026|2027|year[1-5])(?:-batch\d+)?\.json)$/);
   if(isDevotionalPath){
-   const deny=()=>new Response(null,{status:404,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff"}});
+   const deny=()=>new Response(null,{status:404,headers:{"Cache-Control":"no-store, private","X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex, noarchive"}});
    // Reject unexpected filenames instead of passing them to the public asset layer.
-   if(!draftMatch)return deny();
+   if(!draftMatch||!(request.method==="GET"||request.method==="HEAD"))return deny();
    try{
     const manifestResponse=await env.ASSETS.fetch(new Request(new URL("/strength-publication-status.json",url.origin)));
     if(!manifestResponse.ok)return deny();
@@ -99,6 +99,8 @@ export default {
        !Array.isArray(manifest.publishedBatchFiles)||!manifest.publishedBatchFiles.includes(draftMatch[1]))return deny();
     const assetResponse=await env.ASSETS.fetch(new Request(new URL("/"+draftMatch[1],url.origin),request));
     if(!assetResponse.ok)return deny();
+    // Never forward upstream partial-content headers or bytes to a public response.
+    if(assetResponse.status!==200)return deny();
     const data=await assetResponse.clone().json();
     const validDate=(date)=>typeof date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&
       !Number.isNaN(Date.parse(date))&&new Date(date+"T00:00:00Z").toISOString().slice(0,10)===date;
@@ -113,7 +115,18 @@ export default {
            typeof topic.prayer==="string"&&topic.prayer.trim()&&topic.prayer.length<=160)))return deny();
     const dates=data.entries.map(entry=>entry.date);
     if(new Set(dates).size!==dates.length)return deny();
+    if(dates.some((date,index)=>index>0&&date<=dates[index-1]))return deny();
+    // Approved release batches must be complete consecutive calendar days, not sparse excerpts.
+    if(dates.some((date,index)=>index>0&&Date.parse(date+"T00:00:00Z")-Date.parse(dates[index-1]+"T00:00:00Z")!==86400000))return deny();
+    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
+    const today=parts.year+'-'+parts.month+'-'+parts.day;
+    if(dates.some(date=>date>today))return deny();
     const headers=new Headers(assetResponse.headers);
+    headers.delete("Content-Range");
+    headers.delete("Accept-Ranges");
+    headers.delete("Content-Length");
+    headers.set("Content-Type","application/json; charset=utf-8");
+    headers.set("X-Robots-Tag","noindex, noarchive");
     headers.set("Cache-Control","no-store");
     headers.set("X-Content-Type-Options","nosniff");
     return new Response(request.method==="HEAD"?null:assetResponse.body,{status:assetResponse.status,headers});
