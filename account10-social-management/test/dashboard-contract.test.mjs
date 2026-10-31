@@ -292,3 +292,13 @@ test('draft queue blocks viewer actions and stale sessions', () => {
 });
 
 test('post editor session guard exists',()=>{assert.ok(html.includes("activeManagementTab==='posts'&&!!token&&operatorAccessRole==='owner'"))});
+
+
+test('dashboard has keyboard skip navigation, accessible focus and mobile touch targets', () => {
+ assert.match(html,/class="skip-link" href="#chatPanel"/);
+ assert.match(html,/nav aria-label="Account management navigation"/);
+ assert.match(html,/button:focus-visible/);
+ assert.match(html,/min-height:44px/);
+ assert.match(html,/@media\(max-width:760px\)/);
+ assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
+});
