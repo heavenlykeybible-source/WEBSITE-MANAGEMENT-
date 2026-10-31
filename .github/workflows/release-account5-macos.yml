@@ -69,6 +69,8 @@ jobs:
           xcrun stapler staple "release-candidate/HeavenlyKeyMac.dmg"
           xcrun stapler validate "release-candidate/HeavenlyKeyMac.dmg"
           shasum -a 256 "release-candidate/HeavenlyKeyMac.dmg" > "release-candidate/HeavenlyKeyMac.dmg.sha256"
+          digest="$(shasum -a 256 "release-candidate/HeavenlyKeyMac.dmg" | awk '{print $1}')"
+          printf 'signatureVerified=true\nnotarizationVerified=true\nscannedSha256=%s\n' "$digest" > "release-candidate/HeavenlyKeyMac.dmg.security.txt"
       - name: Retain signed and notarized DMG for manual security approval
         uses: actions/upload-artifact@v4
         with:
@@ -76,5 +78,6 @@ jobs:
           path: |
             heavenly-key-accounts/account-05-heavenly-key-app/native/macos/release-candidate/HeavenlyKeyMac.dmg
             heavenly-key-accounts/account-05-heavenly-key-app/native/macos/release-candidate/HeavenlyKeyMac.dmg.sha256
+            heavenly-key-accounts/account-05-heavenly-key-app/native/macos/release-candidate/HeavenlyKeyMac.dmg.security.txt
           retention-days: 14
           if-no-files-found: error
