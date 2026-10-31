@@ -143,6 +143,16 @@ check('Legitimate members can log in after an incorrect attempt',recoveredLogin.
 
 const me = await request('me', { cookie: login.cookie });
 check('Authenticated identity returned', me.status === 200 && me.data?.email === 'smoke@example.com');
+const invalidCookieSuffix=await request('me',{cookie:login.cookie+'garbage'});
+check('Session cookie rejects suffix appended to valid token',invalidCookieSuffix.status===401);
+const invalidCookiePrefix=await request('me',{cookie:'fakehk='+login.cookie.slice(3)});
+check('Session cookie rejects token embedded in another cookie name',invalidCookiePrefix.status===401);
+const withOtherCookie=await request('me',{cookie:'other=test; '+login.cookie});
+check('Session cookie accepts exact token after another cookie',withOtherCookie.status===200);
+const invalidLogout=await request('logout',{method:'POST',cookie:login.cookie+'garbage'});
+const stillSignedInAfterInvalidLogout=await request('me',{cookie:login.cookie});
+check('Invalid cookie cannot log out a valid session',invalidLogout.status===200&&stillSignedInAfterInvalidLogout.status===200);
+
 const unauthorized = await request('me');
 check('Anonymous identity request rejected', unauthorized.status === 401);
 const blockedOriginLogin = await request('login',{method:'POST',headers:{origin:'https://untrusted.example'},body:{email:'smoke@example.com',password:'correct horse battery'}});
