@@ -785,3 +785,11 @@ test('studio background processing rotates fairly and restores original camera a
  assert.match(html,/s\.blur=false;s\.bgm='off';s\.oc=null;msg\('Background processing failed/);
  assert.match(html,/segBusy=false;segCur=null/,'the processing lock must be released');
 });
+
+test('background model load coalesces concurrent requests and ignores obsolete mode changes',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/segWait\.push\(cb\);if\(segLoading\)return;/,'one model loading operation must serve concurrent cameras');
+ assert.match(html,/for\(const fn of segWait\.splice\(0\)\)fn\(ok\)/,'all waiting cameras receive completion');
+ assert.match(html,/s\.bgRequest=requested/,'each camera mode request gets an identifier');
+ assert.match(html,/if\(s\.bgRequest!==requested\)return/,'an obsolete asynchronous load cannot re-enable an unwanted effect');
+});
