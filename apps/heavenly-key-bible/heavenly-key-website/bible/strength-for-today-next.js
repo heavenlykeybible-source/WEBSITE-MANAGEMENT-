@@ -24,7 +24,7 @@ menu.addEventListener('keydown',event=>{
   case 'End':target=buttons.length-1;break;
   default:return;
  }
- event.preventDefault();buttons[target].click();buttons[target].focus();
+ event.preventDefault();current=target;render();buttons[target].focus();
 });
 $('prev').onclick=()=>{if(current>0){current--;render();$('section-title').focus()}};$('next').onclick=()=>{if(current<11){current++;render();$('section-title').focus()}};
 async function copy(value){try{await navigator.clipboard.writeText(value);status.textContent='Copied preview text.'}catch{status.textContent='Copy unavailable on this device.'}}
