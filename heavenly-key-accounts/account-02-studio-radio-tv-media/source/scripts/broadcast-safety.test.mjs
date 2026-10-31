@@ -100,4 +100,11 @@ assert.match(entry, /!\['radio','video'\]\.includes\(requestedChannel\)/, 'Rejec
 assert.match(entry, /Number\.isSafeInteger\(Number\(b\.session_id\)\)/, 'Require a valid live session identifier');
 assert.match(entry, /A valid live session ID is required/, 'Invalid live session IDs must return a client error');
 
+// Egress destinations must never target private infrastructure.
+assert.match(restream, /function unsafeStreamHost\(/, 'Stream destinations must have a host validator');
+assert.match(restream, /unsafeStreamHost\(u\.hostname\)/, 'Host validation must run on save');
+for(const fragment of ["host==='localhost'","a===127","a===10","a===172&&b>=16&&b<=31","a===192&&b===168","a===169&&b===254","host.startsWith('fc')","host.startsWith('fd')"]){
+ assert.ok(restream.includes(fragment), 'Missing private-host guard: '+fragment);
+}
+
 console.log('Account 2 broadcast safety regression checks passed');
