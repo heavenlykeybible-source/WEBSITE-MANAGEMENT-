@@ -371,7 +371,7 @@ test('human request resolution is versioned and rejects stale operator tabs', ()
 
 test('operator access fails closed for weak or malformed ADMIN_TOKEN configuration', () => {
  const begin=source.indexOf("if(!env.ADMIN_TOKEN)return reply");
- const end=source.indexOf("if(!env.DB)return reply",begin);
+ const end=source.indexOf("const provided=req.headers.get('authorization')",begin);
  const auth=source.slice(begin,end);
  assert.ok(begin>0&&end>begin,'operator guard should be present');
  assert.match(auth,/env\.ADMIN_TOKEN\.length<32/);
@@ -384,8 +384,8 @@ test('operator access fails closed for weak or malformed ADMIN_TOKEN configurati
 test('state-changing operator API requests use the checked same-origin guard', () => {
  const auth=source.indexOf("if(!await administratorTokenMatches(provided,env.ADMIN_TOKEN))");
  const guard=source.indexOf("if(!operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin))");
- const database=source.indexOf("if(!env.DB)return reply",guard);
- assert.ok(auth>=0&&guard>auth&&database>guard);
+ const database=source.indexOf("if(!env.DB)return reply");
+ assert.ok(auth>=0&&guard>auth&&database>=0&&database<auth);
  assert.match(source,/import \{ operatorMutationOriginAllowed \} from '\.\/operator-origin'/);
  assert.match(source,/Cross-origin operator mutations are forbidden/);
 });
@@ -425,4 +425,23 @@ test('administrator token verification helper uses bounded digest comparison', a
  assert.equal(await match('Basic '+secret,secret),false);
  assert.equal(await match('Bearer '+secret+'extra',secret),false);
  assert.equal(await match('Bearer '+'r'.repeat(514),secret),false);
+});
+
+test('named D1 operators have bounded revocable permissions and token hashes', () => {
+ const authStart=source.indexOf("const provided=req.headers.get('authorization')");
+ const authEnd=source.indexOf("if(['POST','PUT','PATCH'].includes(req.method))",authStart);
+ const auth=source.slice(authStart,authEnd);
+ assert.match(auth,/operator_credentials WHERE token_hash=\? AND active=1 AND expires_at>CURRENT_TIMESTAMP/);
+ assert.match(auth,/operatorRole==='viewer'/);
+ assert.match(auth,/operatorRole==='operator'/);
+ assert.match(auth,/Operator role cannot perform this administrative action/);
+ const begin=source.indexOf("if(u.pathname==='/api/operators'&&req.method==='POST')");
+ const end=source.indexOf("if(u.pathname==='/api/automation/readiness'",begin);
+ const handlers=source.slice(begin,end);
+ assert.match(handlers,/operatorRole!=='owner'/);
+ assert.match(handlers,/crypto.getRandomValues\(new Uint8Array\(32\)\)/);
+ assert.match(handlers,/token_hash,role,expires_at/);
+ assert.match(handlers,/showOnlyOnce:true/);
+ assert.match(handlers,/UPDATE operator_credentials SET active=0,revoked_at=CURRENT_TIMESTAMP/);
+ assert.doesNotMatch(handlers,/SELECT \* FROM operator_credentials/);
 });
