@@ -37,6 +37,9 @@ jobs:
           assert cfg['vars']['SIGNUP_OPEN'] == 'false'
           assert cfg['vars']['PROTECTED_WORKERS'] == 'website-management'
           assert cfg['observability']['enabled'] is True
+          assert cfg['upload_source_maps'] is True
+          assert cfg['observability']['traces']['enabled'] is True
+          assert 0 < cfg['observability']['traces']['head_sampling_rate'] <= 0.1
           rate = cfg['observability']['logs']['head_sampling_rate']
           assert 0 < rate <= 1
           assert len(cfg['d1_databases']) >= 1
