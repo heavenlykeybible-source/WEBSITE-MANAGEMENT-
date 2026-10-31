@@ -75,4 +75,12 @@ for(const scenario of [
  assert.equal(response.status,404);
  assert.equal(await response.text(),'');
 }
+// Upstream partial asset responses are rejected rather than forwarded to readers.
+{
+ const manifest={schemaVersion:1,publicationStatus:'published',publishedBatchFiles:[filename]};
+ const env={ASSETS:{fetch:async request=>new URL(request.url).pathname==='/strength-publication-status.json'?Response.json(manifest):new Response('partial',{status:206,headers:{'Content-Range':'bytes 0-6/100'}})}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename),env);
+ assert.equal(response.status,404);
+ assert.equal(response.headers.get('Content-Range'),null);
+}
 console.log('Devotional embargo regression: future approved entries blocked; current approved allowed; editorial hold blocked.');
