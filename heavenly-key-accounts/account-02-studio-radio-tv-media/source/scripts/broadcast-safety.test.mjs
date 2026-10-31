@@ -34,4 +34,9 @@ assert.match(entry, /p\.iat<now-300/, 'Reject stale issued-at values');
 assert.match(entry, /p\.exp-p\.iat>300/, 'Reject long-lived admin capabilities');
 assert.match(entry, /p\.exp<=p\.iat/, 'Reject expiration before issuance');
 
+// Campaign creation must keep authorization and media availability checks.
+assert.match(entry, /if\(url\.pathname==='\/api\/campaigns'&&request\.method==='POST'\)/);
+assert.match(entry, /status IN \('approved','published'\)/);
+assert.match(entry, /campaign\.cancel/, 'Campaign cancellation must be audited');
+
 console.log('Account 2 broadcast safety regression checks passed');
