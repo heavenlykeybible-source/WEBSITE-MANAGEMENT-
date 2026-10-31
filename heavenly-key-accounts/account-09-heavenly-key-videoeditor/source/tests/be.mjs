@@ -420,6 +420,23 @@ const repeatedMediaDelete = await request('media/'+mediaCreated.id,{method:'DELE
 check('Repeated media deletion reports not found',repeatedMediaDelete.status===404);
 const storageAfterDelete = await request('media',{cookie:login.cookie});
 check('Media deletion returns storage quota',storageAfterDelete.status===200&&storageAfterDelete.data.used===0);
+const uploadAttempts=db.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='media_upload_attempt'").get(accountId).c;
+check('Media upload attempts are recorded even for unsupported content',uploadAttempts>0);
+for(let i=uploadAttempts;i<120;i++)db.prepare("INSERT INTO audit(user_id,action,at) VALUES(?,?,?)").run(accountId,'media_upload_attempt',Date.now());
+const uploadThrottled=await onRequest({
+  request:new Request('https://studio.example/api/media?name=blocked.png',{
+    method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
+    body:new Uint8Array([137,80,78,71])
+  }),env,params:{path:['media']}
+});
+check('120 media attempts per day blocks further uploads before consuming body',uploadThrottled.status===429);
+const otherMemberUpload=await onRequest({
+  request:new Request('https://studio.example/api/media?name=other.png',{
+    method:'POST',headers:{cookie:secondLogin.cookie,'content-type':'image/png','x-requested-with':'hk'},
+    body:new Uint8Array([1,2,3])
+  }),env,params:{path:['media']}
+});
+check('Upload throttling remains isolated to each member',otherMemberUpload.status===415);
 
 const validWav=(()=>{
   const bytes=new Uint8Array(46),dv=new DataView(bytes.buffer);
