@@ -9,7 +9,11 @@ const names = readdirSync(root).filter(n => /^strength-devotionals-(2026|2027|ye
 const entries = names.flatMap(name => {
  const data=JSON.parse(readFileSync(resolve(root,name),'utf8'));
  if(!Array.isArray(data.entries))throw Error('Missing entries: '+name);
- return data.entries.map(entry=>({...entry,_file:name}));
+ return data.entries.map((entry,index)=>{
+  if(!entry||typeof entry!=='object'||Array.isArray(entry))throw Error('Invalid entry in '+name+' at index '+index);
+  if(typeof entry.date!=='string')throw Error('Missing or invalid date in '+name+' at index '+index);
+  return {...entry,_file:name};
+ });
 }).sort((a,b)=>a.date.localeCompare(b.date));
 const norm = value => String(value??'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
 const normalizeLead = value => norm(value).split(' ').slice(0,12).join(' ');
