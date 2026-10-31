@@ -27,6 +27,7 @@ async function check(date,publicationStatus,expected){
  assert.equal(result.status,expected);
  if(expected===200){assert.equal(result.headers.get('Content-Range'),null);assert.equal(result.headers.get('Accept-Ranges'),null);assert.equal(result.headers.get('Content-Length'),null );assert.match(result.headers.get('Content-Type'),/^application\/json/);assert.equal(result.headers.get('X-Robots-Tag'),'noindex, noarchive');}
  if(expected===404)assert.equal(result.headers.get('Cache-Control'),'no-store, private');
+ if(expected===404)assert.equal(result.headers.get('X-Robots-Tag'),'noindex, noarchive');
  assert.deepEqual(calls,['/strength-publication-status.json',...(publicationStatus==='published'?['/'+filename]:[])]);
 }
 await check(tomorrow,'published',404);
