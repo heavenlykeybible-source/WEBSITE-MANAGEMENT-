@@ -13,6 +13,8 @@ if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'register
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'login_attempt_ip'") || !apiSource.includes("AND at>?) < 100") || !apiSource.includes('if (!loginSlot.meta.changes)')) throw Error('Atomic per-IP login rate protection missing');
 if (!apiSource.includes("INSERT INTO audit(user_id,action,at) SELECT ?,'login_attempt_account'") || !apiSource.includes("AND at>?) < 40") || !apiSource.includes('if (!accountSlot.meta.changes)')) throw Error('Atomic per-account login throttling missing');
 if (!apiSource.includes("DELETE FROM sessions WHERE user_id=? AND expires_at<=?") || !apiSource.includes('ORDER BY expires_at DESC, rowid DESC LIMIT 20')) throw Error('Expired session cleanup and active device cap missing');
+const sessionIndex='CREATE INDEX IF NOT EXISTS idx_sessions_user_expires ON sessions(user_id,expires_at)';
+if (!readFileSync('schema.sql','utf8').includes(sessionIndex) || !readFileSync('migrations/0004_session_user_expiry_index.sql','utf8').includes(sessionIndex)) throw Error('Session index missing from schema or migration');
 const wrangler = readFileSync('wrangler.toml','utf8');
 for (const x of ['pages_build_output_dir = "public"','binding = "DB"','binding = "MEDIA"','binding = "AI"']) if (!wrangler.includes(x)) throw Error(`Missing binding ${x}`);
 for (const name of ['integrations.js','ai-tools.js','gateway-ui.js','voice-enhance.js','timeline.js','voice-studio.js']) {
