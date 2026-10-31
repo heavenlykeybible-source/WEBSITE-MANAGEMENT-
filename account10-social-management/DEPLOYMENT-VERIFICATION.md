@@ -103,3 +103,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Repeated requests must not silently change an already-pending destination; the API rejects duplicate requests, and the operator queue displays the saved destination.
 - [ ] Operator resolution of an already-resolved request must return HTTP 409 rather than modifying a different conversation state.
 - [ ] Ensure D1 migration `0009_human_contact_target.sql` is applied before processing inbound human-contact requests. Roll out only after approval; the integration sends no automatic human-notification message.
+
+## Unified destination-aware AI escalation
+- [ ] After migration 0009, request Gemini operator suggestion with the phrase 'I want to speak with Evangelist Emmanuel Ogheneochuko Adiohwo'; verify `human_contact_target=speak_to_evangelist`, `human_paused=1`, no Gemini provider call, and no outbound message.
+- [ ] Repeat with 'I want to speak with a Heavenly Key Evangelistic Movement agent' and verify `human_contact_target=ministry_agent`.
+- [ ] Both POST /api/ai/suggest-reply and POST /api/automation/evaluate-and-draft must honor the same destination and reject changes to pending or paused human requests.
+- [ ] Check browser dashboard's human requests list visibly distinguishes both routing choices and does not imply a human has already been notified.
