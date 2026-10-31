@@ -60,7 +60,7 @@ export default {
      return json({live:{session_id:safe.session_id,title:safe.title,status:safe.status,source_type:safe.source_type,started_at:safe.started_at,reconnect_deadline:safe.reconnect_deadline}});
   }
   if(marker==='media-engine-public-v1' && request.method==='GET' && url.pathname==='/api/broadcast/programme') return publicProgramme(request,env);
-  { const match=url.pathname.match(/^\/api\/broadcast\/media\/(\d+)\/object$/); if(marker==='media-engine-public-v1' && match && ['GET','HEAD'].includes(request.method))return serveBroadcastMedia(request,env,Number(match[1])); }
+  { const match=url.pathname.match(/^\/api\/broadcast\/media\/(\d+)\/object$/); if(match && ['GET','HEAD'].includes(request.method))return serveBroadcastMedia(request,env,Number(match[1])); }
   if(url.pathname==='/api/media-engine/livekit/viewer-token'&&request.method==='POST'&&marker==='media-engine-public-v1'){
     const live=await env.DB.prepare("SELECT session_id,source_ref,title,status FROM live_sessions WHERE source_ref LIKE 'livekit:%' AND ((status='live' AND last_heartbeat_at>datetime('now','-180 seconds')) OR (status='reconnecting' AND reconnect_deadline>datetime('now'))) ORDER BY session_id DESC LIMIT 1").first<any>();
     if(!live)return json({error:'No LiveKit broadcast is active'},404);
