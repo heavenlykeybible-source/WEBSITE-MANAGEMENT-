@@ -22,6 +22,7 @@ for (const name of ['run.sh','config.env','../secrets.zip','a/b.zip',''])
 await assert.rejects(saveImportSession(db,{...actor,id:0},{...session,ownerId:0}));
 const id=await saveImportSession(db,actor,session);
 assert.match(id,/^[a-f0-9-]{36}$/i);
+assert.equal(id,session.key.split('/').pop(),'D1 session must match the private R2 object UUID');
 const originalPrepare=db.prepare;
 db.prepare=()=>({bind:()=>({run:async()=>({meta:{changes:0}})})});
 await assert.rejects(saveImportSession(db,actor,session),/not persisted/);
@@ -37,6 +38,8 @@ assert.equal(statements.length,beforeInvalidId,'Invalid IDs must be rejected bef
 const originalKey=row.object_key;
 row.object_key='private-imports/8/forged';
 await assert.rejects(loadImportSession(db,actor,id),/unavailable/);
+row.object_key='private-imports/7/123e4567-e89b-42d3-a456-426614174001';
+await assert.rejects(loadImportSession(db,actor,id),/unavailable/,'Another valid session key must be rejected');
 row.object_key=originalKey;
 for (const [field,bad] of [['size_bytes',0],['size_bytes',1073741825],['part_count',2],['upload_id','']]) {
   const original=row[field];
