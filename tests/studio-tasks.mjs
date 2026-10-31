@@ -67,6 +67,15 @@ try{
  const submitted=await studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100});
  assert.equal(submitted.status,'submitted');assert.equal(submitted.proposal_id,100);
  await assert.rejects(studioAITask(env,a1,'submit_studio_assignment',{task_id:first.tasks[0].id,proposal_id:100}),e=>e.status===403);
+ // Reading the inbox is sensitive too: enforce owner revocation and account scope.
+ const originalPolicy=raw.prepare("SELECT value_json FROM settings WHERE key='ai:permissions:1'").get();
+ raw.prepare("UPDATE settings SET value_json=? WHERE key='ai:permissions:1'").run(JSON.stringify({...JSON.parse(originalPolicy.value_json),mode:'chat'}));
+ await assert.rejects(studioAITask(env,a1,'my_studio_assignments',{}),e=>e.status===403);
+ raw.prepare("UPDATE settings SET value_json=? WHERE key='ai:permissions:1'").run(originalPolicy.value_json);
+ await assert.rejects(studioAITask(env,{...a1,aiPolicy:{...grant,connections:[7]}},'my_studio_assignments',{}),e=>e.status===403);
+ raw.prepare("UPDATE agents SET status='revoked' WHERE id=1").run();
+ await assert.rejects(studioAITask(env,a1,'my_studio_assignments',{}),e=>e.status===403);
+ raw.prepare("UPDATE agents SET status='active' WHERE id=1").run();
  assert.equal((await studioAITask(env,a1,'my_studio_assignments',{})).tasks.length,1);
  const reported=await endpoint('studio/tasks','GET');
  assert.equal(reported.tasks.find(t=>t.id===first.tasks[0].id).progress,'Source inspection 60% complete');
