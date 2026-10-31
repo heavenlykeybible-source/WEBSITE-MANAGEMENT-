@@ -96,3 +96,10 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Confirm the welcome menu offers **Heavenly Key Evangelistic Movement agent** and **Evangelist Emmanuel Ogheneochuko Adiohwo** as separate options.
 - [ ] POST /api/human-requests with an authorized conversation ID and target `ministry_agent` or `speak_to_evangelist` must pause Gemini and preserve the selected target. Reject any other target with HTTP 400.
 - [ ] GET /api/human-requests must show the selected destination to the authorized ministry operator; no automated claim of direct notification or conversation initiation.
+
+## Contact destination integrity — October 2026
+- [ ] When a consented WhatsApp test user sends 'I want to speak with a Heavenly Key Evangelistic Movement agent', the signed-event processor stores `human_contact_target=ministry_agent` and pauses Gemini.
+- [ ] When a consented WhatsApp test user sends 'I want to speak with Evangelist Emmanuel Ogheneochuko Adiohwo', the processor stores `human_contact_target=speak_to_evangelist` and pauses Gemini.
+- [ ] Repeated requests must not silently change an already-pending destination; the API rejects duplicate requests, and the operator queue displays the saved destination.
+- [ ] Operator resolution of an already-resolved request must return HTTP 409 rather than modifying a different conversation state.
+- [ ] Ensure D1 migration `0009_human_contact_target.sql` is applied before processing inbound human-contact requests. Roll out only after approval; the integration sends no automatic human-notification message.
