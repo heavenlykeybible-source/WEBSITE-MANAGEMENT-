@@ -19,12 +19,20 @@ self.addEventListener('install',event=>{
     if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
    }catch{}
   }
-  for(const path of SHELL.filter(path=>!core.includes(path))){
-   try{
-   const response=await fetch(path,{cache:'no-store',credentials:'omit'});
-   if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
-   }catch{}
+  // Fetch optional public assets with bounded concurrency instead of a long
+  // serial queue. Optional failures never block the essential app shell.
+  const optional=SHELL.filter(path=>!core.includes(path));
+  let cursor=0;
+  async function cacheOptional(){
+   while(cursor<optional.length){
+    const path=optional[cursor++];
+    try{
+     const response=await fetch(path,{cache:'no-store',credentials:'omit'});
+     if(response.ok && response.type==='basic' && !/(?:private|no-store)/i.test(response.headers.get('cache-control')||'')) await cache.put(path,response);
+    }catch{}
+   }
   }
+  await Promise.all(Array.from({length:Math.min(6,optional.length)},()=>cacheOptional()));
  }));
 });
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE_REVIEWED_SHELL')event.waitUntil(self.skipWaiting());});
