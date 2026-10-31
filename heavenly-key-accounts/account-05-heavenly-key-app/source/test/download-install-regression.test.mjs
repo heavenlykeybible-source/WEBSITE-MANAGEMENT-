@@ -149,3 +149,9 @@ test('all app QR images stay on first-party infrastructure', () => {
  assert.match(js, /recommended\.href='\/download\/'/);
  assert.doesNotMatch(js, /onlinebible\.heavenlykey\.org\/install\//);
 });
+
+test('installation dialog close button works with and without native dialog API', () => {
+ const js = publicFile('app-pages.js');
+ assert.match(js, /typeof dialog\.close==='function'/);
+ assert.match(js, /else dialog\.remove\(\)/);
+});
