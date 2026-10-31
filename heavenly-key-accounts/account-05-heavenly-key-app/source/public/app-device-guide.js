@@ -3,6 +3,7 @@
   'use strict';
   const params = new URLSearchParams(location.search);
   const appId = params.get('app') || 'all-in-one';
+  const validAppId = /^[a-z0-9-]{1,64}$/.test(appId) && params.getAll('app').length <= 1;
   const open = document.getElementById('open');
   const install = document.getElementById('install');
   const info = document.querySelector('.small');
@@ -58,15 +59,16 @@
   }
   async function initialize() {
     try {
-      const response = await fetch('/app-downloads.json', { cache: 'no-store' });
+      if (!validAppId) throw new Error('Invalid app selection');
+      const response = await fetch('/app-downloads.json', { cache: 'no-store', credentials: 'omit', redirect: 'error' });
       if (!response.ok) throw new Error('Catalogue unavailable');
       const apps = await response.json();
       if (!Object.prototype.hasOwnProperty.call(apps, appId)) throw new Error('Unknown app');
       const app = apps[appId];
-      const destination = new URL(app.url, location.origin);
+      if (!app || typeof app.name !== 'string' || !app.name.trim() || typeof app.url !== 'string' || !/^https:\/\//i.test(app.url)) throw new Error('Invalid catalogue entry');
+      const destination = new URL(app.url);
       const trustedHosts = new Set(['apps.heavenlykey.org', 'onlinebible.heavenlykey.org', 'global.heavenlykey.org', 'radio.heavenlykey.org', 'meeting.heavenlykey.org', 'heavenlykey.org', 'www.heavenlykey.org']);
-      const localDevelopment = location.hostname === 'localhost' && destination.protocol === 'http:' && destination.hostname === 'localhost';
-      if ((!localDevelopment && (destination.protocol !== 'https:' || !trustedHosts.has(destination.hostname))) || destination.username || destination.password) throw new Error('Invalid app URL');
+      if ((destination.protocol !== 'https:' || !trustedHosts.has(destination.hostname) || destination.port) || destination.username || destination.password) throw new Error('Invalid app URL');
       if (open) {
         open.href = destination.href;
         open.textContent = 'Open ' + app.name + ' Now';
