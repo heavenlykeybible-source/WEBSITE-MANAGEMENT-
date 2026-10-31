@@ -61,7 +61,10 @@ self.addEventListener('fetch',event=>{
  }
  // Keep each permitted Bible book/chapter URL isolated in offline cache.
  const key=url.origin+cachePath+(READING.has(url.pathname)?url.search:'');
- event.respondWith(fetch(request,{cache:"no-cache"}).then(response=>{
+ // Keep member cookies off public static asset fetches. Navigation requests retain
+ // their normal browser credentials but are never written into runtime cache.
+ const isDocument=request.mode==='navigate'||request.destination==='document';
+ event.respondWith(fetch(request,{cache:"no-cache",credentials:isDocument?request.credentials:'omit'}).then(response=>{
   // Navigation responses can contain member-specific HTML even if misconfigured as public.
   // Do not persist them during runtime; only the credential-free install shell is cached.
   if(request.mode!=='navigate' && request.destination!=='document' && isSafePublicResponse(response))event.waitUntil(caches.open(CACHE).then(cache=>cache.put(key,response.clone())));
