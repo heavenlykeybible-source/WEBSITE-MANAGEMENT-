@@ -3,6 +3,11 @@ const sections=[["Today's Topic","One central topic will guide all 12 sections. 
 const names=['Revival & Spiritual Fire','Holiness & Righteousness','Hope & Encouragement','Prayer & Intercession','Salvation & Repentance','Faith & Trust','The Holy Spirit','Evangelism & Soul Winning','Love & Christian Unity','The Word & Obedience','Wisdom & Discernment','End-time & Rapture Readiness'];
 const $=id=>document.getElementById(id);
 let current=0;
+// Shareable section navigation never loads or exposes unapproved devotional content.
+const sectionFromHash=()=>{const match=/^#section-(\d{1,2})$/.exec(window.location.hash);return match&&Number(match[1])>=1&&Number(match[1])<=12?Number(match[1])-1:0};
+current=sectionFromHash();
+function navigate(index,{focus=true,updateHash=true}={}){if(!Number.isInteger(index)||index<0||index>=sections.length)return;current=index;render();if(updateHash)history.replaceState(null,'','#section-'+(index+1));if(focus)$('section-title').focus();}
+window.addEventListener('hashchange',()=>navigate(sectionFromHash(),{focus:false,updateHash:false}));
 const menu=$('menu'),body=$('content'),status=$('status');
 function sectionText(index){const s=sections[index];return (index+1)+'. '+s[0]+'\n'+s[1]+(index===11?'\n'+names.map((n,i)=>(i+1)+'. '+n+' — Awaiting approved daily challenge.').join('\n'):'');}
 function allText(){return 'STRENGTH FOR TODAY — OUR DAILY MANNA\nDevelopment preview: no devotional has been approved for publication.\n\n'+sections.map((_,i)=>sectionText(i)).join('\n\n');}
@@ -10,7 +15,7 @@ function render(){const s=sections[current];$('section-number').textContent='SEC
 if(current===10){const a=document.createElement('a');a.href='https://www.heavenlykey.org/';a.textContent='Heavenly Key — ministry website';body.append(a);}
 if(current===11)for(const [i,name] of names.entries()){const row=document.createElement('div');row.className='challenge';const label=document.createElement('strong');label.textContent=(i+1)+'. '+name;const detail=document.createElement('span');detail.className='muted';detail.textContent='Awaiting approved daily challenge.';row.append(label,detail);body.append(row);}
 [...menu.children].forEach((b,i)=>{if(i===current)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');b.tabIndex=i===current?0:-1});$('prev').disabled=current===0;$('next').disabled=current===11;$('progress').textContent=(current+1)+' / 12';status.textContent='';}
-sections.forEach((s,i)=>{const button=document.createElement('button');button.type='button';button.textContent=String(i+1).padStart(2,'0')+'  '+s[0];button.onclick=()=>{current=i;render();$('section-title').focus()};menu.append(button)});
+sections.forEach((s,i)=>{const button=document.createElement('button');button.type='button';button.textContent=String(i+1).padStart(2,'0')+'  '+s[0];button.onclick=()=>navigate(i);menu.append(button)});
 // Accessible keyboard navigation for the twelve-section menu.
 menu.addEventListener('keydown',event=>{
  const buttons=[...menu.querySelectorAll('button')];
@@ -24,11 +29,16 @@ menu.addEventListener('keydown',event=>{
   case 'End':target=buttons.length-1;break;
   default:return;
  }
- event.preventDefault();current=target;render();buttons[target].focus();
+ event.preventDefault();navigate(target,{focus:false});buttons[target].focus();
 });
-$('prev').onclick=()=>{if(current>0){current--;render();$('section-title').focus()}};$('next').onclick=()=>{if(current<11){current++;render();$('section-title').focus()}};
+$('prev').onclick=()=>navigate(current-1);$('next').onclick=()=>navigate(current+1);
 async function copy(value){try{await navigator.clipboard.writeText(value);status.textContent='Copied preview text.'}catch{status.textContent='Copy unavailable on this device.'}}
 $('copy-section').onclick=()=>copy('DEVELOPMENT PREVIEW — NOT FOR PUBLICATION\n'+sectionText(current));$('copy-all').onclick=()=>copy(allText());
 $('share').onclick=async()=>{if(!navigator.share){await copy(allText());return}try{await navigator.share({title:'Strength for Today — Our Daily Manna (Preview)',text:allText()})}catch(e){if(e.name!=='AbortError')status.textContent='Sharing unavailable.'}};
+$('print').onclick=()=>window.print();
+$('font-larger').onclick=()=>adjustText(1);
+$('font-smaller').onclick=()=>adjustText(-1);
+let textScale=1;
+function adjustText(direction){textScale=Math.min(1.5,Math.max(.85,Math.round((textScale+direction*.1)*100)/100));body.style.fontSize=textScale+'rem';status.textContent='Reading text size '+Math.round(textScale*100)+'%';}
 render();
 })();
