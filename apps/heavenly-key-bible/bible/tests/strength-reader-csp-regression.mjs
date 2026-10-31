@@ -68,7 +68,7 @@ for(const className of ['archive-history','archive-open-button','archive-topic-g
  assert.ok(css.includes('.'+className),'External CSS must define '+className);
 }
 for(let i=0;i<12;i++){
- assert.ok(js.includes('data-topic=String(i)'),'Topic controls must be data-driven');
+ assert.ok(js.includes('b.dataset.topic=String(i)'),'Topic controls must be data-driven');
  assert.ok(css.includes('.topic[data-topic="'+i+'"]'),'Missing CSP-safe topic palette '+i);
  assert.ok(css.includes(':root[data-manna-theme="'+i+'"]'),'Missing CSP-safe theme palette '+i);
 }
