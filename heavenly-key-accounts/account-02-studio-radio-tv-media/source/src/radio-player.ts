@@ -72,7 +72,8 @@ async function start(){
 play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
 next.addEventListener('click',async()=>{if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
 retry.addEventListener('click',async()=>{const resume=playing;++playGeneration;audio.pause();audio.removeAttribute('src');audio.load();playing=false;play.textContent='▶ Play Radio';await refresh();if(resume&&playlist.length)say('Playlist refreshed. Press Play to resume.')});
-audio.addEventListener('ended',()=>{if(!playlist.length)return;select(position+1);if(playing)void start()});
+audio.addEventListener('ended',()=>{if(!playlist.length)return;const continuePlaying=playing;select(position+1);if(continuePlaying)void start()});
+audio.addEventListener('pause',()=>{if(playing&&!audio.ended)setPaused('Paused.');});
 window.addEventListener('pagehide',()=>{audio.pause();setPaused();});
 audio.addEventListener('error',()=>{if(audio.getAttribute('src'))setPaused('This recording cannot be loaded. Try Next or Refresh playlist.')});
 audio.addEventListener('waiting',()=>{if(playing)say('Buffering radio audio…')});
