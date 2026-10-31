@@ -727,3 +727,19 @@ test('alarm closes guests when host disappears during async stage check',async()
  assert.notEqual(h.guest.readyState,1);
  assert.equal(h.guest.messages.some(m=>m.t==='closed'&&m.why==='The host left.'),true);
 });
+
+test('guest handshake expiring during TURN signing cannot receive welcome',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ h.guest.attachment.until=Date.now()+10;
+ let release,started;
+ const reached=new Promise(resolve=>{started=resolve;});
+ h.context.crypto.subtle={importKey:()=>new Promise(resolve=>{release=resolve;started();}),sign:async()=>new Uint8Array(20)};
+ const pending=h.join('valid');await reached;
+ await new Promise(resolve=>setTimeout(resolve,35));
+ release({});await pending;
+ assert.notEqual(h.guest.readyState,1);
+ assert.equal(h.guest.messages.some(m=>m.t==='welcome'),false);
+ assert.equal(h.host.messages.some(m=>m.t==='waiting'||m.t==='joined'||m.t==='viewer-join'),false);
+});
