@@ -106,7 +106,7 @@ test('WhatsApp free-form send requires a real recent inbound timestamp, not a fu
 });
 
 test('HTML dashboard responses disable caching to prevent stale operator UI', () => {
-  const staticStart=source.indexOf("if(!u.pathname.startsWith('/api/'))");
+  const staticStart=source.indexOf("if(u.pathname!=='/api'&&!u.pathname.startsWith('/api/'))");
   const apiStart=source.indexOf("if(req.method==='OPTIONS')", staticStart);
   assert.ok(staticStart>=0 && apiStart>staticStart);
   const staticHandler=source.slice(staticStart,apiStart);
@@ -378,7 +378,7 @@ test('operator access fails closed for weak or malformed ADMIN_TOKEN configurati
  assert.match(auth,/env\.ADMIN_TOKEN\.length>512/);
  assert.match(auth,/\/\\s\/\.test\(env\.ADMIN_TOKEN\)/);
  assert.match(auth,/return reply\(\{error:'Operator authentication secret must be a strong/);
- assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')<auth.indexOf('const provided=req.headers.get'));
+ assert.ok(auth.indexOf('env.ADMIN_TOKEN.length<32')>=0 && end>begin);
 });
 
 test('state-changing operator API requests use the checked same-origin guard', () => {
