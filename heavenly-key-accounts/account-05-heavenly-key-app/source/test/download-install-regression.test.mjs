@@ -181,7 +181,7 @@ test('offline runtime never caches session-varying redirects or no-cache respons
  const sw = publicFile('sw.js');
  assert.match(sw, /response\.redirected/);
  assert.match(sw, /no-store\|no-cache/);
- assert.match(sw, /cookie\|authorization/);
+ assert.match(sw, /safeVary/);
  assert.match(sw, /response\.headers\.get\('vary'\)/);
 });
 
@@ -200,7 +200,7 @@ test('precache and runtime share a single safe public-response cache policy', ()
  assert.match(sw,/response\.status!==200/);
  assert.match(sw,/response\.redirected/);
  assert.match(sw,/no-store\|no-cache/);
- assert.match(sw,/cookie\|authorization/);
+ assert.match(sw,/safeVary/);
 });
 
 test('incomplete essential offline app shell rejects installation', () => {
@@ -317,4 +317,11 @@ test('install guides reject empty application IDs and partial native installers'
  assert.match(js,/available\.status === 200/);
  assert.match(js,/!available\.headers\.has\('content-range'\)/);
  assert.doesNotMatch(js,/nativeAvailable = available\.ok &&/);
+});
+
+test('offline cache header variance is restricted to safe content encoding', () => {
+ const sw=publicFile('sw.js');
+ assert.match(sw,/vary\.split\(','\)\.every/);
+ assert.match(sw,/value\.trim\(\)\.toLowerCase\(\)==='accept-encoding'/);
+ assert.match(sw,/safeVary/);
 });
