@@ -6,7 +6,7 @@ const bibleReference=value=>nonempty(value)&&/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d+
 export function validateDailyDevotional(entry){
  const errors=[];
  if(!entry||typeof entry!=='object'||Array.isArray(entry))return ['Entry must be an object'];
- if(!/^\d{4}-\d{2}-\d{2}$/.test(entry.date||''))errors.push('Invalid ISO date');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(entry.date||'')||Number.isNaN(Date.parse(entry.date))||new Date(entry.date).toISOString().slice(0,10)!==entry.date)errors.push('Invalid ISO date');
  if(entry.status!=='draft'&&entry.status!=='approved-for-publication')errors.push('Invalid publication status');
  if(!entry.sections||typeof entry.sections!=='object'||Array.isArray(entry.sections))return errors.concat('Missing sections');
  const s=entry.sections;
@@ -14,7 +14,7 @@ export function validateDailyDevotional(entry){
  if(!nonempty(s.topic?.title))errors.push('Missing daily topic title');
  if(!Array.isArray(s.bibleReading?.oldTestament)||s.bibleReading.oldTestament.length!==3)errors.push('Require exactly three Old Testament readings');
  if(!Array.isArray(s.bibleReading?.newTestament)||s.bibleReading.newTestament.length!==3)errors.push('Require exactly three New Testament readings');
- for(const group of ['oldTestament','newTestament'])for(const item of s.bibleReading?.[group]||[]){
+ for(const group of ['oldTestament','newTestament'])for(const item of (Array.isArray(s.bibleReading?.[group])?s.bibleReading[group]:[])){
   if(!bibleReference(item?.reference)||!nonempty(item?.kjvText))errors.push('Missing reference or displayed KJV text in '+group);
  }
  if(!nonempty(s.hymn?.collection)||!Number.isInteger(s.hymn?.number)||s.hymn.number<1||!nonempty(s.hymn?.title))errors.push('Hymn collection, number and title required');
