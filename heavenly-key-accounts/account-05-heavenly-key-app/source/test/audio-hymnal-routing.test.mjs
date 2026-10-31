@@ -166,3 +166,15 @@ test('independent services cannot opt their pages into browser or shared caching
   assert.equal(await response.text(),'<h1>Reader</h1>');
  }
 });
+
+test('anonymous public app responses retain reviewed offline cache policy',async()=>{
+ const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+  fetch:async()=>new Response('Public reader',{headers:{
+   'X-HK-App-Service':'bible-reader','Cache-Control':'public, max-age=120'
+  }})
+ }};
+ const response=await routeIndependentApp(request('/bible.html'),env);
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get('cache-control'),'public, max-age=120');
+ assert.equal(await response.text(),'Public reader');
+});
