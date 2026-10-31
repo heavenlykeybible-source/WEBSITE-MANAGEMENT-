@@ -329,7 +329,7 @@ const mismatchedExt=await onRequest({request:new Request('https://studio.example
 check('Upload rejects mismatched filename extensions',mismatchedExt.status===415);
 const misleadingName=await onRequest({request:new Request('https://studio.example/api/media?name=picture.png.html',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'}}),env,params:{path:['media']}});
 check('Upload rejects misleading multi-extension filenames',misleadingName.status===415);
-const disguisedMedia=await onRequest({request:new Request('https://studio.example/api/media?name=picture.html.png',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'}}),env,params:{path:['media']}});
+const disguisedMedia=await onRequest({request:new Request('https://studio.example/api/media?name=picture.php5.png',{method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'}}),env,params:{path:['media']}});
 check('Upload rejects embedded active-content filename extensions',disguisedMedia.status===415);
 
 for (const [label, payload] of [
