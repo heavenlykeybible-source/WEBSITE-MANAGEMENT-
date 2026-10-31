@@ -151,3 +151,11 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Test valid token, wrong same-length token, extra token bytes, malformed Authorization scheme, and an excessively long Authorization header.
 - [ ] Verify the new authentication helper is exercised by the automated security contract suite and that the production secret is still stored only in Cloudflare Workers secrets.
 - [ ] Treat this as temporary shared-token hardening, NOT completion of person-specific access, role-based authorization, MFA, or session revocation.
+
+## Named operators staging acceptance — migration 0012
+- [ ] Apply `0012_operator_credentials.sql` after 0011 before deploying the new Worker. Verify `/api/automation/readiness` reports `operatorCredentialsReady=true`.
+- [ ] Owner Accounts view creates a viewer and operator using random one-time token display; token hashes only are stored in D1. No plaintext tokens in database, logs, GitHub or screenshots.
+- [ ] Viewer can read allowed dashboards but cannot POST, PATCH, PUT, or DELETE. Operator can create internal notes and resolve a human request but cannot manage staff credentials, connect social accounts, send external messages or publish posts.
+- [ ] An expired credential and a revoked credential both return HTTP 401 immediately; revoke never affects the owner's own master secret. Verify tokens stop working across Worker instances.
+- [ ] Operator creation accepts only a display name, viewer/operator role and expiry 1–90 days. List response never exposes token_hash or raw token.
+- [ ] Check existing owner `ADMIN_TOKEN` is strong, protected and rotated safely. Before global launch add MFA, named owner account, audited operator activity and server-side abuse/rate limiting.
