@@ -38,6 +38,15 @@ async function scenario(mode){
  node('clipRedo').onclick();
  assert.equal(node('clipList').value,'1','Redo reapplies position after move-to-last');
  assert.equal(window.hkTimeline.getClips()[1].end,2,'Redo restores the moved clip and selection together');
+ node('clipReverse').onclick();
+ assert.equal(window.hkTimeline.getClips()[0].end,2,'Reverse order moves full-source clip to first');
+ assert.equal(node('clipList').value,'0','Reverse order keeps the same clip selected');
+ node('clipUndo').onclick();
+ assert.equal(window.hkTimeline.getClips()[1].end,2,'Undo restores order after reverse');
+ assert.equal(node('clipList').value,'1','Undo restores selection after reverse');
+ node('clipRedo').onclick();
+ assert.equal(window.hkTimeline.getClips()[0].end,2,'Redo reapplies reverse clip order');
+ node('clipUndo').onclick();
  assert.equal(window.hkTimeline.getClips().length,2,'Full-source command appends one clip');
  assert.deepEqual(JSON.parse(JSON.stringify(window.hkTimeline.getClips()[1])),{start:0,end:2,speed:1},'Full-source clip covers complete video');
  node('clipClear').onclick();
