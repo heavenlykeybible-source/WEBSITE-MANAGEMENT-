@@ -1,0 +1,1 @@
+location.replace("https://apps.heavenlykey.org/old-time-gospel-revival-hymn-book.html"+location.search+location.hash)
