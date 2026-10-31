@@ -1,5 +1,5 @@
 "use strict";
-const SHELL = "hk-bible-shell-v71";
+const SHELL = "hk-bible-shell-v72";
 const SCRIPTURE = "hk-bible-kjv-ae1f46af-v1";
 const PREFIX = new URL("./", self.location.href).pathname;
 const SHELL_ASSETS = ["./index.html", "./strength-for-today.html", "./strength-publication-status.json", "./strength-devotionals-2026.json", "./strength-devotionals-2027-batch01.json", "./strength-devotionals-year1-batch02.json", "./strength-devotionals-year1-batch03.json", "./strength-devotionals-year1-batch04.json", "./strength-devotionals-year2-batch01.json", "./strength-devotionals-year2-batch02.json", "./strength-devotionals-year2-batch03.json", "./strength-devotionals-year2-batch04.json", "./strength-share-studio.js", "./ministry-logo.jpeg", "./style.css", "./reader-design.css", "./reader-design.js", "./shared/hk-standard-footer.css", "./fonts/NimbusRoman-Regular.otf", "./fonts/NimbusRoman-Bold.otf", "./fonts/NimbusRoman-Italic.otf", "./fonts/NimbusRoman-BoldItalic.otf", "./app.js", "./study-tools.js", "./strength-for-today.html", "./strength-share-studio.js", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png", "./data/hymns.json", "./study-extensions.html", "./study-extensions.js", "./dictionary.json", "./daily-topics.json", "./daily-lessons.json", "./original-language-guide.json", "./read-pray-reminder.js", "./read-pray-push.js", "./data/annotations/GEN.json", "./data/annotations/EXO.json", "./data/annotations/MAT.json", "./data/annotations/MAR.json", "./data/annotations/JOH.json", "./data/annotations/center-references.json", "./shared/app-update.js", "./shared/hk-standard-footer.js", "./family-navigation.js", "./install/index.html", "./install/ipad/index.html", "./install/android/index.html", "./install/iphone/index.html", "./install/mac/index.html", "./install/windows/index.html", "./install/ipad/install.js", "./install/android/install.js", "./install/iphone/install.js", "./install/mac/install.js", "./install/windows/install.js"];
@@ -52,7 +52,19 @@ self.addEventListener("fetch", event => {
  if(event.request.method!=="GET"||url.origin!==self.location.origin||!url.pathname.startsWith(PREFIX))return;
  const isAnnotation = url.pathname.startsWith(PREFIX+"data/annotations/") && ["GEN.json", "EXO.json", "MAT.json", "MAR.json", "JOH.json", "center-references.json"].some(name=>url.pathname===PREFIX+"data/annotations/"+name);
  const isScripture = url.pathname.startsWith(PREFIX+"data/kjv/");
- const isDevotionalDraftLibrary = SHELL_ASSETS.some(asset=>/^\.\/strength-devotionals.*\.json$/.test(asset)&&url.pathname===new URL(asset,self.location.href).pathname);
+  const isDevotionalDraftLibrary = /^strength-devotionals-(?:2026|2027|year[1-5])(?:-batch\d+)?\.json$/.test(url.pathname.slice(PREFIX.length));
+  if(isDevotionalDraftLibrary){
+   // Approval is a live server decision; no old offline copy may bypass withdrawal.
+   event.respondWith((async()=>{
+    for(const name of await caches.keys()){
+     if(!name.startsWith("hk-bible-"))continue;
+     try{await (await caches.open(name)).delete(event.request);}catch{}
+    }
+    try{return await fetch(new Request(event.request,{credentials:"omit",cache:"no-store"}));}
+    catch{return new Response(null,{status:503,headers:{"Cache-Control":"no-store","X-Content-Type-Options":"nosniff"}});}
+   })());
+   return;
+  }
  const aliases={"/kingdom-quest":"kingdom-quest.html","/dictionary":"study-extensions.html","/concordance":"study-extensions.html","/study":"study-extensions.html","/daily-routine":"study-extensions.html"};
  const base=PREFIX.endsWith("/")?PREFIX.slice(0,-1):PREFIX;
  const relative=url.pathname===base?"/":url.pathname.startsWith(base+"/")?url.pathname.slice(base.length):url.pathname;
