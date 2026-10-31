@@ -73,3 +73,29 @@ test('independent service 302 redirects are rejected before browsers see them',a
  assert.equal(response.headers.get('location'),null);
  assert.equal(response.headers.get('cache-control'),'no-store');
 });
+
+test('independent app response cannot clear main-site data, refresh, or grant CORS access',async()=>{
+ const env={INDEPENDENT_APPS_ENABLED:'true',BIBLE_READER_APP:{
+  fetch:async()=>new Response('<h1>Reader</h1>',{status:200,headers:{
+   'X-HK-App-Service':'bible-reader',
+   'Content-Type':'text/html; charset=utf-8',
+   'Clear-Site-Data':'"cookies", "storage"',
+   'Refresh':'0;url=https://unapproved.example/',
+   'Access-Control-Allow-Origin':'*',
+   'Access-Control-Allow-Credentials':'true',
+   'Access-Control-Allow-Methods':'GET, POST',
+   'Access-Control-Allow-Headers':'Authorization',
+   'Access-Control-Expose-Headers':'Set-Cookie',
+   'Access-Control-Max-Age':'86400',
+  }})
+ }};
+ const response=await routeIndependentApp(request('/bible.html'),env);
+ assert.equal(response.status,200);
+ for(const name of ['clear-site-data','refresh','access-control-allow-origin',
+  'access-control-allow-credentials','access-control-allow-methods',
+  'access-control-allow-headers','access-control-expose-headers','access-control-max-age']){
+  assert.equal(response.headers.get(name),null,'Unsafe response header leaked: '+name);
+ }
+ assert.equal(response.headers.get('content-type'),'text/html; charset=utf-8');
+ assert.equal(await response.text(),'<h1>Reader</h1>');
+});
