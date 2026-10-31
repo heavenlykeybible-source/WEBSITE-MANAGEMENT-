@@ -69,6 +69,10 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
     if(!row)problem('Private import not found',404);
     return Response.json({import:publicSession(row)},{headers:{'cache-control':'no-store'}});
   }
+  const mutateSession=fn=>{
+    if(typeof withLock!=='function')problem('Safe private-import concurrency control is unavailable',503);
+    return withLock('account4-private-import-session:'+id,fn);
+  };
   if(action.startsWith('parts/')&&method==='PUT'){
     const session=await loadImportSession(env.DB,actor,id);
     const partNumber=Number(match[3]);
@@ -77,11 +81,14 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
     if(expected<1)problem('Invalid part number');
     const bytes=await boundedBytes(request,PART_BYTES);
     validatePart({partNumber,byteLength:bytes.byteLength},session);
-    const result=await uploadPersistedPrivatePart(env.FILES,env.DB,actor,id,partNumber,bytes);
+    // Serialize every mutation for this upload. This prevents two retries of
+    // the same R2 part from persisting an ETag that no longer matches the
+    // final object, and prevents completion racing an in-flight part receipt.
+    const result=await mutateSession(()=>uploadPersistedPrivatePart(env.FILES,env.DB,actor,id,partNumber,bytes));
     return Response.json(result,{headers:{'cache-control':'no-store'}});
   }
   if(action==='complete'&&method==='POST'){
-    const result=await finishPersistedPrivateImport(env.FILES,env.DB,actor,id);
+    const result=await mutateSession(()=>finishPersistedPrivateImport(env.FILES,env.DB,actor,id));
     if(auditEvent)await auditEvent('private-import-completed',id+' private-awaiting-review');
     return Response.json({...result,notice:'The object remains private and awaits separate security review.'},{headers:{'cache-control':'no-store'}});
   }
@@ -90,7 +97,7 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
     return Response.json(result,{headers:{'cache-control':'no-store'}});
   }
   if(action==='reconcile'&&method==='POST'){
-    const result=await reconcileCompletedPrivateImport(env.DB,env.FILES,actor,id);
+    const result=await mutateSession(()=>reconcileCompletedPrivateImport(env.DB,env.FILES,actor,id));
     if(auditEvent)await auditEvent('private-import-reconciled',id+' private-awaiting-review');
     return Response.json({...result,notice:'Reconciled to private review only. Not scanned, published or deployed.'},{headers:{'cache-control':'no-store'}});
   }
