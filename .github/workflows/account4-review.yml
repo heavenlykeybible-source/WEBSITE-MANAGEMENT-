@@ -31,16 +31,19 @@ jobs:
           node --check scripts/account4-import-d1.mjs
           node --check scripts/account4-import-workflow.mjs
           node --check scripts/account4-import-recovery.mjs
+          node --check scripts/account4-import-publish-gate.mjs
           node --check tests/account4-upload-policy.mjs
           node --check tests/account4-r2-multipart.mjs
           node --check tests/account4-import-d1.mjs
           node --check tests/account4-import-workflow.mjs
           node --check tests/account4-import-recovery.mjs
+          node --check tests/account4-import-publish-gate.mjs
       - run: node tests/account4-upload-policy.mjs
       - run: node tests/account4-r2-multipart.mjs
       - run: node tests/account4-import-d1.mjs
       - run: node tests/account4-import-workflow.mjs
       - run: node tests/account4-import-recovery.mjs
+      - run: node tests/account4-import-publish-gate.mjs
       - run: npm test
       - run: npm run test:cms-dom
       - name: Install isolated browser-test dependencies
