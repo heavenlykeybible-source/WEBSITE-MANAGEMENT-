@@ -572,3 +572,11 @@ test('public health route rejects mutations and serves bodyless HEAD responses',
  assert.match(route,/if\(req\.method!=='GET'&&req\.method!=='HEAD'\)return reply\(\{error:'Method not allowed'\},405\)/);
  assert.match(route,/req\.method==='HEAD'\?new Response\(null,\{status:health\.status,headers:health\.headers\}\):health/);
 });
+
+test('operator mutations reject cross-site browser fetch metadata before origin fallback', () => {
+ const fetchGuard=source.indexOf("req.headers.get('sec-fetch-site')==='cross-site'");
+ const originGuard=source.indexOf("operatorMutationOriginAllowed(req.method,req.headers.get('origin'),u.origin)");
+ assert.ok(fetchGuard>=0&&originGuard>fetchGuard);
+ assert.match(source,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)&&req\.headers\.get\('sec-fetch-site'\)==='cross-site'/);
+ assert.match(source,/Cross-site operator mutations are forbidden/);
+});
