@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const load=p=>readFileSync(resolve(root,p),'utf8');
+const index=load('src/index.ts'),broadcast=load('src/public-broadcast.ts'),player=load('src/radio-player.ts');
+const route=index.split('\n').find(line=>line.includes("match=url.pathname.match")&&line.includes("/object$"));
+assert.ok(route,'Public radio audio route is required');
+assert.ok(route.includes("['GET','HEAD'].includes(request.method)"),'Allow browser GET and HEAD audio requests');
+assert.ok(!route.includes("marker==='media-engine-public-v1'"),'Browser audio elements cannot attach a custom marker header');
+assert.ok(index.includes("if(marker!=='media-engine-v1'||!auth.startsWith('Bearer '))"),'Authenticated admin routes stay protected');
+assert.ok(broadcast.includes("eligibleMedia(env,id)"),'Public media delivery must check publication or active programme eligibility');
+assert.ok(broadcast.includes("if(TV_LOCKED&&!adminPreview&&media.media_type==='video')"),'Public video remains locked');
+assert.ok(broadcast.includes("const range=request.headers.get('Range')"),'Seekable radio range requests remain supported');
+assert.ok(player.includes('<audio id="audio" preload="none"'),'Radio player uses native browser audio');
+assert.ok(player.includes("audio.src=item.url"),'Player loads eligible audio URL directly');
+console.log('Account 2 public radio browser audio route and media access controls passed');
