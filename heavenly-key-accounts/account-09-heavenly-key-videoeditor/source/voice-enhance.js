@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const p=document.createElement('section');p.className='panel';p.style.marginTop='16px';
+const p=document.createElement('section');p.className='panel';p.classList.add('spaced-panel');
 p.innerHTML='<h2>Voice Enhancement & Noise Removal</h2><p class="muted">Local browser processing. Reduces steady background noise, rumble and uneven volume; not equivalent to Adobe Enhance Speech AI.</p><label for="enhanceFile">Voice recording (audio file)</label><input id="enhanceFile" type="file" accept="audio/*"><label for="enhanceStrength">Noise reduction strength</label><input id="enhanceStrength" type="range" min="0" max="100" value="65"><label><input id="enhanceNormalize" type="checkbox" checked> Normalize speech volume</label><div class="actions"><button id="enhanceRun" type="button">Enhance voice</button><a id="enhanceDownload" hidden download="heavenly-key-enhanced.wav">Download enhanced WAV</a></div><audio id="enhancePreview" controls></audio><div id="enhanceStatus" class="status" role="status">Select a recording.</div>';
 document.getElementById('audio').append(p);
 let currentUrl;
