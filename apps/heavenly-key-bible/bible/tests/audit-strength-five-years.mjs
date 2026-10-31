@@ -151,6 +151,24 @@ const remediationPriority=[
  ['THIN_DAILY_REFLECTION','Expand underdeveloped daily reflections'],
  ['DUPLICATE_DAY_TITLE','Review repeated day titles and themes']
 ].map(([code,action])=>({code,count:flags.filter(f=>f.code===code).length,action})).filter(item=>item.count>0);
+// Give editors a short, date-specific review queue instead of a wall of repeated flags.
+const reviewByDate=new Map();
+for(const issue of qualityBlockingFlags){
+ if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(issue.date))continue;
+ let record=reviewByDate.get(issue.date);
+ if(!record){record={date:issue.date,blockingIssues:0,codes:{},sourceFiles:new Set()};reviewByDate.set(issue.date,record);}
+ record.blockingIssues++;
+ record.codes[issue.code]=(record.codes[issue.code]||0)+1;
+}
+for(const entry of entries){
+ const record=reviewByDate.get(entry.date);
+ if(record)record.sourceFiles.add(entry._file);
+}
+const highestPriorityReviewDays=[...reviewByDate.values()]
+ .sort((a,b)=>b.blockingIssues-a.blockingIssues||a.date.localeCompare(b.date))
+ .slice(0,15)
+ .map(item=>({date:item.date,blockingIssues:item.blockingIssues,sourceFiles:[...item.sourceFiles].sort(),topIssues:Object.entries(item.codes).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([code,count])=>({code,count}))}));
+const affectedCalendarDays=reviewByDate.size;
 const automatedQualityPassed=qualityBlockingFlags.length===0 &&
  entries.length===requestedDayTarget &&
  topicCount===requestedDayTarget*12 &&
@@ -161,7 +179,7 @@ const result={
  title:'STRENGTH FOR TODAY — Five-year editorial audit (automated, not doctrinal approval)',
  sources:{primary:'https://heavenlykey.org/what-we-believe/',comparison:['https://dclm.org/about/what-we-believe/','https://mountainoffire.org/']},
  note:'Comparison sources guide doctrine and tone, not copying of their devotional text. An automated check cannot verify the theological accuracy or originality of each passage.',
- files:names.length,ignoredDevotionalFiles,days:entries.length,requestedDayTarget,daysNeededToMeetRequest,missingDates,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
+ files:names.length,ignoredDevotionalFiles,days:entries.length,requestedDayTarget,affectedCalendarDays,highestPriorityReviewDays,daysNeededToMeetRequest,missingDates,uniqueDayTitles:titleOccurrences.size,uniqueDayReflections:dailyReflections.size,uniqueDayPrayers:dailyPrayers.size,consistentVerseReferences:verseTextByReference.size,expectedStartDate,expectedEndDate,automatedQualityPassed,qualityBlockingFlagCount:qualityBlockingFlags.length,releaseRecommendation:'BLOCK_PENDING_INDEPENDENT_EDITORIAL_AND_SECURITY_APPROVAL',range:[entries[0]?.date,entries.at(-1)?.date],topicEntries:topicCount,
  approvedDays:approved,publicationStatus:manifest.publicationStatus,publishedBatches:Array.isArray(manifest.publishedBatchFiles)?manifest.publishedBatchFiles.length:null,
  uniqueScriptureReferencesPerTopic:Object.fromEntries(topicNames.map((n,j)=>[n,references[j].size])),
  flagsByType:flags.reduce((o,f)=>(o[f.code]=(o[f.code]||0)+1,o),{}),remediationPriority,
@@ -177,7 +195,7 @@ const result={
  publicationReady:false
 };
 if(process.env.STRENGTH_AUDIT_SUMMARY==='1') {
- console.log(JSON.stringify({files:result.files,days:result.days,requestedDayTarget:result.requestedDayTarget,missingDates:result.missingDates,topicEntries:result.topicEntries,qualityBlockingFlagCount:result.qualityBlockingFlagCount,flagsByType:result.flagsByType,remediationPriority:result.remediationPriority,sampleFlags:result.sampleFlags,publicationReady:result.publicationReady},null,2));
+ console.log(JSON.stringify({files:result.files,days:result.days,requestedDayTarget:result.requestedDayTarget,missingDates:result.missingDates,topicEntries:result.topicEntries,qualityBlockingFlagCount:result.qualityBlockingFlagCount,affectedCalendarDays:result.affectedCalendarDays,highestPriorityReviewDays:result.highestPriorityReviewDays,flagsByType:result.flagsByType,remediationPriority:result.remediationPriority,sampleFlags:result.sampleFlags,publicationReady:result.publicationReady},null,2));
 } else console.log(JSON.stringify(result,null,2));
 if(!automatedQualityPassed) {
  console.error('EDITORIAL QUALITY BLOCKED: unresolved duplicates, templated copy, incomplete data or missing requested dates. Human doctrinal and KJV approval still required.');
