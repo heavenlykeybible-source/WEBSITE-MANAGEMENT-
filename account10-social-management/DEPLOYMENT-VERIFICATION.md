@@ -84,3 +84,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] /api/automation/evaluate-and-draft must not generate a rule-based reply when a visitor explicitly asks to speak to Evangelist Emmanuel or a human.
 - [ ] Conduct a live WhatsApp test using a consented test number: signed webhook, handover, operator approval, delivery ledger, signed receipts.
 - [ ] Verify CI typecheck, bundle and test results, and review security scanning and rollback before global launch.
+
+## Human-request lifecycle security gate
+- [ ] In the operator dashboard, an explicit visitor request for Evangelist Emmanuel or a human must display the pending state. The resume button must require operator confirmation and call POST /api/human-requests/resolve rather than POST /api/takeover.
+- [ ] At the API level, POST /api/takeover with paused=false must return HTTP 409 while requested_human=1. The human-request resolution route remains the only authorized way for the operator to clear requested_human and resume Gemini.
+- [ ] Test concurrent inbound WhatsApp human requests versus operator resume, using consented test conversations, and confirm no automated content is sent.
+- [ ] This follows OWASP server-side authorization and deny-by-default guidance and WhatsApp Business Policy's clear human-escalation requirement.
