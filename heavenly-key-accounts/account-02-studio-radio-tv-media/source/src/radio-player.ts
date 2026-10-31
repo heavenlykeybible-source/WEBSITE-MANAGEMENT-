@@ -64,7 +64,7 @@ async function start(){
  try{if(!playlist.length){say('No radio recordings are available.');return;}
  if(!audio.getAttribute('src'))select(position);
  const generation=++playGeneration;await audio.play();if(generation!==playGeneration)return;playing=true;play.textContent='⏸ Pause';play.setAttribute('aria-label','Pause radio');say('Playing • '+(position+1)+' of '+playlist.length);}
- catch{setPaused('Audio could not play. Check your connection, audio output, or try the next recording.');}
+ catch{if(generation===playGeneration)setPaused('Audio could not play. Check your connection, audio output, or try the next recording.');}
 }
 play.addEventListener('click',async()=>{if(!playlist.length){say('Playlist not ready. Press Refresh playlist, then Play.');return;}if(!audio.paused){audio.pause();setPaused('Paused.');return;}await start()});
 next.addEventListener('click',async()=>{if(!select(position+1))return;if(playing)await start();else say('Next recording ready. Press Play.')});
