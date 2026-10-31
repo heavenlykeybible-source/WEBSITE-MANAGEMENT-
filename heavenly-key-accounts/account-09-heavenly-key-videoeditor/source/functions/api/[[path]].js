@@ -53,9 +53,9 @@ const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')
 const rnd = n => hex(crypto.getRandomValues(new Uint8Array(n)));
 const sha = async s => hex(await crypto.subtle.digest('SHA-256', enc.encode(s)));
 const J = (o, s = 200, h = {}) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer', 'cross-origin-resource-policy': 'same-origin', 'x-robots-tag': 'noindex, nofollow', ...h } });
-async function pbkdf2(pw, salt) {
+async function pbkdf2(pw, salt, iterations = 600000) {
   const k = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
-  return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: 100000 }, k, 256));
+  return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations }, k, 256));
 }
 const ROLES = new Set(['owner', 'admin']);
 const cookie = (t, age) => `hk=${t}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
@@ -120,7 +120,7 @@ export async function onRequest({ request: req, env, params }) {
       try {
         if (env.DB) {
           // Validate required schema, not merely that the D1 binding exists.
-          await env.DB.prepare('SELECT id,role,storage_used FROM users LIMIT 1').all();
+          await env.DB.prepare('SELECT id,role,storage_used,password_iterations FROM users LIMIT 1').all();
           await env.DB.prepare('SELECT id FROM projects LIMIT 1').all();
           await env.DB.prepare('SELECT id,deleted FROM media LIMIT 1').all();
           await env.DB.prepare('SELECT id FROM audit LIMIT 1').all();
@@ -147,7 +147,7 @@ export async function onRequest({ request: req, env, params }) {
       }
       if (await env.DB.prepare('SELECT 1 x FROM users WHERE email=?').bind(email).first()) return J({ error: 'That email is already registered.' }, 409);
       const id = rnd(16), salt = rnd(16);
-      await env.DB.prepare('INSERT INTO users(id,email,pass_hash,salt,created_at) VALUES(?,?,?,?,?)').bind(id, email, await pbkdf2(pw, salt), salt, Date.now()).run();
+      await env.DB.prepare('INSERT INTO users(id,email,pass_hash,salt,created_at,password_iterations) VALUES(?,?,?,?,?,600000)').bind(id, email, await pbkdf2(pw, salt), salt, Date.now()).run();
       await log(env, id, 'register');
       if (signupIpKey) await log(env, signupIpKey, 'register_ip');
       return J({ ok: true });
@@ -173,8 +173,14 @@ export async function onRequest({ request: req, env, params }) {
       const ipFails = ipKey ? (await env.DB.prepare("SELECT COUNT(*) c FROM audit WHERE user_id=? AND action='login_fail_ip' AND at>?").bind(ipKey, windowStart).first()).c : 0;
       if (fails >= 10 || ipFails >= 50) return J({ error: 'Too many attempts. Try again in 15 minutes.' }, 429);
       const u = await env.DB.prepare('SELECT * FROM users WHERE email=?').bind(email).first();
-      const h = await pbkdf2(String(b?.password || ''), u ? u.salt : '0'.repeat(32));
+      const h = await pbkdf2(String(b?.password || ''), u ? u.salt : '0'.repeat(32), u?.password_iterations || 100000);
       if (!u || h !== u.pass_hash) { await log(env, email, 'login_fail'); if (ipKey) await log(env, ipKey, 'login_fail_ip'); return J({ error: 'Wrong email or password.' }, 401); }
+      // Upgrade legacy 100k hashes after successful authentication; never force a reset.
+      if ((u.password_iterations || 100000) < 600000) {
+        const upgradedSalt = rnd(16);
+        const upgradedHash = await pbkdf2(b.password, upgradedSalt, 600000);
+        await env.DB.prepare('UPDATE users SET pass_hash=?,salt=?,password_iterations=600000 WHERE id=? AND password_iterations=?').bind(upgradedHash,upgradedSalt,u.id,u.password_iterations || 100000).run();
+      }
       const t = rnd(32);
       await env.DB.prepare('INSERT INTO sessions VALUES(?,?,?)').bind(await sha(t), u.id, Date.now() + 30 * DAY).run();
       // Do not retain unlimited sessions when a member uses multiple browsers.
@@ -200,8 +206,8 @@ export async function onRequest({ request: req, env, params }) {
       const reauthAt=Date.now();
       const reauthSlot=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'logout_all_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='logout_all_attempt' AND at>?) < 10").bind(u.id,reauthAt,u.id,reauthAt-900000).run();
       if (!reauthSlot.meta.changes)return J({ error: 'Too many confirmation attempts. Try again in 15 minutes.' },429);
-      const row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
-      if (!row || await pbkdf2(b.password, row.salt) !== row.pass_hash)
+      const row = await env.DB.prepare('SELECT salt,pass_hash,password_iterations FROM users WHERE id=?').bind(u.id).first();
+      if (!row || await pbkdf2(b.password, row.salt, row.password_iterations || 100000) !== row.pass_hash)
         return J({ error: 'Wrong password.' }, 401);
       await env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(u.id).run();
       await log(env,u.id,'logout_all');
@@ -215,8 +221,8 @@ export async function onRequest({ request: req, env, params }) {
       const deleteAt=Date.now();
       const deleteSlot=await env.DB.prepare("INSERT INTO audit(user_id,action,at) SELECT ?,'account_delete_attempt',? WHERE (SELECT COUNT(*) FROM audit WHERE user_id=? AND action='account_delete_attempt' AND at>?) < 10").bind(u.id,deleteAt,u.id,deleteAt-900000).run();
       if (!deleteSlot.meta.changes)return J({ error: 'Too many confirmation attempts. Try again in 15 minutes.' },429);
-      const row = await env.DB.prepare('SELECT salt,pass_hash FROM users WHERE id=?').bind(u.id).first();
-      if (!row || await pbkdf2(b.password, row.salt) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
+      const row = await env.DB.prepare('SELECT salt,pass_hash,password_iterations FROM users WHERE id=?').bind(u.id).first();
+      if (!row || await pbkdf2(b.password, row.salt, row.password_iterations || 100000) !== row.pass_hash) return J({ error: 'Wrong password.' }, 401);
       const files = (await env.DB.prepare('SELECT r2_key FROM media WHERE user_id=?').bind(u.id).all()).results;
       if (files.some(x => typeof x.r2_key !== 'string' || !x.r2_key.startsWith(u.id + '/'))) return J({ error: 'Media ownership check failed. Please contact support.' }, 409);
       for (const x of files) {
