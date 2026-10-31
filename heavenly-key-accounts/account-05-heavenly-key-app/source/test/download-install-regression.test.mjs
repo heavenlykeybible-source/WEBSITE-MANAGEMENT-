@@ -59,7 +59,9 @@ test('offline shell caches device guides without failing when optional assets ar
   for (const device of ['android', 'iphone', 'ipad', 'windows', 'mac']) {
     assert.ok(sw.includes('/download/' + device + '/index.html'), 'Guide missing from cache: ' + device);
   }
-  assert.match(sw, /for\(const path of SHELL\.filter/);
+  assert.match(sw, /const optional=SHELL\.filter/);
+  assert.match(sw, /Math\.min\(6,optional\.length\)/);
+  assert.match(sw, /await Promise\.all\(Array\.from/);
   assert.match(sw, /const cachePath=guide\?url\.pathname\+'index\.html':url\.pathname/);
   assert.match(sw, /getAll\('app'\)\.length===1/);
 });
@@ -162,4 +164,15 @@ test('offline Bible cache keys distinguish each book and chapter', () => {
  assert.match(sw, /const key=url\.origin\+cachePath\+/);
  assert.match(sw, /url\.searchParams\.getAll\('book'\)\.length>1/);
  assert.match(sw, /url\.searchParams\.getAll\('chapter'\)\.length>1/);
+});
+
+
+test('offline precache uses a bounded worker pool and rejects private response caches', () => {
+ const sw = publicFile('sw.js');
+ assert.match(sw, /let cursor=0/);
+ assert.match(sw, /async function cacheOptional/);
+ assert.match(sw, /optional\[cursor\+\+\]/);
+ assert.match(sw, /Math\.min\(6,optional\.length\)/);
+ assert.match(sw, /credentials:'omit'/);
+ assert.match(sw, /private\|no-store/);
 });
