@@ -554,3 +554,12 @@ test('Meta webhook verification response includes protective headers', () => {
  assert.ok(response.includes("'referrer-policy':'no-referrer'"));
  assert.ok(response.includes("'strict-transport-security'"));
 });
+
+test('Meta challenge response blocks cross-origin embedding and active content', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ const start=source.indexOf('return new Response(challenge');
+ assert.ok(start>=0);
+ const response=source.slice(start,start+600);
+ assert.ok(response.includes("'cross-origin-resource-policy':'same-origin'"));
+ assert.ok(response.includes("default-src 'none'; frame-ancestors 'none'; base-uri 'none'"));
+});
