@@ -239,3 +239,9 @@ test('native installer checks exact MIME type and avoids unsupported verificatio
  assert.match(js,/Confirm its publisher signature before installing/);
  assert.doesNotMatch(js,/A verified native installation package is available/);
 });
+
+test('native installer HEAD metadata rejects redirects and member credentials', () => {
+ const js = publicFile('app-device-guide.js');
+ assert.match(js, /method:'HEAD', cache:'no-store', credentials:'omit', redirect:'error'/);
+ assert.doesNotMatch(js, /HEAD verifies a signed and scanned package/);
+});
