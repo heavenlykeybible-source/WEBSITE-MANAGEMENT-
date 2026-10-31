@@ -161,8 +161,8 @@ test('Ministry policy refuses invented theological attribution and missing websi
 
 test('WhatsApp human contact request pauses Gemini without sending or claiming notification', () => {
   assert.match(source, /from '\.\/human-handover'/);
-  assert.match(source, /if\(requestsHumanMinistryContact\(item\.body\)\)statements\.push/);
-  assert.match(source, /UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=\?/);
+  assert.match(source, /if\(target\)statements\.push/);
+  assert.match(source, /UPDATE conversations SET requested_human=1,human_paused=1,human_contact_target=\?,updated_at=CURRENT_TIMESTAMP WHERE id=\? AND requested_human=0/);
   assert.match(source, /messageInsertPositions\.push\(statements\.length\)/);
   assert.match(source, /results\.filter\(\(result,index\)=>messageInsertPositions\.includes\(index\)\)/);
   const start=source.indexOf("if(u.pathname==='/api/ai/suggest-reply'");
