@@ -45,7 +45,7 @@ export default {
     if ((isProgramme || isLive) && method !== "GET") return jsonError("Method not allowed", 405);
     if (mediaMatch && !["GET", "HEAD"].includes(method)) return jsonError("Method not allowed", 405);
     if (isLiveKit && method !== "POST") return jsonError("Method not allowed", 405);
-    if (isProgramme && [...url.searchParams.keys()].some((key) => key !== "channel")) return jsonError("Invalid query", 400);
+    if (isProgramme && ([...url.searchParams.keys()].some((key) => key !== "channel") || url.searchParams.getAll("channel").length !== 1)) return jsonError("Invalid query", 400);
     if (isProgramme && url.searchParams.get("channel") !== "radio") return jsonError("Radio channel required", 400);
     if (!isProgramme && url.search) return jsonError("Unexpected query", 400);
 
