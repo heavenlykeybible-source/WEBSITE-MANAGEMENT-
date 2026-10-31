@@ -7,7 +7,11 @@ function requireSession(session, actor) {
   if (actor?.authenticated !== true || actor.canImport !== true ||
       !Number.isSafeInteger(actor.id) || actor.id <= 0 ||
       !session || session.ownerId !== actor.id ||
-      session.state !== 'uploading' || !Number.isFinite(session.expiresAt) ||
+      session.state !== 'uploading' ||
+      !Number.isSafeInteger(session.size) || session.size < 1 || session.size > 1073741824 ||
+      !Number.isSafeInteger(session.partCount) ||
+      session.partCount !== Math.ceil(session.size / (10 * 1024 * 1024)) ||
+      !Number.isSafeInteger(session.expiresAt) ||
       Date.now() >= session.expiresAt ||
       typeof session.key !== 'string' ||
       !session.key.startsWith(`private-imports/${encodeURIComponent(String(actor.id))}/`) ||
