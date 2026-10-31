@@ -772,7 +772,7 @@ test('broadcast studio preserves sharp camera output and fails safely on backgro
  const page=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
  assert.match(page,/limit=\$\('lite'\)\.checked\?720:1280/,'normal mode must use a higher-resolution segmentation canvas');
  assert.match(page,/if\(!s\|\|!s\.oc\|\|!s\.blur\)return/,'disabled segmentation must not keep processing the camera');
- assert.match(page,/s\.oc=null;ui\(\);msg\('Original camera restored/,'disabling backgrounds restores the unprocessed camera');
+ assert.match(page,/s\.oc=null;s\.segReady=false;ui\(\);msg\('Original camera restored/,'disabling backgrounds restores the unprocessed camera');
  assert.match(page,/t\.img\.onerror=\(\)=>\{if\(request===bgPick&&SC\.includes\(scene\)\)msg\('This studio background could not be loaded/,'only the active background load may report an error');
  for(const ratio of ['Landscape (16:9)','Portrait (9:16, phones)','Square (1:1)'])assert.ok(page.includes(ratio));
 });
@@ -782,7 +782,7 @@ test('studio background processing rotates fairly and restores original camera a
  assert.match(html,/const cameras=S\.filter\(s=>s\.type==='camera'&&s\.blur&&s\.oc/);
  assert.match(html,/const s=cameras\[segIndex\+\+\]/,'multiple cameras should get processing turns');
  assert.match(html,/if\(\+\+s\.segFails>=3\)/,'segmentation errors must have a bounded fallback');
- assert.match(html,/s\.blur=false;s\.bgm='off';s\.oc=null;msg\('Background processing failed/);
+ assert.match(html,/s\.blur=false;s\.bgm='off';s\.oc=null;s\.segReady=false;msg\('Background processing failed/);
  assert.match(html,/segBusy=false;segCur=null/,'the processing lock must be released');
 });
 
@@ -897,4 +897,11 @@ test('live presenter virtual background follows the program scene and never leak
  assert.match(html,/s\.bgm==='tpl'&&sceneBg\?\.img/,'use the scene image for camera compositing');
  assert.match(html,/else if\(s\.bgm==='tpl'\)\{c\.drawImage\(r\.image/,'keep the original presenter visible if no template exists');
  assert.doesNotMatch(html,/if\(s\.bgm==='tpl'&&bgFn\)/,'global template selection may leak an unrelated scene into camera output');
+});
+
+test('virtual backgrounds fail open to the original camera until first valid segmentation frame',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ assert.match(html,/else if\(s\.blur&&s\.oc&&s\.segReady\)/,'uninitialized segmentation canvas must never replace the original camera');
+ assert.match(html,/c\.restore\(\);s\.segReady=true\}\);done\(true\)/,'camera composite becomes visible after a successful render');
+ assert.match(html,/s\.oc=s\.oc\|\|document\.createElement\('canvas'\);s\.segReady=false/,'enabling or changing effects resets the fallback readiness');
 });
