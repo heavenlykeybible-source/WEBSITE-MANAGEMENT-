@@ -13,11 +13,11 @@ binding = "ASSETS"
 run_worker_first = ["/bible.html", "/audio-bible.html", "/audio-bible.js", "/hymns.html", "/featured-main-hymn.js", "/audio-hymns.html", "/audio-hymns.js", "/devotional.html", "/api/*", "/walk-offline.html", "/walk-offline.js", "/walk-offline.css", "/walk-offline-content.js", "/offline-vault.js", "/creation-to-eternity.html", "/creation-to-eternity.js", "/creation-to-eternity.css", "/eternity-in-view", "/eternity-in-view/*"]
 
 
-# Enable only after Account 3 production public APIs and policy are verified.
+# Public integrations only. Member access stays disabled until Account 3 authentication, session revocation, privacy and abuse controls pass independent production verification.
 [vars]
 INDEPENDENT_APPS_ENABLED = "true"
 COMMUNITY_PUBLIC_READS_ENABLED = "true"
-COMMUNITY_MEMBER_ACCESS_ENABLED = "true"
+COMMUNITY_MEMBER_ACCESS_ENABLED = "false"
 # Only read reviewed public website data. No member sessions, secrets or private routes.
 SITE_PUBLIC_SYNC_ENABLED = "true"
 
