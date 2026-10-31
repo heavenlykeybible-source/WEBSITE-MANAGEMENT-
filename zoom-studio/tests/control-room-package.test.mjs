@@ -1274,3 +1274,25 @@ test('deleting a studio scene invalidates pending virtual camera frames',()=>{
  assert.equal(S[1].segReady,true,'audio source should be unchanged');
  assert.equal(ctx.uiCount,1);
 });
+
+test('invalid scene indices cannot disrupt a live studio program',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const begin=html.indexOf('function take(i){'),end=html.indexOf("$('take').onclick",begin);
+ const source=html.slice(begin,end);
+ const S=[{type:'camera',segReady:true}];
+ const SC=[{name:'Main',items:[]},{name:'Backup',items:[]}];
+ const state=new Function('S','SC','$','performance',
+  'let pgm=0,from=null,t0=0,pvw=1,studio=true,sceneVersion=2;'+source+
+  ';for(const i of [-1,2,NaN,"1",null])take(i);return {pgm,sceneVersion,S}'
+ )(S,SC,()=>({value:'cut'}),{now:()=>12});
+ assert.equal(state.pgm,0);
+ assert.equal(state.sceneVersion,2);
+ assert.equal(S[0].segReady,true,'invalid scene changes must not interrupt the live camera');
+ const first=html.indexOf(' sdel:i=>{'),last=html.indexOf('},',first);
+ const handler=html.slice(first,last+1).replace(/^\s*sdel:/,'');
+ const context={SC,S,pgm:0,pvw:1,from:null,sceneVersion:2};
+ const remove=new Function('ctx','msg','ui','with(ctx){return ('+handler+')}')(context,()=>{},()=>{});
+ for(const i of [-1,2,NaN,"0",null])remove(i);
+ assert.equal(SC.length,2,'invalid deletion indices must not remove a studio scene');
+ assert.equal(context.sceneVersion,2);
+});
