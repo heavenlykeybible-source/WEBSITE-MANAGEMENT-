@@ -216,7 +216,7 @@ async function mic(){try{
 $('fm').onchange=e=>{if(e.target.files.length)addMedia(e.target.files);e.target.value=''};
 $('fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.src=URL.createObjectURL(f);place(mk('image',f.name.replace(/\.[^.]+$/,''),{img}));e.target.value='';ui()};
 
-function take(i){if(i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;t0=performance.now();if(studio)pvw=o}
+function take(i){if(i===pgm)return;const o=pgm;from=$('tr').value==='cut'?null:o;pgm=i;for(const camera of S)if(camera.type==='camera')camera.segReady=false;t0=performance.now();if(studio)pvw=o}
 $('take').onclick=()=>{take(pvw);ui()};
 $('stm').onchange=e=>{studio=e.target.checked;if(studio)pvw=SC.length>1?(pgm+1)%SC.length:pgm;$('cvs').classList.toggle('s',studio);$('pw').hidden=!studio;$('take').hidden=!studio;ui()};
 $('vol').oninput=e=>mon.gain.value=e.target.value;
