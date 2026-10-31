@@ -116,3 +116,5 @@ jobs:
         run: npm test
       - name: Run CMS editor DOM security and functionality checks
         run: npm run test:cms-dom
+      - name: Verify CMS build succeeds
+        run: npm run build:cms
