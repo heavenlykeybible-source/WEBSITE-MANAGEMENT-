@@ -67,7 +67,9 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
   if(action==='status'&&method==='GET'){
     const row=await env.DB.prepare("SELECT s.id,s.filename,s.size_bytes,s.part_count,s.state,s.expires_at_ms,s.created_at,(SELECT COUNT(*) FROM account4_import_parts p WHERE p.session_id=s.id) AS uploaded_parts FROM account4_import_sessions s WHERE s.id=? AND s.owner_id=?").bind(id,actor.id).first();
     if(!row)problem('Private import not found',404);
-    return Response.json({import:publicSession(row)},{headers:{'cache-control':'no-store'}});
+    const receipts=await env.DB.prepare('SELECT part_number FROM account4_import_parts WHERE session_id=? ORDER BY part_number').bind(id).all();
+    const completedPartNumbers=(receipts.results||[]).map(part=>part.part_number).filter(number=>Number.isSafeInteger(number)&&number>=1&&number<=row.part_count);
+    return Response.json({import:{...publicSession(row),completedPartNumbers}},{headers:{'cache-control':'no-store'}});
   }
   if(action.startsWith('parts/')&&method==='PUT'){
     const session=await loadImportSession(env.DB,actor,id);
