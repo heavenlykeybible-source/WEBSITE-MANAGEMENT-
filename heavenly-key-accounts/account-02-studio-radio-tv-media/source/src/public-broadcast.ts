@@ -1,6 +1,7 @@
 import { TV_LOCKED,TV_LOCK_MESSAGE } from './channel-lock';
 import { onDemandRadioMetadata } from './radio-on-demand';
 import { parseAudioRange } from './radio-byte-range';
+import { radioNotModified,radioCanResumeRange } from './radio-http-validators';
 export function youtubeVideoId(value:string):string|null {try{const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password)return null;let id:string|null=null;if(u.hostname==='youtu.be')id=u.pathname.slice(1).split('/')[0];else if(['youtube.com','www.youtube.com','m.youtube.com','www.youtube-nocookie.com'].includes(u.hostname)){id=u.pathname==='/watch'?u.searchParams.get('v'):/^\/(?:embed|shorts|live)\/([^/]+)/.exec(u.pathname)?.[1]||null;}return id&&/^[a-zA-Z0-9_-]{11}$/.test(id)?id:null;}catch{return null;}}
 export function isPlaybackURL(value:string):boolean {try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!(u.hostname==='heavenlykey.alldaywow247.workers.dev'&&!u.pathname.startsWith('/api/broadcast/media/'));}catch{return false;}}
 export interface BroadcastEnv { DB:D1Database; MEDIA_R2:R2Bucket; LIVE_STATUS_KV?:KVNamespace }
@@ -58,10 +59,10 @@ export async function serveBroadcastMedia(request:Request,env:BroadcastEnv,id:nu
  const head=await env.MEDIA_R2.head(media.object_key);
  if(!head)return json({error:'Media unavailable'},404);
  const ifNoneMatch=request.headers.get('If-None-Match');
- if(ifNoneMatch&&ifNoneMatch.split(',').some(tag=>tag.trim()===head.httpEtag||tag.trim()==='*'))return new Response(null,{status:304,headers:{'ETag':head.httpEtag,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+ if(radioNotModified(ifNoneMatch,head.httpEtag))return new Response(null,{status:304,headers:{'ETag':head.httpEtag,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
  const requestedRange=request.headers.get('Range');
  const ifRange=request.headers.get('If-Range');
- const range=parseAudioRange(ifRange&&ifRange!==head.httpEtag?null:requestedRange,head.size);
+ const range=parseAudioRange(radioCanResumeRange(ifRange,head.httpEtag)?requestedRange:null,head.size);
  if(range===false)return new Response(null,{status:416,headers:{'Content-Range':'bytes */'+head.size,'Accept-Ranges':'bytes','Cache-Control':'no-store'}});
  const object=request.method==='HEAD'?head:await env.MEDIA_R2.get(media.object_key,range?{range}:undefined);
  if(!object)return json({error:'Media unavailable'},404);
