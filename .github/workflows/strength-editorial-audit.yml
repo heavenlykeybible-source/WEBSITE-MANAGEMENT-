@@ -26,6 +26,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Verify unpublished devotional access is denied
+        run: node --test apps/heavenly-key-bible/bible/tests/strength-draft-access.test.mjs
+
       - name: Run complete five-year content audit
         run: node apps/heavenly-key-bible/bible/tests/audit-strength-five-years.mjs
 
