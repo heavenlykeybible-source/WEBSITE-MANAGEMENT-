@@ -20,6 +20,10 @@ on:
       - 'tests/browser-agent.mjs'
       - 'cms/editor.js'
       - 'cms/frame.js'
+      - 'tests/cms-dom.mjs'
+      - 'tests/cms-browser.mjs'
+      - 'tests/account4-unified-access.mjs'
+      - 'tests/owner-passkeys.mjs'
       - 'browser-agent/**'
       - 'control-room-worker.js'
       - 'schema.sql'
@@ -87,9 +91,14 @@ jobs:
           node tests/domains.mjs
           node tests/ai-workspace.mjs
           node tests/browser-agent.mjs
+          node tests/account4-unified-access.mjs
+          node tests/owner-passkeys.mjs
+          npm run test:cms-dom
       - name: Install isolated browser for real preview tests
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Test imported website as interactive mobile preview
-        run: node tests/native-imports-browser.mjs
+        run: |
+          node tests/native-imports-browser.mjs
+          npm run test:cms-browser
