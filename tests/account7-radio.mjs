@@ -11,7 +11,7 @@ try{
  const env={MEDIA_PUBLIC_ORIGIN:'https://account2.example',RADIO_PUBLIC_API_KEY:'server-only-test-key',ASSETS:{fetch:()=>new Response('asset')}};
  let r=await worker.fetch(new Request('https://radio.example/api/broadcast/programme?channel=video&admin=1'),env);
  assert.equal(forwarded.url,'https://account2.example/api/broadcast/programme?channel=radio');
- assert.equal(forwarded.headers.get('Authorization'),'Bearer server-only-test-key');assert.equal(r.headers.get('set-cookie'),null);
+ assert.equal(forwarded.headers.get('Authorization'),'Bearer server-only-test-key');assert.equal(r.headers.get('set-cookie'),null);assert.equal(r.headers.get('X-Content-Type-Options'),'nosniff');assert.equal(r.headers.get('Referrer-Policy'),'no-referrer');assert.equal(r.headers.get('Cross-Origin-Resource-Policy'),'same-origin');
  r=await worker.fetch(new Request('https://radio.example/api/broadcast/media/42/object',{headers:{Range:'bytes=0-10',Cookie:'owner=secret','X-Heavenly-Key-Internal':'spoof'}}),env);
  assert.equal(r.status,206);assert.equal(forwarded.headers.get('Range'),'bytes=0-10');assert.equal(forwarded.headers.get('Cookie'),null);assert.equal(forwarded.headers.get('X-Heavenly-Key-Internal'),null);
  await worker.fetch(new Request('https://radio.example/api/broadcast/livekit/viewer-token',{method:'POST'}),env);
