@@ -12,6 +12,7 @@ const apiSource=readFileSync('functions/api/[[path]].js','utf8');
 if(!apiSource.includes(".replace(/^[.\\- ]+/, '').replace(/\\.{2,}/g, '.')"))throw Error('Uploaded filename normalization missing');
 if(!apiSource.includes(".replace(/[. ]+$/, '')"))throw Error('Trailing filename cleanup missing');
 if(!apiSource.includes("rawName.includes(':')"))throw Error('Colon filename rejection missing');
+if(!apiSource.includes('c.charCodeAt(0) < 32') || !apiSource.includes('c.charCodeAt(0) === 127'))throw Error('Control-character filename rejection missing');
 if(!apiSource.includes('Filename extension does not match media type.') || !apiSource.includes('Unsafe filename extension.'))throw Error('Media extension validation missing');
 if(!apiSource.includes('if (!suffix || !extensions[type]?.includes(suffix))'))throw Error('Missing-extension upload protection absent');
 if((apiSource.match(/const suffix=name\.includes/g)||[]).length!==1)throw Error('Media filename validation must occur in one route only');
