@@ -22,4 +22,10 @@ assert.match(restream, /AES-GCM/, 'Stored stream destinations must remain encryp
 assert.match(config, /crons = \["\* \* \* \* \*"\]/, 'Broadcast monitoring must retain its one-minute schedule');
 assert.doesNotMatch(config, /^\s*MEDIA_ENGINE_SHARED_SECRET\s*=/m, 'Never commit the shared secret as a Wrangler variable');
 
+// Ensure invalid recording retention values cannot trigger 500s or unlimited storage.
+assert.match(entry, /Number\.isFinite\(retentionHours\)\|\|retentionHours<1\|\|retentionHours>48/, 'Retention must have a finite, bounded duration');
+assert.equal((entry.match(/Retention must be between 1 and 48 hours/g) ?? []).length, 2, 'Validate retention on both create and update');
+assert.match(entry, /typeof b\.keep!=='boolean'/, 'Keep-recording changes require an explicit boolean');
+assert.match(entry, /async scheduled\(/, 'Cron trigger must have a scheduled handler');
+
 console.log('Account 2 broadcast safety regression checks passed');
