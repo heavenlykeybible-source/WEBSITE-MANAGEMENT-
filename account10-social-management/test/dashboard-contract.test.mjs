@@ -316,3 +316,17 @@ test('owner account settings expose an explicit Gemini connection smoke test', (
   assert.match(html,/No customer message/);
   assert.match(html,/No messages were sent/);
 });
+
+
+test('operator credentials are never persisted in browser storage', () => {
+ assert.doesNotMatch(app,/\\b(?:localStorage|sessionStorage|indexedDB|document\\.cookie|caches\\.open)\\b/);
+ assert.match(app,/token=\\$\\('token'\\)\\.value\\.trim\\(\\)/);
+ assert.match(app,/\\$\\('token'\\)\\.value=''/);
+ assert.match(app,/\\$\\('logout'\\)\\.onclick=\\(\\)=>\\{sessionController\\.abort\\(\\);sessionController=new AbortController\\(\\);authEpoch\\+\\+;token=''/);
+});
+
+test('dashboard avoids HTML injection sinks for customer-controlled content', () => {
+ assert.doesNotMatch(app,/\\b(?:innerHTML|outerHTML|insertAdjacentHTML|document\\.write)\\b/);
+ assert.match(app,/b\\.textContent=/);
+ assert.match(app,/area\\.replaceChildren\\(\\)/);
+});
