@@ -107,3 +107,10 @@ test('Account 10 strict script CSP has a same-origin external dashboard bundle',
  assert.doesNotMatch(html,/<script\b(?![^>]*\bsrc=)[^>]*>/i);
  assert.match(worker,/script-src 'self'; script-src-attr 'none'/);
 });
+
+
+test('preflight syntax-checks the external dashboard bundle without executing it', () => {
+ const preflight=readFileSync(resolve(root,'scripts','preflight.mjs'),'utf8');
+ assert.match(preflight,/new Script\(read\('public\/app\.js'\)/);
+ assert.match(preflight,/node:vm/);
+});
