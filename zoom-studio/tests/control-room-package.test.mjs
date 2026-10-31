@@ -903,7 +903,7 @@ test('live presenter virtual background follows the program scene and never leak
 test('virtual backgrounds fail open to the original camera until first valid segmentation frame',()=>{
  const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
  assert.match(html,/else if\(s\.blur&&s\.oc&&s\.segReady\)/,'uninitialized segmentation canvas must never replace the original camera');
- assert.match(html,/c\.restore\(\);s\.segReady=true\}\);done\(true\)/,'camera composite becomes visible after a successful render');
+ assert.match(html,/s\.segReady=true\}catch\(e\)\{s\.segReady=false;console\.error\('Background frame rendering failed',e\)\}finally\{c\.restore\(\)\}\}\);done\(true\)/,'camera context is restored after success or failure');
  assert.match(html,/s\.oc=s\.oc\|\|document\.createElement\('canvas'\);s\.segReady=false/,'enabling or changing effects resets the fallback readiness');
 });
 
@@ -1176,4 +1176,23 @@ test('Twitch chat frames and rendered messages stay bounded under external messa
  ws.onmessage({data:Array.from({length:60},()=>shortLine).join('\r\n')});
  assert.equal(chatLog.length,51,'only 50 IRC lines per network frame may be processed');
  assert.equal(nodes.cl.children.length,30,'visible chat history remains bounded');
+});
+
+test('failed scene background drawing restores the canvas and invalidates the processed frame',()=>{
+ const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
+ const start=html.indexOf('seg.onResults(r=>'),end=html.indexOf('});done(true)',start);
+ assert.ok(start>0&&end>start,'camera model result callback exists');
+ const source=html.slice(start,end+3);
+ let restoreCount=0,saveCount=0,callback;
+ const ctx={save(){saveCount++},restore(){restoreCount++},clearRect(){},drawImage(){}};
+ const camera={oc:{width:0,height:0,getContext:()=>ctx},blur:true,bgm:'tpl',segReady:true};
+ const SC=[{items:[{id:'background',on:true}]}];
+ const seg={onResults(fn){callback=fn}};
+ new Function('seg','segCur','SC','pgm','src','$','performance','cover','console',source)(
+  seg,camera,SC,0,()=>({isBg:true,fn(){throw Error('bad studio background')}}),()=>({checked:false}),{now:()=>1},()=>{},{error:()=>{}}
+ );
+ callback({image:{width:1280,height:720},segmentationMask:{}});
+ assert.equal(saveCount,1);
+ assert.equal(restoreCount,1,'canvas save must always be balanced by restore');
+ assert.equal(camera.segReady,false,'failed composite must not hide the original presenter video');
 });
