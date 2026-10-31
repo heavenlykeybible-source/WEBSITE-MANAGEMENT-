@@ -34,5 +34,21 @@ for (const [command, label] of [
   ['node tests/account4-studio-menu.mjs', 'owner Studio navigation acceptance'],
   ['node tests/account4-release-safety-regression.mjs', 'release safety self-check']
 ]) mustContain(acceptance, command, label);
+for (const [command, label] of [
+  ['node tests/domains.mjs', 'Cloudflare zone and account isolation'],
+  ['node tests/ai-workspace.mjs', 'owner-only AI access requests'],
+  ['node tests/browser-agent.mjs', 'browser agent permissions and private sessions'],
+  ['node tests/account4-unified-access.mjs', 'external MCP and unified access boundaries'],
+  ['node tests/owner-passkeys.mjs', 'owner passkey authentication'],
+  ['npm run test:cms-dom', 'CMS document safety and editing'],
+  ['npm run test:cms-browser', 'CMS visual browser verification']
+]) mustContain(acceptance, command, label);
+for (const [file, label] of [
+  ["'cms/editor.js'", 'visual editor changes'],
+  ["'cms/frame.js'", 'CMS iframe changes'],
+  ["'browser-agent/**'", 'browser agent changes'],
+  ["'tests/account4-unified-access.mjs'", 'unified access test changes'],
+  ["'tests/owner-passkeys.mjs'", 'passkey test changes']
+]) mustContain(acceptance, file, 'acceptance trigger: ' + label);
 assert.ok(!acceptance.includes('CLOUDFLARE_API_TOKEN:'), 'Unapproved acceptance tests must not consume production Cloudflare credentials');
 console.log('PASS: Account 4 manual deployment and stale-source regression guards are present.');
