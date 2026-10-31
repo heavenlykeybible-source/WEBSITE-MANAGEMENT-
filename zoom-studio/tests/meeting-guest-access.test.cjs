@@ -496,3 +496,13 @@ test('malformed WebSocket frames count toward per-connection rate limit',async()
  for(let i=0;i<101&&h.guest.readyState===1;i++)await h.r.webSocketMessage(h.guest,'{not-json');
  assert.notEqual(h.guest.readyState,1);
 });
+
+test('hand raise rejects nonboolean state without consuming cooldown',async()=>{
+ const h=setup();await h.join('');
+ const before=h.host.messages.filter(m=>m.t==='hand').length;
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'hand',on:'false'}));
+ await h.r.webSocketMessage(h.guest,JSON.stringify({t:'hand',on:true}));
+ const hands=h.host.messages.filter(m=>m.t==='hand').slice(before);
+ assert.equal(hands.length,1);
+ assert.equal(hands[0].on,true);
+});
