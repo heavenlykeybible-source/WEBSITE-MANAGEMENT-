@@ -133,7 +133,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
   const dbBound=!!env.DB,mediaBound=!!env.MEDIA_BUCKET;
   let databaseQueryOk=false,mediaBucketReadOk=false;
   try{if(dbBound){await env.DB.prepare('SELECT 1 AS ok').first();databaseQueryOk=true}}catch{}
-  try{if(mediaBound){await env.MEDIA_BUCKET.head('account10-readiness-probe');mediaBucketReadOk=true}}catch{}
+  try{if(env.MEDIA_BUCKET){await env.MEDIA_BUCKET.head('account10-readiness-probe');mediaBucketReadOk=true}}catch{}
   return reply({account:10,dbBound,mediaBound,assetsBound:!!env.ASSETS,databaseQueryOk,mediaBucketReadOk,storageReady:databaseQueryOk&&mediaBucketReadOk,mediaOperationsEnabled:false,providerPublishingVerified:false,note:'Read-only probes; bucket head returning null counts as successful access. Schema migrations, write access and provider authorization remain unverified.'});
  }
  if(u.pathname==='/api/media'&&req.method==='POST'){
