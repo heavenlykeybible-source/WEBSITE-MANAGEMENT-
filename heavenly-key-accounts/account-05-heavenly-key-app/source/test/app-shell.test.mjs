@@ -70,3 +70,22 @@ test('Clean theme has responsive layouts and reduced-motion support',()=>{const 
 test('all five device QR assets are local, included in offline shell, and linked to installation pages',()=>{const sw=get('public/sw.js'),code=get('public/premium-download-options.js');for(const device of ['android','iphone','ipad','windows','mac']){const qr=get('public/qr/'+device+'.svg');assert.match(qr,/<svg /);assert.match(qr,/<path fill="#111"/);assert.match(sw,new RegExp('/qr/'+device+'\\.svg'));assert.ok(code.includes("'/download/'")||code.includes("'download/'"));assert.ok(get('public/download/'+device+'/index.html').length>100);}assert.match(code,/qrLink\.append\(img\)/);});
 
 test('App directory and downloads remain distinct from the preserved all-in-one application',()=>{const home=get('public/index.html'),experience=get('public/experience.html');assert.match(home,/href="\/experience.html"/);assert.match(experience,/data-screen="community"/);assert.match(experience,/data-screen="live"/);assert.match(experience,/\/app.js/);});
+
+test('all-in-one install manifest provides valid raster browser icons and retains SVG artwork',()=>{
+ const manifest=JSON.parse(get('public/manifests/all-in-one.webmanifest'));
+ assert.equal(manifest.start_url,'/experience.html');
+ assert.equal(manifest.display,'standalone');
+ const expected=[192,512];
+ for(const size of expected){
+  const entry=manifest.icons.find(icon=>icon.sizes===size+'x'+size && icon.type==='image/png');
+  assert.ok(entry,'Missing '+size+'px PNG installation icon');
+  assert.ok(entry.src.startsWith('/icons/'));
+  const bytes=readFileSync(new URL('../public'+entry.src,import.meta.url));
+  assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  assert.equal(bytes.toString('ascii',12,16),'IHDR');
+  assert.equal(bytes.readUInt32BE(16),size);
+  assert.equal(bytes.readUInt32BE(20),size);
+  assert.ok(bytes.length>100,'Icon should not be empty');
+ }
+ assert.ok(manifest.icons.some(icon=>icon.type==='image/svg+xml'));
+});
