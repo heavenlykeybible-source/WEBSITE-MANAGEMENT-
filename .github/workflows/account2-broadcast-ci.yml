@@ -37,6 +37,8 @@ jobs:
         run: npm run test:d1
       - name: Administrator capability authentication security tests
         run: npm run test:capability-auth
+      - name: Television lock and radio availability checks
+        run: npm run test:tv-lock
       - name: TypeScript validation
         run: npm run check
       - name: Deployment preflight
