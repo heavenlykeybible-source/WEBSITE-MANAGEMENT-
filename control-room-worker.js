@@ -204,7 +204,7 @@ async function stageConnectedSource(env,user,b){
  });
 }
 async function importWorkspaceRoutes(req,env,user,sub,m){
- if(!sub.startsWith('workspace/'))return null;if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);const privateImport=await account4PrivateImportRoutes(req,env,user,sub,m,(key,fn)=>withOperationLock(env,key,fn));if(privateImport)return privateImport;const u=new URL(req.url);
+ if(!sub.startsWith('workspace/'))return null;if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);const privateImport=await account4PrivateImportRoutes(req,env,user,sub,m,(key,fn)=>withOperationLock(env,key,fn),(event,detail)=>audit(env,user.username,event,detail));if(privateImport)return privateImport;const u=new URL(req.url);
  if(sub==='workspace/catalog'&&m==='GET')return json({sources:(await env.DB.prepare('SELECT id,label,repo,branch,dir FROM github_sites WHERE owner_id IS NULL').all()).results,sites:(await env.DB.prepare('SELECT slug,name FROM sites ORDER BY name').all()).results,accounts:(await env.DB.prepare('SELECT id,label FROM cf_connections ORDER BY label').all()).results});
  if(sub==='workspace/candidates'&&m==='GET')return json(await sourceCandidates(env,user,u.searchParams.get('source')));
  if(sub==='workspace/workers'&&m==='GET'){const c=await connById(env,u.searchParams.get('connection')),d=await cf(env,c,'GET','/workers/scripts');return json({workers:(d.result||[]).map(w=>({name:w.id}))});}
