@@ -48,6 +48,13 @@ jobs:
           test "$(jq -r '.event' <<<"$info")" = workflow_dispatch
           test "$(jq -r '.head_branch' <<<"$info")" = main
           test "$(jq -r '.head_repository.full_name' <<<"$info")" = "$GITHUB_REPOSITORY"
+          # Do not publish a previously approved binary built from outdated code.
+          # Approval always applies to exactly the current main commit.
+          release_sha="$(jq -r '.head_sha' <<<"$info")"
+          test "$release_sha" = "$GITHUB_SHA" || {
+            echo "::error::Release artifact was built from a different commit than approved production main"
+            exit 1
+          }
           case "$PLATFORM" in
             android) expected='Package Account 5 Signed Android Release'; artifact=heavenly-key-account5-signed-android-release ;;
             windows) expected='Package Account 5 Signed Windows Release Candidate'; artifact=heavenly-key-account5-windows-signed-candidate ;;
