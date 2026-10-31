@@ -85,9 +85,10 @@ test('expired pending connections are closed before the unauthenticated-slot lim
  assert.equal(expired.readyState,3);
  assert.equal(s.state.getWebSockets().filter(w=>w.readyState===1).length,2);
 });
-test('expired pending sockets are closed even when a room is full',async()=>{
+test('expired pending sockets are closed even when an active meeting room is full',async()=>{
  const s=meeting();
- for(let i=0;i<8;i++)s.add({role:'guest'});
+ s.add({role:'host',id:'host',room:'11111111-1111-4111-8111-111111111111',key:'active-session',until:Date.now()+60000});
+ for(let i=0;i<7;i++)s.add({role:'guest',id:'viewer-'+i,session:'active-session',ok:true,aud:true});
  const expired=s.add({until:Date.now()-1000});
  const req=new Request('https://meeting/meeting/11111111-1111-4111-8111-111111111111/room',{headers:{upgrade:'websocket',origin:'https://meeting'}});
  const result=await s.room.fetch(req);
