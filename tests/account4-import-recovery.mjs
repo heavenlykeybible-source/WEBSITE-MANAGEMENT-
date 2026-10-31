@@ -7,7 +7,7 @@ let heads=0;
 const db={prepare(sql){assert.match(sql,/owner_id=\?/);return {bind(...args){assert.deepEqual(args,[id,7]);return {async first(){return row}}}}}};
 const bucket={async head(key){heads++;assert.equal(key,row.object_key);return {key,size:11,version:'v123',etag:'abc'}}};
 assert.deepEqual(await inspectPrivateImportRecovery(db,bucket,actor,id),{
- id,state:'completing',objectPresent:true,matchesExpectedSize:true,requiresOperatorReview:true
+ id,state:'completing',expectedSize:11,objectPresent:true,matchesExpectedSize:true,requiresOperatorReview:true
 });
 row.state='private-awaiting-review';
 assert.equal((await inspectPrivateImportRecovery(db,bucket,actor,id)).requiresOperatorReview,false);
