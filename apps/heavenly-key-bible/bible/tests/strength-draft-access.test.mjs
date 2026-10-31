@@ -164,3 +164,21 @@ test('offline service worker cannot resurrect withdrawn devotional drafts',()=>{
   assert.ok(gate.includes(expected),'Offline draft gate missing '+expected);
  }
 });
+
+test('all 21 devotional date windows match between the interface and edge worker',()=>{
+ const html=readFileSync(fileURLToPath(new URL('../../heavenly-key-website/bible/strength-for-today.html',import.meta.url)),'utf8');
+ const declaration=html.match(/const DEVOTIONAL_BATCHES=(\\[[\\s\\S]*?\\]);/);
+ assert.ok(declaration,'Five-year devotional batch registry is required');
+ const uiBatches=JSON.parse(declaration[1]);
+ const workerSource=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+ const workerBatches=[...workerSource.matchAll(/"(strength-devotionals-[^"]+\\.json)":\\["(\\d{4}-\\d{2}-\\d{2})","(\\d{4}-\\d{2}-\\d{2})"\\]/g)].map(match=>[match[1],match[2],match[3]]);
+ assert.equal(uiBatches.length,21,'All 21 source batches must be selectable');
+ assert.deepEqual(uiBatches.map(([start,end,name])=>[name,start,end]),workerBatches,'Browser and server date allowlists must agree exactly');
+ assert.deepEqual(uiBatches.at(-1),['2031-07-30','2031-10-31','strength-devotionals-year5-batch04.json']);
+});
+test('final batch contains the two missing editions required for 1,828 days',()=>{
+ const finalBatch=JSON.parse(readFileSync(fileURLToPath(new URL('../../heavenly-key-website/bible/strength-devotionals-year5-batch04.json',import.meta.url)),'utf8'));
+ assert.equal(finalBatch.entries.length,94);
+ assert.deepEqual(finalBatch.entries.slice(-2).map(entry=>entry.date),['2031-10-30','2031-10-31']);
+ assert(finalBatch.entries.slice(-2).every(entry=>entry.status==='draft-not-published'&&entry.topics.every(topic=>topic.reviewStatus==='draft-original-editorial-and-doctrinal-approval-pending')));
+});
