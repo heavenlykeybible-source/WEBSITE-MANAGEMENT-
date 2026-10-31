@@ -13,7 +13,7 @@ const response=runInNewContext(generated+';radioPlayerHtml()', {Response,crypto:
 const html=await response.text();
 const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script,'Standalone player script should exist');
-const events=new Map(),elements=new Map(),mediaActions=new Map();
+const events=new Map(),elements=new Map(),mediaActions=new Map(),mediaSession={setActionHandler:(name,fn)=>mediaActions.set(name,fn)};
 let holdPlay=false,resolvePendingPlay=null,simulateAbort=false;const timers=new Map();let timerId=0;
 function element(id){
  const listeners=new Map(),attributes=new Map();
@@ -31,7 +31,7 @@ let fetchResult={items:[{type:'audio',title:'First',url:'/api/broadcast/media/1/
 const task=runInNewContext(script,{
  document:{getElementById:id=>elements.get(id)},
  window:{addEventListener:(name,fn)=>events.set(name,fn)},
- navigator:{mediaSession:{setActionHandler:(name,fn)=>mediaActions.set(name,fn)}},
+ navigator:{mediaSession},
  AbortController,
  setTimeout:(fn,ms)=>{assert.equal(ms,12000);const id=++timerId;timers.set(id,fn);return id;},
  clearTimeout:id=>timers.delete(id),
@@ -46,9 +46,11 @@ await get('play').fire('click');
 assert.equal(audio.src,'/api/broadcast/media/1/object');
 assert.equal(audio.paused,false);
 assert.equal(get('play').getAttribute('aria-label'),'Pause radio');
+assert.equal(mediaSession.playbackState,'playing','OS controls must show Playing');
 audio.paused=true;
 await audio.fire('pause');
 assert.equal(get('play').getAttribute('aria-label'),'Play radio','Native OS pause must reset button');
+assert.equal(mediaSession.playbackState,'paused','OS controls must show Paused');
 await get('play').fire('click');
 assert.equal(get('play').getAttribute('aria-label'),'Pause radio','Native pause must remain resumable');
 await audio.fire('ended');
@@ -163,4 +165,8 @@ fetchResult={items:[{type:'audio',title:'Recovered after timeout',url:'/api/broa
 await get('retry').fire('click');
 assert.equal(get('track').textContent,'Recovered after timeout');
 assert.equal(get('play').disabled,false);
+await get('play').fire('click');
+assert.equal(mediaSession.playbackState,'playing');
+mediaActions.get('pause')();
+assert.equal(mediaSession.playbackState,'paused');
 console.log('Account 2 radio runtime play, pause, next, end, refresh, and page-exit tests passed');
