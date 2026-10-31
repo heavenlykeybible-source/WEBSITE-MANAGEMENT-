@@ -1,4 +1,5 @@
 import { originalAssistantInstruction } from './assistant-profile';
+import { requestsHumanMinistryContact } from './human-handover';
 interface Env { DB: D1Database; MEDIA_BUCKET?: R2Bucket; ADMIN_TOKEN: string; GEMINI_API_KEY?: string; META_WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; META_WHATSAPP_ACCESS_TOKEN?: string; ASSETS?: Fetcher }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",'strict-transport-security':'max-age=31536000; includeSubDomains'}});
 const allowed=new Set(['whatsapp_business','facebook_messenger','online_assistant']);
@@ -220,12 +221,15 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    const seenIds=new Set<string>();
    for(const item of inbound){const key=item.account+':'+item.messageId;if(seenIds.has(key))return reply({error:'Duplicate WhatsApp message IDs within event'},422);seenIds.add(key)}
    const statements:D1PreparedStatement[]=[];
+   const messageInsertPositions:number[]=[];
    for(const item of inbound){
     const senderKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.account+':'+item.sender)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
     const conversationId='wa_'+senderKey;
     const messageKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(item.account+':'+item.messageId)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32);
     statements.push(env.DB.prepare("INSERT OR IGNORE INTO conversations(id,channel,sender_id) VALUES(?,'whatsapp_business',?)").bind(conversationId,item.account+':'+item.sender));
+    messageInsertPositions.push(statements.length);
     statements.push(env.DB.prepare("INSERT OR IGNORE INTO messages(id,conversation_id,direction,body,created_at) VALUES(?,?,'inbound',?,datetime(?,'unixepoch'))").bind('wa_msg_'+messageKey,conversationId,item.body,item.timestamp));
+    if(requestsHumanMinistryContact(item.body))statements.push(env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
     statements.push(env.DB.prepare('UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(conversationId));
    }
    for(const item of receipts){
@@ -236,7 +240,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
    statements.push(env.DB.prepare("UPDATE webhook_events SET processing_status='processed' WHERE id=? AND processing_status='pending'").bind(event.id));
    const results=await env.DB.batch(statements);
    if(!(results[results.length-1].meta.changes||0))return reply({error:'Concurrent review; retry'},409);
-   const importedMessages=results.filter((result,index)=>index%3===1&&index<inbound.length*3).reduce((sum,result)=>sum+(result.meta.changes||0),0);
+   const importedMessages=results.filter((result,index)=>messageInsertPositions.includes(index)).reduce((sum,result)=>sum+(result.meta.changes||0),0);
    return reply({processed:true,acceptedMessages:inbound.length,importedMessages,duplicateMessages:inbound.length-importedMessages,receiptRecords:receipts.length,externalDelivery:false,automationTriggered:false});
   }catch{return reply({error:'Webhook processing failed; event remains pending if transaction rolled back'},503)}
  }
@@ -446,10 +450,14 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  if(u.pathname==='/api/ai/suggest-reply'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
   if(!idOk(data?.conversationId)||typeof data?.message!=='string'||!data.message.trim()||data.message.length>4000)return reply({error:'Valid conversation and message required'},400);
-  if(!env.GEMINI_API_KEY)return reply({error:'Gemini API key is not configured'},503);
   const conversation=await env.DB.prepare('SELECT id,human_paused,requested_human FROM conversations WHERE id=?').bind(data.conversationId).first<{id:string;human_paused:number;requested_human:number}>();
   if(!conversation)return reply({error:'Conversation not found'},404);
   if(conversation.human_paused||conversation.requested_human)return reply({action:'human_review',suggestion:null,sent:false,reason:'Human takeover active'});
+  if(requestsHumanMinistryContact(data.message)){
+   await env.DB.prepare('UPDATE conversations SET requested_human=1,human_paused=1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(data.conversationId).run();
+   return reply({action:'human_review',humanRequested:true,automationPaused:true,suggestion:null,sent:false,externalNotificationsSent:false,reason:'Request to speak to a ministry representative recorded for human follow-up'});
+  }
+  if(!env.GEMINI_API_KEY)return reply({error:'Gemini API key is not configured'},503);
   // Reserve usage in D1 before contacting Gemini. Each atomic UPSERT prevents
   // concurrent requests from bypassing limits, even across Worker isolates.
   const seconds=Math.floor(Date.now()/1000);
