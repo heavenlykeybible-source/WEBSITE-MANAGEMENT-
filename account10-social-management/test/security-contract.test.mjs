@@ -511,3 +511,10 @@ test('private dashboard responses discourage search indexing', () => {
  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
  assert.ok(source.includes("headers.set('x-robots-tag','noindex, nofollow, noarchive')"));
 });
+
+test('dashboard and service worker scripts are served without stale browser caching', () => {
+ const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+ assert.ok(source.includes("u.pathname==='/service-worker.js'"));
+ assert.ok(source.includes("u.pathname==='/sw.js'"));
+ assert.ok(source.includes("headers.set('cache-control','no-store')"));
+});
