@@ -432,9 +432,9 @@ test('named D1 operators have bounded revocable permissions and token hashes', (
  const authEnd=source.indexOf("if(['POST','PUT','PATCH'].includes(req.method))",authStart);
  const auth=source.slice(authStart,authEnd);
  assert.match(auth,/operator_credentials WHERE token_hash=\? AND active=1 AND expires_at>CURRENT_TIMESTAMP/);
- assert.match(auth,/operatorRole==='viewer'/);
- assert.match(auth,/operatorRole==='operator'/);
- assert.match(auth,/Operator role cannot perform this administrative action/);
+ assert.match(auth,/operatorActionAllowed\(operatorRole,req.method,u.pathname\)/);
+ assert.match(source,/import \{ operatorActionAllowed \} from '\.\/operator-permissions'/);
+ assert.match(auth,/This staff role is not permitted to perform this action/);
  const begin=source.indexOf("if(u.pathname==='/api/operators'&&req.method==='POST')");
  const end=source.indexOf("if(u.pathname==='/api/automation/readiness'",begin);
  const handlers=source.slice(begin,end);
@@ -444,4 +444,26 @@ test('named D1 operators have bounded revocable permissions and token hashes', (
  assert.match(handlers,/showOnlyOnce:true/);
  assert.match(handlers,/UPDATE operator_credentials SET active=0,revoked_at=CURRENT_TIMESTAMP/);
  assert.doesNotMatch(handlers,/SELECT \* FROM operator_credentials/);
+});
+
+test('least-privilege staff policy denies unknown writes and external messaging', () => {
+ const helper=readFileSync(new URL('../src/operator-permissions.ts',import.meta.url),'utf8');
+ const js=helper.replace(
+  "export const operatorActionAllowed=(role:'owner'|'operator'|'viewer',method:string,path:string):boolean=>",
+  "const operatorActionAllowed=(role,method,path)=>"
+ );
+ const allowed=new Function(js+';return operatorActionAllowed')();
+ for(const role of ['viewer','operator']){
+  assert.equal(allowed(role,'GET','/api/conversations'),true);
+  assert.equal(allowed(role,'POST','/api/operators'),false);
+  assert.equal(allowed(role,'POST','/api/whatsapp/send-approved'),false);
+  assert.equal(allowed(role,'POST','/api/posts'),false);
+  assert.equal(allowed(role,'DELETE','/api/human-requests'),false);
+ }
+ for(const path of ['/api/messages','/api/takeover','/api/human-requests','/api/human-requests/resolve','/api/ai/suggest-reply']){
+  assert.equal(allowed('operator','POST',path),true,path);
+  assert.equal(allowed('viewer','POST',path),false,path);
+ }
+ assert.equal(allowed('operator','POST','/api/new-unsafe-feature'),false);
+ assert.equal(allowed('owner','POST','/api/operators'),true);
 });
