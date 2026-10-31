@@ -13,7 +13,7 @@ test('Android guide has only one install prompt controller', () => {
 test('device guide only advertises native download when the server confirms its availability', () => {
   const js = publicFile('app-device-guide.js');
   assert.match(js, /method:'HEAD'/);
-  assert.match(js, /nativeLink\.hidden = !nativeAvailable/);
+  assert.match(js, /nativeLink\.hidden = !\(nativeAvailable && matchesDevice\(\)\)/);
   assert.match(js, /nativeLink\.hidden = true/);
   assert.match(js, /\/api\/native-download\//);
 });
@@ -116,15 +116,13 @@ test('public app directory and device chooser do not require registration before
  assert.match(guide,/No Heavenly Key sign-in is required to download it/);
 });
 
-test('scanned native install guides start verified package download for matching device only',()=>{
+test('scanned guides require deliberate download and hide mismatched native installers',()=>{
  const js=publicFile('app-device-guide.js');
  assert.match(js,/function matchesDevice\(\)/);
- assert.match(js,/nativeAvailable && matchesDevice\(\)/);
- assert.match(js,/window\.location\.assign\(nativeLink\.href\)/);
- assert.match(js,/nativeLink\.hidden = !nativeAvailable/);
- assert.match(js,/download is starting/i);
- assert.match(js,/different device/i);
+ assert.match(js,/nativeLink\.hidden = !\(nativeAvailable && matchesDevice\(\)\)/);
+ assert.doesNotMatch(js,/window\.location\.assign\(nativeLink\.href\)/);
  assert.doesNotMatch(js,/window\.location\.assign\(destination\.href\)/);
+ assert.match(js,/different device/i);
 });
 
 
