@@ -276,3 +276,12 @@ test('service worker rejects mismatched script and stylesheet MIME types', () =>
  assert.match(sw,/path\.endsWith\('\.css'\)/);
  assert.match(sw,/hasCompatibleAssetType\(cachePath,response\)/);
 });
+
+test('download catalogue selection rejects prototype-inherited and malformed IDs', () => {
+ const js=publicFile('app-pages.js');
+ assert.match(js,/Object\.prototype\.hasOwnProperty\.call\(apps,id\)/);
+ assert.match(js,/\^\[a-z0-9-\]\{1,64\}\$/);
+ assert.match(js,/typeof app\.name!=='string'/);
+ assert.match(js,/typeof app\.url!=='string'/);
+ assert.doesNotMatch(js,/const apps=await load\(\),id=button\.dataset\.downloadApp,app=apps\[id\];if\(!app\)/);
+});
