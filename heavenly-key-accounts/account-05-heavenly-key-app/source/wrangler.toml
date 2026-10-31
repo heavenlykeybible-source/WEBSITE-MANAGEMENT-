@@ -46,10 +46,6 @@ binding = "HYMNS_APP"
 service = "heavenlykey-hymns"
 
 [[services]]
-binding = "AUDIO_HYMNS_APP"
-service = "heavenlykey-audio-hymns"
-
-[[services]]
 binding = "DAILY_READING_APP"
 service = "heavenlykey-daily-reading"
 
