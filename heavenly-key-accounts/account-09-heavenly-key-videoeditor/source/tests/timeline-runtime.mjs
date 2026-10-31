@@ -137,6 +137,9 @@ async function scenario(mode){
    node('cv').width=6000;node('cv').height=3000;
    await node('clipExport').onclick();
    assert.match(node('clipStatus').textContent,/Invalid export canvas size/,'Excessive canvas is rejected');
+   node('cv').width=5000;node('cv').height=200;
+   await node('clipExport').onclick();
+   assert.match(node('clipStatus').textContent,/Invalid export canvas size/,'Oversized width rejected even when pixel area is small');
    console.log('PASS timeline encoder '+mode);
    return;
  }
