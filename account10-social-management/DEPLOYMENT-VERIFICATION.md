@@ -139,3 +139,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Confirm operator dashboard resume and Mark Handled send the exact version from the corresponding conversation or queue item, and clear cached versions upon sign-out or credential change.
 - [ ] Verify authenticated `/api/automation/readiness` remains false if `human_request_version` is absent, and true only if all required handover and rate-limiting schema elements exist.
 - [ ] This version control prevents stale handover resolution but does not replace individual operator logins, auditable actor identities, or provider-side human notification.
+
+## Operator secret and browser-origin security gate
+- [ ] Before deploying the new Worker, check the existing Cloudflare `ADMIN_TOKEN` secret out of band: generate a fresh cryptographically random token of at least 32 and at most 512 characters, with no whitespace. Store it using Cloudflare Workers secrets, never in GitHub, logs, chat, or frontend source. Rotate the old credential in a controlled maintenance window. This is a shared secret, not individual access control.
+- [ ] In staging, a missing, short, or malformed `ADMIN_TOKEN` must return HTTP 503 on authenticated API routes; a wrong bearer token must receive HTTP 401. Do not publish the actual token in test evidence.
+- [ ] After authentication, verify mutating POST/PUT/PATCH/DELETE requests with a foreign or `null` Origin are rejected with HTTP 403, while same-origin requests and authorized service clients without an Origin remain eligible for normal route validation.
+- [ ] This does not replace per-person identity, role-based authorization, session revocation, edge abuse controls, and a complete production penetration test.
