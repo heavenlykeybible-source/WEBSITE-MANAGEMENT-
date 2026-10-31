@@ -60,8 +60,10 @@ Do not announce production readiness until the above checks pass on a deployed W
 - **Release remains blocked** until authenticating operators individually, database migration verification, Cloudflare asset/binding checks, live WhatsApp opt-in delivery receipts, Gemini tests, and security/device verification.
 
 ## Production security gates (OWASP ASVS 5.0 / Cloudflare guidance)
-- [ ] Replace shared `ADMIN_TOKEN` with individual operator identities, short-lived sessions, server-side session invalidation on logout, least-privilege roles, and auditable access changes.
-- [ ] Enable Cloudflare edge rate limiting on authenticated APIs and Gemini suggestion requests, and an appropriately scoped failed-authentication rule, with safeguards against blocking real operators.
+- [ ] Keep the Account 10 dashboard on an external same-origin script bundle. The Worker now enforces `script-src 'self'` and `script-src-attr 'none'`; re-run browser checks after any future HTML/script change.
+- [ ] Replace shared `ADMIN_TOKEN` with individual owner identity, MFA, short-lived sessions, server-side session invalidation on logout, least-privilege roles, and auditable access changes.
+- [ ] Apply `migrations/0013_auth_rate_limits.sql` before deploying the new Worker. Failed private-API credentials are counted per hashed Cloudflare edge address and blocked after 20 failures in a 15-minute window; raw IP addresses are not stored and stale counters are pruned when a subsequent failed-authentication event runs cleanup for entries older than 24 hours.
+- [ ] Enable Cloudflare edge rate limiting on authenticated APIs and Gemini suggestion requests, and an appropriately scoped failed-authentication rule, with safeguards against blocking real operators. The Worker-level D1 failed-authentication counter is defense in depth, not a substitute for edge controls.
 - [ ] Verify `ADMIN_TOKEN`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `META_WHATSAPP_ACCESS_TOKEN` and `GEMINI_API_KEY` are configured as encrypted Cloudflare secrets rather than Wrangler plaintext variables.
 - [ ] Verify the operator dashboard returns `Cache-Control: no-store` for HTML, and private JSON API responses are never cached by a CDN.
 - [ ] Verify stale session responses cannot repopulate other operators' conversations, and live tests cover sign-out during an outstanding Gemini call.
