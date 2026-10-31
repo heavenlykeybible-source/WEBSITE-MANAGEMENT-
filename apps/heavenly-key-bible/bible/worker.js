@@ -143,8 +143,10 @@ export default {
      if(entry.status==="approved-for-publication"&&!entry.topics.every(topic=>topic.reviewStatus==="approved"))return deny();
     }
     // Never expose a future edition, even when its batch has been allowlisted.
-    const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-    const available=data.entries.filter(entry=>entry.date<=today&&entry.status==="approved-for-publication"&&entry.topics.every(topic=>topic.reviewStatus==="approved"));
+    const todayParts=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+    const today=Object.fromEntries(todayParts.filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
+    const todayKey=today.year+"-"+today.month+"-"+today.day;
+    const available=data.entries.filter(entry=>entry.date<=todayKey&&entry.status==="approved-for-publication"&&entry.topics.every(topic=>topic.reviewStatus==="approved"));
     if(!available.length)return deny();
     const headers=new Headers(assetResponse.headers);
     headers.set("Cache-Control","no-store, private");
