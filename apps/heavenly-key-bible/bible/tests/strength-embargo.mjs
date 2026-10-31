@@ -103,4 +103,12 @@ for(const scenario of ['unapproved entry','unapproved topic','reordered topics']
  const response=await worker.fetch(new Request('https://example.org/'+filename),env);
  assert.equal(response.status,404,scenario);
 }
+// Published batches must reject repeated calendar days.
+{
+ const manifest={schemaVersion:1,publicationStatus:'published',publishedBatchFiles:[filename]};
+ const entry={date:today,status:'approved-for-publication',topics};
+ const env={ASSETS:{fetch:async request=>new URL(request.url).pathname==='/strength-publication-status.json'?Response.json(manifest):Response.json({timezone:'Africa/Lagos',entries:[entry,entry]})}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename),env);
+ assert.equal(response.status,404);
+}
 console.log('Devotional embargo regression: future approved entries blocked; current approved allowed; editorial hold blocked.');
