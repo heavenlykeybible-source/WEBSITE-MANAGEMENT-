@@ -58,7 +58,7 @@ $('.hkr-popout').onclick=()=>{
  else notice.textContent='Your browser blocked the player window. Allow pop-ups for heavenlykey.org and try again.';
 };
 root.addEventListener('keydown',e=>{if(e.key==='Escape')$('.hkr-close').click()});
-window.addEventListener('pagehide',stop);
+
 refresh().catch(e=>{notice.textContent=e.message||'Radio is unavailable.'});
 })();
 
