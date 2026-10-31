@@ -1,5 +1,6 @@
 import { TV_LOCKED,TV_LOCK_MESSAGE } from './channel-lock';
 import { onDemandRadioMetadata } from './radio-on-demand';
+import { parseAudioRange } from './radio-byte-range';
 export function youtubeVideoId(value:string):string|null {try{const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password)return null;let id:string|null=null;if(u.hostname==='youtu.be')id=u.pathname.slice(1).split('/')[0];else if(['youtube.com','www.youtube.com','m.youtube.com','www.youtube-nocookie.com'].includes(u.hostname)){id=u.pathname==='/watch'?u.searchParams.get('v'):/^\/(?:embed|shorts|live)\/([^/]+)/.exec(u.pathname)?.[1]||null;}return id&&/^[a-zA-Z0-9_-]{11}$/.test(id)?id:null;}catch{return null;}}
 export function isPlaybackURL(value:string):boolean {try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!(u.hostname==='heavenlykey.alldaywow247.workers.dev'&&!u.pathname.startsWith('/api/broadcast/media/'));}catch{return false;}}
 export interface BroadcastEnv { DB:D1Database; MEDIA_R2:R2Bucket; LIVE_STATUS_KV?:KVNamespace }
@@ -53,18 +54,18 @@ export async function serveBroadcastMedia(request:Request,env:BroadcastEnv,id:nu
  const media=adminPreview?await env.DB.prepare("SELECT * FROM media_objects WHERE media_id=? AND status IN ('approved','published') AND (status='published' OR keep_media=1 OR retention_until IS NULL OR julianday(retention_until)>julianday('now'))").bind(id).first<any>():await eligibleMedia(env,id);
  if(!media||!['audio','video','image'].includes(media.media_type))return json({error:'Media unavailable'},404);
  if(TV_LOCKED&&!adminPreview&&media.media_type==='video')return json({error:TV_LOCK_MESSAGE,code:'TELEVISION_LOCKED',locked:true},423);
- const range=request.headers.get('Range');
- if(range&&!/^bytes=(\d+-\d*|-\d+)$/.test(range))return new Response(null,{status:416});
  const head=await env.MEDIA_R2.head(media.object_key);
  if(!head)return json({error:'Media unavailable'},404);
- if(range){const r=/^bytes=(\d+)-(\d*)$/.exec(range);if((r&&(Number(r[1])>=head.size||(r[2]&&Number(r[2])<Number(r[1]))))||range==='bytes=-0')return new Response(null,{status:416,headers:{'Content-Range':'bytes */'+head.size}});}
- const object=request.method==='HEAD'?head:await env.MEDIA_R2.get(media.object_key,range?{range:request.headers}:undefined);
+ const range=parseAudioRange(request.headers.get('Range'),head.size);
+ if(range===false)return new Response(null,{status:416,headers:{'Content-Range':'bytes */'+head.size,'Accept-Ranges':'bytes','Cache-Control':'no-store'}});
+ const object=request.method==='HEAD'?head:await env.MEDIA_R2.get(media.object_key,range?{range}:undefined);
  if(!object)return json({error:'Media unavailable'},404);
  const headers=new Headers({'Content-Type':media.mime_type,'Accept-Ranges':'bytes','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"});
- headers.set('ETag',object.httpEtag);
- const part=object.range as {offset?:number;length?:number}|undefined;
- let status=200;
- if(range&&part?.offset!==undefined&&part.length!==undefined){status=206;headers.set('Content-Range',`bytes ${part.offset}-${part.offset+part.length-1}/${object.size}`);headers.set('Content-Length',String(part.length));}
- else headers.set('Content-Length',String(object.size));
+ headers.set('ETag',head.httpEtag);
+ const status=range?206:200;
+ if(range){
+  headers.set('Content-Range',`bytes ${range.offset}-${range.offset+range.length-1}/${head.size}`);
+  headers.set('Content-Length',String(range.length));
+ }else headers.set('Content-Length',String(head.size));
  return new Response(request.method==='HEAD'?null:(object as R2ObjectBody).body,{status,headers});
 }
