@@ -25,4 +25,19 @@ async function check(date,publicationStatus,expected){
 await check(tomorrow,'published',404);
 await check(today,'published',200);
 await check(today,'editorial-hold',404);
+// Unrecognized filenames must not fall through to the public asset layer.
+{
+ let called=false;
+ const env={ASSETS:{fetch:async()=>{called=true;throw Error('Asset should not be fetched');}}};
+ const response=await worker.fetch(new Request('https://example.org/strength-devotionals-unreviewed.json'),env);
+ assert.equal(response.status,404);
+ assert.equal(called,false);
+}
+// HEAD requests must not leak draft content or response bodies.
+{
+ const env={ASSETS:{fetch:async()=>Response.json({private:true})}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename,{method:'HEAD'}),env);
+ assert.equal(response.status,404);
+ assert.equal(await response.text(),'');
+}
 console.log('Devotional embargo regression: future approved entries blocked; current approved allowed; editorial hold blocked.');
