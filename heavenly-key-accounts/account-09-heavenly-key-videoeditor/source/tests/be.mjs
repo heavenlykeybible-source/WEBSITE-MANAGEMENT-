@@ -207,7 +207,10 @@ const touchedSession=db.prepare('SELECT last_seen_at,expires_at FROM sessions WH
 check('Active session is accepted within the 30-minute inactivity window',activeAfterIdleTouch.status===200);
 check('Active session activity refreshes last-seen timestamp',touchedSession.last_seen_at>idleTouchTime);
 check('Session retains fixed 30-day absolute expiry',touchedSession.expires_at===initialSession.expires_at);
-db.prepare('UPDATE sessions SET last_seen_at=? WHERE token_hash=?').run(Date.now()-31*60*1000,idleTokenHash);
+db.prepare('UPDATE sessions SET expires_at=?,last_seen_at=? WHERE token_hash=?').run(Date.now()-1000,Date.now(),idleTokenHash);
+const absoluteExpired=await request('me',{cookie:sessionIdleLogin.cookie});
+check('Session is rejected at its absolute expiry even after recent activity',absoluteExpired.status===401);
+db.prepare('UPDATE sessions SET expires_at=?,last_seen_at=? WHERE token_hash=?').run(initialSession.expires_at,Date.now()-31*60*1000,idleTokenHash);
 const idleExpired=await request('me',{cookie:sessionIdleLogin.cookie});
 check('Session is rejected after 30 minutes of inactivity',idleExpired.status===401);
 await request('logout',{method:'POST',cookie:sessionIdleLogin.cookie});
@@ -221,8 +224,8 @@ check('Malformed login passwords are rejected safely',malformedPassword.status==
 const recoveredLogin = await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
 check('Legitimate members can log in after an incorrect attempt',recoveredLogin.status===200&&recoveredLogin.cookie.length>5);
 const sessionTestUser=db.prepare('SELECT id FROM users WHERE email=?').get('smoke@example.com').id;
-const extraSession=db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)');
-for(let i=0;i<25;i++)extraSession.run('old-device-session-'+i,sessionTestUser,Date.now()+3600000);
+const extraSession=db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at,last_seen_at) VALUES(?,?,?,?)');
+for(let i=0;i<25;i++)extraSession.run('old-device-session-'+i,sessionTestUser,Date.now()+3600000,Date.now());
 const boundedLogin=await request('login',{method:'POST',body:{email:'smoke@example.com',password:'correct horse battery'}});
 const sessionCount=db.prepare('SELECT COUNT(*) c FROM sessions WHERE user_id=?').get(sessionTestUser).c;
 check('Member sessions capped at twenty after login',boundedLogin.status===200&&sessionCount===20);
