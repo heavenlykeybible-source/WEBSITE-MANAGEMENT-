@@ -47,6 +47,7 @@ jobs:
           with open('wrangler.toml', 'rb') as file:
               cfg = tomllib.load(file)
           assert cfg['name'] == 'website-management'
+          assert set(cfg['secrets']['required']) == {'ADMIN_USER', 'ADMIN_PASS', 'SESSION_SECRET', 'VAULT_KEY'}
           assert cfg['main'] == 'control-room-worker.js'
           assert cfg['vars']['SIGNUP_OPEN'] == 'false'
           assert cfg['vars']['PROTECTED_WORKERS'] == 'website-management'
