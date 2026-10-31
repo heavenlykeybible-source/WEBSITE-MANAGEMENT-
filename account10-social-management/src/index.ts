@@ -449,7 +449,7 @@ const app={async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Respons
  }
  if(u.pathname==='/api/ai/suggest-post'&&req.method==='POST'){
   let data:any;try{data=await req.json()}catch{return reply({error:'Invalid JSON'},400)}
-  const supported=['facebook_page','instagram_professional','youtube','tiktok'];
+  const supported=['facebook_page','instagram_professional','youtube','tiktok','x'];
   if(!supported.includes(data?.platform)||typeof data?.topic!=='string'||!data.topic.trim()||data.topic.length>2000)return reply({error:'Choose a supported channel and a ministry topic under 2000 characters'},400);
   if(!env.GEMINI_API_KEY)return reply({error:'Gemini API key is not configured',sent:false,published:false},503);
   const seconds=Math.floor(Date.now()/1000);
