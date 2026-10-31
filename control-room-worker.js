@@ -4221,7 +4221,7 @@ function privateImportForm(){
  }},'Resume existing upload');
  var upload=h('button',{onclick:async function(){
   if(busy)return;var selected=file.files&&file.files[0];if(!selected){status.textContent='Choose a ZIP package first.';return;}
-  if(!/\.zip$/i.test(selected.name)||selected.size<1||selected.size>1073741824){status.textContent='Choose a ZIP file between 1 byte and 1 GiB.';return;}
+  if(!/\\.zip$/i.test(selected.name)||selected.size<1||selected.size>1073741824){status.textContent='Choose a ZIP file between 1 byte and 1 GiB.';return;}
   busy=true;upload.disabled=true;resume.disabled=true;
   try{
    if(!current){
