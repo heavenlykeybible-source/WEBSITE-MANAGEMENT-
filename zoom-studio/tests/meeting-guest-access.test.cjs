@@ -567,3 +567,16 @@ test('host authentication verifier failure closes socket safely',async()=>{
  assert.notEqual(ws.attachment.role,'host');
  assert.ok(ws.messages.some(m=>m.t==='error'));
 });
+
+test('meeting admission survives optional TURN credential signing failure',async()=>{
+ const h=setup();
+ h.r.env.TURN_URLS='turn:relay.example.com:3478';
+ h.r.env.TURN_SHARED_SECRET='a'.repeat(32);
+ h.context.crypto.subtle={importKey:async()=>{throw new Error('TURN signing unavailable');}};
+ await h.join('valid');
+ const welcome=h.guest.messages.find(m=>m.t==='welcome');
+ assert.ok(welcome);
+ assert.equal(welcome.ice.length,1);
+ assert.match(welcome.ice[0].urls,/^stun:/);
+ assert.equal(h.guest.readyState,1);
+});
