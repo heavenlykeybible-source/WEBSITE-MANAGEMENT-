@@ -56,8 +56,8 @@ const completionDb={prepare(sql){return {bind(){return {
 assert.deepEqual(await finishPersistedPrivateImport(completionBucket,completionDb,actor,started.id),{id:started.id,size:11,state:'private-awaiting-review'});
 assert.equal(deleteCount,0);
 failTransition=true;
-await assert.rejects(finishPersistedPrivateImport(completionBucket,completionDb,actor,started.id),/transition denied/);
-assert.equal(deleteCount,1,'Failed D1 state transition must delete completed private object');
+await assert.rejects(finishPersistedPrivateImport(completionBucket,completionDb,actor,started.id),/requires operator reconciliation/);
+assert.equal(deleteCount,0,'Ambiguous D1 transition must not delete an object another request may have approved');
 assert.equal(completeCount,2);
 await assert.rejects(finishPersistedPrivateImport(completionBucket,completionDb,{...actor,id:8},started.id));
 assert.equal(completeCount,2,'Unauthorized actor cannot complete upload');
