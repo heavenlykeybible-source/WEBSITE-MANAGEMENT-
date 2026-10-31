@@ -930,3 +930,9 @@ test('invite keys cannot join through a socket allocated to a different meeting 
  assert.equal(legit.d.role,'guest','correctly routed invite must remain functional');
  assert.equal(legit.readyState,1);
 });
+
+test('host meeting expiry is capped from the completed verification timestamp',()=>{
+ const source=fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8');
+ assert.match(source,/until:Math\.min\(a\.pe,verifiedAt\+86400000\)/,'host expiry must use verification completion time');
+ assert.doesNotMatch(source,/until:Math\.min\(a\.pe,now\+86400000\)/,'stale message timestamps must not limit renewed sessions');
+});
