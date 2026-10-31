@@ -345,3 +345,14 @@ test('schema readiness cannot be accessed before bearer authorization', () => {
  assert.doesNotMatch(handler,/env\.ADMIN_TOKEN|env\.META_APP_SECRET|geminiApiKey:\s*env\.GEMINI_API_KEY/);
  assert.match(handler,/migrationReady:false/);
 });
+
+test('readiness requires the real handover ledger and limiter columns, not just table names', () => {
+ const begin=source.indexOf("if(u.pathname==='/api/automation/readiness'");
+ const end=source.indexOf("if(u.pathname==='/api/accounts'",begin);
+ const handler=source.slice(begin,end);
+ assert.match(handler,/PRAGMA table_info\(whatsapp_handover_events\)/);
+ assert.match(handler,/PRAGMA table_info\(ai_rate_limits\)/);
+ assert.match(handler,/\['message_id','conversation_id','contact_target','consumed'\]/);
+ assert.match(handler,/\['scope','window_kind','window_start','request_count'\]/);
+ assert.match(handler,/migrationReady=humanContactColumn&&whatsappReplayLedger&&aiUsageLimits/);
+});
