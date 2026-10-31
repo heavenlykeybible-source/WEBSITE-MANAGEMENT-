@@ -127,8 +127,7 @@ export default {
     const validDate=(date)=>typeof date==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(date)&&
       !Number.isNaN(Date.parse(date))&&new Date(date+"T00:00:00Z").toISOString().slice(0,10)===date;
     const requiredTopics=["Revival & Spiritual Fire","Holiness & Righteousness","Hope & Encouragement","Prayer & Intercession","Salvation & Repentance","Faith & Trust","The Holy Spirit","Evangelism & Soul Winning","Love & Christian Unity","The Word & Obedience","Wisdom & Discernment","End-time & Rapture Readiness"];
-    const expectedDays=Math.round((Date.parse(batchEnd+"T00:00:00Z")-Date.parse(batchStart+"T00:00:00Z"))/86400000)+1;
-    if(data?.timezone!=="Africa/Lagos"||!Array.isArray(data.entries)||data.entries.length!==expectedDays||data.entries.length>366)return deny();
+    if(data?.timezone!=="Africa/Lagos"||!Array.isArray(data.entries)||!data.entries.length||data.entries.length>366)return deny();
     for(let index=0;index<data.entries.length;index++){
      const entry=data.entries[index];
      const expectedDate=new Date(Date.parse(batchStart+"T00:00:00Z")+index*86400000).toISOString().slice(0,10);
