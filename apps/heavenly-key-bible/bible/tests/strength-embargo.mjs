@@ -119,4 +119,12 @@ for(const scenario of ['unapproved entry','unapproved topic','reordered topics']
  assert.equal(response.status,404);
  assert.equal(response.headers.get('Cache-Control'),'no-store, private');
 }
+// Unsupported HTTP methods must not fetch even the publication manifest.
+for(const method of ['POST','PUT','PATCH','DELETE','OPTIONS']){
+ let fetched=false;
+ const env={ASSETS:{fetch:async()=>{fetched=true;throw Error('Unexpected fetch');}}};
+ const response=await worker.fetch(new Request('https://example.org/'+filename,{method}),env);
+ assert.equal(response.status,404,method);
+ assert.equal(fetched,false,method);
+}
 console.log('Devotional embargo regression: future approved entries blocked; current approved allowed; editorial hold blocked.');
