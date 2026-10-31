@@ -803,3 +803,11 @@ test('simultaneous host authorization attempts cannot create competing hosts',as
  assert.equal([first,second].filter(w=>w.readyState===1&&w.d.role==='host').length,1);
  assert.equal(s.room.hostAuthPending,false,'authorization guard must be released');
 });
+
+test('room admission reclaims stale previous-session participants before connection limits',()=>{
+ const source=fs.readFileSync(path.join(root,'server/meeting-rooms.mjs'),'utf8');
+ const cleanup=source.indexOf('Reclaim capacity from previous host generations');
+ const capacity=source.indexOf('this.sockets().length>=capacity');
+ assert.ok(cleanup>0&&capacity>cleanup,'outdated guest connections must be closed before capacity enforcement');
+ assert.match(source,/if\(activeKey\)for\(const guest of this\.guests\(\)\)if\(this\.data\(guest\)\.session!==activeKey\)this\.close/);
+});
