@@ -209,3 +209,7 @@ test('Gemini suggestion button remains disabled after role, conversation or sess
 test('WhatsApp send errors cannot repaint a different conversation or authentication session', () => {
  assert.match(html, /catch\(err\)\{if\(selected===currentConversation&&authEpoch===sessionEpoch\)status\(err\.message\)\}finally\{send\.disabled=false\}/);
 });
+
+test('WhatsApp delivery ledger failures do not expose stale status across chats or sessions', () => {
+ assert.match(html, /catch\(err\)\{if\(selected===id&&authEpoch===epoch\)status\('WhatsApp delivery ledger unavailable; sending disabled until migrations are applied\.'\)\}/);
+});
