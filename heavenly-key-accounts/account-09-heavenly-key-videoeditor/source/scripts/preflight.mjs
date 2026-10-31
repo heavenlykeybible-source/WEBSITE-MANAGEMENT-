@@ -19,6 +19,7 @@ if(!apiSource.includes('SELECT r2_key,size FROM media') || !apiSource.includes('
 if(!apiSource.includes("p[1] === 'cleanup' && !p[2] && m === 'POST'") || !apiSource.includes("SELECT id,r2_key FROM media WHERE user_id=? AND deleted=1 ORDER BY created_at ASC LIMIT 10") || !apiSource.includes("DELETE FROM media WHERE id=? AND user_id=? AND deleted=1"))throw Error('Authenticated bounded R2 cleanup route missing');
 if(!apiSource.includes("SELECT r2_key FROM media WHERE user_id=?'"))throw Error('Account deletion must include previously deleted R2 objects');
 if(!apiSource.includes('Account deletion was not completed; please retry.'))throw Error('Account deletion must stop safely on R2 storage failure');
+if((apiSource.match(/env\.MEDIA\.delete\(item\.r2_key\)/g)||[]).length!==2)throw Error('Media cleanup must retry transient R2 deletion errors');
 if(!apiSource.includes('try { await env.MEDIA.delete(x.r2_key); }') || (apiSource.match(/env\.MEDIA\.delete\(x\.r2_key\)/g)||[]).length!==2)throw Error('Account deletion must retry R2 once before aborting');
 if(!apiSource.includes("!item.r2_key.startsWith(u.id + '/')") || !apiSource.includes("!x.r2_key.startsWith(u.id + '/')"))throw Error('R2 deletion requires per-account object key ownership');
 if((apiSource.match(/!r\.r2_key\.startsWith\(u\.id \+ '\/'\)/g)||[]).length!==2)throw Error('Media read and delete must validate R2 ownership');
