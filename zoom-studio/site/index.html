@@ -339,8 +339,8 @@ function proc(n,c1,c2,c3){const c=document.createElement('canvas');c.width=1280;
  g.fillStyle='rgba(242,193,78,.9)';g.fillRect(0,692,1280,6);T.push({n,c,u:c.toDataURL('image/jpeg',.6)})}
 proc('Royal blue and gold','#0b1f4d','#143a8c','#061233');proc('Crimson glory','#4a0d18','#8c1b2c','#1d0409');proc('Midnight worship','#05060f','#101a3a','#050810');proc('Golden dawn','#1b3a6b','#d9973f','#fbe4a1');
 function gal(){$('gal').innerHTML=T.map((t,i)=>`<button data-a="bgsel" data-i="${i}" class="${i==curBg?'cur':''}"><img src="${t.th||t.u}" alt="${esc(t.n)}" loading="lazy"><span>${esc(t.n)}</span></button>`).join('')}
-function setBg(i){const t=T[i];if(!t)return;curBg=i;const request=++bgPick,scene=SC[ed()];
- const go=()=>{if(request!==bgPick||!SC.includes(scene))return;bgImg=t.c||t.img;bgFn=t.fn||null;
+function setBg(i){const t=T[i];if(!t)return;const request=++bgPick,scene=SC[ed()];
+ const go=()=>{if(request!==bgPick||!SC.includes(scene))return;curBg=i;bgImg=t.c||t.img;bgFn=t.fn||null;
   const it=scene.items;let b=it.map(x=>src(x.id)).find(s=>s&&s.isBg);
   if(!b)b=mk('image','Background',{isBg:true,cover:true});b.img=bgImg;b.fn=bgFn;b.tn=t.n;
   if(!it.some(x=>x.id===b.id))it.unshift({id:b.id,p:'full',on:true});gal();ui()};
