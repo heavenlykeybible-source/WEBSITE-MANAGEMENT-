@@ -319,7 +319,7 @@ const anonymousVoice = await request('voice-config');
 check('Anonymous voice configuration forbidden', anonymousVoice.status === 401);
 
 const noLengthUpload = await onRequest({
-  request: new Request('https://studio.example/api/media?name=sample.png',{
+  request: new Request('https://studio.example/api/media?name=..sample..png',{
     method:'POST',headers:{cookie:login.cookie,'content-type':'image/png','x-requested-with':'hk'},
     body:Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4//8/AwAI/AL+X9uSAAAAAElFTkSuQmCC','base64'))
   }),env,params:{path:['media']}
