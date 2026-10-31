@@ -231,3 +231,8 @@ test('async chat refresh cannot post stale operator success messages after switc
  assert.match(html, /await openChat\(targetConversation\);if\(selected===targetConversation&&authEpoch===epoch\)status\('Internal note saved\. Not delivered to any provider\.'\)/);
  assert.match(html, /await openChat\(targetConversation\);if\(selected===targetConversation&&authEpoch===epoch\)status\(wasHumanRequested\?/);
 });
+
+test('WhatsApp send guard checks owner role and duplicate submission both before and after confirmation', () => {
+ assert.match(html, /const currentConversation=conversationId;if\(send\.disabled\|\|operatorAccessRole!=='owner'\|\|selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return/);
+ assert.match(html, /if\(operatorAccessRole!=='owner'\|\|selected!==currentConversation\|\|authEpoch!==sessionEpoch\)return;send\.disabled=true;try/);
+});
