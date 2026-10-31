@@ -35,6 +35,7 @@
   const picker=el('input',{type:'file',accept:'video/*,audio/*,image/png,image/jpeg,image/gif,image/webp'},media);
   const upload=el('button',{type:'button',text:'Upload selected file'},media);
   const mediaRefresh=el('button',{type:'button',text:'Refresh media'},media);
+  const mediaCleanup=el('button',{type:'button',text:'Retry pending media cleanup'},media);
   const ml=el('ul',{},media);const ms=el('div',{class:'status',role:'status',text:'Sign in to view cloud media.'},media);
   async function loadMedia(){const generation=libraryGeneration;try{const d=await json('media');if(generation!==libraryGeneration)return;ml.replaceChildren();for(const f of d.items){const li=el('li',{},ml);el('span',{text:f.name+' ('+(f.size/1048576).toFixed(1)+' MB) '},li);const a=el('a',{href:'/api/media/'+encodeURIComponent(f.id),text:'Open / Download'},li);a.target='_blank';a.rel='noopener noreferrer';
       if(f.type.startsWith('video/')||f.type.startsWith('audio/')){
