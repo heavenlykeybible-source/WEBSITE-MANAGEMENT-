@@ -63,8 +63,8 @@ export async function transitionImportSession(db, actor, id, fromState, toState)
   authorized(actor);
   if (fromState !== 'uploading' || !['private-awaiting-review','aborted'].includes(toState))
     throw new Error('Invalid import transition');
-  const result = await db.prepare('UPDATE account4_import_sessions SET state=? WHERE id=? AND owner_id=? AND state=? AND expires_at_ms>?')
-    .bind(toState,id,actor.id,fromState,Date.now()).run();
+  const result = await db.prepare('UPDATE account4_import_sessions SET state=? WHERE id=? AND owner_id=? AND state=? AND expires_at_ms>? AND (? = ? OR (SELECT COUNT(*) FROM account4_import_parts p WHERE p.session_id=account4_import_sessions.id)=part_count AND (SELECT MIN(part_number) FROM account4_import_parts p WHERE p.session_id=account4_import_sessions.id)=1 AND (SELECT MAX(part_number) FROM account4_import_parts p WHERE p.session_id=account4_import_sessions.id)=part_count)')
+    .bind(toState,id,actor.id,fromState,Date.now(),toState,'aborted').run();
   if (result.meta?.changes !== 1) throw new Error('Import session transition denied');
   return {id,state:toState};
 }
