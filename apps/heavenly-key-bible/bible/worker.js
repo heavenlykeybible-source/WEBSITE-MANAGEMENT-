@@ -120,7 +120,7 @@ export default {
     const manifest=await manifestResponse.json();
     if(manifest?.schemaVersion!==1||manifest.publicationStatus!=="published"||
        !Array.isArray(manifest.publishedBatchFiles)||!manifest.publishedBatchFiles.includes(draftMatch[1]))return deny();
-    const assetResponse=await env.ASSETS.fetch(new Request(new URL("/"+draftMatch[1],url.origin),request));
+    const assetResponse=await env.ASSETS.fetch(new Request(new URL("/"+draftMatch[1],url.origin),{method:"GET"}));
     if(!assetResponse.ok)return deny();
     const data=await assetResponse.clone().json();
     const [batchStart,batchEnd]=batchRanges[draftMatch[1]];
@@ -151,7 +151,7 @@ export default {
     headers.set("Cache-Control","no-store, private");
     headers.set("X-Content-Type-Options","nosniff");
     headers.set("Content-Type","application/json; charset=utf-8");
-    return Response.json({timezone:"Africa/Lagos",entries:available},{status:200,headers});
+    return new Response(request.method==="HEAD"?null:JSON.stringify({timezone:"Africa/Lagos",entries:available}),{status:200,headers});
    }catch{return deny();}
   }
   // Canonical extensionless devotional URL; preserve legacy links with a permanent redirect.
