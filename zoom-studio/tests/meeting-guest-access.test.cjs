@@ -546,3 +546,14 @@ test('host token identity must be a bounded string',async()=>{
  assert.notEqual(newHost.attachment.role,'host');
  assert.notEqual(newHost.readyState,1);
 });
+
+test('closed host socket cannot be activated after asynchronous token check',async()=>{
+ const h=setup();h.host.close();
+ const ws=h.add();let release;
+ const room=ws.attachment.room;
+ h.context.check=()=>new Promise(resolve=>{release=()=>resolve({k:'meeting',r:room,u:'host@example.com',pe:Date.now()+60000});});
+ const pending=h.r.webSocketMessage(ws,JSON.stringify({t:'host',token:'valid-host'}));
+ ws.close();release();await pending;
+ assert.notEqual(ws.attachment.role,'host');
+ assert.equal(h.r.host(),undefined);
+});
