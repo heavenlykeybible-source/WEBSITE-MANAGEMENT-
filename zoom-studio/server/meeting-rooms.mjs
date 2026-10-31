@@ -64,10 +64,11 @@ export class MeetingRooms {
   if(this.sockets().length>=capacity)return new Response('Room is full',{status:429});
   // Limit unauthenticated pending connections separately so they cannot exhaust meeting capacity.
   if(this.sockets().filter(w=>!this.data(w).role).length>=2)return new Response('Too many pending connections',{status:429});
+  // Schedule handshake expiration before accepting a socket so storage failures cannot leave an orphaned connection.
+  await this.scheduleHandshakeAlarm();
   const pair=new WebSocketPair(),client=pair[0],server=pair[1];
   this.state.acceptWebSocket(server);
   this.save(server,{role:'',room:url.pathname.split('/')[2],until:Date.now()+15000});
-  await this.scheduleHandshakeAlarm();
   return new Response(null,{status:101,webSocket:client});
  }
  async alarm(){
