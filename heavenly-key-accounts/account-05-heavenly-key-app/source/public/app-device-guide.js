@@ -93,7 +93,7 @@
           const expectedTypes = {android:'application/vnd.android.package-archive',windows:'application/msix',mac:'application/x-apple-diskimage'};
           const size = Number(available.headers.get('content-length'));
           const digest = available.headers.get('x-release-sha256') || '';
-          nativeAvailable = available.ok && contentType.includes(expectedTypes[platform]) && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
+          nativeAvailable = available.ok && contentType.split(';',1)[0].trim() === expectedTypes[platform] && Number.isSafeInteger(size) && size > 0 && /^[a-f0-9]{64}$/i.test(digest);
           // Do not initiate software downloads on QR scans or page navigation.
           // Show the package only on the matching platform and require a click.
           nativeLink.hidden = !(nativeAvailable && matchesDevice());
@@ -105,11 +105,11 @@
       } else if (platform === 'iphone' || platform === 'ipad') {
         status('Open this app in Safari, tap Share, then Add to Home Screen. Native App Store installation is not available here.');
       } else if (nativeAvailable) {
-        status('A verified native installation package is available. No Heavenly Key sign-in is required to download it. Choose Download above or open the web app.');
+        status('A native installation package is listed by the official server. Confirm its publisher signature before installing. No Heavenly Key sign-in is required to download it. Choose Download above or open the web app.');
       } else if (!sameOrigin) {
         status('This app is hosted on another Heavenly Key website. Open it above and use installation options offered on that website. This page cannot install it directly.');
       } else if (!nativeAvailable) {
-        status('Open the selected app first, then use your browser Install App or Add to Home Screen option when supported. Native installers are not available until verified releases are published.');
+        status('Open the selected app first, then use your browser Install App or Add to Home Screen option when supported. Native installers are not available until official releases are published.');
       }
     } catch {
       if (open) { open.href = '/downloads.html'; open.textContent = 'Return to the Apps directory'; }
