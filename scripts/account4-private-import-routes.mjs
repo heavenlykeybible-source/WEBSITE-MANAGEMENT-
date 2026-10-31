@@ -57,7 +57,8 @@ export async function account4PrivateImportRoutes(request,env,user,sub,method,wi
       if((active?.count||0)>=3)problem('You already have three active uploads. Complete or reconcile one first.',429);
       return startPersistedPrivateImport(env.FILES,env.DB,actor,{name:input.name,size:input.size});
     };
-    const result=withLock?await withLock('account4-private-import-start:'+actor.id,create):await create();
+    if(typeof withLock!=='function')problem('Safe private-import concurrency control is unavailable',503);
+    const result=await withLock('account4-private-import-start:'+actor.id,create);
     if(auditEvent)await auditEvent('private-import-started',result.id+' '+result.name+' '+result.size+' bytes');
     return Response.json({...result,notice:'Private staging only. Malware scanning and explicit release approval are still required.'},{status:201,headers:{'cache-control':'no-store'}});
   }
