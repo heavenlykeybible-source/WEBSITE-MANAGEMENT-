@@ -580,3 +580,7 @@ test('operator mutations reject cross-site browser fetch metadata before origin 
  assert.match(source,/\['POST','PUT','PATCH','DELETE'\]\.includes\(req\.method\)&&req\.headers\.get\('sec-fetch-site'\)==='cross-site'/);
  assert.match(source,/Cross-site operator mutations are forbidden/);
 });
+
+test('API JSON responses vary on browser origin and fetch metadata', () => {
+ assert.match(source,/const reply=\(body:unknown,status=200\)=>new Response\(JSON\.stringify\(body\),\{status,headers:\{[^\n]*'cache-control':'no-store','vary':'Origin, Sec-Fetch-Site'/);
+});
