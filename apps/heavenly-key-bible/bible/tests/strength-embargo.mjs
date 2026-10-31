@@ -25,6 +25,7 @@ async function check(date,publicationStatus,expected){
  }}};
  const result=await worker.fetch(new Request('https://example.org/'+filename),env);
  assert.equal(result.status,expected);
+ if(expected===200){assert.equal(result.headers.get('Content-Range'),null);assert.equal(result.headers.get('Accept-Ranges'),null);assert.equal(result.headers.get('Content-Length'),null);}
  if(expected===404)assert.equal(result.headers.get('Cache-Control'),'no-store, private');
  assert.deepEqual(calls,['/strength-publication-status.json',...(publicationStatus==='published'?['/'+filename]:[])]);
 }
