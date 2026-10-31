@@ -65,7 +65,7 @@ export default {
     const live=await env.DB.prepare("SELECT session_id,source_ref,title,status FROM live_sessions WHERE source_ref LIKE 'livekit:%' AND ((status='live' AND last_heartbeat_at>datetime('now','-180 seconds')) OR (status='reconnecting' AND reconnect_deadline>datetime('now'))) ORDER BY session_id DESC LIMIT 1").first<any>();
     if(!live)return json({error:'No LiveKit broadcast is active'},404);
     try { const {createLiveKitToken}=await import('./livekit'); const room='heavenlykey-live-'+live.session_id; return json({...(await createLiveKitToken((await resolveLiveKitConfig(env))??{},room,'viewer-'+crypto.randomUUID(),false)),title:live.title,sessionId:live.session_id}); }
-    catch(e){return json({error:e instanceof Error?e.message:'Live transport unavailable'},503);}
+    catch(e){console.error('Viewer token issuance failed',e instanceof Error?e.name:'UnknownError');return json({error:'Live transport unavailable'},503);}
   }
 
   if(marker!=='media-engine-v1'||!auth.startsWith('Bearer ')) return json({error:'Unauthorized'},401);
