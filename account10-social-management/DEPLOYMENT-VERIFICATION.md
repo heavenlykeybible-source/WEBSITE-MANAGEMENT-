@@ -145,3 +145,9 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] In staging, a missing, short, or malformed `ADMIN_TOKEN` must return HTTP 503 on authenticated API routes; a wrong bearer token must receive HTTP 401. Do not publish the actual token in test evidence.
 - [ ] After authentication, verify mutating POST/PUT/PATCH/DELETE requests with a foreign or `null` Origin are rejected with HTTP 403, while same-origin requests and authorized service clients without an Origin remain eligible for normal route validation.
 - [ ] This does not replace per-person identity, role-based authorization, session revocation, edge abuse controls, and a complete production penetration test.
+
+## Bounded operator-token verification
+- [ ] Confirm the shared admin bearer token comparison uses the Cloudflare Web Crypto SHA-256 verifier and a full digest byte comparison; no credential value appears in logs, error responses or frontend source.
+- [ ] Test valid token, wrong same-length token, extra token bytes, malformed Authorization scheme, and an excessively long Authorization header.
+- [ ] Verify the new authentication helper is exercised by the automated security contract suite and that the production secret is still stored only in Cloudflare Workers secrets.
+- [ ] Treat this as temporary shared-token hardening, NOT completion of person-specific access, role-based authorization, MFA, or session revocation.
