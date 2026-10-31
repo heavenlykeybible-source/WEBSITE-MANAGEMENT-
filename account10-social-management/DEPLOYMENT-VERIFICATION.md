@@ -75,3 +75,12 @@ Do not announce production readiness until the above checks pass on a deployed W
 - [ ] Verify exhausted limits yield 429 and manual human response remains available.
 - [ ] Independently configure Cloudflare edge abuse and authentication throttling; the D1 counter is an AI-specific cost safeguard, not complete site-wide rate limiting.
 - [ ] Establish a retention and cleanup policy for old request counter rows.
+
+## Gemini and social-media staging verification
+- [ ] Deploy only after owner approval and apply migration 0008_ai_rate_limits.sql first.
+- [ ] Authenticated POST /api/ai/connection-check reaches Gemini with a KJV reference check; verify anonymous requests get 401 and the sixth hourly check receives 429 without exposing secrets.
+- [ ] Authenticated POST /api/ai/suggest-post returns review-only ministry suggestions for Facebook Page, Instagram professional, YouTube, TikTok and X; no post is saved, queued, sent or published automatically.
+- [ ] X accounts remain unverified and cannot publish; every provider needs its own official authorization and a tested publishing adapter.
+- [ ] /api/automation/evaluate-and-draft must not generate a rule-based reply when a visitor explicitly asks to speak to Evangelist Emmanuel or a human.
+- [ ] Conduct a live WhatsApp test using a consented test number: signed webhook, handover, operator approval, delivery ledger, signed receipts.
+- [ ] Verify CI typecheck, bundle and test results, and review security scanning and rollback before global launch.
