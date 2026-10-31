@@ -20,7 +20,7 @@ for(const name of ["Today's Topic",'Bible Reading','Hymn of the Day','Bible Stor
 assert.match(js,/Awaiting approved daily challenge/);
 assert.match(js,/menu\.addEventListener\('keydown'/);
 for(const key of ['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'])assert.ok(js.includes("case '"+key+"'"),'Missing keyboard shortcut '+key);
-assert.match(js,/event\.preventDefault\(\);buttons\[target\]\.click\(\);buttons\[target\]\.focus\(\)/);
+assert.match(js,/event\.preventDefault\(\);current=target;render\(\);buttons\[target\]\.focus\(\)/);
 assert.match(js,/b\.tabIndex=i===current\?0:-1/);
 assert.ok(js.includes("$('section-title').focus()"));
 assert.ok(js.includes('DEVELOPMENT PREVIEW — NOT FOR PUBLICATION'));
