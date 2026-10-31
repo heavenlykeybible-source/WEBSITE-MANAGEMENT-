@@ -7,6 +7,9 @@ const workflow=name=>readFileSync(new URL('../../../../.github/workflows/'+name,
 test('native release promotion requires cryptographic identity evidence for Android Windows and Mac',()=>{
  const source=workflow('promote-account5-native-release.yml');
  assert.match(source,/environment: production-release/);
+ assert.match(source,/release_sha="\$\(jq -r '\.head_sha'/);
+ assert.match(source,/test "\$release_sha" = "\$GITHUB_SHA"/);
+ assert.match(source,/test "\$\(jq -r '\.head_branch'[^\n]* = main/);
  assert.match(source,/test -s "\$evidence"/);
  assert.match(source,/grep -qx 'signatureVerified=true' "\$evidence"/);
  assert.match(source,/grep -qx "scannedSha256=\$actual" "\$evidence"/);
