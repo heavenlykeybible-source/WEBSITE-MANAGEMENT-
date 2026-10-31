@@ -13,6 +13,12 @@ async function scenario(mode){
  runInNewContext(readFileSync('public/timeline.js','utf8'),{window,document:{getElementById:node,createElement:()=>node(Symbol())},MediaRecorder:Recorder,Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},setTimeout:(fn,ms)=>setTimeout(fn,ms===15000?5:ms),clearTimeout,setInterval,clearInterval,Date,console});
  window.hkTimeline.restoreClips([{start:0,end:1,speed:1}]);
  const originalTimeline=JSON.stringify(window.hkTimeline.getClips());
+ video.duration=0;
+ node('clipList').value='0';
+ node('clipList').onchange();
+ assert.match(node('clipStatus').textContent,/Load the matching video to seek/);
+ video.duration=2;
+ node('clipList').onchange();
  window.hkTimeline.restoreClips([{start:0,end:86401,speed:1}]);
  assert.equal(JSON.stringify(window.hkTimeline.getClips()),originalTimeline,'Reject excessive saved clip timestamps without changing clips');
  assert.match(node('clipStatus').textContent,/invalid clips/,'Oversized restored timeline reports validation failure');
