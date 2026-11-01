@@ -1,5 +1,5 @@
 import {publicPage} from './public-page.mjs';
-import {studioReady,submitToStudio} from './studio-bridge.mjs';
+import {studioReady,submitToStudio,readStudioStatus} from './studio-bridge.mjs';
 // STRENGTH FOR TODAY - our daily manna: independent Worker. No credentials are embedded.
 // Bind DB to a dedicated D1 database; set EDITOR_TOKEN as a secret.
 // Scheduled trigger: 0 * * * * (hourly UTC, publishes only at 23:00 UTC = midnight Lagos).
@@ -188,8 +188,15 @@ export default {
    if(match&&method==='PUT'&&auth(req,env))return edit(req,env,match[1]);
    if(path==='/api/approve'&&method==='POST'&&auth(req,env))return approve(req,env);
    if(path==='/api/publish-check'&&method==='POST'&&auth(req,env))return response(await publishToday(env));
+   if(path==='/api/studio-status'&&method==='GET'&&auth(req,env)){
+    const id=url.searchParams.get('delivery_id')||'';
+    if(!/^[a-f0-9-]{36}$/.test(id))return response({error:'Invalid delivery ID'},400);
+    const record=await env.DB.prepare("SELECT id FROM manna_deliveries WHERE id=? AND destination='studio'").bind(id).first();
+    if(!record)return response({error:'Studio delivery not found'},404);
+    try{return response(await readStudioStatus(id,env))}catch{return response({error:'Studio delivery status unavailable'},502)}
+   }
    if(path==='/api/deliveries'&&method==='GET'&&auth(req,env)){
-    const rows=await env.DB.prepare('SELECT d.entry_id,e.publish_date,d.destination,d.status,d.attempts,d.error,d.provider_post_id FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id ORDER BY e.publish_date DESC LIMIT 200').all();
+    const rows=await env.DB.prepare('SELECT d.id AS delivery_id,d.entry_id,e.publish_date,d.destination,d.status,d.attempts,d.error,d.provider_post_id FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id ORDER BY e.publish_date DESC LIMIT 200').all();
     return response({deliveries:rows.results});
    }
    const archive=path.match(/^\/api\/public\/([0-9]{4}-[0-9]{2}-[0-9]{2})$/);
