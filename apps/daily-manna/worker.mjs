@@ -108,10 +108,11 @@ export default {
    if(method==='GET'&&path.startsWith('/api/picture/'))return picture(req,env,path.slice('/api/picture/'.length));
    if((path==='/'||path==='/index.html')&&method==='GET')return new Response(publicPage(),{headers:{'content-type':'text/html; charset=utf-8','cache-control':'public, max-age=300','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"}});
    if(path==='/api/archive'&&method==='GET'){
-    const before=url.searchParams.get('before')||todayLagos();
-    if(!validDate(before))return response({error:'Invalid archive date'},400);
-    const cutoff=before<todayLagos()?before:todayLagos();
-    const result=await env.DB.prepare("SELECT publish_date,title,scripture FROM manna_entries WHERE status='published' AND publish_date<=? ORDER BY publish_date DESC LIMIT 25").bind(cutoff).all();
+    const before=url.searchParams.get('before');
+    if(before&&!validDate(before))return response({error:'Invalid archive date'},400);
+    const cutoff=before&&before<todayLagos()?before:todayLagos();
+    const comparator=before?'<':'<=';
+    const result=await env.DB.prepare("SELECT publish_date,title,scripture FROM manna_entries WHERE status='published' AND publish_date"+comparator+"? ORDER BY publish_date DESC LIMIT 25").bind(cutoff).all();
     return response({entries:result.results||[],next_before:(result.results||[]).length===25?(result.results||[])[24].publish_date:null});
    }
    if(path==='/api/today'&&method==='GET'){
