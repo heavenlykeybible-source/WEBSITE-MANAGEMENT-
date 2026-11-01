@@ -132,42 +132,9 @@ test('application controls require reviewed build',()=>{
  assert.match(server,/ownerApprovalRequired:true,deploymentAuthorized:false/);
 });
 
-test('Heavenly Key Browser Engine automation requires Worker secret and owner-scoped persisted task history',()=>{
- assert.match(server,/workspace\/tinyfish\/status/);
- assert.match(server,/workspace\/tinyfish\/run/);
- assert.match(server,/workspace\/tinyfish\/result/);
- assert.match(server,/BROWSER_ENGINE_KEY/);
- assert.match(server,/BROWSER_ENGINE_URL/);
- assert.match(server,/item\.createdBy!==user\.id/);
- assert.match(client,/Approve and start Heavenly Key Browser Engine task/);
- assert.match(client,/Check Heavenly Key Browser Engine connection/);
- assert.match(client,/Refresh task history/);
-});
 
-test('Heavenly Key Browser Engine result history and cancellation preserve owner approval boundary',()=>{
- assert.match(server,/workspace\/tinyfish\/cancel/);
- assert.match(server,/\/runs\/'\+encodeURIComponent\(item\.runId\)\+'\/cancel/);
- assert.match(server,/item\.status=status/);
- assert.match(server,/UPDATE settings SET value_json=/);
- assert.match(client,/Cancel task/);
-});
 
-test('Heavenly Key Browser Engine automation rejects private network and non-HTTPS target URLs',()=>{
- assert.match(server,/target\.protocol!=='https:'/);
- assert.match(server,/target\.hostname\.startsWith\('\['\)/);
- assert.match(server,/target\.hostname\.endsWith\('\.internal'\)/);
- assert.match(server,/target\.hostname\.endsWith\('\.localhost'\)/);
- assert.match(server,/public HTTPS domain/);
-});
 
-test('Heavenly Key Browser Engine concurrency guard and terminal cancellation protect owner wallet',()=>{
- assert.match(server,/Number\(active\?\.n\|\|0\)>=3/);
- assert.match(server,/At most three uncompleted Heavenly Key Browser Engine tasks/);
- assert.match(server,/This task has already finished/);
- assert.match(client,/Up to three unfinished tasks/);
-});
 
-test('Heavenly Key Browser Engine remote run identifiers are validated before storage',()=>{
- assert.match(server,/Heavenly Key Browser Engine returned no valid run identifier/);
- assert.match(server,/runId\)\)fail/);
-});
+
+test('Account 4 excludes external browser automation routes and UI',()=>{assert.doesNotMatch(server,/workspace\\/tinyfish\\/|BROWSER_ENGINE_URL|BROWSER_ENGINE_KEY/);assert.doesNotMatch(client,/fishPanel|workspace\\/tinyfish\\/|Heavenly Key Browser Engine/);});
