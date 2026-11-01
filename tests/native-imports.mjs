@@ -26,6 +26,13 @@ for(const [id,owner,when] of [['11111111-1111-4111-8111-111111111111',1,10],['22
 const buildsUrl='https://room/api/owner/workspace/application-builds';
 const builds=await(await w.importWorkspaceRoutes(new Request(buildsUrl),env,user,'workspace/application-builds','GET')).json();
 assert.deepEqual(builds.builds.map(x=>x.id),['33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111']);
+const ownedId='11111111-1111-4111-8111-111111111111',otherId='22222222-2222-4222-8222-222222222222';
+const stopUrl='https://room/api/owner/workspace/application-build/cancel';
+const stop=(id)=>w.importWorkspaceRoutes(new Request(stopUrl,{method:'POST',body:JSON.stringify({id})}),env,user,'workspace/application-build/cancel','POST');
+await assert.rejects(stop(otherId),e=>e.status===403);
+assert.equal((await(await stop(ownedId)).json()).status,'cancelled');
+assert.equal(JSON.parse(raw.prepare('SELECT value_json FROM settings WHERE key=?').get('workspace:application:'+otherId).value_json).status,'build-required');
+await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/application-build/status?id='+otherId),env,user,'workspace/application-build/status','GET'),e=>e.status===403);
 raw.close();
 console.log('PASS native source workflow: connected credentials, complete pinned-commit scan, real sandbox preview, no live writes, idempotent staging, changed-source and tamper rejection, source/secrets blockers, owner scope and official-only verification without permission grants');
 }finally{globalThis.fetch=originalFetch;fs.unlinkSync(temp);}
