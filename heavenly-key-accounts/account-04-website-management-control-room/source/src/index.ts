@@ -108,7 +108,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
     if(path.startsWith('/')||path.includes('\\')||/[\x00-\x1f\x7f]/.test(path)||segments.some(x=>!x||x==='.'||x==='..')||path.endsWith('/')||seen.has(path)){
      rejected.push({path,reason:'Unsafe or duplicate relative path'});continue;
     }
-    if(segments.some(x=>x==='.git')||/(^|\/)(\.env(?:\.|$)|id_rsa$|.*\.pem$)/i.test(path)){
+    if(segments.some(x=>x.toLowerCase()==='.git')||/(^|\/)(\.env(?:\.|$)|id_rsa$|.*\.pem$)/i.test(path)){
      rejected.push({path,reason:'Protected or credential-related file'});continue;
     }
     seen.add(path);valid.push(path);
