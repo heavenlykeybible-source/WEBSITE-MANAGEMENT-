@@ -25,7 +25,7 @@ async function edit(req,env,id){
  await audit(env,existing?'edited':'created',key,date);return response({ok:true,id:key,status:'draft',revision:(existing?.revision||0)+1});
 }
 async function approve(req,env){
- const {entries}=await req.json();
+ const payload=await req.json();const entries=payload?.entries;
  if(!Array.isArray(entries)||entries.length===0||entries.length>100||entries.some(x=>!x||typeof x.id!=='string'||!Number.isSafeInteger(x.revision)))return response({error:'Select 1-100 entries with their reviewed revisions'},400);
  if(new Set(entries.map(x=>x.id)).size!==entries.length)return response({error:'Duplicate entries'},400);
  const results=[];
@@ -63,8 +63,8 @@ export default {
    }
    if(path==='/api/entries'&&method==='GET'&&auth(req,env)){
     const month=url.searchParams.get('month');
-    if(month&&!/^\\d{4}-(0[1-9]|1[0-2])$/.test(month))return response({error:'Invalid month'},400);
-    const rows=month?await env.DB.prepare('SELECT * FROM manna_entries WHERE publish_date>=? AND publish_date<? ORDER BY publish_date LIMIT 100').bind(month+'-01',month+'-32').all():await env.DB.prepare('SELECT * FROM manna_entries ORDER BY publish_date DESC LIMIT 180').all();
+    if(month&&!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))return response({error:'Invalid month'},400);
+    const rows=month?await env.DB.prepare('SELECT * FROM manna_entries WHERE substr(publish_date,1,7)=? ORDER BY publish_date LIMIT 100').bind(month).all():await env.DB.prepare('SELECT * FROM manna_entries ORDER BY publish_date DESC LIMIT 180').all();
     return response({entries:rows.results});
    }
    if(path==='/api/entries'&&method==='POST'&&auth(req,env))return edit(req,env,null);
@@ -76,7 +76,7 @@ export default {
     const rows=await env.DB.prepare('SELECT d.entry_id,e.publish_date,d.destination,d.status,d.attempts,d.error FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id ORDER BY e.publish_date DESC LIMIT 200').all();
     return response({deliveries:rows.results});
    }
-   const archive=path.match(/^\\/api\\/public\\/([0-9]{4}-[0-9]{2}-[0-9]{2})$/);
+   const archive=path.match(/^\/api\/public\/([0-9]{4}-[0-9]{2}-[0-9]{2})$/);
    if(archive&&method==='GET'&&validDate(archive[1])&&archive[1]<=todayLagos()){
     const entry=await env.DB.prepare("SELECT publish_date,title,scripture,body,prayer FROM manna_entries WHERE publish_date=? AND status='published'").bind(archive[1]).first();
     return response({entry:entry||null});
