@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {runInNewContext} from 'node:vm';
 const server=fs.readFileSync('workspace/imports.js','utf8');
 const client=fs.readFileSync('workspace/client.js','utf8');
 const workflow=fs.readFileSync('.github/workflows/review-application-build.yml','utf8');
@@ -51,6 +52,15 @@ test('review artifact preserves request provenance',()=>{
  assert.match(workflow,/source_sha=%s/);
  assert.match(server,/review\.artifact=\{id:artifact\.id/);
  assert.match(client,/Open verified GitHub Actions run/);
+});
+test('real candidate picker only accepts locked source applications',()=>{
+ const start=server.indexOf('function sourceBuildCandidates(');
+ const end=server.indexOf('async function queueConnectedApplication(',start);
+ assert.ok(start>=0&&end>start);
+ const fn=runInNewContext('('+server.slice(start,end).trim()+')');
+ const files=['app/package.json','app/package-lock.json','unlocked/package.json','vendor/package.json','vendor/package-lock.json','nested/pkg/package.json','nested/pkg/package-lock.json'].map(path=>({path}));
+ const paths=Array.from(fn(files),item=>item.path);
+ assert.deepEqual(paths,['app/package.json','nested/pkg/package.json']);
 });
 test('application source picker rejects dependency-unspecified npm projects',()=>{
  assert.match(server,/paths\.has\(f\.path\.replace/);
