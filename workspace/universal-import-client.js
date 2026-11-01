@@ -14,7 +14,7 @@ async function universalImportHub(){
   function category(repo){
    var name=String(repo||'').toLowerCase(),which=app.value;
    if(which==='bible')return /bible|scripture|daily.?manna|devotion/.test(name);
-   if(which==='community')return /community|social|network|gcc/.test(name);
+   if(which==='community')return /community|social|network|gcc|online.?bible/.test(name);
    if(which==='website')return /website|heavenly|portal|control|cms/.test(name);
    return true;
   }
@@ -42,7 +42,7 @@ async function universalImportHub(){
    chosen=listing.candidates[+project.value];if(!chosen)return;
    if(chosen.kind==='static')sites.forEach(function(s){option(destination,'site:'+s.slug,'Managed website · '+s.name);});
    else accounts.forEach(function(a){option(destination,'account:'+a.id,'Cloudflare account · '+a.label);});
-   buildButton.disabled=chosen.kind!=='application';
+   scanButton.disabled=chosen.kind==='application';buildButton.disabled=chosen.kind!=='application';
    note(chosen.kind==='application'?'Complete source application selected: reviewed build required before installation.':'Project selected. Scan all required project files, then choose the destination.');
   }
   async function ensureConnected(){
@@ -127,7 +127,7 @@ async function universalImportHub(){
   }catch(e){note(e.message);}finally{setBusy(false);}};
   provider.onchange=function(){
    githubSection.hidden=provider.value!=='github';localSection.hidden=provider.value==='github';
-   note(provider.value==='drive'?'Google Drive direct connector is not configured in this Control Room. Download the complete ZIP from Drive and choose it below.':'Choose an app, scan its complete files and stage an owner-reviewed import.');
+   note(provider.value==='drive'?'Use the existing Google Drive file ID field in the ZIP importer if your Drive connection is authorized, or choose the ZIP from your device's Files app.':'Choose an app, scan its complete files and stage an owner-reviewed import.');
   };
   var githubSection=h('section',{class:'card'},h('h3',{},'1 · Choose app and GitHub repository'),h('p',{},'One authorized GitHub identity can access every repository permitted by its GitHub permissions. No separate token per Cloudflare account.'));
   var appOptions=[['all','All applications'],['bible','Bible App / Daily Manna'],['community','Global Christian Community'],['website','Heavenly Key websites and Control Room']];
@@ -146,7 +146,7 @@ async function universalImportHub(){
   localSection.appendChild(h('label',{},'Target managed website',site));localSection.appendChild(fileTarget);
   option(provider,'github','GitHub — connect once, browse all authorized repositories');
   option(provider,'device','Phone or computer — upload a complete website ZIP');
-  option(provider,'drive','Google Drive — use an exported ZIP (direct connector pending)');
+  option(provider,'drive','Google Drive — connected file ID or ZIP in Files app');
   mount.appendChild(h('h2',{},'Universal App Import'));
   mount.appendChild(h('p',{},'Choose an app → Locate full source → Scan → Preview → Review → Install. Your existing websites, databases and secrets remain protected.'));
   mount.appendChild(h('label',{},'Import from',provider));mount.appendChild(githubSection);mount.appendChild(localSection);
