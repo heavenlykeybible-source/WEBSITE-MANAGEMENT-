@@ -117,9 +117,10 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(item.status==='cancelled')fail('Build request cancelled',409);
   const g=await importSource(env,user,item.source);
   if(g.repo!==item.repo)fail('Connected repository changed since build request',409);
+  if((g.dir||'')!==(item.root||''))fail('Connected application root changed since build request',409);
   const tree=await sourceTree(env,g);
   const prefix=item.directory?item.directory+'/':'';
-  const valid=tree.head.commit===item.commit&&tree.files.some(f=>f.path===prefix+'package.json');
+  const valid=tree.head.commit===item.commit&&tree.files.some(f=>f.path===prefix+'package.json')&&tree.files.some(f=>f.path===prefix+'package-lock.json');
   if(!valid)fail('Pinned application source has changed or package.json is missing',409);
   return json({id,sourceVerified:valid,commit:item.commit,status:item.status,buildVerified:false,deploymentAuthorized:false});
  }
