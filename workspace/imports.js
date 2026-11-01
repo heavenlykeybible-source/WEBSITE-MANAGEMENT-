@@ -165,7 +165,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
     if(!matching.length)fail('GitHub run is not yet discoverable; cancellation cannot be confirmed',409);
     const run=matching[0];
     if(run.status!=='completed')await gh(env,g,'POST','/actions/runs/'+encodeURIComponent(run.id)+'/cancel',{});
-    item.cancellationRequested=run.status!=='completed';item.cancelledReviewRun=run.id;
+    item.cancellationRequested=run.status!=='completed';item.cancelledReviewRun=run.id;item.cancelledReviewAt=Date.now();
    }
    item.status=item.cancellationRequested?'review-cancellation-requested':'cancelled';item.deploymentAuthorized=false;item.cancelledAt=Date.now();
    await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
