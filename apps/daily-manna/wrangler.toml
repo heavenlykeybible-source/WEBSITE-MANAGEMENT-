@@ -14,3 +14,14 @@ crons = ["0 * * * *"]
 # binding = "DB"
 # database_name = "strength-for-today-manna"
 # database_id = "REPLACE_WITH_REAL_D1_DATABASE_ID"
+
+# Owner-uploaded pictures use a dedicated PRIVATE R2 bucket.
+# Enable after Cloudflare resource proposal #57 is approved.
+# [[r2_buckets]]
+# binding = "MANNA_IMAGES"
+# bucket_name = "strength-for-today-manna-images-staging"
+
+# Publication of unreviewed entries has a separate switch and must be
+# enabled only after the imported source collection is authorized for release.
+# [vars]
+# ALLOW_UNREVIEWED_PUBLICATION = "true"
