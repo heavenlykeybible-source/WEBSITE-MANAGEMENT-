@@ -15,7 +15,7 @@ test('review dispatch is explicitly owner only and cannot authorize deployment',
 test('review build input contract matches GitHub Actions',()=>{
  for(const key of ['request_id','source_sha','directory']){
   assert.ok(workflow.includes('      '+key+':'),'workflow requires '+key);
-  assert.ok(server.includes(key+':'),'dispatch passes '+key);
+  assert.ok(server.includes(key+':')||(key==='directory'&&server.includes('source_sha:item.commit,directory')),'dispatch passes '+key);
  }
  assert.match(workflow,/run-name: Review \$\{\{ inputs\.request_id \}\}/);
  assert.match(server,/const wanted='Review '\+b\.id/);
