@@ -61,7 +61,7 @@ async function refreshOperations(){
  try{
   const [readiness,delivery]=await Promise.all([api('readiness'),api('deliveries')]);
   const e=readiness.entries||{};
-  status.textContent='Database: '+readiness.database+' · Pictures: '+readiness.picture_storage+' · Facebook: '+readiness.facebook_delivery+' · Unreviewed release: '+(readiness.unreviewed_publication?'enabled':'disabled')+' · Published: '+(e.published||0)+' · Approved: '+(e.approved||0)+' · Drafts: '+(e.draft||0);
+  status.textContent='Database: '+readiness.database+' · Pictures: '+readiness.picture_storage+' · Studio: '+readiness.studio_delivery+' · Unreviewed release: '+(readiness.unreviewed_publication?'enabled':'disabled')+' · Published: '+(e.published||0)+' · Approved: '+(e.approved||0)+' · Drafts: '+(e.draft||0);
   const jobs=(delivery.deliveries||[]).slice(0,20);
   for(const job of jobs){const li=document.createElement('li');li.textContent=job.publish_date+' · '+job.destination+' · '+job.status+(job.provider_post_id?' · '+job.provider_post_id:'');list.append(li)}
   if(!jobs.length){const li=document.createElement('li');li.textContent='No delivery jobs recorded yet.';list.append(li)}
