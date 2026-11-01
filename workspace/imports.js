@@ -136,7 +136,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(!row)fail('Build request not found',404);
   const item=JSON.parse(row.value_json);
   if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
-  if(item.status==='cancelled')fail('Build request cancelled',409);
+  if(['cancelled','review-cancellation-requested'].includes(item.status))fail('Build request cancelled or cancellation pending',409);
   const g=await importSource(env,user,item.source);
   if(g.repo!==item.repo)fail('Connected repository changed since build request',409);
   if((g.dir||'')!==(item.root||''))fail('Connected application root changed since build request',409);
