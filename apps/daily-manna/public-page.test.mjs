@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import {publicPage} from './public-page.mjs';
 import worker from './worker.mjs';
 const html=publicPage();
+const browserSource=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
+assert.ok(browserSource,'Public page must include reader JavaScript');
+new vm.Script(browserSource,{filename:'public-reader.js'});
+assert.match(browserSource,/\\d\{4\}/,'Generated date-matching regex must retain escaping');
+
 assert.match(html,/STRENGTH FOR TODAY - our daily manna/);
 assert.match(html,/textContent=entry\.body/);
 assert.doesNotMatch(html,/innerHTML\s*=/);
