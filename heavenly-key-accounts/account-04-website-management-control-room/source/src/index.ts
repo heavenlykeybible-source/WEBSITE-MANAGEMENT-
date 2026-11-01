@@ -115,7 +115,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    }
    return json({valid,rejected,readyForReview:rejected.length===0,published:false});
   }
-  const importMatch=u.pathname.match(/^\\/api\\/project-imports\\/([a-f0-9-]{36})(?:\\/chunks\\/(\\d+))?$/);
+  const importMatch=u.pathname.match(new RegExp('^/api/project-imports/([a-f0-9-]{36})(?:/chunks/([0-9]+))?$'));
   if(importMatch){
    const id=importMatch[1],prefix='imports/'+id+'/',stored=await env.MEDIA.get(prefix+'manifest');
    if(!stored)return fail('Import session not found.',404);
