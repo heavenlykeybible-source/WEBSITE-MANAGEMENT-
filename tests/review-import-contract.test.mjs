@@ -131,3 +131,15 @@ test('application controls require reviewed build',()=>{
  assert.match(client,/Deployment not authorized/);
  assert.match(server,/ownerApprovalRequired:true,deploymentAuthorized:false/);
 });
+
+test('TinyFish automation requires Worker secret and owner-scoped persisted task history',()=>{
+ assert.match(server,/workspace\/tinyfish\/status/);
+ assert.match(server,/workspace\/tinyfish\/run/);
+ assert.match(server,/workspace\/tinyfish\/result/);
+ assert.match(server,/TINYFISH_API_KEY/);
+ assert.match(server,/agent\.tinyfish\.ai\/v1\/automation\/run-async/);
+ assert.match(server,/item\.createdBy!==user\.id/);
+ assert.match(client,/Approve and start TinyFish task/);
+ assert.match(client,/Check TinyFish connection/);
+ assert.match(client,/Refresh task history/);
+});
