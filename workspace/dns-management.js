@@ -1,6 +1,7 @@
 // Account 4 DNS management: explicit owner approval required before mutation.
 // Wire these helpers into the existing authenticated owner-only Control Room router.
 // Never expose the API token to the browser or include it in audit records.
+import {isIP} from 'node:net';
 const DNS_HOST_RE=/^(?!-)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 export function validateDnsRequest(input){
  const name=String(input?.name||'').trim().toLowerCase();
@@ -11,8 +12,8 @@ export function validateDnsRequest(input){
  if(type==='CNAME'){
   if(target.length>253||!target.includes('.')||!target.split('.').every(x=>DNS_HOST_RE.test(x)))throw Error('Invalid CNAME target');
  }else if(type==='A'){
-  if(!/^(?:\d{1,3}\.){3}\d{1,3}$/.test(target)||target.split('.').some(x=>Number(x)>255))throw Error('Invalid IPv4 address');
- }else if(!/^[0-9a-f:]+$/i.test(target)||!target.includes(':')||target.length>45)throw Error('Invalid IPv6 address');
+  if(isIP(target)!==4)throw Error('Invalid IPv4 address');
+ }else if(isIP(target)!==6)throw Error('Invalid IPv6 address');
  return {name,type,target,proxied:type==='CNAME'||type==='A'||type==='AAAA'};
 }
 export async function cloudflareDnsRequest({token,zoneId,method='GET',recordId='',body,fetcher=fetch}){
