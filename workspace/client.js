@@ -18,7 +18,7 @@ async function nativeImports(){try{
   var batch=await api('workspace/github/bulk-connect','POST',{source:+tokenSource.value,repositories:names,branch:repoBranch.value.trim()});
   var errors=[];(batch.results||[]).forEach(function(entry){if(entry.status==='connected'){
    data.sources.push(entry);source.appendChild(h('option',{value:entry.id},entry.label+' · '+entry.repo+' · '+entry.branch));
-   tokenSource.appendChild(h('option',{value:entry.id},entry.label+' · '+entry.repo}));
+   tokenSource.appendChild(h('option',{value:entry.id},entry.label+' · '+entry.repo));
   }else if(entry.status==='failed'){errors.push(entry.repo+': not authorized or not available');}});
   bulkStatus.textContent='New connections: '+batch.connected+'.'+(errors.length?' Not connected: '+errors.join('; '):'')+' Deployment still requires approval.';
  }catch(e){bulkStatus.textContent=e.message;}finally{this.disabled=false;}}},'Verify and connect selected repositories'));
