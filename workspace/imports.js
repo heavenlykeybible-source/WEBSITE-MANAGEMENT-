@@ -98,7 +98,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Select an existing authorized GitHub connection',400);
   if(!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)||repo.length>200||repo.split('/').some(x=>x==='.'||x==='..'))fail('Enter an owner/repository name',400);
   if(!label||label.length>100||/[\x00-\x1f]/.test(label))fail('Enter a connection label',400);
-  if(!/^[a-zA-Z0-9_./-]{1,120}$/.test(branch)||branch.split('/').some(x=>x==='.'||x==='..'))fail('Enter a valid Git branch',400);
+  if(!/^[a-zA-Z0-9_./-]{1,120}$/.test(branch)||branch.startsWith('/')||branch.endsWith('/')||branch.includes('//')||branch.split('/').some(x=>x==='.'||x==='..'))fail('Enter a valid Git branch',400);
   const g=await importSource(env,user,sourceId);
   const target={...g,repo,branch,dir:''};
   const head=await ghHead(env,target);
