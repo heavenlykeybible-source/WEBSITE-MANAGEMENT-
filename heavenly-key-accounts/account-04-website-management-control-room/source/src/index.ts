@@ -83,6 +83,37 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
   if(u.pathname==='/api/save'&&request.method==='POST'){const data=await body(request);return json(await saveDraft(env.DB,location(),data.content,data.expectedVersion,actor))}
   if(u.pathname==='/api/publish'&&request.method==='POST'){const data=await body(request,4096);return json(await publishDraft(env.DB,location(),data.expectedVersion,actor))}
   if(u.pathname==='/api/restore'&&request.method==='POST'){const data=await body(request,4096);if(!Number.isSafeInteger(data.revisionId)||data.revisionId<1)return fail('Choose a revision.');return json({...await restoreDraft(env.DB,location(),data.revisionId,data.expectedVersion,actor),published:false})}
+  // Account 3 large-project staging: authenticated, bounded chunks stored privately in R2.
+  // Staging never publishes or changes a GitHub branch. The Waiting Room remains mandatory.
+  if(u.pathname==='/api/project-imports'&&request.method==='POST'){
+   const data=await body(request,2048);
+   if(typeof data.name!=='string'||!data.name.trim()||data.name.length>120)return fail('Enter a project name (up to 120 characters).');
+   const total=data.totalBytes;
+   if(!Number.isSafeInteger(total)||total<1||total>209715200)return fail('Project archive must be 1 byte to 200 MB.',413);
+   const id=crypto.randomUUID(),parts=Math.ceil(total/4194304);
+   await env.MEDIA.put('imports/'+id+'/manifest',JSON.stringify({name:data.name.trim(),totalBytes:total,parts,createdAt:new Date().toISOString(),status:'staging'}),{httpMetadata:{contentType:'application/json'}});
+   return json({id,parts,chunkBytes:4194304,status:'staging',published:false});
+  }
+  const importMatch=u.pathname.match(/^\\/api\\/project-imports\\/([a-f0-9-]{36})(?:\\/chunks\\/(\\d+))?$/);
+  if(importMatch){
+   const id=importMatch[1],prefix='imports/'+id+'/',stored=await env.MEDIA.get(prefix+'manifest');
+   if(!stored)return fail('Import session not found.',404);
+   const manifest=JSON.parse(await stored.text());
+   if(importMatch[2]!==undefined&&request.method==='PUT'){
+    const n=Number(importMatch[2]);
+    if(!Number.isSafeInteger(n)||n<0||n>=manifest.parts)return fail('Invalid chunk index.');
+    const expected=Math.min(4194304,manifest.totalBytes-n*4194304);
+    if(Number(request.headers.get('content-length')||0)>expected)return fail('Chunk too large.',413);
+    const bytes=await request.arrayBuffer();
+    if(bytes.byteLength!==expected)return fail('Incorrect chunk length.',400);
+    await env.MEDIA.put(prefix+'chunks/'+n,bytes,{httpMetadata:{contentType:'application/octet-stream'}});
+    return json({ok:true,chunk:n,published:false});
+   }
+   if(importMatch[2]===undefined&&request.method==='GET'){
+    const chunks=await Promise.all(Array.from({length:manifest.parts},(_,i)=>env.MEDIA.head(prefix+'chunks/'+i)));
+    return json({id,name:manifest.name,totalBytes:manifest.totalBytes,received:chunks.filter(Boolean).length,parts:manifest.parts,complete:chunks.every(Boolean),published:false});
+   }
+  }
   if(u.pathname==='/api/media'&&request.method==='POST'){
    if(Number(request.headers.get('content-length')||0)>5000000)return fail('Image exceeds 5 MB',413);
    const bytes=new Uint8Array(await request.arrayBuffer()),type=imageType(bytes);
