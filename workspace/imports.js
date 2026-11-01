@@ -29,7 +29,7 @@ async function verifyNpmBuildManifest(env,g,files,prefix){
  if(blob.encoding!=='base64')fail('GitHub package manifest encoding is unsupported',502);
  const bytes=Uint8Array.from(atob(String(blob.content||'').replace(/\s/g,'')),c=>c.charCodeAt(0));
  if(bytes.length>262144)fail('Application package manifest exceeds 256 KB',413);
- const header=new TextEncoder().encode('blob '+bytes.length+'\\0'),input=new Uint8Array(header.length+bytes.length);
+ const header=new TextEncoder().encode('blob '+bytes.length+'\0'),input=new Uint8Array(header.length+bytes.length);
  input.set(header);input.set(bytes,header.length);
  if(hex(await crypto.subtle.digest('SHA-1',input))!==entry.sha)fail('Application package.json integrity check failed',409);
  let manifest;try{manifest=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{fail('Application package.json is not valid UTF-8 JSON',409);}
