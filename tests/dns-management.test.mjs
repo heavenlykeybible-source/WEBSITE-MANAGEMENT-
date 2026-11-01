@@ -27,7 +27,7 @@ test('DNS changes require owner approval and audit logging',()=>{
 test('DNS token is server-side and interface does not accept token input',()=>{
  assert.match(server,/env\.DNS_API_TOKEN/);
  assert.doesNotMatch(client,/DNS_API_TOKEN.*value/);
- assert.match(client,/workspace\/dns\/capabilities/);
+ assert.match(client,/workspace\/dns\/verify-permission/);
  assert.match(client,/workspace\/dns\/propose-create/);
  assert.match(client,/workspace\/dns\/approve-create/);
 });
