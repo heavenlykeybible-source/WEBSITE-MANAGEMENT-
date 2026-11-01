@@ -84,7 +84,7 @@ test('real package manifest verifier checks Git blob integrity and build script'
  blob='{}';
  await assert.rejects(verify({}, {},[entry],'app/'),/integrity check failed/);
  const pnpm=JSON.stringify({scripts:{build:'vite build'},packageManager:'pnpm@9'});
- const pnpmSha=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+Buffer.byteLength(pnpm)+'\\0'),Buffer.from(pnpm)])).digest('hex');
+ const pnpmSha=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+Buffer.byteLength(pnpm)+'\0'),Buffer.from(pnpm)])).digest('hex');
  blob=pnpm;
  await assert.rejects(verify({}, {},[{path:'app/package.json',size:pnpm.length,sha:pnpmSha}],'app/'),/supports npm only/);
 });
