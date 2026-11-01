@@ -86,6 +86,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const item=JSON.parse(row.value_json);
   if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
   if(item.status!=='build-required')fail('Build request is not awaiting dispatch',409);
+  if(!/^[a-f0-9]{40}$/.test(item.commit))fail('Invalid pinned source commit',409);
   if(item.repo!=='heavenlykeybible-source/WEBSITE-MANAGEMENT-')fail('This build workflow is only installed in the Website Management repository',409);
   const g=await importSource(env,user,item.source),tree=await sourceTree(env,g);
   if(g.repo!==item.repo||tree.head.commit!==item.commit)fail('Source changed since build request',409);
