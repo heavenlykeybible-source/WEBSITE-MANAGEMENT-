@@ -99,7 +99,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    if(directory!=='.'&&(directory.split('/').some(part=>!part||part==='.'||part==='..'||!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/.test(part))))fail('Invalid application directory',400);
    const prefix=directory==='.'?'':directory+'/';
    if(!tree.files.some(f=>f.path===prefix+'package.json')||!tree.files.some(f=>f.path===prefix+'package-lock.json'))fail('Pinned application manifest or npm lockfile is missing',409);
-   await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{source_sha:item.commit,directory}});
+   await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{request_id:id,source_sha:item.commit,directory}});
    item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
    await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
    await audit(env,user.username,'application-build-dispatched','Review-only build '+id);
