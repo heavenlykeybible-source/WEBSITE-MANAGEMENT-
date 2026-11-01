@@ -74,6 +74,14 @@ test('application queue updates after register, dispatch, and cancel',()=>{
  const updates=client.match(/refreshBuilds\.click\(\)/g)||[];
  assert.ok(updates.length>=3);
 });
+test('dispatched review cancellation targets only its owner and exact run',()=>{
+ assert.match(server,/if\(item\.createdBy!==user\.id\)fail\('Build request owner mismatch',403\)/);
+ assert.match(server,/matching\[0\]/);
+ assert.match(server,/run\.display_title==='Review '\+id/);
+ assert.match(server,/\/actions\/runs\/['"]\+encodeURIComponent\(run\.id\)\+['"]\/cancel/);
+ assert.match(client,/Cancel dispatched review/);
+ assert.match(server,/item\.status='cancelled';item\.deploymentAuthorized=false/);
+});
 test('application controls require reviewed build',()=>{
  assert.match(client,/Start review build/);
  assert.match(client,/Check review build status/);
