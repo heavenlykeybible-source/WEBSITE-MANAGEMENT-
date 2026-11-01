@@ -52,6 +52,17 @@ test('review artifact preserves request provenance',()=>{
  assert.match(server,/review\.artifact=\{id:artifact\.id/);
  assert.match(client,/Open verified GitHub Actions run/);
 });
+test('application source picker rejects dependency-unspecified npm projects',()=>{
+ assert.match(server,/paths\.has\(f\.path\.replace\(\/package\\\.json\$\/,['"]package-lock\.json['"]\)\)/);
+});
+test('review status requires exact run identity and dispatch timestamp',()=>{
+ assert.match(server,/run\.display_title===wanted/);
+ assert.match(server,/Date\.parse\(run\.created_at\)>=b\.dispatchedAt-120000/);
+});
+test('application queue updates after register, dispatch, and cancel',()=>{
+ const updates=client.match(/refreshBuilds\.click\(\)/g)||[];
+ assert.ok(updates.length>=3);
+});
 test('application controls require reviewed build',()=>{
  assert.match(client,/Start review build/);
  assert.match(client,/Check review build status/);
