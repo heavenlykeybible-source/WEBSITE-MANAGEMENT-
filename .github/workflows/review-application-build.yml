@@ -29,6 +29,7 @@ jobs:
       - name: Validate source reference
         shell: bash
         run: |
+          [[ "${{ inputs.request_id }}" =~ ^[0-9a-f-]{36}$ ]] || exit 1
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
           [[ "$APP_DIRECTORY" == "." || "$APP_DIRECTORY" =~ ^[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)*$ ]] || exit 1
           [[ "$APP_DIRECTORY" != *".."* ]] || exit 1
