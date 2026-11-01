@@ -127,6 +127,8 @@ jobs:
         run: npx --yes wrangler@4.136.0 deploy --dry-run --outdir /tmp/account4-worker-bundle
       - name: Validate production release antirollback rules
         run: node tests/account4-release-lineage.mjs
+      - name: Verify Control Room home navigation
+        run: node tests/account4-home-actions.mjs
       - name: Run Account 4 regression suite
         run: npm test
       - name: Run CMS editor DOM security and functionality checks
