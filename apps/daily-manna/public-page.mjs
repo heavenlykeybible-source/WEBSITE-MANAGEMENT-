@@ -5,7 +5,7 @@ return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="v
 const el=id=>document.getElementById(id);
 const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const part=t=>parts.find(p=>p.type===t).value;const today=part('year')+'-'+part('month')+'-'+part('day');el('day').max=today;el('day').value=today;
 let currentEntry=null,currentDay=today;
-function devotionalText(){if(!currentEntry)return '';return [currentEntry.title,currentEntry.scripture,currentEntry.body,currentEntry.prayer?'Prayer: '+currentEntry.prayer:'','Read: '+location.origin+'/api/public/'+currentDay].filter(Boolean).join('\n\n')}
+function devotionalText(){if(!currentEntry)return '';return [currentEntry.title,currentEntry.scripture,currentEntry.body,currentEntry.prayer?'Prayer: '+currentEntry.prayer:'','Read: '+location.origin+'/?date='+encodeURIComponent(currentDay)].filter(Boolean).join('\n\n')}
 async function load(day){currentEntry=null;currentDay=day||today;el('copy').disabled=true;el('share').disabled=true;el('action-status').textContent='';el('status').textContent='Loading…';for(const k of ['body','scripture','prayer'])el(k).textContent='';el('prayer-heading').hidden=true;
 try{const response=await fetch(day?'/api/public/'+encodeURIComponent(day):'/api/today');if(!response.ok)throw Error();const result=await response.json();el('date').textContent=day||result.date||today;
 if(!result.entry){el('title').textContent='No published devotional for this date';el('status').textContent='Check back later or choose another date.';return;}
