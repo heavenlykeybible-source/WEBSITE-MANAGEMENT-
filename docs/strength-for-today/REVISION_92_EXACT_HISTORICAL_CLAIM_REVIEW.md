@@ -1,0 +1,9 @@
+# STRENGTH FOR TODAY — Revision 92
+
+The separate 1,826-day working manuscript received **1,070 additional exact-text historical-core-claim reviews**, based on 38 distinct simple narrative texts matched to named institutional historical sources. The 20 previously reviewed entries from Revision 91 remain marked separately. Total: **1,090 day occurrences with historical core claims checked**; 736 day occurrences remain pending. Subject breakdown: Müller 172, Wilberforce 122, Nightingale 164, Wesley 167, Carey 154, Newton 89, Booth 103, Clarkson 99.
+
+**Scope limitation:** These are repeated occurrences of narrowly checked historical claims, not 1,070 unique independently researched accounts, and do not verify the devotional interpretation. Source citations and verified factual scope are included in the per-day register. The 1,826-day original structure and narrative text remain unchanged. Canonical Revision 50 was not modified; no independent KJV verse-by-verse check or canonical merge. Publication-ready: NO.
+
+Sources: https://www.parliament.uk/about/living-heritage/transformingsociety/tradeindustry/slavetrade/overview/the-abolitionists/ ; https://www.methodist.org.uk/about/history/ ; https://www.npg.org.uk/collections/search/person/mp53745/john-newton ; https://www.salvationarmy.org/history ; https://www.kcl.ac.uk/people/florence-nightingale ; https://museums.bristol.gov.uk/narratives.php?irn=16125 ; https://www.bu.edu/missiology/missionary-biography/c-d/carey-william-1761-1834/ .
+
+ChatGPT Library archive: `strength_for_today_revision_92_exact_historical_claim_review.zip`; SHA256 `fcad63febdc3f904e1a48ea087cfe668a1a2927c6102a9357a0645e55975d172`. Next: check 736 remaining day occurrences, correct repetition and verse-level Scripture, merge vetted fields selectively with canonical Rev50.
