@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {dispatchStudio} from './worker.mjs';
 let state='pending',attempts=0,postId=null;
-const one={delivery_id:'delivery-1',entry_id:'entry-1',publish_date:'2026-11-01',title:'The Word',scripture:'John 1:1',body:'Message',prayer:'Prayer',picture_object_key:null,picture_content_type:null};
+const one={delivery_id:'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',entry_id:'entry-1',publish_date:'2026-11-01',title:'The Word',scripture:'John 1:1',body:'Message',prayer:'Prayer',picture_object_key:null,picture_content_type:null};
 const DB={prepare(sql){
  let args=[];return {bind(...v){args=v;return this},async all(){
   if(sql.includes("d.destination='studio'"))return {results:state==='pending'?[one]:[]};
@@ -30,8 +30,8 @@ result=await dispatchStudio(env,async()=>new Response(JSON.stringify({error:'den
 assert.equal(result.failed,1);
 assert.equal(state,'failed');
 assert.equal((await dispatchStudio(env,fake)).processed,0,'Do not auto retry uncertain failures');
-assert.equal((await dispatchStudio({DB},fake)).configured,false,'Requires Page credentials');
+assert.equal((await dispatchStudio({DB},fake)).configured,false,'Requires Studio credentials');
 const disabled=await dispatchStudio({...env,STUDIO_FIRST_POST_DATE:''},fake);
-assert.equal(disabled.enabled,false,'Unapproved historic backlog cannot post');
+assert.equal(disabled.configured,false,'Unapproved historic backlog cannot post');
 assert.equal(sendCount,1,'Historic backlog gate prevents further posts');
 console.log('PASS Studio social outbox: atomic claim, success, no duplicates, failure hold');
