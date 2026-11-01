@@ -61,7 +61,14 @@ async function universalImportHub(){
     if(!selected.connected){note('This repository is discoverable. Choose “Connect selected repository” to authorize it for scanning.');return;}
     var id=await ensureConnected();listing=await api('workspace/candidates?source='+encodeURIComponent(id));
     empty(project,'Choose the detected project');
-    (listing.candidates||[]).forEach(function(c,i){option(project,i,(c.kind==='application'?'Full application · build needed · ':c.kind==='worker'?'Cloudflare Worker · ':'Website · ')+c.path);});
+    var order=(listing.candidates||[]).map(function(c,i){return {c:c,i:i};});
+    function score(v){var p=v.c.path.toLowerCase();
+     if(app.value==='community')return /global christian community\/implementation\/package\.json/.test(p)?0:/global-community\/package\.json/.test(p)?1:/community/.test(p)?2:9;
+     if(app.value==='bible')return /bible/.test(p)?0:/manna|devotion/.test(p)?1:8;
+     return v.c.kind==='application'?0:2;
+    }
+    order.sort(function(a,b){return score(a)-score(b)||a.c.path.localeCompare(b.c.path);});
+    order.forEach(function(v){var c=v.c,p=c.path.toLowerCase(),hint=app.value==='community'&&/global christian community\/implementation\/package\.json/.test(p)?'Complete Community source · ':app.value==='community'&&/global-community\/package\.json/.test(p)?'Account 3 production source · ':'';option(project,v.i,hint+(c.kind==='application'?'Full application · build needed · ':c.kind==='worker'?'Cloudflare Worker · ':'Website · ')+c.path);});
     details.textContent='Source: '+selected.repo+' · Commit '+listing.commit.slice(0,12)+' · '+(listing.candidates||[]).length+' installable entry points found.';
     note(listing.candidates.length?'Choose the complete project to import.':'No installable project entry detected. A complete build/manifest may be required; no partial import will be sent.');
    }catch(e){note(e.message);}finally{setBusy(false);}
@@ -149,6 +156,7 @@ async function universalImportHub(){
   option(provider,'drive','Google Drive — connected file ID or ZIP in Files app');
   mount.appendChild(h('h2',{},'Universal App Import'));
   mount.appendChild(h('p',{},'Choose an app → Locate full source → Scan → Preview → Review → Install. Your existing websites, databases and secrets remain protected.'));
+  mount.appendChild(h('button',{class:'sm',onclick:legacyNativeImports},'Advanced DNS, Worker and GitHub tools'));
   mount.appendChild(h('label',{},'Import from',provider));mount.appendChild(githubSection);mount.appendChild(localSection);
   mount.appendChild(h('h3',{},'Scan results'));mount.appendChild(details);mount.appendChild(h('h3',{},'Preview and approval'));mount.appendChild(preview);mount.appendChild(status);
   show(nav(),mount);localSection.hidden=true;
