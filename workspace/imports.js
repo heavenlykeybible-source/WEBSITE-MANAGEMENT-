@@ -108,7 +108,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(!response.ok)fail('TinyFish could not start this task (HTTP '+response.status+'). Check API key and wallet.',502);
   const result=await response.json();
   const runId=String(result.run_id||result.runId||result.id||'');
-  if(!runId||runId.length>160)fail('TinyFish returned no valid run identifier',502);
+  if(!/^[a-zA-Z0-9_-]{1,160}$/.test(runId))fail('TinyFish returned no valid run identifier',502);
   const id=crypto.randomUUID(),item={id,runId,createdBy:user.id,createdAt:Date.now(),url:target.href,goal,status:'submitted'};
   await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:tinyfish:'+id,JSON.stringify(item)).run();
   await audit(env,user.username,'tinyfish-run','TinyFish task '+id+' submitted');
