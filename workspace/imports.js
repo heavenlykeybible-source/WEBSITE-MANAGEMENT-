@@ -74,6 +74,22 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const staged=await stageConnectedSource(env,user,{scan:scan.id,connection:b.connection,worker:b.worker,site:b.site});
   return json({ok:true,status:'waiting',proposal_id:staged.proposal_id,source:{repo:scan.repo,commit:scan.commit,files:scan.files.length,bytes:scan.bytes},notice:'Imported and staged for owner approval; production has not been deployed.'});
  }
+ if(sub==='workspace/application-build/cancel'&&m==='POST'){
+  const b=await body(req),id=String(b?.id||'');
+  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid build identifier',400);
+  return withOperationLock(env,'application-build:'+id,async()=>{
+   const key='workspace:application:'+id;
+   const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+   if(!row)fail('Build request not found',404);
+   const item=JSON.parse(row.value_json);
+   if(item.status!=='build-required')fail('Only unstarted build requests can be cancelled',409);
+   if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
+   item.status='cancelled';item.deploymentAuthorized=false;item.cancelledAt=Date.now();
+   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
+   await audit(env,user.username,'application-build-cancel','Cancelled build request '+id);
+   return json({id,status:'cancelled',deploymentAuthorized:false});
+  });
+ }
  if(sub==='workspace/application-build/status'&&m==='GET'){
   const id=u.searchParams.get('id');
   if(!/^[a-f0-9-]{36}$/.test(id||''))fail('Invalid build identifier',400);
