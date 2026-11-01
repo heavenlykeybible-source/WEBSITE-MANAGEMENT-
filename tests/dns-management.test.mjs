@@ -8,12 +8,12 @@ const start=server.indexOf('function dnsRecordInput('),end=server.indexOf('async
 assert.ok(start>=0&&end>start,'DNS validator exists');
 const validate=runInNewContext('('+server.slice(start,end).trim()+')',{fail:(msg)=>{throw Error(msg)}});
 test('DNS validator accepts valid IPv4 and CNAME records',()=>{
- assert.equal(validate({name:'browser',type:'A',target:'203.0.113.12'}).name,'browser.heavenlykey.org');
+ assert.equal(validate({name:'browser',type:'A',target:'8.8.8.8'}).name,'browser.heavenlykey.org');
  assert.equal(validate({name:'browser',type:'CNAME',target:'service.example.com'}).content,'service.example.com');
 });
 test('DNS validator rejects malformed addresses and unauthorized names',()=>{
- for(const target of ['256.1.1.1','1.2.3','01.2.3.4','1.2.3.4x','127.0.0.1:80'])assert.throws(()=>validate({name:'browser',type:'A',target}));
- for(const name of ['*.example','a.b','-browser','browser-',''])assert.throws(()=>validate({name,type:'A',target:'203.0.113.12'}));
+ for(const target of ['256.1.1.1','1.2.3','01.2.3.4','1.2.3.4x','127.0.0.1:80','203.0.113.12','10.1.2.3','192.168.1.1'])assert.throws(()=>validate({name:'browser',type:'A',target}));
+ for(const name of ['*.example','a.b','-browser','browser-',''])assert.throws(()=>validate({name,type:'A',target:'8.8.8.8'}));
 });
 test('DNS changes require owner approval and audit logging',()=>{
  assert.match(server,/user\.role!=='owner'/);
