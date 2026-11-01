@@ -93,6 +93,41 @@ async function stageConnectedSource(env,user,b){
 }
 async function importWorkspaceRoutes(req,env,user,sub,m){
  if(!sub.startsWith('workspace/'))return null;if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);const u=new URL(req.url);
+ if(sub==='workspace/tinyfish/status'&&m==='GET'){
+  return json({configured:!!String(env.TINYFISH_API_KEY||'').trim(),provider:'TinyFish',requiresOwnerApproval:true,notice:env.TINYFISH_API_KEY?'TinyFish credential configured. Run a task to verify connectivity.':'Set the TINYFISH_API_KEY Cloudflare Worker secret before running TinyFish.'});
+ }
+ if(sub==='workspace/tinyfish/run'&&m==='POST'){
+  const b=await body(req),url=String(b?.url||'').trim(),goal=String(b?.goal||'').trim(),key=String(env.TINYFISH_API_KEY||'').trim();
+  if(!key)fail('TinyFish API key is not configured in Cloudflare Worker secrets',503);
+  let target;try{target=new URL(url);}catch{fail('Enter a valid HTTPS website URL',400);}
+  if(target.protocol!=='https:'||target.username||target.password||target.port||!target.hostname.includes('.')||target.hostname==='localhost'||/^(?:127|10|192\.168|169\.254)\./.test(target.hostname)||target.hostname.endsWith('.local'))fail('TinyFish requires a public HTTPS website',400);
+  if(goal.length<8||goal.length>3000)fail('Enter a clear task of 8 to 3000 characters',400);
+  const response=await fetch('https://agent.tinyfish.ai/v1/automation/run-async',{method:'POST',headers:{'X-API-Key':key,'Content-Type':'application/json'},body:JSON.stringify({url:target.href,goal}),signal:AbortSignal.timeout(25000)});
+  if(!response.ok)fail('TinyFish could not start this task (HTTP '+response.status+'). Check API key and wallet.',502);
+  const result=await response.json();
+  const runId=String(result.run_id||result.runId||result.id||'');
+  if(!runId||runId.length>160)fail('TinyFish returned no valid run identifier',502);
+  const id=crypto.randomUUID(),item={id,runId,createdBy:user.id,createdAt:Date.now(),url:target.href,goal,status:'submitted'};
+  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:tinyfish:'+id,JSON.stringify(item)).run();
+  await audit(env,user.username,'tinyfish-run','TinyFish task '+id+' submitted');
+  return json({id,runId,status:'submitted',notice:'TinyFish task started. No deployment is authorized.'});
+ }
+ if(sub==='workspace/tinyfish/runs'&&m==='GET'){
+  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:tinyfish:%' AND json_extract(value_json,'$.createdBy')=? ORDER BY CAST(json_extract(value_json,'$.createdAt') AS INTEGER) DESC LIMIT 30").bind(user.id).all();
+  return json({runs:(rows.results||[]).map(r=>JSON.parse(r.value_json)).map(({id,url,goal,createdAt,status})=>({id,url,goal,createdAt,status}))});
+ }
+ if(sub==='workspace/tinyfish/result'&&m==='GET'){
+  const id=String(u.searchParams.get('id')||'');
+  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid TinyFish task',400);
+  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:tinyfish:'+id).first();
+  if(!row)fail('TinyFish task not found',404);
+  const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('TinyFish task owner mismatch',403);
+  const key=String(env.TINYFISH_API_KEY||'').trim();if(!key)fail('TinyFish API key not configured',503);
+  const response=await fetch('https://agent.tinyfish.ai/v1/runs/'+encodeURIComponent(item.runId),{headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
+  if(!response.ok)fail('TinyFish status unavailable (HTTP '+response.status+')',502);
+  const result=await response.json();
+  return json({id,status:result.status||'unknown',result:result.resultJson||result.result||null,error:result.error||null,createdAt:item.createdAt,url:item.url,goal:item.goal});
+ }
  if(sub==='workspace/github/reuse'&&m==='POST'){
   const b=await body(req),sourceId=Number(b?.source),repo=String(b?.repo||'').trim(),label=String(b?.label||'').trim(),branch=String(b?.branch||'main').trim();
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Select an existing authorized GitHub connection',400);
