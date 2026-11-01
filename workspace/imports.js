@@ -117,7 +117,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Select an authorized GitHub identity',400);
   if(!/^[a-zA-Z0-9_./-]{1,120}$/.test(branch)||branch.startsWith('/')||branch.endsWith('/')||branch.includes('//')||branch.split('/').some(p=>p==='.'||p==='..'))fail('Invalid branch',400);
   if(!Array.isArray(names)||names.length<1||names.length>20)fail('Provide 1–20 repositories',400);
-  if(names.some(n=>typeof n!=='string'||!/^[a-zA-Z0-9_.-]+\\/[a-zA-Z0-9_.-]+$/.test(n)||n.length>200||n.split('/').some(p=>p==='.'||p==='..'))||new Set(names.map(n=>n.toLowerCase())).size!==names.length)fail('Invalid or duplicate repositories',400);
+  if(names.some(n=>typeof n!=='string'||!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(n)||n.length>200||n.split('/').some(p=>p==='.'||p==='..'))||new Set(names.map(n=>n.toLowerCase())).size!==names.length)fail('Invalid or duplicate repositories',400);
   const g=await importSource(env,user,sourceId);
   const original=await env.DB.prepare('SELECT secret_enc FROM github_sites WHERE id=? AND owner_id IS NULL').bind(sourceId).first();
   if(!original?.secret_enc)fail('GitHub authorization unavailable',404);
