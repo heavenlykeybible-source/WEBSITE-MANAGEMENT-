@@ -1,0 +1,7 @@
+# STRENGTH FOR TODAY — Revision 83 historical source integrity
+
+Screened all 1,826 entries of the separate working manuscript, without changing the canonical Revision 50 JSONL. All historical stories are now explicitly labelled `not_independently_verified` in a new non-destructive field. **This screening is not fact-checking or source verification.**
+
+Results: 1,423 provisional generated titles; 1,412 narratives shorter than 22 words; 1,709 days sharing exactly repeated historical narrative text in 116 repeated groups; 60 entries whose source domain could not be matched to a recognized subject using a simple heuristic. 1,766 entries have plausible subject/source domains, but domain plausibility does not verify specific claims. No historical claims independently verified this revision. Publication ready: NO.
+
+ChatGPT Library checkpoint: `strength_for_today_revision_83_historical_source_integrity_audit.zip`, including 1,826-day working JSONL, full CSV evidence register, 300-entry prioritized research queue, QA and README. Next: independently research specific historical claims, replace repetitive accounts, verify Scripture, and selectively merge approved changes with canonical Rev50 while preserving canonical KJV quotations.
