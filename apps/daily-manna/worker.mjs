@@ -1,6 +1,6 @@
 import {publicPage} from './public-page.mjs';
 import {facebookReady,publishToFacebook} from './facebook-publisher.mjs';
-// Strength for Today Daily Manna: independent Worker. No credentials are embedded.
+// STRENGTH FOR TODAY - our daily manna: independent Worker. No credentials are embedded.
 // Bind DB to a dedicated D1 database; set EDITOR_TOKEN as a secret.
 // Scheduled trigger: 0 * * * * (hourly UTC, publishes only at 23:00 UTC = midnight Lagos).
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
