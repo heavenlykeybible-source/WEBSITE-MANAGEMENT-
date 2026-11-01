@@ -72,3 +72,14 @@ test('GitHub source inspector reads only a verified pinned source revision',()=>
  assert.match(client,/Inspect pinned source file/);
  assert.match(client,/result\.content\.slice\(0,60000\)/);
 });
+
+test('GitHub file edits require pinned source SHA and Waiting Room approval',()=>{
+ assert.match(server,/workspace\/github\/propose-file-edit/);
+ assert.match(server,/tree\.head\.commit!==commit/);
+ assert.match(server,/file\.sha!==baseSha/);
+ assert.match(server,/coreProposeGithub\(env,actor/);
+ assert.match(server,/requiresOwnerApproval:true/);
+ assert.match(client,/Submit GitHub edit for owner review/);
+ assert.match(client,/inspectEdit\.value===inspectOriginal/);
+ assert.match(client,/No direct GitHub commit or production deployment/);
+});
