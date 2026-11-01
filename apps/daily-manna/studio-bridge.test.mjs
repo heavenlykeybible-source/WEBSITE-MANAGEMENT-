@@ -8,6 +8,10 @@ assert.equal(studioReady({...env,STUDIO_FIRST_POST_DATE:''}),false);
 const caption=formatDailyMannaPost(entry,env.MANNA_PUBLIC_ORIGIN);
 assert.ok(caption.includes('STRENGTH FOR TODAY - our daily manna'));
 assert.ok(caption.includes('https://dailyword.heavenlykey.org/?date=2026-11-01'));
+const veryLong=formatDailyMannaPost({...entry,title:'A'.repeat(250),scripture:'B'.repeat(500),body:'C'.repeat(40000),prayer:'D'.repeat(5000)},env.MANNA_PUBLIC_ORIGIN);
+assert.ok(Array.from(veryLong).length<=1950,'Social caption must fit Instagram and preserve direct reading link');
+assert.ok(veryLong.includes('https://dailyword.heavenlykey.org/?date=2026-11-01'));
+
 let received=0;
 const transport=async(url,opt)=>{
  received++;
@@ -32,6 +36,7 @@ const status=await readStudioStatus(entry.delivery_id,env,async(url,options)=>{
 });
 assert.equal(status.jobs[0].provider_post_id,'987_654','Real provider result is available to owner');
 assert.equal(status.receipt_status,'submitted');
+await submitToStudio({...entry,picture_object_key:'post-banners/foo',studio_media_id:45},env,async(_url,options)=>{assert.equal(JSON.parse(options.body).studio_media_id,45);return Response.json({ok:true,job_ids:[555]})});
 
 await assert.rejects(submitToStudio({...entry,picture_object_key:'post-banners/image'},env,async(u,opt)=>{
  assert.equal(JSON.parse(opt.body).requires_picture,true);
