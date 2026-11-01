@@ -99,6 +99,28 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
  if(sub==='workspace/dns/capabilities'&&m==='GET')return json({zone:'heavenlykey.org',configured:!!(env.DNS_ZONE_ID&&env.DNS_API_TOKEN),actions:['propose-create','approve-create'],requiresOwnerApproval:true});
  if(sub==='workspace/dns/propose-create'&&m==='POST'){const record=dnsRecordInput(await body(req)),id=crypto.randomUUID(),proposal={id,record,status:'pending-owner-approval',createdBy:user.id,createdAt:Date.now(),expiresAt:Date.now()+900000};await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:dns:'+id,JSON.stringify(proposal)).run();await audit(env,user.username,'dns-create-proposed',record.name);return json({id,status:proposal.status,record,notice:'Review and approve separately before DNS is changed.'});}
  if(sub==='workspace/dns/approve-create'&&m==='POST'){const input=await body(req),id=String(input?.id||'');if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid proposal',400);return withOperationLock(env,'dns-create:'+id,async()=>{const key='workspace:dns:'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('DNS proposal not found',404);const p=JSON.parse(row.value_json);if(p.createdBy!==user.id||p.status!=='pending-owner-approval'||p.expiresAt<Date.now())fail('Proposal is not available for owner approval',409);if(input?.confirm!==p.record.name)fail('Confirm the exact subdomain name to approve',400);const existing=await dnsCloudflare(env,'GET','/dns_records?name='+encodeURIComponent(p.record.name));if(existing.length)fail('A DNS record already exists for this subdomain',409);p.status='applying';await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();try{const result=await dnsCloudflare(env,'POST','/dns_records',p.record);p.status='created';p.recordId=result.id;p.completedAt=Date.now();await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();await audit(env,user.username,'dns-create-approved',p.record.name);return json({id,status:p.status,record:p.record});}catch(e){p.status='needs-reconciliation';await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();throw e;}});}
+ if(sub==='workspace/github/files'&&m==='GET'){
+  const sourceId=Number(u.searchParams.get('source'));
+  if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Choose a connected repository',400);
+  const g=await importSource(env,user,sourceId),tree=await sourceTree(env,g);
+  const files=tree.files.filter(f=>f.mode!=='120000'&&f.size<=200000&&/\\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(f.path)&&!/(^|\\/)(?:\\.env|\\.git|node_modules|vendor)(?:\\/|$)/.test(f.path)).slice(0,300).map(f=>({path:f.path,size:f.size,sha:f.sha}));
+  return json({repo:g.repo,branch:g.branch,commit:tree.head.commit,files,truncated:tree.files.length>files.length,readOnly:true});
+ }
+ if(sub==='workspace/github/file'&&m==='GET'){
+  const sourceId=Number(u.searchParams.get('source')),path=String(u.searchParams.get('path')||''),commit=String(u.searchParams.get('commit')||'');
+  if(!Number.isSafeInteger(sourceId)||sourceId<1||!/^[a-f0-9]{40}$/.test(commit))fail('Select a pinned repository revision',400);
+  if(!path||path.length>240||path.startsWith('/')||path.split('/').some(v=>!v||v==='.'||v==='..'||v==='.env'||v==='.git'||v==='node_modules'||v==='vendor')||! /\\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(path))fail('Select a supported ordinary source file',400);
+  const g=await importSource(env,user,sourceId),tree=await sourceTree(env,g);
+  if(tree.head.commit!==commit)fail('GitHub source changed. Refresh the file list.',409);
+  const file=tree.files.find(f=>f.path===path&&f.mode!=='120000'&&f.size<=200000);if(!file)fail('File is unavailable or too large for the code inspector',404);
+  const original=(g.dir?g.dir+'/':'')+path;
+  const data=await gh(env,g,'GET','/contents/'+ghEnc(original)+'?ref='+encodeURIComponent(commit));
+  if(data.type!=='file'||data.sha!==file.sha||data.encoding!=='base64'||!data.content)fail('Pinned GitHub file content cannot be verified',409);
+  const raw=Uint8Array.from(atob(String(data.content).replace(/\\s/g,'')),c=>c.charCodeAt(0));
+  if(raw.byteLength>200000)fail('File exceeds code inspector limit',413);
+  let content;try{content=new TextDecoder('utf-8',{fatal:true}).decode(raw);}catch{fail('Only UTF-8 source files are supported',400);}
+  return json({repo:g.repo,commit,path,sha:file.sha,content,readOnly:true});
+ }
  if(sub==='workspace/github/discover'&&m==='GET'){
   const sourceId=Number(u.searchParams.get('source')),page=Number(u.searchParams.get('page')||1);
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Choose an authorized GitHub connection',400);
