@@ -171,6 +171,12 @@ export default {
     const date=todayLagos(),entry=await env.DB.prepare("SELECT publish_date,title,scripture,body,prayer FROM manna_entries WHERE publish_date=? AND status='published'").bind(date).first();
     return response({date,entry:entry||null,picture_url:entry?'/api/picture/'+date:null});
    }
+   if(path==='/api/picture-config'&&method==='GET'&&auth(req,env)){
+    const date=mediaDate(url.searchParams.get('scope')||'');
+    if(date===null)return response({error:'Invalid picture scope'},400);
+    const record=await env.DB.prepare("SELECT studio_media_id,content_type,updated_at FROM manna_post_images WHERE image_date=?").bind(date).first();
+    return response({scope:date||'default',image_uploaded:Boolean(record),studio_media_id:record?.studio_media_id||null,content_type:record?.content_type||null,updated_at:record?.updated_at||null});
+   }
    if(path==='/api/readiness'&&method==='GET'&&auth(req,env)){
     const tally=await env.DB.prepare("SELECT status,COUNT(*) AS count FROM manna_entries GROUP BY status").all();
     const counts={draft:0,approved:0,published:0,corrected:0};
