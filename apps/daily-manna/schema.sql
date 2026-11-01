@@ -23,9 +23,17 @@ CREATE INDEX IF NOT EXISTS idx_manna_status_date ON manna_entries(status,publish
 -- Editorial audit trail. Store no bearer tokens or subscriber secrets here.
 CREATE TABLE IF NOT EXISTS manna_audit (
  id TEXT PRIMARY KEY,
- action TEXT NOT NULL CHECK(action IN ('created','edited','approved','published')),
+ action TEXT NOT NULL CHECK(action IN ('created','edited','approved','published','corrected','image_uploaded','image_removed')),
  entry_id TEXT NOT NULL,
  detail TEXT NOT NULL DEFAULT '',
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_manna_audit_entry ON manna_audit(entry_id,created_at);
+
+-- Optional uploaded header: empty image_date is default, YYYY-MM-DD is a day override.
+CREATE TABLE IF NOT EXISTS manna_post_images (
+ image_date TEXT PRIMARY KEY,
+ object_key TEXT NOT NULL,
+ content_type TEXT NOT NULL CHECK(content_type IN ('image/jpeg','image/png','image/webp')),
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
