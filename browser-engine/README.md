@@ -4,3 +4,5 @@ Self-hosted Playwright worker. No TinyFish account or API is required. Build and
 
 ## Deployment safety
 Run the container as a non-root user with Chromium sandboxing enabled, restricted network egress and a memory/CPU limit. Use a reverse proxy with HTTPS and do not expose the engine to public traffic without authentication. Tasks can be cancelled while running, but state is currently in memory and restarts will lose task history. The service is not production-ready until durable persistence, DNS/IP-level SSRF controls, operational monitoring and real integration tests are added.
+
+The engine now checks DNS resolutions and rejects private/reserved IP addresses for the submitted URL and browser requests. This application-level check is defense in depth, **not** a substitute for firewall or container-level egress restrictions, because DNS can change between validation and connection. Production deployment must restrict outbound access to public internet destinations at the network layer.
