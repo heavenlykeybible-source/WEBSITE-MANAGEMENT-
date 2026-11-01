@@ -74,6 +74,14 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const staged=await stageConnectedSource(env,user,{scan:scan.id,connection:b.connection,worker:b.worker,site:b.site});
   return json({ok:true,status:'waiting',proposal_id:staged.proposal_id,source:{repo:scan.repo,commit:scan.commit,files:scan.files.length,bytes:scan.bytes},notice:'Imported and staged for owner approval; production has not been deployed.'});
  }
+ if(sub==='workspace/application-build/status'&&m==='GET'){
+  const id=u.searchParams.get('id');
+  if(!/^[a-f0-9-]{36}$/.test(id||''))fail('Invalid build identifier',400);
+  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:application:'+id).first();
+  if(!row)fail('Build request not found',404);
+  const b=JSON.parse(row.value_json);
+  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,ownerApprovalRequired:true,deploymentAuthorized:false});
+ }
  if(sub==='workspace/application-builds'&&m==='GET'){
  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:application:%' LIMIT 100").all();
  return json({builds:(rows.results||[]).map(r=>{const b=JSON.parse(r.value_json);return {id:b.id,repo:b.repo,commit:b.commit,status:b.status,worker:b.worker};})});
