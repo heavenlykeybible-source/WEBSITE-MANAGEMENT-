@@ -1,0 +1,25 @@
+{
+  "revision": 51,
+  "source": "https://github.com/aruljohn/Bible-kjv",
+  "review": "source_checked_pending_secondary_confirmation",
+  "patches": [
+    {
+      "day": 1,
+      "date": "2026-10-30",
+      "reference": "Hebrews 3:15",
+      "corrected_verse": "While it is said, To day if ye will hear his voice, harden not your hearts, as in the provocation."
+    },
+    {
+      "day": 2,
+      "date": "2026-10-31",
+      "reference": "Luke 16:10",
+      "corrected_verse": "He that is faithful in that which is least is faithful also in much: and he that is unjust in the least is unjust also in much."
+    },
+    {
+      "day": 6,
+      "date": "2026-11-04",
+      "reference": "2 Corinthians 12:9",
+      "corrected_verse": "And he said unto me, My grace is sufficient for thee: for my strength is made perfect in weakness. Most gladly therefore will I rather glory in my infirmities, that the power of Christ may rest upon me."
+    }
+  ]
+}
