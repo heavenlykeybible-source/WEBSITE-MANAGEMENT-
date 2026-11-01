@@ -8,6 +8,8 @@ const validDate=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s+'T0
 const randomId=()=>crypto.randomUUID();
 const todayLagos=(now=Date.now())=>{const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(now));const get=k=>p.find(x=>x.type===k).value;return get('year')+'-'+get('month')+'-'+get('day');};
 async function parseBody(req){
+ const declared=Number(req.headers.get('content-length')||0);
+ if(Number.isFinite(declared)&&declared>50000)return null;
  const raw=await req.text();
  if(new TextEncoder().encode(raw).length>50000)return null;
  try{return JSON.parse(raw)}catch{return null}
