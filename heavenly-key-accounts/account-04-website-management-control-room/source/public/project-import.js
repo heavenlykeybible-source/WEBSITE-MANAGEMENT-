@@ -36,7 +36,7 @@ start.onclick=async()=>{
    done.add(n);progress.value=Math.floor(done.size/info.parts*100);
    tell('Staging '+file.name+' · '+progress.value+'% ('+done.size+'/'+info.parts+' chunks)');
   }
-  if(!stopped){const check=await request('/api/project-imports/'+encodeURIComponent(id));if(!check.complete)throw Error('Some chunks are missing. Resume the upload.');sessionStorage.removeItem(storageKey);progress.value=100;tell('1 GiB-capable staging completed. Archive is private and NOT published. Import ID: '+id);}
+  if(!stopped){const check=await request('/api/project-imports/'+encodeURIComponent(id));if(!check.complete)throw Error('Some chunks are missing. Resume the upload.');const submitted=await request('/api/project-imports/'+encodeURIComponent(id),{method:'POST',signal:controller.signal});sessionStorage.removeItem(storageKey);progress.value=100;tell('Upload verified and submitted for review. Archive is NOT published. Import ID: '+id+' · Status: '+submitted.status);}
  }catch(e){if(!stopped)tell('Upload interrupted: '+e.message+'. Select Start / resume to retry.');}
  finally{start.disabled=false;controller=null;}
 };
