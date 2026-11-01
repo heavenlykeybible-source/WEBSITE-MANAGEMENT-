@@ -86,6 +86,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
   if(item.status==='cancelled')fail('Build request cancelled',409);
   const g=await importSource(env,user,item.source);
+  if(g.repo!==item.repo)fail('Connected repository changed since build request',409);
   const tree=await sourceTree(env,g);
   const prefix=item.directory?item.directory+'/':'';
   const valid=tree.head.commit===item.commit&&tree.files.some(f=>f.path===prefix+'package.json');
