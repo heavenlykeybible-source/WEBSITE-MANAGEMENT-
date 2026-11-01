@@ -184,14 +184,14 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(['build-dispatched','review-cancellation-requested'].includes(b.status)&&b.repo==='heavenlykeybible-source/WEBSITE-MANAGEMENT-'){
    const g=await importSource(env,user,b.source);
    if(g.repo!==b.repo||(g.dir||'')!==(b.root||''))fail('Connected build repository or root no longer matches',409);
-   const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=50').catch(()=>({workflow_runs:[]}));
+   const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=50');
    const wanted='Review '+b.id;
    const runs=(data.workflow_runs||[]).filter(run=>run.display_title===wanted&&run.event==='workflow_dispatch'&&run.head_branch==='feature/complete-reviewed-import-pipeline'&&Date.parse(run.created_at)>=b.dispatchedAt-120000&&Date.parse(run.created_at)<=b.dispatchedAt+3600000);
    if(runs.length){
     const run=runs.sort((x,y)=>Date.parse(y.created_at)-Date.parse(x.created_at))[0];
     review={runId:run.id,status:run.status,conclusion:run.conclusion||null,url:run.html_url||null,artifactAvailable:false};
     if(run.status==='completed'&&run.conclusion==='success'){
-     const artifacts=await gh(env,g,'GET','/actions/runs/'+encodeURIComponent(run.id)+'/artifacts').catch(()=>({artifacts:[]}));
+     const artifacts=await gh(env,g,'GET','/actions/runs/'+encodeURIComponent(run.id)+'/artifacts');
      const artifact=(artifacts.artifacts||[]).find(a=>a.name==='review-build-'+b.id&&!a.expired&&a.workflow_run?.id===run.id);
      review.artifactAvailable=!!artifact;
      if(artifact)review.artifact={id:artifact.id,sizeBytes:artifact.size_in_bytes,expiresAt:artifact.expires_at||null};
