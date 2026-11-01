@@ -19,9 +19,9 @@
 /* Embed behind an Account 4 authenticated owner-only reverse proxy. Do not expose EDITOR_TOKEN here. */
 const $=id=>document.getElementById(id), entries=new Map(),selected=new Set();
 let active=null,activeRevision=null;
-const localDate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const localDate=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const get=k=>parts.find(p=>p.type===k).value;return get('year')+'-'+get('month')+'-'+get('day')};
 function message(text,error=false){$('message').textContent=text;$('message').setAttribute('role',error?'alert':'status')}
-async function api(path,options={}){const res=await fetch('/api/'+path,{credentials:'same-origin',headers:{'content-type':'application/json'},...options});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed ('+res.status+')');return data}
+async function api(path,options={}){const res=await fetch('/api/daily-manna/'+path,{credentials:'same-origin',headers:{'content-type':'application/json'},...options});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed ('+res.status+')');return data}
 function reset(date=''){active=null;activeRevision=null;$('editor').reset();$('date').value=date;$('current').replaceChildren();message('New draft. Save before approving.')}
 function openEntry(entry){active=entry.id;activeRevision=entry.revision;for(const key of ['date','title','scripture','body','prayer'])$(key).value=key==='date'?entry.publish_date:(entry[key]||'');$('current').textContent='Status: '+entry.status+' · Revision '+entry.revision;message('Review the entry and save any changes before approval.')}
 function render(){
