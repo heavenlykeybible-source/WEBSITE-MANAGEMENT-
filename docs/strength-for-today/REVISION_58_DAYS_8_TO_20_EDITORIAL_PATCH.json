@@ -1,0 +1,85 @@
+{
+  "revision": 58,
+  "canonical_target": "revision-50",
+  "status": "reviewed_corrections_pending_merge",
+  "days": [
+    {
+      "day_number": 8,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "The risen Christ calls His disciples not merely to profess allegiance but to make disciples and teach obedience to His commands. Consecration includes humble witness and faithful service under His authority.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 9,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "Achan’s hidden disobedience brought serious consequences in Israel’s covenant history. Guarding the heart requires honest repentance rather than assuming concealed wrongdoing cannot affect others; this account must not be used to justify harming anyone today.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 10,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "The apostles responded to neglected widows by organising fair practical care. Christian love becomes visible when people correct unfair treatment and serve those who might otherwise be overlooked.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 11,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "Daniel continued praying faithfully when obedience became costly. His steadfastness calls believers to honour God in private and public, without assuming that every faithful person will experience the same miraculous deliverance.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 12,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "Joseph refused adultery and the betrayal of his employer’s trust, even though false accusation followed. Holiness means choosing integrity without demanding an immediate reward for doing right.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 13,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "Hannah brought deep grief to God in sincere prayer and answered misunderstanding with dignity. A consecrated life includes honest dependence on God and compassion toward people whose suffering is not obvious.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 14,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "The Samaritan acted as a neighbour to someone outside his own community. Love for God should lead to practical mercy that crosses prejudice and helps people in genuine need.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 15,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "The rich farmer planned as though possessions could guarantee his future. Knowing God means rejecting covetousness, remembering eternity, and using resources responsibly rather than making wealth the centre of life.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 16,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "The father welcomed the repentant son, while the older brother struggled with resentment. True repentance turns back to God, and genuine holiness leaves room for mercy rather than pride.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 17,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "The three Hebrew men refused to worship the king’s image even before they knew the outcome. Faithfulness is obedience to God in difficult choices, not a bargain that guarantees protection from every hardship.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 18,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "Nehemiah confessed sin, prayed earnestly, and then prepared carefully for the rebuilding work. Revival-minded prayer should produce responsible action, truthful planning, and service to others.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 19,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "Isaiah first recognised God’s holiness and his own need for cleansing before accepting a difficult commission. Christian witness must grow from humility, truthful speech, and obedience rather than self-promotion.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    },
+    {
+      "day_number": 20,
+      "field": "bible_story.spiritual_lesson",
+      "spiritual_lesson": "Peter learned that the gospel of Jesus Christ is for people of every nation. Faithful ministry must reject prejudice and proclaim repentance and salvation without making cultural background a barrier.",
+      "world_story_status": "needs_unique_sourced_replacement"
+    }
+  ]
+}
