@@ -24,6 +24,8 @@ assert.match(schema,/CREATE TABLE IF NOT EXISTS manna_audit/);
 for(const key of ['id="month"','id="calendar"','id="editor"','id="approve"','id="date"','id="scripture"','id="select-month"'])assert.ok(html.includes(key),key);
 assert.ok(!html.includes('EDITOR_TOKEN='));
 assert.ok(html.includes("credentials:'same-origin'"));
+assert.ok(html.includes("'/api/daily-manna/'"),'Editor must use Account 4 proxy');
+assert.match(html,/formatToParts/,'Editor must calculate Lagos dates reliably');
 assert.ok(!html.includes('innerHTML='));
 assert.match(html,/expected_revision:activeRevision/);
 assert.match(html,/JSON\.stringify\(\{entries:items\}\)/);
