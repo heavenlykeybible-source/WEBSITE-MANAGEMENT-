@@ -42,3 +42,6 @@ jobs:
 
       - name: Validate authorized Facebook Page publishing adapter
         run: node facebook-publisher.test.mjs
+
+      - name: Validate social queue delivery and duplicate protection
+        run: node facebook-dispatch.test.mjs
