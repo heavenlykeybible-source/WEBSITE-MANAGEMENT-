@@ -22,3 +22,13 @@ test('bulk GitHub onboarding reuses authorized credential and validates reposito
  assert.match(server,/const head=await ghHead\(env,target\)/);
  assert.match(server,/original\.secret_enc/);
 });
+
+test('bulk GitHub endpoint enforces scope and validates before writes',()=>{
+ assert.match(server,/workspace\/github\/bulk-connect/);
+ assert.match(server,/names\.length>20/);
+ assert.match(server,/new Set\(names\.map\(n=>n\.toLowerCase\(\)\)\)/);
+ assert.match(server,/const g=await importSource\(env,user,sourceId\)/);
+ assert.match(server,/await ghHead\(env,\{\.\.\.g,repo,branch,dir:''\}\)/);
+ assert.match(server,/requiresOwnerApprovalForDeploy:true/);
+ assert.match(client,/workspace\/github\/bulk-connect/);
+});
