@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {ACCOUNT4_ID,verifyAccount4Destination} from '../scripts/account4-destination.mjs';
+assert.equal(verifyAccount4Destination(ACCOUNT4_ID),ACCOUNT4_ID);
+for(const value of [undefined,null,'', 'cd095c096c2d5a42501e7d77cecbb34c','404ebf05a781fcccbbed44aeb02cb72b ','00000000000000000000000000000000'])assert.throws(()=>verifyAccount4Destination(value),/exact Account 4 ID/);
+const release=fs.readFileSync('scripts/deploy-account4-existing.mjs','utf8');
+assert.match(release,/verifyAccount4Destination\(account\)/);
+assert.ok(release.indexOf('verifyAccount4Destination(account)')<release.indexOf("const base = "),'Wrong-account fail-closed check must happen before any Cloudflare request');
+const workflow=fs.readFileSync('.github/workflows/deploy.yml','utf8');
+assert.match(workflow,/test "\$CF_ACCOUNT" = '404ebf05a781fcccbbed44aeb02cb72b'/);
+assert.match(workflow,/workflow_dispatch:/);
+console.log('PASS Account 4 exact deployment destination, fail-closed and manual release');
