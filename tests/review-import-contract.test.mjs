@@ -38,6 +38,10 @@ test('review status never assumes that a completed job has a verified artifact',
  assert.match(server,/artifactAvailable:false/);
  assert.match(server,/deploymentAuthorized:false/);
 });
+test('source re-verification checks both lockfile and connected repository root',()=>{
+ assert.match(server,/Connected application root changed since build request/);
+ assert.match(server,/tree\.files\.some\(f=>f\.path===prefix\+'package-lock\.json'\)/);
+});
 test('review artifact preserves request provenance',()=>{
  assert.match(workflow,/request_id=%s/);
  assert.match(workflow,/source_sha=%s/);
