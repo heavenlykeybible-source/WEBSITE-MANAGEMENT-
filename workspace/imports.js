@@ -94,42 +94,43 @@ async function stageConnectedSource(env,user,b){
 async function importWorkspaceRoutes(req,env,user,sub,m){
  if(!sub.startsWith('workspace/'))return null;if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);const u=new URL(req.url);
  if(sub==='workspace/tinyfish/status'&&m==='GET'){
-  return json({configured:!!String(env.TINYFISH_API_KEY||'').trim(),provider:'TinyFish',requiresOwnerApproval:true,notice:env.TINYFISH_API_KEY?'TinyFish credential configured. Run a task to verify connectivity.':'Set the TINYFISH_API_KEY Cloudflare Worker secret before running TinyFish.'});
+  return json({configured:!!String(env.BROWSER_ENGINE_KEY||'').trim(),provider:'Heavenly Key Browser Engine',requiresOwnerApproval:true,notice:env.BROWSER_ENGINE_KEY?'Heavenly Key Browser Engine credential configured. Run a task to verify connectivity.':'Set the BROWSER_ENGINE_KEY Cloudflare Worker secret before running Heavenly Key Browser Engine.'});
  }
  if(sub==='workspace/tinyfish/run'&&m==='POST'){
-  const b=await body(req),url=String(b?.url||'').trim(),goal=String(b?.goal||'').trim(),key=String(env.TINYFISH_API_KEY||'').trim();
-  if(!key)fail('TinyFish API key is not configured in Cloudflare Worker secrets',503);
+  const b=await body(req),url=String(b?.url||'').trim(),goal=String(b?.goal||'').trim(),key=String(env.BROWSER_ENGINE_KEY||'').trim();
+  if(!/^https:\/\/[^/?#]+/.test(String(env.BROWSER_ENGINE_URL||'')))fail('Configure a public HTTPS BROWSER_ENGINE_URL',503);
+  if(!key)fail('Heavenly Key Browser Engine API key is not configured in Cloudflare Worker secrets',503);
   let target;try{target=new URL(url);}catch{fail('Enter a valid HTTPS website URL',400);}
-  if(target.protocol!=='https:'||target.username||target.password||target.port||target.href.length>2000||!target.hostname.includes('.')||target.hostname.endsWith('.local')||target.hostname.endsWith('.internal')||target.hostname.endsWith('.localhost')||target.hostname.endsWith('.test')||target.hostname.endsWith('.invalid')||target.hostname==='localhost'||target.hostname.startsWith('[')||/^(?:\d{1,3}\.){3}\d{1,3}$/.test(target.hostname)||target.hostname==='metadata.google.internal')fail('TinyFish requires a public HTTPS domain, not a private network address',400);
+  if(target.protocol!=='https:'||target.username||target.password||target.port||target.href.length>2000||!target.hostname.includes('.')||target.hostname.endsWith('.local')||target.hostname.endsWith('.internal')||target.hostname.endsWith('.localhost')||target.hostname.endsWith('.test')||target.hostname.endsWith('.invalid')||target.hostname==='localhost'||target.hostname.startsWith('[')||/^(?:\d{1,3}\.){3}\d{1,3}$/.test(target.hostname)||target.hostname==='metadata.google.internal')fail('Heavenly Key Browser Engine requires a public HTTPS domain, not a private network address',400);
   if(goal.length<8||goal.length>3000)fail('Enter a clear task of 8 to 3000 characters',400);
   const active=await env.DB.prepare("SELECT COUNT(*) AS n FROM settings WHERE key LIKE 'workspace:tinyfish:%' AND json_extract(value_json,'$.createdBy')=? AND json_extract(value_json,'$.status') NOT IN ('COMPLETED','FAILED','CANCELLED')").bind(user.id).first();
-  if(Number(active?.n||0)>=3)fail('At most three uncompleted TinyFish tasks are allowed. Check or cancel existing tasks first.',429);
-  const response=await fetch('https://agent.tinyfish.ai/v1/automation/run-async',{method:'POST',headers:{'X-API-Key':key,'Content-Type':'application/json'},body:JSON.stringify({url:target.href,goal}),signal:AbortSignal.timeout(25000)});
-  if(!response.ok)fail('TinyFish could not start this task (HTTP '+response.status+'). Check API key and wallet.',502);
+  if(Number(active?.n||0)>=3)fail('At most three uncompleted Heavenly Key Browser Engine tasks are allowed. Check or cancel existing tasks first.',429);
+  const response=await fetch(String(env.BROWSER_ENGINE_URL||'').replace(/\/$/,'')+'/v1/automation/run-async',{method:'POST',headers:{'X-API-Key':key,'Content-Type':'application/json'},body:JSON.stringify({url:target.href,goal}),signal:AbortSignal.timeout(25000)});
+  if(!response.ok)fail('Heavenly Key Browser Engine could not start this task (HTTP '+response.status+'). Check API key and wallet.',502);
   const result=await response.json();
   const runId=String(result.run_id||result.runId||result.id||'');
-  if(!/^[a-zA-Z0-9_-]{1,160}$/.test(runId))fail('TinyFish returned no valid run identifier',502);
+  if(!/^[a-zA-Z0-9_-]{1,160}$/.test(runId))fail('Heavenly Key Browser Engine returned no valid run identifier',502);
   const id=crypto.randomUUID(),item={id,runId,createdBy:user.id,createdAt:Date.now(),url:target.href,goal,status:'submitted'};
   await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:tinyfish:'+id,JSON.stringify(item)).run();
-  await audit(env,user.username,'tinyfish-run','TinyFish task '+id+' submitted');
-  return json({id,runId,status:'submitted',notice:'TinyFish task started. No deployment is authorized.'});
+  await audit(env,user.username,'tinyfish-run','Heavenly Key Browser Engine task '+id+' submitted');
+  return json({id,runId,status:'submitted',notice:'Heavenly Key Browser Engine task started. No deployment is authorized.'});
  }
  if(sub==='workspace/tinyfish/cancel'&&m==='POST'){
   const b=await body(req),id=String(b?.id||'');
-  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid TinyFish task',400);
+  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid Heavenly Key Browser Engine task',400);
   const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:tinyfish:'+id).first();
-  if(!row)fail('TinyFish task not found',404);
-  const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('TinyFish task owner mismatch',403);
-  const key=String(env.TINYFISH_API_KEY||'').trim();if(!key)fail('TinyFish API key not configured',503);
+  if(!row)fail('Heavenly Key Browser Engine task not found',404);
+  const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('Heavenly Key Browser Engine task owner mismatch',403);
+  const key=String(env.BROWSER_ENGINE_KEY||'').trim();if(!key)fail('Heavenly Key Browser Engine API key not configured',503);
   if(['COMPLETED','FAILED','CANCELLED'].includes(item.status))return json({id,status:item.status,notice:'This task has already finished.'});
-  const response=await fetch('https://agent.tinyfish.ai/v1/runs/'+encodeURIComponent(item.runId)+'/cancel',{method:'POST',headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
-  if(!response.ok)fail('TinyFish cancellation unavailable (HTTP '+response.status+')',502);
+  const response=await fetch(String(env.BROWSER_ENGINE_URL||'').replace(/\/$/,'')+'/v1/runs/'+encodeURIComponent(item.runId)+'/cancel',{method:'POST',headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
+  if(!response.ok)fail('Heavenly Key Browser Engine cancellation unavailable (HTTP '+response.status+')',502);
   const result=await response.json(),status=String(result.status||'unknown').toUpperCase();
   if(['COMPLETED','FAILED','CANCELLED'].includes(status)){
    item.status=status;
    await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),'workspace:tinyfish:'+id).run();
   }
-  await audit(env,user.username,'tinyfish-cancel','Requested cancellation of TinyFish task '+id);
+  await audit(env,user.username,'tinyfish-cancel','Requested cancellation of Heavenly Key Browser Engine task '+id);
   return json({id,status});
  }
  if(sub==='workspace/tinyfish/runs'&&m==='GET'){
@@ -138,13 +139,13 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
  }
  if(sub==='workspace/tinyfish/result'&&m==='GET'){
   const id=String(u.searchParams.get('id')||'');
-  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid TinyFish task',400);
+  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid Heavenly Key Browser Engine task',400);
   const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:tinyfish:'+id).first();
-  if(!row)fail('TinyFish task not found',404);
-  const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('TinyFish task owner mismatch',403);
-  const key=String(env.TINYFISH_API_KEY||'').trim();if(!key)fail('TinyFish API key not configured',503);
-  const response=await fetch('https://agent.tinyfish.ai/v1/runs/'+encodeURIComponent(item.runId),{headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
-  if(!response.ok)fail('TinyFish status unavailable (HTTP '+response.status+')',502);
+  if(!row)fail('Heavenly Key Browser Engine task not found',404);
+  const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('Heavenly Key Browser Engine task owner mismatch',403);
+  const key=String(env.BROWSER_ENGINE_KEY||'').trim();if(!key)fail('Heavenly Key Browser Engine API key not configured',503);
+  const response=await fetch(String(env.BROWSER_ENGINE_URL||'').replace(/\/$/,'')+'/v1/runs/'+encodeURIComponent(item.runId),{headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
+  if(!response.ok)fail('Heavenly Key Browser Engine status unavailable (HTTP '+response.status+')',502);
   const result=await response.json();
   const status=String(result.status||'unknown').toUpperCase();
   if(['COMPLETED','FAILED','CANCELLED'].includes(status)&&item.status!==status){
