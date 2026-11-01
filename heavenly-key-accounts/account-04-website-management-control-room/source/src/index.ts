@@ -134,7 +134,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
      if(!item)continue;
      try{
       const m=JSON.parse(await item.text());
-      if(m.owner===actor)entries.push({id,name:m.name,status:m.status,createdAt:m.createdAt,submittedAt:m.submittedAt,totalBytes:m.totalBytes,parts:m.parts});
+      if(m.owner===actor)entries.push({id,name:m.name,status:m.status,createdAt:m.createdAt,submittedAt:m.submittedAt,totalBytes:m.totalBytes,parts:m.parts,source:m.source,fileCount:m.fileCount,commit:m.commit} as typeof entries[number]);
      }catch{}
     }
     cursor=page.truncated?page.cursor:undefined;
@@ -171,6 +171,21 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
     seen.add(path);valid.push(path);
    }
    return json({valid,rejected,readyForReview:rejected.length===0,published:false});
+  }
+  const filesMatch=u.pathname.match(/^\/api\/project-imports\/([a-f0-9-]{36})\/files$/);
+  if(filesMatch&&request.method==='GET'){
+   const id=filesMatch[1],prefix='imports/'+id+'/';
+   const stored=await env.MEDIA.get(prefix+'manifest');
+   if(!stored)return fail('Import session not found.',404);
+   const manifest=JSON.parse(await stored.text());
+   if(manifest.owner!==actor)return fail('Import belongs to another administrator.',403);
+   if(manifest.source!=='github-tree')return fail('Source listing is only available for GitHub imports.',400);
+   const inventory=await env.MEDIA.get(prefix+'files.json');
+   if(!inventory)return fail('Source listing is missing.',404);
+   const record=JSON.parse(await inventory.text());
+   const offset=Number(u.searchParams.get('offset')||0);
+   if(!Number.isSafeInteger(offset)||offset<0)return fail('Invalid file offset.');
+   return json({id,repository:record.repository,commit:record.commit,root:record.root,total:record.files.length,offset,files:record.files.slice(offset,offset+200),published:false});
   }
   const importMatch=u.pathname.match(new RegExp('^/api/project-imports/([a-f0-9-]{36})(?:/chunks/([0-9]+))?$'));
   if(importMatch){
