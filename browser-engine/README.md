@@ -1,3 +1,6 @@
 # Heavenly Key Browser Engine
 
 Self-hosted Playwright worker. No TinyFish account or API is required. Build and host the Docker container on a browser-capable server. Configure `BROWSER_ENGINE_KEY` (32+ random characters), `BROWSER_ENGINE_URL` (public HTTPS endpoint) and the matching `BROWSER_ENGINE_KEY` secret on the Control Room Cloudflare Worker. This initial engine safely opens public HTTPS pages and returns page title/text. It does **not** execute arbitrary natural-language click/login workflows; those require a separately designed and tested task interpreter. In-memory jobs do not survive restarts. Production requires durable queue, egress filtering at the network layer, resource quotas and verified hosting before enabling unrestricted browsing.
+
+## Deployment safety
+Run the container as a non-root user with Chromium sandboxing enabled, restricted network egress and a memory/CPU limit. Use a reverse proxy with HTTPS and do not expose the engine to public traffic without authentication. Tasks can be cancelled while running, but state is currently in memory and restarts will lose task history. The service is not production-ready until durable persistence, DNS/IP-level SSRF controls, operational monitoring and real integration tests are added.
