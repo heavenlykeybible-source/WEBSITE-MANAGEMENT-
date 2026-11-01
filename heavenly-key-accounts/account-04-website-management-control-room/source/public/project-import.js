@@ -23,6 +23,21 @@ async function refreshWaitingRoom(){
    const date=entry.submittedAt||entry.createdAt;
    item.textContent=entry.name+' — '+entry.status+' — '+(entry.totalBytes/1048576).toFixed(1)+' MiB — '+new Date(date).toLocaleString()+' — ID: '+entry.id;
    container.append(item);
+   if(entry.source==='github-tree'){
+    const button=document.createElement('button');
+    button.type='button';button.textContent='Inspect GitHub source files';
+    const preview=document.createElement('pre');
+    preview.style.whiteSpace='pre-wrap';preview.hidden=true;
+    button.onclick=async()=>{
+     button.disabled=true;preview.hidden=false;preview.textContent='Loading source inventory…';
+     try{
+      const listing=await request('/api/project-imports/'+encodeURIComponent(entry.id)+'/files');
+      preview.textContent='Pinned commit: '+listing.commit+'\\n'+listing.files.map(file=>file.path+' ('+file.size+' bytes)').join('\\n')+(listing.total>listing.files.length?'\\nShowing first '+listing.files.length+' of '+listing.total+' files.':'');
+     }catch(e){preview.textContent='Unable to inspect source: '+e.message;}
+     finally{button.disabled=false;}
+    };
+    container.append(button,preview);
+   }
   }
  }catch(e){container.textContent='Unable to load Waiting Room: '+e.message;}
 }
