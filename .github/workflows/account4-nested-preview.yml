@@ -54,3 +54,16 @@ jobs:
       - name: Deploy isolated preview (never the root production Worker)
         run: npx --yes wrangler@4.45.0 deploy --config wrangler.import-preview.toml
         working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
+      - name: Smoke-test deployed Control Room UI and security boundary
+        run: |
+          set -euo pipefail
+          url="https://heavenlykey-control-room-import-preview.emmanuel2026miracle.workers.dev"
+          curl --fail --silent --show-error --retry 4 --retry-delay 2 "$url/" -o /tmp/account4-control-room.html
+          grep -q 'account3-github-import' /tmp/account4-control-room.html
+          grep -q 'project-review-refresh' /tmp/account4-control-room.html
+          ! grep -q 'Set ADMIN_USER and ADMIN_PASS' /tmp/account4-control-room.html
+          curl --fail --silent --show-error "$url/project-import.js" -o /tmp/account4-project-import.js
+          grep -q 'project-imports/github' /tmp/account4-project-import.js
+          status="$(curl --silent --output /tmp/account4-unauthorized.json --write-out '%{http_code}' "$url/api/project-imports")"
+          test "$status" = '401' || { echo "::error::Expected unauthenticated import API to return 401, got $status"; exit 1; }
+          grep -q 'Administrator sign-in required' /tmp/account4-unauthorized.json
