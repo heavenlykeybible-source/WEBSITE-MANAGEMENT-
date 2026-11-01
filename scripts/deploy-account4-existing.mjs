@@ -57,6 +57,21 @@ if (process.argv.includes('--check')) {
   const finalSha = finalRemote.stdout?.trim().split(/\s+/)[0];
   if (finalRemote.status !== 0 || finalSha !== approved)
     throw new Error('Account 4 upload cancelled: newer source appeared during release preparation');
+  // A newer GitHub main is not sufficient: reject rollbacks relative to the Worker already live.
+  const live = await fetch(base, {headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(60000)});
+  if (!live.ok) throw new Error('Cannot read existing live Worker to verify release history; upload blocked');
+  const liveBody = await live.text();
+  const markers = [...liveBody.matchAll(/\/\/ ACCOUNT4_DEPLOY_COMMIT_SHA=([a-f0-9]{40})/gi)];
+  const deployed = markers.at(-1)?.[1];
+  if (!deployed) {
+    if (process.env.ACCOUNT4_ALLOW_UNMARKED_BASELINE !== '1')
+      throw new Error('Existing Worker has no verifiable release commit; owner-approved legacy baseline required before first guarded upload');
+  } else {
+    if (deployed.toLowerCase() === approved.toLowerCase()) throw new Error('This exact release is already deployed');
+    const ancestor = spawnSync('git', ['merge-base','--is-ancestor',deployed,approved], {encoding:'utf8',shell:false,timeout:20000});
+    if (ancestor.status !== 0) throw new Error('Account 4 rollback or unrelated history blocked: live deployed commit is not an ancestor of approved source');
+  }
+  form.set('control-room-worker.js', new Blob([source+'\n// ACCOUNT4_DEPLOY_COMMIT_SHA='+approved+'\n'], {type:'application/javascript+module'}), 'control-room-worker.js');
   await api(base, {method:'PUT', body:form});
   const after = await api(base + '/settings');
   if (signature(bindings) !== signature(after.bindings || [])) throw new Error('Upload completed but binding verification differs. Inspect existing Worker before retrying.');
