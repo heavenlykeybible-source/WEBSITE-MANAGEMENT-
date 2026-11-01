@@ -18,7 +18,7 @@ test('import wizard provides app-first GitHub discovery and safe destination sel
 test('device and Drive imports preserve complete ZIP upload flow',()=>{
  assert.match(hub,/Phone or computer/);
  assert.match(hub,/Google Drive/);
- assert.match(hub,/direct connector is not configured/);
+ assert.match(hub,/existing Google Drive file ID field/);
  assert.match(hub,/packageForm\(entry\)/);
  assert.doesNotMatch(hub,/workspace\/tinyfish\/|BROWSER_ENGINE_KEY/);
 });
