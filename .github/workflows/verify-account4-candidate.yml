@@ -1,0 +1,26 @@
+name: Verify Account 4 candidate without deployment
+on:
+  push:
+    branches: [feature/complete-reviewed-import-pipeline]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - name: Run regression suite
+        run: npm test
+      - name: Verify forward-only deployment rules
+        run: node tests/account4-release-lineage.mjs
+      - name: Verify source syntax
+        run: |
+          node --check workspace/imports.js
+          node --check workspace/client.js
+          node --check scripts/deploy-account4-existing.mjs
