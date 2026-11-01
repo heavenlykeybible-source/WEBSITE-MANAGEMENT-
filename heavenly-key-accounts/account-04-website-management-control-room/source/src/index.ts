@@ -3,7 +3,7 @@ import {SITES,planDeployment} from './deployment-engine.ts';
 import {AI_MODEL,PUBLIC_CMS_ORIGIN,validateDocument} from './cms-schema.ts';
 import {saveDraft,publishDraft,restoreDraft} from './cms-storage.ts';
 import {ownerSession,ownerLogin,ownerLogout,setOwnerPassword,generatedPassword} from './owner-auth.ts';
-interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string}
+interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string;GITHUB_TOKEN?:string}
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 const fail=(message:string,status=400)=>json({error:message},status);
 // Harden browser-delivered Control Room pages without changing authentication or cached media.
@@ -92,7 +92,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    if(data.repository!=='heavenlykeybible-source/onlinebible')return fail('Only the approved Account 3 repository is allowed.',403);
    const ref=typeof data.ref==='string'&&/^[A-Za-z0-9._/-]{1,100}$/.test(data.ref)&&!data.ref.includes('..')?data.ref:'main';
    const root='Global Christian Community/implementation/';
-   const token=(env as Env & {GITHUB_TOKEN?:string}).GITHUB_TOKEN;
+   const token=env.GITHUB_TOKEN;
    const headers:Record<string,string>={'Accept':'application/vnd.github+json','User-Agent':'Heavenly-Key-Control-Room','X-GitHub-Api-Version':'2022-11-28'};
    if(token)headers.Authorization='Bearer '+token;
    const base='https://api.github.com/repos/heavenlykeybible-source/onlinebible';
@@ -123,7 +123,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    return json({id,status:'waiting-review',source:'github-tree',commit:commit.sha,fileCount:files.length,totalBytes:total,approvalRequired:true,published:false,materialized:false});
   }
   if(u.pathname==='/api/project-imports'&&request.method==='GET'){
-   const entries:{id:string,name:string,status:string,createdAt:string,submittedAt?:string,totalBytes:number,parts:number}[]=[];
+   const entries:{id:string,name:string,status:string,createdAt:string,submittedAt?:string,totalBytes:number,parts:number,source?:string,fileCount?:number,commit?:string}[]=[];
    let cursor:string|undefined;
    do{
     const page=await env.MEDIA.list({prefix:'imports/',delimiter:'/',limit:1000,...(cursor?{cursor}:{})});
@@ -134,7 +134,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
      if(!item)continue;
      try{
       const m=JSON.parse(await item.text());
-      if(m.owner===actor)entries.push({id,name:m.name,status:m.status,createdAt:m.createdAt,submittedAt:m.submittedAt,totalBytes:m.totalBytes,parts:m.parts,source:m.source,fileCount:m.fileCount,commit:m.commit} as typeof entries[number]);
+      if(m.owner===actor)entries.push({id,name:m.name,status:m.status,createdAt:m.createdAt,submittedAt:m.submittedAt,totalBytes:m.totalBytes,parts:m.parts,source:m.source,fileCount:m.fileCount,commit:m.commit});
      }catch{}
     }
     cursor=page.truncated?page.cursor:undefined;
