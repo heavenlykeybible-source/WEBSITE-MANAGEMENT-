@@ -32,7 +32,7 @@ async function refreshWaitingRoom(){
      button.disabled=true;preview.hidden=false;preview.textContent='Loading source inventory…';
      try{
       const listing=await request('/api/project-imports/'+encodeURIComponent(entry.id)+'/files');
-      preview.textContent='Pinned commit: '+listing.commit+'\\n'+listing.files.map(file=>file.path+' ('+file.size+' bytes)').join('\\n')+(listing.total>listing.files.length?'\\nShowing first '+listing.files.length+' of '+listing.total+' files.':'');
+      preview.textContent='Pinned commit: '+listing.commit+'\n'+listing.files.map(file=>file.path+' ('+file.size+' bytes)').join('\n')+(listing.total>listing.files.length?'\nShowing first '+listing.files.length+' of '+listing.total+' files.':'');
      }catch(e){preview.textContent='Unable to inspect source: '+e.message;}
      finally{button.disabled=false;}
     };
