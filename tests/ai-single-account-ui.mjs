@@ -21,7 +21,7 @@ function h(tag,attrs={},...children){
 const ctx={document,h,Date,Set,Array,Promise,console,OWNER_APPROVAL_SESSION:null,lagosTime:d=>String(d),nav:()=>document.createElement('nav'),show:(...nodes)=>document.body.replaceChildren(...nodes),oops:e=>{throw e},claude:()=>{},enableQuickApprovals:async()=>null,registerOwnerDevice:async()=>false,verifyOwnerDevice:async()=>{},passwordDialog:async()=> 'verified-owner',
  api:async (path,method,body)=>{
   if(path==='passkeys')return {credentials:[]};
-  if(path==='ai/permissions'&&method==='POST'){saves.push(body);return {policy:{expires_at:Date.now()+3600000}};}
+  if(path==='ai/permissions'&&method==='POST'){saves.push(body);return {policy:{connections:body.connections,mode:body.mode,expires_at:Date.now()+3600000}};}
   if(path==='ai/permissions')return initial;
   throw Error('Unexpected API '+path);
  }};
@@ -44,4 +44,6 @@ await save.onclick();
 assert.equal(saves.length,1);
 assert.equal(JSON.stringify(Array.from(saves[0].connections)),JSON.stringify([4]));
 assert.match(document.body.textContent,/No unsaved permission changes/);
+assert.match(document.body.textContent,/Currently authorized: Account 4 · Mode: work/);
+assert.doesNotMatch(document.body.textContent,/Currently authorized: Account 3, Account 4/);
 console.log('PASS Account 4 single-account permission selection and owner-confirmed save');
