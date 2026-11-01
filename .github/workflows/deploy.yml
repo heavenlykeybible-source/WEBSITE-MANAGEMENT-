@@ -101,6 +101,8 @@ jobs:
       - name: Integrate saved interfaces into active Worker
         run: |
           npm run build:cms
+          node tests/account4-subdomain-integration.mjs
+          npm run test:ai-worker-permissions
           node --check control-room-worker.js
           grep -q 'Cloudflare API tokens' control-room-worker.js
           grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
