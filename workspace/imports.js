@@ -88,7 +88,8 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(item.status!=='build-required')fail('Build request is not awaiting dispatch',409);
   if(!/^[a-f0-9]{40}$/.test(item.commit))fail('Invalid pinned source commit',409);
   if(item.repo!=='heavenlykeybible-source/WEBSITE-MANAGEMENT-')fail('This build workflow is only installed in the Website Management repository',409);
-  fail('Review build dispatch is unavailable until the workflow is installed on the default GitHub branch. Production deployment remains disabled.',409);
+  const workflow=await gh(env,await importSource(env,user,item.source),'GET','/actions/workflows/review-application-build.yml').catch(()=>null);
+  if(!workflow||workflow.state!=='active')fail('Review build workflow is not active on the default GitHub branch. Install and enable it before dispatch.',409);
   const g=await importSource(env,user,item.source),tree=await sourceTree(env,g);
   if(g.repo!==item.repo||tree.head.commit!==item.commit)fail('Source changed since build request',409);
   if(!tree.files.some(f=>f.path===(item.directory?item.directory+'/':'')+'package.json'))fail('Application manifest no longer exists',409);
