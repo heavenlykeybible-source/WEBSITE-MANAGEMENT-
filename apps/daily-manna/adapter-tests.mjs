@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {dailyMannaProxy} from './account4-adapter.mjs';
+const origin='https://manna.example.test';
+const env={MANNA_EDITOR_ORIGIN:origin,MANNA_EDITOR_TOKEN:'server-only-secret'};
+const req=(path,method='GET',body)=>new Request('https://controlroom.example.test/api/daily-manna/'+path,{method,headers:{'content-type':'application/json'},body});
+const status=async(request,security,e=env)=>(await dailyMannaProxy(request,e,security)).status;
+assert.equal(await status(req('entries'),{}),403,'No owner access');
+assert.equal(await status(req('approve','POST','{}'),{owner:true}),403,'No CSRF');
+assert.equal(await status(req('publish-check','GET'),{owner:true}),405,'Disallow unexpected methods');
+assert.equal(await status(req('http://evil.example'),{owner:true}),405,'Disallow unknown paths');
+assert.equal(await status(req('entries'),{owner:true},{...env,MANNA_EDITOR_TOKEN:''}),503,'No configured secret');
+assert.equal(await status(req('entries'),{owner:true},{...env,MANNA_EDITOR_ORIGIN:'http://unsafe.test'}),503,'Require HTTPS');
+console.log('PASS Account 4 Daily Manna proxy access and configuration checks');
