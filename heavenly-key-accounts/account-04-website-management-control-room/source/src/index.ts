@@ -154,7 +154,8 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    }
    if(importMatch[2]===undefined&&request.method==='POST'){
     if(manifest.status!=='staging')return fail('Import is already submitted.',409);
-    const chunks=await Promise.all(Array.from({length:manifest.parts},(_,i)=>env.MEDIA.head(prefix+'chunks/'+i)));
+    const chunks:({size:number}|null)[]=[];
+    for(let start=0;start<manifest.parts;start+=16){const batch=await Promise.all(Array.from({length:Math.min(16,manifest.parts-start)},(_,i)=>env.MEDIA.head(prefix+'chunks/'+(start+i))));chunks.push(...batch);}
     const missing=chunks.flatMap((item,i)=>item?[]:[i]);
     if(missing.length)return json({error:'Upload incomplete',missing:missing.slice(0,100),missingCount:missing.length},409);
     for(let i=0;i<chunks.length;i++){
@@ -172,7 +173,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    if(importMatch[2]===undefined&&request.method==='GET'){
     const chunks=[];
     for(let start=0;start<manifest.parts;start+=16){chunks.push(...await Promise.all(Array.from({length:Math.min(16,manifest.parts-start)},(_,i)=>env.MEDIA.head(prefix+'chunks/'+(start+i)))));}
-    return json({id,name:manifest.name,totalBytes:manifest.totalBytes,received:chunks.filter(Boolean).length,receivedIndices:chunks.flatMap((x,i)=>x?[i]:[]),parts:manifest.parts,complete:chunks.every(Boolean),published:false});
+    return json({id,name:manifest.name,status:manifest.status,totalBytes:manifest.totalBytes,received:chunks.filter(Boolean).length,receivedIndices:chunks.flatMap((x,i)=>x?[i]:[]),parts:manifest.parts,complete:chunks.every(Boolean),published:false,extracted:false,approvalRequired:manifest.status==='waiting-review'});
    }
   }
   if(u.pathname==='/api/media'&&request.method==='POST'){
