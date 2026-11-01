@@ -8,9 +8,18 @@ const temp=new URL('./browser-test-worker.mjs',import.meta.url);fs.writeFileSync
 try{
 const w=await import(temp.href),db=new DatabaseSync(':memory:');db.exec(fs.readFileSync('schema.sql','utf8'));db.exec("INSERT INTO users(id,username,role,status,kind)VALUES(1,'owner','owner','active','staff'),(2,'other','admin','active','staff');");
 const DB={prepare(sql){const q=db.prepare(sql);let v=[];return {bind(...a){v=a;return this},async first(){return q.get(...v)||null},async all(){return {results:q.all(...v)}},async run(){const r=q.run(...v);return {meta:{changes:r.changes,last_row_id:r.lastInsertRowid}}}}}};
-let calls=0;const env={DB,VAULT_KEY:'fixture-browser-vault-key-long',BROWSER_AGENT:{async fetch(url,init){calls++;const payload=JSON.parse(init.body);assert.ok(!JSON.stringify(payload).includes('fixture-password'));return Response.json({session:'private-session',snapshot:'snapshot',url:'https://example.com/',elements:[{id:0,tag:'input',label:'Name'}],screenshot:'owner-only'});}}},actor={agentId:7,chatUserId:1,a:{can_read:true}},user={id:1,username:'owner',role:'owner',kind:'staff'};
-await assert.rejects(w.browserTool({...env,BROWSER_AGENT:null},actor,'browser_request_task',{goal:'Edit the website',hosts:['example.com']}),e=>e.status===503&&/runtime is not connected/.test(e.message));
+let calls=0,healthChecks=0,healthy=true;const env={DB,VAULT_KEY:'fixture-browser-vault-key-long',BROWSER_AGENT:{async fetch(url,init){if(url.endsWith('/health')){healthChecks++;return Response.json({ready:healthy});}calls++;const payload=JSON.parse(init.body);assert.ok(!JSON.stringify(payload).includes('fixture-password'));return Response.json({session:'private-session',snapshot:'snapshot',url:'https://example.com/',elements:[{id:0,tag:'input',label:'Name'}],screenshot:'owner-only'});}}},actor={agentId:7,chatUserId:1,a:{can_read:true}},user={id:1,username:'owner',role:'owner',kind:'staff'};
+await assert.rejects(w.browserTool({...env,BROWSER_AGENT:null},actor,'browser_request_task',{goal:'Edit the website',hosts:['example.com']}),e=>e.status===503&&/runtime is not ready/.test(e.message));
 assert.equal(db.prepare("SELECT count(*) n FROM settings WHERE key LIKE 'workspace:browser:%'").get().n,0,'Unavailable browser runtime must not queue phantom tasks');
+healthy=false;
+const unhealthyStatus=await (await w.browserWorkspaceRoutes(new Request('https://room'),env,user,'browser','GET')).json();
+assert.equal(unhealthyStatus.available,false,'A binding alone must not be marked ready');
+await assert.rejects(w.browserTool(env,actor,'browser_request_task',{goal:'Unavailable worker',hosts:['example.com']}),e=>e.status===503);
+assert.equal(db.prepare("SELECT count(*) n FROM settings WHERE key LIKE 'workspace:browser:%'").get().n,0);
+healthy=true;
+const healthyStatus=await (await w.browserWorkspaceRoutes(new Request('https://room'),env,user,'browser','GET')).json();
+assert.equal(healthyStatus.available,true,'Live private service must reply ready');
+assert.ok(healthChecks>=3,'Private health endpoint must be consulted');
 const task=(await w.browserTool(env,actor,'browser_request_task',{goal:'Fill the public form',hosts:['example.com']})).task;assert.equal(task.status,'awaiting-owner');assert.equal(calls,0);
 await assert.rejects(w.browserTool(env,actor,'browser_action',{id:task.id,type:'click',element:0}),e=>e.status===409);
 await assert.rejects(w.browserTool(env,{...actor,agentId:8},'browser_task_status',{id:task.id}),e=>e.status===403);
