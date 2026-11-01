@@ -28,7 +28,9 @@ async function verifyNpmBuildManifest(env,g,files,prefix){
  if(!entry||entry.mode==='120000'||entry.size>262144)fail('Application package.json is missing or oversized',409);
  const blob=await gh(env,g,'GET','/git/blobs/'+entry.sha);
  if(blob.encoding!=='base64')fail('GitHub package manifest encoding is unsupported',502);
- const bytes=Uint8Array.from(atob(String(blob.content||'').replace(/\s/g,'')),c=>c.charCodeAt(0));
+ const raw=String(blob.content||'').replace(/\s/g,'');
+ if(raw.length>350000||!/^[A-Za-z0-9+/]*={0,2}$/.test(raw))fail('Invalid or oversized GitHub manifest encoding',409);
+ const bytes=Uint8Array.from(atob(raw),c=>c.charCodeAt(0));
  if(bytes.length>262144)fail('Application package manifest exceeds 256 KB',413);
  const header=new TextEncoder().encode('blob '+bytes.length+'\0'),input=new Uint8Array(header.length+bytes.length);
  input.set(header);input.set(bytes,header.length);
