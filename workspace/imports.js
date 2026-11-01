@@ -103,20 +103,20 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const sourceId=Number(u.searchParams.get('source'));
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Choose a connected repository',400);
   const g=await importSource(env,user,sourceId),tree=await sourceTree(env,g);
-  const files=tree.files.filter(f=>f.mode!=='120000'&&f.size<=200000&&/\\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(f.path)&&!/(^|\\/)(?:\\.env|\\.git|node_modules|vendor)(?:\\/|$)/.test(f.path)).slice(0,300).map(f=>({path:f.path,size:f.size,sha:f.sha}));
+  const files=tree.files.filter(f=>f.mode!=='120000'&&f.size<=200000&&/\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(f.path)&&!/(^|\/)(?:\.env|\.git|node_modules|vendor)(?:\/|$)/.test(f.path)).slice(0,300).map(f=>({path:f.path,size:f.size,sha:f.sha}));
   return json({repo:g.repo,branch:g.branch,commit:tree.head.commit,files,truncated:tree.files.length>files.length,readOnly:true});
  }
  if(sub==='workspace/github/file'&&m==='GET'){
   const sourceId=Number(u.searchParams.get('source')),path=String(u.searchParams.get('path')||''),commit=String(u.searchParams.get('commit')||'');
   if(!Number.isSafeInteger(sourceId)||sourceId<1||!/^[a-f0-9]{40}$/.test(commit))fail('Select a pinned repository revision',400);
-  if(!path||path.length>240||path.startsWith('/')||path.split('/').some(v=>!v||v==='.'||v==='..'||v==='.env'||v==='.git'||v==='node_modules'||v==='vendor')||! /\\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(path))fail('Select a supported ordinary source file',400);
+  if(!path||path.length>240||path.startsWith('/')||path.split('/').some(v=>!v||v==='.'||v==='..'||v==='.env'||v==='.git'||v==='node_modules'||v==='vendor')||! /\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(path))fail('Select a supported ordinary source file',400);
   const g=await importSource(env,user,sourceId),tree=await sourceTree(env,g);
   if(tree.head.commit!==commit)fail('GitHub source changed. Refresh the file list.',409);
   const file=tree.files.find(f=>f.path===path&&f.mode!=='120000'&&f.size<=200000);if(!file)fail('File is unavailable or too large for the code inspector',404);
   const original=(g.dir?g.dir+'/':'')+path;
   const data=await gh(env,g,'GET','/contents/'+ghEnc(original)+'?ref='+encodeURIComponent(commit));
   if(data.type!=='file'||data.sha!==file.sha||data.encoding!=='base64'||!data.content)fail('Pinned GitHub file content cannot be verified',409);
-  const raw=Uint8Array.from(atob(String(data.content).replace(/\\s/g,'')),c=>c.charCodeAt(0));
+  const raw=Uint8Array.from(atob(String(data.content).replace(/\s/g,'')),c=>c.charCodeAt(0));
   if(raw.byteLength>200000)fail('File exceeds code inspector limit',413);
   let content;try{content=new TextDecoder('utf-8',{fatal:true}).decode(raw);}catch{fail('Only UTF-8 source files are supported',400);}
   return json({repo:g.repo,commit,path,sha:file.sha,content,readOnly:true});
