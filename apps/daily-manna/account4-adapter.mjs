@@ -13,7 +13,7 @@ export async function dailyMannaProxy(request,env,security){
  const pictureDelete=method==='DELETE'&&/^picture\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
  const picturePreview=method==='GET'&&/^picture-manage\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
  const pictureLink=method==='POST'&&/^picture-link\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
- const permitted=pictureUpload||pictureDelete||picturePreview||pictureLink||(method==='GET'&&['entries','deliveries','readiness','studio-status'].includes(suffix))||
+ const permitted=pictureUpload||pictureDelete||picturePreview||pictureLink||(method==='GET'&&['entries','deliveries','readiness','studio-status','picture-config'].includes(suffix))||
   (method==='POST'&&['entries','approve','publish-check'].includes(suffix))||
   (method==='PUT'&&/^entries\/[a-f0-9-]{36}$/.test(suffix));
  if(!permitted)return reply({error:'Operation not permitted'},405);
@@ -24,6 +24,7 @@ export async function dailyMannaProxy(request,env,security){
  const target=new URL('/api/'+suffix,base);
  if(method==='GET'&&suffix==='entries'){const month=url.searchParams.get('month');if(month)target.searchParams.set('month',month)}
  if(method==='GET'&&suffix==='studio-status'){const id=url.searchParams.get('delivery_id');if(id)target.searchParams.set('delivery_id',id)}
+ if(method==='GET'&&suffix==='picture-config'){const scope=url.searchParams.get('scope');if(scope)target.searchParams.set('scope',scope)}
  let body;
  if(pictureUpload){if(Number(request.headers.get('content-length')||0)>2000000)return reply({error:'Picture too large'},413);body=await request.arrayBuffer();if(body.byteLength>2000000)return reply({error:'Picture too large'},413)}
  else{body=mutates&&method!=='DELETE'?await request.text():undefined;if(body&&new TextEncoder().encode(body).length>50000)return reply({error:'Request too large'},413)}
