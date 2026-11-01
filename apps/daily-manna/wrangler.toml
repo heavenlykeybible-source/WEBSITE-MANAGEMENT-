@@ -25,5 +25,10 @@ bucket_name = "strength-for-today-manna-images-staging"
 # unverified content to production before the source material is cleared.
 [vars]
 ALLOW_UNREVIEWED_PUBLICATION = "true"
-# Set FACEBOOK_FIRST_POST_DATE to a verified launch date only after Page authorization.
-# Leaving it absent prevents any social posts, including past backlog.
+# Studio publishing bridge: set STUDIO_BRIDGE_SECRET using `wrangler secret put`.
+# Do not configure the shared secret or launch date until the Studio ingress
+# migration and route are deployed on the existing Heavenly Key platform.
+# STUDIO_BRIDGE_ORIGIN must be the HTTPS origin of the existing Heavenly Key Core Worker.
+# MANNA_PUBLIC_ORIGIN must be the verified public Daily Manna domain.
+# STUDIO_FIRST_POST_DATE (YYYY-MM-DD) is an explicit owner launch gate.
+# All these are intentionally left unset: no social posts are sent before verification.
