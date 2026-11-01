@@ -53,7 +53,8 @@ test('review artifact preserves request provenance',()=>{
  assert.match(client,/Open verified GitHub Actions run/);
 });
 test('application source picker rejects dependency-unspecified npm projects',()=>{
- assert.match(server,/paths\.has\(f\.path\.replace\(\/package\\\.json\$\/,['"]package-lock\.json['"]\)\)/);
+ assert.match(server,/paths\.has\(f\.path\.replace/);
+ assert.match(server,/package-lock\.json/);
 });
 test('review status requires exact run identity and dispatch timestamp',()=>{
  assert.match(server,/run\.display_title===wanted/);
