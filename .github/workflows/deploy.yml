@@ -28,7 +28,7 @@ concurrency:
 jobs:
   test-and-deploy:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Activate Account 4 one-shot')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: account-4
     steps:
