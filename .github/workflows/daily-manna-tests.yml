@@ -36,3 +36,6 @@ jobs:
 
       - name: Validate picture upload and retrieval
         run: node picture.test.mjs
+
+      - name: Validate public devotional archive privacy and pagination
+        run: node archive.test.mjs
