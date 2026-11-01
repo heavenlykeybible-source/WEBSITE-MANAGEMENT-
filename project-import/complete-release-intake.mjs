@@ -13,7 +13,7 @@ export async function queueCompleteRelease({
     throw Error('Supported source type and project kind required');
   if (!source.reference || typeof source.reference!=='string' || source.reference.length>2048)
     throw Error('Immutable source reference required');
-  if (source.type==='github' && !/^[0-9a-f]{40}$/.test(source.revision||''))
+  if (source.type==='github' && (!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(?:\/[a-zA-Z0-9_./-]+)?$/.test(source.reference) || source.reference.split('/').slice(2).some(p=>p==='..'||p==='.') || !/^[0-9a-f]{40}$/.test(source.revision||'')))
     throw Error('GitHub source must pin an exact commit');
   if (!target || typeof target.accountId!=='string' || !/^[0-9a-f]{32}$/.test(target.accountId))
     throw Error('Exact Cloudflare account ID required');
@@ -33,7 +33,7 @@ export async function queueCompleteRelease({
     source:{type:source.type,kind:source.kind,reference:source.reference,revision:source.revision||null},
     target:destination,buildRequired:true,buildVerified:false,previewVerified:false,
     requiresOwnerApproval:true,deploymentAuthorized:false,
-    releasePolicy:{preserveBindings:true,preventRollback:true,ownerApprovalRequired:true}
+    releasePolicy:{preserveBindings:true,preserveAssets:true,preventRollback:true,ownerApprovalRequired:true,verifyTargetAccount:true,verifyBuildArtifacts:true,verifyLiveHealth:true,rollbackOnFailure:true}
   });
   if (!proposal || typeof proposal.id!=='string'||!proposal.id.trim())
     throw Error('Waiting Room did not confirm release');
