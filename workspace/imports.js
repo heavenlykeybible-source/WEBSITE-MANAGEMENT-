@@ -93,6 +93,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(!workflow||workflow.state!=='active')fail('Review build workflow is not active on the default GitHub branch. Install and enable it before dispatch.',409);
   if(g.repo!==item.repo||tree.head.commit!==item.commit)fail('Source changed since build request',409);
   if(!tree.files.some(f=>f.path===(item.directory&&item.directory!=='.'?item.directory+'/':'')+'package.json'))fail('Application manifest no longer exists',409);
+  if(!tree.files.some(f=>f.path===(item.directory&&item.directory!=='.'?item.directory+'/':'')+'package-lock.json'))fail('Application lockfile no longer exists',409);
   const directory=item.directory||'.';
   if(!/^(?:\.|[a-zA-Z0-9_.-]+(?:\/[a-zA-Z0-9_.-]+)*)$/.test(directory)||directory.split('/').includes('..'))fail('Invalid application directory',400);
   await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{source_sha:item.commit,directory}});
