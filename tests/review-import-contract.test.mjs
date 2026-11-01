@@ -20,7 +20,7 @@ test('review build input contract matches GitHub Actions',()=>{
   assert.ok(server.includes(key+':')||(key==='directory'&&server.includes('source_sha:item.commit,directory')),'dispatch passes '+key);
  }
  assert.match(workflow,/run-name: Review \$\{\{ inputs\.request_id \}\}/);
- assert.match(server,/const wanted='Review '\+b\.id/);
+ assert.match(server,/const wanted='Review '\+id/);
  assert.match(workflow,/name: review-build-\$\{\{ inputs\.request_id \}\}/);
  assert.match(server,/a\.name==='review-build-'\+b\.id/);
 });
