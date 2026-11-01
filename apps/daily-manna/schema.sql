@@ -19,3 +19,13 @@ CREATE TABLE IF NOT EXISTS manna_deliveries (
  UNIQUE(entry_id,destination)
 );
 CREATE INDEX IF NOT EXISTS idx_manna_status_date ON manna_entries(status,publish_date);
+
+-- Editorial audit trail. Store no bearer tokens or subscriber secrets here.
+CREATE TABLE IF NOT EXISTS manna_audit (
+ id TEXT PRIMARY KEY,
+ action TEXT NOT NULL CHECK(action IN ('created','edited','approved','published')),
+ entry_id TEXT NOT NULL,
+ detail TEXT NOT NULL DEFAULT '',
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_manna_audit_entry ON manna_audit(entry_id,created_at);
