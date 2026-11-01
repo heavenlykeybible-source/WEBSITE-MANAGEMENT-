@@ -32,7 +32,7 @@ assert.ok(html.includes('id="picture-preview"'));
 assert.ok(html.includes('id="picture-remove"'));
 assert.ok(html.includes('id="operations-status"'));
 assert.ok(html.includes('id="operations-refresh"'));
-assert.match(worker,/FACEBOOK_FIRST_POST_DATE/,'Social outbox requires an explicit first-post date');
+assert.match(worker,/STUDIO_FIRST_POST_DATE/,'Studio outbox requires an explicit first-post date');
 assert.match(worker,/release_mode=CASE/,'Automatic release must record whether human-reviewed');
 assert.ok(html.includes('I have read and reviewed'),'Single-day approval must require explicit review confirmation');
 assert.match(html,/expected_revision:activeRevision/);
