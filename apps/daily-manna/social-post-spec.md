@@ -5,7 +5,7 @@ Use a reusable ultra-wide, shallow topic banner at the beginning of every social
 
 ## Image precedence
 1. A dated, owner-approved override image for that devotional.
-2. Otherwise the approved default Daily Manna topic-banner template, populated with that day's title.
+2. Otherwise the owner's uploaded default Daily Manna image, unchanged.
 3. If image rendering or upload fails, do not falsely mark the social delivery as sent; retry or record the failure.
 
 ## Post structure
@@ -19,3 +19,6 @@ Record whether an entry was manually approved or automatically released. Retain 
 
 ## Implementation status
 Specification only. The image renderer, social media authentication, delivery sender, platform-specific formatting, and live end-to-end tests are not yet implemented.
+
+## Owner image upload controls
+Provide an image-upload field in the Account 4 posting flow: upload or replace default picture, upload or replace selected-day picture, preview, remove day override, and show the image selected for the post. Preserve the original uploaded picture without AI editing. Store images in a private/managed R2 bucket and publish only validated media URLs; allow PNG, JPEG or WebP and enforce file-size limits. Upload UI is not equivalent to completed R2 storage and delivery integration.
