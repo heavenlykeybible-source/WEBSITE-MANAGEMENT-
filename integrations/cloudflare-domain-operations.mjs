@@ -5,10 +5,10 @@
  */
 const ROOT="https://api.cloudflare.com/client/v4";
 const id=v=>{if(!/^[a-f0-9]{32}$/i.test(String(v)))throw Error("Invalid Cloudflare ID");return v;};
-const host=(v,z)=>{v=String(v).trim().toLowerCase();z=String(z).trim().toLowerCase();if(!/^[a-z0-9.-]+$/.test(v)||!v.endsWith("."+z)||v===z||v.includes(".."))throw Error("Hostname outside selected zone");return v;};
+const host=(v,z)=>{v=String(v).trim().toLowerCase();z=String(z).trim().toLowerCase();if(!/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(v)||!v.endsWith("."+z)||v===z||v.length>253)throw Error("Hostname outside selected zone");return v;};
 const worker=v=>{if(!/^[a-z0-9][a-z0-9-]{0,62}$/.test(String(v)))throw Error("Invalid Worker");return v;};
 async function api(token,path,method="GET",data){if(!token)throw Error("Vault token missing");const r=await fetch(ROOT+path,{method,headers:{Authorization:"Bearer "+token,...(data?{"Content-Type":"application/json"}:{})},body:data?JSON.stringify(data):undefined});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw Error("Cloudflare operation failed: "+(j.errors||[]).map(x=>x.message).join("; "));return j.result;}
-function authorize(grant,op,target){if(!grant||grant.status!=="approved"||grant.operation!==op||grant.used||grant.expiresAt&&Date.parse(grant.expiresAt)<Date.now())throw Error("Active owner approval required");for(const [k,v] of Object.entries(target))if(grant[k]!==v)throw Error("Approval scope mismatch: "+k);}
+function authorize(grant,op,target){if(!grant||grant.status!=="approved"||grant.operation!==op||grant.used||grant.expiresAt&&(!Number.isFinite(Date.parse(grant.expiresAt))||Date.parse(grant.expiresAt)<=Date.now()))throw Error("Active owner approval required");for(const [k,v] of Object.entries(target))if(grant[k]!==v)throw Error("Approval scope mismatch: "+k);}
 export async function createDnsRecord({token,zoneId,zoneName,name,type,content,ttl=1,proxied=false,grant}) {
  id(zoneId);name=host(name,zoneName);type=String(type).toUpperCase();
  if(!["A","AAAA","CNAME","TXT"].includes(type))throw Error("Unsupported DNS type");
