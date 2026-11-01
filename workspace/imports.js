@@ -86,6 +86,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const tree=await sourceTree(env,g);
   const prefix=item.directory?item.directory+'/':'';
   const valid=tree.head.commit===item.commit&&tree.files.some(f=>f.path===prefix+'package.json');
+  if(!valid)fail('Pinned application source has changed or package.json is missing',409);
   return json({id,sourceVerified:valid,commit:item.commit,status:item.status,buildVerified:false,deploymentAuthorized:false});
  }
  if(sub==='workspace/application-build/cancel'&&m==='POST'){
