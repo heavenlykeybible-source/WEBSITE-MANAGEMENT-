@@ -28,6 +28,7 @@ async function nativeImports(){try{
  var quick=h('button',{onclick:async function(){
  if(busy||!source.value||project.value===''||!dest.value){status.textContent='Select source, project and destination.';return;}
  var c=listing.candidates[+project.value];
+ if(c.kind==='application'){status.textContent='Register an application build before preview or deployment.';return;}
  if(c.kind==='worker'&&!worker.value){status.textContent='Choose destination Worker.';return;}
  busy=true;quick.disabled=true;status.textContent='Importing verified GitHub project...';
  try{
