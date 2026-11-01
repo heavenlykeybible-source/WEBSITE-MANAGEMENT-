@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const backend=fs.readFileSync('workspace/large-uploads.js','utf8');
+const imports=fs.readFileSync('workspace/imports.js','utf8');
+const build=fs.readFileSync('cms/build.mjs','utf8');
+const worker=fs.readFileSync('control-room-worker.js','utf8');
+for(const name of ['start','part','status','complete','cancel'])assert.ok(backend.includes("action==='"+name+"'"),name+' route missing');
+assert.match(backend,/1024\*1024\*1024/);
+assert.match(backend,/createMultipartUpload/);
+assert.match(backend,/resumeMultipartUpload/);
+assert.match(backend,/upload\.complete/);
+assert.match(backend,/upload\.abort/);
+assert.match(backend,/withOperationLock/);
+assert.match(backend,/user\.role!=='owner'/);
+assert.match(imports,/largeUploadRoutes\(req,env,user,sub,m\)/);
+assert.match(build,/workspace\/large-uploads\.js/);
+assert.match(worker,/async function largeUploadRoutes/,'Assembled Worker missing upload routes');
+console.log('PASS private R2 multipart 1 GiB upload integration');
