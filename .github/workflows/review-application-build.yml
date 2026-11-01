@@ -1,5 +1,5 @@
 name: Review-only application build
-run-name: Review source ${{ inputs.source_sha }}
+run-name: Review ${{ inputs.source_sha }} / ${{ inputs.directory }}
 on:
   workflow_dispatch:
     inputs:
