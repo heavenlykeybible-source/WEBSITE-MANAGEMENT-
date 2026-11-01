@@ -98,9 +98,10 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    const base='https://api.github.com/repos/heavenlykeybible-source/onlinebible';
    const commitResponse=await fetch(base+'/commits/'+encodeURIComponent(ref),{headers});
    if(!commitResponse.ok)return fail('GitHub connection failed ('+commitResponse.status+'). Configure GITHUB_TOKEN if the repository is private.',502);
-   const commit=await commitResponse.json() as {sha?:string};
-   if(!commit.sha||!/^[0-9a-f]{40}$/.test(commit.sha))return fail('GitHub returned an invalid commit.',502);
-   const treeResponse=await fetch(base+'/git/trees/'+commit.sha+'?recursive=1',{headers});
+   const commit=await commitResponse.json() as {sha?:string;commit?:{tree?:{sha?:string}}};
+   const treeSha=commit.commit?.tree?.sha;
+   if(!commit.sha||!/^[0-9a-f]{40}$/.test(commit.sha)||!treeSha||!/^[0-9a-f]{40}$/.test(treeSha))return fail('GitHub returned an invalid commit or tree.',502);
+   const treeResponse=await fetch(base+'/git/trees/'+treeSha+'?recursive=1',{headers});
    if(!treeResponse.ok)return fail('Could not read Account 3 repository tree ('+treeResponse.status+').',502);
    const tree=await treeResponse.json() as {truncated?:boolean;tree?:{path:string;type:string;sha:string;size?:number}[]};
    if(tree.truncated||!Array.isArray(tree.tree))return fail('GitHub returned a truncated source tree; import cancelled.',422);
