@@ -28,6 +28,10 @@ test('review run cannot silently deploy production',()=>{
  assert.match(server,/Review workflow must first be active on the default GitHub branch/);
  assert.match(server,/package-lock\.json/);
 });
+test('nested repository directory is preserved in pinned build',()=>{
+ assert.match(server,/root:g\.dir\|\|''/);
+ assert.match(server,/\[item\.root\|\|'',item\.directory\|\|''\]\.filter\(Boolean\)\.join\('\/'\)/);
+});
 test('application controls require reviewed build',()=>{
  assert.match(client,/Start review build/);
  assert.match(client,/Check review build status/);
