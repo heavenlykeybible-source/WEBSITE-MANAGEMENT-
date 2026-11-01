@@ -111,6 +111,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:application:'+id).first();
   if(!row)fail('Build request not found',404);
   const b=JSON.parse(row.value_json);
+  if(b.createdBy!==user.id)fail('Build request owner mismatch',403);
   return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,ownerApprovalRequired:true,deploymentAuthorized:false});
  }
  if(sub==='workspace/application-builds'&&m==='GET'){
