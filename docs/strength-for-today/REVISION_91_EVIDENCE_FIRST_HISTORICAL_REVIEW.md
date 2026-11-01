@@ -1,0 +1,9 @@
+# Revision 91 — Evidence-first historical verification
+
+Checked the historical core of **4 distinct exact narrative texts** (William Carey, George and Mary Müller, William Wilberforce, Florence Nightingale) against named institutional sources, covering **20 repeated day occurrences**. Other narrative variations about the same people remain pending; devotional interpretations are not factual claims. Sources: https://www.bu.edu/missiology/missionary-biography/c-d/carey-william-1761-1834/ ; https://bmsworldmission.org/tributes/wcarey ; https://museums.bristol.gov.uk/narratives.php?irn=16125 ; https://museums.bristol.gov.uk/narratives.php?irn=2651 ; https://www.parliament.uk/about/living-heritage/transformingsociety/tradeindustry/slavetrade/overview/the-abolitionists/ ; https://www.parliament.uk/about/living-heritage/transformingsociety/tradeindustry/slavetrade/overview/parliament-abolishes-the-slave-trade/ ; https://www.nam.ac.uk/explore/florence-nightingale-lady-lamp .
+
+Full 1,826-day audit: 233 distinct historical narrative texts; 1,709 daily occurrences use a narrative appearing more than once; 1,806 day occurrences remain without individual historical source checking. No historical text was fabricated or deleted. No independent KJV verification or canonical merge. **Publication ready: NO**. Canonical Revision 50 unchanged.
+
+Full working archive in ChatGPT Library: `strength_for_today_revision_91_evidence_first_historical_review.zip`; SHA256 `4f6136e474eee5590ec925be3a87f76b3ef9a1720bba3d69b2f870dcb9a3dccf`.
+
+Next: fact-check additional distinct historical narratives, replace repetitious stories, merge vetted editorial fields into canonical Rev50 preserving its KJV excerpts, then verse-level verification and final review.
