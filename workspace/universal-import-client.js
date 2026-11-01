@@ -10,7 +10,7 @@ async function universalImportHub(){
   function option(select,value,label){select.appendChild(h('option',{value:String(value)},label));}
   function empty(select,label){select.innerHTML='';option(select,'',label);}
   function note(message){status.textContent=message;}
-  function setBusy(value){loading=value;refresh.disabled=value;connect.disabled=value;scanButton.disabled=value||!listing||project.value==='';stageButton.disabled=value||!scan;buildButton.disabled=value||!listing||project.value===''||listing.candidates[+project.value]?.kind!=='application';}
+  function setBusy(value){loading=value;refresh.disabled=value;connect.disabled=value;scanButton.disabled=value||!listing||project.value===''||listing.candidates[+project.value]?.kind==='application';stageButton.disabled=value||!scan;buildButton.disabled=value||!listing||project.value===''||listing.candidates[+project.value]?.kind!=='application';}
   function category(repo){
    var name=String(repo||'').toLowerCase(),which=app.value;
    if(which==='bible')return /bible|scripture|daily.?manna|devotion/.test(name);
@@ -51,7 +51,7 @@ async function universalImportHub(){
    if(!identity.value)throw Error('Choose an authorized GitHub connection, or connect an identity first.');
    var selected=repoList.find(function(r){return r.repo===repos.value;});if(!selected)throw Error('Select a discovered repository.');
    var result=await api('workspace/github/reuse','POST',{source:+identity.value,repo:selected.repo,label:selected.repo+' ('+selected.branch+')',branch:selected.branch});
-   connections.push(result);catalog.sources.push(result);sourceId=String(result.id);selected.connected=true;displayRepos();repos.value=selected.repo;
+   connections.push(result);sourceId=String(result.id);selected.connected=true;displayRepos();repos.value=selected.repo;
    note('Repository verified and linked using your existing authorized GitHub identity. No deployment has occurred.');return sourceId;
   }
   async function openRepo(){
