@@ -131,6 +131,11 @@ jobs:
         run: npm run test:cms-dom
       - name: Verify CMS build succeeds
         run: npm run build:cms
+      - name: Check repeat build output
+        run: |
+          cp control-room-worker.js /tmp/account4-build-copy.js
+          npm run build:cms
+          cmp /tmp/account4-build-copy.js control-room-worker.js
       - name: Validate generated CMS Worker syntax and Cloudflare bundle
         run: |
           node --check control-room-worker.js
