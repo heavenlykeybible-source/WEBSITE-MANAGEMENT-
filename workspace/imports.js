@@ -134,6 +134,30 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const result=await coreProposeGithub(env,actor,{site:g.id,message:'Review edit to '+path,note:'Owner-reviewed edit from native GitHub source inspector; pinned to '+commit,files:[{path,content,base_sha:baseSha}]});
   return json({proposal_id:result.proposal_id,status:'waiting',requiresOwnerApproval:true,sourceCommit:commit,sourceFile:path});
  }
+ if(sub==='workspace/github/central-connect'&&m==='POST'){
+  const b=await body(req),label=String(b?.label||'').trim(),token=String(b?.token||'').trim();
+  if(!label||label.length>90||/[\x00-\x1f]/.test(label))fail('Choose a GitHub identity label',400);
+  if(token.length<20||token.length>512||/[\s\x00-\x1f]/.test(token))fail('Provide a valid GitHub API token in the private owner form',400);
+  const existing=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND label=?').bind(label).first();
+  if(existing)fail('This connection label already exists; use a different name to reauthorize.',409);
+  const headers={authorization:'Bearer '+token,accept:'application/vnd.github+json','x-github-api-version':'2022-11-28','user-agent':'heavenly-key-control-room'};
+  const init=()=>({method:'GET',redirect:'manual',signal:AbortSignal.timeout(15000),headers});
+  let response=await fetch('https://api.github.com/user/repos?per_page=1&affiliation=owner%2Ccollaborator%2Corganization_member',init()),mode='user';
+  if([403,404].includes(response.status)){response=await fetch('https://api.github.com/installation/repositories?per_page=1',init());mode='installation';}
+  if(!response.ok)fail('GitHub authorization failed or lacks repository listing permission',403);
+  const data=await response.json(),repos=mode==='installation'?data?.repositories:data;
+  if(!Array.isArray(repos)||!repos.length)fail('GitHub connection has no authorized repositories. Grant repository access on GitHub first.',409);
+  const first=repos[0];
+  if(typeof first?.full_name!=='string'||! /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(first.full_name))fail('GitHub returned an invalid repository identity',502);
+  const branch=String(first.default_branch||'main');
+  if(!/^[a-zA-Z0-9_./-]{1,120}$/.test(branch)||branch.split('/').some(p=>p==='.'||p==='..'))fail('GitHub returned an invalid default branch',502);
+  const already=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND repo=? AND branch=? AND dir=?').bind(first.full_name,branch,'').first();
+  if(already)fail('This repository is already registered. Use that authorized identity or choose another account.',409);
+  const secret=await seal(env,token);
+  const created=await env.DB.prepare('INSERT INTO github_sites(label,repo,branch,dir,secret_enc,owner_id) VALUES(?,?,?,?,?,NULL)').bind(label,first.full_name,branch,'',secret).run();
+  await audit(env,user.username,'github-central-identity-connected','Authorized GitHub identity '+label+' with repository access; no deployment');
+  return json({id:created.meta.last_row_id,label,repo:first.full_name,branch,connectionMode:mode,authenticated:true,scope:'All repositories explicitly authorized in GitHub',deploymentAuthorized:false});
+ }
  if(sub==='workspace/github/discover'&&m==='GET'){
   const sourceId=Number(u.searchParams.get('source')),page=Number(u.searchParams.get('page')||1);
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Choose an authorized GitHub connection',400);
