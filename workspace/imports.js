@@ -91,6 +91,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    if(item.repo!=='heavenlykeybible-source/WEBSITE-MANAGEMENT-')fail('Review-only build is not installed for this repository',409);
    const g=await importSource(env,user,item.source);
    if(g.repo!==item.repo)fail('Repository connection has changed',409);
+   if((g.dir||'')!==(item.root||''))fail('Connected repository root has changed',409);
    const workflow=await gh(env,g,'GET','/actions/workflows/review-application-build.yml').catch(()=>null);
    if(!workflow||workflow.state!=='active')fail('Review workflow must first be active on the default GitHub branch',409);
    const tree=await sourceTree(env,g);
