@@ -35,10 +35,10 @@ async function uploadPicture(req,env,date){
  await audit(env,'image_uploaded',date||'default','Owner uploaded post picture');
  return response({ok:true,date:date||'default',picture_url:'/api/picture/'+(date||'default')});
 }
-async function picture(req,env,slug){
+async function picture(req,env,slug,ownerPreview=false){
  if(!env.MANNA_IMAGES)return new Response(null,{status:404});
  const date=mediaDate(slug);if(date===null)return new Response(null,{status:404});
- if(date&&date>todayLagos())return new Response(null,{status:404});
+ if(date&&date>todayLagos()&&!ownerPreview)return new Response(null,{status:404});
  let row=await env.DB.prepare('SELECT object_key,content_type FROM manna_post_images WHERE image_date=?').bind(date).first();
  if(!row&&date)row=await env.DB.prepare("SELECT object_key,content_type FROM manna_post_images WHERE image_date=''").first();
  if(!row)return new Response(null,{status:404});
@@ -46,6 +46,16 @@ async function picture(req,env,slug){
  return new Response(object.body,{headers:{'content-type':row.content_type,'cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'"}});
 }
 
+async function removePicture(env,date){
+ if(!env.MANNA_IMAGES)return response({error:'Picture storage not configured'},503);
+ const prior=await env.DB.prepare('SELECT object_key FROM manna_post_images WHERE image_date=?').bind(date).first();
+ if(!prior)return response({error:'No picture assigned for that date'},404);
+ const deleted=await env.DB.prepare('DELETE FROM manna_post_images WHERE image_date=? AND object_key=?').bind(date,prior.object_key).run();
+ if(deleted.meta?.changes!==1)return response({error:'Picture changed; refresh and retry'},409);
+ await env.MANNA_IMAGES.delete(prior.object_key).catch(()=>{});
+ await audit(env,'image_removed',date||'default','Owner removed post picture');
+ return response({ok:true,removed:date||'default'});
+}
 async function audit(env,action,entry,detail){await env.DB.prepare('INSERT INTO manna_audit(id,action,entry_id,detail) VALUES(?,?,?,?)').bind(randomId(),action,entry,detail).run();}
 function auth(req,env){const a=req.headers.get('authorization')||'';return !!env.EDITOR_TOKEN&&a==='Bearer '+env.EDITOR_TOKEN;}
 async function edit(req,env,id){
@@ -135,6 +145,8 @@ export default {
  async fetch(req,env){
   try{
    const url=new URL(req.url),path=url.pathname,method=req.method;
+   if(method==='GET'&&path.startsWith('/api/picture-manage/')&&auth(req,env))return picture(req,env,path.slice('/api/picture-manage/'.length),true);
+   if(method==='DELETE'&&path.startsWith('/api/picture/')&&auth(req,env)){const date=mediaDate(path.slice('/api/picture/'.length));if(date===null)return response({error:'Invalid picture date'},400);return removePicture(env,date)}
    if(method==='PUT'&&path.startsWith('/api/picture/')&&auth(req,env)){const date=mediaDate(path.slice('/api/picture/'.length));if(date===null)return response({error:'Invalid picture date'},400);return uploadPicture(req,env,date)}
    if(method==='GET'&&path.startsWith('/api/picture/'))return picture(req,env,path.slice('/api/picture/'.length));
    if((path==='/'||path==='/index.html')&&method==='GET')return new Response(publicPage(),{headers:{'content-type':'text/html; charset=utf-8','cache-control':'public, max-age=300','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"}});
