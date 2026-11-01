@@ -154,7 +154,11 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    const runs=(data.workflow_runs||[]).filter(run=>run.display_title===wanted&&run.event==='workflow_dispatch');
    if(runs.length){
     const run=runs.sort((x,y)=>Date.parse(y.created_at)-Date.parse(x.created_at))[0];
-    review={runId:run.id,status:run.status,conclusion:run.conclusion||null,url:run.html_url||null};
+    review={runId:run.id,status:run.status,conclusion:run.conclusion||null,url:run.html_url||null,artifactAvailable:false};
+    if(run.status==='completed'&&run.conclusion==='success'){
+     const artifacts=await gh(env,g,'GET','/actions/runs/'+encodeURIComponent(run.id)+'/artifacts').catch(()=>({artifacts:[]}));
+     review.artifactAvailable=(artifacts.artifacts||[]).some(a=>a.name==='review-build-'+b.commit&&!a.expired);
+    }
    }
   }
   return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,review,ownerApprovalRequired:true,deploymentAuthorized:false});
