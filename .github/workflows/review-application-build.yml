@@ -1,8 +1,12 @@
 name: Review-only application build
-run-name: Review ${{ inputs.source_sha }} / ${{ inputs.directory }}
+run-name: Review ${{ inputs.request_id }}
 on:
   workflow_dispatch:
     inputs:
+      request_id:
+        description: Immutable review request identifier
+        required: true
+        type: string
       source_sha:
         description: Exact 40-character source commit from this repository
         required: true
@@ -67,7 +71,7 @@ jobs:
       - name: Upload review artifact only
         uses: actions/upload-artifact@v4
         with:
-          name: review-build-${{ inputs.source_sha }}
+          name: review-build-${{ inputs.request_id }}
           path: |
             ${{ runner.temp }}/review-build.tar.gz
             ${{ runner.temp }}/review-build.sha256
