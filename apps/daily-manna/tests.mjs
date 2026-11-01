@@ -28,6 +28,12 @@ assert.ok(html.includes("'/api/daily-manna/'"),'Editor must use Account 4 proxy'
 assert.match(html,/formatToParts/,'Editor must calculate Lagos dates reliably');
 assert.ok(!html.includes('innerHTML='));
 assert.ok(html.includes("entry.status!=='draft'"),'Single-day approval must only enable on draft');
+assert.ok(html.includes('id="picture-preview"'));
+assert.ok(html.includes('id="picture-remove"'));
+assert.ok(html.includes('id="operations-status"'));
+assert.ok(html.includes('id="operations-refresh"'));
+assert.match(worker,/FACEBOOK_FIRST_POST_DATE/,'Social outbox requires an explicit first-post date');
+assert.match(worker,/release_mode=CASE/,'Automatic release must record whether human-reviewed');
 assert.ok(html.includes('I have read and reviewed'),'Single-day approval must require explicit review confirmation');
 assert.match(html,/expected_revision:activeRevision/);
 assert.match(html,/JSON\.stringify\(\{entries:items\}\)/);
