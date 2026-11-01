@@ -1,0 +1,17 @@
+{
+  "revision": 95,
+  "source_revision": 92,
+  "days_preserved": 1826,
+  "missing_supporting_scripture_text_fields": 1750,
+  "distinct_missing_scripture_references": 167,
+  "days_with_missing_supporting_text": 1197,
+  "days_with_two_missing_supporting_passages": 553,
+  "days_with_one_missing_supporting_passage": 644,
+  "overlength_messages": 38,
+  "maximum_words_over_limit": 4,
+  "historical_verification_remaining_carried_forward": 736,
+  "new_scripture_text_inserted": 0,
+  "new_historical_claims_verified": 0,
+  "publication_ready": false,
+  "manuscript_sha256": "ac035dcef653a5c2fbdc02b42f91c76feda510b823a15c0f5bdfa24d345fd8b5"
+}
