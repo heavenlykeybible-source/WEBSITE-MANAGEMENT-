@@ -19,7 +19,7 @@ async function edit(req,env,id){
  if(existing&&(!Number.isSafeInteger(data.expected_revision)||data.expected_revision!==existing.revision))return response({error:'Entry changed; refresh before editing'},409);
  const key=existing?.id||randomId();
  try{
-  if(existing)await env.DB.prepare("UPDATE manna_entries SET publish_date=?,title=?,scripture=?,body=?,prayer=?,status='draft',approved_revision=NULL,approved_at=NULL,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status!='published'").bind(date,title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision).run();
+  if(existing){const updated=await env.DB.prepare("UPDATE manna_entries SET publish_date=?,title=?,scripture=?,body=?,prayer=?,status='draft',approved_revision=NULL,approved_at=NULL,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status!='published'").bind(date,title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision).run();if(updated.meta?.changes!==1)return response({error:'Concurrent update; refresh before saving'},409);}
   else await env.DB.prepare('INSERT INTO manna_entries(id,publish_date,title,scripture,body,prayer) VALUES(?,?,?,?,?,?)').bind(key,date,title.trim(),scripture.trim(),body.trim(),prayer.trim()).run();
  }catch(e){if(/UNIQUE/i.test(e.message))return response({error:'Date already has a devotional'},409);throw e;}
  await audit(env,existing?'edited':'created',key,date);return response({ok:true,id:key,status:'draft',revision:(existing?.revision||0)+1});
@@ -39,8 +39,14 @@ async function approve(req,env){
  }
  return response({results});
 }
+async function repairOutbox(env){
+ const missing=await env.DB.prepare("SELECT e.id FROM manna_entries e WHERE e.status='published' AND (SELECT COUNT(*) FROM manna_deliveries d WHERE d.entry_id=e.id AND d.destination IN ('community','buffer','email'))<3 LIMIT 100").bind().all();
+ for(const entry of missing.results||[])for(const destination of ['community','buffer','email'])
+  await env.DB.prepare("INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,'pending')").bind(randomId(),entry.id,destination).run();
+}
 async function publishToday(env,now=Date.now()){
  const date=todayLagos(now);
+ await repairOutbox(env);
  const due=await env.DB.prepare("SELECT id,publish_date FROM manna_entries WHERE publish_date<=? AND status='approved' AND approved_revision=revision ORDER BY publish_date LIMIT 100").bind(date).all();
  let published=0;
  for(const entry of due.results||[]){
@@ -50,6 +56,7 @@ async function publishToday(env,now=Date.now()){
   for(const destination of ['community','buffer','email'])await env.DB.prepare("INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,'pending')").bind(randomId(),entry.id,destination).run();
   await audit(env,'published',entry.id,entry.publish_date);
  }
+ await repairOutbox(env);
  return {date,published,moreMayBeDue:(due.results||[]).length===100};
 }
 
