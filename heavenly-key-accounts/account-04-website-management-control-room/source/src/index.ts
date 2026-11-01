@@ -173,6 +173,47 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    }
    return json({valid,rejected,readyForReview:rejected.length===0,published:false});
   }
+  // Copy exact GitHub blob revisions to private R2 before the owner can approve a release.
+  // One bounded batch per request avoids Workers' CPU/memory/subrequest limits.
+  const copyMatch=u.pathname.match(/^\/api\/project-imports\/([a-f0-9-]{36})\/materialize$/);
+  if(copyMatch&&request.method==='POST'){
+   const id=copyMatch[1],prefix='imports/'+id+'/';
+   const stored=await env.MEDIA.get(prefix+'manifest');
+   if(!stored)return fail('Import session not found.',404);
+   const manifest=JSON.parse(await stored.text());
+   if(manifest.owner!==actor)return fail('Import belongs to another administrator.',403);
+   if(manifest.source!=='github-tree'||manifest.published||!['source-discovered','materializing','waiting-review'].includes(manifest.status))return fail('This GitHub import cannot be materialized.',409);
+   const inventoryObject=await env.MEDIA.get(prefix+'files.json');
+   if(!inventoryObject)return fail('Source inventory is missing.',409);
+   const inventory=JSON.parse(await inventoryObject.text()) as {commit:string;root:string;files:{path:string;sha:string;size:number}[]};
+   const data=await body(request,2048),indices=data.indices;
+   if(!Array.isArray(indices)||indices.length<1||indices.length>4||new Set(indices).size!==indices.length||indices.some((n:unknown)=>!Number.isSafeInteger(n)||Number(n)<0||Number(n)>=inventory.files.length))return fail('Supply 1 to 4 distinct source file indices.');
+   const copied:number[]=[],alreadyPresent:number[]=[];
+   for(const index of indices as number[]){
+    const entry=inventory.files[index],key=prefix+'source/'+String(index).padStart(7,'0');
+    const previous=await env.MEDIA.head(key);
+    if(previous?.customMetadata?.gitSha===entry.sha&&previous.size===entry.size){alreadyPresent.push(index);continue;}
+    if(entry.size>25165824)return fail('Source file exceeds 24 MiB; use reviewed ZIP import for larger files: '+entry.path,413);
+    const encodedPath=(inventory.root+entry.path).split('/').map(encodeURIComponent).join('/');
+    const rawUrl='https://raw.githubusercontent.com/heavenlykeybible-source/onlinebible/'+inventory.commit+'/'+encodedPath;
+    const headers:Record<string,string>={'User-Agent':'Heavenly-Key-Control-Room'};
+    if(env.GITHUB_TOKEN)headers.Authorization='Bearer '+env.GITHUB_TOKEN;
+    const result=await fetch(rawUrl,{headers,redirect:'error'});
+    if(!result.ok)return fail('Pinned GitHub file fetch failed ('+result.status+') for index '+index,502);
+    if(Number(result.headers.get('content-length')||0)>25165824)return fail('Source file is too large.',413);
+    const bytes=new Uint8Array(await result.arrayBuffer());
+    if(bytes.byteLength!==entry.size||bytes.byteLength>25165824)return fail('Source file differs from pinned GitHub metadata.',422);
+    const prefixBytes=new TextEncoder().encode('blob '+bytes.length+'\\0');
+    const hashInput=new Uint8Array(prefixBytes.length+bytes.length);
+    hashInput.set(prefixBytes);hashInput.set(bytes,prefixBytes.length);
+    const digest=new Uint8Array(await crypto.subtle.digest('SHA-1',hashInput));
+    const actualSha=[...digest].map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(actualSha!==entry.sha)return fail('Pinned GitHub checksum failed for index '+index,422);
+    await env.MEDIA.put(key,bytes,{httpMetadata:{contentType:'application/octet-stream'},customMetadata:{gitSha:entry.sha,sourcePath:entry.path}});
+    copied.push(index);
+   }
+   return json({id,copied,alreadyPresent,remainingReview:true,published:false});
+  }
   const filesMatch=u.pathname.match(/^\/api\/project-imports\/([a-f0-9-]{36})\/files$/);
   if(filesMatch&&request.method==='GET'){
    const id=filesMatch[1],prefix='imports/'+id+'/';
