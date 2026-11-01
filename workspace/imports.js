@@ -109,7 +109,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const response=await fetch(endpoint,{method:'GET',redirect:'manual',signal:AbortSignal.timeout(15000),headers:{authorization:'Bearer '+token,accept:'application/vnd.github+json','x-github-api-version':'2022-11-28','user-agent':'heavenly-key-control-room'}});
   if(!response.ok){if(response.status===401||response.status===403)fail('This GitHub authorization cannot list repositories. Reconnect with approved repository read access.',403);fail('GitHub repository discovery unavailable (HTTP '+response.status+')',502);}
   const data=await response.json();if(!Array.isArray(data))fail('Unexpected GitHub repository list response',502);
-  const repositories=data.filter(x=>x&&typeof x.full_name==='string'&&/^[a-zA-Z0-9_.-]+\\/[a-zA-Z0-9_.-]+$/.test(x.full_name)).map(x=>({repo:x.full_name,owner:x.owner?.login||'',private:!!x.private,default_branch:String(x.default_branch||'main'),archived:!!x.archived,disabled:!!x.disabled,canPush:!!x.permissions?.push}));
+  const repositories=data.filter(x=>x&&typeof x.full_name==='string'&&/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(x.full_name)).map(x=>({repo:x.full_name,owner:x.owner?.login||'',private:!!x.private,default_branch:String(x.default_branch||'main'),archived:!!x.archived,disabled:!!x.disabled,canPush:!!x.permissions?.push}));
   return json({repositories,page,hasMore:data.length===50,scope:'GitHub repositories visible to the selected authorized credential',readOnly:true});
  }
  if(sub==='workspace/github/bulk-connect'&&m==='POST'){
