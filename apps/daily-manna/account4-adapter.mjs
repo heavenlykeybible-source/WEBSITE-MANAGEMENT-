@@ -20,12 +20,12 @@ export async function dailyMannaProxy(request,env,security){
  const target=new URL('/api/'+suffix,base);
  if(method==='GET'&&suffix==='entries'){const month=url.searchParams.get('month');if(month)target.searchParams.set('month',month)}
  const body=mutates?await request.text():undefined;
- if(body&&body.length>50000)return reply({error:'Request too large'},413);
+ if(body&&new TextEncoder().encode(body).length>50000)return reply({error:'Request too large'},413);
  try{
   const upstream=await fetch(target.toString(),{method,headers:{authorization:'Bearer '+env.MANNA_EDITOR_TOKEN,'content-type':'application/json'},body,redirect:'manual',signal:AbortSignal.timeout(15000)});
   if(upstream.status>=300&&upstream.status<400)return reply({error:'Unexpected upstream redirect'},502);
   const raw=await upstream.text();
-  if(raw.length>1000000)return reply({error:'Response too large'},502);
+  if(new TextEncoder().encode(raw).length>1000000)return reply({error:'Response too large'},502);
   let payload;try{payload=JSON.parse(raw)}catch{return reply({error:'Invalid upstream response'},502)}
   return reply(payload,upstream.status);
  }catch{return reply({error:'Daily Manna service unavailable'},502)}
