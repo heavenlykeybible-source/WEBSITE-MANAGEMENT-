@@ -37,3 +37,15 @@ test('Account 3 source and advanced management are distinguishable in unified im
  assert.match(hub,/Advanced DNS, Worker and GitHub tools/);
  assert.match(hub,/scanButton\.disabled=chosen\.kind==='application'/);
 });
+
+test('universal Account 4 GitHub reauthorization is independent of app destinations',()=>{
+ const server=fs.readFileSync('workspace/imports.js','utf8');
+ assert.match(server,/workspace\/github\/central-connect/);
+ assert.match(server,/await seal\(env,token\)/);
+ assert.match(server,/UPDATE github_sites SET label=\?,secret_enc=\?/);
+ assert.match(server,/connectionMode:mode,authenticated:true/);
+ assert.match(hub,/Authorize \/ reauthorize universal GitHub account/);
+ assert.match(hub,/belongs to Account 4, not Account 3 or a website/);
+ assert.match(hub,/all repositories and organizations permitted by the token/);
+ assert.doesNotMatch(hub,/api\('github','POST'/);
+});
