@@ -1,6 +1,7 @@
 import {inspectBrowserBindings} from './bindings.mjs';
+import {appendFile} from 'node:fs/promises';
 const account=process.env.CLOUDFLARE_ACCOUNT_ID,token=process.env.CLOUDFLARE_API_TOKEN;
-if(!/^[a-f0-9]{32}$/.test(account||'')||!token)throw Error('Account 4 deployment credentials are required');
+if(account!=='404ebf05a781fcccbbed44aeb02cb72b'||!token)throw Error('Exact Account 4 credentials required; refusing to inspect a different Cloudflare account');
 const base='https://api.cloudflare.com/client/v4/accounts/'+account;
 async function read(path){const r=await fetch(base+path,{headers:{authorization:'Bearer '+token},redirect:'manual',signal:AbortSignal.timeout(20000)});let d;try{d=await r.json();}catch{}return {status:r.status,success:r.ok&&d?.success===true,result:d?.result};}
 const settings=await read('/workers/scripts/website-management/settings');
@@ -19,3 +20,16 @@ const limits=await read('/browser-rendering/limits');
 console.log('Browser runtime API read HTTP '+limits.status);
 console.log('Browser runtime API access: '+limits.success);
 console.log('No settings, resources, billing or credentials were changed.');
+
+const statuses=[
+ ['Control Room Worker readable',settings.success],
+ ['Browser Agent Worker readable',runtime.success],
+ ['Control Room BROWSER_AGENT service binding',bindingStatus.serviceLinked],
+ ['Private Worker HK_BROWSER browser binding',bindingStatus.runtimeBrowserBound],
+ ['Browser runtime API access',limits.success],
+];
+const ready=statuses.every(([,ok])=>ok);
+const report=['## Account 4 — read-only activation preflight','','| Check | Result |','|---|---|',...statuses.map(([name,ok])=>'| '+name+' | '+(ok?'PASS':'BLOCKED')+' |'),'','This report checks account metadata only. It does not deploy a Worker, activate a paid feature, prove live browser operation, or grant access.',''];
+if(process.env.GITHUB_STEP_SUMMARY)await appendFile(process.env.GITHUB_STEP_SUMMARY,report.join('\n'));
+console.log('Account 4 activation metadata ready: '+ready);
+if(process.argv.includes('--strict')&&!ready)throw Error('Activation preflight blocked: resolve the missing bindings or permissions shown above before attempting a live release.');
