@@ -8,6 +8,7 @@ const DB={prepare(sql){
   return null
  },async run(){
   if(sql.startsWith('INSERT INTO manna_post_images')){pictureRows.set(args[0],{object_key:args[1],content_type:args[2]});return {meta:{changes:1}}}
+  if(sql.startsWith('DELETE FROM manna_post_images')){const row=pictureRows.get(args[0]);if(row?.object_key!==args[1])return {meta:{changes:0}};pictureRows.delete(args[0]);return {meta:{changes:1}}}
   if(sql.startsWith('INSERT INTO manna_audit')){audits.push(args);return {meta:{changes:1}}}
   throw Error('Unexpected SQL '+sql)
  }};
@@ -37,4 +38,11 @@ assert.equal(res.status,200);
 assert.equal((await worker.fetch(new Request('https://example.test/api/picture/2099-01-01'),env)).status,404,'future day pictures are private');
 assert.equal((await upload('default')).status,200,'default can be replaced');
 assert.equal(pictureRows.size,2);
+const future='2099-01-01';
+assert.equal((await upload(future)).status,200);
+assert.equal((await worker.fetch(new Request('https://example.test/api/picture/'+future),env)).status,404);
+assert.equal((await worker.fetch(new Request('https://example.test/api/picture-manage/'+future,{headers:{authorization:'Bearer secret'}}),env)).status,200,'Owner can preview an uploaded future image');
+assert.equal((await worker.fetch(new Request('https://example.test/api/picture-manage/'+future),env)).status,401,'Preview requires owner token');
+assert.equal((await worker.fetch(new Request('https://example.test/api/picture/'+future,{method:'DELETE',headers:{authorization:'Bearer secret'}}),env)).status,200,'Owner can remove day image');
+assert.equal(pictureRows.has(future),false);
 console.log('PASS image upload, validation, default replacement, future privacy and delivery');
