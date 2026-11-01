@@ -38,6 +38,12 @@ test('review status never assumes that a completed job has a verified artifact',
  assert.match(server,/artifactAvailable:false/);
  assert.match(server,/deploymentAuthorized:false/);
 });
+test('review artifact preserves request provenance',()=>{
+ assert.match(workflow,/request_id=%s/);
+ assert.match(workflow,/source_sha=%s/);
+ assert.match(server,/review\.artifact=\{id:artifact\.id/);
+ assert.match(client,/Open verified GitHub Actions run/);
+});
 test('application controls require reviewed build',()=>{
  assert.match(client,/Start review build/);
  assert.match(client,/Check review build status/);
