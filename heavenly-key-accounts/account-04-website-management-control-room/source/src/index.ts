@@ -132,6 +132,23 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
     await env.MEDIA.put(prefix+'chunks/'+n,bytes,{httpMetadata:{contentType:'application/octet-stream'}});
     return json({ok:true,chunk:n,published:false});
    }
+   if(importMatch[2]===undefined&&request.method==='POST'){
+    if(manifest.status!=='staging')return fail('Import is already submitted.',409);
+    const chunks=await Promise.all(Array.from({length:manifest.parts},(_,i)=>env.MEDIA.head(prefix+'chunks/'+i)));
+    const missing=chunks.flatMap((item,i)=>item?[]:[i]);
+    if(missing.length)return json({error:'Upload incomplete',missing:missing.slice(0,100),missingCount:missing.length},409);
+    for(let i=0;i<chunks.length;i++){
+     const expected=Math.min(4194304,manifest.totalBytes-i*4194304);
+     if(chunks[i]!.size!==expected)return fail('Uploaded chunk size mismatch: '+i,409);
+    }
+    const first=await env.MEDIA.get(prefix+'chunks/0',{range:{offset:0,length:4}});
+    if(!first)return fail('Archive is missing.',409);
+    const header=new Uint8Array(await first.arrayBuffer());
+    if(header.length<4||header[0]!==80||header[1]!==75||![3,5,7].includes(header[2])||![4,6,8].includes(header[3]))return fail('Upload must be a ZIP archive.',415);
+    const updated={...manifest,status:'waiting-review',submittedAt:new Date().toISOString(),receivedParts:chunks.length};
+    await env.MEDIA.put(prefix+'manifest',JSON.stringify(updated),{httpMetadata:{contentType:'application/json'}});
+    return json({id,status:'waiting-review',receivedParts:chunks.length,published:false,extracted:false,approvalRequired:true});
+   }
    if(importMatch[2]===undefined&&request.method==='GET'){
     const chunks=[];
     for(let start=0;start<manifest.parts;start+=16){chunks.push(...await Promise.all(Array.from({length:Math.min(16,manifest.parts-start)},(_,i)=>env.MEDIA.head(prefix+'chunks/'+(start+i)))));}
