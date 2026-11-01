@@ -9,6 +9,12 @@ raw.prepare('INSERT INTO github_sites(id,label,repo,branch,dir,secret_enc)VALUES
 let commit='a'.repeat(40),files=new Map([['dist/index.html','<!doctype html><h1>Original live preview</h1><link rel="stylesheet" href="main.css">'],['dist/main.css','h1{color:green}']]),corrupt=false,writes=0;
 function tree(){return [...files].map(([path,text])=>({path,type:'blob',mode:'100644',size:Buffer.byteLength(text),sha:createHash('sha1').update('blob '+Buffer.byteLength(text)+'\0'+text).digest('hex')}));}
 globalThis.fetch=async(url,init)=>{assert.equal(init.method,'GET');assert.ok(url.startsWith('https://api.github.com/repos/owner/repo/'));if(url.includes('/git/ref/heads/'))return Response.json({object:{sha:commit}});if(url.includes('/git/commits/'))return Response.json({tree:{sha:'tree-sha'}});if(url.includes('/git/trees/'))return Response.json({tree:tree(),truncated:false});if(url.includes('/git/blobs/')){const row=tree().find(f=>url.endsWith(f.sha));assert.ok(row);return Response.json({encoding:'base64',content:Buffer.from(corrupt?'tampered':files.get(row.path)).toString('base64')});}writes++;throw Error('Unexpected network write');};
+const addRepo=await(await w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify({source:1,repo:'owner/repo',label:'Second GitHub repository',branch:'main'})}),env,user,'workspace/github/reuse','POST')).json();
+assert.equal(addRepo.authenticated,true);
+assert.equal(addRepo.tokenReused,true);
+const originalToken=raw.prepare('SELECT secret_enc FROM github_sites WHERE id=1').get().secret_enc;
+const copied=raw.prepare('SELECT repo,secret_enc FROM github_sites WHERE id=?').get(addRepo.id);
+assert.equal(copied.repo,'owner/repo');assert.equal(copied.secret_enc,originalToken);
 const candidates=await w.sourceCandidates(env,user,1);assert.equal(candidates.candidates[0].path,'dist/index.html');const count=()=>raw.prepare('SELECT count(*) n FROM proposals').get().n;
 const scan=await w.scanConnectedSource(env,user,{source:1,kind:'static',directory:'dist'});assert.equal(scan.files.length,2);assert.equal(count(),0);assert.equal(raw.prepare('SELECT count(*) n FROM site_files').get().n,0);
 const staged=await w.stageConnectedSource(env,user,{scan:scan.id,site:'demo'});assert.equal(count(),1);assert.equal(raw.prepare('SELECT count(*) n FROM site_files').get().n,0);assert.equal((await w.stageConnectedSource(env,user,{scan:scan.id,site:'demo'})).proposal_id,staged.proposal_id);
