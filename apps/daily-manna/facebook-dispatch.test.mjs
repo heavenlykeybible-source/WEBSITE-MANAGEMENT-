@@ -16,7 +16,7 @@ const DB={prepare(sql){
   throw Error('Unexpected update '+sql)
  }};
 }};
-const env={DB,FACEBOOK_PAGE_ID:'123',FACEBOOK_PAGE_TOKEN:'secret',MANNA_PUBLIC_ORIGIN:'https://dailyword.heavenlykey.org'};
+const env={DB,FACEBOOK_PAGE_ID:'123',FACEBOOK_PAGE_TOKEN:'secret',MANNA_PUBLIC_ORIGIN:'https://dailyword.heavenlykey.org',FACEBOOK_FIRST_POST_DATE:'2026-11-01'};
 let sendCount=0;
 const fake=async()=>{sendCount++;return new Response(JSON.stringify({id:'123_456'}),{status:200})};
 let result=await dispatchFacebook(env,fake);
@@ -31,4 +31,7 @@ assert.equal(result.failed,1);
 assert.equal(state,'failed');
 assert.equal((await dispatchFacebook(env,fake)).processed,0,'Do not auto retry uncertain failures');
 assert.equal((await dispatchFacebook({DB},fake)).configured,false,'Requires Page credentials');
+const disabled=await dispatchFacebook({...env,FACEBOOK_FIRST_POST_DATE:''},fake);
+assert.equal(disabled.enabled,false,'Unapproved historic backlog cannot post');
+assert.equal(sendCount,1,'Historic backlog gate prevents further posts');
 console.log('PASS Facebook social outbox: atomic claim, success, no duplicates, failure hold');
