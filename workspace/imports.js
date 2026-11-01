@@ -11,11 +11,15 @@ async function queueConnectedApplication(env,user,b){
  const conn=await connById(env,b.connection),worker=String(b.worker||'');
  protectWorker(env,worker);
  if(!/^[a-f0-9]{40}$/.test(tree.head.commit))fail('Pinned commit required',409);
+ const selected=tree.files.filter(f=>f.path.startsWith(prefix));
+ if(!selected.length||selected.length>20000)fail('Incomplete or oversized application source tree',413);
+ const manifestFiles=selected.map(f=>({path:f.path.slice(prefix.length),sha:f.sha,size:f.size||0}));
+ if(manifestFiles.some(f=>!f.path||!/^([a-f0-9]{40})$/.test(f.sha)||!Number.isSafeInteger(f.size)||f.size<0))fail('Invalid application source file metadata',422);
  const id=crypto.randomUUID();
- const manifest={id,kind:'application',status:'build-required',source:g.id,repo:g.repo,commit:tree.head.commit,directory,connection:conn.id,worker,createdBy:user.id,createdAt:Date.now(),ownerApprovalRequired:true,deploymentAuthorized:false};
+ const manifest={id,kind:'application',status:'source-copy-pending',source:g.id,repo:g.repo,commit:tree.head.commit,directory,connection:conn.id,worker,files:manifestFiles,fileCount:manifestFiles.length,totalBytes:manifestFiles.reduce((n,f)=>n+f.size,0),createdBy:user.id,createdAt:Date.now(),ownerApprovalRequired:true,deploymentAuthorized:false,sourceComplete:false};
  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:application:'+id,JSON.stringify(manifest)).run();
  await audit(env,user.username,'application-build-request','Queued '+g.repo+'@'+tree.head.commit+' for '+worker);
- return {id,status:'build-required',repo:g.repo,commit:tree.head.commit,notice:'Application registered for reviewed build. No production deployment or preview is available until a verified build is attached.'};
+ return {id,status:'source-copy-pending',fileCount:manifestFiles.length,totalBytes:manifest.totalBytes,repo:g.repo,commit:tree.head.commit,notice:'Complete source inventory pinned to one commit. Copy and verify every file before review. No production deployment.'};
 }
 async function scanConnectedSource(env,user,b){
  const g=await importSource(env,user,b.source),tree=await sourceTree(env,g),kind=b.kind==='worker'?'worker':'static',directory=sourceFolder(b.directory),pre=directory?directory+'/':'';
@@ -75,6 +79,55 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const staged=await stageConnectedSource(env,user,{scan:scan.id,connection:b.connection,worker:b.worker,site:b.site});
   return json({ok:true,status:'waiting',proposal_id:staged.proposal_id,source:{repo:scan.repo,commit:scan.commit,files:scan.files.length,bytes:scan.bytes},notice:'Imported and staged for owner approval; production has not been deployed.'});
  }
+ // Resumable complete source copy: exact pinned Git blob, no truncated source listing.
+ // One bounded request per 1–3 files, owner-only; writes private R2, never production.
+ if(sub==='workspace/application-build/copy-files'&&m==='POST'){
+  const b=await body(req),id=String(b?.id||''),indices=b?.indices;
+  if(!/^[a-f0-9-]{36}$/.test(id)||!Array.isArray(indices)||indices.length<1||indices.length>3||new Set(indices).size!==indices.length||indices.some(n=>!Number.isSafeInteger(n)||n<0))fail('Select up to three distinct source file indices',400);
+  const key='workspace:application:'+id,stored=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+  if(!stored)fail('Application build request not found',404);
+  const item=JSON.parse(stored.value_json);
+  if(item.createdBy!==user.id||item.status==='cancelled')fail('Application source inaccessible',403);
+  if(!Array.isArray(item.files)||indices.some(n=>n>=item.files.length))fail('Source inventory mismatch',409);
+  const g=await importSource(env,user,item.source);
+  if(g.repo!==item.repo)fail('Connected source changed',409);
+  let copied=0,skipped=0;
+  for(const index of indices){
+   const file=item.files[index],fileKey='workspace-applications/'+user.id+'/'+id+'/source/'+String(index).padStart(7,'0');
+   const existing=await env.FILES.head(fileKey);
+   if(existing?.customMetadata?.gitSha===file.sha&&existing.size===file.size){skipped++;continue;}
+   if(file.size>20000000)fail('Source file exceeds 20 MB: '+file.path,413);
+   const blob=await gh(env,g,'GET','/git/blobs/'+file.sha);
+   if(blob.encoding!=='base64'||typeof blob.content!=='string')fail('GitHub source blob is unavailable',502);
+   const bytes=Uint8Array.from(atob(blob.content.replace(/\\s/g,'')),c=>c.charCodeAt(0));
+   if(bytes.byteLength!==file.size)fail('Pinned source file size mismatch',409);
+   const header=new TextEncoder().encode('blob '+bytes.length+'\\0'),input=new Uint8Array(header.length+bytes.length);
+   input.set(header);input.set(bytes,header.length);
+   if(hex(await crypto.subtle.digest('SHA-1',input))!==file.sha)fail('Pinned source Git checksum mismatch: '+file.path,409);
+   await env.FILES.put(fileKey,bytes,{customMetadata:{gitSha:file.sha}});
+   copied++;
+  }
+  return json({id,copied,skipped,total:item.fileCount,published:false});
+ }
+ if(sub==='workspace/application-build/finalize-source'&&m==='POST'){
+  const b=await body(req),id=String(b?.id||'');
+  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid application identifier',400);
+  const key='workspace:application:'+id,stored=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+  if(!stored)fail('Application not found',404);
+  const item=JSON.parse(stored.value_json);
+  if(item.createdBy!==user.id||!Array.isArray(item.files)||item.status==='cancelled')fail('Application source inaccessible',403);
+  let copied=0;
+  for(let i=0;i<item.files.length;i+=12){
+   const batch=item.files.slice(i,i+12);
+   const results=await Promise.all(batch.map((f,j)=>env.FILES.head('workspace-applications/'+user.id+'/'+id+'/source/'+String(i+j).padStart(7,'0'))));
+   for(let j=0;j<batch.length;j++)if(results[j]?.size===batch[j].size&&results[j]?.customMetadata?.gitSha===batch[j].sha)copied++;
+  }
+  if(copied!==item.files.length)return json({id,status:'source-incomplete',copied,total:item.files.length,remaining:item.files.length-copied,published:false},409);
+  item.status='build-required';item.sourceComplete=true;item.sourceVerifiedAt=Date.now();
+  await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
+  await audit(env,user.username,'application-source-complete','Verified '+copied+' Git source blobs at '+item.repo+'@'+item.commit);
+  return json({id,status:'build-required',copied,total:item.files.length,verified:true,needsReviewedBuild:true,published:false});
+ }
  if(sub==='workspace/application-build/verify-source'&&m==='POST'){
   const b=await body(req),id=String(b?.id||'');
   if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid build identifier',400);
@@ -111,7 +164,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:application:'+id).first();
   if(!row)fail('Build request not found',404);
   const b=JSON.parse(row.value_json);
-  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,ownerApprovalRequired:true,deploymentAuthorized:false});
+  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,fileCount:b.fileCount||0,sourceComplete:!!b.sourceComplete,ownerApprovalRequired:true,deploymentAuthorized:false});
  }
  if(sub==='workspace/application-builds'&&m==='GET'){
  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:application:%' LIMIT 100").all();
