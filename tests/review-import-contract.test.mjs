@@ -166,3 +166,8 @@ test('TinyFish concurrency guard and terminal cancellation protect owner wallet'
  assert.match(server,/This task has already finished/);
  assert.match(client,/Up to three unfinished tasks/);
 });
+
+test('TinyFish remote run identifiers are validated before storage',()=>{
+ assert.match(server,/TinyFish returned no valid run identifier/);
+ assert.match(server,/runId\)\)fail/);
+});
