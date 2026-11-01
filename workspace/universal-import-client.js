@@ -147,9 +147,9 @@ async function universalImportHub(){
   centralBox.appendChild(h('button',{onclick:async function(){this.disabled=true;try{
    if(!centralLabel.value.trim()||!centralToken.value.trim())throw Error('Enter the connection label and GitHub token.');
    var linked=await api('workspace/github/central-connect','POST',{label:centralLabel.value.trim(),token:centralToken.value.trim()});
-   centralToken.value='';connections.push(linked);option(identity,linked.id,linked.label+' · GitHub identity');identity.value=String(linked.id);identity.onchange();await loadRepos(false);
+   centralToken.value='';var oldConnection=connections.find(function(c){return String(c.id)===String(linked.id);});if(oldConnection)Object.assign(oldConnection,linked);else connections.push(linked);if(!Array.from(identity.options).some(function(o){return o.value===String(linked.id);}))option(identity,linked.id,linked.label+' · GitHub identity');identity.value=String(linked.id);identity.onchange();await loadRepos(false);
    centralStatus.textContent='Central GitHub identity connected to Control Room. Browse accessible repositories and choose any destination account.';
-  }catch(e){centralToken.value='';centralStatus.textContent=e.message;}finally{this.disabled=false;}}},'Authorize GitHub for all permitted repositories'));
+  }catch(e){centralToken.value='';centralStatus.textContent=e.message;}finally{this.disabled=false;}}},'Authorize / reauthorize universal GitHub account'));
   centralBox.appendChild(centralStatus);githubSection.appendChild(centralBox);
   githubSection.appendChild(h('div',{},refresh,more));
   githubSection.appendChild(h('label',{},'Search',query));empty(repos,'Choose a repository');githubSection.appendChild(repos);githubSection.appendChild(connect);
