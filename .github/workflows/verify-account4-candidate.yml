@@ -17,6 +17,11 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Run regression suite
         run: npm test
+      - name: Assemble and verify complete Account 4 Worker without deployment
+        run: |
+          node cms/build.mjs
+          node tests/account4-native-assembly.mjs
+          node --check control-room-worker.js
       - name: Verify forward-only deployment rules
         run: node tests/account4-release-lineage.mjs
       - name: Verify source syntax
