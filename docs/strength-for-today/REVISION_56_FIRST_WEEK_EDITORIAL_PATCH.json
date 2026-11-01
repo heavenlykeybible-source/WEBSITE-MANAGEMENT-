@@ -1,0 +1,47 @@
+{
+  "status": "proposed_not_merged",
+  "base": "canonical revision 50",
+  "repairs": [
+    {
+      "day": 1,
+      "field": "bible_story.spiritual_lesson",
+      "replacement": "Matthew responded to Jesus’ call by following Him. Hearing Christ’s invitation calls for a sincere response of repentance and obedience rather than repeated postponement."
+    },
+    {
+      "day": 1,
+      "field": "verified_real_life_story.application_to_today",
+      "replacement": "Carey’s missionary service reminds believers that following a godly calling may require patient preparation and persevering obedience. Respond to what Scripture clearly requires today, without assuming everyone is called to the same work."
+    },
+    {
+      "day": 2,
+      "field": "bible_story.spiritual_lesson",
+      "replacement": "Daniel refused the king’s promised reward before delivering a difficult message. His example challenges believers to speak truthfully and refuse to let status or payment control their conscience."
+    },
+    {
+      "day": 3,
+      "field": "bible_story.spiritual_lesson",
+      "replacement": "The rich farmer planned for possessions while ignoring his accountability to God. Work and saving are not condemned, but a life centred on wealth rather than God is spiritually impoverished."
+    },
+    {
+      "day": 4,
+      "field": "bible_story.spiritual_lesson",
+      "replacement": "Joshua called his household to serve the Lord while challenging Israel to put away rival gods. A Christ-honouring home begins with sincere personal obedience, not public religious appearance."
+    },
+    {
+      "day": 5,
+      "field": "bible_story.spiritual_lesson",
+      "replacement": "Dorcas was remembered for the practical good she did for others. Her example directs attention away from applause and toward faithful service that meets real needs."
+    },
+    {
+      "day": 6,
+      "field": "bible_story.spiritual_lesson",
+      "replacement": "The friends brought the paralysed man to Jesus, showing compassionate action alongside faith. Believers should pray and support people facing illness without blaming them or promising a particular medical outcome."
+    },
+    {
+      "day": 7,
+      "field": "bible_story.spiritual_lesson",
+      "replacement": "The parable of the ten virgins teaches watchfulness and readiness for the bridegroom. Respond to Christ with sincere faith and persevering obedience rather than trying to borrow another person’s spiritual preparation."
+    }
+  ],
+  "owner_review": "Day 2 world story remains weakly aligned and must be replaced with independently sourced account"
+}
