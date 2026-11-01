@@ -33,7 +33,11 @@ jobs:
           [[ "$REQUEST_ID" =~ ^[0-9a-f-]{36}$ ]] || exit 1
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
           [[ "$APP_DIRECTORY" == "." || "$APP_DIRECTORY" =~ ^[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)*$ ]] || exit 1
-          [[ "$APP_DIRECTORY" != *".."* ]] || exit 1
+          [[ "$APP_DIRECTORY" != /* && "$APP_DIRECTORY" != *"//"* ]] || exit 1
+          IFS='/' read -ra PARTS <<< "$APP_DIRECTORY"
+          for part in "${PARTS[@]}"; do
+            [[ "$part" != ".." && "$part" != "." ]] || [[ "$APP_DIRECTORY" == "." ]] || exit 1
+          done
       - name: Checkout immutable source
         uses: actions/checkout@v4
         with:
