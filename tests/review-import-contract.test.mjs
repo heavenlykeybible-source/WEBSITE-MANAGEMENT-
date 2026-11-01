@@ -143,3 +143,11 @@ test('TinyFish automation requires Worker secret and owner-scoped persisted task
  assert.match(client,/Check TinyFish connection/);
  assert.match(client,/Refresh task history/);
 });
+
+test('TinyFish result history and cancellation preserve owner approval boundary',()=>{
+ assert.match(server,/workspace\/tinyfish\/cancel/);
+ assert.match(server,/\/runs\/'\+encodeURIComponent\(item\.runId\)\+'\/cancel/);
+ assert.match(server,/item\.status=status/);
+ assert.match(server,/UPDATE settings SET value_json=/);
+ assert.match(client,/Cancel task/);
+});
