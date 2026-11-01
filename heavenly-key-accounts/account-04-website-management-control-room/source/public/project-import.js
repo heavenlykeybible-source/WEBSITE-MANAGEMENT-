@@ -43,6 +43,34 @@ async function refreshWaitingRoom(){
      finally{button.disabled=false;}
     };
     container.append(button,preview);
+    if(entry.status!=='waiting-review'){
+     const copyButton=document.createElement('button');
+     copyButton.type='button';copyButton.textContent='Copy full Account 3 source into private review storage';
+     const copyStatus=document.createElement('p');copyStatus.setAttribute('role','status');
+     copyButton.onclick=async()=>{
+      copyButton.disabled=true;
+      try{
+       let total=entry.fileCount||0,completed=0;
+       if(!total){const first=await request('/api/project-imports/'+encodeURIComponent(entry.id)+'/files');total=first.total;}
+       for(let offset=0;offset<total;offset+=200){
+        const page=await request('/api/project-imports/'+encodeURIComponent(entry.id)+'/files?offset='+offset);
+        if(page.offset!==offset||!Array.isArray(page.files)||page.files.length!==Math.min(200,total-offset))throw Error('Source inventory pagination mismatch');
+        for(let i=0;i<page.files.length;i+=4){
+         const indices=page.files.slice(i,i+4).map((_,j)=>offset+i+j);
+         await request('/api/project-imports/'+encodeURIComponent(entry.id)+'/materialize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({indices})});
+         completed+=indices.length;
+         copyStatus.textContent='Verifying and copying pinned GitHub source: '+completed+'/'+total+' files checked.';
+        }
+       }
+       const verified=await request('/api/project-imports/'+encodeURIComponent(entry.id)+'/verify-source',{method:'POST'});
+       copyStatus.textContent='Source verified: '+verified.verified+'/'+verified.total+' files. Ready for owner review; not published.';
+       await refreshWaitingRoom();
+      }catch(error){copyStatus.textContent='Source transfer stopped: '+error.message+'. You can resume by selecting Copy again.';}
+      finally{copyButton.disabled=false;}
+     };
+     container.append(copyButton,copyStatus);
+    }
+
    }
   }
  }catch(e){container.textContent='Unable to load Waiting Room: '+e.message;}
