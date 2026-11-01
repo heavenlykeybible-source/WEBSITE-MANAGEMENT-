@@ -75,5 +75,8 @@ if (process.argv.includes('--check')) {
   await api(base, {method:'PUT', body:form});
   const after = await api(base + '/settings');
   if (signature(bindings) !== signature(after.bindings || [])) throw new Error('Upload completed but binding verification differs. Inspect existing Worker before retrying.');
+  const verified = await fetch(base, {headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(60000)});
+  if (!verified.ok || !(await verified.text()).includes('// ACCOUNT4_DEPLOY_COMMIT_SHA='+approved))
+    throw new Error('Upload completed but live Worker release marker could not be verified; inspect production before retrying');
   console.log('SUCCESS: deployed existing website-management Worker; all saved bindings and secret names verified unchanged.');
 }
