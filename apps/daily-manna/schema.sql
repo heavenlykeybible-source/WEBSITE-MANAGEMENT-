@@ -38,3 +38,16 @@ CREATE TABLE IF NOT EXISTS manna_post_images (
  content_type TEXT NOT NULL CHECK(content_type IN ('image/jpeg','image/png','image/webp')),
  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Immutable historical copies captured before each published correction.
+CREATE TABLE IF NOT EXISTS manna_entry_revisions (
+ entry_id TEXT NOT NULL,
+ revision INTEGER NOT NULL,
+ publish_date TEXT NOT NULL,
+ title TEXT NOT NULL,
+ scripture TEXT NOT NULL,
+ body TEXT NOT NULL,
+ prayer TEXT NOT NULL,
+ captured_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY(entry_id, revision)
+);
