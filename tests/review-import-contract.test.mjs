@@ -104,6 +104,7 @@ test('dispatched review cancellation targets only its owner and exact run',()=>{
  assert.match(server,/if\(item\.createdBy!==user\.id\)fail\('Build request owner mismatch',403\)/);
  assert.match(server,/matching\[0\]/);
  assert.match(server,/run\.display_title==='Review '\+id/);
+ assert.match(server,/item\.cancelledReviewAt=Date\.now\(\)/);
  assert.match(server,/\/actions\/runs\/['"]\+encodeURIComponent\(run\.id\)\+['"]\/cancel/);
  assert.match(client,/Cancel dispatched review/);
  assert.match(server,/item\.status=item\.cancellationRequested\?'review-cancellation-requested':'cancelled'/);
