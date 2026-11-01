@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises';
 import {liveReleaseCommit,verifyForwardRelease} from './account4-release-lineage.mjs';
+import {verifyAccount4Destination} from './account4-destination.mjs';
 const account = process.env.CLOUDFLARE_ACCOUNT_ID;
 const token = process.env.CLOUDFLARE_API_TOKEN;
 const worker = 'website-management';
 if (!/^[a-f0-9]{32}$/i.test(account || '') || !token) throw new Error('Missing or malformed Account 4 credentials');
-if (account === 'cd095c096c2d5a42501e7d77cecbb34c') throw new Error('Refusing Account 3 destination');
+verifyAccount4Destination(account);
 const base = 'https://api.cloudflare.com/client/v4/accounts/' + account + '/workers/scripts/' + worker;
 async function api(url, init = {}) {
   const response = await fetch(url, { ...init, headers: { Authorization: 'Bearer ' + token, ...init.headers }, signal: AbortSignal.timeout(60000) });
