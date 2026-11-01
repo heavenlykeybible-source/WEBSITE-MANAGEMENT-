@@ -39,3 +39,6 @@ jobs:
 
       - name: Validate public devotional archive privacy and pagination
         run: node archive.test.mjs
+
+      - name: Validate authorized Facebook Page publishing adapter
+        run: node facebook-publisher.test.mjs
