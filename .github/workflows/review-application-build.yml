@@ -70,7 +70,7 @@ jobs:
           cd "$APP_DIRECTORY"
           tar -czf "$RUNNER_TEMP/review-build.tar.gz" -C dist .
           sha256sum "$RUNNER_TEMP/review-build.tar.gz" | tee "$RUNNER_TEMP/review-build.sha256"
-          printf 'source_sha=%s\napplication_directory=%s\n' "$SOURCE_SHA" "$APP_DIRECTORY" > "$RUNNER_TEMP/review-build-source.txt"
+          printf 'request_id=%s\nsource_sha=%s\napplication_directory=%s\n' "$REQUEST_ID" "$SOURCE_SHA" "$APP_DIRECTORY" > "$RUNNER_TEMP/review-build-source.txt"
       - name: Upload review artifact only
         uses: actions/upload-artifact@v4
         with:
