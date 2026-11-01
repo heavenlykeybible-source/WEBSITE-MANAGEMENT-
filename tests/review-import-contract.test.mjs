@@ -51,7 +51,7 @@ test('build dispatch and source verification reject bundled dependencies',()=>{
 });
 test('source re-verification checks both lockfile and connected repository root',()=>{
  assert.match(server,/Connected application root changed since build request/);
- assert.match(server,/tree\.files\.some\(f=>f\.path===prefix\+'package-lock\.json'\)/);
+ assert.match(server,/tree\.files\.find\(f=>f\.path===prefix\+'package-lock\.json'\)/);
 });
 test('review artifact preserves request provenance',()=>{
  assert.match(workflow,/request_id=%s/);
