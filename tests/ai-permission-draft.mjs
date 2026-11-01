@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const client=fs.readFileSync('ai/permissions.js','utf8');
+assert.match(client,/function markDraft\(\)\{draftNotice\.textContent='Unsaved changes/);
+assert.match(client,/function savedDraft\(\)\{draftNotice\.textContent='No unsaved permission changes/);
+assert.match(client,/cb\.onchange=function\(\)\{[^}]*markDraft\(\)/);
+assert.match(client,/mode\.onchange=markDraft;steps\.onchange=markDraft;duration\.onchange=markDraft/);
+assert.match(client,/allAgents\.onchange=markDraft/);
+assert.match(client,/updateSelectedCount\(\);markDraft\(\);\}\},'Select all saved accounts'/);
+assert.match(client,/savedDraft\(\);status\.textContent='Saved\./);
+assert.ok(client.indexOf("savedDraft();status.textContent='Saved.")>client.indexOf("await api('ai/permissions','POST'"));
+console.log('PASS AI permission draft-state checks');
