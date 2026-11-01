@@ -40,10 +40,8 @@ jobs:
       - name: Validate public devotional archive privacy and pagination
         run: node archive.test.mjs
 
-      - name: Validate authorized Facebook Page publishing adapter
-        run: node facebook-publisher.test.mjs
 
-      - name: Validate social queue delivery and duplicate protection
+      - name: Validate Studio queue handoff and duplicate protection
         run: node facebook-dispatch.test.mjs
 
       - name: Validate published correction history and stale-write protection
