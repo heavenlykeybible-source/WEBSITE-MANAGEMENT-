@@ -49,6 +49,17 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
  if(sub==='workspace/catalog'&&m==='GET')return json({sources:(await env.DB.prepare('SELECT id,label,repo,branch,dir FROM github_sites WHERE owner_id IS NULL').all()).results,sites:(await env.DB.prepare('SELECT slug,name FROM sites ORDER BY name').all()).results,accounts:(await env.DB.prepare('SELECT id,label FROM cf_connections ORDER BY label').all()).results});
  if(sub==='workspace/candidates'&&m==='GET')return json(await sourceCandidates(env,user,u.searchParams.get('source')));
  if(sub==='workspace/workers'&&m==='GET'){const c=await connById(env,u.searchParams.get('connection')),d=await cf(env,c,'GET','/workers/scripts');return json({workers:(d.result||[]).map(w=>({name:w.id}))});}
+ // One authenticated request imports an already-connected GitHub project and stages
+ // its immutable snapshot for owner approval. No unreviewed production deployment.
+ if(sub==='workspace/import-from-github'&&m==='POST'){
+  const b=await body(req);
+  if(!b||!b.source||!['static','worker'].includes(b.kind))fail('Select a connected GitHub source and project type',400);
+  if(b.kind==='worker'&&(!b.connection||!b.worker))fail('Select a connected Cloudflare account and Worker',400);
+  if(b.kind==='static'&&!b.site)fail('Select the destination site',400);
+  const scan=await scanConnectedSource(env,user,b);
+  const staged=await stageConnectedSource(env,user,{scan:scan.id,connection:b.connection,worker:b.worker,site:b.site});
+  return json({ok:true,status:'waiting',proposal_id:staged.proposal_id,source:{repo:scan.repo,commit:scan.commit,files:scan.files.length,bytes:scan.bytes},notice:'Imported and staged for owner approval; production has not been deployed.'});
+ }
  if(sub==='workspace/scan'&&m==='POST')return json(await scanConnectedSource(env,user,await body(req)));
  if(sub==='workspace/stage'&&m==='POST')return json(await stageConnectedSource(env,user,await body(req)));
  return null;
