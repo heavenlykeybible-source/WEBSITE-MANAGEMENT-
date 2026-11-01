@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {createHash,webcrypto} from 'node:crypto';
 const server=fs.readFileSync('workspace/imports.js','utf8');
 const client=fs.readFileSync('workspace/client.js','utf8');
 const workflow=fs.readFileSync('.github/workflows/review-application-build.yml','utf8');
@@ -61,6 +62,20 @@ test('real candidate picker only accepts locked source applications',()=>{
  const files=['app/package.json','app/package-lock.json','unlocked/package.json','vendor/package.json','vendor/package-lock.json','nested/pkg/package.json','nested/pkg/package-lock.json'].map(path=>({path}));
  const paths=Array.from(fn(files),item=>item.path);
  assert.deepEqual(paths,['app/package.json','nested/pkg/package.json']);
+});
+test('real package manifest verifier checks Git blob integrity and build script',async()=>{
+ const start=server.indexOf('async function verifyNpmBuildManifest(');
+ const end=server.indexOf('async function scanConnectedSource(',start);
+ assert.ok(start>0&&end>start);
+ const json=JSON.stringify({scripts:{build:'vite build'}});
+ let blob=json;
+ const sha=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+Buffer.byteLength(json)+'\\0'),Buffer.from(json)])).digest('hex');
+ const ctx={atob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto,hex:data=>Buffer.from(data).toString('hex'),fail:message=>{throw Error(message)},gh:async()=>({encoding:'base64',content:Buffer.from(blob).toString('base64')})};
+ const verify=runInNewContext('('+server.slice(start,end).trim()+')',ctx);
+ const entry={path:'app/package.json',size:json.length,sha};
+ assert.equal((await verify({}, {},[entry],'app/')).scripts.build,'vite build');
+ blob='{}';
+ await assert.rejects(verify({}, {},[entry],'app/'),/integrity check failed/);
 });
 test('application source picker rejects dependency-unspecified npm projects',()=>{
  assert.match(server,/paths\.has\(f\.path\.replace/);
