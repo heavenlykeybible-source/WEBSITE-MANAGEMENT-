@@ -20,17 +20,18 @@ async function edit(req,env,id){
  const data=await parseBody(req);if(!data||typeof data!=='object'||Array.isArray(data))return response({error:'Invalid payload'},400);
  const date=data.publish_date,title=data.title,scripture=data.scripture,body=data.body,prayer=data.prayer??'';
  if(![title,scripture,body,prayer].every(x=>typeof x==='string'))return response({error:'All text fields must be strings'},400);
- if(!validDate(date)||date<todayLagos()||!title.trim()||!scripture.trim()||!body.trim()||title.length>250||scripture.length>500||body.length>40000||prayer.length>5000)return response({error:'Invalid devotional fields'},400);
+ if(!validDate(date)||(date<todayLagos()&&!id)||!title.trim()||!scripture.trim()||!body.trim()||title.length>250||scripture.length>500||body.length>40000||prayer.length>5000)return response({error:'Invalid devotional fields'},400);
  const existing=id?await env.DB.prepare('SELECT * FROM manna_entries WHERE id=?').bind(id).first():null;
  if(id&&!existing)return response({error:'Not found'},404);
- if(existing?.status==='published')return response({error:'Published entries are immutable; create a correction workflow'},409);
+ if(existing?.status==='published'&&date!==existing.publish_date)return response({error:'Published date cannot be changed'},409);
  if(existing&&(!Number.isSafeInteger(data.expected_revision)||data.expected_revision!==existing.revision))return response({error:'Entry changed; refresh before editing'},409);
  const key=existing?.id||randomId();
  try{
-  if(existing){const updated=await env.DB.prepare("UPDATE manna_entries SET publish_date=?,title=?,scripture=?,body=?,prayer=?,status='draft',approved_revision=NULL,approved_at=NULL,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status!='published'").bind(date,title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision).run();if(updated.meta?.changes!==1)return response({error:'Concurrent update; refresh before saving'},409);}
+  if(existing?.status==='published'){const updated=await env.DB.prepare("UPDATE manna_entries SET title=?,scripture=?,body=?,prayer=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status='published'").bind(title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision).run();if(updated.meta?.changes!==1)return response({error:'Concurrent update; refresh before saving'},409);}
+  else if(existing){const updated=await env.DB.prepare("UPDATE manna_entries SET publish_date=?,title=?,scripture=?,body=?,prayer=?,status='draft',approved_revision=NULL,approved_at=NULL,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status!='published'").bind(date,title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision).run();if(updated.meta?.changes!==1)return response({error:'Concurrent update; refresh before saving'},409);}
   else await env.DB.prepare('INSERT INTO manna_entries(id,publish_date,title,scripture,body,prayer) VALUES(?,?,?,?,?,?)').bind(key,date,title.trim(),scripture.trim(),body.trim(),prayer.trim()).run();
  }catch(e){if(/UNIQUE/i.test(e.message))return response({error:'Date already has a devotional'},409);throw e;}
- await audit(env,existing?'edited':'created',key,date);return response({ok:true,id:key,status:'draft',revision:(existing?.revision||0)+1});
+ await audit(env,existing?.status==='published'?'corrected':existing?'edited':'created',key,date);return response({ok:true,id:key,status:existing?.status==='published'?'published':'draft',revision:(existing?.revision||0)+1});
 }
 async function approve(req,env){
  const payload=await parseBody(req);const entries=payload?.entries;
@@ -55,10 +56,10 @@ async function repairOutbox(env){
 async function publishToday(env,now=Date.now()){
  const date=todayLagos(now);
  await repairOutbox(env);
- const due=await env.DB.prepare("SELECT id,publish_date FROM manna_entries WHERE publish_date<=? AND status='approved' AND approved_revision=revision ORDER BY publish_date LIMIT 100").bind(date).all();
+ const due=await env.DB.prepare("SELECT id,publish_date FROM manna_entries WHERE publish_date<=? AND ((status='approved' AND approved_revision=revision) OR (status='draft' AND ?=1)) ORDER BY publish_date LIMIT 100").bind(date,env.ALLOW_UNREVIEWED_PUBLICATION==='true'?1:0).all();
  let published=0;
  for(const entry of due.results||[]){
-  const result=await env.DB.prepare("UPDATE manna_entries SET status='published',published_at=CURRENT_TIMESTAMP WHERE id=? AND status='approved' AND approved_revision=revision").bind(entry.id).run();
+  const result=await env.DB.prepare("UPDATE manna_entries SET status='published',published_at=CURRENT_TIMESTAMP WHERE id=? AND ((status='approved' AND approved_revision=revision) OR (status='draft' AND ?=1))").bind(entry.id,env.ALLOW_UNREVIEWED_PUBLICATION==='true'?1:0).run();
   if(result.meta?.changes!==1)continue;
   published++;
   for(const destination of ['community','buffer','email'])await env.DB.prepare("INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,'pending')").bind(randomId(),entry.id,destination).run();
