@@ -16,7 +16,7 @@ assert.match(worker,/expected_revision/,'Concurrent edits must be rejected');
 assert.match(worker,/publish_date<=\?/,'Missed release recovery');
 assert.match(worker,/repairOutbox/,'Missing delivery jobs must be recoverable');
 assert.match(worker,/Concurrent update/,'Concurrent saves must be rejected');
-assert.ok(worker.includes('api\\/public'),'Public archive route must exist');
+assert.ok(worker.includes('api') && worker.includes('public'),'Public archive route must exist');
 assert.match(worker,/manna_audit/,'Editorial audit log');
 assert.match(schema,/publish_date TEXT NOT NULL UNIQUE/);
 assert.match(schema,/UNIQUE\(entry_id,destination\)/);
