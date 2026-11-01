@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {inspectBrowserBindings} from '../scripts/browser/bindings.mjs';
+assert.deepEqual(inspectBrowserBindings([],[]),{serviceLinked:false,runtimeBrowserBound:false});
+const services=[{type:'service',name:'BROWSER_AGENT',service:'heavenlykey-browser'}];
+const browser=[{type:'browser',name:'HK_BROWSER'}];
+assert.deepEqual(inspectBrowserBindings(services,browser),{serviceLinked:true,runtimeBrowserBound:true});
+assert.equal(inspectBrowserBindings([{type:'browser',name:'BROWSER_AGENT'}],browser).serviceLinked,false,'Browser bindings on Control Room are not its required service binding');
+assert.equal(inspectBrowserBindings([{type:'service',name:'BROWSER_AGENT',service:'wrong-worker'}],browser).serviceLinked,false,'An unrelated Worker is not a valid target');
+assert.equal(inspectBrowserBindings(services,[{type:'service',name:'HK_BROWSER'}]).runtimeBrowserBound,false,'Runtime must have actual Browser Rendering binding');
+assert.equal(inspectBrowserBindings(null,null).serviceLinked,false);
+console.log('PASS Account 4 private browser service and runtime binding inspection');
