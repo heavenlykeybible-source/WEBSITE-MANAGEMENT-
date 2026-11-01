@@ -1,7 +1,7 @@
 // Public presentation module for the standalone Daily Manna staging Worker.
 // Devotional fields must always be inserted with textContent, never innerHTML.
 export function publicPage(){
-return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Strength for Today · Daily Manna</title><style>body{margin:0;background:#f5f7fc;color:#17243c;font:17px/1.6 system-ui,sans-serif}header{background:#173d7b;color:#fff;text-align:center;padding:2rem}main{max-width:760px;margin:2rem auto;padding:1rem}article,section{background:white;border:1px solid #dde4ef;border-radius:14px;padding:1.5rem;margin-bottom:1rem}#body,#prayer{white-space:pre-wrap}#post-image{display:block;width:100%;max-height:210px;object-fit:contain;margin:0 0 1rem;border-radius:8px}input,button{padding:.6rem;font:inherit}.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}button:disabled{opacity:.45;cursor:not-allowed}button{background:#173d7b;color:white;border:0;border-radius:6px}footer{text-align:center;padding:2rem;color:#59677d}</style></head><body><header><h1>Strength for Today</h1><p>Daily Manna · Heavenly Key Evangelistic Movement</p></header><main><article><img id="post-image" alt="Daily Manna post picture" hidden><small id="date"></small><h2 id="title">Daily devotional</h2><p id="status" role="status">Loading…</p><p id="scripture"></p><div id="body"></div><h3 id="prayer-heading" hidden>Prayer</h3><div id="prayer"></div><div class="actions"><button id="copy" type="button" disabled>Copy devotional</button> <button id="share" type="button" disabled>Share devotional</button></div><p id="action-status" role="status"></p></article><section><form id="archive"><label for="day">Published archive date</label> <input type="date" id="day" required> <button>Read</button></form></section></main><footer>Revival · Holiness · Power</footer><script type="module">
+return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Strength for Today · Daily Manna</title><style>body{margin:0;background:#f5f7fc;color:#17243c;font:17px/1.6 system-ui,sans-serif}header{background:#173d7b;color:#fff;text-align:center;padding:2rem}main{max-width:760px;margin:2rem auto;padding:1rem}article,section{background:white;border:1px solid #dde4ef;border-radius:14px;padding:1.5rem;margin-bottom:1rem}#body,#prayer{white-space:pre-wrap}#post-image{display:block;width:100%;max-height:210px;object-fit:contain;margin:0 0 1rem;border-radius:8px}input,button{padding:.6rem;font:inherit}.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}button:disabled{opacity:.45;cursor:not-allowed}button{background:#173d7b;color:white;border:0;border-radius:6px}.archive-list{list-style:none;padding:0;margin:.6rem 0}.archive-list li{padding:.75rem 0;border-bottom:1px solid #e3e8f0}.archive-list button{background:transparent;border:0;color:#173d7b;text-align:left;padding:0;cursor:pointer}.archive-list button:hover{text-decoration:underline}.archive-list small{display:block;color:#65728b}footer{text-align:center;padding:2rem;color:#59677d}</style></head><body><header><h1>Strength for Today</h1><p>Daily Manna · Heavenly Key Evangelistic Movement</p></header><main><article><img id="post-image" alt="Daily Manna post picture" hidden><small id="date"></small><h2 id="title">Daily devotional</h2><p id="status" role="status">Loading…</p><p id="scripture"></p><div id="body"></div><h3 id="prayer-heading" hidden>Prayer</h3><div id="prayer"></div><div class="actions"><button id="copy" type="button" disabled>Copy devotional</button> <button id="share" type="button" disabled>Share devotional</button></div><p id="action-status" role="status"></p></article><section><form id="archive"><label for="day">Published archive date</label> <input type="date" id="day" required> <button>Read</button></form><h3>Previous devotionals</h3><p id="archive-status" role="status"></p><ul id="archive-list" class="archive-list"></ul><button id="archive-more" type="button" hidden>Load more</button></section></main><footer>Revival · Holiness · Power</footer><script type="module">
 const el=id=>document.getElementById(id);
 const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const part=t=>parts.find(p=>p.type===t).value;const today=part('year')+'-'+part('month')+'-'+part('day');el('day').max=today;el('day').value=today;
 let currentEntry=null,currentDay=today;
@@ -13,6 +13,26 @@ const entry=result.entry;currentEntry=entry;if(result.picture_url){el('post-imag
 }catch{el('title').textContent='Temporarily unavailable';el('status').textContent='Please try again later.';}}
 el('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(devotionalText());el('action-status').textContent='Devotional copied.'}catch{el('action-status').textContent='Copy is unavailable in this browser.'}});
 el('share').addEventListener('click',async()=>{if(!currentEntry)return;const data={title:currentEntry.title,text:devotionalText(),url:location.origin+'/?date='+encodeURIComponent(currentDay)};try{if(navigator.share)await navigator.share(data);else{await navigator.clipboard.writeText(devotionalText());el('action-status').textContent='Devotional copied for sharing.'}}catch(e){if(e.name!=='AbortError')el('action-status').textContent='Sharing is unavailable in this browser.'}});
+let archiveCursor=null;
+async function browseArchive(before=null){
+ el('archive-status').textContent='Loading previous devotionals…';
+ try{
+  const res=await fetch('/api/archive'+(before?'?before='+encodeURIComponent(before):''));if(!res.ok)throw Error('Archive unavailable');
+  const data=await res.json();
+  if(!before)el('archive-list').replaceChildren();
+  for(const entry of data.entries){
+   const li=document.createElement('li'),b=document.createElement('button'),details=document.createElement('small');
+   b.type='button';b.textContent=entry.title;details.textContent=entry.publish_date+' · '+entry.scripture;
+   b.onclick=()=>{el('day').value=entry.publish_date;history.replaceState(null,'','/?date='+encodeURIComponent(entry.publish_date));load(entry.publish_date);window.scrollTo({top:0,behavior:'smooth'})};
+   li.append(b,details);el('archive-list').append(li);
+  }
+  archiveCursor=data.next_before;
+  el('archive-more').hidden=!archiveCursor;
+  el('archive-status').textContent=el('archive-list').children.length?'Browse published devotionals below.':'No past devotionals available yet.';
+ }catch{el('archive-status').textContent='Could not load the archive. Please try again.'}
+}
+el('archive-more').onclick=()=>{if(archiveCursor)browseArchive(archiveCursor)};
+browseArchive();
 el('archive').addEventListener('submit',e=>{e.preventDefault();const d=el('day').value;if(d&&d<=today)load(d)});const requested=new URLSearchParams(location.search).get('date');if(requested&&/^\d{4}-\d{2}-\d{2}$/.test(requested)&&requested<=today){el('day').value=requested;load(requested)}else load();
 </script></body></html>`;
 }
