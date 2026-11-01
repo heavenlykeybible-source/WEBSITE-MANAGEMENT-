@@ -35,6 +35,7 @@ async function verifyNpmBuildManifest(env,g,files,prefix){
  if(hex(await crypto.subtle.digest('SHA-1',input))!==entry.sha)fail('Application package.json integrity check failed',409);
  let manifest;try{manifest=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{fail('Application package.json is not valid UTF-8 JSON',409);}
  if(!manifest||typeof manifest.scripts?.build!=='string'||!manifest.scripts.build.trim())fail('Application must provide an npm build script',409);
+ if(manifest.packageManager&&typeof manifest.packageManager==='string'&&!/^npm(?:@|$)/.test(manifest.packageManager))fail('Review build currently supports npm only',409);
  return manifest;
 }
 async function scanConnectedSource(env,user,b){
