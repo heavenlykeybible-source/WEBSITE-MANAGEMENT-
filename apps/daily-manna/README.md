@@ -31,3 +31,12 @@ Build a secure owner-only proxy from Account 4 to the editor API, backed by the 
 - Buffer multi-account OAuth and provider-specific scheduling.
 - Delivery workers with idempotency, rate limits, retry and failure alerts.
 - Integration tests and staging deployment; manual owner approval before production cutover.
+
+## Staging configuration added
+`wrangler.toml` is intentionally named `strength-for-today-manna-staging`, not the existing live Daily Word Worker. It includes an hourly cron; the Worker gates execution to 00:00 Africa/Lagos. A dedicated D1 database must be created, migrated, and bound before any deployment. Do not assume Account 1 credentials are available from Account 4's GitHub Actions secrets.
+
+## Security integration contract
+The Account 4 editorial browser must use its existing owner session, permission checks, and CSRF defenses. Account 4 must forward authorized requests to the dedicated Manna Worker using a server-side secret, never expose an editor bearer token to browser JavaScript, and must not allow unauthenticated direct editorial writes. Avoid routing public subscribers through the owner editor endpoint.
+
+## Editorial review requirement
+Before connecting the existing live Daily Word database, compare existing devotional fields and dates with the new schema. Create an import mapping and preview sample records; do not migrate or overwrite any existing content until the owner approves the reviewed mapping.
