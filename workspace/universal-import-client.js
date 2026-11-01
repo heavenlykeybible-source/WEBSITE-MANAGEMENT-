@@ -138,10 +138,19 @@ async function universalImportHub(){
   };
   var githubSection=h('section',{class:'card'},h('h3',{},'1 · Choose app and GitHub repository'),h('p',{},'One authorized GitHub identity can access every repository permitted by its GitHub permissions. No separate token per Cloudflare account.'));
   var appOptions=[['all','All applications'],['bible','Bible App / Daily Manna'],['community','Global Christian Community'],['website','Heavenly Key websites and Control Room']];
-  appOptions.forEach(function(v){option(app,v[0],v[1]);});option(identity,'','Select authorized GitHub identity');connections.forEach(function(c){option(identity,c.id,c.label+' · '+c.repo);});
+  appOptions.forEach(function(v){option(app,v[0],v[1]);});option(identity,'','Select authorized GitHub identity');connections.forEach(function(c){option(identity,c.id,c.label+' · GitHub access');});
   githubSection.appendChild(h('label',{},'Application',app));
-  githubSection.appendChild(h('label',{},'Central GitHub authorization',identity));
-  githubSection.appendChild(h('button',{class:'sm',onclick:github},'Connect / reauthenticate GitHub'));
+  githubSection.appendChild(h('label',{},'Universal GitHub identity',identity));
+  var centralLabel=h('input',{placeholder:'GitHub account label, e.g. Heavenly Key GitHub','aria-label':'Central GitHub account label'}),centralToken=h('input',{type:'password',placeholder:'GitHub token (entered privately here)','aria-label':'Central GitHub authorization token'}),centralStatus=h('p',{role:'status'});
+  var centralBox=h('section',{class:'card'},h('h4',{},'Universal GitHub authorization'),h('p',{},'Authorize your GitHub identity once for all repositories and organizations permitted by the token. This authorization belongs to Account 4, not Account 3 or a website.'));
+  centralBox.appendChild(h('label',{},'Connection name',centralLabel));centralBox.appendChild(h('label',{},'GitHub authorization token',centralToken));
+  centralBox.appendChild(h('button',{onclick:async function(){this.disabled=true;try{
+   if(!centralLabel.value.trim()||!centralToken.value.trim())throw Error('Enter the connection label and GitHub token.');
+   var linked=await api('workspace/github/central-connect','POST',{label:centralLabel.value.trim(),token:centralToken.value.trim()});
+   centralToken.value='';connections.push(linked);option(identity,linked.id,linked.label+' · GitHub identity');identity.value=String(linked.id);identity.onchange();await loadRepos(false);
+   centralStatus.textContent='Central GitHub identity connected to Control Room. Browse accessible repositories and choose any destination account.';
+  }catch(e){centralToken.value='';centralStatus.textContent=e.message;}finally{this.disabled=false;}}},'Authorize GitHub for all permitted repositories'));
+  centralBox.appendChild(centralStatus);githubSection.appendChild(centralBox);
   githubSection.appendChild(h('div',{},refresh,more));
   githubSection.appendChild(h('label',{},'Search',query));empty(repos,'Choose a repository');githubSection.appendChild(repos);githubSection.appendChild(connect);
   githubSection.appendChild(h('label',{},'Detected app / project',project));
