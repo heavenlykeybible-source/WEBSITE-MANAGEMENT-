@@ -9,7 +9,7 @@ export function devotionalCaption(entry,origin){
  const home=new URL(origin);
  if(home.protocol!=='https:'||home.username||home.password||home.search||home.hash)throw Error('Invalid public origin');
  const link=new URL('/?date='+encodeURIComponent(entry.publish_date),home).toString();
- const text=[entry.title,entry.scripture,entry.body,entry.prayer?'Prayer: '+entry.prayer:'','Read Daily Manna: '+link].filter(Boolean).join('\n\n');
+ const text=[entry.title,entry.scripture,entry.body,entry.prayer?'Prayer: '+entry.prayer:'','Read STRENGTH FOR TODAY - our daily manna: '+link].filter(Boolean).join('\n\n');
  if(text.length>MAX_MESSAGE)throw Error('Caption exceeds provider limit');
  return {text,link};
 }
