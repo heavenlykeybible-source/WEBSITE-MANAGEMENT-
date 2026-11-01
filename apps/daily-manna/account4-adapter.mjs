@@ -10,7 +10,7 @@ export async function dailyMannaProxy(request,env,security){
  if(!url.pathname.startsWith(prefix))return reply({error:'Invalid path'},404);
  const suffix=url.pathname.slice(prefix.length);
  const pictureUpload=method==='PUT'&&/^picture\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
- const permitted=pictureUpload||(method==='GET'&&['entries','deliveries'].includes(suffix))||
+ const permitted=pictureUpload||(method==='GET'&&['entries','deliveries','readiness'].includes(suffix))||
   (method==='POST'&&['entries','approve','publish-check'].includes(suffix))||
   (method==='PUT'&&/^entries\/[a-f0-9-]{36}$/.test(suffix));
  if(!permitted)return reply({error:'Operation not permitted'},405);
