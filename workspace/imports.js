@@ -141,11 +141,18 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const g=await importSource(env,user,sourceId);
   const token=await unseal(env,g.secret_enc);
   const endpoint='https://api.github.com/user/repos?per_page=50&page='+page+'&affiliation=owner%2Ccollaborator%2Corganization_member&sort=full_name&direction=asc';
-  const response=await fetch(endpoint,{method:'GET',redirect:'manual',signal:AbortSignal.timeout(15000),headers:{authorization:'Bearer '+token,accept:'application/vnd.github+json','x-github-api-version':'2022-11-28','user-agent':'heavenly-key-control-room'}});
-  if(!response.ok){if(response.status===401||response.status===403)fail('This GitHub authorization cannot list repositories. Reconnect with approved repository read access.',403);fail('GitHub repository discovery unavailable (HTTP '+response.status+')',502);}
-  const data=await response.json();if(!Array.isArray(data))fail('Unexpected GitHub repository list response',502);
+  const headers={authorization:'Bearer '+token,accept:'application/vnd.github+json','x-github-api-version':'2022-11-28','user-agent':'heavenly-key-control-room'};
+  const init=()=>({method:'GET',redirect:'manual',signal:AbortSignal.timeout(15000),headers});
+  let response=await fetch(endpoint,init()),mode='user';
+  if(response.status===403||response.status===404){
+   const installed='https://api.github.com/installation/repositories?per_page=50&page='+page;
+   response=await fetch(installed,init());mode='installation';
+  }
+  if(!response.ok){if([401,403,404].includes(response.status))fail('GitHub repository listing is not authorized. Reconnect with repository read access.',403);fail('GitHub repository discovery unavailable (HTTP '+response.status+')',502);}
+  const payload=await response.json(),data=mode==='installation'?payload?.repositories:payload;
+  if(!Array.isArray(data))fail('Unexpected GitHub repository list response',502);
   const repositories=data.filter(x=>x&&typeof x.full_name==='string'&&/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(x.full_name)).map(x=>({repo:x.full_name,owner:x.owner?.login||'',private:!!x.private,default_branch:String(x.default_branch||'main'),archived:!!x.archived,disabled:!!x.disabled,canPush:!!x.permissions?.push}));
-  return json({repositories,page,hasMore:data.length===50,scope:'GitHub repositories visible to the selected authorized credential',readOnly:true});
+  return json({repositories,page,hasMore:data.length===50,scope:'GitHub repositories visible to the selected authorized credential',connectionMode:mode,readOnly:true});
  }
  if(sub==='workspace/github/bulk-connect'&&m==='POST'){
   const b=await body(req),sourceId=Number(b?.source),branch=String(b?.branch||'main').trim(),names=b?.repositories;
