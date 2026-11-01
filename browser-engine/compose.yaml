@@ -8,6 +8,7 @@ services:
     environment:
       PORT: "8080"
       MAX_JOBS: "2"
+      NODE_ENV: production
       BROWSER_ENGINE_KEY: ${BROWSER_ENGINE_KEY:?Set BROWSER_ENGINE_KEY in environment}
       BROWSER_ENGINE_STATE_FILE: /data/browser-jobs.json
     volumes:
