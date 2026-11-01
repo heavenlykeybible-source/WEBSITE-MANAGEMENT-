@@ -107,6 +107,8 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(duplicate)fail('This GitHub repository and branch are already connected',409);
   const original=await env.DB.prepare('SELECT secret_enc FROM github_sites WHERE id=? AND owner_id IS NULL').bind(sourceId).first();
   if(!original?.secret_enc)fail('Authorized GitHub connection is unavailable',404);
+  const existingLabel=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND label=?').bind(label).first();
+  if(existingLabel)fail('A GitHub connection with this label already exists',409);
   const inserted=await env.DB.prepare('INSERT INTO github_sites(label,repo,branch,dir,secret_enc,owner_id) VALUES(?,?,?,?,?,NULL)').bind(label,repo,branch,'',original.secret_enc).run();
   await audit(env,user.username,'github-repository-added','Added authorized repository '+repo+' from connection '+sourceId);
   return json({id:inserted.meta.last_row_id,label,repo,branch,authenticated:true,tokenReused:true});
