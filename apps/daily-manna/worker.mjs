@@ -7,10 +7,15 @@ const response=(v,status=200)=>new Response(JSON.stringify(v),{status,headers});
 const validDate=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
 const randomId=()=>crypto.randomUUID();
 const todayLagos=(now=Date.now())=>{const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(now));const get=k=>p.find(x=>x.type===k).value;return get('year')+'-'+get('month')+'-'+get('day');};
+async function parseBody(req){
+ const raw=await req.text();
+ if(new TextEncoder().encode(raw).length>50000)return null;
+ try{return JSON.parse(raw)}catch{return null}
+}
 async function audit(env,action,entry,detail){await env.DB.prepare('INSERT INTO manna_audit(id,action,entry_id,detail) VALUES(?,?,?,?)').bind(randomId(),action,entry,detail).run();}
 function auth(req,env){const a=req.headers.get('authorization')||'';return !!env.EDITOR_TOKEN&&a==='Bearer '+env.EDITOR_TOKEN;}
 async function edit(req,env,id){
- const data=await req.json();if(!data||typeof data!=='object'||Array.isArray(data))return response({error:'Invalid payload'},400);
+ const data=await parseBody(req);if(!data||typeof data!=='object'||Array.isArray(data))return response({error:'Invalid payload'},400);
  const date=data.publish_date,title=data.title,scripture=data.scripture,body=data.body,prayer=data.prayer??'';
  if(![title,scripture,body,prayer].every(x=>typeof x==='string'))return response({error:'All text fields must be strings'},400);
  if(!validDate(date)||date<todayLagos()||!title.trim()||!scripture.trim()||!body.trim()||title.length>250||scripture.length>500||body.length>40000||prayer.length>5000)return response({error:'Invalid devotional fields'},400);
@@ -26,7 +31,7 @@ async function edit(req,env,id){
  await audit(env,existing?'edited':'created',key,date);return response({ok:true,id:key,status:'draft',revision:(existing?.revision||0)+1});
 }
 async function approve(req,env){
- const payload=await req.json();const entries=payload?.entries;
+ const payload=await parseBody(req);const entries=payload?.entries;
  if(!Array.isArray(entries)||entries.length===0||entries.length>100||entries.some(x=>!x||typeof x.id!=='string'||!Number.isSafeInteger(x.revision)))return response({error:'Select 1-100 entries with their reviewed revisions'},400);
  if(new Set(entries.map(x=>x.id)).size!==entries.length)return response({error:'Duplicate entries'},400);
  const results=[];
