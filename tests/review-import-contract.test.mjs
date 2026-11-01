@@ -159,3 +159,10 @@ test('TinyFish automation rejects private network and non-HTTPS target URLs',()=
  assert.match(server,/target\.hostname\.endsWith\('\.localhost'\)/);
  assert.match(server,/public HTTPS domain/);
 });
+
+test('TinyFish concurrency guard and terminal cancellation protect owner wallet',()=>{
+ assert.match(server,/Number\(active\?\.n\|\|0\)>=3/);
+ assert.match(server,/At most three uncompleted TinyFish tasks/);
+ assert.match(server,/This task has already finished/);
+ assert.match(client,/Up to three unfinished tasks/);
+});
