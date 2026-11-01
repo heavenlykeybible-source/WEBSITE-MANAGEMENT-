@@ -2,6 +2,8 @@
 
 The Control Room contains an owner-only Browser agent panel and three AI tools: `browser_request_task`, `browser_task_status`, and `browser_action`. Each task requires approval of its goal and exact HTTPS hosts. Navigation, clicks, and form actions are staged for an inline owner decision. Private field entry never goes to the AI or D1. Screenshots are returned only to the authenticated owner; input values are masked. Screenshots can still show private page content.
 
+Readiness is checked through a private `GET /health` service-binding request; merely configuring `BROWSER_AGENT` no longer counts as healthy. An unreachable service or missing `HK_BROWSER` binding blocks new browser tasks and session approvals. The check starts no browser session and makes no website changes.
+
 The private Cloudflare Worker runs `@cloudflare/puppeteer`. It exposes no public routes, no arbitrary JavaScript evaluation, and no cookie/storage export. Sessions are isolated per task and encrypted in the control plane. A task lasts two minutes, idle sessions expire after thirty seconds, and the control plane reserves at most three tasks daily. These application limits do not account for other consumers of the same Cloudflare browser allowance. Provider CAPTCHA and authentication remain provider-controlled; some sites will block automation.
 
 ## Activation blocked as of 2026-10-23
