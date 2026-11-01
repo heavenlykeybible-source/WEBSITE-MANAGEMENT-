@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {liveReleaseCommit,verifyForwardRelease} from './account4-release-lineage.mjs';
 const account = process.env.CLOUDFLARE_ACCOUNT_ID;
 const token = process.env.CLOUDFLARE_API_TOKEN;
 const worker = 'website-management';
@@ -57,8 +58,19 @@ if (process.argv.includes('--check')) {
   const finalSha = finalRemote.stdout?.trim().split(/\s+/)[0];
   if (finalRemote.status !== 0 || finalSha !== approved)
     throw new Error('Account 4 upload cancelled: newer source appeared during release preparation');
+  // A newer GitHub main is not sufficient: reject rollbacks relative to the Worker already live.
+  const live = await fetch(base, {headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(60000)});
+  if (!live.ok) throw new Error('Cannot read existing live Worker to verify release history; upload blocked');
+  const liveBody = await live.text();
+  const deployed = liveReleaseCommit(liveBody);
+  const ancestor = deployed ? spawnSync('git', ['merge-base','--is-ancestor',deployed,approved], {encoding:'utf8',shell:false,timeout:20000}) : null;
+  verifyForwardRelease({deployed,approved,allowUnmarked:process.env.ACCOUNT4_ALLOW_UNMARKED_BASELINE==='1',isAncestor:ancestor?.status===0});
+  form.set('control-room-worker.js', new Blob([source+'\n// ACCOUNT4_DEPLOY_COMMIT_SHA='+approved+'\n'], {type:'application/javascript+module'}), 'control-room-worker.js');
   await api(base, {method:'PUT', body:form});
   const after = await api(base + '/settings');
   if (signature(bindings) !== signature(after.bindings || [])) throw new Error('Upload completed but binding verification differs. Inspect existing Worker before retrying.');
+  const verified = await fetch(base, {headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(60000)});
+  if (!verified.ok || !(await verified.text()).includes('// ACCOUNT4_DEPLOY_COMMIT_SHA='+approved))
+    throw new Error('Upload completed but live Worker release marker could not be verified; inspect production before retrying');
   console.log('SUCCESS: deployed existing website-management Worker; all saved bindings and secret names verified unchanged.');
 }

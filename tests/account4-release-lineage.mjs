@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {liveReleaseCommit,verifyForwardRelease} from '../scripts/account4-release-lineage.mjs';
+const older='1'.repeat(40),newer='2'.repeat(40);
+assert.equal(liveReleaseCommit('no release marker'),null);
+assert.equal(liveReleaseCommit('// ACCOUNT4_DEPLOY_COMMIT_SHA='+older),older);
+assert.equal(liveReleaseCommit('// ACCOUNT4_DEPLOY_COMMIT_SHA='+older+'\n// ACCOUNT4_DEPLOY_COMMIT_SHA='+newer),newer);
+assert.throws(()=>verifyForwardRelease({deployed:null,approved:newer}),/legacy baseline/);
+assert.equal(verifyForwardRelease({deployed:null,approved:newer,allowUnmarked:true}),'legacy-bootstrap');
+assert.throws(()=>verifyForwardRelease({deployed:older,approved:older,isAncestor:true}),/already deployed/);
+assert.throws(()=>verifyForwardRelease({deployed:newer,approved:older,isAncestor:false}),/rollback/);
+assert.throws(()=>verifyForwardRelease({deployed:older,approved:newer,isAncestor:false}),/rollback/);
+assert.equal(verifyForwardRelease({deployed:older,approved:newer,isAncestor:true}),'forward');
+assert.throws(()=>verifyForwardRelease({deployed:older,approved:'bad',isAncestor:true}),/Invalid approved/);
+console.log('PASS: Account 4 deployed-release ancestry checks');
