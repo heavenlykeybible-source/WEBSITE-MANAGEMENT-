@@ -1,0 +1,16 @@
+# Independent Strength for Today application (Account 1).
+# Do not deploy until the real D1 database ID is provisioned and entered.
+name = "strength-for-today-manna-staging"
+main = "worker.mjs"
+compatibility_date = "2026-10-18"
+workers_dev = true
+
+[triggers]
+crons = ["0 * * * *"]
+
+# Set EDITOR_TOKEN with: npx wrangler secret put EDITOR_TOKEN
+# Then replace the placeholder and uncomment the D1 binding.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "strength-for-today-manna"
+# database_id = "REPLACE_WITH_REAL_D1_DATABASE_ID"
