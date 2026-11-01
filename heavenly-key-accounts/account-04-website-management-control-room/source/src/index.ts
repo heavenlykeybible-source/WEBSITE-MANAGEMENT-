@@ -120,8 +120,8 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    if(!files.length)return fail('No Account 3 implementation files found at the expected source folder.',404);
    const id=crypto.randomUUID(),prefix='imports/'+id+'/',now=new Date().toISOString();
    await env.MEDIA.put(prefix+'files.json',JSON.stringify({repository:data.repository,ref,commit:commit.sha,root,files}),{httpMetadata:{contentType:'application/json'}});
-   await env.MEDIA.put(prefix+'manifest',JSON.stringify({name:'Global Christian Community — Account 3',owner:actor,createdAt:now,submittedAt:now,status:'waiting-review',source:'github-tree',repository:data.repository,ref,commit:commit.sha,root,fileCount:files.length,totalBytes:total,parts:0,extracted:false,published:false}),{httpMetadata:{contentType:'application/json'}});
-   return json({id,status:'waiting-review',source:'github-tree',commit:commit.sha,fileCount:files.length,totalBytes:total,approvalRequired:true,published:false,materialized:false});
+   await env.MEDIA.put(prefix+'manifest',JSON.stringify({name:'Global Christian Community — Account 3',owner:actor,createdAt:now,submittedAt:undefined,status:'source-discovered',source:'github-tree',repository:data.repository,ref,commit:commit.sha,root,fileCount:files.length,totalBytes:total,parts:0,extracted:false,published:false}),{httpMetadata:{contentType:'application/json'}});
+   return json({id,status:'source-discovered',source:'github-tree',commit:commit.sha,fileCount:files.length,totalBytes:total,approvalRequired:true,published:false,materialized:false});
   }
   if(u.pathname==='/api/project-imports'&&request.method==='GET'){
    const entries:{id:string,name:string,status:string,createdAt:string,submittedAt?:string,totalBytes:number,parts:number,source?:string,fileCount?:number,commit?:string}[]=[];
@@ -173,6 +173,33 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    }
    return json({valid,rejected,readyForReview:rejected.length===0,published:false});
   }
+  // Confirm every pinned source blob was copied before presenting it for approval.
+  const verifyMatch=u.pathname.match(/^\/api\/project-imports\/([a-f0-9-]{36})\/verify-source$/);
+  if(verifyMatch&&request.method==='POST'){
+   const id=verifyMatch[1],prefix='imports/'+id+'/',stored=await env.MEDIA.get(prefix+'manifest');
+   if(!stored)return fail('Import session not found.',404);
+   const manifest=JSON.parse(await stored.text());
+   if(manifest.owner!==actor)return fail('Import belongs to another administrator.',403);
+   if(manifest.source!=='github-tree'||manifest.published)return fail('Not a pending GitHub source import.',409);
+   const source=await env.MEDIA.get(prefix+'files.json');
+   if(!source)return fail('Source manifest is missing.',409);
+   const inventory=JSON.parse(await source.text()) as {files:{sha:string;size:number}[]};
+   let verified=0;
+   const missing:number[]=[];
+   for(let start=0;start<inventory.files.length;start+=12){
+    const slice=inventory.files.slice(start,start+12);
+    const checks=await Promise.all(slice.map((_,i)=>env.MEDIA.head(prefix+'source/'+String(start+i).padStart(7,'0'))));
+    for(let i=0;i<slice.length;i++){
+     const entry=slice[i],found=checks[i];
+     if(found?.size===entry.size&&found.customMetadata?.gitSha===entry.sha)verified++;
+     else missing.push(start+i);
+    }
+   }
+   if(missing.length)return json({id,status:'materializing',verified,total:inventory.files.length,missing:missing.slice(0,100),missingCount:missing.length,published:false},409);
+   const updated={...manifest,status:'waiting-review',materialized:true,verifiedAt:new Date().toISOString()};
+   await env.MEDIA.put(prefix+'manifest',JSON.stringify(updated),{httpMetadata:{contentType:'application/json'}});
+   return json({id,status:'waiting-review',verified,total:inventory.files.length,approvalRequired:true,published:false});
+  }
   // Copy exact GitHub blob revisions to private R2 before the owner can approve a release.
   // One bounded batch per request avoids Workers' CPU/memory/subrequest limits.
   const copyMatch=u.pathname.match(/^\/api\/project-imports\/([a-f0-9-]{36})\/materialize$/);
@@ -203,7 +230,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
     if(Number(result.headers.get('content-length')||0)>25165824)return fail('Source file is too large.',413);
     const bytes=new Uint8Array(await result.arrayBuffer());
     if(bytes.byteLength!==entry.size||bytes.byteLength>25165824)return fail('Source file differs from pinned GitHub metadata.',422);
-    const prefixBytes=new TextEncoder().encode('blob '+bytes.length+'\\0');
+    const prefixBytes=new TextEncoder().encode('blob '+bytes.length+'\0');
     const hashInput=new Uint8Array(prefixBytes.length+bytes.length);
     hashInput.set(prefixBytes);hashInput.set(bytes,prefixBytes.length);
     const digest=new Uint8Array(await crypto.subtle.digest('SHA-1',hashInput));
