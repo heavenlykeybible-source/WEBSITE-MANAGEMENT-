@@ -94,6 +94,27 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    await env.MEDIA.put('imports/'+id+'/manifest',JSON.stringify({name:data.name.trim(),totalBytes:total,parts,owner:actor,createdAt:new Date().toISOString(),status:'staging'}),{httpMetadata:{contentType:'application/json'}});
    return json({id,parts,chunkBytes:4194304,status:'staging',published:false});
   }
+  // Validate GitHub-relative paths without forbidding legitimate folder names with spaces.
+  // This prepares a manifest for review; it does not commit, extract or publish files.
+  if(u.pathname==='/api/project-imports/validate-paths'&&request.method==='POST'){
+   const data=await body(request,131072);
+   if(!Array.isArray(data.paths)||data.paths.length<1||data.paths.length>1000)return fail('Supply 1 to 1000 paths.');
+   const valid:string[]=[],rejected:{path:string,reason:string}[]=[];
+   const seen=new Set<string>();
+   for(const candidate of data.paths){
+    if(typeof candidate!=='string'||candidate.length>1024){rejected.push({path:String(candidate).slice(0,120),reason:'Invalid length or type'});continue;}
+    const path=candidate.normalize('NFC');
+    const segments=path.split('/');
+    if(path.startsWith('/')||path.includes('\\\\')||/[\\x00-\\x1f\\x7f]/.test(path)||segments.some(x=>!x||x==='.'||x==='..')||path.endsWith('/')||seen.has(path)){
+     rejected.push({path,reason:'Unsafe or duplicate relative path'});continue;
+    }
+    if(segments.some(x=>x===' .git'||x==='.git')||/(^|\\/)(\\.env(?:\\.|$)|id_rsa$|.*\\.pem$)/i.test(path)){
+     rejected.push({path,reason:'Protected or credential-related file'});continue;
+    }
+    seen.add(path);valid.push(path);
+   }
+   return json({valid,rejected,readyForReview:rejected.length===0,published:false});
+  }
   const importMatch=u.pathname.match(/^\\/api\\/project-imports\\/([a-f0-9-]{36})(?:\\/chunks\\/(\\d+))?$/);
   if(importMatch){
    const id=importMatch[1],prefix='imports/'+id+'/',stored=await env.MEDIA.get(prefix+'manifest');
