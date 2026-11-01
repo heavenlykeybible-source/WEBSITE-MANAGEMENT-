@@ -116,6 +116,15 @@ test('review status exposes API failures and confirmed cancellation only',()=>{
  assert.match(server,/review-closed-after-cancel-request/);
  assert.match(server,/Build request cancelled or cancellation pending/);
 });
+test('additional GitHub repositories reuse only authorized encrypted connection tokens',()=>{
+ assert.match(server,/workspace\/github\/reuse/);
+ assert.match(server,/await importSource\(env,user,sourceId\)/);
+ assert.match(server,/await ghHead\(env,target\)/);
+ assert.match(server,/SELECT secret_enc FROM github_sites WHERE id=\? AND owner_id IS NULL/);
+ assert.match(server,/original\.secret_enc\)\.run\(\)/);
+ assert.match(client,/Verify and add repository/);
+ assert.match(client,/different GitHub account/);
+});
 test('application controls require reviewed build',()=>{
  assert.match(client,/Start review build/);
  assert.match(client,/Check review build status/);
