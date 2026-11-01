@@ -13,7 +13,7 @@ async function nativeImports(){try{
   try{var result=await api('workspace/application-builds');var items=result.builds||[];
    buildQueue.appendChild(h('h4',{},'Application build requests'));
    if(!items.length)buildQueue.appendChild(h('p',{},'No application builds registered.'));
-   items.forEach(function(b){buildQueue.appendChild(h('p',{class:'tag'},b.repo+' · '+b.commit.slice(0,12)+' · '+b.worker+' · '+b.status));});
+   items.forEach(function(b){var item=h('div',{class:'card'},h('p',{class:'tag'},b.repo+' · '+b.commit.slice(0,12)+' · '+b.worker+' · '+b.status));if(b.status==='build-required'){item.appendChild(h('button',{class:'sm',onclick:async function(){this.disabled=true;try{await api('workspace/application-build/cancel','POST',{id:b.id});item.textContent='Build request cancelled.';}catch(e){status.textContent=e.message;this.disabled=false;}}},'Cancel unstarted build'));}buildQueue.appendChild(item);});
   }catch(e){buildQueue.textContent=e.message;}
  }},'View application build queue');
  var appBuild=h('button',{onclick:async function(){
