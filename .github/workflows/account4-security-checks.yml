@@ -122,7 +122,7 @@ jobs:
         run: node --check control-room-worker.js
       - name: Validate Control Room workspace and security module syntax
         run: |
-          find workspace security cms ai scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -r -n1 node --check
+          find workspace security cms ai scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -r -n1 node --check
       - name: Validate Cloudflare Worker packaging without deployment
         run: npx --yes wrangler@4.136.0 deploy --dry-run --outdir /tmp/account4-worker-bundle
       - name: Run Account 4 regression suite
