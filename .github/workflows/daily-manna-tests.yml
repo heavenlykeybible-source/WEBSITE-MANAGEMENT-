@@ -48,3 +48,6 @@ jobs:
 
       - name: Validate published correction history and stale-write protection
         run: node correction-history.test.mjs
+
+      - name: Validate signed central Studio handoff
+        run: node studio-bridge.test.mjs
