@@ -10,6 +10,7 @@ async function queueConnectedApplication(env,user,b){
  if(!tree.files.some(f=>f.path===prefix+'package.json'))fail('Application package.json missing',400);
  if(tree.files.some(f=>f.path.startsWith(prefix+'node_modules/')))fail('Dependencies must not be included in application source',400);
  const conn=await connById(env,b.connection),worker=String(b.worker||'');
+ if(!/^[a-z0-9][a-z0-9_-]{0,62}$/.test(worker))fail('Choose a valid Cloudflare Worker name',400);
  protectWorker(env,worker);
  if(!/^[a-f0-9]{40}$/.test(tree.head.commit))fail('Pinned commit required',409);
  const id=crypto.randomUUID();
