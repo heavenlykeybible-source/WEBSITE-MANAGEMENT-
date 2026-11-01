@@ -102,6 +102,8 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   let target;try{target=new URL(url);}catch{fail('Enter a valid HTTPS website URL',400);}
   if(target.protocol!=='https:'||target.username||target.password||target.port||target.href.length>2000||!target.hostname.includes('.')||target.hostname.endsWith('.local')||target.hostname.endsWith('.internal')||target.hostname.endsWith('.localhost')||target.hostname.endsWith('.test')||target.hostname.endsWith('.invalid')||target.hostname==='localhost'||target.hostname.startsWith('[')||/^(?:\d{1,3}\.){3}\d{1,3}$/.test(target.hostname)||target.hostname==='metadata.google.internal')fail('TinyFish requires a public HTTPS domain, not a private network address',400);
   if(goal.length<8||goal.length>3000)fail('Enter a clear task of 8 to 3000 characters',400);
+  const active=await env.DB.prepare("SELECT COUNT(*) AS n FROM settings WHERE key LIKE 'workspace:tinyfish:%' AND json_extract(value_json,'$.createdBy')=? AND json_extract(value_json,'$.status') NOT IN ('COMPLETED','FAILED','CANCELLED')").bind(user.id).first();
+  if(Number(active?.n||0)>=3)fail('At most three uncompleted TinyFish tasks are allowed. Check or cancel existing tasks first.',429);
   const response=await fetch('https://agent.tinyfish.ai/v1/automation/run-async',{method:'POST',headers:{'X-API-Key':key,'Content-Type':'application/json'},body:JSON.stringify({url:target.href,goal}),signal:AbortSignal.timeout(25000)});
   if(!response.ok)fail('TinyFish could not start this task (HTTP '+response.status+'). Check API key and wallet.',502);
   const result=await response.json();
