@@ -1,4 +1,5 @@
 import {publicPage} from './public-page.mjs';
+import {facebookReady,publishToFacebook} from './facebook-publisher.mjs';
 // Strength for Today Daily Manna: independent Worker. No credentials are embedded.
 // Bind DB to a dedicated D1 database; set EDITOR_TOKEN as a secret.
 // Scheduled trigger: 0 * * * * (hourly UTC, publishes only at 23:00 UTC = midnight Lagos).
@@ -80,8 +81,8 @@ async function approve(req,env){
  return response({results});
 }
 async function repairOutbox(env){
- const missing=await env.DB.prepare("SELECT e.id FROM manna_entries e WHERE e.status='published' AND (SELECT COUNT(*) FROM manna_deliveries d WHERE d.entry_id=e.id AND d.destination IN ('community','buffer','email'))<3 LIMIT 100").bind().all();
- for(const entry of missing.results||[])for(const destination of ['community','buffer','email'])
+ const missing=await env.DB.prepare("SELECT e.id FROM manna_entries e WHERE e.status='published' AND (SELECT COUNT(*) FROM manna_deliveries d WHERE d.entry_id=e.id AND d.destination IN ('community','facebook'))<2 LIMIT 100").bind().all();
+ for(const entry of missing.results||[])for(const destination of ['community','facebook'])
   await env.DB.prepare("INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,'pending')").bind(randomId(),entry.id,destination).run();
 }
 async function publishToday(env,now=Date.now()){
@@ -98,6 +99,28 @@ async function publishToday(env,now=Date.now()){
  }
  await repairOutbox(env);
  return {date,published,moreMayBeDue:(due.results||[]).length===100};
+}
+
+// At-most-once provider attempt. Ambiguous network failures are NOT retried automatically:
+// an owner must reconcile the Facebook Page before explicitly retrying to avoid duplicate posts.
+async function dispatchFacebook(env){
+ if(!facebookReady(env))return {configured:false,processed:0};
+ const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.id AS entry_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT content_type FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_content_type FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='facebook' AND d.status='pending' AND e.status='published' ORDER BY e.publish_date LIMIT 10").all();
+ let processed=0,sent=0,failed=0;
+ for(const entry of jobs.results||[]){
+  const claim=await env.DB.prepare("UPDATE manna_deliveries SET status='skipped',attempts=attempts+1,error='Provider attempt in progress; reconcile before retry',updated_at=CURRENT_TIMESTAMP WHERE id=? AND destination='facebook' AND status='pending'").bind(entry.delivery_id).run();
+  if(claim.meta?.changes!==1)continue;
+  processed++;
+  try{
+   const result=await publishToFacebook(entry,env);
+   await env.DB.prepare("UPDATE manna_deliveries SET status='sent',provider_post_id=?,error=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='skipped'").bind(result.provider_post_id,entry.delivery_id).run();
+   sent++;
+  }catch(error){
+   await env.DB.prepare("UPDATE manna_deliveries SET status='failed',error=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='skipped'").bind('Provider delivery failed; verify Facebook Page before retry',entry.delivery_id).run();
+   failed++;
+  }
+ }
+ return {configured:true,processed,sent,failed};
 }
 
 export default {
@@ -149,6 +172,7 @@ export default {
   }catch(e){return response({error:'Internal error'},500);}
  },
  async scheduled(event,env){
-  await publishToday(env,event.scheduledTime); // Hourly safety check: first run at Lagos midnight; later runs recover missed releases.
+  await publishToday(env,event.scheduledTime); // Hourly recovery and scheduled release.
+  await dispatchFacebook(env); // Only runs if authorized Page integration is configured.
  }
 };
