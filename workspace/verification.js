@@ -17,10 +17,19 @@ async function providerVerificationRoutes(req,env,user,sub,m){
   const b=await body(req);if(!/^[a-f0-9-]{36}$/.test(String(b.id))||!['decline','recheck'].includes(b.action))fail('Choose Decline or Recheck');
   return withOperationLock(env,'verification:'+b.id,async()=>{const key='workspace:verification:'+user.id+':'+b.id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('Verification request not found',404);const record=JSON.parse(row.value_json);if(record.status!=='pending'||record.expires<Date.now())fail('Request expired or already resolved.',409);
    if(b.action==='decline')record.status='declined';
-   else if(record.provider==='cloudflare'){const c=await connById(env,record.connection);await cf(env,c,'GET','/workers/scripts');record.status='connection-verified';}
+   else if(record.provider==='cloudflare'){
+    const c=await connById(env,record.connection);
+    if(/DNS\s*:\s*Read|dns records|subdomain/i.test(record.reason||'')){
+     const zones=await domainZoneRead(env,c,'/zones?name=heavenlykey.org&account.id='+encodeURIComponent(c.account_id)+'&per_page=50','Zone: Read');
+     const zone=(zones.result||[]).find(z=>z.name==='heavenlykey.org'&&z.account?.id===c.account_id&&z.status==='active');
+     if(!zone)fail('Active heavenlykey.org zone not found on this connection.',409);
+     await domainZoneRead(env,c,'/zones/'+zone.id+'/dns_records?per_page=1','DNS: Read');
+     record.status='dns-read-verified';
+    }else{await cf(env,c,'GET','/workers/scripts');record.status='workers-read-verified';}
+   }
    else if(record.provider==='github'){const g=await ghById(env,record.connection,scopeOf({kind:'owner',user,ow:null}));await ghHead(env,g);record.status='connection-verified';}
    else fail('Google sign-in cannot be confirmed here. Test the connected Google Drive source after completing the official provider step.',409);
-   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(record),key).run();await audit(env,user.username,'provider-verification',record.provider+' '+record.status);return json({ok:true,status:record.status,notice:record.status==='connection-verified'?'Saved API connection can be read. This does not prove browser sign-in or write permission.':'No access granted.'});
+   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(record),key).run();await audit(env,user.username,'provider-verification',record.provider+' '+record.status);return json({ok:true,status:record.status,notice:record.status==='dns-read-verified'?'DNS read access verified on heavenlykey.org; DNS write permission is not established.':record.status==='workers-read-verified'?'Worker list read access verified; write permission is not established.':'No access granted.'});
   });
  }
  fail('Method not allowed',405);
