@@ -60,3 +60,15 @@ test('GitHub identity discovery selects actual default branch and isolates pagin
  assert.match(client,/discoveredSource!==tokenSource\.value/);
  assert.match(client,/loadMoreRepos\.disabled=!result\.hasMore/);
 });
+
+test('GitHub source inspector reads only a verified pinned source revision',()=>{
+ assert.match(server,/workspace\/github\/files/);
+ assert.match(server,/workspace\/github\/file/);
+ assert.match(server,/tree\.head\.commit!==commit/);
+ assert.match(server,/data\.sha!==file\.sha/);
+ assert.match(server,/raw\.byteLength>200000/);
+ assert.match(server,/readOnly:true/);
+ assert.match(client,/GitHub source inspector/);
+ assert.match(client,/Inspect pinned source file/);
+ assert.match(client,/result\.content\.slice\(0,60000\)/);
+});
