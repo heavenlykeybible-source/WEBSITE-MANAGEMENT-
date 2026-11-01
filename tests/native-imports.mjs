@@ -19,6 +19,13 @@ files.set('dist/package.json','{}');await assert.rejects(w.scanConnectedSource(e
 await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/catalog'),env,{...user,role:'admin'},'workspace/catalog','GET'),e=>e.status===403);
 const actor={chatUserId:1,agentId:1,a:{can_read:1},chatConversationId:crypto.randomUUID()},request=await w.requestProviderVerification(env,actor,{provider:'github',connection:1,reason:'Recheck repository access',url:'https://evil.example'});assert.equal(request.verification_request.url,'https://github.com/login');
 const same=await w.requestProviderVerification(env,actor,{provider:'github',connection:1,reason:'Still needs checking'});assert.equal(same.verification_request.id,request.verification_request.id);
-const req=new Request('https://room/api/owner/verification/resolve',{method:'POST',body:JSON.stringify({id:request.verification_request.id,action:'recheck'})});const result=await (await w.providerVerificationRoutes(req,env,user,'verification/resolve','POST')).json();assert.equal(result.status,'connection-verified');assert.match(result.notice,/does not prove browser sign-in or write permission/);assert.equal(raw.prepare("SELECT count(*) n FROM settings WHERE key LIKE 'ai:permissions:%'").get().n,0);assert.equal(writes,0);raw.close();
+const req=new Request('https://room/api/owner/verification/resolve',{method:'POST',body:JSON.stringify({id:request.verification_request.id,action:'recheck'})});const result=await (await w.providerVerificationRoutes(req,env,user,'verification/resolve','POST')).json();assert.equal(result.status,'connection-verified');assert.match(result.notice,/does not prove browser sign-in or write permission/);assert.equal(raw.prepare("SELECT count(*) n FROM settings WHERE key LIKE 'ai:permissions:%'").get().n,0);assert.equal(writes,0);
+for(const [id,owner,when] of [['11111111-1111-4111-8111-111111111111',1,10],['22222222-2222-4222-8222-222222222222',2,20],['33333333-3333-4333-8333-333333333333',1,30]]){
+ raw.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').run('workspace:application:'+id,JSON.stringify({id,createdBy:owner,createdAt:when,repo:'owner/repo',commit:'a'.repeat(40),status:'build-required',worker:'demo'}));
+}
+const buildsUrl='https://room/api/owner/workspace/application-builds';
+const builds=await(await w.importWorkspaceRoutes(new Request(buildsUrl),env,user,'workspace/application-builds','GET')).json();
+assert.deepEqual(builds.builds.map(x=>x.id),['33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111']);
+raw.close();
 console.log('PASS native source workflow: connected credentials, complete pinned-commit scan, real sandbox preview, no live writes, idempotent staging, changed-source and tamper rejection, source/secrets blockers, owner scope and official-only verification without permission grants');
 }finally{globalThis.fetch=originalFetch;fs.unlinkSync(temp);}
