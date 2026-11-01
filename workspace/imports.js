@@ -16,7 +16,7 @@ async function queueConnectedApplication(env,user,b){
  if(!/^[a-f0-9]{40}$/.test(tree.head.commit))fail('Pinned commit required',409);
  await cf(env,conn,'GET','/workers/scripts/'+encodeURIComponent(worker)+'/settings');
  const id=crypto.randomUUID();
- const manifest={id,kind:'application',status:'build-required',source:g.id,repo:g.repo,commit:tree.head.commit,directory,connection:conn.id,worker,createdBy:user.id,createdAt:Date.now(),ownerApprovalRequired:true,deploymentAuthorized:false};
+ const manifest={id,kind:'application',status:'build-required',source:g.id,repo:g.repo,commit:tree.head.commit,root:g.dir||'',directory,connection:conn.id,worker,createdBy:user.id,createdAt:Date.now(),ownerApprovalRequired:true,deploymentAuthorized:false};
  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:application:'+id,JSON.stringify(manifest)).run();
  await audit(env,user.username,'application-build-request','Queued '+g.repo+'@'+tree.head.commit+' for '+worker);
  return {id,status:'build-required',repo:g.repo,commit:tree.head.commit,notice:'Application registered for reviewed build. No production deployment or preview is available until a verified build is attached.'};
@@ -95,9 +95,9 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    if(!workflow||workflow.state!=='active')fail('Review workflow must first be active on the default GitHub branch',409);
    const tree=await sourceTree(env,g);
    if(tree.head.commit!==item.commit)fail('Source changed since build request',409);
-   const directory=item.directory||'.';
+   const directory=[item.root||'',item.directory||''].filter(Boolean).join('/')||'.';
    if(directory!=='.'&&(directory.split('/').some(part=>!part||part==='.'||part==='..'||!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/.test(part))))fail('Invalid application directory',400);
-   const prefix=directory==='.'?'':directory+'/';
+   const prefix=item.directory?item.directory+'/':'';
    if(!tree.files.some(f=>f.path===prefix+'package.json')||!tree.files.some(f=>f.path===prefix+'package-lock.json'))fail('Pinned application manifest or npm lockfile is missing',409);
    await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{request_id:id,source_sha:item.commit,directory}});
    item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
