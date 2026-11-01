@@ -44,6 +44,11 @@ test('application build queue orders latest requests and filters owner in D1',()
  assert.match(server,/json_extract\(value_json,'\$\.createdBy'\)=\?/);
  assert.match(server,/ORDER BY CAST\(json_extract\(value_json,'\$\.createdAt'\) AS INTEGER\) DESC/);
 });
+test('build dispatch and source verification reject bundled dependencies',()=>{
+ assert.match(server,/Pinned source contains bundled node_modules/);
+ assert.match(server,/!tree\.files\.some\(f=>f\.path\.startsWith\(prefix\+'node_modules\/'\)\)/);
+ assert.match(server,/lock\.mode!=='120000'/);
+});
 test('source re-verification checks both lockfile and connected repository root',()=>{
  assert.match(server,/Connected application root changed since build request/);
  assert.match(server,/tree\.files\.some\(f=>f\.path===prefix\+'package-lock\.json'\)/);
