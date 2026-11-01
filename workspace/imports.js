@@ -101,7 +101,6 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(!/^[a-zA-Z0-9_./-]{1,120}$/.test(branch)||branch.split('/').some(x=>x==='.'||x==='..'))fail('Enter a valid Git branch',400);
   const g=await importSource(env,user,sourceId);
   const target={...g,repo,branch,dir:''};
-  await gh(env,target,'GET','');
   const head=await ghHead(env,target);
   if(!/^[a-f0-9]{40}$/.test(head.commit))fail('GitHub branch could not be verified',409);
   const original=await env.DB.prepare('SELECT secret_enc FROM github_sites WHERE id=? AND owner_id IS NULL').bind(sourceId).first();
