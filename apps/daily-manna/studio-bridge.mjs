@@ -36,6 +36,6 @@ export async function submitToStudio(entry,env,fetcher=fetch){
   'content-type':'application/json','x-manna-timestamp':String(stamp),'x-manna-key':key,'x-manna-signature':sig
  },body,redirect:'error',signal:AbortSignal.timeout(15000)});
  let data;try{data=await res.json()}catch{throw Error('Studio response not JSON')}
- if(!res.ok||data.ok!==true)throw Error('Studio rejected delivery: HTTP '+res.status);
+ if(!res.ok||data.ok!==true||!Array.isArray(data.job_ids)||!data.job_ids.length||data.job_ids.some(id=>!Number.isSafeInteger(id)||id<1))throw Error('Studio rejected or failed to register delivery: HTTP '+res.status);
  return {job_ids:data.job_ids,duplicate:Boolean(data.duplicate)};
 }
