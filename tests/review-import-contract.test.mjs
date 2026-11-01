@@ -132,19 +132,19 @@ test('application controls require reviewed build',()=>{
  assert.match(server,/ownerApprovalRequired:true,deploymentAuthorized:false/);
 });
 
-test('TinyFish automation requires Worker secret and owner-scoped persisted task history',()=>{
+test('Heavenly Key Browser Engine automation requires Worker secret and owner-scoped persisted task history',()=>{
  assert.match(server,/workspace\/tinyfish\/status/);
  assert.match(server,/workspace\/tinyfish\/run/);
  assert.match(server,/workspace\/tinyfish\/result/);
- assert.match(server,/TINYFISH_API_KEY/);
+ assert.match(server,/BROWSER_ENGINE_KEY/);
  assert.match(server,/agent\.tinyfish\.ai\/v1\/automation\/run-async/);
  assert.match(server,/item\.createdBy!==user\.id/);
- assert.match(client,/Approve and start TinyFish task/);
- assert.match(client,/Check TinyFish connection/);
+ assert.match(client,/Approve and start Heavenly Key Browser Engine task/);
+ assert.match(client,/Check Heavenly Key Browser Engine connection/);
  assert.match(client,/Refresh task history/);
 });
 
-test('TinyFish result history and cancellation preserve owner approval boundary',()=>{
+test('Heavenly Key Browser Engine result history and cancellation preserve owner approval boundary',()=>{
  assert.match(server,/workspace\/tinyfish\/cancel/);
  assert.match(server,/\/runs\/'\+encodeURIComponent\(item\.runId\)\+'\/cancel/);
  assert.match(server,/item\.status=status/);
@@ -152,7 +152,7 @@ test('TinyFish result history and cancellation preserve owner approval boundary'
  assert.match(client,/Cancel task/);
 });
 
-test('TinyFish automation rejects private network and non-HTTPS target URLs',()=>{
+test('Heavenly Key Browser Engine automation rejects private network and non-HTTPS target URLs',()=>{
  assert.match(server,/target\.protocol!=='https:'/);
  assert.match(server,/target\.hostname\.startsWith\('\['\)/);
  assert.match(server,/target\.hostname\.endsWith\('\.internal'\)/);
@@ -160,14 +160,14 @@ test('TinyFish automation rejects private network and non-HTTPS target URLs',()=
  assert.match(server,/public HTTPS domain/);
 });
 
-test('TinyFish concurrency guard and terminal cancellation protect owner wallet',()=>{
+test('Heavenly Key Browser Engine concurrency guard and terminal cancellation protect owner wallet',()=>{
  assert.match(server,/Number\(active\?\.n\|\|0\)>=3/);
- assert.match(server,/At most three uncompleted TinyFish tasks/);
+ assert.match(server,/At most three uncompleted Heavenly Key Browser Engine tasks/);
  assert.match(server,/This task has already finished/);
  assert.match(client,/Up to three unfinished tasks/);
 });
 
-test('TinyFish remote run identifiers are validated before storage',()=>{
- assert.match(server,/TinyFish returned no valid run identifier/);
+test('Heavenly Key Browser Engine remote run identifiers are validated before storage',()=>{
+ assert.match(server,/Heavenly Key Browser Engine returned no valid run identifier/);
  assert.match(server,/runId\)\)fail/);
 });
