@@ -1,0 +1,53 @@
+name: Package entire Account 3 application for Account 4 review
+
+on:
+  push:
+    branches: [feature/account4-large-project-staging-20261101]
+    paths:
+      - '.github/workflows/account3-complete-review-bundle.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  complete-source-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out pinned release workflow
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Check out complete Account 3 application
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: heavenlykeybible-source/onlinebible
+          ref: main
+          path: account3-source
+          persist-credentials: false
+      - name: Verify full source and archive it without auto-publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="account3-source/Global Christian Community/implementation"
+          test -f "$root/package.json"
+          test -d "$root/public"
+          count="$(find "$root" -type f | wc -l)"
+          echo "Account 3 source files: $count"
+          test "$count" -gt 20 || { echo '::error::Incomplete Account 3 application'; exit 1; }
+          if find "$root" -type f \( -name '.env' -o -name '.env.*' -o -name '*.pem' -o -name 'id_rsa' \) | grep .; then
+            echo '::error::Potential secret or private-key file detected; refuse to package'
+            exit 1
+          fi
+          mkdir -p release
+          (cd "account3-source/Global Christian Community" && zip -qr "$GITHUB_WORKSPACE/release/account3-global-christian-community-full.zip" implementation)
+          sha256sum release/account3-global-christian-community-full.zip | tee release/SHA256SUMS
+          git -C account3-source rev-parse HEAD | tee release/SOURCE_COMMIT
+          printf 'Source: heavenlykeybible-source/onlinebible\nSubdirectory: Global Christian Community/implementation\nFiles: %s\nStatus: Review only; not deployed\n' "$count" > release/RELEASE_INFO.txt
+          unzip -t release/account3-global-christian-community-full.zip | tail -n 1
+      - name: Upload complete review bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: account3-full-source-review
+          path: release/
+          if-no-files-found: error
+          retention-days: 30

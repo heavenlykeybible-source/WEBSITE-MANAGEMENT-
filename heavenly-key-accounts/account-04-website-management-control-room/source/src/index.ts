@@ -3,7 +3,7 @@ import {SITES,planDeployment} from './deployment-engine.ts';
 import {AI_MODEL,PUBLIC_CMS_ORIGIN,validateDocument} from './cms-schema.ts';
 import {saveDraft,publishDraft,restoreDraft} from './cms-storage.ts';
 import {ownerSession,ownerLogin,ownerLogout,setOwnerPassword,generatedPassword} from './owner-auth.ts';
-interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string}
+interface Env {DB:D1Database;MEDIA:R2Bucket;AI:Ai;ASSETS:Fetcher;ACCESS_TEAM_DOMAIN:string;ACCESS_AUD:string;GITHUB_TOKEN?:string}
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 const fail=(message:string,status=400)=>json({error:message},status);
 // Harden browser-delivered Control Room pages without changing authentication or cached media.
@@ -41,13 +41,13 @@ async function body(request:Request,max=210000){if(!(request.headers.get('conten
 function imageType(b:Uint8Array){if(b.length>=8&&[137,80,78,71,13,10,26,10].every((n,i)=>b[i]===n))return 'image/png';if(b[0]===255&&b[1]===216&&b[2]===255)return 'image/jpeg';if(String.fromCharCode(...b.slice(0,6)).startsWith('GIF8'))return 'image/gif';if(String.fromCharCode(...b.slice(0,4))==='RIFF'&&String.fromCharCode(...b.slice(8,12))==='WEBP')return 'image/webp';return ''}
 export default {async fetch(request:Request,env:Env):Promise<Response>{
  const u=new URL(request.url);
- const ownerHost=u.hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
+ const ownerHost=u.hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev'||u.hostname==='heavenlykey-control-room-import-preview.emmanuel2026miracle.workers.dev';
  if(!ownerHost&&!u.pathname.startsWith('/api/'))return secureAsset(request,env);
  if(ownerHost&&u.pathname==='/api/owner/login'&&request.method==='POST'){
   if(request.headers.get('Origin')!==u.origin)return fail('Invalid sign-in origin.',403);
   try{const data=await body(request,4096);if(data.username!==undefined&&data.username!=='owner')return fail('Sign-in failed. Check your username and password.',401);const result=await ownerLogin(request,env.DB,data.password);return result.ok?new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','cache-control':'no-store','set-cookie':result.cookie!}}):fail(result.error!,result.status)}catch{return fail('Sign-in is temporarily unavailable.',503)}
  }
- const accessActor=ownerHost?null:await authenticate(request,env);
+ const accessActor=u.hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev'?null:await authenticate(request,env);
  const actor=accessActor||(ownerHost?await ownerSession(request,env.DB):null);
  if(!u.pathname.startsWith('/api/')){
   return secureAsset(request,env);
@@ -83,6 +83,220 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
   if(u.pathname==='/api/save'&&request.method==='POST'){const data=await body(request);return json(await saveDraft(env.DB,location(),data.content,data.expectedVersion,actor))}
   if(u.pathname==='/api/publish'&&request.method==='POST'){const data=await body(request,4096);return json(await publishDraft(env.DB,location(),data.expectedVersion,actor))}
   if(u.pathname==='/api/restore'&&request.method==='POST'){const data=await body(request,4096);if(!Number.isSafeInteger(data.revisionId)||data.revisionId<1)return fail('Choose a revision.');return json({...await restoreDraft(env.DB,location(),data.revisionId,data.expectedVersion,actor),published:false})}
+  // Account 3 large-project staging: authenticated, bounded chunks stored privately in R2.
+  // Staging never publishes or changes a GitHub branch. The Waiting Room remains mandatory.
+  // Import a pinned source-tree inventory directly from Account 3. File contents remain
+  // in GitHub until a separately approved materialization/deployment workflow runs.
+  if(u.pathname==='/api/project-imports/github'&&request.method==='POST'){
+   const data=await body(request,4096);
+   if(data.repository!=='heavenlykeybible-source/onlinebible')return fail('Only the approved Account 3 repository is allowed.',403);
+   const ref=typeof data.ref==='string'&&/^[A-Za-z0-9._/-]{1,100}$/.test(data.ref)&&!data.ref.includes('..')?data.ref:'main';
+   const root='Global Christian Community/implementation/';
+   const token=env.GITHUB_TOKEN;
+   const headers:Record<string,string>={'Accept':'application/vnd.github+json','User-Agent':'Heavenly-Key-Control-Room','X-GitHub-Api-Version':'2022-11-28'};
+   if(token)headers.Authorization='Bearer '+token;
+   const base='https://api.github.com/repos/heavenlykeybible-source/onlinebible';
+   const commitResponse=await fetch(base+'/commits/'+encodeURIComponent(ref),{headers});
+   if(!commitResponse.ok)return fail('GitHub connection failed ('+commitResponse.status+'). Configure GITHUB_TOKEN if the repository is private.',502);
+   const commit=await commitResponse.json() as {sha?:string;commit?:{tree?:{sha?:string}}};
+   const treeSha=commit.commit?.tree?.sha;
+   if(!commit.sha||!/^[0-9a-f]{40}$/.test(commit.sha)||!treeSha||!/^[0-9a-f]{40}$/.test(treeSha))return fail('GitHub returned an invalid commit or tree.',502);
+   const treeResponse=await fetch(base+'/git/trees/'+treeSha+'?recursive=1',{headers});
+   if(!treeResponse.ok)return fail('Could not read Account 3 repository tree ('+treeResponse.status+').',502);
+   const tree=await treeResponse.json() as {truncated?:boolean;tree?:{path:string;type:string;sha:string;size?:number}[]};
+   if(tree.truncated||!Array.isArray(tree.tree))return fail('GitHub returned a truncated source tree; import cancelled.',422);
+   const files:{path:string;sha:string;size:number}[]=[];
+   let total=0;
+   for(const entry of tree.tree){
+    if(entry.type!=='blob'||!entry.path.startsWith(root))continue;
+    const relative=entry.path.slice(root.length),parts=relative.split('/');
+    if(!relative||relative.length>1024||parts.some(part=>!part||part==='.'||part==='..'||part.toLowerCase()==='.git')||relative.includes('\\')||/[\x00-\x1f\x7f]/.test(relative))return fail('Unsafe path in source tree.',422);
+    if(/(^|\/)(\.env(?:\.|$)|id_rsa$|.*\.pem$)/i.test(relative))continue;
+    if(!/^[0-9a-f]{40}$/.test(entry.sha)||!Number.isSafeInteger(entry.size)||entry.size!<0)return fail('Invalid GitHub file metadata.',422);
+    files.push({path:relative,sha:entry.sha,size:entry.size!});
+    total+=entry.size!;
+    if(files.length>25000||total>2147483648)return fail('Project exceeds source import limits.',413);
+   }
+   if(!files.length)return fail('No Account 3 implementation files found at the expected source folder.',404);
+   const id=crypto.randomUUID(),prefix='imports/'+id+'/',now=new Date().toISOString();
+   await env.MEDIA.put(prefix+'files.json',JSON.stringify({repository:data.repository,ref,commit:commit.sha,root,files}),{httpMetadata:{contentType:'application/json'}});
+   await env.MEDIA.put(prefix+'manifest',JSON.stringify({name:'Global Christian Community — Account 3',owner:actor,createdAt:now,submittedAt:undefined,status:'source-discovered',source:'github-tree',repository:data.repository,ref,commit:commit.sha,root,fileCount:files.length,totalBytes:total,parts:0,extracted:false,published:false}),{httpMetadata:{contentType:'application/json'}});
+   return json({id,status:'source-discovered',source:'github-tree',commit:commit.sha,fileCount:files.length,totalBytes:total,approvalRequired:true,published:false,materialized:false});
+  }
+  if(u.pathname==='/api/project-imports'&&request.method==='GET'){
+   const entries:{id:string,name:string,status:string,createdAt:string,submittedAt?:string,totalBytes:number,parts:number,source?:string,fileCount?:number,commit?:string}[]=[];
+   let cursor:string|undefined;
+   do{
+    const page=await env.MEDIA.list({prefix:'imports/',delimiter:'/',limit:1000,...(cursor?{cursor}:{})});
+    for(const folder of page.delimitedPrefixes){
+     const id=folder.slice('imports/'.length).replace(/\/$/,'');
+     if(!/^[a-f0-9-]{36}$/.test(id))continue;
+     const item=await env.MEDIA.get(folder+'manifest');
+     if(!item)continue;
+     try{
+      const m=JSON.parse(await item.text());
+      if(m.owner===actor)entries.push({id,name:m.name,status:m.status,createdAt:m.createdAt,submittedAt:m.submittedAt,totalBytes:m.totalBytes,parts:m.parts,source:m.source,fileCount:m.fileCount,commit:m.commit});
+     }catch{}
+    }
+    cursor=page.truncated?page.cursor:undefined;
+   }while(cursor&&entries.length<200);
+   entries.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+   return json({imports:entries.slice(0,200),published:false});
+  }
+  if(u.pathname==='/api/project-imports'&&request.method==='POST'){
+   const data=await body(request,2048);
+   if(typeof data.name!=='string'||!data.name.trim()||data.name.length>120)return fail('Enter a project name (up to 120 characters).');
+   const total=data.totalBytes;
+   if(!Number.isSafeInteger(total)||total<1||total>1073741824)return fail('Project archive must be 1 byte to 1 GiB.',413);
+   const id=crypto.randomUUID(),parts=Math.ceil(total/4194304);
+   await env.MEDIA.put('imports/'+id+'/manifest',JSON.stringify({name:data.name.trim(),totalBytes:total,parts,owner:actor,createdAt:new Date().toISOString(),status:'staging'}),{httpMetadata:{contentType:'application/json'}});
+   return json({id,parts,chunkBytes:4194304,status:'staging',published:false});
+  }
+  // Validate GitHub-relative paths without forbidding legitimate folder names with spaces.
+  // This prepares a manifest for review; it does not commit, extract or publish files.
+  if(u.pathname==='/api/project-imports/validate-paths'&&request.method==='POST'){
+   const data=await body(request,131072);
+   if(!Array.isArray(data.paths)||data.paths.length<1||data.paths.length>1000)return fail('Supply 1 to 1000 paths.');
+   const valid:string[]=[],rejected:{path:string,reason:string}[]=[];
+   const seen=new Set<string>();
+   for(const candidate of data.paths){
+    if(typeof candidate!=='string'||candidate.length>1024){rejected.push({path:String(candidate).slice(0,120),reason:'Invalid length or type'});continue;}
+    const path=candidate.normalize('NFC');
+    const segments=path.split('/');
+    if(path.startsWith('/')||path.includes('\\')||/[\x00-\x1f\x7f]/.test(path)||segments.some(x=>!x||x==='.'||x==='..')||path.endsWith('/')||seen.has(path)){
+     rejected.push({path,reason:'Unsafe or duplicate relative path'});continue;
+    }
+    if(segments.some(x=>x.toLowerCase()==='.git')||/(^|\/)(\.env(?:\.|$)|id_rsa$|.*\.pem$)/i.test(path)){
+     rejected.push({path,reason:'Protected or credential-related file'});continue;
+    }
+    seen.add(path);valid.push(path);
+   }
+   return json({valid,rejected,readyForReview:rejected.length===0,published:false});
+  }
+  // Confirm every pinned source blob was copied before presenting it for approval.
+  const verifyMatch=u.pathname.match(/^\/api\/project-imports\/([a-f0-9-]{36})\/verify-source$/);
+  if(verifyMatch&&request.method==='POST'){
+   const id=verifyMatch[1],prefix='imports/'+id+'/',stored=await env.MEDIA.get(prefix+'manifest');
+   if(!stored)return fail('Import session not found.',404);
+   const manifest=JSON.parse(await stored.text());
+   if(manifest.owner!==actor)return fail('Import belongs to another administrator.',403);
+   if(manifest.source!=='github-tree'||manifest.published)return fail('Not a pending GitHub source import.',409);
+   const source=await env.MEDIA.get(prefix+'files.json');
+   if(!source)return fail('Source manifest is missing.',409);
+   const inventory=JSON.parse(await source.text()) as {files:{sha:string;size:number}[]};
+   let verified=0;
+   const missing:number[]=[];
+   for(let start=0;start<inventory.files.length;start+=12){
+    const slice=inventory.files.slice(start,start+12);
+    const checks=await Promise.all(slice.map((_,i)=>env.MEDIA.head(prefix+'source/'+String(start+i).padStart(7,'0'))));
+    for(let i=0;i<slice.length;i++){
+     const entry=slice[i],found=checks[i];
+     if(found?.size===entry.size&&found.customMetadata?.gitSha===entry.sha)verified++;
+     else missing.push(start+i);
+    }
+   }
+   if(missing.length)return json({id,status:'materializing',verified,total:inventory.files.length,missing:missing.slice(0,100),missingCount:missing.length,published:false},409);
+   const updated={...manifest,status:'waiting-review',materialized:true,verifiedAt:new Date().toISOString()};
+   await env.MEDIA.put(prefix+'manifest',JSON.stringify(updated),{httpMetadata:{contentType:'application/json'}});
+   return json({id,status:'waiting-review',verified,total:inventory.files.length,approvalRequired:true,published:false});
+  }
+  // Copy exact GitHub blob revisions to private R2 before the owner can approve a release.
+  // One bounded batch per request avoids Workers' CPU/memory/subrequest limits.
+  const copyMatch=u.pathname.match(/^\/api\/project-imports\/([a-f0-9-]{36})\/materialize$/);
+  if(copyMatch&&request.method==='POST'){
+   const id=copyMatch[1],prefix='imports/'+id+'/';
+   const stored=await env.MEDIA.get(prefix+'manifest');
+   if(!stored)return fail('Import session not found.',404);
+   const manifest=JSON.parse(await stored.text());
+   if(manifest.owner!==actor)return fail('Import belongs to another administrator.',403);
+   if(manifest.source!=='github-tree'||manifest.published||!['source-discovered','materializing','waiting-review'].includes(manifest.status))return fail('This GitHub import cannot be materialized.',409);
+   const inventoryObject=await env.MEDIA.get(prefix+'files.json');
+   if(!inventoryObject)return fail('Source inventory is missing.',409);
+   const inventory=JSON.parse(await inventoryObject.text()) as {commit:string;root:string;files:{path:string;sha:string;size:number}[]};
+   const data=await body(request,2048),indices=data.indices;
+   if(!Array.isArray(indices)||indices.length<1||indices.length>4||new Set(indices).size!==indices.length||indices.some((n:unknown)=>!Number.isSafeInteger(n)||Number(n)<0||Number(n)>=inventory.files.length))return fail('Supply 1 to 4 distinct source file indices.');
+   const copied:number[]=[],alreadyPresent:number[]=[];
+   for(const index of indices as number[]){
+    const entry=inventory.files[index],key=prefix+'source/'+String(index).padStart(7,'0');
+    const previous=await env.MEDIA.head(key);
+    if(previous?.customMetadata?.gitSha===entry.sha&&previous.size===entry.size){alreadyPresent.push(index);continue;}
+    if(entry.size>25165824)return fail('Source file exceeds 24 MiB; use reviewed ZIP import for larger files: '+entry.path,413);
+    const encodedPath=(inventory.root+entry.path).split('/').map(encodeURIComponent).join('/');
+    const rawUrl='https://raw.githubusercontent.com/heavenlykeybible-source/onlinebible/'+inventory.commit+'/'+encodedPath;
+    const headers:Record<string,string>={'User-Agent':'Heavenly-Key-Control-Room'};
+    if(env.GITHUB_TOKEN)headers.Authorization='Bearer '+env.GITHUB_TOKEN;
+    const result=await fetch(rawUrl,{headers,redirect:'error'});
+    if(!result.ok)return fail('Pinned GitHub file fetch failed ('+result.status+') for index '+index,502);
+    if(Number(result.headers.get('content-length')||0)>25165824)return fail('Source file is too large.',413);
+    const bytes=new Uint8Array(await result.arrayBuffer());
+    if(bytes.byteLength!==entry.size||bytes.byteLength>25165824)return fail('Source file differs from pinned GitHub metadata.',422);
+    const prefixBytes=new TextEncoder().encode('blob '+bytes.length+'\0');
+    const hashInput=new Uint8Array(prefixBytes.length+bytes.length);
+    hashInput.set(prefixBytes);hashInput.set(bytes,prefixBytes.length);
+    const digest=new Uint8Array(await crypto.subtle.digest('SHA-1',hashInput));
+    const actualSha=[...digest].map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(actualSha!==entry.sha)return fail('Pinned GitHub checksum failed for index '+index,422);
+    await env.MEDIA.put(key,bytes,{httpMetadata:{contentType:'application/octet-stream'},customMetadata:{gitSha:entry.sha,sourcePath:entry.path}});
+    copied.push(index);
+   }
+   return json({id,copied,alreadyPresent,remainingReview:true,published:false});
+  }
+  const filesMatch=u.pathname.match(/^\/api\/project-imports\/([a-f0-9-]{36})\/files$/);
+  if(filesMatch&&request.method==='GET'){
+   const id=filesMatch[1],prefix='imports/'+id+'/';
+   const stored=await env.MEDIA.get(prefix+'manifest');
+   if(!stored)return fail('Import session not found.',404);
+   const manifest=JSON.parse(await stored.text());
+   if(manifest.owner!==actor)return fail('Import belongs to another administrator.',403);
+   if(manifest.source!=='github-tree')return fail('Source listing is only available for GitHub imports.',400);
+   const inventory=await env.MEDIA.get(prefix+'files.json');
+   if(!inventory)return fail('Source listing is missing.',404);
+   const record=JSON.parse(await inventory.text());
+   const offset=Number(u.searchParams.get('offset')||0);
+   if(!Number.isSafeInteger(offset)||offset<0)return fail('Invalid file offset.');
+   return json({id,repository:record.repository,commit:record.commit,root:record.root,total:record.files.length,offset,files:record.files.slice(offset,offset+200),published:false});
+  }
+  const importMatch=u.pathname.match(new RegExp('^/api/project-imports/([a-f0-9-]{36})(?:/chunks/([0-9]+))?$'));
+  if(importMatch){
+   const id=importMatch[1],prefix='imports/'+id+'/',stored=await env.MEDIA.get(prefix+'manifest');
+   if(!stored)return fail('Import session not found.',404);
+   const manifest=JSON.parse(await stored.text());
+   if(manifest.owner!==actor)return fail('Import belongs to another administrator.',403);
+   if(importMatch[2]!==undefined&&request.method==='PUT'){
+    const n=Number(importMatch[2]);
+    if(!Number.isSafeInteger(n)||n<0||n>=manifest.parts)return fail('Invalid chunk index.');
+    const expected=Math.min(4194304,manifest.totalBytes-n*4194304);
+    if(Number(request.headers.get('content-length')||0)>expected)return fail('Chunk too large.',413);
+    if(manifest.status!=='staging')return fail('Import is no longer accepting chunks.',409);
+    const bytes=await request.arrayBuffer();
+    if(bytes.byteLength!==expected)return fail('Incorrect chunk length.',400);
+    await env.MEDIA.put(prefix+'chunks/'+n,bytes,{httpMetadata:{contentType:'application/octet-stream'}});
+    return json({ok:true,chunk:n,published:false});
+   }
+   if(importMatch[2]===undefined&&request.method==='POST'){
+    if(manifest.status!=='staging')return fail('Import is already submitted.',409);
+    const chunks:({size:number}|null)[]=[];
+    for(let start=0;start<manifest.parts;start+=16){const batch=await Promise.all(Array.from({length:Math.min(16,manifest.parts-start)},(_,i)=>env.MEDIA.head(prefix+'chunks/'+(start+i))));chunks.push(...batch);}
+    const missing=chunks.flatMap((item,i)=>item?[]:[i]);
+    if(missing.length)return json({error:'Upload incomplete',missing:missing.slice(0,100),missingCount:missing.length},409);
+    for(let i=0;i<chunks.length;i++){
+     const expected=Math.min(4194304,manifest.totalBytes-i*4194304);
+     if(chunks[i]!.size!==expected)return fail('Uploaded chunk size mismatch: '+i,409);
+    }
+    const first=await env.MEDIA.get(prefix+'chunks/0',{range:{offset:0,length:4}});
+    if(!first)return fail('Archive is missing.',409);
+    const header=new Uint8Array(await first.arrayBuffer());
+    if(header.length<4||header[0]!==80||header[1]!==75||![3,5,7].includes(header[2])||![4,6,8].includes(header[3]))return fail('Upload must be a ZIP archive.',415);
+    const updated={...manifest,status:'waiting-review',submittedAt:new Date().toISOString(),receivedParts:chunks.length};
+    await env.MEDIA.put(prefix+'manifest',JSON.stringify(updated),{httpMetadata:{contentType:'application/json'}});
+    return json({id,status:'waiting-review',receivedParts:chunks.length,published:false,extracted:false,approvalRequired:true});
+   }
+   if(importMatch[2]===undefined&&request.method==='GET'){
+    const chunks=[];
+    for(let start=0;start<manifest.parts;start+=16){chunks.push(...await Promise.all(Array.from({length:Math.min(16,manifest.parts-start)},(_,i)=>env.MEDIA.head(prefix+'chunks/'+(start+i)))));}
+    return json({id,name:manifest.name,status:manifest.status,totalBytes:manifest.totalBytes,received:chunks.filter(Boolean).length,receivedIndices:chunks.flatMap((x,i)=>x?[i]:[]),parts:manifest.parts,complete:chunks.every(Boolean),published:false,extracted:false,approvalRequired:manifest.status==='waiting-review'});
+   }
+  }
   if(u.pathname==='/api/media'&&request.method==='POST'){
    if(Number(request.headers.get('content-length')||0)>5000000)return fail('Image exceeds 5 MB',413);
    const bytes=new Uint8Array(await request.arrayBuffer()),type=imageType(bytes);
