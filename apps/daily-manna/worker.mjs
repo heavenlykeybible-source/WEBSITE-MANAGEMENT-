@@ -85,7 +85,6 @@ export default {
   }catch(e){return response({error:'Internal error'},500);}
  },
  async scheduled(event,env){
-  const lagosHour=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',hour:'2-digit',hourCycle:'h23'}).format(new Date(event.scheduledTime));
-  if(lagosHour==='00')await publishToday(env,event.scheduledTime);
+  await publishToday(env,event.scheduledTime); // Hourly safety check: first run at Lagos midnight; later runs recover missed releases.
  }
 };
