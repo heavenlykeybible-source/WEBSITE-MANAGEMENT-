@@ -39,3 +39,15 @@ export async function submitToStudio(entry,env,fetcher=fetch){
  if(!res.ok||data.ok!==true||!Array.isArray(data.job_ids)||!data.job_ids.length||data.job_ids.some(id=>!Number.isSafeInteger(id)||id<1))throw Error('Studio rejected or failed to register delivery: HTTP '+res.status);
  return {job_ids:data.job_ids,duplicate:Boolean(data.duplicate)};
 }
+
+export async function readStudioStatus(deliveryId,env,fetcher=fetch){
+ if(!studioReady(env))throw Error('Studio bridge is not configured');
+ if(!/^[0-9a-f-]{36}$/.test(deliveryId))throw Error('Invalid Studio receipt ID');
+ const body=JSON.stringify({source:'daily-manna',action:'status'});
+ const stamp=Date.now(),signature=await hmac(env.STUDIO_BRIDGE_SECRET,stamp+'.'+deliveryId+'.'+body);
+ const url=new URL('/api/integrations/daily-manna/publish',env.STUDIO_BRIDGE_ORIGIN);
+ const res=await fetcher(url.toString(),{method:'POST',headers:{'content-type':'application/json','x-manna-timestamp':String(stamp),'x-manna-key':deliveryId,'x-manna-signature':signature},body,redirect:'error',signal:AbortSignal.timeout(12000)});
+ let data;try{data=await res.json()}catch{throw Error('Studio status unavailable')}
+ if(!res.ok||data.ok!==true||!Array.isArray(data.jobs))throw Error('Studio status query rejected: HTTP '+res.status);
+ return {receipt_status:data.receipt_status,jobs:data.jobs.map(x=>({job_id:x.job_id,platform:x.platform,display_name:x.display_name,status:x.status,provider_post_id:x.provider_post_id,error:x.error}))};
+}
