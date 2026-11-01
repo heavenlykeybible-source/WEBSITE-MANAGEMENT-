@@ -145,7 +145,19 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(!row)fail('Build request not found',404);
   const b=JSON.parse(row.value_json);
   if(b.createdBy!==user.id)fail('Build request owner mismatch',403);
-  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,ownerApprovalRequired:true,deploymentAuthorized:false});
+  let review=null;
+  if(b.status==='build-dispatched'&&b.repo==='heavenlykeybible-source/WEBSITE-MANAGEMENT-'){
+   const g=await importSource(env,user,b.source);
+   if(g.repo!==b.repo)fail('Connected build repository no longer matches',409);
+   const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=50').catch(()=>({workflow_runs:[]}));
+   const wanted='Review '+b.commit+' / '+(b.directory||'.');
+   const runs=(data.workflow_runs||[]).filter(run=>run.display_title===wanted&&run.event==='workflow_dispatch');
+   if(runs.length){
+    const run=runs.sort((x,y)=>Date.parse(y.created_at)-Date.parse(x.created_at))[0];
+    review={runId:run.id,status:run.status,conclusion:run.conclusion||null,url:run.html_url||null};
+   }
+  }
+  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,review,ownerApprovalRequired:true,deploymentAuthorized:false});
  }
  if(sub==='workspace/application-builds'&&m==='GET'){
  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:application:%' LIMIT 100").all();
