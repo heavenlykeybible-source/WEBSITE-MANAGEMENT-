@@ -5,18 +5,18 @@ export function facebookReady(env){
  return Boolean(env.FACEBOOK_PAGE_ID&&/^[0-9]+$/.test(env.FACEBOOK_PAGE_ID)&&env.FACEBOOK_PAGE_TOKEN&&env.MANNA_PUBLIC_ORIGIN);
 }
 export function devotionalCaption(entry,origin){
- if(!entry||!/^\\d{4}-\\d{2}-\\d{2}$/.test(entry.publish_date))throw Error('Invalid publication date');
+ if(!entry||!/^\d{4}-\d{2}-\d{2}$/.test(entry.publish_date))throw Error('Invalid publication date');
  const home=new URL(origin);
  if(home.protocol!=='https:'||home.username||home.password||home.search||home.hash)throw Error('Invalid public origin');
  const link=new URL('/?date='+encodeURIComponent(entry.publish_date),home).toString();
- const text=[entry.title,entry.scripture,entry.body,entry.prayer?'Prayer: '+entry.prayer:'','Read Daily Manna: '+link].filter(Boolean).join('\\n\\n');
+ const text=[entry.title,entry.scripture,entry.body,entry.prayer?'Prayer: '+entry.prayer:'','Read Daily Manna: '+link].filter(Boolean).join('\n\n');
  if(text.length>MAX_MESSAGE)throw Error('Caption exceeds provider limit');
  return {text,link};
 }
 export async function publishToFacebook(entry,env,fetcher=fetch){
  if(!facebookReady(env))throw Error('Facebook Page integration is not configured');
  const {text,link}=devotionalCaption(entry,env.MANNA_PUBLIC_ORIGIN);
- const version=/^v\\d+\\.\\d+$/.test(env.FACEBOOK_GRAPH_VERSION||'')?env.FACEBOOK_GRAPH_VERSION:'v26.0';
+ const version=/^v\d+\.\d+$/.test(env.FACEBOOK_GRAPH_VERSION||'')?env.FACEBOOK_GRAPH_VERSION:'v26.0';
  const page=env.FACEBOOK_PAGE_ID;
  const headers={authorization:'Bearer '+env.FACEBOOK_PAGE_TOKEN};
  const pictureKey=entry.picture_object_key;
