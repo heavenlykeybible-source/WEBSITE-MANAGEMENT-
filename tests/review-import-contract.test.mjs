@@ -69,7 +69,7 @@ test('real package manifest verifier checks Git blob integrity and build script'
  assert.ok(start>0&&end>start);
  const json=JSON.stringify({scripts:{build:'vite build'}});
  let blob=json;
- const sha=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+Buffer.byteLength(json)+'\\0'),Buffer.from(json)])).digest('hex');
+ const sha=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+Buffer.byteLength(json)+'\0'),Buffer.from(json)])).digest('hex');
  const ctx={atob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto,hex:data=>Buffer.from(data).toString('hex'),fail:message=>{throw Error(message)},gh:async()=>({encoding:'base64',content:Buffer.from(blob).toString('base64')})};
  const verify=runInNewContext('('+server.slice(start,end).trim()+')',ctx);
  const entry={path:'app/package.json',size:json.length,sha};
