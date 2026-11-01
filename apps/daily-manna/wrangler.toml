@@ -1,5 +1,5 @@
 # Independent Strength for Today application (Account 1).
-# Do not deploy until the real D1 database ID is provisioned and entered.
+# Staging D1 verified on Cloudflare Account 1. Apply schema.sql before deployment.
 name = "strength-for-today-manna-staging"
 main = "worker.mjs"
 compatibility_date = "2026-10-18"
@@ -9,11 +9,10 @@ workers_dev = true
 crons = ["0 * * * *"]
 
 # Set EDITOR_TOKEN with: npx wrangler secret put EDITOR_TOKEN
-# Then replace the placeholder and uncomment the D1 binding.
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "strength-for-today-manna"
-# database_id = "REPLACE_WITH_REAL_D1_DATABASE_ID"
+[[d1_databases]]
+binding = "DB"
+database_name = "strength-for-today-manna-staging"
+database_id = "567e1b66-6fe4-460c-b67a-8bafec52eacd"
 
 # Owner-uploaded pictures use a dedicated PRIVATE R2 bucket.
 # Enable after Cloudflare resource proposal #57 is approved.
