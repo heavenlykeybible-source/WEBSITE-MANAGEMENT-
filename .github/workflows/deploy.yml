@@ -1,4 +1,5 @@
 name: Deploy Website Management to Cloudflare
+# One-time owner-authorized push attempt; remove the push trigger afterward.
 
 on:
   push:
