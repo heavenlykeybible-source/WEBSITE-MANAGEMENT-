@@ -32,6 +32,12 @@ test('nested repository directory is preserved in pinned build',()=>{
  assert.match(server,/root:g\.dir\|\|''/);
  assert.match(server,/\[item\.root\|\|'',item\.directory\|\|''\]\.filter\(Boolean\)\.join\('\/'\)/);
 });
+test('review status never assumes that a completed job has a verified artifact',()=>{
+ assert.match(server,/run\.conclusion==='success'/);
+ assert.match(server,/a\.name==='review-build-'\+b\.id&&!a\.expired/);
+ assert.match(server,/artifactAvailable:false/);
+ assert.match(server,/deploymentAuthorized:false/);
+});
 test('application controls require reviewed build',()=>{
  assert.match(client,/Start review build/);
  assert.match(client,/Check review build status/);
