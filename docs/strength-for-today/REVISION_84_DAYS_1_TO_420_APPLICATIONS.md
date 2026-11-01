@@ -1,0 +1,7 @@
+# STRENGTH FOR TODAY — Revision 84
+
+A separate working manuscript with 1,826 daily records was edited for **Days 1–420**: 420 `verified_real_life_story.application_to_today` fields rewritten to offer theme-related, practical devotional application, with cautions against treating unverified historical claims as proof of theological promises. Applications use 19 topic classes and seven day-angle variants. 77 day titles did not match a specific theme class and received a general discipleship application; these require closer editorial attention. **No historical claims were independently verified**, and no historical narratives, source URLs, Bible passages or prayers were changed. Prior applications are preserved in the JSON patch. No final publication approval.
+
+Library archive: `strength_for_today_revision_84_days_1_to_420_applications.zip`; SHA256 `53aae16b5109f24f7476e3bc5feb57fd78c6c572a25a99b975e031a8ce048e5b`.
+
+**Do not overwrite canonical Revision 50**; the separate working copy lacks 1,750 supporting KJV quotations present in canonical Rev50. Next: improve 77 general applications, independently verify historic claims, merge only vetted fields into canonical and verify KJV text.
