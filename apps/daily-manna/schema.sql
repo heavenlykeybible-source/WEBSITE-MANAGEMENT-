@@ -35,6 +35,7 @@ CREATE INDEX IF NOT EXISTS idx_manna_audit_entry ON manna_audit(entry_id,created
 CREATE TABLE IF NOT EXISTS manna_post_images (
  image_date TEXT PRIMARY KEY,
  object_key TEXT NOT NULL,
+ studio_media_id INTEGER,
  content_type TEXT NOT NULL CHECK(content_type IN ('image/jpeg','image/png','image/webp')),
  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
