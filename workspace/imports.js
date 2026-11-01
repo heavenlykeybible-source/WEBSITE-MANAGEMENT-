@@ -103,6 +103,8 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const target={...g,repo,branch,dir:''};
   const head=await ghHead(env,target);
   if(!/^[a-f0-9]{40}$/.test(head.commit))fail('GitHub branch could not be verified',409);
+  const duplicate=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND repo=? AND branch=? AND dir=?').bind(repo,branch,'').first();
+  if(duplicate)fail('This GitHub repository and branch are already connected',409);
   const original=await env.DB.prepare('SELECT secret_enc FROM github_sites WHERE id=? AND owner_id IS NULL').bind(sourceId).first();
   if(!original?.secret_enc)fail('Authorized GitHub connection is unavailable',404);
   const inserted=await env.DB.prepare('INSERT INTO github_sites(label,repo,branch,dir,secret_enc,owner_id) VALUES(?,?,?,?,?,NULL)').bind(label,repo,branch,'',original.secret_enc).run();
