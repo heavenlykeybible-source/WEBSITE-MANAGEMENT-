@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS manna_subscribers (
 CREATE TABLE IF NOT EXISTS manna_deliveries (
  id TEXT PRIMARY KEY, entry_id TEXT NOT NULL, destination TEXT NOT NULL,
  status TEXT NOT NULL CHECK(status IN ('pending','sent','failed','skipped')),
- attempts INTEGER NOT NULL DEFAULT 0, error TEXT, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ attempts INTEGER NOT NULL DEFAULT 0, error TEXT, provider_post_id TEXT, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
  UNIQUE(entry_id,destination)
 );
 CREATE INDEX IF NOT EXISTS idx_manna_status_date ON manna_entries(status,publish_date);
