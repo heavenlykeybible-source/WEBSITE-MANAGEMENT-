@@ -80,7 +80,9 @@ test('dispatched review cancellation targets only its owner and exact run',()=>{
  assert.match(server,/run\.display_title==='Review '\+id/);
  assert.match(server,/\/actions\/runs\/['"]\+encodeURIComponent\(run\.id\)\+['"]\/cancel/);
  assert.match(client,/Cancel dispatched review/);
- assert.match(server,/item\.status='cancelled';item\.deploymentAuthorized=false/);
+ assert.match(server,/item\.status=item\.cancellationRequested\?'review-cancellation-requested':'cancelled'/);
+ assert.match(server,/item\.deploymentAuthorized=false/);
+ assert.match(client,/cancellation requested; awaiting GitHub confirmation/);
 });
 test('application controls require reviewed build',()=>{
  assert.match(client,/Start review build/);
