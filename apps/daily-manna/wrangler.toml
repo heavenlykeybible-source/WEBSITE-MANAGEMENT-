@@ -21,7 +21,8 @@ crons = ["0 * * * *"]
 # binding = "MANNA_IMAGES"
 # bucket_name = "strength-for-today-manna-images-staging"
 
-# Publication of unreviewed entries has a separate switch and must be
-# enabled only after the imported source collection is authorized for release.
-# [vars]
-# ALLOW_UNREVIEWED_PUBLICATION = "true"
+# Publication is scheduled even when manual editorial review is incomplete.
+# This staging setting is requested by the owner. Do not import or deploy
+# unverified content to production before the source material is cleared.
+[vars]
+ALLOW_UNREVIEWED_PUBLICATION = "true"
