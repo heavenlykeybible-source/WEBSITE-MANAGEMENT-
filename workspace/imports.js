@@ -99,67 +99,6 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
  if(sub==='workspace/dns/capabilities'&&m==='GET')return json({zone:'heavenlykey.org',configured:!!(env.DNS_ZONE_ID&&env.DNS_API_TOKEN),actions:['propose-create','approve-create'],requiresOwnerApproval:true});
  if(sub==='workspace/dns/propose-create'&&m==='POST'){const record=dnsRecordInput(await body(req)),id=crypto.randomUUID(),proposal={id,record,status:'pending-owner-approval',createdBy:user.id,createdAt:Date.now(),expiresAt:Date.now()+900000};await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:dns:'+id,JSON.stringify(proposal)).run();await audit(env,user.username,'dns-create-proposed',record.name);return json({id,status:proposal.status,record,notice:'Review and approve separately before DNS is changed.'});}
  if(sub==='workspace/dns/approve-create'&&m==='POST'){const input=await body(req),id=String(input?.id||'');if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid proposal',400);return withOperationLock(env,'dns-create:'+id,async()=>{const key='workspace:dns:'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('DNS proposal not found',404);const p=JSON.parse(row.value_json);if(p.createdBy!==user.id||p.status!=='pending-owner-approval'||p.expiresAt<Date.now())fail('Proposal is not available for owner approval',409);if(input?.confirm!==p.record.name)fail('Confirm the exact subdomain name to approve',400);const existing=await dnsCloudflare(env,'GET','/dns_records?name='+encodeURIComponent(p.record.name));if(existing.length)fail('A DNS record already exists for this subdomain',409);p.status='applying';await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();try{const result=await dnsCloudflare(env,'POST','/dns_records',p.record);p.status='created';p.recordId=result.id;p.completedAt=Date.now();await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();await audit(env,user.username,'dns-create-approved',p.record.name);return json({id,status:p.status,record:p.record});}catch(e){p.status='needs-reconciliation';await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();throw e;}});}
- if(sub==='workspace/tinyfish/status'&&m==='GET'){
-  return json({configured:!!String(env.BROWSER_ENGINE_KEY||'').trim(),provider:'Heavenly Key Browser Engine',requiresOwnerApproval:true,notice:env.BROWSER_ENGINE_KEY?'Heavenly Key Browser Engine credential configured. Run a task to verify connectivity.':'Set the BROWSER_ENGINE_KEY Cloudflare Worker secret before running Heavenly Key Browser Engine.'});
- }
- if(sub==='workspace/tinyfish/run'&&m==='POST'){
-  const b=await body(req),url=String(b?.url||'').trim(),goal=String(b?.goal||'').trim(),key=String(env.BROWSER_ENGINE_KEY||'').trim();
-  if(!/^https:\/\/[^/?#]+/.test(String(env.BROWSER_ENGINE_URL||'')))fail('Configure a public HTTPS BROWSER_ENGINE_URL',503);
-  if(!key)fail('Heavenly Key Browser Engine API key is not configured in Cloudflare Worker secrets',503);
-  let target;try{target=new URL(url);}catch{fail('Enter a valid HTTPS website URL',400);}
-  if(target.protocol!=='https:'||target.username||target.password||target.port||target.href.length>2000||!target.hostname.includes('.')||target.hostname.endsWith('.local')||target.hostname.endsWith('.internal')||target.hostname.endsWith('.localhost')||target.hostname.endsWith('.test')||target.hostname.endsWith('.invalid')||target.hostname==='localhost'||target.hostname.startsWith('[')||/^(?:\d{1,3}\.){3}\d{1,3}$/.test(target.hostname)||target.hostname==='metadata.google.internal')fail('Heavenly Key Browser Engine requires a public HTTPS domain, not a private network address',400);
-  if(goal.length<8||goal.length>3000)fail('Enter a clear task of 8 to 3000 characters',400);
-  const active=await env.DB.prepare("SELECT COUNT(*) AS n FROM settings WHERE key LIKE 'workspace:tinyfish:%' AND json_extract(value_json,'$.createdBy')=? AND json_extract(value_json,'$.status') NOT IN ('COMPLETED','FAILED','CANCELLED')").bind(user.id).first();
-  if(Number(active?.n||0)>=3)fail('At most three uncompleted Heavenly Key Browser Engine tasks are allowed. Check or cancel existing tasks first.',429);
-  const response=await fetch(String(env.BROWSER_ENGINE_URL||'').replace(/\/$/,'')+'/v1/automation/run-async',{method:'POST',headers:{'X-API-Key':key,'Content-Type':'application/json'},body:JSON.stringify({url:target.href,goal}),signal:AbortSignal.timeout(25000)});
-  if(!response.ok)fail('Heavenly Key Browser Engine could not start this task (HTTP '+response.status+'). Check API key and wallet.',502);
-  const result=await response.json();
-  const runId=String(result.run_id||result.runId||result.id||'');
-  if(!/^[a-zA-Z0-9_-]{1,160}$/.test(runId))fail('Heavenly Key Browser Engine returned no valid run identifier',502);
-  const id=crypto.randomUUID(),item={id,runId,createdBy:user.id,createdAt:Date.now(),url:target.href,goal,status:'submitted'};
-  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:tinyfish:'+id,JSON.stringify(item)).run();
-  await audit(env,user.username,'tinyfish-run','Heavenly Key Browser Engine task '+id+' submitted');
-  return json({id,runId,status:'submitted',notice:'Heavenly Key Browser Engine task started. No deployment is authorized.'});
- }
- if(sub==='workspace/tinyfish/cancel'&&m==='POST'){
-  const b=await body(req),id=String(b?.id||'');
-  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid Heavenly Key Browser Engine task',400);
-  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:tinyfish:'+id).first();
-  if(!row)fail('Heavenly Key Browser Engine task not found',404);
-  const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('Heavenly Key Browser Engine task owner mismatch',403);
-  const key=String(env.BROWSER_ENGINE_KEY||'').trim();if(!key)fail('Heavenly Key Browser Engine API key not configured',503);
-  if(['COMPLETED','FAILED','CANCELLED'].includes(item.status))return json({id,status:item.status,notice:'This task has already finished.'});
-  const response=await fetch(String(env.BROWSER_ENGINE_URL||'').replace(/\/$/,'')+'/v1/runs/'+encodeURIComponent(item.runId)+'/cancel',{method:'POST',headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
-  if(!response.ok)fail('Heavenly Key Browser Engine cancellation unavailable (HTTP '+response.status+')',502);
-  const result=await response.json(),status=String(result.status||'unknown').toUpperCase();
-  if(['COMPLETED','FAILED','CANCELLED'].includes(status)){
-   item.status=status;
-   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),'workspace:tinyfish:'+id).run();
-  }
-  await audit(env,user.username,'tinyfish-cancel','Requested cancellation of Heavenly Key Browser Engine task '+id);
-  return json({id,status});
- }
- if(sub==='workspace/tinyfish/runs'&&m==='GET'){
-  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:tinyfish:%' AND json_extract(value_json,'$.createdBy')=? ORDER BY CAST(json_extract(value_json,'$.createdAt') AS INTEGER) DESC LIMIT 30").bind(user.id).all();
-  return json({runs:(rows.results||[]).map(r=>JSON.parse(r.value_json)).map(({id,url,goal,createdAt,status})=>({id,url,goal,createdAt,status}))});
- }
- if(sub==='workspace/tinyfish/result'&&m==='GET'){
-  const id=String(u.searchParams.get('id')||'');
-  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid Heavenly Key Browser Engine task',400);
-  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:tinyfish:'+id).first();
-  if(!row)fail('Heavenly Key Browser Engine task not found',404);
-  const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('Heavenly Key Browser Engine task owner mismatch',403);
-  const key=String(env.BROWSER_ENGINE_KEY||'').trim();if(!key)fail('Heavenly Key Browser Engine API key not configured',503);
-  const response=await fetch(String(env.BROWSER_ENGINE_URL||'').replace(/\/$/,'')+'/v1/runs/'+encodeURIComponent(item.runId),{headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
-  if(!response.ok)fail('Heavenly Key Browser Engine status unavailable (HTTP '+response.status+')',502);
-  const result=await response.json();
-  const status=String(result.status||'unknown').toUpperCase();
-  if(['COMPLETED','FAILED','CANCELLED'].includes(status)&&item.status!==status){
-   item.status=status;
-   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),'workspace:tinyfish:'+id).run();
-  }
-  return json({id,status,result:result.resultJson??result.result??null,error:result.error||null,createdAt:item.createdAt,url:item.url,goal:item.goal});
- }
  if(sub==='workspace/github/reuse'&&m==='POST'){
   const b=await body(req),sourceId=Number(b?.source),repo=String(b?.repo||'').trim(),label=String(b?.label||'').trim(),branch=String(b?.branch||'main').trim();
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Select an existing authorized GitHub connection',400);
