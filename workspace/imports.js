@@ -4,6 +4,19 @@ async function sourceTree(env,g){const head=await ghHead(env,g),result=await gh(
 function sourceFolder(value){const path=String(value||'').replace(/^\/+|\/+$/g,'');if(path&&(path.split('/').some(p=>!p||p==='.'||p==='..')||/[\x00-\x1f\\]/.test(path)||path.length>250))fail('Choose a valid project folder');return path;}
 async function sourceCandidates(env,user,id){const g=await importSource(env,user,id),tree=await sourceTree(env,g);return {source:ghPublic(g),commit:tree.head.commit,candidates:tree.files.filter(f=>/(^|\/)index\.html?$/.test(f.path)||/(^|\/)[^/]*worker\.(?:m?js)$/.test(f.path)).slice(0,150).map(f=>({path:f.path,kind:/\.html?$/.test(f.path)?'static':'worker',directory:f.path.includes('/')?f.path.slice(0,f.path.lastIndexOf('/')):''} )).concat(sourceBuildCandidates(tree.files)),notice:'Application source requires a reviewed build workflow; built websites and standalone Workers can be imported directly. Source projects needing compilation cannot be deployed as static files.'};}
 function sourceBuildCandidates(files){return files.filter(f=>/(^|\/)package\.json$/.test(f.path)).slice(0,100).map(f=>({path:f.path,kind:'application',directory:f.path.includes('/')?f.path.slice(0,f.path.lastIndexOf('/')):'',requiresBuild:true}));}
+async function queueConnectedApplication(env,user,b){
+ const g=await importSource(env,user,b.source),tree=await sourceTree(env,g);
+ const directory=sourceFolder(b.directory),prefix=directory?directory+'/':'';
+ if(!tree.files.some(f=>f.path===prefix+'package.json'))fail('Application package.json missing',400);
+ const conn=await connById(env,b.connection),worker=String(b.worker||'');
+ protectWorker(env,worker);
+ if(!/^[a-f0-9]{40}$/.test(tree.head.commit))fail('Pinned commit required',409);
+ const id=crypto.randomUUID();
+ const manifest={id,kind:'application',status:'build-required',source:g.id,repo:g.repo,commit:tree.head.commit,directory,connection:conn.id,worker,createdBy:user.id,createdAt:Date.now(),ownerApprovalRequired:true,deploymentAuthorized:false};
+ await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:application:'+id,JSON.stringify(manifest)).run();
+ await audit(env,user.username,'application-build-request','Queued '+g.repo+'@'+tree.head.commit+' for '+worker);
+ return {id,status:'build-required',repo:g.repo,commit:tree.head.commit,notice:'Application registered for reviewed build. No production deployment or preview is available until a verified build is attached.'};
+}
 async function scanConnectedSource(env,user,b){
  const g=await importSource(env,user,b.source),tree=await sourceTree(env,g),kind=b.kind==='worker'?'worker':'static',directory=sourceFolder(b.directory),pre=directory?directory+'/':'';
  let selected=tree.files.filter(f=>f.path.startsWith(pre));
@@ -61,6 +74,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const staged=await stageConnectedSource(env,user,{scan:scan.id,connection:b.connection,worker:b.worker,site:b.site});
   return json({ok:true,status:'waiting',proposal_id:staged.proposal_id,source:{repo:scan.repo,commit:scan.commit,files:scan.files.length,bytes:scan.bytes},notice:'Imported and staged for owner approval; production has not been deployed.'});
  }
+ if(sub==='workspace/application-build'&&m==='POST')return json(await queueConnectedApplication(env,user,await body(req)));
  if(sub==='workspace/scan'&&m==='POST')return json(await scanConnectedSource(env,user,await body(req)));
  if(sub==='workspace/stage'&&m==='POST')return json(await stageConnectedSource(env,user,await body(req)));
  return null;
