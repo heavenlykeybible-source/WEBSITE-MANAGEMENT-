@@ -96,7 +96,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    const tree=await sourceTree(env,g);
    if(tree.head.commit!==item.commit)fail('Source changed since build request',409);
    const directory=item.directory||'.';
-   if(!/^(?:\\.|[a-zA-Z0-9_.-]+(?:\\/[a-zA-Z0-9_.-]+)*)$/.test(directory)||directory.split('/').includes('..'))fail('Invalid application directory',400);
+   if(directory!=='.'&&(directory.split('/').some(part=>!part||part==='.'||part==='..'||!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/.test(part))))fail('Invalid application directory',400);
    const prefix=directory==='.'?'':directory+'/';
    if(!tree.files.some(f=>f.path===prefix+'package.json')||!tree.files.some(f=>f.path===prefix+'package-lock.json'))fail('Pinned application manifest or npm lockfile is missing',409);
    await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{source_sha:item.commit,directory}});
