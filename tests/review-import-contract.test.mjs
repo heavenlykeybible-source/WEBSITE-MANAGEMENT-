@@ -111,6 +111,11 @@ test('dispatched review cancellation targets only its owner and exact run',()=>{
  assert.match(server,/item\.deploymentAuthorized=false/);
  assert.match(client,/cancellation requested; awaiting GitHub confirmation/);
 });
+test('review status exposes API failures and confirmed cancellation only',()=>{
+ assert.doesNotMatch(server,/workflow_runs:\[\]\}\)/);
+ assert.match(server,/review-closed-after-cancel-request/);
+ assert.match(server,/Build request cancelled or cancellation pending/);
+});
 test('application controls require reviewed build',()=>{
  assert.match(client,/Start review build/);
  assert.match(client,/Check review build status/);
