@@ -1,4 +1,13 @@
 const BROWSER_TASK_PREFIX='workspace:browser:';
+async function browserRuntimeReady(env){
+ if(!env.BROWSER_AGENT)return false;
+ try{
+  const response=await env.BROWSER_AGENT.fetch('https://browser.internal/health',{method:'GET',signal:AbortSignal.timeout(5000)});
+  if(!response.ok)return false;
+  const data=await response.json();
+  return data?.ready===true;
+ }catch{return false;}
+}
 function browserPublic(j,ownerView=false){return {id:j.id,goal:j.goal,hosts:j.hosts,status:j.status,expires:j.expires||null,url:j.url||null,snapshot:j.snapshot||null,elements:j.elements||[],pending:j.pending?{type:j.pending.type,element:j.pending.element,url:j.pending.url,...(ownerView?{value:j.pending.value,key:j.pending.key}:{} )}:null};}
 async function browserSave(env,owner,j){await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json,updated_at=CURRENT_TIMESTAMP').bind(BROWSER_TASK_PREFIX+owner+':'+j.id,JSON.stringify(j)).run();}
 async function browserLoad(env,owner,id){if(!/^[a-f0-9-]{36}$/.test(String(id)))fail('Invalid browser task');const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(BROWSER_TASK_PREFIX+owner+':'+id).first();if(!row)fail('Browser task not found',404);return JSON.parse(row.value_json);}
@@ -10,7 +19,7 @@ async function browserAgentOwner(env,actor){
 async function browserTool(env,actor,name,b){
  const owner=await browserAgentOwner(env,actor);
  if(name==='browser_request_task'){
-  if(!env.BROWSER_AGENT)fail('Browser runtime is not connected. A private Browser Run service binding is required before AI can start website tasks.',503);
+  if(!await browserRuntimeReady(env))fail('Browser runtime is not ready. Verify Account 4 Browser Run access, private Worker health, and service binding before creating website tasks.',503);
   if(!Array.isArray(b.hosts))fail('Choose exact public HTTPS hosts');
   const goal=String(b.goal||'').trim(),hosts=[...new Set(b.hosts)];
   if(!goal||goal.length>500||!hosts.length||hosts.length>8||hosts.some(h=>typeof h!=='string'||h.length>253||!/^([a-z0-9][a-z0-9-]*\.)+[a-z]{2,63}$/.test(h)))fail('Provide a goal and up to eight exact public HTTPS hosts');
@@ -39,14 +48,14 @@ async function browserRun(env,owner,j,action){
 }
 async function browserWorkspaceRoutes(req,env,user,sub,m){
  if(!sub.startsWith('browser'))return null;if(user.role!=='owner'||user.kind!=='staff')fail('Owner access required',403);
- if(sub==='browser'&&m==='GET'){const rows=await env.DB.prepare('SELECT value_json FROM settings WHERE key LIKE ? ORDER BY updated_at DESC LIMIT 30').bind(BROWSER_TASK_PREFIX+user.id+':%').all();return json({available:!!env.BROWSER_AGENT,tasks:rows.results.map(r=>browserPublic(JSON.parse(r.value_json),true)),notice:env.BROWSER_AGENT?'Browser sessions last at most two minutes. Idle sessions expire after 30 seconds.':'Browser agent code is installed. Live runtime requires Account 4 Browser Run access and the private service binding.'});}
+ if(sub==='browser'&&m==='GET'){const ready=await browserRuntimeReady(env);const rows=await env.DB.prepare('SELECT value_json FROM settings WHERE key LIKE ? ORDER BY updated_at DESC LIMIT 30').bind(BROWSER_TASK_PREFIX+user.id+':%').all();return json({available:ready,tasks:rows.results.map(r=>browserPublic(JSON.parse(r.value_json),true)),notice:ready?'Private Browser Agent health check passed. Browser sessions last at most two minutes. Idle sessions expire after 30 seconds.':'Browser agent is unavailable or its private health check failed. Confirm Account 4 Browser Run access, private service and BROWSER_AGENT binding.'});}
  if(sub==='browser/decide'&&m==='POST'){
   const b=await body(req);return withOperationLock(env,'browser:'+b.id,async()=>{const j=await browserLoad(env,user.id,b.id);
    if(b.decision==='decline'){j.pending=null;j.status='declined';await browserSave(env,user.id,j);return json({task:browserPublic(j)});}
    if(b.decision!=='approve')fail('Choose Approve or Decline');
    if(j.status==='awaiting-owner'){
     await reauthenticate(env,user,b.password);
-    if(!env.BROWSER_AGENT)fail('Browser Run access is not connected yet',503);
+    if(!await browserRuntimeReady(env))fail('Browser Agent service health check failed. Approval cannot start an unavailable session.',503);
     await withOperationLock(env,'browser:daily-budget',async()=>{const key='browser:budget:'+new Date().toISOString().slice(0,10);const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();const used=Number(row?.value_json||0);if(used>=3)fail('Daily browser limit reached. No paid capacity is enabled.',429);await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json').bind(key,String(used+1)).run();});
     j.status='active';j.expires=Date.now()+120000;await browserSave(env,user.id,j);await audit(env,user.username,'browser-task-approved',j.id+' '+j.hosts.join(','));return json(await browserRun(env,user.id,j,{type:'navigate',url:'https://'+j.hosts[0]+'/'}));
    }
