@@ -15,6 +15,20 @@ assert.equal(addRepo.tokenReused,true);
 const originalToken=raw.prepare('SELECT secret_enc FROM github_sites WHERE id=1').get().secret_enc;
 const copied=raw.prepare('SELECT repo,secret_enc FROM github_sites WHERE id=?').get(addRepo.id);
 assert.equal(copied.repo,'owner/repo');assert.equal(copied.secret_enc,originalToken);
+const countConnections=()=>raw.prepare('SELECT count(*) n FROM github_sites').get().n;
+const beforeInvalid=countConnections();
+for(const invalid of [
+ {source:999,repo:'owner/repo',label:'Unknown source',branch:'main'},
+ {source:1,repo:'../repo',label:'Invalid repository',branch:'main'},
+ {source:1,repo:'owner/repo',label:'Invalid branch',branch:'../main'},
+ {source:1,repo:'owner/repo',label:'',branch:'main'}
+]){
+ await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify(invalid)}),env,user,'workspace/github/reuse','POST'));
+}
+assert.equal(countConnections(),beforeInvalid);
+await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify({source:1,repo:'owner/repo',label:'Non-owner',branch:'main'})}),env,{...user,role:'admin'},'workspace/github/reuse','POST'),e=>e.status===403);
+assert.equal(countConnections(),beforeInvalid);
+
 const candidates=await w.sourceCandidates(env,user,1);assert.equal(candidates.candidates[0].path,'dist/index.html');const count=()=>raw.prepare('SELECT count(*) n FROM proposals').get().n;
 const scan=await w.scanConnectedSource(env,user,{source:1,kind:'static',directory:'dist'});assert.equal(scan.files.length,2);assert.equal(count(),0);assert.equal(raw.prepare('SELECT count(*) n FROM site_files').get().n,0);
 const staged=await w.stageConnectedSource(env,user,{scan:scan.id,site:'demo'});assert.equal(count(),1);assert.equal(raw.prepare('SELECT count(*) n FROM site_files').get().n,0);assert.equal((await w.stageConnectedSource(env,user,{scan:scan.id,site:'demo'})).proposal_id,staged.proposal_id);
