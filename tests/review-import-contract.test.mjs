@@ -94,7 +94,7 @@ test('application source picker rejects dependency-unspecified npm projects',()=
 });
 test('review status requires exact run identity and dispatch timestamp',()=>{
  assert.match(server,/run\.display_title===wanted/);
- assert.match(server,/Date\.parse\(run\.created_at\)>=b\.dispatchedAt-120000/);
+ assert.match(server,/Date\.parse\(run\.created_at\)>=dispatchedAt-120000/);
 });
 test('application queue updates after register, dispatch, and cancel',()=>{
  const updates=client.match(/refreshBuilds\.click\(\)/g)||[];
@@ -103,7 +103,7 @@ test('application queue updates after register, dispatch, and cancel',()=>{
 test('dispatched review cancellation targets only its owner and exact run',()=>{
  assert.match(server,/if\(item\.createdBy!==user\.id\)fail\('Build request owner mismatch',403\)/);
  assert.match(server,/matching\[0\]/);
- assert.match(server,/run\.display_title==='Review '\+id/);
+ assert.match(server,/const wanted='Review '\+id/);
  assert.match(server,/item\.cancelledReviewAt=Date\.now\(\)/);
  assert.match(server,/\/actions\/runs\/['"]\+encodeURIComponent\(run\.id\)\+['"]\/cancel/);
  assert.match(client,/Cancel dispatched review/);
