@@ -43,3 +43,13 @@ test('GitHub repository discovery is owner-scoped, paginated and read-only',()=>
  assert.match(client,/Discover my GitHub repositories/);
  assert.match(client,/Load more authorized repositories/);
 });
+
+test('installation wizard shows source revision and requires destination confirmation',()=>{
+ assert.match(client,/function installationDescription\(\)/);
+ assert.match(client,/function updateInstallationSummary\(\)/);
+ assert.match(client,/install\.commit!==scan\.commit/);
+ assert.match(client,/install\.repo!==scan\.repo/);
+ assert.match(client,/Select the exact target Worker/);
+ assert.match(client,/Prepare this installation for review/);
+ assert.match(client,/Owner approval is still required/);
+});
