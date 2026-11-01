@@ -121,6 +121,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(!row)fail('TinyFish task not found',404);
   const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('TinyFish task owner mismatch',403);
   const key=String(env.TINYFISH_API_KEY||'').trim();if(!key)fail('TinyFish API key not configured',503);
+  if(['COMPLETED','FAILED','CANCELLED'].includes(item.status))return json({id,status:item.status,notice:'This task has already finished.'});
   const response=await fetch('https://agent.tinyfish.ai/v1/runs/'+encodeURIComponent(item.runId)+'/cancel',{method:'POST',headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
   if(!response.ok)fail('TinyFish cancellation unavailable (HTTP '+response.status+')',502);
   const result=await response.json(),status=String(result.status||'unknown').toUpperCase();
