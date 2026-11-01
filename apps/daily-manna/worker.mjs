@@ -59,7 +59,14 @@ async function edit(req,env,id){
  if(existing&&(!Number.isSafeInteger(data.expected_revision)||data.expected_revision!==existing.revision))return response({error:'Entry changed; refresh before editing'},409);
  const key=existing?.id||randomId();
  try{
-  if(existing?.status==='published'){const updated=await env.DB.prepare("UPDATE manna_entries SET title=?,scripture=?,body=?,prayer=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status='published'").bind(title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision).run();if(updated.meta?.changes!==1)return response({error:'Concurrent update; refresh before saving'},409);}
+  if(existing?.status==='published'){
+   // D1 batch is transactional: keep the previous published version with its revision.
+   const results=await env.DB.batch([
+    env.DB.prepare("INSERT OR IGNORE INTO manna_entry_revisions(entry_id,revision,publish_date,title,scripture,body,prayer) SELECT id,revision,publish_date,title,scripture,body,prayer FROM manna_entries WHERE id=? AND revision=? AND status='published'").bind(key,data.expected_revision),
+    env.DB.prepare("UPDATE manna_entries SET title=?,scripture=?,body=?,prayer=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status='published'").bind(title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision)
+   ]);
+   if(results[1]?.meta?.changes!==1)return response({error:'Concurrent update; refresh before saving'},409);
+  }
   else if(existing){const updated=await env.DB.prepare("UPDATE manna_entries SET publish_date=?,title=?,scripture=?,body=?,prayer=?,status='draft',approved_revision=NULL,approved_at=NULL,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status!='published'").bind(date,title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision).run();if(updated.meta?.changes!==1)return response({error:'Concurrent update; refresh before saving'},409);}
   else await env.DB.prepare('INSERT INTO manna_entries(id,publish_date,title,scripture,body,prayer) VALUES(?,?,?,?,?,?)').bind(key,date,title.trim(),scripture.trim(),body.trim(),prayer.trim()).run();
  }catch(e){if(/UNIQUE/i.test(e.message))return response({error:'Date already has a devotional'},409);throw e;}
