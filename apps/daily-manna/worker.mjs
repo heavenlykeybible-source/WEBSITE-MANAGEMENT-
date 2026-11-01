@@ -119,6 +119,12 @@ export default {
     const date=todayLagos(),entry=await env.DB.prepare("SELECT publish_date,title,scripture,body,prayer FROM manna_entries WHERE publish_date=? AND status='published'").bind(date).first();
     return response({date,entry:entry||null,picture_url:entry?'/api/picture/'+date:null});
    }
+   if(path==='/api/readiness'&&method==='GET'&&auth(req,env)){
+    const tally=await env.DB.prepare("SELECT status,COUNT(*) AS count FROM manna_entries GROUP BY status").all();
+    const counts={draft:0,approved:0,published:0,corrected:0};
+    for(const row of tally.results||[])if(Object.hasOwn(counts,row.status))counts[row.status]=row.count;
+    return response({database:'connected',picture_storage:env.MANNA_IMAGES?'connected':'not_configured',unreviewed_publication:env.ALLOW_UNREVIEWED_PUBLICATION==='true',entries:counts,subscriptions:'deferred',social_delivery:'integration_pending'});
+   }
    if(path==='/api/entries'&&method==='GET'&&auth(req,env)){
     const month=url.searchParams.get('month');
     if(month&&!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))return response({error:'Invalid month'},400);
