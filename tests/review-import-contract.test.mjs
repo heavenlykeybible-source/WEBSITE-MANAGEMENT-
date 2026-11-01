@@ -151,3 +151,11 @@ test('TinyFish result history and cancellation preserve owner approval boundary'
  assert.match(server,/UPDATE settings SET value_json=/);
  assert.match(client,/Cancel task/);
 });
+
+test('TinyFish automation rejects private network and non-HTTPS target URLs',()=>{
+ assert.match(server,/target\.protocol!=='https:'/);
+ assert.match(server,/target\.hostname\.startsWith\('\['\)/);
+ assert.match(server,/target\.hostname\.endsWith\('\.internal'\)/);
+ assert.match(server,/target\.hostname\.endsWith\('\.localhost'\)/);
+ assert.match(server,/public HTTPS domain/);
+});
