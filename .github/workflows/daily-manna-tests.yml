@@ -45,3 +45,6 @@ jobs:
 
       - name: Validate social queue delivery and duplicate protection
         run: node facebook-dispatch.test.mjs
+
+      - name: Validate published correction history and stale-write protection
+        run: node correction-history.test.mjs
