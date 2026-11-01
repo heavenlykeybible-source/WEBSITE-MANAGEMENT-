@@ -14,8 +14,13 @@ async function nativeImports(){try{
   if(!tokenSource.value)throw Error('Choose an authorized GitHub connection');
   if(!names.length||names.length>20||new Set(names).size!==names.length)throw Error('Enter 1–20 unique repository names');
   if(names.some(function(n){return !/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(n);}))throw Error('Each line must be owner/repository');
-  var ok=0,errors=[];for(var k=0;k<names.length;k++){try{var name=names[k];var added=await api('workspace/github/reuse','POST',{source:+tokenSource.value,repo:name,label:name+' ('+repoBranch.value.trim()+')',branch:repoBranch.value.trim()});data.sources.push(added);source.appendChild(h('option',{value:added.id},added.label+' · '+added.repo+' · '+added.branch));tokenSource.appendChild(h('option',{value:added.id},added.label+' · '+added.repo));ok++;}catch(e){errors.push(names[k]+': '+e.message);}bulkStatus.textContent='Verified '+(k+1)+'/'+names.length+'; connected '+ok+'.';}
-  bulkStatus.textContent='Connected '+ok+' repositories.'+(errors.length?' Not connected: '+errors.join('; '):'');
+  bulkStatus.textContent='Checking authorization for '+names.length+' repositories…';
+  var batch=await api('workspace/github/bulk-connect','POST',{source:+tokenSource.value,repositories:names,branch:repoBranch.value.trim()});
+  var errors=[];(batch.results||[]).forEach(function(entry){if(entry.status==='connected'){
+   data.sources.push(entry);source.appendChild(h('option',{value:entry.id},entry.label+' · '+entry.repo+' · '+entry.branch));
+   tokenSource.appendChild(h('option',{value:entry.id},entry.label+' · '+entry.repo}));
+  }else if(entry.status==='failed'){errors.push(entry.repo+': not authorized or not available');}});
+  bulkStatus.textContent='New connections: '+batch.connected+'.'+(errors.length?' Not connected: '+errors.join('; '):'')+' Deployment still requires approval.';
  }catch(e){bulkStatus.textContent=e.message;}finally{this.disabled=false;}}},'Verify and connect selected repositories'));
  githubAccounts.appendChild(bulkStatus);
  source.appendChild(h('option',{value:''},'Choose connected GitHub repository'));data.sources.forEach(function(s){source.appendChild(h('option',{value:s.id},s.label+' · '+s.repo+' · '+s.branch));});
