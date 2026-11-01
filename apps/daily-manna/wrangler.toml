@@ -15,13 +15,15 @@ database_name = "strength-for-today-manna-staging"
 database_id = "567e1b66-6fe4-460c-b67a-8bafec52eacd"
 
 # Owner-uploaded pictures use a dedicated PRIVATE R2 bucket.
-# Enable after Cloudflare resource proposal #57 is approved.
-# [[r2_buckets]]
-# binding = "MANNA_IMAGES"
-# bucket_name = "strength-for-today-manna-images-staging"
+# Dedicated R2 bucket verified on Cloudflare Account 1.
+[[r2_buckets]]
+binding = "MANNA_IMAGES"
+bucket_name = "strength-for-today-manna-images-staging"
 
 # Publication is scheduled even when manual editorial review is incomplete.
 # This staging setting is requested by the owner. Do not import or deploy
 # unverified content to production before the source material is cleared.
 [vars]
 ALLOW_UNREVIEWED_PUBLICATION = "true"
+# Set FACEBOOK_FIRST_POST_DATE to a verified launch date only after Page authorization.
+# Leaving it absent prevents any social posts, including past backlog.
