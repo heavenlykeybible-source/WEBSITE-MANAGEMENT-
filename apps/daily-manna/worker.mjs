@@ -103,7 +103,7 @@ async function publishToday(env,now=Date.now()){
 
 // At-most-once provider attempt. Ambiguous network failures are NOT retried automatically:
 // an owner must reconcile the Facebook Page before explicitly retrying to avoid duplicate posts.
-async function dispatchFacebook(env){
+export async function dispatchFacebook(env,fetcher=fetch){
  if(!facebookReady(env))return {configured:false,processed:0};
  const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.id AS entry_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT content_type FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_content_type FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='facebook' AND d.status='pending' AND e.status='published' ORDER BY e.publish_date LIMIT 10").all();
  let processed=0,sent=0,failed=0;
@@ -112,7 +112,7 @@ async function dispatchFacebook(env){
   if(claim.meta?.changes!==1)continue;
   processed++;
   try{
-   const result=await publishToFacebook(entry,env);
+   const result=await publishToFacebook(entry,env,fetcher);
    await env.DB.prepare("UPDATE manna_deliveries SET status='sent',provider_post_id=?,error=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='skipped'").bind(result.provider_post_id,entry.delivery_id).run();
    sent++;
   }catch(error){
