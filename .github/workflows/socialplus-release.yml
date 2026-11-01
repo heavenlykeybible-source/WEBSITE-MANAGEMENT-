@@ -46,7 +46,7 @@ jobs:
           node --input-type=module -e "import fs from 'node:fs'; const r=JSON.parse(fs.readFileSync('handoff/mobile-release.json')); fs.writeFileSync('handoff/STATUS.txt', 'Account 10 SocialPlus\\nRelease status: '+r.release_status+'\\nAndroid: '+r.android.status+'\\niOS: '+r.ios.status+'\\nPWA: '+r.pwa.status+'\\nMANUAL REVIEW ONLY — not deployed or approved\\n')"
           printf '%s\\n' "Commit: $GITHUB_SHA" "Control Room owner must review and approve any deployment." "This is a review/evidence package, not an application bundle." > handoff/README.txt
           sha256sum handoff/* > handoff/SHA256SUMS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: socialplus-account10-control-room-review
           path: handoff/

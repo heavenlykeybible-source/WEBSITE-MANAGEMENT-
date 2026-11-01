@@ -76,7 +76,7 @@ jobs:
           } finally { $zip.Dispose() }
           Get-FileHash './test-msix/HeavenlyKeyWindows.msix' -Algorithm SHA256 | Format-List
       - name: Retain nonproduction Windows testing build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: heavenly-key-account5-windows-test-build-unsigned
           path: heavenly-key-accounts/account-05-heavenly-key-app/native/windows/test-publish/

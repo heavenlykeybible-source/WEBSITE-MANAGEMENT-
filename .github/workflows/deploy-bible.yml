@@ -57,7 +57,7 @@ jobs:
         env:
           RELEASE_WORKER: onlinebible
           RELEASE_ORIGIN: https://bible.heavenlykey.org/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: onlinebible-previous-deployments
