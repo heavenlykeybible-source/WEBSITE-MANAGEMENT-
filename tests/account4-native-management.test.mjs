@@ -12,3 +12,13 @@ test('native Control Room features remain available',()=>{
 test('no external automated-browser execution remains in native workspace',()=>{
  for(const s of [server,client])assert.doesNotMatch(s,/workspace\/tinyfish\/|BROWSER_ENGINE_KEY|BROWSER_ENGINE_URL|fishPanel|Heavenly Key Browser Engine/);
 });
+
+test('bulk GitHub onboarding reuses authorized credential and validates repository list',()=>{
+ assert.match(client,/Add multiple repositories using one existing GitHub authorization/);
+ assert.match(client,/names\.length>20/);
+ assert.match(client,/new Set\(names\)\.size!==names\.length/);
+ assert.match(client,/workspace\/github\/reuse/);
+ assert.match(server,/const g=await importSource\(env,user,sourceId\)/);
+ assert.match(server,/const head=await ghHead\(env,target\)/);
+ assert.match(server,/original\.secret_enc/);
+});
