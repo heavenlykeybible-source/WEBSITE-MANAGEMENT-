@@ -6,7 +6,7 @@ This is an independent Cloudflare Worker app, not yet deployed. It is deliberate
 1. Create a dedicated D1 database and apply `schema.sql`.
 2. Bind it as `DB` on a new Worker using `worker.mjs`.
 3. Add `EDITOR_TOKEN` as a Cloudflare secret, never in source or a URL.
-4. Configure the cron trigger `0 * * * *` (hourly UTC). The handler only publishes at midnight in `Africa/Lagos`.
+4. Configure the cron trigger `0 * * * *` (hourly UTC). The hourly handler publishes entries when their Lagos publication date is due, first at midnight and then retries missed releases on subsequent hourly runs.
 5. Protect editor routes behind Account 4 owner login before exposing them to the browser. The token is intended for server-to-server requests only.
 6. Test on a staging Worker and review existing Daily Word data before switching any live domain.
 
@@ -40,3 +40,16 @@ The Account 4 editorial browser must use its existing owner session, permission 
 
 ## Editorial review requirement
 Before connecting the existing live Daily Word database, compare existing devotional fields and dates with the new schema. Create an import mapping and preview sample records; do not migrate or overwrite any existing content until the owner approves the reviewed mapping.
+
+## Editorial safety improvements
+- Saving a draft requires the last observed `expected_revision`; conflicting concurrent edits are refused.
+- Bulk approval requires `entries: [{id,revision}]` to prevent accidentally approving a later unreviewed edit.
+- Only due, approved revisions are released. A conditional D1 update ensures repeat cron invocations cannot publish twice.
+- Missed midnight runs can be recovered by subsequent hourly cron invocations. Older approved entries can also be recovered.
+- `manna_audit` records creation, edits, approvals and publication.
+- `GET /api/deliveries` provides an owner-only delivery queue summary.
+- `GET /api/public/YYYY-MM-DD` returns only already published archive entries.
+- The editorial calendar supports mobile selection, monthly draft selection, and month-scoped loading.
+
+## Verification limitations
+The static regression script `node apps/daily-manna/tests.mjs` must be executed in CI or a checked-out repository. Staging D1 integration tests, browser acceptance tests, Account 4 session/CSRF integration and live cron verification are still outstanding. Do not treat the queue records as completed social deliveries.
