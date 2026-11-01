@@ -81,26 +81,30 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
  if(sub==='workspace/application-build/dispatch'&&m==='POST'){
   const input=await body(req),id=String(input?.id||'');
   if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid build identifier',400);
-  const key='workspace:application:'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
-  if(!row)fail('Build request not found',404);
-  const item=JSON.parse(row.value_json);
-  if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
-  if(item.status!=='build-required')fail('Build request is not awaiting dispatch',409);
-  if(!/^[a-f0-9]{40}$/.test(item.commit))fail('Invalid pinned source commit',409);
-  if(item.repo!=='heavenlykeybible-source/WEBSITE-MANAGEMENT-')fail('This build workflow is only installed in the Website Management repository',409);
-  const g=await importSource(env,user,item.source),tree=await sourceTree(env,g);
-  const workflow=await gh(env,g,'GET','/actions/workflows/review-application-build.yml').catch(()=>null);
-  if(!workflow||workflow.state!=='active')fail('Review build workflow is not active on the default GitHub branch. Install and enable it before dispatch.',409);
-  if(g.repo!==item.repo||tree.head.commit!==item.commit)fail('Source changed since build request',409);
-  if(!tree.files.some(f=>f.path===(item.directory&&item.directory!=='.'?item.directory+'/':'')+'package.json'))fail('Application manifest no longer exists',409);
-  if(!tree.files.some(f=>f.path===(item.directory&&item.directory!=='.'?item.directory+'/':'')+'package-lock.json'))fail('Application lockfile no longer exists',409);
-  const directory=item.directory||'.';
-  if(!/^(?:\.|[a-zA-Z0-9_.-]+(?:\/[a-zA-Z0-9_.-]+)*)$/.test(directory)||directory.split('/').includes('..'))fail('Invalid application directory',400);
-  await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{source_sha:item.commit,directory}});
-  item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
-  await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
-  await audit(env,user.username,'application-build-dispatched','Review-only build '+id);
-  return json({id,status:item.status,source:item.commit,notice:'Review-only GitHub Actions build requested. No deployment authorized.'});
+  return withOperationLock(env,'application-build:'+id,async()=>{
+   const key='workspace:application:'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+   if(!row)fail('Build request not found',404);
+   const item=JSON.parse(row.value_json);
+   if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
+   if(item.status!=='build-required')fail('Build request is not awaiting dispatch',409);
+   if(!/^[a-f0-9]{40}$/.test(item.commit))fail('Invalid pinned source commit',409);
+   if(item.repo!=='heavenlykeybible-source/WEBSITE-MANAGEMENT-')fail('Review-only build is not installed for this repository',409);
+   const g=await importSource(env,user,item.source);
+   if(g.repo!==item.repo)fail('Repository connection has changed',409);
+   const workflow=await gh(env,g,'GET','/actions/workflows/review-application-build.yml').catch(()=>null);
+   if(!workflow||workflow.state!=='active')fail('Review workflow must first be active on the default GitHub branch',409);
+   const tree=await sourceTree(env,g);
+   if(tree.head.commit!==item.commit)fail('Source changed since build request',409);
+   const directory=item.directory||'.';
+   if(!/^(?:\\.|[a-zA-Z0-9_.-]+(?:\\/[a-zA-Z0-9_.-]+)*)$/.test(directory)||directory.split('/').includes('..'))fail('Invalid application directory',400);
+   const prefix=directory==='.'?'':directory+'/';
+   if(!tree.files.some(f=>f.path===prefix+'package.json')||!tree.files.some(f=>f.path===prefix+'package-lock.json'))fail('Pinned application manifest or npm lockfile is missing',409);
+   await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{source_sha:item.commit,directory}});
+   item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
+   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
+   await audit(env,user.username,'application-build-dispatched','Review-only build '+id);
+   return json({id,status:item.status,source:item.commit,notice:'Review build dispatched; production remains locked.'});
+  });
  }
  if(sub==='workspace/application-build/verify-source'&&m==='POST'){
   const b=await body(req),id=String(b?.id||'');
