@@ -9,7 +9,8 @@ export async function dailyMannaProxy(request,env,security){
  const url=new URL(request.url),prefix='/api/daily-manna/';
  if(!url.pathname.startsWith(prefix))return reply({error:'Invalid path'},404);
  const suffix=url.pathname.slice(prefix.length);
- const permitted=(method==='GET'&&['entries','deliveries'].includes(suffix))||
+ const pictureUpload=method==='PUT'&&/^picture\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
+ const permitted=pictureUpload||(method==='GET'&&['entries','deliveries'].includes(suffix))||
   (method==='POST'&&['entries','approve','publish-check'].includes(suffix))||
   (method==='PUT'&&/^entries\/[a-f0-9-]{36}$/.test(suffix));
  if(!permitted)return reply({error:'Operation not permitted'},405);
@@ -19,10 +20,11 @@ export async function dailyMannaProxy(request,env,security){
  if(base.protocol!=='https:'||base.username||base.password||base.pathname!=='/'||base.search||base.hash)return reply({error:'Invalid upstream origin'},503);
  const target=new URL('/api/'+suffix,base);
  if(method==='GET'&&suffix==='entries'){const month=url.searchParams.get('month');if(month)target.searchParams.set('month',month)}
- const body=mutates?await request.text():undefined;
- if(body&&new TextEncoder().encode(body).length>50000)return reply({error:'Request too large'},413);
+ let body;
+ if(pictureUpload){if(Number(request.headers.get('content-length')||0)>2000000)return reply({error:'Picture too large'},413);body=await request.arrayBuffer();if(body.byteLength>2000000)return reply({error:'Picture too large'},413)}
+ else{body=mutates?await request.text():undefined;if(body&&new TextEncoder().encode(body).length>50000)return reply({error:'Request too large'},413)}
  try{
-  const upstream=await fetch(target.toString(),{method,headers:{authorization:'Bearer '+env.MANNA_EDITOR_TOKEN,'content-type':'application/json'},body,redirect:'manual',signal:AbortSignal.timeout(15000)});
+  const upstream=await fetch(target.toString(),{method,headers:{authorization:'Bearer '+env.MANNA_EDITOR_TOKEN,'content-type':pictureUpload?(request.headers.get('content-type')||'application/octet-stream'):'application/json'},body,redirect:'manual',signal:AbortSignal.timeout(15000)});
   if(upstream.status>=300&&upstream.status<400)return reply({error:'Unexpected upstream redirect'},502);
   const raw=await upstream.text();
   if(new TextEncoder().encode(raw).length>1000000)return reply({error:'Response too large'},502);
