@@ -103,6 +103,7 @@ jobs:
           npm run build:cms
           node tests/account4-subdomain-integration.mjs
           node tests/account4-large-upload-integration.mjs
+          node tests/account4-provider-verification.mjs
           npm run test:ai-worker-permissions
           node --check control-room-worker.js
           grep -q 'Cloudflare API tokens' control-room-worker.js
