@@ -31,3 +31,5 @@ jobs:
         run: node adapter-tests.mjs
       - name: Validate public page
         run: node public-page.test.mjs
+      - name: Validate request limits and authentication
+        run: node request-validation.test.mjs
