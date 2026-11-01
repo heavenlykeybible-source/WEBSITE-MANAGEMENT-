@@ -115,6 +115,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    const directory=[item.root||'',item.directory||''].filter(Boolean).join('/')||'.';
    if(directory!=='.'&&(directory.split('/').some(part=>!part||part==='.'||part==='..'||!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/.test(part))))fail('Invalid application directory',400);
    const prefix=item.directory?item.directory+'/':'';
+   if(tree.files.some(f=>f.path.startsWith(prefix+'node_modules/')))fail('Pinned source contains bundled node_modules',409);
    const npmLock=tree.files.find(f=>f.path===prefix+'package-lock.json');
    if(!npmLock||npmLock.mode==='120000'||npmLock.size>5*1024*1024)fail('Pinned npm lockfile is missing or unsafe',409);
    await verifyNpmBuildManifest(env,g,tree.files,prefix);
@@ -138,7 +139,8 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if((g.dir||'')!==(item.root||''))fail('Connected application root changed since build request',409);
   const tree=await sourceTree(env,g);
   const prefix=item.directory?item.directory+'/':'';
-  const valid=tree.head.commit===item.commit&&tree.files.some(f=>f.path===prefix+'package.json')&&tree.files.some(f=>f.path===prefix+'package-lock.json');
+  const lock=tree.files.find(f=>f.path===prefix+'package-lock.json');
+  const valid=tree.head.commit===item.commit&&tree.files.some(f=>f.path===prefix+'package.json')&&!!lock&&lock.mode!=='120000'&&lock.size<=5*1024*1024&&!tree.files.some(f=>f.path.startsWith(prefix+'node_modules/'));
   if(!valid)fail('Pinned application source has changed or package.json is missing',409);
   return json({id,sourceVerified:valid,commit:item.commit,status:item.status,buildVerified:false,deploymentAuthorized:false});
  }
