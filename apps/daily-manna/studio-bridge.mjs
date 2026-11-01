@@ -18,7 +18,11 @@ export function formatDailyMannaPost(entry,origin){
  const date=entry.publish_date;
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw Error('Invalid date');
  const link=new URL('/?date='+encodeURIComponent(date),u).toString();
- return ['STRENGTH FOR TODAY - our daily manna',entry.title,entry.scripture,entry.body,entry.prayer?'Prayer: '+entry.prayer:'','Read: '+link].filter(Boolean).join('\n\n');
+ const message=String(entry.body||'');
+ const preview=Array.from(message).length>1500?Array.from(message).slice(0,1500).join('')+'…':message;
+ const prayer=String(entry.prayer||'');
+ const reflection=prayer&&preview.length+prayer.length<1750?'Prayer: '+prayer:'';
+ return ['STRENGTH FOR TODAY - our daily manna',entry.title,entry.scripture,preview,reflection,'Read the complete devotional: '+link].filter(Boolean).join('\n\n');
 }
 export async function submitToStudio(entry,env,fetcher=fetch){
  if(!studioReady(env))throw Error('Studio bridge is not configured');
