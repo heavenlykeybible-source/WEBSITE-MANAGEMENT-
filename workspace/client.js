@@ -23,6 +23,23 @@ async function nativeImports(){try{
   bulkStatus.textContent='New connections: '+batch.connected+'.'+(errors.length?' Not connected: '+errors.join('; '):'')+' Deployment still requires approval.';
  }catch(e){bulkStatus.textContent=e.message;}finally{this.disabled=false;}}},'Verify and connect selected repositories'));
  githubAccounts.appendChild(bulkStatus);
+ var discoverPage=1,discoverList=h('select',{'aria-label':'Authorized GitHub repository discovered from connected identity'}),discoverStatus=h('p',{role:'status'});
+ discoverList.appendChild(h('option',{value:''},'Discover authorized repositories'));
+ githubAccounts.appendChild(h('h5',{},'Discover repositories from an authorized GitHub identity'));
+ githubAccounts.appendChild(h('button',{onclick:async function(){this.disabled=true;discoverStatus.textContent='Reading GitHub repository access…';try{
+  if(!tokenSource.value)throw Error('Select an authorized connection first');discoverPage=1;
+  var result=await api('workspace/github/discover?source='+encodeURIComponent(tokenSource.value)+'&page=1');
+  discoverList.innerHTML='';discoverList.appendChild(h('option',{value:''},'Choose repository'));
+  (result.repositories||[]).forEach(function(repo){discoverList.appendChild(h('option',{value:repo.repo},repo.repo+(repo.private?' · Private':' · Public')+(repo.archived?' · Archived':'')));});
+  discoverStatus.textContent=(result.repositories||[]).length+' repositories on page 1. Only repositories authorized by this GitHub connection appear.';
+ }catch(e){discoverStatus.textContent=e.message;}finally{this.disabled=false;}}},'Discover my GitHub repositories'));
+ githubAccounts.appendChild(h('button',{onclick:async function(){this.disabled=true;try{if(!tokenSource.value)throw Error('Select an authorized connection first');discoverPage++;
+  var result=await api('workspace/github/discover?source='+encodeURIComponent(tokenSource.value)+'&page='+discoverPage);
+  (result.repositories||[]).forEach(function(repo){if(!Array.from(discoverList.options).some(function(o){return o.value===repo.repo;}))discoverList.appendChild(h('option',{value:repo.repo},repo.repo+(repo.private?' · Private':' · Public')));});
+  discoverStatus.textContent='Loaded through page '+discoverPage+'.';if(!result.hasMore)this.disabled=true;
+ }catch(e){discoverPage--;discoverStatus.textContent=e.message;this.disabled=false;}finally{if(discoverPage<20&&this.disabled!==true)this.disabled=false;}}},'Load more authorized repositories'));
+ discoverList.onchange=function(){if(this.value){repoInput.value=this.value;repoLabel.value=this.value+' ('+repoBranch.value.trim()+')';}};
+ githubAccounts.appendChild(discoverList);githubAccounts.appendChild(discoverStatus);
  source.appendChild(h('option',{value:''},'Choose connected GitHub repository'));data.sources.forEach(function(s){source.appendChild(h('option',{value:s.id},s.label+' · '+s.repo+' · '+s.branch));});
  function reset(){scan=null;report.innerHTML='';preview.innerHTML='';stage.disabled=true;}
  source.onchange=async function(){reset();project.innerHTML='';if(!source.value)return;status.textContent='Reading repository projects…';try{listing=await api('workspace/candidates?source='+encodeURIComponent(source.value));project.appendChild(h('option',{value:''},'Choose built website or Worker'));listing.candidates.forEach(function(c,i){project.appendChild(h('option',{value:i},(c.kind==='application'?'Application · build required · ':c.kind==='static'?'Website · ':'Worker · ')+c.path));});status.textContent=listing.candidates.length?'Choose the exact project. Source commit '+listing.commit.slice(0,12):'No index.html or Worker entry candidates found. Connect the built output folder or use the existing ZIP importer.';}catch(e){status.textContent=e.message;}};
