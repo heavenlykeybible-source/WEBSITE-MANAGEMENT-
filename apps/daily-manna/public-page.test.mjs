@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {publicPage} from './public-page.mjs';
 import worker from './worker.mjs';
 const html=publicPage();
-assert.match(html,/Strength for Today/);
+assert.match(html,/STRENGTH FOR TODAY - our daily manna/);
 assert.match(html,/textContent=entry\.body/);
 assert.doesNotMatch(html,/innerHTML\s*=/);
 assert.match(html,/timeZone:'Africa\/Lagos'/);
