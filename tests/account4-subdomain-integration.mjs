@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const ai=fs.readFileSync('ai/capabilities.js','utf8');
+const domain=fs.readFileSync('workspace/domains.js','utf8');
+const worker=fs.readFileSync('control-room-worker.js','utf8');
+assert.match(ai,/name:'propose_worker_subdomain'/);
+assert.match(ai,/case 'propose_worker_subdomain':\{propose\(\);return await prepareWorkerDomain\(env,actor,args\);\}/);
+assert.match(ai,/AI_INFRA_WRITES=new Set\(\['propose_worker_subdomain'/);
+assert.match(domain,/async function prepareWorkerDomain/);
+assert.match(domain,/async function domainApprovalRoutes/);
+assert.match(domain,/await reauthenticate\(env,user,b.password\)/);
+assert.match(domain,/withOperationLock\(env,'domain-host:'/);
+assert.match(domain,/await checkNewWorkerDomain\(env,r.connection,r.hostname,r.worker\)/);
+assert.match(domain,/cf\(env,conn,'PUT','\/workers\/domains'/);
+assert.match(worker,/async function prepareWorkerDomain/,'Built Worker missing domain operations: run npm run build:cms');
+assert.match(worker,/case 'propose_worker_subdomain'/,'Built Worker missing AI tool: run npm run build:cms');
+console.log('PASS Account 4 subdomain AI integration in assembled Worker');
