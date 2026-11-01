@@ -8,7 +8,29 @@ const objects=new Map(),env={DB,VAULT_KEY:'fixture-only-vault-long-key',ADMIN_US
 raw.prepare('INSERT INTO github_sites(id,label,repo,branch,dir,secret_enc)VALUES(?,?,?,?,?,?)').run(1,'Website Management','owner/repo','main','',await w.seal(env,'fixture-github-token'));
 let commit='a'.repeat(40),files=new Map([['dist/index.html','<!doctype html><h1>Original live preview</h1><link rel="stylesheet" href="main.css">'],['dist/main.css','h1{color:green}']]),corrupt=false,writes=0;
 function tree(){return [...files].map(([path,text])=>({path,type:'blob',mode:'100644',size:Buffer.byteLength(text),sha:createHash('sha1').update('blob '+Buffer.byteLength(text)+'\0'+text).digest('hex')}));}
-globalThis.fetch=async(url,init)=>{assert.equal(init.method,'GET');assert.ok(url.startsWith('https://api.github.com/repos/owner/repo/'));if(url.includes('/git/ref/heads/'))return Response.json({object:{sha:commit}});if(url.includes('/git/commits/'))return Response.json({tree:{sha:'tree-sha'}});if(url.includes('/git/trees/'))return Response.json({tree:tree(),truncated:false});if(url.includes('/git/blobs/')){const row=tree().find(f=>url.endsWith(f.sha));assert.ok(row);return Response.json({encoding:'base64',content:Buffer.from(corrupt?'tampered':files.get(row.path)).toString('base64')});}writes++;throw Error('Unexpected network write');};
+globalThis.fetch=async(url,init)=>{assert.equal(init.method,'GET');assert.ok(url.startsWith('https://api.github.com/repos/owner/repo/')||url.startsWith('https://api.github.com/repos/owner/second-repo/'));if(url.includes('/git/ref/heads/'))return Response.json({object:{sha:commit}});if(url.includes('/git/commits/'))return Response.json({tree:{sha:'tree-sha'}});if(url.includes('/git/trees/'))return Response.json({tree:tree(),truncated:false});if(url.includes('/git/blobs/')){const row=tree().find(f=>url.endsWith(f.sha));assert.ok(row);return Response.json({encoding:'base64',content:Buffer.from(corrupt?'tampered':files.get(row.path)).toString('base64')});}writes++;throw Error('Unexpected network write');};
+const addRepo=await(await w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify({source:1,repo:'owner/second-repo',label:'Second GitHub repository',branch:'main'})}),env,user,'workspace/github/reuse','POST')).json();
+assert.equal(addRepo.authenticated,true);
+assert.equal(addRepo.tokenReused,true);
+const originalToken=raw.prepare('SELECT secret_enc FROM github_sites WHERE id=1').get().secret_enc;
+const copied=raw.prepare('SELECT repo,secret_enc FROM github_sites WHERE id=?').get(addRepo.id);
+assert.equal(copied.repo,'owner/second-repo');assert.equal(copied.secret_enc,originalToken);
+await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify({source:1,repo:'owner/another',label:'Second GitHub repository',branch:'main'})}),env,user,'workspace/github/reuse','POST'),e=>e.status===409);
+await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify({source:1,repo:'owner/repo',label:'Duplicate',branch:'main'})}),env,user,'workspace/github/reuse','POST'),e=>e.status===409);
+const countConnections=()=>raw.prepare('SELECT count(*) n FROM github_sites').get().n;
+const beforeInvalid=countConnections();
+for(const invalid of [
+ {source:999,repo:'owner/repo',label:'Unknown source',branch:'main'},
+ {source:1,repo:'../repo',label:'Invalid repository',branch:'main'},
+ {source:1,repo:'owner/repo',label:'Invalid branch',branch:'../main'},
+ {source:1,repo:'owner/repo',label:'',branch:'main'}
+]){
+ await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify(invalid)}),env,user,'workspace/github/reuse','POST'));
+}
+assert.equal(countConnections(),beforeInvalid);
+await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify({source:1,repo:'owner/repo',label:'Non-owner',branch:'main'})}),env,{...user,role:'admin'},'workspace/github/reuse','POST'),e=>e.status===403);
+assert.equal(countConnections(),beforeInvalid);
+
 const candidates=await w.sourceCandidates(env,user,1);assert.equal(candidates.candidates[0].path,'dist/index.html');const count=()=>raw.prepare('SELECT count(*) n FROM proposals').get().n;
 const scan=await w.scanConnectedSource(env,user,{source:1,kind:'static',directory:'dist'});assert.equal(scan.files.length,2);assert.equal(count(),0);assert.equal(raw.prepare('SELECT count(*) n FROM site_files').get().n,0);
 const staged=await w.stageConnectedSource(env,user,{scan:scan.id,site:'demo'});assert.equal(count(),1);assert.equal(raw.prepare('SELECT count(*) n FROM site_files').get().n,0);assert.equal((await w.stageConnectedSource(env,user,{scan:scan.id,site:'demo'})).proposal_id,staged.proposal_id);
@@ -19,6 +41,20 @@ files.set('dist/package.json','{}');await assert.rejects(w.scanConnectedSource(e
 await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/catalog'),env,{...user,role:'admin'},'workspace/catalog','GET'),e=>e.status===403);
 const actor={chatUserId:1,agentId:1,a:{can_read:1},chatConversationId:crypto.randomUUID()},request=await w.requestProviderVerification(env,actor,{provider:'github',connection:1,reason:'Recheck repository access',url:'https://evil.example'});assert.equal(request.verification_request.url,'https://github.com/login');
 const same=await w.requestProviderVerification(env,actor,{provider:'github',connection:1,reason:'Still needs checking'});assert.equal(same.verification_request.id,request.verification_request.id);
-const req=new Request('https://room/api/owner/verification/resolve',{method:'POST',body:JSON.stringify({id:request.verification_request.id,action:'recheck'})});const result=await (await w.providerVerificationRoutes(req,env,user,'verification/resolve','POST')).json();assert.equal(result.status,'connection-verified');assert.match(result.notice,/does not prove browser sign-in or write permission/);assert.equal(raw.prepare("SELECT count(*) n FROM settings WHERE key LIKE 'ai:permissions:%'").get().n,0);assert.equal(writes,0);raw.close();
+const req=new Request('https://room/api/owner/verification/resolve',{method:'POST',body:JSON.stringify({id:request.verification_request.id,action:'recheck'})});const result=await (await w.providerVerificationRoutes(req,env,user,'verification/resolve','POST')).json();assert.equal(result.status,'connection-verified');assert.match(result.notice,/does not prove browser sign-in or write permission/);assert.equal(raw.prepare("SELECT count(*) n FROM settings WHERE key LIKE 'ai:permissions:%'").get().n,0);assert.equal(writes,0);
+for(const [id,owner,when] of [['11111111-1111-4111-8111-111111111111',1,10],['22222222-2222-4222-8222-222222222222',2,20],['33333333-3333-4333-8333-333333333333',1,30]]){
+ raw.prepare('INSERT INTO settings(key,value_json)VALUES(?,?)').run('workspace:application:'+id,JSON.stringify({id,createdBy:owner,createdAt:when,repo:'owner/repo',commit:'a'.repeat(40),status:'build-required',worker:'demo'}));
+}
+const buildsUrl='https://room/api/owner/workspace/application-builds';
+const builds=await(await w.importWorkspaceRoutes(new Request(buildsUrl),env,user,'workspace/application-builds','GET')).json();
+assert.deepEqual(builds.builds.map(x=>x.id),['33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111']);
+const ownedId='11111111-1111-4111-8111-111111111111',otherId='22222222-2222-4222-8222-222222222222';
+const stopUrl='https://room/api/owner/workspace/application-build/cancel';
+const stop=(id)=>w.importWorkspaceRoutes(new Request(stopUrl,{method:'POST',body:JSON.stringify({id})}),env,user,'workspace/application-build/cancel','POST');
+await assert.rejects(stop(otherId),e=>e.status===403);
+assert.equal((await(await stop(ownedId)).json()).status,'cancelled');
+assert.equal(JSON.parse(raw.prepare('SELECT value_json FROM settings WHERE key=?').get('workspace:application:'+otherId).value_json).status,'build-required');
+await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/application-build/status?id='+otherId),env,user,'workspace/application-build/status','GET'),e=>e.status===403);
+raw.close();
 console.log('PASS native source workflow: connected credentials, complete pinned-commit scan, real sandbox preview, no live writes, idempotent staging, changed-source and tamper rejection, source/secrets blockers, owner scope and official-only verification without permission grants');
 }finally{globalThis.fetch=originalFetch;fs.unlinkSync(temp);}
