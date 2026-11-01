@@ -121,6 +121,19 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   let content;try{content=new TextDecoder('utf-8',{fatal:true}).decode(raw);}catch{fail('Only UTF-8 source files are supported',400);}
   return json({repo:g.repo,commit,path,sha:file.sha,content,readOnly:true});
  }
+ if(sub==='workspace/github/propose-file-edit'&&m==='POST'){
+  const b=await body(req),sourceId=Number(b?.source),path=String(b?.path||''),commit=String(b?.commit||''),baseSha=String(b?.base_sha||''),content=b?.content;
+  if(!Number.isSafeInteger(sourceId)||sourceId<1||!/^[a-f0-9]{40}$/.test(commit)||!/^[a-f0-9]{40}$/.test(baseSha))fail('Select a pinned original GitHub file',400);
+  if(typeof content!=='string'||new TextEncoder().encode(content).byteLength>200000)fail('GitHub proposed file must be UTF-8 text up to 200 KB',413);
+  if(!path||path.length>240||path.startsWith('/')||path.split('/').some(v=>!v||v==='.'||v==='..'||v==='.env'||v==='.git'||v==='node_modules'||v==='vendor')||!/\\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(path))fail('Choose a supported GitHub source file',400);
+  const g=await importSource(env,user,sourceId),tree=await sourceTree(env,g);
+  if(tree.head.commit!==commit)fail('GitHub branch advanced. Refresh and review the new source first.',409);
+  const file=tree.files.find(f=>f.path===path&&f.mode!=='120000'&&f.size<=200000);
+  if(!file||file.sha!==baseSha)fail('GitHub source file has changed. Refresh before proposing.',409);
+  const actor={kind:'owner',user,ow:null,agentId:await userAgentId(env,user)};
+  const result=await coreProposeGithub(env,actor,{site:g.id,message:'Review edit to '+path,note:'Owner-reviewed edit from native GitHub source inspector; pinned to '+commit,files:[{path,content,base_sha:baseSha}]});
+  return json({proposal_id:result.proposal_id,status:'waiting',requiresOwnerApproval:true,sourceCommit:commit,sourceFile:path});
+ }
  if(sub==='workspace/github/discover'&&m==='GET'){
   const sourceId=Number(u.searchParams.get('source')),page=Number(u.searchParams.get('page')||1);
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Choose an authorized GitHub connection',400);
