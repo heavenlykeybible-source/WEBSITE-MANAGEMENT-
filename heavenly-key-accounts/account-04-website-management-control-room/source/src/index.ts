@@ -89,9 +89,9 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    const data=await body(request,2048);
    if(typeof data.name!=='string'||!data.name.trim()||data.name.length>120)return fail('Enter a project name (up to 120 characters).');
    const total=data.totalBytes;
-   if(!Number.isSafeInteger(total)||total<1||total>209715200)return fail('Project archive must be 1 byte to 200 MB.',413);
+   if(!Number.isSafeInteger(total)||total<1||total>1073741824)return fail('Project archive must be 1 byte to 1 GiB.',413);
    const id=crypto.randomUUID(),parts=Math.ceil(total/4194304);
-   await env.MEDIA.put('imports/'+id+'/manifest',JSON.stringify({name:data.name.trim(),totalBytes:total,parts,createdAt:new Date().toISOString(),status:'staging'}),{httpMetadata:{contentType:'application/json'}});
+   await env.MEDIA.put('imports/'+id+'/manifest',JSON.stringify({name:data.name.trim(),totalBytes:total,parts,owner:actor,createdAt:new Date().toISOString(),status:'staging'}),{httpMetadata:{contentType:'application/json'}});
    return json({id,parts,chunkBytes:4194304,status:'staging',published:false});
   }
   const importMatch=u.pathname.match(/^\\/api\\/project-imports\\/([a-f0-9-]{36})(?:\\/chunks\\/(\\d+))?$/);
@@ -99,19 +99,22 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
    const id=importMatch[1],prefix='imports/'+id+'/',stored=await env.MEDIA.get(prefix+'manifest');
    if(!stored)return fail('Import session not found.',404);
    const manifest=JSON.parse(await stored.text());
+   if(manifest.owner!==actor)return fail('Import belongs to another administrator.',403);
    if(importMatch[2]!==undefined&&request.method==='PUT'){
     const n=Number(importMatch[2]);
     if(!Number.isSafeInteger(n)||n<0||n>=manifest.parts)return fail('Invalid chunk index.');
     const expected=Math.min(4194304,manifest.totalBytes-n*4194304);
     if(Number(request.headers.get('content-length')||0)>expected)return fail('Chunk too large.',413);
+    if(manifest.status!=='staging')return fail('Import is no longer accepting chunks.',409);
     const bytes=await request.arrayBuffer();
     if(bytes.byteLength!==expected)return fail('Incorrect chunk length.',400);
     await env.MEDIA.put(prefix+'chunks/'+n,bytes,{httpMetadata:{contentType:'application/octet-stream'}});
     return json({ok:true,chunk:n,published:false});
    }
    if(importMatch[2]===undefined&&request.method==='GET'){
-    const chunks=await Promise.all(Array.from({length:manifest.parts},(_,i)=>env.MEDIA.head(prefix+'chunks/'+i)));
-    return json({id,name:manifest.name,totalBytes:manifest.totalBytes,received:chunks.filter(Boolean).length,parts:manifest.parts,complete:chunks.every(Boolean),published:false});
+    const chunks=[];
+    for(let start=0;start<manifest.parts;start+=16){chunks.push(...await Promise.all(Array.from({length:Math.min(16,manifest.parts-start)},(_,i)=>env.MEDIA.head(prefix+'chunks/'+(start+i)))));}
+    return json({id,name:manifest.name,totalBytes:manifest.totalBytes,received:chunks.filter(Boolean).length,receivedIndices:chunks.flatMap((x,i)=>x?[i]:[]),parts:manifest.parts,complete:chunks.every(Boolean),published:false});
    }
   }
   if(u.pathname==='/api/media'&&request.method==='POST'){
