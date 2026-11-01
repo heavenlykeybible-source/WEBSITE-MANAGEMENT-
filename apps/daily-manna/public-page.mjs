@@ -1,0 +1,14 @@
+// Public presentation module for the standalone Daily Manna staging Worker.
+// Devotional fields must always be inserted with textContent, never innerHTML.
+export function publicPage(){
+return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Strength for Today · Daily Manna</title><style>body{margin:0;background:#f5f7fc;color:#17243c;font:17px/1.6 system-ui,sans-serif}header{background:#173d7b;color:#fff;text-align:center;padding:2rem}main{max-width:760px;margin:2rem auto;padding:1rem}article,section{background:white;border:1px solid #dde4ef;border-radius:14px;padding:1.5rem;margin-bottom:1rem}#body,#prayer{white-space:pre-wrap}input,button{padding:.6rem;font:inherit}button{background:#173d7b;color:white;border:0;border-radius:6px}footer{text-align:center;padding:2rem;color:#59677d}</style></head><body><header><h1>Strength for Today</h1><p>Daily Manna · Heavenly Key Evangelistic Movement</p></header><main><article><small id="date"></small><h2 id="title">Daily devotional</h2><p id="status" role="status">Loading…</p><p id="scripture"></p><div id="body"></div><h3 id="prayer-heading" hidden>Prayer</h3><div id="prayer"></div></article><section><form id="archive"><label for="day">Published archive date</label> <input type="date" id="day" required> <button>Read</button></form></section></main><footer>Revival · Holiness · Power</footer><script type="module">
+const el=id=>document.getElementById(id);
+const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const part=t=>parts.find(p=>p.type===t).value;const today=part('year')+'-'+part('month')+'-'+part('day');el('day').max=today;el('day').value=today;
+async function load(day){el('status').textContent='Loading…';for(const k of ['body','scripture','prayer'])el(k).textContent='';el('prayer-heading').hidden=true;
+try{const response=await fetch(day?'/api/public/'+encodeURIComponent(day):'/api/today');if(!response.ok)throw Error();const result=await response.json();el('date').textContent=day||result.date||today;
+if(!result.entry){el('title').textContent='No published devotional for this date';el('status').textContent='Check back later or choose another date.';return;}
+const entry=result.entry;el('title').textContent=entry.title;el('scripture').textContent=entry.scripture;el('body').textContent=entry.body;el('prayer').textContent=entry.prayer||'';el('prayer-heading').hidden=!entry.prayer;el('status').textContent='';
+}catch{el('title').textContent='Temporarily unavailable';el('status').textContent='Please try again later.';}}
+el('archive').addEventListener('submit',e=>{e.preventDefault();const d=el('day').value;if(d&&d<=today)load(d)});load();
+</script></body></html>`;
+}
