@@ -85,6 +85,43 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
   if(u.pathname==='/api/restore'&&request.method==='POST'){const data=await body(request,4096);if(!Number.isSafeInteger(data.revisionId)||data.revisionId<1)return fail('Choose a revision.');return json({...await restoreDraft(env.DB,location(),data.revisionId,data.expectedVersion,actor),published:false})}
   // Account 3 large-project staging: authenticated, bounded chunks stored privately in R2.
   // Staging never publishes or changes a GitHub branch. The Waiting Room remains mandatory.
+  // Import a pinned source-tree inventory directly from Account 3. File contents remain
+  // in GitHub until a separately approved materialization/deployment workflow runs.
+  if(u.pathname==='/api/project-imports/github'&&request.method==='POST'){
+   const data=await body(request,4096);
+   if(data.repository!=='heavenlykeybible-source/onlinebible')return fail('Only the approved Account 3 repository is allowed.',403);
+   const ref=typeof data.ref==='string'&&/^[A-Za-z0-9._/-]{1,100}$/.test(data.ref)&&!data.ref.includes('..')?data.ref:'main';
+   const root='Global Christian Community/implementation/';
+   const token=(env as Env & {GITHUB_TOKEN?:string}).GITHUB_TOKEN;
+   const headers:Record<string,string>={'Accept':'application/vnd.github+json','User-Agent':'Heavenly-Key-Control-Room','X-GitHub-Api-Version':'2022-11-28'};
+   if(token)headers.Authorization='Bearer '+token;
+   const base='https://api.github.com/repos/heavenlykeybible-source/onlinebible';
+   const commitResponse=await fetch(base+'/commits/'+encodeURIComponent(ref),{headers});
+   if(!commitResponse.ok)return fail('GitHub connection failed ('+commitResponse.status+'). Configure GITHUB_TOKEN if the repository is private.',502);
+   const commit=await commitResponse.json() as {sha?:string};
+   if(!commit.sha||!/^[0-9a-f]{40}$/.test(commit.sha))return fail('GitHub returned an invalid commit.',502);
+   const treeResponse=await fetch(base+'/git/trees/'+commit.sha+'?recursive=1',{headers});
+   if(!treeResponse.ok)return fail('Could not read Account 3 repository tree ('+treeResponse.status+').',502);
+   const tree=await treeResponse.json() as {truncated?:boolean;tree?:{path:string;type:string;sha:string;size?:number}[]};
+   if(tree.truncated||!Array.isArray(tree.tree))return fail('GitHub returned a truncated source tree; import cancelled.',422);
+   const files:{path:string;sha:string;size:number}[]=[];
+   let total=0;
+   for(const entry of tree.tree){
+    if(entry.type!=='blob'||!entry.path.startsWith(root))continue;
+    const relative=entry.path.slice(root.length),parts=relative.split('/');
+    if(!relative||relative.length>1024||parts.some(part=>!part||part==='.'||part==='..'||part.toLowerCase()==='.git')||relative.includes('\\')||/[\x00-\x1f\x7f]/.test(relative))return fail('Unsafe path in source tree.',422);
+    if(/(^|\/)(\.env(?:\.|$)|id_rsa$|.*\.pem$)/i.test(relative))continue;
+    if(!/^[0-9a-f]{40}$/.test(entry.sha)||!Number.isSafeInteger(entry.size)||entry.size!<0)return fail('Invalid GitHub file metadata.',422);
+    files.push({path:relative,sha:entry.sha,size:entry.size!});
+    total+=entry.size!;
+    if(files.length>25000||total>2147483648)return fail('Project exceeds source import limits.',413);
+   }
+   if(!files.length)return fail('No Account 3 implementation files found at the expected source folder.',404);
+   const id=crypto.randomUUID(),prefix='imports/'+id+'/',now=new Date().toISOString();
+   await env.MEDIA.put(prefix+'files.json',JSON.stringify({repository:data.repository,ref,commit:commit.sha,root,files}),{httpMetadata:{contentType:'application/json'}});
+   await env.MEDIA.put(prefix+'manifest',JSON.stringify({name:'Global Christian Community — Account 3',owner:actor,createdAt:now,submittedAt:now,status:'waiting-review',source:'github-tree',repository:data.repository,ref,commit:commit.sha,root,fileCount:files.length,totalBytes:total,parts:0,extracted:false,published:false}),{httpMetadata:{contentType:'application/json'}});
+   return json({id,status:'waiting-review',source:'github-tree',commit:commit.sha,fileCount:files.length,totalBytes:total,approvalRequired:true,published:false,materialized:false});
+  }
   if(u.pathname==='/api/project-imports'&&request.method==='GET'){
    const entries:{id:string,name:string,status:string,createdAt:string,submittedAt?:string,totalBytes:number,parts:number}[]=[];
    let cursor:string|undefined;
