@@ -10,6 +10,7 @@ async function queueConnectedApplication(env,user,b){
  if(!tree.files.some(f=>f.path===prefix+'package.json'))fail('Application package.json missing',400);
  if(tree.files.some(f=>f.path.startsWith(prefix+'node_modules/')))fail('Dependencies must not be included in application source',400);
  if(!tree.files.some(f=>f.path===prefix+'package-lock.json'))fail('Review build requires npm package-lock.json',409);
+ await verifyNpmBuildManifest(env,g,tree.files,prefix);
  const conn=await connById(env,b.connection),worker=String(b.worker||'');
  if(!/^[a-z0-9][a-z0-9_-]{0,62}$/.test(worker))fail('Choose a valid Cloudflare Worker name',400);
  protectWorker(env,worker);
@@ -20,6 +21,20 @@ async function queueConnectedApplication(env,user,b){
  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:application:'+id,JSON.stringify(manifest)).run();
  await audit(env,user.username,'application-build-request','Queued '+g.repo+'@'+tree.head.commit+' for '+worker);
  return {id,status:'build-required',repo:g.repo,commit:tree.head.commit,notice:'Application registered for reviewed build. No production deployment or preview is available until a verified build is attached.'};
+}
+async function verifyNpmBuildManifest(env,g,files,prefix){
+ const entry=files.find(f=>f.path===prefix+'package.json');
+ if(!entry||entry.mode==='120000'||entry.size>262144)fail('Application package.json is missing or oversized',409);
+ const blob=await gh(env,g,'GET','/git/blobs/'+entry.sha);
+ if(blob.encoding!=='base64')fail('GitHub package manifest encoding is unsupported',502);
+ const bytes=Uint8Array.from(atob(String(blob.content||'').replace(/\s/g,'')),c=>c.charCodeAt(0));
+ if(bytes.length>262144)fail('Application package manifest exceeds 256 KB',413);
+ const header=new TextEncoder().encode('blob '+bytes.length+'\\0'),input=new Uint8Array(header.length+bytes.length);
+ input.set(header);input.set(bytes,header.length);
+ if(hex(await crypto.subtle.digest('SHA-1',input))!==entry.sha)fail('Application package.json integrity check failed',409);
+ let manifest;try{manifest=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{fail('Application package.json is not valid UTF-8 JSON',409);}
+ if(!manifest||typeof manifest.scripts?.build!=='string'||!manifest.scripts.build.trim())fail('Application must provide an npm build script',409);
+ return manifest;
 }
 async function scanConnectedSource(env,user,b){
  const g=await importSource(env,user,b.source),tree=await sourceTree(env,g),kind=b.kind==='worker'?'worker':'static',directory=sourceFolder(b.directory),pre=directory?directory+'/':'';
@@ -100,6 +115,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    if(directory!=='.'&&(directory.split('/').some(part=>!part||part==='.'||part==='..'||!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/.test(part))))fail('Invalid application directory',400);
    const prefix=item.directory?item.directory+'/':'';
    if(!tree.files.some(f=>f.path===prefix+'package.json')||!tree.files.some(f=>f.path===prefix+'package-lock.json'))fail('Pinned application manifest or npm lockfile is missing',409);
+   await verifyNpmBuildManifest(env,g,tree.files,prefix);
    await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{request_id:id,source_sha:item.commit,directory}});
    item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
    await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
