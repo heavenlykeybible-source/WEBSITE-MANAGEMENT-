@@ -132,8 +132,18 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
    if(!row)fail('Build request not found',404);
    const item=JSON.parse(row.value_json);
-   if(item.status!=='build-required')fail('Only unstarted build requests can be cancelled',409);
    if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
+   if(!['build-required','build-dispatched'].includes(item.status))fail('Build request is already closed',409);
+   if(item.status==='build-dispatched'){
+    const g=await importSource(env,user,item.source);
+    if(g.repo!==item.repo||(g.dir||'')!==(item.root||''))fail('Connected build repository changed',409);
+    const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=50');
+    const matching=(data.workflow_runs||[]).filter(run=>run.display_title==='Review '+id&&run.event==='workflow_dispatch'&&Date.parse(run.created_at)>=item.dispatchedAt-120000).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+    if(!matching.length)fail('GitHub run is not yet discoverable; cancellation cannot be confirmed',409);
+    const run=matching[0];
+    if(run.status!=='completed')await gh(env,g,'POST','/actions/runs/'+encodeURIComponent(run.id)+'/cancel',{});
+    item.cancelledReviewRun=run.id;
+   }
    item.status='cancelled';item.deploymentAuthorized=false;item.cancelledAt=Date.now();
    await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
    await audit(env,user.username,'application-build-cancel','Cancelled build request '+id);
