@@ -47,8 +47,8 @@ async function nativeImports(){try{
  discoverList.onchange=function(){if(this.value){repoInput.value=this.value;repoBranch.value=discoveredBranches[this.value]||'main';repoLabel.value=this.value+' ('+repoBranch.value.trim()+')';}};
  githubAccounts.appendChild(discoverList);githubAccounts.appendChild(discoverStatus);
  var githubInspector=h('section',{class:'card'},h('h4',{},'GitHub source inspector'),h('p',{},'Review pinned source code before proposing an edit. This viewer never writes to a repository.'));
- var inspectFiles=h('select',{'aria-label':'GitHub source file to inspect'}),inspectStatus=h('p',{role:'status'}),inspectContent=h('pre',{class:'code'}),inspectCommit='',inspectRepo='';
- githubInspector.appendChild(h('button',{onclick:async function(){this.disabled=true;inspectContent.textContent='';inspectFiles.innerHTML='';try{
+ var inspectFiles=h('select',{'aria-label':'GitHub source file to inspect'}),inspectStatus=h('p',{role:'status'}),inspectContent=h('pre',{class:'code'}),inspectEdit=h('textarea',{'aria-label':'Proposed replacement GitHub file content',rows:12}),inspectSha='',inspectPath='',inspectSourceId='',inspectOriginal='',inspectCommit='',inspectRepo='';
+ githubInspector.appendChild(h('button',{onclick:async function(){this.disabled=true;inspectContent.textContent='';inspectEdit.value='';inspectSha='';inspectPath='';inspectSourceId='';inspectOriginal='';inspectFiles.innerHTML='';try{
   if(!source.value)throw Error('Select a connected GitHub repository first');var result=await api('workspace/github/files?source='+encodeURIComponent(source.value));
   inspectCommit=result.commit;inspectRepo=result.repo;inspectFiles.appendChild(h('option',{value:''},'Choose a source file'));
   (result.files||[]).forEach(function(f){inspectFiles.appendChild(h('option',{value:f.path},f.path+' · '+f.size+' bytes'));});
@@ -59,10 +59,23 @@ async function nativeImports(){try{
   if(!source.value||!inspectFiles.value||!inspectCommit)throw Error('Browse and select a file first');
   var result=await api('workspace/github/file?source='+encodeURIComponent(source.value)+'&commit='+encodeURIComponent(inspectCommit)+'&path='+encodeURIComponent(inspectFiles.value));
   if(result.repo!==inspectRepo||result.commit!==inspectCommit)throw Error('Unexpected repository revision. Refresh files.');
-  inspectContent.textContent=result.content.slice(0,60000);
+  inspectContent.textContent=result.content.slice(0,60000);inspectEdit.value=result.content;inspectSha=result.sha;inspectPath=result.path;inspectSourceId=source.value;inspectOriginal=result.content;
   inspectStatus.textContent='Read-only verified file · '+result.path+' · '+result.sha.slice(0,12)+(result.content.length>60000?' · showing first 60,000 characters':'');
  }catch(e){inspectContent.textContent='';inspectStatus.textContent=e.message;}finally{this.disabled=false;}}},'Inspect pinned source file'));
  githubInspector.appendChild(inspectStatus);githubInspector.appendChild(inspectContent);
+ githubInspector.appendChild(h('h5',{},'Prepare a reviewed GitHub file change'));
+ githubInspector.appendChild(h('p',{},'Edit a verified source file below. Submitting creates a Waiting Room proposal; it does not commit or deploy code.'));
+ githubInspector.appendChild(inspectEdit);
+ githubInspector.appendChild(h('button',{onclick:async function(){this.disabled=true;try{
+  if(!inspectSha||!inspectPath||!inspectCommit||!inspectSourceId||source.value!==inspectSourceId||inspectFiles.value!==inspectPath)throw Error('Inspect the original file in the selected repository before proposing an edit');
+  if(inspectEdit.value===inspectOriginal)throw Error('No source changes to propose');
+  if(new TextEncoder().encode(inspectEdit.value).byteLength>200000)throw Error('Proposed file exceeds 200 KB');
+  if(!confirm('Submit GitHub code change for owner review?\\n'+inspectRepo+'\\n'+inspectPath+'\\nPinned commit '+inspectCommit+'\\nNo direct GitHub commit or production deployment will occur.'))return;
+  var result=await api('workspace/github/propose-file-edit','POST',{source:+inspectSourceId,path:inspectPath,commit:inspectCommit,base_sha:inspectSha,content:inspectEdit.value});
+  inspectStatus.textContent='GitHub source edit submitted to Waiting Room. Proposal '+result.proposal_id+'. No deployment authorized.';
+  openP(result.proposal_id,githubInspector);
+ }catch(e){inspectStatus.textContent=e.message;}finally{this.disabled=false;}}},'Submit GitHub edit for owner review'));
+
  source.appendChild(h('option',{value:''},'Choose connected GitHub repository'));data.sources.forEach(function(s){source.appendChild(h('option',{value:s.id},s.label+' · '+s.repo+' · '+s.branch));});
  function reset(){scan=null;report.innerHTML='';preview.innerHTML='';stage.disabled=true;installSummary.textContent='Select a project, scan it, and choose an exact destination to prepare installation.';}
  var installSummary=h('section',{class:'card','aria-live':'polite'},'Select a project, scan it, and choose an exact destination to prepare installation.');
