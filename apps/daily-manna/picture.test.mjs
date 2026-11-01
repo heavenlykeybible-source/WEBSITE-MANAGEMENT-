@@ -7,7 +7,8 @@ const DB={prepare(sql){
   if(sql.includes('FROM manna_post_images')){const d=sql.includes("image_date=''")?'':args[0];return pictureRows.get(d)||null}
   return null
  },async run(){
-  if(sql.startsWith('INSERT INTO manna_post_images')){pictureRows.set(args[0],{object_key:args[1],content_type:args[2]});return {meta:{changes:1}}}
+  if(sql.startsWith('INSERT INTO manna_post_images')){pictureRows.set(args[0],{object_key:args[1],content_type:args[2],studio_media_id:null});return {meta:{changes:1}}}
+  if(sql.startsWith('UPDATE manna_post_images SET studio_media_id=')){const row=pictureRows.get(args[1]);if(!row)return {meta:{changes:0}};row.studio_media_id=args[0];return {meta:{changes:1}}}
   if(sql.startsWith('DELETE FROM manna_post_images')){const row=pictureRows.get(args[0]);if(row?.object_key!==args[1])return {meta:{changes:0}};pictureRows.delete(args[0]);return {meta:{changes:1}}}
   if(sql.startsWith('INSERT INTO manna_audit')){audits.push(args);return {meta:{changes:1}}}
   throw Error('Unexpected SQL '+sql)
@@ -23,7 +24,13 @@ const png=Uint8Array.from([137,80,78,71,13,10,26,10,1,2,3]);
 const upload=(date,bytes=png,headers={})=>worker.fetch(new Request('https://example.test/api/picture/'+date,{method:'PUT',headers:{authorization:'Bearer secret','content-type':'image/png',...headers},body:bytes}),env);
 assert.equal((await upload('default')).status,200);
 assert.equal(pictureRows.size,1);
-assert.equal(audits.length,1);
+const linking=()=>worker.fetch(new Request('https://example.test/api/picture-link/default',{method:'POST',headers:{authorization:'Bearer secret','content-type':'application/json'},body:JSON.stringify({studio_media_id:42})}),env);
+assert.equal((await linking()).status,200,'Owner can bind their Studio media upload');
+assert.equal(pictureRows.get('').studio_media_id,42);
+let cfg=await worker.fetch(new Request('https://example.test/api/picture-config?scope=default',{headers:{authorization:'Bearer secret'}}),env);
+assert.equal((await cfg.json()).studio_media_id,42);
+assert.equal((await worker.fetch(new Request('https://example.test/api/picture-config?scope=default'),env)).status,401,'Picture mapping remains private');
+assert.equal(audits.length,2);
 let res=await worker.fetch(new Request('https://example.test/api/picture/default'),env);
 assert.equal(res.status,200);
 assert.equal(res.headers.get('content-type'),'image/png');
@@ -37,6 +44,7 @@ res=await worker.fetch(new Request('https://example.test/api/picture/'+yesterday
 assert.equal(res.status,200);
 assert.equal((await worker.fetch(new Request('https://example.test/api/picture/2099-01-01'),env)).status,404,'future day pictures are private');
 assert.equal((await upload('default')).status,200,'default can be replaced');
+assert.equal(pictureRows.get('').studio_media_id,null,'Replacing picture clears stale Studio mapping');
 assert.equal(pictureRows.size,2);
 const future='2099-01-01';
 assert.equal((await upload(future)).status,200);
