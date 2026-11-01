@@ -94,6 +94,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(g.repo!==item.repo||tree.head.commit!==item.commit)fail('Source changed since build request',409);
   if(!tree.files.some(f=>f.path===(item.directory?item.directory+'/':'')+'package.json'))fail('Application manifest no longer exists',409);
   const directory=item.directory||'.';
+  if(!/^(?:\.|[a-zA-Z0-9_.-]+(?:\/[a-zA-Z0-9_.-]+)*)$/.test(directory)||directory.split('/').includes('..'))fail('Invalid application directory',400);
   await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{source_sha:item.commit,directory}});
   item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
