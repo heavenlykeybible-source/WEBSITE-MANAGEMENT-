@@ -20,7 +20,7 @@ const nativeServer='// BEGIN NATIVE WORKSPACE SERVER\n'+fs.readFileSync(new URL(
 if(worker.includes('// BEGIN NATIVE WORKSPACE SERVER'))worker=worker.replace(/\/\/ BEGIN NATIVE WORKSPACE SERVER[\s\S]*?\/\/ END NATIVE WORKSPACE SERVER/,()=>nativeServer);
 else worker=nativeServer+'\n'+worker;
 worker=worker.replace('// END NATIVE WORKSPACE SERVER',()=>fs.readFileSync(new URL('../workspace/domains.js',import.meta.url),'utf8')+'\n// END NATIVE WORKSPACE SERVER');
-const nativeClient='// BEGIN NATIVE WORKSPACE CLIENT\n'+(fs.readFileSync(new URL('../workspace/client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/browser-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END NATIVE WORKSPACE CLIENT';
+const nativeClient='// BEGIN NATIVE WORKSPACE CLIENT\n'+(fs.readFileSync(new URL('../workspace/client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/universal-import-client.js',import.meta.url),'utf8')+'\n'+fs.readFileSync(new URL('../workspace/browser-client.js',import.meta.url),'utf8')).replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END NATIVE WORKSPACE CLIENT';
 if(worker.includes('// BEGIN NATIVE WORKSPACE CLIENT'))worker=worker.replace(/\/\/ BEGIN NATIVE WORKSPACE CLIENT[\s\S]*?\/\/ END NATIVE WORKSPACE CLIENT/,()=>nativeClient);
 else worker=worker.replace('var CHAT=[],',nativeClient+'\nvar CHAT=[],');
 worker=worker.replace('// END NATIVE WORKSPACE CLIENT',()=>fs.readFileSync(new URL('../workspace/domains-client.js',import.meta.url),'utf8').replaceAll('\\','\\\\').replaceAll('`','\\`').replaceAll('${','\\${')+'\n// END NATIVE WORKSPACE CLIENT');
