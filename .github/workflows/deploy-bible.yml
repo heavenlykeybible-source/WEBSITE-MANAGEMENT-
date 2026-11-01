@@ -18,7 +18,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.BIBLE_CLOUDFLARE_API_TOKEN || secrets.ACCOUNT6_CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.BIBLE_CLOUDFLARE_ACCOUNT_ID || secrets.ACCOUNT6_CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build the single approved homepage footer
         working-directory: ${{ github.workspace }}
         run: node scripts/cleanup/sync-footer.mjs

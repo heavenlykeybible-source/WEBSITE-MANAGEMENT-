@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 60
     environment: production-release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Require Apple signing and notarization secrets
         env:
           P12_BASE64: ${{ secrets.HKEM_MAC_DEVELOPER_ID_P12_BASE64 }}

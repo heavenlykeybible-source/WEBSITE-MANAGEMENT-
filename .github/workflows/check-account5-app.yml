@@ -28,7 +28,7 @@ jobs:
         working-directory: heavenly-key-accounts/account-05-heavenly-key-app/source
     steps:
       - name: Check out app source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
