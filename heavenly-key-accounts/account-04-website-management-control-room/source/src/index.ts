@@ -85,6 +85,26 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{
   if(u.pathname==='/api/restore'&&request.method==='POST'){const data=await body(request,4096);if(!Number.isSafeInteger(data.revisionId)||data.revisionId<1)return fail('Choose a revision.');return json({...await restoreDraft(env.DB,location(),data.revisionId,data.expectedVersion,actor),published:false})}
   // Account 3 large-project staging: authenticated, bounded chunks stored privately in R2.
   // Staging never publishes or changes a GitHub branch. The Waiting Room remains mandatory.
+  if(u.pathname==='/api/project-imports'&&request.method==='GET'){
+   const entries:{id:string,name:string,status:string,createdAt:string,submittedAt?:string,totalBytes:number,parts:number}[]=[];
+   let cursor:string|undefined;
+   do{
+    const page=await env.MEDIA.list({prefix:'imports/',delimiter:'/',limit:1000,...(cursor?{cursor}:{})});
+    for(const folder of page.delimitedPrefixes){
+     const id=folder.slice('imports/'.length).replace(/\/$/,'');
+     if(!/^[a-f0-9-]{36}$/.test(id))continue;
+     const item=await env.MEDIA.get(folder+'manifest');
+     if(!item)continue;
+     try{
+      const m=JSON.parse(await item.text());
+      if(m.owner===actor)entries.push({id,name:m.name,status:m.status,createdAt:m.createdAt,submittedAt:m.submittedAt,totalBytes:m.totalBytes,parts:m.parts});
+     }catch{}
+    }
+    cursor=page.truncated?page.cursor:undefined;
+   }while(cursor&&entries.length<200);
+   entries.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+   return json({imports:entries.slice(0,200),published:false});
+  }
   if(u.pathname==='/api/project-imports'&&request.method==='POST'){
    const data=await body(request,2048);
    if(typeof data.name!=='string'||!data.name.trim()||data.name.length>120)return fail('Enter a project name (up to 120 characters).');
