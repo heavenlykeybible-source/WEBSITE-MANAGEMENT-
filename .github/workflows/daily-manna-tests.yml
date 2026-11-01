@@ -1,0 +1,33 @@
+name: Daily Manna checks
+on:
+  push:
+    paths:
+      - 'apps/daily-manna/**'
+      - '.github/workflows/daily-manna-tests.yml'
+  pull_request:
+    paths:
+      - 'apps/daily-manna/**'
+      - '.github/workflows/daily-manna-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: apps/daily-manna
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Worker syntax
+        run: node --check worker.mjs
+      - name: Validate editor and schema
+        run: node tests.mjs
+      - name: Validate owner proxy
+        run: node adapter-tests.mjs
+      - name: Validate public page
+        run: node public-page.test.mjs
