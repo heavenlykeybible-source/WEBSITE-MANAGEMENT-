@@ -135,6 +135,8 @@ jobs:
         run: node tests/ai-single-account-ui.mjs
       - name: Verify private Browser Agent service bindings
         run: node tests/browser-preflight-bindings.mjs
+      - name: Test read-only Account 4 activation checks
+        run: node tests/account4-activation-preflight.mjs
       - name: Test browser agent runtime readiness UI
         run: node tests/browser-readiness-ui.mjs
       - name: Test AI Studio readiness dashboard
