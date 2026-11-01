@@ -5,46 +5,54 @@ const headers={'content-type':'application/json; charset=utf-8','cache-control':
 const response=(v,status=200)=>new Response(JSON.stringify(v),{status,headers});
 const validDate=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
 const randomId=()=>crypto.randomUUID();
-const todayLagos=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const todayLagos=(now=Date.now())=>{const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(now));const get=k=>p.find(x=>x.type===k).value;return get('year')+'-'+get('month')+'-'+get('day');};
+async function audit(env,action,entry,detail){await env.DB.prepare('INSERT INTO manna_audit(id,action,entry_id,detail) VALUES(?,?,?,?)').bind(randomId(),action,entry,detail).run();}
 function auth(req,env){const a=req.headers.get('authorization')||'';return !!env.EDITOR_TOKEN&&a==='Bearer '+env.EDITOR_TOKEN;}
 async function edit(req,env,id){
- const data=await req.json(),date=String(data.publish_date||''),title=String(data.title||'').trim(),scripture=String(data.scripture||'').trim(),body=String(data.body||'').trim(),prayer=String(data.prayer||'').trim();
- if(!validDate(date)||!title||!scripture||!body||title.length>250||scripture.length>500||body.length>40000||prayer.length>5000)return response({error:'Invalid devotional fields'},400);
+ const data=await req.json();if(!data||typeof data!=='object'||Array.isArray(data))return response({error:'Invalid payload'},400);
+ const date=data.publish_date,title=data.title,scripture=data.scripture,body=data.body,prayer=data.prayer??'';
+ if(![title,scripture,body,prayer].every(x=>typeof x==='string'))return response({error:'All text fields must be strings'},400);
+ if(!validDate(date)||date<todayLagos()||!title.trim()||!scripture.trim()||!body.trim()||title.length>250||scripture.length>500||body.length>40000||prayer.length>5000)return response({error:'Invalid devotional fields'},400);
  const existing=id?await env.DB.prepare('SELECT * FROM manna_entries WHERE id=?').bind(id).first():null;
  if(id&&!existing)return response({error:'Not found'},404);
  if(existing?.status==='published')return response({error:'Published entries are immutable; create a correction workflow'},409);
+ if(existing&&(!Number.isSafeInteger(data.expected_revision)||data.expected_revision!==existing.revision))return response({error:'Entry changed; refresh before editing'},409);
  const key=existing?.id||randomId();
  try{
-  if(existing)await env.DB.prepare("UPDATE manna_entries SET publish_date=?,title=?,scripture=?,body=?,prayer=?,status='draft',approved_revision=NULL,approved_at=NULL,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(date,title,scripture,body,prayer,key).run();
-  else await env.DB.prepare('INSERT INTO manna_entries(id,publish_date,title,scripture,body,prayer) VALUES(?,?,?,?,?,?)').bind(key,date,title,scripture,body,prayer).run();
+  if(existing)await env.DB.prepare("UPDATE manna_entries SET publish_date=?,title=?,scripture=?,body=?,prayer=?,status='draft',approved_revision=NULL,approved_at=NULL,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status!='published'").bind(date,title.trim(),scripture.trim(),body.trim(),prayer.trim(),key,data.expected_revision).run();
+  else await env.DB.prepare('INSERT INTO manna_entries(id,publish_date,title,scripture,body,prayer) VALUES(?,?,?,?,?,?)').bind(key,date,title.trim(),scripture.trim(),body.trim(),prayer.trim()).run();
  }catch(e){if(/UNIQUE/i.test(e.message))return response({error:'Date already has a devotional'},409);throw e;}
- return response({ok:true,id:key,status:'draft'});
+ await audit(env,existing?'edited':'created',key,date);return response({ok:true,id:key,status:'draft',revision:(existing?.revision||0)+1});
 }
 async function approve(req,env){
- const {ids}=await req.json();
- if(!Array.isArray(ids)||ids.length===0||ids.length>100||ids.some(x=>typeof x!=='string'))return response({error:'Select 1-100 entries'},400);
+ const {entries}=await req.json();
+ if(!Array.isArray(entries)||entries.length===0||entries.length>100||entries.some(x=>!x||typeof x.id!=='string'||!Number.isSafeInteger(x.revision)))return response({error:'Select 1-100 entries with their reviewed revisions'},400);
+ if(new Set(entries.map(x=>x.id)).size!==entries.length)return response({error:'Duplicate entries'},400);
  const results=[];
- for(const id of [...new Set(ids)]){
-  const entry=await env.DB.prepare('SELECT id,status FROM manna_entries WHERE id=?').bind(id).first();
-  if(!entry||entry.status==='published'){results.push({id,approved:false});continue;}
-  await env.DB.prepare("UPDATE manna_entries SET status='approved',approved_revision=revision,approved_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status!='published'").bind(id).run();
-  results.push({id,approved:true});
+ for(const item of entries){
+  const id=item.id,entry=await env.DB.prepare('SELECT id,status,revision,publish_date FROM manna_entries WHERE id=?').bind(id).first();
+  if(!entry||entry.status==='published'||entry.revision!==item.revision||entry.publish_date<todayLagos()){results.push({id,approved:false,reason:'Missing, past, published or changed'});continue;}
+  const update=await env.DB.prepare("UPDATE manna_entries SET status='approved',approved_revision=revision,approved_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=? AND status!='published'").bind(id,item.revision).run();
+  const approved=update.meta?.changes===1;
+  if(approved)await audit(env,'approved',id,entry.publish_date+' revision '+item.revision);
+  results.push({id,approved});
  }
  return response({results});
 }
-async function publishToday(env){
- const date=todayLagos();
- // Atomic conditional update prevents two cron runs publishing the same entry twice.
- const result=await env.DB.prepare("UPDATE manna_entries SET status='published',published_at=CURRENT_TIMESTAMP WHERE publish_date=? AND status='approved' AND approved_revision=revision RETURNING id,title").bind(date).all();
- const entries=result.results||[];
- for(const entry of entries){
-  for(const destination of ['website','community','buffer','email']){
-   const status=destination==='website'?'sent':'pending';
-   await env.DB.prepare('INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,?)').bind(randomId(),entry.id,destination,status).run();
-  }
+async function publishToday(env,now=Date.now()){
+ const date=todayLagos(now);
+ const due=await env.DB.prepare("SELECT id,publish_date FROM manna_entries WHERE publish_date<=? AND status='approved' AND approved_revision=revision ORDER BY publish_date LIMIT 100").bind(date).all();
+ let published=0;
+ for(const entry of due.results||[]){
+  const result=await env.DB.prepare("UPDATE manna_entries SET status='published',published_at=CURRENT_TIMESTAMP WHERE id=? AND status='approved' AND approved_revision=revision").bind(entry.id).run();
+  if(result.meta?.changes!==1)continue;
+  published++;
+  for(const destination of ['community','buffer','email'])await env.DB.prepare("INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,'pending')").bind(randomId(),entry.id,destination).run();
+  await audit(env,'published',entry.id,entry.publish_date);
  }
- return {date,published:entries.length,entries:entries.map(x=>x.id)};
+ return {date,published,moreMayBeDue:(due.results||[]).length===100};
 }
+
 export default {
  async fetch(req,env){
   try{
@@ -54,18 +62,30 @@ export default {
     return response({date,entry:entry||null});
    }
    if(path==='/api/entries'&&method==='GET'&&auth(req,env)){
-    const rows=await env.DB.prepare('SELECT * FROM manna_entries ORDER BY publish_date LIMIT 180').all();return response({entries:rows.results});
+    const month=url.searchParams.get('month');
+    if(month&&!/^\\d{4}-(0[1-9]|1[0-2])$/.test(month))return response({error:'Invalid month'},400);
+    const rows=month?await env.DB.prepare('SELECT * FROM manna_entries WHERE publish_date>=? AND publish_date<? ORDER BY publish_date LIMIT 100').bind(month+'-01',month+'-32').all():await env.DB.prepare('SELECT * FROM manna_entries ORDER BY publish_date DESC LIMIT 180').all();
+    return response({entries:rows.results});
    }
    if(path==='/api/entries'&&method==='POST'&&auth(req,env))return edit(req,env,null);
    const match=path.match(/^\/api\/entries\/([a-f0-9-]{36})$/);
    if(match&&method==='PUT'&&auth(req,env))return edit(req,env,match[1]);
    if(path==='/api/approve'&&method==='POST'&&auth(req,env))return approve(req,env);
    if(path==='/api/publish-check'&&method==='POST'&&auth(req,env))return response(await publishToday(env));
-   return response({error:auth(req,env)?'Not found':'Not found or unauthorized'},404);
+   if(path==='/api/deliveries'&&method==='GET'&&auth(req,env)){
+    const rows=await env.DB.prepare('SELECT d.entry_id,e.publish_date,d.destination,d.status,d.attempts,d.error FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id ORDER BY e.publish_date DESC LIMIT 200').all();
+    return response({deliveries:rows.results});
+   }
+   const archive=path.match(/^\\/api\\/public\\/([0-9]{4}-[0-9]{2}-[0-9]{2})$/);
+   if(archive&&method==='GET'&&validDate(archive[1])&&archive[1]<=todayLagos()){
+    const entry=await env.DB.prepare("SELECT publish_date,title,scripture,body,prayer FROM manna_entries WHERE publish_date=? AND status='published'").bind(archive[1]).first();
+    return response({entry:entry||null});
+   }
+   return response({error:auth(req,env)?'Not found':'Unauthorized'},auth(req,env)?404:401);
   }catch(e){return response({error:'Internal error'},500);}
  },
  async scheduled(event,env){
   const lagosHour=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Lagos',hour:'2-digit',hourCycle:'h23'}).format(new Date(event.scheduledTime));
-  if(lagosHour==='00')await publishToday(env);
+  if(lagosHour==='00')await publishToday(env,event.scheduledTime);
  }
 };
