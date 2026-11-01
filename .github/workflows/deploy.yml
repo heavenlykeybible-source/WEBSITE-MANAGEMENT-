@@ -57,7 +57,7 @@ jobs:
           CF_ACCOUNT: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
         run: |
           test -n "$CF_ACCOUNT" || { echo '::error::Missing ACCOUNT4_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
-          test "$CF_ACCOUNT" != 'cd095c096c2d5a42501e7d77cecbb34c' || { echo '::error::Account 3 destination detected; deployment blocked'; exit 1; }
+          test "$CF_ACCOUNT" = '404ebf05a781fcccbbed44aeb02cb72b' || { echo '::error::Exact Account 4 destination required; deployment blocked'; exit 1; }
 
       - name: Verify existing Account 4 Worker and live bindings
         run: node scripts/deploy-account4-existing.mjs --check
