@@ -90,6 +90,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(item.repo!=='heavenlykeybible-source/WEBSITE-MANAGEMENT-')fail('This build workflow is only installed in the Website Management repository',409);
   const g=await importSource(env,user,item.source),tree=await sourceTree(env,g);
   if(g.repo!==item.repo||tree.head.commit!==item.commit)fail('Source changed since build request',409);
+  if(!tree.files.some(f=>f.path===(item.directory?item.directory+'/':'')+'package.json'))fail('Application manifest no longer exists',409);
   const directory=item.directory||'.';
   await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{source_sha:item.commit,directory}});
   item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
