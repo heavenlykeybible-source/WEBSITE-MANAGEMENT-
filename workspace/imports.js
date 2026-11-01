@@ -164,7 +164,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:application:'+id).first();
   if(!row)fail('Build request not found',404);
   const b=JSON.parse(row.value_json);
-  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,ownerApprovalRequired:true,deploymentAuthorized:false});
+  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,fileCount:b.fileCount||0,sourceComplete:!!b.sourceComplete,ownerApprovalRequired:true,deploymentAuthorized:false});
  }
  if(sub==='workspace/application-builds'&&m==='GET'){
  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:application:%' LIMIT 100").all();
