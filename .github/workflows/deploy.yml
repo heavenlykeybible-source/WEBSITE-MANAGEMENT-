@@ -70,6 +70,7 @@ jobs:
 
       - name: Run project tests
         run: |
+          node tests/account4-release-lineage.mjs
           npm test
           node tests/account4-studio-menu.mjs
           node tests/account4-unified-access.mjs
