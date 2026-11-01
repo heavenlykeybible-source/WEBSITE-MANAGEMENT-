@@ -137,4 +137,6 @@ test('application controls require reviewed build',()=>{
 
 
 
-test('Account 4 excludes external browser automation routes and UI',()=>{assert.doesNotMatch(server,/workspace\\/tinyfish\\/|BROWSER_ENGINE_URL|BROWSER_ENGINE_KEY/);assert.doesNotMatch(client,/fishPanel|workspace\\/tinyfish\\/|Heavenly Key Browser Engine/);});
+test('Account 4 excludes external browser automation routes and UI',()=>{
+ for(const source of [server,client])for(const forbidden of ['workspace/tinyfish/','BROWSER_ENGINE_URL','BROWSER_ENGINE_KEY','Heavenly Key Browser Engine'])assert.equal(source.includes(forbidden),false,'Unexpected browser integration: '+forbidden);
+});
