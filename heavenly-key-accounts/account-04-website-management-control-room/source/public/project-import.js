@@ -10,6 +10,23 @@ async function request(url,options={}){
  if(!r.ok){let error='Request failed ('+r.status+')';try{const d=await r.json();error=d.error||error;}catch{}throw Error(error);}
  return r.json();
 }
+async function refreshWaitingRoom(){
+ const container=$('project-review-list');
+ if(!container)return;
+ container.textContent='Loading saved imports…';
+ try{
+  const data=await request('/api/project-imports');
+  container.replaceChildren();
+  if(!data.imports?.length){container.textContent='No project imports yet.';return;}
+  for(const entry of data.imports){
+   const item=document.createElement('p');
+   const date=entry.submittedAt||entry.createdAt;
+   item.textContent=entry.name+' — '+entry.status+' — '+(entry.totalBytes/1048576).toFixed(1)+' MiB — '+new Date(date).toLocaleString()+' — ID: '+entry.id;
+   container.append(item);
+  }
+ }catch(e){container.textContent='Unable to load Waiting Room: '+e.message;}
+}
+$('project-review-refresh')?.addEventListener('click',refreshWaitingRoom);
 function key(file){return 'hk-project-import:'+file.name+':'+file.size+':'+file.lastModified;}
 pause.onclick=()=>{stopped=true;controller?.abort();tell('Paused. Choose the same archive and select Start / resume to continue.');};
 start.onclick=async()=>{
@@ -36,8 +53,9 @@ start.onclick=async()=>{
    done.add(n);progress.value=Math.floor(done.size/info.parts*100);
    tell('Staging '+file.name+' · '+progress.value+'% ('+done.size+'/'+info.parts+' chunks)');
   }
-  if(!stopped){const check=await request('/api/project-imports/'+encodeURIComponent(id));if(!check.complete)throw Error('Some chunks are missing. Resume the upload.');const submitted=await request('/api/project-imports/'+encodeURIComponent(id),{method:'POST',signal:controller.signal});sessionStorage.removeItem(storageKey);progress.value=100;tell('Upload verified and submitted for review. Archive is NOT published. Import ID: '+id+' · Status: '+submitted.status);}
+  if(!stopped){const check=await request('/api/project-imports/'+encodeURIComponent(id));if(!check.complete)throw Error('Some chunks are missing. Resume the upload.');const submitted=await request('/api/project-imports/'+encodeURIComponent(id),{method:'POST',signal:controller.signal});sessionStorage.removeItem(storageKey);progress.value=100;tell('Upload verified and submitted for review. Archive is NOT published. Import ID: '+id+' · Status: '+submitted.status);await refreshWaitingRoom();}
  }catch(e){if(!stopped)tell('Upload interrupted: '+e.message+'. Select Start / resume to retry.');}
  finally{start.disabled=false;controller=null;}
 };
+refreshWaitingRoom();
 })();
