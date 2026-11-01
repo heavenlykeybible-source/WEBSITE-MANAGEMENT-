@@ -59,7 +59,9 @@ test('real candidate picker only accepts locked source applications',()=>{
  const end=server.indexOf('async function queueConnectedApplication(',start);
  assert.ok(start>=0&&end>start);
  const fn=runInNewContext('('+server.slice(start,end).trim()+')');
- const files=['app/package.json','app/package-lock.json','unlocked/package.json','vendor/package.json','vendor/package-lock.json','nested/pkg/package.json','nested/pkg/package-lock.json'].map(path=>({path}));
+ const files=['app/package.json','app/package-lock.json','unlocked/package.json','vendor/package.json','vendor/package-lock.json','nested/pkg/package.json','nested/pkg/package-lock.json','symlink/package.json','huge/package.json'].map(path=>({path}));
+ files.push({path:'symlink/package-lock.json',mode:'120000',size:99});
+ files.push({path:'huge/package-lock.json',size:6*1024*1024});
  const paths=Array.from(fn(files),item=>item.path);
  assert.deepEqual(paths,['app/package.json','nested/pkg/package.json']);
 });
