@@ -138,8 +138,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const b=await body(req),label=String(b?.label||'').trim(),token=String(b?.token||'').trim();
   if(!label||label.length>90||/[\x00-\x1f]/.test(label))fail('Choose a GitHub identity label',400);
   if(token.length<20||token.length>512||/[\s\x00-\x1f]/.test(token))fail('Provide a valid GitHub API token in the private owner form',400);
-  const existing=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND label=?').bind(label).first();
-  if(existing)fail('This connection label already exists; use a different name to reauthorize.',409);
+  const existing=await env.DB.prepare('SELECT id,repo FROM github_sites WHERE owner_id IS NULL AND label=?').bind(label).first();
   const headers={authorization:'Bearer '+token,accept:'application/vnd.github+json','x-github-api-version':'2022-11-28','user-agent':'heavenly-key-control-room'};
   const init=()=>({method:'GET',redirect:'manual',signal:AbortSignal.timeout(15000),headers});
   let response=await fetch('https://api.github.com/user/repos?per_page=1&affiliation=owner%2Ccollaborator%2Corganization_member',init()),mode='user';
@@ -152,11 +151,21 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const branch=String(first.default_branch||'main');
   if(!/^[a-zA-Z0-9_./-]{1,120}$/.test(branch)||branch.split('/').some(p=>p==='.'||p==='..'))fail('GitHub returned an invalid default branch',502);
   const already=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND repo=? AND branch=? AND dir=?').bind(first.full_name,branch,'').first();
-  if(already)fail('This repository is already registered. Use that authorized identity or choose another account.',409);
+  if(existing&&existing.repo!==first.full_name)fail('Connection label already belongs to another GitHub identity. Choose a distinct name.',409);
+  if(existing&&already&&existing.id!==already.id)fail('GitHub connection name conflicts with another repository registration.',409);
   const secret=await seal(env,token);
-  const created=await env.DB.prepare('INSERT INTO github_sites(label,repo,branch,dir,secret_enc,owner_id) VALUES(?,?,?,?,?,NULL)').bind(label,first.full_name,branch,'',secret).run();
-  await audit(env,user.username,'github-central-identity-connected','Authorized GitHub identity '+label+' with repository access; no deployment');
-  return json({id:created.meta.last_row_id,label,repo:first.full_name,branch,connectionMode:mode,authenticated:true,scope:'All repositories explicitly authorized in GitHub',deploymentAuthorized:false});
+  let id,reconnected=false;
+  if(already){
+   id=already.id;reconnected=true;
+   const collision=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND label=? AND id<>?').bind(label,id).first();
+   if(collision)fail('GitHub connection label already in use',409);
+   await env.DB.prepare('UPDATE github_sites SET label=?,secret_enc=? WHERE id=? AND owner_id IS NULL').bind(label,secret,id).run();
+  }else{
+   const created=await env.DB.prepare('INSERT INTO github_sites(label,repo,branch,dir,secret_enc,owner_id) VALUES(?,?,?,?,?,NULL)').bind(label,first.full_name,branch,'',secret).run();
+   id=created.meta.last_row_id;
+  }
+  await audit(env,user.username,'github-central-identity-connected',(reconnected?'Reauthorized':'Authorized')+' GitHub identity '+label+' with repository access; no deployment');
+  return json({id,label,repo:first.full_name,branch,reconnected,connectionMode:mode,authenticated:true,scope:'All repositories explicitly authorized in GitHub',deploymentAuthorized:false});
  }
  if(sub==='workspace/github/discover'&&m==='GET'){
   const sourceId=Number(u.searchParams.get('source')),page=Number(u.searchParams.get('page')||1);
