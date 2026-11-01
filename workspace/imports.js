@@ -198,7 +198,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
     }
    }
   }
-  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,review,ownerApprovalRequired:true,deploymentAuthorized:false});
+  return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:(b.status==='review-cancellation-requested'&&review&&review.status==='completed'?(review.conclusion==='cancelled'?'cancelled':'review-closed-after-cancel-request'):b.status),review,ownerApprovalRequired:true,deploymentAuthorized:false});
  }
  if(sub==='workspace/application-builds'&&m==='GET'){
  const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:application:%' AND json_extract(value_json,'$.createdBy')=? ORDER BY CAST(json_extract(value_json,'$.createdAt') AS INTEGER) DESC LIMIT 100").bind(user.id).all();
