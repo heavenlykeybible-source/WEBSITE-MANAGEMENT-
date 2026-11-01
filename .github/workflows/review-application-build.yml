@@ -61,6 +61,7 @@ jobs:
           cd "$APP_DIRECTORY"
           test -d dist
           test -f dist/index.html
+          test -z "$(find dist -type l -print -quit)"
           test "$(find dist -type f | wc -l)" -le 1000
           test "$(du -sm dist | cut -f1)" -le 100
       - name: Package immutable review artifact
