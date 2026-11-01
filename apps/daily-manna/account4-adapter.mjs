@@ -12,7 +12,8 @@ export async function dailyMannaProxy(request,env,security){
  const pictureUpload=method==='PUT'&&/^picture\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
  const pictureDelete=method==='DELETE'&&/^picture\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
  const picturePreview=method==='GET'&&/^picture-manage\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
- const permitted=pictureUpload||pictureDelete||picturePreview||(method==='GET'&&['entries','deliveries','readiness'].includes(suffix))||
+ const pictureLink=method==='POST'&&/^picture-link\/(default|\d{4}-\d{2}-\d{2})$/.test(suffix);
+ const permitted=pictureUpload||pictureDelete||picturePreview||pictureLink||(method==='GET'&&['entries','deliveries','readiness'].includes(suffix))||
   (method==='POST'&&['entries','approve','publish-check'].includes(suffix))||
   (method==='PUT'&&/^entries\/[a-f0-9-]{36}$/.test(suffix));
  if(!permitted)return reply({error:'Operation not permitted'},405);
