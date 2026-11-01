@@ -112,7 +112,8 @@ async function publishToday(env,now=Date.now()){
 // an owner must reconcile the Facebook Page before explicitly retrying to avoid duplicate posts.
 export async function dispatchFacebook(env,fetcher=fetch){
  if(!facebookReady(env))return {configured:false,processed:0};
- const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.id AS entry_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT content_type FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_content_type FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='facebook' AND d.status='pending' AND e.status='published' ORDER BY e.publish_date LIMIT 10").all();
+ if(!validDate(env.FACEBOOK_FIRST_POST_DATE))return {configured:true,enabled:false,processed:0,reason:'Set FACEBOOK_FIRST_POST_DATE to authorize the first social publication date'};
+ const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.id AS entry_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT content_type FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_content_type FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='facebook' AND d.status='pending' AND e.status='published' AND e.publish_date>=? AND e.publish_date<=? ORDER BY e.publish_date LIMIT 10").bind(env.FACEBOOK_FIRST_POST_DATE,todayLagos()).all();
  let processed=0,sent=0,failed=0;
  for(const entry of jobs.results||[]){
   const claim=await env.DB.prepare("UPDATE manna_deliveries SET status='skipped',attempts=attempts+1,error='Provider attempt in progress; reconcile before retry',updated_at=CURRENT_TIMESTAMP WHERE id=? AND destination='facebook' AND status='pending'").bind(entry.delivery_id).run();
@@ -153,7 +154,7 @@ export default {
     const tally=await env.DB.prepare("SELECT status,COUNT(*) AS count FROM manna_entries GROUP BY status").all();
     const counts={draft:0,approved:0,published:0,corrected:0};
     for(const row of tally.results||[])if(Object.hasOwn(counts,row.status))counts[row.status]=row.count;
-    return response({database:'connected',picture_storage:env.MANNA_IMAGES?'connected':'not_configured',unreviewed_publication:env.ALLOW_UNREVIEWED_PUBLICATION==='true',entries:counts,subscriptions:'deferred',facebook_delivery:facebookReady(env)?'configured':'not_configured',social_network_delivery:'not_configured'});
+    return response({database:'connected',picture_storage:env.MANNA_IMAGES?'connected':'not_configured',unreviewed_publication:env.ALLOW_UNREVIEWED_PUBLICATION==='true',entries:counts,subscriptions:'deferred',facebook_delivery:!facebookReady(env)?'not_configured':validDate(env.FACEBOOK_FIRST_POST_DATE)?'enabled':'waiting_for_start_date',social_network_delivery:'not_configured'});
    }
    if(path==='/api/entries'&&method==='GET'&&auth(req,env)){
     const month=url.searchParams.get('month');
