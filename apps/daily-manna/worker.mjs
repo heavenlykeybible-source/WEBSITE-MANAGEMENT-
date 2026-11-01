@@ -14,6 +14,37 @@ async function parseBody(req){
  if(new TextEncoder().encode(raw).length>50000)return null;
  try{return JSON.parse(raw)}catch{return null}
 }
+
+const mediaDate=s=>s==='default'?'':validDate(s)?s:null;
+const imageType=(bytes,type)=>type==='image/png'&&bytes.length>8&&[137,80,78,71,13,10,26,10].every((b,i)=>bytes[i]===b)||type==='image/jpeg'&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255||type==='image/webp'&&bytes.length>12&&new TextDecoder().decode(bytes.slice(0,4))==='RIFF'&&new TextDecoder().decode(bytes.slice(8,12))==='WEBP';
+async function uploadPicture(req,env,date){
+ if(!env.MANNA_IMAGES)return response({error:'Picture storage not configured'},503);
+ const contentType=(req.headers.get('content-type')||'').split(';')[0].toLowerCase();
+ if(!['image/png','image/jpeg','image/webp'].includes(contentType))return response({error:'Use PNG, JPEG or WebP'},415);
+ if(Number(req.headers.get('content-length')||0)>2000000)return response({error:'Picture exceeds 2 MB'},413);
+ const bytes=new Uint8Array(await req.arrayBuffer());
+ if(!bytes.length||bytes.length>2000000||!imageType(bytes,contentType))return response({error:'Invalid image or size exceeds 2 MB'},400);
+ const previous=await env.DB.prepare('SELECT object_key FROM manna_post_images WHERE image_date=?').bind(date).first();
+ const key='post-banners/'+crypto.randomUUID();
+ await env.MANNA_IMAGES.put(key,bytes,{httpMetadata:{contentType},customMetadata:{purpose:'daily-manna-picture'}});
+ try{
+  await env.DB.prepare('INSERT INTO manna_post_images(image_date,object_key,content_type) VALUES(?,?,?) ON CONFLICT(image_date) DO UPDATE SET object_key=excluded.object_key, content_type=excluded.content_type,updated_at=CURRENT_TIMESTAMP').bind(date,key,contentType).run();
+ }catch(e){await env.MANNA_IMAGES.delete(key);throw e}
+ if(previous?.object_key)await env.MANNA_IMAGES.delete(previous.object_key).catch(()=>{});
+ await audit(env,'image_uploaded',date||'default','Owner uploaded post picture');
+ return response({ok:true,date:date||'default',picture_url:'/api/picture/'+(date||'default')});
+}
+async function picture(req,env,slug){
+ if(!env.MANNA_IMAGES)return new Response(null,{status:404});
+ const date=mediaDate(slug);if(date===null)return new Response(null,{status:404});
+ if(date&&date>todayLagos())return new Response(null,{status:404});
+ let row=await env.DB.prepare('SELECT object_key,content_type FROM manna_post_images WHERE image_date=?').bind(date).first();
+ if(!row&&date)row=await env.DB.prepare("SELECT object_key,content_type FROM manna_post_images WHERE image_date=''").first();
+ if(!row)return new Response(null,{status:404});
+ const object=await env.MANNA_IMAGES.get(row.object_key);if(!object)return new Response(null,{status:404});
+ return new Response(object.body,{headers:{'content-type':row.content_type,'cache-control':'public, max-age=60','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'"}});
+}
+
 async function audit(env,action,entry,detail){await env.DB.prepare('INSERT INTO manna_audit(id,action,entry_id,detail) VALUES(?,?,?,?)').bind(randomId(),action,entry,detail).run();}
 function auth(req,env){const a=req.headers.get('authorization')||'';return !!env.EDITOR_TOKEN&&a==='Bearer '+env.EDITOR_TOKEN;}
 async function edit(req,env,id){
@@ -73,10 +104,12 @@ export default {
  async fetch(req,env){
   try{
    const url=new URL(req.url),path=url.pathname,method=req.method;
+   if(method==='PUT'&&path.startsWith('/api/picture/')&&auth(req,env)){const date=mediaDate(path.slice('/api/picture/'.length));if(date===null)return response({error:'Invalid picture date'},400);return uploadPicture(req,env,date)}
+   if(method==='GET'&&path.startsWith('/api/picture/'))return picture(req,env,path.slice('/api/picture/'.length));
    if((path==='/'||path==='/index.html')&&method==='GET')return new Response(publicPage(),{headers:{'content-type':'text/html; charset=utf-8','cache-control':'public, max-age=300','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"}});
    if(path==='/api/today'&&method==='GET'){
     const date=todayLagos(),entry=await env.DB.prepare("SELECT publish_date,title,scripture,body,prayer FROM manna_entries WHERE publish_date=? AND status='published'").bind(date).first();
-    return response({date,entry:entry||null});
+    return response({date,entry:entry||null,picture_url:entry?'/api/picture/'+date:null});
    }
    if(path==='/api/entries'&&method==='GET'&&auth(req,env)){
     const month=url.searchParams.get('month');
@@ -96,7 +129,7 @@ export default {
    const archive=path.match(/^\/api\/public\/([0-9]{4}-[0-9]{2}-[0-9]{2})$/);
    if(archive&&method==='GET'&&validDate(archive[1])&&archive[1]<=todayLagos()){
     const entry=await env.DB.prepare("SELECT publish_date,title,scripture,body,prayer FROM manna_entries WHERE publish_date=? AND status='published'").bind(archive[1]).first();
-    return response({entry:entry||null});
+    return response({entry:entry||null,picture_url:entry?'/api/picture/'+archive[1]:null});
    }
    return response({error:auth(req,env)?'Not found':'Unauthorized'},auth(req,env)?404:401);
   }catch(e){return response({error:'Internal error'},500);}
