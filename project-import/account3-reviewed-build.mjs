@@ -27,6 +27,7 @@ export async function requestAccount3BuildReview({
     source:{repository:ACCOUNT3_RELEASE.repository, revision, projectPath:ACCOUNT3_RELEASE.projectPath},
     workflow:ACCOUNT3_RELEASE.workflow, target,
     buildRequired:true, buildVerified:false, previewVerified:false,
+    deploymentPlan:{type:'github-actions',workflow:ACCOUNT3_RELEASE.workflow,branch:'main',approvedRevision:revision,requiresBuildChecks:true,requiresOwnerReview:true},
     requiresOwnerApproval:true, deploymentAuthorized:false
   });
   if (!proposal || typeof proposal.id !== 'string' || !proposal.id.trim())
