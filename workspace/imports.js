@@ -74,6 +74,20 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const staged=await stageConnectedSource(env,user,{scan:scan.id,connection:b.connection,worker:b.worker,site:b.site});
   return json({ok:true,status:'waiting',proposal_id:staged.proposal_id,source:{repo:scan.repo,commit:scan.commit,files:scan.files.length,bytes:scan.bytes},notice:'Imported and staged for owner approval; production has not been deployed.'});
  }
+ if(sub==='workspace/application-build/verify-source'&&m==='POST'){
+  const b=await body(req),id=String(b?.id||'');
+  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid build identifier',400);
+  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:application:'+id).first();
+  if(!row)fail('Build request not found',404);
+  const item=JSON.parse(row.value_json);
+  if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
+  if(item.status==='cancelled')fail('Build request cancelled',409);
+  const g=await importSource(env,user,item.source);
+  const tree=await sourceTree(env,g);
+  const prefix=item.directory?item.directory+'/':'';
+  const valid=tree.head.commit===item.commit&&tree.files.some(f=>f.path===prefix+'package.json');
+  return json({id,sourceVerified:valid,commit:item.commit,status:item.status,buildVerified:false,deploymentAuthorized:false});
+ }
  if(sub==='workspace/application-build/cancel'&&m==='POST'){
   const b=await body(req),id=String(b?.id||'');
   if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid build identifier',400);
