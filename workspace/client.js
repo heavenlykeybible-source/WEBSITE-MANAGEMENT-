@@ -44,13 +44,31 @@ async function nativeImports(){try{
    items.forEach(function(b){var item=h('div',{class:'card'},h('p',{class:'tag'},b.repo+' · '+b.commit.slice(0,12)+' · '+b.worker+' · '+b.status));if(b.status==='build-required'){item.appendChild(h('button',{class:'sm',onclick:async function(){this.disabled=true;try{await api('workspace/application-build/cancel','POST',{id:b.id});item.textContent='Build request cancelled.';}catch(e){status.textContent=e.message;this.disabled=false;}}},'Cancel unstarted build'));}buildQueue.appendChild(item);});
   }catch(e){buildQueue.textContent=e.message;}
  }},'View application build queue');
+ var activeApplicationId=null;
+ var copyFullSource=h('button',{disabled:true,onclick:async function(){
+  if(!activeApplicationId||busy)return;
+  busy=true;this.disabled=true;
+  try{
+   var current=await api('workspace/application-build/status?id='+encodeURIComponent(activeApplicationId));
+   var count=current.fileCount;
+   if(!Number.isSafeInteger(count)||count<1)throw Error('Application source inventory unavailable.');
+   for(var i=0;i<count;i+=3){
+    var indices=[];for(var j=i;j<Math.min(i+3,count);j++)indices.push(j);
+    await api('workspace/application-build/copy-files','POST',{id:activeApplicationId,indices:indices});
+    status.textContent='Copying and verifying the complete application: '+Math.min(i+3,count)+' / '+count+' files. Do not close this page.';
+   }
+   var done=await api('workspace/application-build/finalize-source','POST',{id:activeApplicationId});
+   status.textContent='All '+done.copied+' application files verified in private Account 4 storage. A reviewed build is still required before deployment.';
+  }catch(e){status.textContent='Copy interrupted: '+e.message+'. Press Copy entire application again to resume; verified files are reused.';}
+  finally{busy=false;this.disabled=false;}
+ }},'Copy entire application to Control Room');
  var appBuild=h('button',{onclick:async function(){
  if(project.value===''||!listing||listing.candidates[+project.value].kind!=='application'||!source.value||!dest.value||!worker.value){status.textContent='Choose application source, Cloudflare account and Worker.';return;}
  this.disabled=true;
  try{
  var c=listing.candidates[+project.value];
  var result=await api('workspace/application-build','POST',{source:+source.value,directory:c.directory,connection:+dest.value,worker:worker.value});
- status.textContent='Application build registered: '+result.id+'. No production deployment.';
+ activeApplicationId=result.id;copyFullSource.disabled=false;status.textContent='Complete application pinned: '+result.fileCount+' files. Press Copy entire application to transfer and verify every file. Nothing published.';
  }catch(e){status.textContent=e.message;}finally{this.disabled=false;}
  }},'Register application build');
  var quick=h('button',{onclick:async function(){
@@ -67,7 +85,7 @@ async function nativeImports(){try{
  status.textContent='Imported to Waiting Room. Approval required before deployment.';
  }catch(e){status.textContent=e.message;}finally{busy=false;quick.disabled=false;}
  }},'One-click GitHub import and preview');
- show(nav(),h('main',{class:'card'},h('h3',{},'Import, scan and preview'),account3Panel,h('button',{class:'sm',onclick:largeUploadCenter},'Large file upload · up to 1 GB'),data.sources.length?null:h('section',{class:'card'},h('p',{},'No GitHub repository is connected to this Control Room yet. Your ChatGPT GitHub connection is separate. ZIP uploads below do not require GitHub.'),h('button',{onclick:github},'Connect a GitHub repository')),h('p',{},'Use connected repositories without a dashboard sign-in for each task. Select a complete built website or bundled Worker. Multi-file backend projects require a build; files are never silently deployed as a partial application.'),h('label',{},'1. Source repository'),source,h('label',{},'2. Exact project'),project,scanButton,report,h('label',{},'3. Destination'),dest,worker,quick,appBuild,refreshBuilds,buildQueue,h('p',{class:'tag'},'Websites use their existing managed content hosting. Bundled Workers target the exact selected Cloudflare account and Worker. This does not move databases or credentials.'),stage,status,preview,h('h4',{},'Upload from phone or computer'),h('p',{},'Use a built website ZIP up to 25 MB. Choose its managed site below.'),...data.sites.map(function(s){return h('div',{class:'card'},h('h4',{},s.name),packageForm(s));})));
+ show(nav(),h('main',{class:'card'},h('h3',{},'Import, scan and preview'),account3Panel,h('button',{class:'sm',onclick:largeUploadCenter},'Large file upload · up to 1 GB'),data.sources.length?null:h('section',{class:'card'},h('p',{},'No GitHub repository is connected to this Control Room yet. Your ChatGPT GitHub connection is separate. ZIP uploads below do not require GitHub.'),h('button',{onclick:github},'Connect a GitHub repository')),h('p',{},'Use connected repositories without a dashboard sign-in for each task. Select a complete built website or bundled Worker. Multi-file backend projects require a build; files are never silently deployed as a partial application.'),h('label',{},'1. Source repository'),source,h('label',{},'2. Exact project'),project,scanButton,report,h('label',{},'3. Destination'),dest,worker,quick,appBuild,copyFullSource,refreshBuilds,buildQueue,h('p',{class:'tag'},'Websites use their existing managed content hosting. Bundled Workers target the exact selected Cloudflare account and Worker. This does not move databases or credentials.'),stage,status,preview,h('h4',{},'Upload from phone or computer'),h('p',{},'Use a built website ZIP up to 25 MB. Choose its managed site below.'),...data.sites.map(function(s){return h('div',{class:'card'},h('h4',{},s.name),packageForm(s));})));
  }catch(e){oops(e);}}
 var PROVIDER_SEEN={},PROVIDER_POLL=null;
 async function verificationPanel(mount){if(!own())return;try{var data=await api('verification');mount.innerHTML='';data.requests.forEach(function(r){var status=h('p',{role:'status'}),card=h('section',{class:'card'},h('h4',{},'Provider verification needed'),h('p',{},r.provider+' · '+r.reason),h('p',{class:'tag'},'Enter your email, password or verification code only on the official provider page. Human verification is not an email challenge and cannot be completed by this control room.'),h('a',{class:'btn',href:r.url,target:'_blank',rel:'noopener noreferrer',onclick:function(){status.textContent='When you return, the saved API connection will be checked. Dashboard sign-in does not grant token permissions.';window.addEventListener('focus',async function(){try{var result=await api('verification/resolve','POST',{id:r.id,action:'recheck'});status.textContent=result.notice;}catch(e){status.textContent=e.message+' Open Cloudflare connections to update this account token if its permissions are insufficient.';}},{once:true});}},'Open official '+r.provider+' verification'));
