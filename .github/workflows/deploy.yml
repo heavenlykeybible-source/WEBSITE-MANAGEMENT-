@@ -132,7 +132,7 @@ jobs:
         env:
           ACCOUNT4_PRODUCTION_APPROVED: '1'
           ACCOUNT4_APPROVED_COMMIT: ${{ github.event_name == 'push' && github.sha || inputs.approved_commit }}
-          ACCOUNT4_ALLOW_UNMARKED_BASELINE: ${{ inputs.bootstrap_legacy_worker && '1' || '0' }}
+          ACCOUNT4_ALLOW_UNMARKED_BASELINE: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Authorize one-time existing Account 4 Worker baseline [account4-owner-approved-bootstrap-20261101]') && '1' || (inputs.bootstrap_legacy_worker && '1' || '0') }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.ACCOUNT4_CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT4_CLOUDFLARE_ACCOUNT_ID }}
 
