@@ -22,3 +22,18 @@ test('device and Drive imports preserve complete ZIP upload flow',()=>{
  assert.match(hub,/packageForm\(entry\)/);
  assert.doesNotMatch(hub,/workspace\/tinyfish\/|BROWSER_ENGINE_KEY/);
 });
+
+test('central connection supports GitHub user tokens and installation tokens without exposing secrets',()=>{
+ const server=fs.readFileSync('workspace/imports.js','utf8');
+ assert.match(server,/api\.github\.com\/user\/repos\?per_page=50/);
+ assert.match(server,/api\.github\.com\/installation\/repositories\?per_page=50/);
+ assert.match(server,/connectionMode:mode,readOnly:true/);
+ assert.match(server,/await unseal\(env,g\.secret_enc\)/);
+});
+test('Account 3 source and advanced management are distinguishable in unified importer',()=>{
+ assert.match(hub,/Global Christian Community/);
+ assert.match(hub,/Complete Community source/);
+ assert.match(hub,/Account 3 production source/);
+ assert.match(hub,/Advanced DNS, Worker and GitHub tools/);
+ assert.match(hub,/scanButton\.disabled=chosen\.kind==='application'/);
+});
