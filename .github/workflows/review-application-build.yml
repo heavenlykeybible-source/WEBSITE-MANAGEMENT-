@@ -1,4 +1,5 @@
 name: Review-only application build
+run-name: Review source ${{ inputs.source_sha }}
 on:
   workflow_dispatch:
     inputs:
