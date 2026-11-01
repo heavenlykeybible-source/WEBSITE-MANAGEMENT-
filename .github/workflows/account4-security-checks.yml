@@ -152,3 +152,7 @@ jobs:
         run: |
           node --check control-room-worker.js
           npx --yes wrangler@4.136.0 deploy --dry-run --outdir /tmp/account4-generated-worker-bundle
+      - name: Validate private Browser Agent Worker packaging
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund @cloudflare/puppeteer@1.4.0
+          npx --yes wrangler@4.136.0 deploy --config browser-agent/wrangler.jsonc --dry-run --outdir /tmp/account4-private-browser-bundle
