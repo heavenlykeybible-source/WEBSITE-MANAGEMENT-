@@ -18,11 +18,18 @@ export function formatDailyMannaPost(entry,origin){
  const date=entry.publish_date;
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw Error('Invalid date');
  const link=new URL('/?date='+encodeURIComponent(date),u).toString();
- const message=String(entry.body||'');
- const preview=Array.from(message).length>1500?Array.from(message).slice(0,1500).join('')+'…':message;
- const prayer=String(entry.prayer||'');
- const reflection=prayer&&preview.length+prayer.length<1750?'Prayer: '+prayer:'';
- return ['STRENGTH FOR TODAY - our daily manna',entry.title,entry.scripture,preview,reflection,'Read the complete devotional: '+link].filter(Boolean).join('\n\n');
+ const fixed=['STRENGTH FOR TODAY - our daily manna',String(entry.title||''),String(entry.scripture||'')];
+ const ending='Read the complete devotional: '+link;
+ const charCount=v=>Array.from(v).length;
+ const limit=1950;
+ const allowance=Math.max(0,limit-charCount(fixed.join('\n\n'))-charCount(ending)-12);
+ const raw=Array.from(String(entry.body||''));
+ const excerpt=raw.slice(0,Math.max(0,allowance-(raw.length>allowance?1:0))).join('')+(raw.length>allowance?'…':'');
+ const pieces=[...fixed,excerpt];
+ const prayer='Prayer: '+String(entry.prayer||'');
+ if(entry.prayer&&charCount(pieces.join('\n\n'))+charCount(prayer)+charCount(ending)+6<=limit)pieces.push(prayer);
+ pieces.push(ending);
+ return pieces.filter(Boolean).join('\n\n');
 }
 export async function submitToStudio(entry,env,fetcher=fetch){
  if(!studioReady(env))throw Error('Studio bridge is not configured');
