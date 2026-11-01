@@ -112,6 +112,23 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   await audit(env,user.username,'tinyfish-run','TinyFish task '+id+' submitted');
   return json({id,runId,status:'submitted',notice:'TinyFish task started. No deployment is authorized.'});
  }
+ if(sub==='workspace/tinyfish/cancel'&&m==='POST'){
+  const b=await body(req),id=String(b?.id||'');
+  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid TinyFish task',400);
+  const row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind('workspace:tinyfish:'+id).first();
+  if(!row)fail('TinyFish task not found',404);
+  const item=JSON.parse(row.value_json);if(item.createdBy!==user.id)fail('TinyFish task owner mismatch',403);
+  const key=String(env.TINYFISH_API_KEY||'').trim();if(!key)fail('TinyFish API key not configured',503);
+  const response=await fetch('https://agent.tinyfish.ai/v1/runs/'+encodeURIComponent(item.runId)+'/cancel',{method:'POST',headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
+  if(!response.ok)fail('TinyFish cancellation unavailable (HTTP '+response.status+')',502);
+  const result=await response.json(),status=String(result.status||'unknown').toUpperCase();
+  if(['COMPLETED','FAILED','CANCELLED'].includes(status)){
+   item.status=status;
+   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),'workspace:tinyfish:'+id).run();
+  }
+  await audit(env,user.username,'tinyfish-cancel','Requested cancellation of TinyFish task '+id);
+  return json({id,status});
+ }
  if(sub==='workspace/tinyfish/runs'&&m==='GET'){
   const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:tinyfish:%' AND json_extract(value_json,'$.createdBy')=? ORDER BY CAST(json_extract(value_json,'$.createdAt') AS INTEGER) DESC LIMIT 30").bind(user.id).all();
   return json({runs:(rows.results||[]).map(r=>JSON.parse(r.value_json)).map(({id,url,goal,createdAt,status})=>({id,url,goal,createdAt,status}))});
