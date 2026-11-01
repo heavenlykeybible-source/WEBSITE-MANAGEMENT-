@@ -9,7 +9,8 @@ async function queueConnectedApplication(env,user,b){
  const directory=sourceFolder(b.directory),prefix=directory?directory+'/':'';
  if(!tree.files.some(f=>f.path===prefix+'package.json'))fail('Application package.json missing',400);
  if(tree.files.some(f=>f.path.startsWith(prefix+'node_modules/')))fail('Dependencies must not be included in application source',400);
- if(!tree.files.some(f=>f.path===prefix+'package-lock.json'))fail('Review build requires npm package-lock.json',409);
+ const npmLock=tree.files.find(f=>f.path===prefix+'package-lock.json');
+ if(!npmLock||npmLock.mode==='120000'||npmLock.size>5*1024*1024)fail('Application requires a regular npm lockfile of at most 5 MB',409);
  await verifyNpmBuildManifest(env,g,tree.files,prefix);
  const conn=await connById(env,b.connection),worker=String(b.worker||'');
  if(!/^[a-z0-9][a-z0-9_-]{0,62}$/.test(worker))fail('Choose a valid Cloudflare Worker name',400);
@@ -114,7 +115,8 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    const directory=[item.root||'',item.directory||''].filter(Boolean).join('/')||'.';
    if(directory!=='.'&&(directory.split('/').some(part=>!part||part==='.'||part==='..'||!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/.test(part))))fail('Invalid application directory',400);
    const prefix=item.directory?item.directory+'/':'';
-   if(!tree.files.some(f=>f.path===prefix+'package.json')||!tree.files.some(f=>f.path===prefix+'package-lock.json'))fail('Pinned application manifest or npm lockfile is missing',409);
+   const npmLock=tree.files.find(f=>f.path===prefix+'package-lock.json');
+   if(!npmLock||npmLock.mode==='120000'||npmLock.size>5*1024*1024)fail('Pinned npm lockfile is missing or unsafe',409);
    await verifyNpmBuildManifest(env,g,tree.files,prefix);
    await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{request_id:id,source_sha:item.commit,directory}});
    item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
