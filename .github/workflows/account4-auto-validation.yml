@@ -1,0 +1,43 @@
+name: Account 4 automatic validation
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'integrations/**'
+      - 'tests/ai-worker-permissions.test.mjs'
+      - 'tests/cloudflare-domain-operations.test.mjs'
+      - 'package.json'
+      - '.github/workflows/account4-auto-validation.yml'
+  pull_request:
+    paths:
+      - 'integrations/**'
+      - 'tests/ai-worker-permissions.test.mjs'
+      - 'tests/cloudflare-domain-operations.test.mjs'
+      - 'package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: account4-validation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check integrations/ai-worker-permissions.mjs
+          node --check integrations/cloudflare-domain-operations.mjs
+          node --check integrations/cloudflare-worker-custom-domain.mjs
+      - name: Test AI permissions and Cloudflare domain operations
+        run: npm run test:ai-worker-permissions
+      - name: Write build validation summary
+        if: always()
+        run: |
+          echo '## Account 4 automatic validation' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Source changes are saved in GitHub. This workflow does not deploy to Cloudflare or modify DNS.' >> "$GITHUB_STEP_SUMMARY"
