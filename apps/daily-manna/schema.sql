@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS manna_entries (
  scripture TEXT NOT NULL, body TEXT NOT NULL, prayer TEXT NOT NULL DEFAULT '',
  status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','approved','published','corrected')),
  revision INTEGER NOT NULL DEFAULT 1, approved_revision INTEGER,
+ release_mode TEXT CHECK(release_mode IN ('reviewed','unreviewed')),
  approved_at TEXT, published_at TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
