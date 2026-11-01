@@ -168,7 +168,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   return json({id:b.id,repo:b.repo,commit:b.commit,worker:b.worker,status:b.status,review,ownerApprovalRequired:true,deploymentAuthorized:false});
  }
  if(sub==='workspace/application-builds'&&m==='GET'){
- const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:application:%' LIMIT 100").all();
+ const rows=await env.DB.prepare("SELECT value_json FROM settings WHERE key LIKE 'workspace:application:%' AND json_extract(value_json,'$.createdBy')=? ORDER BY CAST(json_extract(value_json,'$.createdAt') AS INTEGER) DESC LIMIT 100").bind(user.id).all();
  return json({builds:(rows.results||[]).map(r=>JSON.parse(r.value_json)).filter(b=>b.createdBy===user.id).map(b=>({id:b.id,repo:b.repo,commit:b.commit,status:b.status,worker:b.worker}))});
  }
  if(sub==='workspace/application-build'&&m==='POST')return json(await queueConnectedApplication(env,user,await body(req)));
