@@ -78,6 +78,24 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const staged=await stageConnectedSource(env,user,{scan:scan.id,connection:b.connection,worker:b.worker,site:b.site});
   return json({ok:true,status:'waiting',proposal_id:staged.proposal_id,source:{repo:scan.repo,commit:scan.commit,files:scan.files.length,bytes:scan.bytes},notice:'Imported and staged for owner approval; production has not been deployed.'});
  }
+ if(sub==='workspace/application-build/dispatch'&&m==='POST'){
+  const input=await body(req),id=String(input?.id||'');
+  if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid build identifier',400);
+  const key='workspace:application:'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();
+  if(!row)fail('Build request not found',404);
+  const item=JSON.parse(row.value_json);
+  if(item.createdBy!==user.id)fail('Build request owner mismatch',403);
+  if(item.status!=='build-required')fail('Build request is not awaiting dispatch',409);
+  if(item.repo!=='heavenlykeybible-source/WEBSITE-MANAGEMENT-')fail('This build workflow is only installed in the Website Management repository',409);
+  const g=await importSource(env,user,item.source),tree=await sourceTree(env,g);
+  if(g.repo!==item.repo||tree.head.commit!==item.commit)fail('Source changed since build request',409);
+  const directory=item.directory||'.';
+  await gh(env,g,'POST','/actions/workflows/review-application-build.yml/dispatches',{ref:'feature/complete-reviewed-import-pipeline',inputs:{source_sha:item.commit,directory}});
+  item.status='build-dispatched';item.dispatchedAt=Date.now();item.deploymentAuthorized=false;
+  await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
+  await audit(env,user.username,'application-build-dispatched','Review-only build '+id);
+  return json({id,status:item.status,source:item.commit,notice:'Review-only GitHub Actions build requested. No deployment authorized.'});
+ }
  if(sub==='workspace/application-build/verify-source'&&m==='POST'){
   const b=await body(req),id=String(b?.id||'');
   if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid build identifier',400);
