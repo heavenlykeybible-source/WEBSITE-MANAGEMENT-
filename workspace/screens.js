@@ -28,11 +28,47 @@ function proposalCard(id,mount){
  mount.appendChild(h('button',{class:'bad',onclick:async function(){if(busy)return;busy=true;this.disabled=true;try{await api('proposals/'+id+'/decide','POST',{decision:'reject',comment:'Declined in chat'});mount.textContent='Declined. Nothing published.';}catch(e){status.textContent=e.message;}finally{busy=false;this.disabled=false;}}},'Decline'));
  mount.appendChild(status);
 }
+async function aiStudioReadiness(){
+ var report=h('div'),status=h('p',{role:'status','aria-live':'polite'});
+ function item(title,message,open,label){
+  var card=h('section',{class:'card'},h('h4',{},title),h('p',{},message));
+  if(open)card.appendChild(h('button',{class:'sm',onclick:open},label));
+  report.appendChild(card);
+ }
+ async function check(){
+  status.textContent='Checking saved AI Studio configuration…';
+  refresh.disabled=true;report.innerHTML='';
+  try{
+   var responses=await Promise.allSettled([api('ai'),api('ai/permissions'),api('browser'),api('workspace/catalog')]);
+   var ai=responses[0],permission=responses[1],browser=responses[2],projects=responses[3];
+   if(ai.status==='fulfilled'){
+    var a=ai.value,available=Array.isArray(a.accounts)?a.accounts:[];
+    item('AI chat providers',a.enabled&&available.length?'Configured providers: '+available.map(function(v){return v.label||v.id;}).join(', ')+'. Provider responses require a live chat test.':'No enabled AI chat provider confirmed by the dashboard.',claude,'Open AI chat');
+   }else item('AI chat providers','Could not check providers: '+String(ai.reason.message||ai.reason),claude,'Open AI chat');
+   if(permission.status==='fulfilled'){
+    var data=permission.value,policy=data.policy||{},active=policy.expires_at>Date.now(),granted=active&&Array.isArray(policy.connections)?policy.connections:[],labels=granted.map(function(id){var c=(data.connections||[]).find(function(c){return c.id===id;});return c?c.label:'Account '+id;});
+    item('AI website permissions',!active?'No active account permission grant.':policy.mode!=='work'?'Current mode is '+policy.mode+'. Website modification proposals require Work mode.':'Work mode. Authorized accounts: '+(labels.length?labels.join(', '):'none')+'. Expires '+lagosTime(policy.expires_at)+'.',aiPermissions,'Manage exact account permissions');
+   }else item('AI website permissions','Could not read account permissions: '+String(permission.reason.message||permission.reason),aiPermissions,'Manage permissions');
+   if(browser.status==='fulfilled')item('Browser automation',browser.value.available?'Browser service binding reported. Run an owner-approved browser task to verify real operation.':'Browser runtime is not connected. Live website browsing cannot run yet.',browserCenter,'Open Browser agent');
+   else item('Browser automation','Could not check browser runtime: '+String(browser.reason.message||browser.reason),browserCenter,'Open Browser agent');
+   if(projects.status==='fulfilled'){
+    var s=projects.value.sources||[];
+    item('Source projects',s.length?s.length+' connected GitHub source'+(s.length===1?'':'s')+' available for scanning. Import and preview still require review.':'No connected GitHub project sources returned.',nativeImports,'Import and preview projects');
+   }else item('Source projects','Could not check project sources: '+String(projects.reason.message||projects.reason),nativeImports,'Open project imports');
+   item('Production deployment','Not verified by this screen. GitHub checks or configured AI permissions do not prove that Cloudflare has published the current release.',releaseHistory,'Review release history');
+   status.textContent='Checks finished. These are configuration checks, not a live deployment or AI execution test.';
+  }catch(e){status.textContent='Readiness check failed: '+e.message;}
+  finally{refresh.disabled=false;}
+ }
+ var refresh=h('button',{class:'sm',onclick:check},'Refresh AI Studio status');
+ show(nav(),h('main',{},h('h3',{class:'page-title'},'AI Studio readiness'),h('p',{},'Review the accounts, providers and services needed for AI website work. Every deployment still requires your approval.'),refresh,status,report));
+ await check();
+}
 async function controlHome(){CURRENT_NAV='Home';try{
  var d=await api('summary');
  show(nav(),h('h3',{class:'page-title'},'Control Room'),h('p',{},'Manage your websites, review AI work and monitor connected accounts.'),
  h('section',{class:'stat-grid'},h('div',{class:'stat'},h('strong',{},String(d.waiting||0)),h('span',{},'Waiting for your review'))),
- h('div',{class:'card'},h('h3',{},'Your workspace'),h('button',{onclick:claude},'Chat with AI'),h('button',{onclick:aiPermissions},'Manage AI account permissions'),h('button',{onclick:verificationCenter},'Review AI access requests'),h('button',{onclick:nativeImports},'Import and preview a project'),h('button',{onclick:browserCenter},'Browser agent and runtime status'),h('button',{onclick:websiteScreens},'Browse website screens'),h('button',{onclick:waiting},'Review waiting work'),h('button',{onclick:releaseHistory},'Release history and recovery')),
+ h('div',{class:'card'},h('h3',{},'Your workspace'),h('button',{onclick:claude},'Chat with AI'),h('button',{onclick:aiStudioReadiness},'Check AI Studio readiness'),h('button',{onclick:aiPermissions},'Manage AI account permissions'),h('button',{onclick:verificationCenter},'Review AI access requests'),h('button',{onclick:nativeImports},'Import and preview a project'),h('button',{onclick:browserCenter},'Browser agent and runtime status'),h('button',{onclick:websiteScreens},'Browse website screens'),h('button',{onclick:waiting},'Review waiting work'),h('button',{onclick:releaseHistory},'Release history and recovery')),
  h('div',{class:'card'},h('h3',{},'Connections'),h('button',{onclick:cloud},'Cloudflare accounts'),h('button',{onclick:github},'GitHub sites and backups'),h('button',{onclick:projectSources},'Google Drive project source')));
  }catch(e){oops(e);}}
 async function githubSourceBackup(site,mount){try{
