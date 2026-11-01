@@ -1,3 +1,4 @@
+import {publicPage} from './public-page.mjs';
 // Strength for Today Daily Manna: independent Worker. No credentials are embedded.
 // Bind DB to a dedicated D1 database; set EDITOR_TOKEN as a secret.
 // Scheduled trigger: 0 * * * * (hourly UTC, publishes only at 23:00 UTC = midnight Lagos).
@@ -64,6 +65,7 @@ export default {
  async fetch(req,env){
   try{
    const url=new URL(req.url),path=url.pathname,method=req.method;
+   if((path==='/'||path==='/index.html')&&method==='GET')return new Response(publicPage(),{headers:{'content-type':'text/html; charset=utf-8','cache-control':'public, max-age=300','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"}});
    if(path==='/api/today'&&method==='GET'){
     const date=todayLagos(),entry=await env.DB.prepare("SELECT publish_date,title,scripture,body,prayer FROM manna_entries WHERE publish_date=? AND status='published'").bind(date).first();
     return response({date,entry:entry||null});
