@@ -1,0 +1,7 @@
+# Revision 80 — Historical heading recovery
+
+The separate working manuscript retains 1,826 daily records. 1,423 previously missing historical headings were provisionally populated using **only persons explicitly named in their existing narratives**; 18 historical headings remain unresolved. No historical anecdotes were invented and no historical claims or URLs were independently verified in this revision. There remain 40 missing narratives and 14 missing source URLs. All newly generated headings are marked `provisional_subject_identified_from_existing_narrative_not_independently_verified` and all pages remain **not publication ready**.
+
+ChatGPT Library checkpoint: `strength_for_today_revision_80_historical_title_recovery.zip`; SHA256 `021f5ee54a1105076daecf347a1a11302b95a6e60eeb369fc8802f3e330a1b33`.
+
+**Preservation rule:** Do not overwrite canonical Revision 50 JSONL files; canonical contains more complete supporting KJV quotations. Merge vetted editorial fields into canonical only after review. Follow up: independently source and fact-check each historical story; replace repetitive or weak thematic connections; complete missing narratives; validate KJV; run final production checks.
