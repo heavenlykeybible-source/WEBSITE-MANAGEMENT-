@@ -99,6 +99,32 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
  if(sub==='workspace/dns/capabilities'&&m==='GET')return json({zone:'heavenlykey.org',configured:!!(env.DNS_ZONE_ID&&env.DNS_API_TOKEN),actions:['propose-create','approve-create'],requiresOwnerApproval:true});
  if(sub==='workspace/dns/propose-create'&&m==='POST'){const record=dnsRecordInput(await body(req)),id=crypto.randomUUID(),proposal={id,record,status:'pending-owner-approval',createdBy:user.id,createdAt:Date.now(),expiresAt:Date.now()+900000};await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:dns:'+id,JSON.stringify(proposal)).run();await audit(env,user.username,'dns-create-proposed',record.name);return json({id,status:proposal.status,record,notice:'Review and approve separately before DNS is changed.'});}
  if(sub==='workspace/dns/approve-create'&&m==='POST'){const input=await body(req),id=String(input?.id||'');if(!/^[a-f0-9-]{36}$/.test(id))fail('Invalid proposal',400);return withOperationLock(env,'dns-create:'+id,async()=>{const key='workspace:dns:'+id,row=await env.DB.prepare('SELECT value_json FROM settings WHERE key=?').bind(key).first();if(!row)fail('DNS proposal not found',404);const p=JSON.parse(row.value_json);if(p.createdBy!==user.id||p.status!=='pending-owner-approval'||p.expiresAt<Date.now())fail('Proposal is not available for owner approval',409);if(input?.confirm!==p.record.name)fail('Confirm the exact subdomain name to approve',400);const existing=await dnsCloudflare(env,'GET','/dns_records?name='+encodeURIComponent(p.record.name));if(existing.length)fail('A DNS record already exists for this subdomain',409);p.status='applying';await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();try{const result=await dnsCloudflare(env,'POST','/dns_records',p.record);p.status='created';p.recordId=result.id;p.completedAt=Date.now();await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();await audit(env,user.username,'dns-create-approved',p.record.name);return json({id,status:p.status,record:p.record});}catch(e){p.status='needs-reconciliation';await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(p),key).run();throw e;}});}
+ if(sub==='workspace/github/bulk-connect'&&m==='POST'){
+  const b=await body(req),sourceId=Number(b?.source),branch=String(b?.branch||'main').trim(),names=b?.repositories;
+  if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Select an authorized GitHub identity',400);
+  if(!/^[a-zA-Z0-9_./-]{1,120}$/.test(branch)||branch.startsWith('/')||branch.endsWith('/')||branch.includes('//')||branch.split('/').some(p=>p==='.'||p==='..'))fail('Invalid branch',400);
+  if(!Array.isArray(names)||names.length<1||names.length>20)fail('Provide 1–20 repositories',400);
+  if(names.some(n=>typeof n!=='string'||!/^[a-zA-Z0-9_.-]+\\/[a-zA-Z0-9_.-]+$/.test(n)||n.length>200||n.split('/').some(p=>p==='.'||p==='..'))||new Set(names.map(n=>n.toLowerCase())).size!==names.length)fail('Invalid or duplicate repositories',400);
+  const g=await importSource(env,user,sourceId);
+  const original=await env.DB.prepare('SELECT secret_enc FROM github_sites WHERE id=? AND owner_id IS NULL').bind(sourceId).first();
+  if(!original?.secret_enc)fail('GitHub authorization unavailable',404);
+  const results=[];
+  for(const repo of names){
+   const label=repo+' ('+branch+')';
+   try{
+    const existing=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND repo=? AND branch=? AND dir=?').bind(repo,branch,'').first();
+    if(existing){results.push({repo,status:'already-connected',id:existing.id});continue;}
+    const head=await ghHead(env,{...g,repo,branch,dir:''});
+    if(!/^[a-f0-9]{40}$/.test(head.commit))throw Error('Repository branch could not be verified');
+    const duplicateLabel=await env.DB.prepare('SELECT id FROM github_sites WHERE owner_id IS NULL AND label=?').bind(label).first();
+    if(duplicateLabel)throw Error('Connection label already exists');
+    const inserted=await env.DB.prepare('INSERT INTO github_sites(label,repo,branch,dir,secret_enc,owner_id) VALUES(?,?,?,?,?,NULL)').bind(label,repo,branch,'',original.secret_enc).run();
+    results.push({repo,status:'connected',id:inserted.meta.last_row_id,label,branch});
+    await audit(env,user.username,'github-repository-added','Connected authorized repository '+repo+' using source '+sourceId);
+   }catch(e){results.push({repo,status:'failed',error:'GitHub repository access or registration failed'});}
+  }
+  return json({results,connected:results.filter(r=>r.status==='connected').length,requiresOwnerApprovalForDeploy:true});
+ }
  if(sub==='workspace/github/reuse'&&m==='POST'){
   const b=await body(req),sourceId=Number(b?.source),repo=String(b?.repo||'').trim(),label=String(b?.label||'').trim(),branch=String(b?.branch||'main').trim();
   if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Select an existing authorized GitHub connection',400);
