@@ -122,7 +122,7 @@ test('additional GitHub repositories reuse only authorized encrypted connection 
  assert.match(server,/await ghHead\(env,target\)/);
  assert.match(server,/SELECT secret_enc FROM github_sites WHERE id=\? AND owner_id IS NULL/);
  assert.match(server,/original\.secret_enc\)\.run\(\)/);
- assert.match(client,/Verify and add repository/);
+ assert.match(client,/Connect repository using existing authorization/);
  assert.match(client,/different GitHub account/);
 });
 test('application controls require reviewed build',()=>{
