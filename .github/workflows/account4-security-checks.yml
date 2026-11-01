@@ -135,6 +135,8 @@ jobs:
         run: node tests/ai-single-account-ui.mjs
       - name: Test browser agent runtime readiness UI
         run: node tests/browser-readiness-ui.mjs
+      - name: Test AI Studio readiness dashboard
+        run: node tests/ai-studio-readiness-ui.mjs
       - name: Run Account 4 regression suite
         run: npm test
       - name: Run CMS editor DOM security and functionality checks
