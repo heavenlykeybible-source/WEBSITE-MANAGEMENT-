@@ -15,7 +15,7 @@ pause.onclick=()=>{stopped=true;controller?.abort();tell('Paused. Choose the sam
 start.onclick=async()=>{
  const file=$('project-import-file').files?.[0],name=$('project-import-name').value.trim();
  if(!file||!name){tell('Select a ZIP file and enter a project name.');return;}
- if(!/\\.zip$/i.test(file.name)){tell('Choose a ZIP archive.');return;}
+ if(!/\.zip$/i.test(file.name)){tell('Choose a ZIP archive.');return;}
  if(file.size<1||file.size>MAX){tell('Archive must be between 1 byte and 1 GiB.');return;}
  stopped=false;start.disabled=true;controller=new AbortController();
  const storageKey=key(file);
