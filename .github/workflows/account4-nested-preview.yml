@@ -33,6 +33,7 @@ jobs:
           test -f src/index.ts
           test -f public/index.html
           test -f public/project-import.js
+          test -f public/login.html
           grep -q 'project-imports/github' src/index.ts
           grep -q 'account3-github-import' public/index.html
           grep -q 'account3-github-import' public/project-import.js
@@ -64,6 +65,8 @@ jobs:
           ! grep -q 'Set ADMIN_USER and ADMIN_PASS' /tmp/account4-control-room.html
           curl --fail --silent --show-error "$url/project-import.js" -o /tmp/account4-project-import.js
           grep -q 'project-imports/github' /tmp/account4-project-import.js
+          curl --fail --silent --show-error "$url/login.html" -o /tmp/account4-owner-login.html
+          grep -q 'Control Room owner sign-in' /tmp/account4-owner-login.html
           status="$(curl --silent --output /tmp/account4-unauthorized.json --write-out '%{http_code}' "$url/api/project-imports")"
           test "$status" = '401' || { echo "::error::Expected unauthenticated import API to return 401, got $status"; exit 1; }
           grep -q 'Administrator sign-in required' /tmp/account4-unauthorized.json
