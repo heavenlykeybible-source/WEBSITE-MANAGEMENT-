@@ -1,6 +1,7 @@
 export function liveReleaseCommit(body) {
   const markers = [...String(body).matchAll(/\/\/ ACCOUNT4_DEPLOY_COMMIT_SHA=([a-f0-9]{40})/gi)];
-  return markers.at(-1)?.[1]?.toLowerCase() || null;
+  if (markers.length>1) throw new Error('Multiple Account 4 live release markers found; refuse ambiguous deployment history');
+  return markers[0]?.[1]?.toLowerCase() || null;
 }
 export function verifyForwardRelease({deployed,approved,allowUnmarked=false,isAncestor=false}) {
   if (!/^[a-f0-9]{40}$/i.test(approved)) throw new Error('Invalid approved release commit');
