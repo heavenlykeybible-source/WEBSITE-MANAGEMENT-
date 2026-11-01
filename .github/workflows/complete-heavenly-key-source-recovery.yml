@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout recovery branch with write permissions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: global-community-recovery-20261022
           persist-credentials: true

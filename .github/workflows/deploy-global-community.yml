@@ -25,7 +25,7 @@ jobs:
         working-directory: heavenly-key-accounts/account-03-global-christian-community/source
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Verify exact manually approved release
         working-directory: ${{ github.workspace }}

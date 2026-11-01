@@ -32,7 +32,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ACCOUNT5_CLOUDFLARE_ACCOUNT_ID }}
       RELEASE_TARGET: ${{ inputs.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

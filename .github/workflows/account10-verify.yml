@@ -28,7 +28,7 @@ jobs:
         working-directory: account10-social-management
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Set up Node.js

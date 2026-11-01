@@ -11,7 +11,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Generate all six PNG assets
         run: python3 heavenly-key-accounts/account-09-heavenly-key-videoeditor/source/scripts/generate-brand-assets.py
       - name: Validate generated PNG files
