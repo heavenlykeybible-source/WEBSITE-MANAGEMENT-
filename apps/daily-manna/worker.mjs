@@ -1,5 +1,5 @@
 import {publicPage} from './public-page.mjs';
-import {facebookReady,publishToFacebook} from './facebook-publisher.mjs';
+import {studioReady,submitToStudio} from './studio-bridge.mjs';
 // STRENGTH FOR TODAY - our daily manna: independent Worker. No credentials are embedded.
 // Bind DB to a dedicated D1 database; set EDITOR_TOKEN as a secret.
 // Scheduled trigger: 0 * * * * (hourly UTC, publishes only at 23:00 UTC = midnight Lagos).
@@ -98,8 +98,8 @@ async function approve(req,env){
  return response({results});
 }
 async function repairOutbox(env){
- const missing=await env.DB.prepare("SELECT e.id FROM manna_entries e WHERE e.status='published' AND (SELECT COUNT(*) FROM manna_deliveries d WHERE d.entry_id=e.id AND d.destination IN ('community','facebook'))<2 LIMIT 100").bind().all();
- for(const entry of missing.results||[])for(const destination of ['community','facebook'])
+ const missing=await env.DB.prepare("SELECT e.id FROM manna_entries e WHERE e.status='published' AND (SELECT COUNT(*) FROM manna_deliveries d WHERE d.entry_id=e.id AND d.destination IN ('community','studio'))<2 LIMIT 100").bind().all();
+ for(const entry of missing.results||[])for(const destination of ['community','studio'])
   await env.DB.prepare("INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,'pending')").bind(randomId(),entry.id,destination).run();
 }
 async function publishToday(env,now=Date.now()){
@@ -118,23 +118,22 @@ async function publishToday(env,now=Date.now()){
  return {date,published,moreMayBeDue:(due.results||[]).length===100};
 }
 
-// At-most-once provider attempt. Ambiguous network failures are NOT retried automatically:
-// an owner must reconcile the Facebook Page before explicitly retrying to avoid duplicate posts.
-export async function dispatchFacebook(env,fetcher=fetch){
- if(!facebookReady(env))return {configured:false,processed:0};
- if(!validDate(env.FACEBOOK_FIRST_POST_DATE))return {configured:true,enabled:false,processed:0,reason:'Set FACEBOOK_FIRST_POST_DATE to authorize the first social publication date'};
- const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.id AS entry_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT content_type FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_content_type FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='facebook' AND d.status='pending' AND e.status='published' AND e.publish_date>=? AND e.publish_date<=? ORDER BY e.publish_date LIMIT 10").bind(env.FACEBOOK_FIRST_POST_DATE,todayLagos()).all();
+// The Studio is the only external social publisher. We never store Facebook
+// credentials here, and uncertain submissions are not blindly resent.
+export async function dispatchStudio(env,fetcher=fetch){
+ if(!studioReady(env))return {configured:false,processed:0};
+ const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='studio' AND d.status='pending' AND e.status='published' AND e.publish_date>=? AND e.publish_date<=? ORDER BY e.publish_date LIMIT 10").bind(env.STUDIO_FIRST_POST_DATE,todayLagos()).all();
  let processed=0,sent=0,failed=0;
  for(const entry of jobs.results||[]){
-  const claim=await env.DB.prepare("UPDATE manna_deliveries SET status='skipped',attempts=attempts+1,error='Provider attempt in progress; reconcile before retry',updated_at=CURRENT_TIMESTAMP WHERE id=? AND destination='facebook' AND status='pending'").bind(entry.delivery_id).run();
-  if(claim.meta?.changes!==1)continue;
+  const claimed=await env.DB.prepare("UPDATE manna_deliveries SET status='skipped',attempts=attempts+1,error='Studio submission in progress; reconcile before retry',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='pending' AND destination='studio'").bind(entry.delivery_id).run();
+  if(claimed.meta?.changes!==1)continue;
   processed++;
   try{
-   const result=await publishToFacebook(entry,env,fetcher);
-   await env.DB.prepare("UPDATE manna_deliveries SET status='sent',provider_post_id=?,error=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='skipped'").bind(result.provider_post_id,entry.delivery_id).run();
+   const result=await submitToStudio(entry,env,fetcher);
+   await env.DB.prepare("UPDATE manna_deliveries SET status='sent',provider_post_id=?,error=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='skipped'").bind(JSON.stringify(result.job_ids).slice(0,500),entry.delivery_id).run();
    sent++;
-  }catch(error){
-   await env.DB.prepare("UPDATE manna_deliveries SET status='failed',error=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='skipped'").bind('Provider delivery failed; verify Facebook Page before retry',entry.delivery_id).run();
+  }catch{
+   await env.DB.prepare("UPDATE manna_deliveries SET status='failed',error='Studio handoff unsuccessful; reconcile before retry',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='skipped'").bind(entry.delivery_id).run();
    failed++;
   }
  }
@@ -166,7 +165,7 @@ export default {
     const tally=await env.DB.prepare("SELECT status,COUNT(*) AS count FROM manna_entries GROUP BY status").all();
     const counts={draft:0,approved:0,published:0,corrected:0};
     for(const row of tally.results||[])if(Object.hasOwn(counts,row.status))counts[row.status]=row.count;
-    return response({database:'connected',picture_storage:env.MANNA_IMAGES?'connected':'not_configured',unreviewed_publication:env.ALLOW_UNREVIEWED_PUBLICATION==='true',entries:counts,subscriptions:'deferred',facebook_delivery:!facebookReady(env)?'not_configured':validDate(env.FACEBOOK_FIRST_POST_DATE)?'enabled':'waiting_for_start_date',social_network_delivery:'not_configured'});
+    return response({database:'connected',picture_storage:env.MANNA_IMAGES?'connected':'not_configured',unreviewed_publication:env.ALLOW_UNREVIEWED_PUBLICATION==='true',entries:counts,subscriptions:'deferred',studio_delivery:studioReady(env)?'configured':'not_configured',social_network_delivery:'not_configured'});
    }
    if(path==='/api/entries'&&method==='GET'&&auth(req,env)){
     const month=url.searchParams.get('month');
@@ -193,6 +192,6 @@ export default {
  },
  async scheduled(event,env){
   await publishToday(env,event.scheduledTime); // Hourly recovery and scheduled release.
-  await dispatchFacebook(env); // Only runs if authorized Page integration is configured.
+  await dispatchStudio(env); // Existing Studio queue is the only external social publisher.
  }
 };
