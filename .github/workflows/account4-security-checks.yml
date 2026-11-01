@@ -137,6 +137,8 @@ jobs:
         run: node tests/browser-readiness-ui.mjs
       - name: Run Account 4 regression suite
         run: npm test
+      - name: Test Browser Agent server runtime and owner approval
+        run: node tests/browser-agent.mjs
       - name: Run CMS editor DOM security and functionality checks
         run: npm run test:cms-dom
       - name: Verify CMS build succeeds
