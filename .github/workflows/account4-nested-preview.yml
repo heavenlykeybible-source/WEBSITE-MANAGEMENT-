@@ -40,6 +40,9 @@ jobs:
           test "$(sed -n 's/^main = "\(.*\)"/\1/p' wrangler.toml)" = 'src/index.ts'
           node --check public/project-import.js
         working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
+      - name: Verify real Account 3 source and pinned GitHub blob transfer
+        run: node tests/account3-source-import.mjs
+        working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
       - name: Create isolated staging Worker configuration
         run: |
           sed 's/^name = "heavenlykey-control-room"$/name = "heavenlykey-control-room-import-preview"/' wrangler.toml > wrangler.import-preview.toml
