@@ -32,3 +32,14 @@ test('bulk GitHub endpoint enforces scope and validates before writes',()=>{
  assert.match(server,/requiresOwnerApprovalForDeploy:true/);
  assert.match(client,/workspace\/github\/bulk-connect/);
 });
+
+test('GitHub repository discovery is owner-scoped, paginated and read-only',()=>{
+ assert.match(server,/user\.role!=='owner'/);
+ assert.match(server,/workspace\/github\/discover/);
+ assert.match(server,/api\.github\.com\/user\/repos\?per_page=50/);
+ assert.match(server,/organization_member/);
+ assert.match(server,/await unseal\(env,g\.secret_enc\)/);
+ assert.match(server,/readOnly:true/);
+ assert.match(client,/Discover my GitHub repositories/);
+ assert.match(client,/Load more authorized repositories/);
+});
