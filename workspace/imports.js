@@ -125,7 +125,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const b=await body(req),sourceId=Number(b?.source),path=String(b?.path||''),commit=String(b?.commit||''),baseSha=String(b?.base_sha||''),content=b?.content;
   if(!Number.isSafeInteger(sourceId)||sourceId<1||!/^[a-f0-9]{40}$/.test(commit)||!/^[a-f0-9]{40}$/.test(baseSha))fail('Select a pinned original GitHub file',400);
   if(typeof content!=='string'||new TextEncoder().encode(content).byteLength>200000)fail('GitHub proposed file must be UTF-8 text up to 200 KB',413);
-  if(!path||path.length>240||path.startsWith('/')||path.split('/').some(v=>!v||v==='.'||v==='..'||v==='.env'||v==='.git'||v==='node_modules'||v==='vendor')||!/\\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(path))fail('Choose a supported GitHub source file',400);
+  if(!path||path.length>240||path.startsWith('/')||path.split('/').some(v=>!v||v==='.'||v==='..'||v==='.env'||v==='.git'||v==='node_modules'||v==='vendor')||!/\.(?:js|mjs|cjs|jsx|ts|tsx|json|html|css|md|txt|yml|yaml|toml|xml|svg)$/i.test(path))fail('Choose a supported GitHub source file',400);
   const g=await importSource(env,user,sourceId),tree=await sourceTree(env,g);
   if(tree.head.commit!==commit)fail('GitHub branch advanced. Refresh and review the new source first.',409);
   const file=tree.files.find(f=>f.path===path&&f.mode!=='120000'&&f.size<=200000);
