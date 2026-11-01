@@ -145,6 +145,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const lock=tree.files.find(f=>f.path===prefix+'package-lock.json');
   const valid=tree.head.commit===item.commit&&tree.files.some(f=>f.path===prefix+'package.json')&&!!lock&&lock.mode!=='120000'&&lock.size<=5*1024*1024&&!tree.files.some(f=>f.path.startsWith(prefix+'node_modules/'));
   if(!valid)fail('Pinned application source has changed or package.json is missing',409);
+  await verifyNpmBuildManifest(env,g,tree.files,prefix);
   return json({id,sourceVerified:valid,commit:item.commit,status:item.status,buildVerified:false,deploymentAuthorized:false});
  }
  if(sub==='workspace/application-build/cancel'&&m==='POST'){
