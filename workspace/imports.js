@@ -126,7 +126,12 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const response=await fetch('https://agent.tinyfish.ai/v1/runs/'+encodeURIComponent(item.runId),{headers:{'X-API-Key':key},signal:AbortSignal.timeout(15000)});
   if(!response.ok)fail('TinyFish status unavailable (HTTP '+response.status+')',502);
   const result=await response.json();
-  return json({id,status:result.status||'unknown',result:result.resultJson||result.result||null,error:result.error||null,createdAt:item.createdAt,url:item.url,goal:item.goal});
+  const status=String(result.status||'unknown').toUpperCase();
+  if(['COMPLETED','FAILED','CANCELLED'].includes(status)&&item.status!==status){
+   item.status=status;
+   await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),'workspace:tinyfish:'+id).run();
+  }
+  return json({id,status,result:result.resultJson??result.result??null,error:result.error||null,createdAt:item.createdAt,url:item.url,goal:item.goal});
  }
  if(sub==='workspace/github/reuse'&&m==='POST'){
   const b=await body(req),sourceId=Number(b?.source),repo=String(b?.repo||'').trim(),label=String(b?.label||'').trim(),branch=String(b?.branch||'main').trim();
