@@ -10,6 +10,7 @@ async function browserAgentOwner(env,actor){
 async function browserTool(env,actor,name,b){
  const owner=await browserAgentOwner(env,actor);
  if(name==='browser_request_task'){
+  if(!env.BROWSER_AGENT)fail('Browser runtime is not connected. A private Browser Run service binding is required before AI can start website tasks.',503);
   if(!Array.isArray(b.hosts))fail('Choose exact public HTTPS hosts');
   const goal=String(b.goal||'').trim(),hosts=[...new Set(b.hosts)];
   if(!goal||goal.length>500||!hosts.length||hosts.length>8||hosts.some(h=>typeof h!=='string'||h.length>253||!/^([a-z0-9][a-z0-9-]*\.)+[a-z]{2,63}$/.test(h)))fail('Provide a goal and up to eight exact public HTTPS hosts');

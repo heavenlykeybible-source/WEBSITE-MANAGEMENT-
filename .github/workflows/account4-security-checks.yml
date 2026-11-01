@@ -141,6 +141,8 @@ jobs:
         run: npm run test:cms-dom
       - name: Verify CMS build succeeds
         run: npm run build:cms
+      - name: Test Browser Agent server runtime and owner approval
+        run: node tests/browser-agent.mjs
       - name: Verify generated integration sections
         run: |
           node --input-type=module -e "import fs from 'node:fs'; const s=fs.readFileSync('control-room-worker.js','utf8'); for(const n of ['VISUAL CMS CLIENT','AI CAPABILITIES','AI PERMISSION CLIENT','AI WORKSPACE','OWNER PASSKEY SERVER','NATIVE WORKSPACE SERVER']) { if(s.split('// BEGIN '+n).length!==2||s.split('// END '+n).length!==2) throw Error('Invalid generated section: '+n); }"
