@@ -180,7 +180,7 @@ export default {
    if(path==='/api/approve'&&method==='POST'&&auth(req,env))return approve(req,env);
    if(path==='/api/publish-check'&&method==='POST'&&auth(req,env))return response(await publishToday(env));
    if(path==='/api/deliveries'&&method==='GET'&&auth(req,env)){
-    const rows=await env.DB.prepare('SELECT d.entry_id,e.publish_date,d.destination,d.status,d.attempts,d.error FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id ORDER BY e.publish_date DESC LIMIT 200').all();
+    const rows=await env.DB.prepare('SELECT d.entry_id,e.publish_date,d.destination,d.status,d.attempts,d.error,d.provider_post_id FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id ORDER BY e.publish_date DESC LIMIT 200').all();
     return response({deliveries:rows.results});
    }
    const archive=path.match(/^\/api\/public\/([0-9]{4}-[0-9]{2}-[0-9]{2})$/);
