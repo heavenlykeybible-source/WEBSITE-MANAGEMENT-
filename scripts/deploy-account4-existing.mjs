@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {liveReleaseCommit,verifyForwardRelease} from './account4-release-lineage.mjs';
 const account = process.env.CLOUDFLARE_ACCOUNT_ID;
 const token = process.env.CLOUDFLARE_API_TOKEN;
 const worker = 'website-management';
@@ -61,16 +62,9 @@ if (process.argv.includes('--check')) {
   const live = await fetch(base, {headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(60000)});
   if (!live.ok) throw new Error('Cannot read existing live Worker to verify release history; upload blocked');
   const liveBody = await live.text();
-  const markers = [...liveBody.matchAll(/\/\/ ACCOUNT4_DEPLOY_COMMIT_SHA=([a-f0-9]{40})/gi)];
-  const deployed = markers.at(-1)?.[1];
-  if (!deployed) {
-    if (process.env.ACCOUNT4_ALLOW_UNMARKED_BASELINE !== '1')
-      throw new Error('Existing Worker has no verifiable release commit; owner-approved legacy baseline required before first guarded upload');
-  } else {
-    if (deployed.toLowerCase() === approved.toLowerCase()) throw new Error('This exact release is already deployed');
-    const ancestor = spawnSync('git', ['merge-base','--is-ancestor',deployed,approved], {encoding:'utf8',shell:false,timeout:20000});
-    if (ancestor.status !== 0) throw new Error('Account 4 rollback or unrelated history blocked: live deployed commit is not an ancestor of approved source');
-  }
+  const deployed = liveReleaseCommit(liveBody);
+  const ancestor = deployed ? spawnSync('git', ['merge-base','--is-ancestor',deployed,approved], {encoding:'utf8',shell:false,timeout:20000}) : null;
+  verifyForwardRelease({deployed,approved,allowUnmarked:process.env.ACCOUNT4_ALLOW_UNMARKED_BASELINE==='1',isAncestor:ancestor?.status===0});
   form.set('control-room-worker.js', new Blob([source+'\n// ACCOUNT4_DEPLOY_COMMIT_SHA='+approved+'\n'], {type:'application/javascript+module'}), 'control-room-worker.js');
   await api(base, {method:'PUT', body:form});
   const after = await api(base + '/settings');
