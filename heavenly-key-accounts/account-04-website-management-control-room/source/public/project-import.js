@@ -3,6 +3,12 @@
 const $=id=>document.getElementById(id),start=$('project-import-start'),pause=$('project-import-pause'),status=$('project-import-status'),progress=$('project-import-progress');
 if(!start||!pause||!status||!progress)return;
 const CHUNK=4194304,MAX=1073741824;
+const previewOwner=location.hostname==='heavenlykey-control-room-import-preview.emmanuel2026miracle.workers.dev';
+if(previewOwner){
+ const area=$('large-project-import');
+ if(area){const link=document.createElement('a');link.href='/login.html';link.textContent='Sign in as owner to import or review projects';link.style.display='inline-block';link.style.margin='0.5rem 0';area.insertBefore(link,area.querySelector('#project-import-name')?.closest('label')||area.firstChild);}
+}
+
 let stopped=false,controller=null;
 const tell=message=>{status.textContent=message;};
 async function request(url,options={}){
