@@ -137,7 +137,7 @@ test('Heavenly Key Browser Engine automation requires Worker secret and owner-sc
  assert.match(server,/workspace\/tinyfish\/run/);
  assert.match(server,/workspace\/tinyfish\/result/);
  assert.match(server,/BROWSER_ENGINE_KEY/);
- assert.match(server,/agent\.tinyfish\.ai\/v1\/automation\/run-async/);
+ assert.match(server,/BROWSER_ENGINE_URL/);
  assert.match(server,/item\.createdBy!==user\.id/);
  assert.match(client,/Approve and start Heavenly Key Browser Engine task/);
  assert.match(client,/Check Heavenly Key Browser Engine connection/);
