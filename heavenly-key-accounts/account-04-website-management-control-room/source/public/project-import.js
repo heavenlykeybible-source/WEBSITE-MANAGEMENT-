@@ -38,7 +38,7 @@ start.onclick=async()=>{
  const storageKey=key(file);
  try{
   let id=sessionStorage.getItem(storageKey),info;
-  if(id){try{info=await request('/api/project-imports/'+encodeURIComponent(id),{signal:controller.signal});if(info.totalBytes!==file.size)throw Error('Size changed');}catch(e){if(e.name==='AbortError')throw e;id=null;sessionStorage.removeItem(storageKey);}}
+  if(id){try{info=await request('/api/project-imports/'+encodeURIComponent(id),{signal:controller.signal});if(info.totalBytes!==file.size||info.name!==name)throw Error('Project or archive changed');if(info.status==='waiting-review'){sessionStorage.removeItem(storageKey);progress.value=100;tell('Archive already submitted for review. Import ID: '+id);await refreshWaitingRoom();return;}if(info.status!=='staging')throw Error('This import can no longer accept chunks');}catch(e){if(e.name==='AbortError')throw e;id=null;sessionStorage.removeItem(storageKey);}}
   if(!id){const created=await request('/api/project-imports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,totalBytes:file.size}),signal:controller.signal});id=created.id;sessionStorage.setItem(storageKey,id);info={receivedIndices:[],parts:created.parts};}
   const done=new Set(info.receivedIndices||[]);
   progress.value=Math.floor(done.size/info.parts*100);
@@ -53,7 +53,7 @@ start.onclick=async()=>{
    done.add(n);progress.value=Math.floor(done.size/info.parts*100);
    tell('Staging '+file.name+' · '+progress.value+'% ('+done.size+'/'+info.parts+' chunks)');
   }
-  if(!stopped){const check=await request('/api/project-imports/'+encodeURIComponent(id));if(!check.complete)throw Error('Some chunks are missing. Resume the upload.');const submitted=await request('/api/project-imports/'+encodeURIComponent(id),{method:'POST',signal:controller.signal});sessionStorage.removeItem(storageKey);progress.value=100;tell('Upload verified and submitted for review. Archive is NOT published. Import ID: '+id+' · Status: '+submitted.status);await refreshWaitingRoom();}
+  if(!stopped){const check=await request('/api/project-imports/'+encodeURIComponent(id));if(!check.complete)throw Error('Some chunks are missing. Resume the upload.');if(check.status==='waiting-review'){sessionStorage.removeItem(storageKey);progress.value=100;tell('Archive already awaiting review. Import ID: '+id);await refreshWaitingRoom();return;}const submitted=await request('/api/project-imports/'+encodeURIComponent(id),{method:'POST',signal:controller.signal});sessionStorage.removeItem(storageKey);progress.value=100;tell('Upload verified and submitted for review. Archive is NOT published. Import ID: '+id+' · Status: '+submitted.status);await refreshWaitingRoom();}
  }catch(e){if(!stopped)tell('Upload interrupted: '+e.message+'. Select Start / resume to retry.');}
  finally{start.disabled=false;controller=null;}
 };
