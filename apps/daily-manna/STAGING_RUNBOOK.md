@@ -4,7 +4,7 @@ This runbook is for the dedicated Cloudflare Account 1 staging Worker only. Do n
 
 ## Verified infrastructure
 - Cloudflare D1: `strength-for-today-manna-staging`, ID `567e1b66-6fe4-460c-b67a-8bafec52eacd` (listed on Account 1).
-- Separate private R2 bucket `strength-for-today-manna-images-staging` is not verified as created. Owner approval of proposal #57 is pending.
+- Separate private R2 bucket `strength-for-today-manna-images-staging` has been verified as created in Account 1 and is bound to staging Worker config.
 - Worker code, tests, editor and SQL schema are in `apps/daily-manna/` in `heavenlykeybible-source/WEBSITE-MANAGEMENT-`.
 
 ## Required before Worker deploy
@@ -12,7 +12,7 @@ This runbook is for the dedicated Cloudflare Account 1 staging Worker only. Do n
 2. In `apps/daily-manna`, for a verified empty staging DB only: `npx wrangler d1 execute strength-for-today-manna-staging --remote --file=./schema.sql`.
 3. Verify expected table names and columns in the dashboard, including `release_mode`, `manna_entry_revisions`, `manna_post_images`, and `provider_post_id`.
 4. Set `EDITOR_TOKEN` as a Cloudflare secret; never put it in HTML, git, logs or the public frontend: `npx wrangler secret put EDITOR_TOKEN`.
-5. After R2 approval and verification, uncomment the dedicated `MANNA_IMAGES` binding in `wrangler.toml`; never reuse unrelated private buckets.
+5. The dedicated `MANNA_IMAGES` R2 binding has been enabled in staging `wrangler.toml`; verify its permissions on deploy and never reuse unrelated private buckets.
 6. Use `npx wrangler deploy` from `apps/daily-manna` to the staging Worker; confirm worker is not mapped to a production hostname.
 7. Configure Account 4 owner-only proxy after verifying its real authentication and CSRF session middleware; do not expose the editor token client-side.
 
@@ -21,13 +21,13 @@ This runbook is for the dedicated Cloudflare Account 1 staging Worker only. Do n
 - Confirm that their source/reference material is authorized for publication; automatic release of unreviewed entries must not be used to release unverified source content publicly.
 - Confirm Africa/Lagos date boundary and hourly UTC cron. Missed midnight dispatch is recovered at the following hourly trigger.
 - The publication code queues `community` and `facebook` destinations only. The `community` sender is not implemented; do not label queue records as successful deliveries.
-- Facebook needs an owner-authorized Page ID and Page token plus `MANNA_PUBLIC_ORIGIN`. Do not configure those until the Page connection and public URL are validated. Photos are posted via the Graph photo endpoint; text-only posts via feed. The system records provider IDs. Ambiguous network failures require operator reconciliation before retry to avoid duplicates.
+- Facebook needs an owner-authorized Page ID and Page token plus `MANNA_PUBLIC_ORIGIN` and `FACEBOOK_FIRST_POST_DATE` (YYYY-MM-DD). Without the explicit first-post date, the sender stays disabled to prevent historical backlog flooding. Do not configure those until the Page connection and public URL are validated. Photos are posted via the Graph photo endpoint; text-only posts via feed. The system records provider IDs. Ambiguous network failures require operator reconciliation before retry to avoid duplicates.
 
 ## Minimum live staging acceptance tests
 - Public homepage loads on mobile/desktop and no draft/future entry leaks through /api/archive, /api/today, /api/public/*, or /api/picture/*.
 - Draft and approved future-day entries publish at their scheduled Lagos date; status records `release_mode='reviewed'` or `'unreviewed'` correctly.
 - Missed cron invocation recovers without duplicate outbox delivery records.
-- Owner-only month editor, approval, corrections, stale revision conflict, immutable revision history, uploaded default/day pictures and image replacement.
+- Owner-only month editor, approval, corrections, stale revision conflict, immutable revision history, uploaded default/day pictures, private future-day preview, image replacement and deletion.
 - Browser native Share/Copy and direct dated links, archived pagination, and same-origin picture display.
 - Facebook Page provider receipt and provider post ID; verify delivery against actual Page; verify failure behavior.
 - No email/newsletter/notification delivery in this stage, as deliberately deferred.
