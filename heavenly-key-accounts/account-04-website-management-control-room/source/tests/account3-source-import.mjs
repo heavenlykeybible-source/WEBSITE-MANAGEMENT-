@@ -26,7 +26,7 @@ for(const entry of samples){
  assert.equal(fetched.status,200,'Pinned content should be readable: '+entry.path);
  const bytes=Buffer.from(await fetched.arrayBuffer());
  assert.equal(bytes.length,entry.size,'File byte length mismatch: '+entry.path);
- const sha=createHash('sha1').update(Buffer.from('blob '+bytes.length+'\\0')).update(bytes).digest('hex');
+ const sha=createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
  assert.equal(sha,entry.sha,'Git SHA mismatch: '+entry.path);
  console.log('VERIFIED '+entry.path+' '+bytes.length+' bytes '+sha);
 }
