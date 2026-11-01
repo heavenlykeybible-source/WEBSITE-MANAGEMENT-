@@ -13,6 +13,7 @@ async function queueConnectedApplication(env,user,b){
  if(!/^[a-z0-9][a-z0-9_-]{0,62}$/.test(worker))fail('Choose a valid Cloudflare Worker name',400);
  protectWorker(env,worker);
  if(!/^[a-f0-9]{40}$/.test(tree.head.commit))fail('Pinned commit required',409);
+ await cf(env,conn,'GET','/workers/scripts/'+encodeURIComponent(worker)+'/settings');
  const id=crypto.randomUUID();
  const manifest={id,kind:'application',status:'build-required',source:g.id,repo:g.repo,commit:tree.head.commit,directory,connection:conn.id,worker,createdBy:user.id,createdAt:Date.now(),ownerApprovalRequired:true,deploymentAuthorized:false};
  await env.DB.prepare('INSERT INTO settings(key,value_json) VALUES(?,?)').bind('workspace:application:'+id,JSON.stringify(manifest)).run();
