@@ -29,7 +29,7 @@ async function uploadPicture(req,env,date){
  const key='post-banners/'+crypto.randomUUID();
  await env.MANNA_IMAGES.put(key,bytes,{httpMetadata:{contentType},customMetadata:{purpose:'daily-manna-picture'}});
  try{
-  await env.DB.prepare('INSERT INTO manna_post_images(image_date,object_key,content_type) VALUES(?,?,?) ON CONFLICT(image_date) DO UPDATE SET object_key=excluded.object_key, content_type=excluded.content_type,updated_at=CURRENT_TIMESTAMP').bind(date,key,contentType).run();
+  await env.DB.prepare('INSERT INTO manna_post_images(image_date,object_key,content_type) VALUES(?,?,?) ON CONFLICT(image_date) DO UPDATE SET object_key=excluded.object_key, content_type=excluded.content_type,studio_media_id=NULL,updated_at=CURRENT_TIMESTAMP').bind(date,key,contentType).run();
  }catch(e){await env.MANNA_IMAGES.delete(key);throw e}
  if(previous?.object_key)await env.MANNA_IMAGES.delete(previous.object_key).catch(()=>{});
  await audit(env,'image_uploaded',date||'default','Owner uploaded post picture');
@@ -46,6 +46,15 @@ async function picture(req,env,slug,ownerPreview=false){
  return new Response(object.body,{headers:{'content-type':row.content_type,'cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'"}});
 }
 
+async function linkStudioPicture(req,env,date){
+ const body=await parseBody(req);
+ const id=body?.studio_media_id;
+ if(!Number.isSafeInteger(id)||id<1)return response({error:'Choose an existing Studio media image ID'},400);
+ const updated=await env.DB.prepare('UPDATE manna_post_images SET studio_media_id=?,updated_at=CURRENT_TIMESTAMP WHERE image_date=?').bind(id,date).run();
+ if(updated.meta?.changes!==1)return response({error:'Upload the picture here before linking its Studio media ID'},404);
+ await audit(env,'edited',date||'default','Studio media mapping updated (image ID '+id+')');
+ return response({ok:true,studio_media_id:id});
+}
 async function removePicture(env,date){
  if(!env.MANNA_IMAGES)return response({error:'Picture storage not configured'},503);
  const prior=await env.DB.prepare('SELECT object_key FROM manna_post_images WHERE image_date=?').bind(date).first();
@@ -122,7 +131,7 @@ async function publishToday(env,now=Date.now()){
 // credentials here, and uncertain submissions are not blindly resent.
 export async function dispatchStudio(env,fetcher=fetch){
  if(!studioReady(env))return {configured:false,processed:0};
- const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='studio' AND d.status='pending' AND e.status='published' AND e.publish_date>=? AND e.publish_date<=? ORDER BY e.publish_date LIMIT 10").bind(env.STUDIO_FIRST_POST_DATE,todayLagos()).all();
+ const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT studio_media_id FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS studio_media_id FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='studio' AND d.status='pending' AND e.status='published' AND e.publish_date>=? AND e.publish_date<=? ORDER BY e.publish_date LIMIT 10").bind(env.STUDIO_FIRST_POST_DATE,todayLagos()).all();
  let processed=0,sent=0,failed=0;
  for(const entry of jobs.results||[]){
   const claimed=await env.DB.prepare("UPDATE manna_deliveries SET status='skipped',attempts=attempts+1,error='Studio submission in progress; reconcile before retry',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='pending' AND destination='studio'").bind(entry.delivery_id).run();
@@ -144,6 +153,7 @@ export default {
  async fetch(req,env){
   try{
    const url=new URL(req.url),path=url.pathname,method=req.method;
+   if(method==='POST'&&path.startsWith('/api/picture-link/')&&auth(req,env)){const date=mediaDate(path.slice('/api/picture-link/'.length));if(date===null)return response({error:'Invalid picture date'},400);return linkStudioPicture(req,env,date)}
    if(method==='GET'&&path.startsWith('/api/picture-manage/')&&auth(req,env))return picture(req,env,path.slice('/api/picture-manage/'.length),true);
    if(method==='DELETE'&&path.startsWith('/api/picture/')&&auth(req,env)){const date=mediaDate(path.slice('/api/picture/'.length));if(date===null)return response({error:'Invalid picture date'},400);return removePicture(env,date)}
    if(method==='PUT'&&path.startsWith('/api/picture/')&&auth(req,env)){const date=mediaDate(path.slice('/api/picture/'.length));if(date===null)return response({error:'Invalid picture date'},400);return uploadPicture(req,env,date)}
