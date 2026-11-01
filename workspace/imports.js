@@ -158,7 +158,9 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
     review={runId:run.id,status:run.status,conclusion:run.conclusion||null,url:run.html_url||null,artifactAvailable:false};
     if(run.status==='completed'&&run.conclusion==='success'){
      const artifacts=await gh(env,g,'GET','/actions/runs/'+encodeURIComponent(run.id)+'/artifacts').catch(()=>({artifacts:[]}));
-     review.artifactAvailable=(artifacts.artifacts||[]).some(a=>a.name==='review-build-'+b.id&&!a.expired);
+     const artifact=(artifacts.artifacts||[]).find(a=>a.name==='review-build-'+b.id&&!a.expired&&a.workflow_run?.id===run.id);
+     review.artifactAvailable=!!artifact;
+     if(artifact)review.artifact={id:artifact.id,sizeBytes:artifact.size_in_bytes,expiresAt:artifact.expires_at||null};
     }
    }
   }
