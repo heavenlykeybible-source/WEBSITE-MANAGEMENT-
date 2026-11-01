@@ -27,7 +27,7 @@ export async function submitToStudio(entry,env,fetcher=fetch){
  const body=JSON.stringify({
   source:'daily-manna',publish_date:entry.publish_date,title:entry.title,scripture:entry.scripture,
   text:formatDailyMannaPost(entry,env.MANNA_PUBLIC_ORIGIN),
-  requires_picture:Boolean(entry.picture_object_key)
+  requires_picture:Boolean(entry.picture_object_key),studio_media_id:Number(entry.studio_media_id)||null
  });
  const stamp=Date.now(),key=entry.delivery_id;
  if(!/^[0-9a-f-]{36}$/.test(key))throw Error('Invalid stable delivery key');
