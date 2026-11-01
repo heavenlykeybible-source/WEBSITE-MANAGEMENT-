@@ -3,7 +3,8 @@ import {liveReleaseCommit,verifyForwardRelease} from '../scripts/account4-releas
 const older='1'.repeat(40),newer='2'.repeat(40);
 assert.equal(liveReleaseCommit('no release marker'),null);
 assert.equal(liveReleaseCommit('// ACCOUNT4_DEPLOY_COMMIT_SHA='+older),older);
-assert.equal(liveReleaseCommit('// ACCOUNT4_DEPLOY_COMMIT_SHA='+older+'\n// ACCOUNT4_DEPLOY_COMMIT_SHA='+newer),newer);
+assert.throws(()=>liveReleaseCommit('// ACCOUNT4_DEPLOY_COMMIT_SHA='+older+'\n// ACCOUNT4_DEPLOY_COMMIT_SHA='+newer),/Multiple Account 4 live release markers/);
+assert.throws(()=>liveReleaseCommit('// ACCOUNT4_DEPLOY_COMMIT_SHA='+older+'\n// ACCOUNT4_DEPLOY_COMMIT_SHA='+older),/Multiple Account 4 live release markers/);
 assert.throws(()=>verifyForwardRelease({deployed:null,approved:newer}),/legacy baseline/);
 assert.equal(verifyForwardRelease({deployed:null,approved:newer,allowUnmarked:true}),'legacy-bootstrap');
 assert.throws(()=>verifyForwardRelease({deployed:older,approved:older,isAncestor:true}),/already deployed/);
