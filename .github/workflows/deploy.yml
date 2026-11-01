@@ -61,13 +61,6 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Integrate saved interfaces into active Worker
-        run: |
-          npm run build:cms
-          node --check control-room-worker.js
-          grep -q 'Cloudflare API tokens' control-room-worker.js
-          grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
-
       - name: Run project tests
         run: |
           npm test
@@ -95,6 +88,13 @@ jobs:
           node tests/account4-permissions-browser.mjs
           node tests/native-imports-browser.mjs
           node tests/browser-agent-chromium.mjs
+
+      - name: Integrate saved interfaces into active Worker
+        run: |
+          npm run build:cms
+          node --check control-room-worker.js
+          grep -q 'Cloudflare API tokens' control-room-worker.js
+          grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
 
       - name: Verify approved source was not replaced during build
         run: |
