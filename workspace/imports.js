@@ -23,6 +23,16 @@ async function queueConnectedApplication(env,user,b){
  await audit(env,user.username,'application-build-request','Queued '+g.repo+'@'+tree.head.commit+' for '+worker);
  return {id,status:'build-required',repo:g.repo,commit:tree.head.commit,notice:'Application registered for reviewed build. No production deployment or preview is available until a verified build is attached.'};
 }
+async function reviewWorkflowRuns(env,g,id,dispatchedAt){
+ const wanted='Review '+id,found=[];
+ for(let page=1;page<=5;page++){
+  const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=100&page='+page);
+  const runs=data.workflow_runs||[];
+  found.push(...runs.filter(run=>run.display_title===wanted&&run.event==='workflow_dispatch'&&run.head_branch==='feature/complete-reviewed-import-pipeline'&&Date.parse(run.created_at)>=dispatchedAt-120000&&Date.parse(run.created_at)<=dispatchedAt+3600000));
+  if(found.length||runs.length<100||runs.every(run=>Date.parse(run.created_at)<dispatchedAt-120000))break;
+ }
+ return found.sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+}
 async function verifyNpmBuildManifest(env,g,files,prefix){
  const entry=files.find(f=>f.path===prefix+'package.json');
  if(!entry||entry.mode==='120000'||entry.size>262144)fail('Application package.json is missing or oversized',409);
@@ -161,8 +171,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    if(item.status==='build-dispatched'){
     const g=await importSource(env,user,item.source);
     if(g.repo!==item.repo||(g.dir||'')!==(item.root||''))fail('Connected build repository changed',409);
-    const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=50');
-    const matching=(data.workflow_runs||[]).filter(run=>run.display_title==='Review '+id&&run.event==='workflow_dispatch'&&run.head_branch==='feature/complete-reviewed-import-pipeline'&&Date.parse(run.created_at)>=item.dispatchedAt-120000&&Date.parse(run.created_at)<=item.dispatchedAt+3600000).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+    const matching=await reviewWorkflowRuns(env,g,id,item.dispatchedAt);
     if(!matching.length)fail('GitHub run is not yet discoverable; cancellation cannot be confirmed',409);
     const run=matching[0];
     if(run.status!=='completed')await gh(env,g,'POST','/actions/runs/'+encodeURIComponent(run.id)+'/cancel',{});
@@ -185,9 +194,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   if(['build-dispatched','review-cancellation-requested'].includes(b.status)&&b.repo==='heavenlykeybible-source/WEBSITE-MANAGEMENT-'){
    const g=await importSource(env,user,b.source);
    if(g.repo!==b.repo||(g.dir||'')!==(b.root||''))fail('Connected build repository or root no longer matches',409);
-   const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=50');
-   const wanted='Review '+b.id;
-   const runs=(data.workflow_runs||[]).filter(run=>run.display_title===wanted&&run.event==='workflow_dispatch'&&run.head_branch==='feature/complete-reviewed-import-pipeline'&&Date.parse(run.created_at)>=b.dispatchedAt-120000&&Date.parse(run.created_at)<=b.dispatchedAt+3600000);
+   const runs=await reviewWorkflowRuns(env,g,b.id,b.dispatchedAt);
    if(runs.length){
     const run=runs.sort((x,y)=>Date.parse(y.created_at)-Date.parse(x.created_at))[0];
     review={runId:run.id,status:run.status,conclusion:run.conclusion||null,url:run.html_url||null,artifactAvailable:false};
