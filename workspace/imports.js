@@ -150,14 +150,14 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
    const g=await importSource(env,user,b.source);
    if(g.repo!==b.repo)fail('Connected build repository no longer matches',409);
    const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=50').catch(()=>({workflow_runs:[]}));
-   const wanted='Review '+b.commit+' / '+(b.directory||'.');
+   const wanted='Review '+b.id;
    const runs=(data.workflow_runs||[]).filter(run=>run.display_title===wanted&&run.event==='workflow_dispatch');
    if(runs.length){
     const run=runs.sort((x,y)=>Date.parse(y.created_at)-Date.parse(x.created_at))[0];
     review={runId:run.id,status:run.status,conclusion:run.conclusion||null,url:run.html_url||null,artifactAvailable:false};
     if(run.status==='completed'&&run.conclusion==='success'){
      const artifacts=await gh(env,g,'GET','/actions/runs/'+encodeURIComponent(run.id)+'/artifacts').catch(()=>({artifacts:[]}));
-     review.artifactAvailable=(artifacts.artifacts||[]).some(a=>a.name==='review-build-'+b.commit&&!a.expired);
+     review.artifactAvailable=(artifacts.artifacts||[]).some(a=>a.name==='review-build-'+b.id&&!a.expired);
     }
    }
   }
