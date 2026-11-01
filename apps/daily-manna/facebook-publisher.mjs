@@ -21,7 +21,8 @@ export async function publishToFacebook(entry,env,fetcher=fetch){
  const headers={authorization:'Bearer '+env.FACEBOOK_PAGE_TOKEN};
  const pictureKey=entry.picture_object_key;
  let endpoint='feed',body;
- if(pictureKey&&env.MANNA_IMAGES){
+ if(pictureKey){
+  if(!env.MANNA_IMAGES)throw Error('Selected picture storage unavailable');
   const image=await env.MANNA_IMAGES.get(pictureKey);
   if(!image)throw Error('Selected post picture missing');
   const bytes=await image.arrayBuffer();
