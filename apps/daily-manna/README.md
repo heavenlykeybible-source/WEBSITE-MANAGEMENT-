@@ -1,4 +1,4 @@
-# Strength for Today — Daily Manna application (Phase 1)
+# STRENGTH FOR TODAY - our daily manna application (Phase 1)
 
 This is an independent Cloudflare Worker app, not yet deployed. It is deliberately kept separate from Account 4's existing Worker so editorial changes cannot accidentally overwrite the Control Room.
 
