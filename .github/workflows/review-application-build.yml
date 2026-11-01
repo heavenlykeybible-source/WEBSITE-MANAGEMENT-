@@ -1,0 +1,74 @@
+name: Review-only application build
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact 40-character source commit from this repository
+        required: true
+        type: string
+      directory:
+        description: Application directory relative to repository root
+        required: true
+        default: .
+        type: string
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      APP_DIRECTORY: ${{ inputs.directory }}
+    steps:
+      - name: Validate source reference
+        shell: bash
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          [[ "$APP_DIRECTORY" == "." || "$APP_DIRECTORY" =~ ^[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)*$ ]] || exit 1
+          [[ "$APP_DIRECTORY" != *".."* ]] || exit 1
+      - name: Checkout immutable source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - name: Validate checked-out commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test -f "$APP_DIRECTORY/package-lock.json"
+          test -f "$APP_DIRECTORY/package.json"
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install and build without deployment credentials
+        shell: bash
+        run: |
+          cd "$APP_DIRECTORY"
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+      - name: Validate build output
+        shell: bash
+        run: |
+          cd "$APP_DIRECTORY"
+          test -d dist
+          test -f dist/index.html
+          test "$(find dist -type f | wc -l)" -le 1000
+          test "$(du -sm dist | cut -f1)" -le 100
+      - name: Package immutable review artifact
+        shell: bash
+        run: |
+          cd "$APP_DIRECTORY"
+          tar -czf "$RUNNER_TEMP/review-build.tar.gz" -C dist .
+          sha256sum "$RUNNER_TEMP/review-build.tar.gz" | tee "$RUNNER_TEMP/review-build.sha256"
+          printf 'source_sha=%s\napplication_directory=%s\n' "$SOURCE_SHA" "$APP_DIRECTORY" > "$RUNNER_TEMP/review-build-source.txt"
+      - name: Upload review artifact only
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-build-${{ inputs.source_sha }}
+          path: |
+            ${{ runner.temp }}/review-build.tar.gz
+            ${{ runner.temp }}/review-build.sha256
+            ${{ runner.temp }}/review-build-source.txt
+          retention-days: 7
