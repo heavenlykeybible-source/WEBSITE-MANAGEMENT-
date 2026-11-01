@@ -9,6 +9,7 @@ async function queueConnectedApplication(env,user,b){
  const directory=sourceFolder(b.directory),prefix=directory?directory+'/':'';
  if(!tree.files.some(f=>f.path===prefix+'package.json'))fail('Application package.json missing',400);
  if(tree.files.some(f=>f.path.startsWith(prefix+'node_modules/')))fail('Dependencies must not be included in application source',400);
+ if(!tree.files.some(f=>f.path===prefix+'package-lock.json'||f.path===prefix+'pnpm-lock.yaml'||f.path===prefix+'yarn.lock'||f.path===prefix+'bun.lockb'||f.path===prefix+'bun.lock'))fail('Application requires a committed dependency lockfile for reproducible builds',409);
  const conn=await connById(env,b.connection),worker=String(b.worker||'');
  if(!/^[a-z0-9][a-z0-9_-]{0,62}$/.test(worker))fail('Choose a valid Cloudflare Worker name',400);
  protectWorker(env,worker);
