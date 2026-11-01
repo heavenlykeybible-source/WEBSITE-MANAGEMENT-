@@ -93,6 +93,23 @@ async function stageConnectedSource(env,user,b){
 }
 async function importWorkspaceRoutes(req,env,user,sub,m){
  if(!sub.startsWith('workspace/'))return null;if(user.role!=='owner'||user.kind==='member')fail('Owner access required',403);const u=new URL(req.url);
+ if(sub==='workspace/github/reuse'&&m==='POST'){
+  const b=await body(req),sourceId=Number(b?.source),repo=String(b?.repo||'').trim(),label=String(b?.label||'').trim(),branch=String(b?.branch||'main').trim();
+  if(!Number.isSafeInteger(sourceId)||sourceId<1)fail('Select an existing authorized GitHub connection',400);
+  if(!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)||repo.length>200||repo.split('/').some(x=>x==='.'||x==='..'))fail('Enter an owner/repository name',400);
+  if(!label||label.length>100||/[\x00-\x1f]/.test(label))fail('Enter a connection label',400);
+  if(!/^[a-zA-Z0-9_./-]{1,120}$/.test(branch)||branch.split('/').some(x=>x==='.'||x==='..'))fail('Enter a valid Git branch',400);
+  const g=await importSource(env,user,sourceId);
+  const target={...g,repo,branch,dir:''};
+  await gh(env,target,'GET','');
+  const head=await ghHead(env,target);
+  if(!/^[a-f0-9]{40}$/.test(head.commit))fail('GitHub branch could not be verified',409);
+  const original=await env.DB.prepare('SELECT secret_enc FROM github_sites WHERE id=? AND owner_id IS NULL').bind(sourceId).first();
+  if(!original?.secret_enc)fail('Authorized GitHub connection is unavailable',404);
+  const inserted=await env.DB.prepare('INSERT INTO github_sites(label,repo,branch,dir,secret_enc,owner_id) VALUES(?,?,?,?,?,NULL)').bind(label,repo,branch,'',original.secret_enc).run();
+  await audit(env,user.username,'github-repository-added','Added authorized repository '+repo+' from connection '+sourceId);
+  return json({id:inserted.meta.last_row_id,label,repo,branch,authenticated:true,tokenReused:true});
+ }
  if(sub==='workspace/catalog'&&m==='GET')return json({sources:(await env.DB.prepare('SELECT id,label,repo,branch,dir FROM github_sites WHERE owner_id IS NULL').all()).results,sites:(await env.DB.prepare('SELECT slug,name FROM sites ORDER BY name').all()).results,accounts:(await env.DB.prepare('SELECT id,label FROM cf_connections ORDER BY label').all()).results});
  if(sub==='workspace/candidates'&&m==='GET')return json(await sourceCandidates(env,user,u.searchParams.get('source')));
  if(sub==='workspace/workers'&&m==='GET'){const c=await connById(env,u.searchParams.get('connection')),d=await cf(env,c,'GET','/workers/scripts');return json({workers:(d.result||[]).map(w=>({name:w.id}))});}
