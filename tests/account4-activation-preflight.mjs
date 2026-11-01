@@ -26,7 +26,7 @@ globalThis.fetch=async(url,init)=>{
 };
 try{
  await import('../scripts/browser/preflight.mjs?healthy=1');
- assert.match(fs.readFileSync(summary,'utf8'),/Activation preflight/);
+ assert.match(fs.readFileSync(summary,'utf8'),/activation preflight/);
  assert.match(fs.readFileSync(summary,'utf8'),/\| Browser Agent Worker readable \| PASS \|/);
  assert.equal(requests.length,4);
  missing=true;requests=[];
