@@ -83,7 +83,6 @@ jobs:
           node tests/owner-passkeys.mjs
           node tests/ai-workspace.mjs
           node tests/native-imports.mjs
-          node tests/browser-agent.mjs
           node tests/domains.mjs
 
       - name: Verify Account 4 owner approval interface
@@ -110,6 +109,9 @@ jobs:
           grep -q 'Cloudflare API tokens' control-room-worker.js
           grep -q 'Authorized Cloudflare deployment proposals' control-room-worker.js
           node --input-type=module -e "import fs from 'node:fs'; const s=fs.readFileSync('control-room-worker.js','utf8'); for(const n of ['VISUAL CMS CLIENT','AI CAPABILITIES','AI PERMISSION CLIENT','AI WORKSPACE','OWNER PASSKEY SERVER','NATIVE WORKSPACE SERVER']) if(s.split('// BEGIN '+n).length!==2||s.split('// END '+n).length!==2) throw Error('Missing or duplicate generated section: '+n);"
+
+      - name: Verify Browser Agent integration in assembled Worker
+        run: node tests/browser-agent.mjs
 
       - name: Verify approved source was not replaced during build
         run: |
