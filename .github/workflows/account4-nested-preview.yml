@@ -47,7 +47,10 @@ jobs:
       - name: Compile exact nested Worker source
         run: npx --yes wrangler@4.45.0 deploy --config wrangler.import-preview.toml --dry-run --outdir ./dist-preview
         working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
+      - name: Verify Account 4 Cloudflare deployment credentials are available
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo '::error::Missing ACCOUNT4_CLOUDFLARE_API_TOKEN'; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo '::error::Missing ACCOUNT4_CLOUDFLARE_ACCOUNT_ID'; exit 1; }
       - name: Deploy isolated preview (never the root production Worker)
-        if: ${{ env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: npx --yes wrangler@4.45.0 deploy --config wrangler.import-preview.toml
         working-directory: heavenly-key-accounts/account-04-website-management-control-room/source
