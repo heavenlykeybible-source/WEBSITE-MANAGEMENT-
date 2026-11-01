@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {publicPage} from './public-page.mjs';
+import worker from './worker.mjs';
+const html=publicPage();
+assert.match(html,/Strength for Today/);
+assert.match(html,/textContent=entry\.body/);
+assert.doesNotMatch(html,/innerHTML\s*=/);
+assert.match(html,/timeZone:'Africa\/Lagos'/);
+const res=await worker.fetch(new Request('https://example.test/'),{});
+assert.equal(res.status,200);
+assert.match(res.headers.get('content-type'),/text\/html/);
+assert.match(res.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+console.log('PASS public home page, archive controls, safe rendering, and response headers');
