@@ -23,22 +23,28 @@ async function nativeImports(){try{
   bulkStatus.textContent='New connections: '+batch.connected+'.'+(errors.length?' Not connected: '+errors.join('; '):'')+' Deployment still requires approval.';
  }catch(e){bulkStatus.textContent=e.message;}finally{this.disabled=false;}}},'Verify and connect selected repositories'));
  githubAccounts.appendChild(bulkStatus);
- var discoverPage=1,discoverList=h('select',{'aria-label':'Authorized GitHub repository discovered from connected identity'}),discoverStatus=h('p',{role:'status'});
+ var discoverPage=1,discoveredBranches={},discoveredSource='',discoverList=h('select',{'aria-label':'Authorized GitHub repository discovered from connected identity'}),discoverStatus=h('p',{role:'status'}),loadMoreRepos=h('button',{},'Load more authorized repositories');
  discoverList.appendChild(h('option',{value:''},'Discover authorized repositories'));
  githubAccounts.appendChild(h('h5',{},'Discover repositories from an authorized GitHub identity'));
+ function addDiscoveredRepositories(items){(items||[]).forEach(function(repo){discoveredBranches[repo.repo]=repo.default_branch;if(!Array.from(discoverList.options).some(function(o){return o.value===repo.repo;}))discoverList.appendChild(h('option',{value:repo.repo},repo.repo+(repo.private?' · Private':' · Public')+(repo.archived?' · Archived':'')));});}
  githubAccounts.appendChild(h('button',{onclick:async function(){this.disabled=true;discoverStatus.textContent='Reading GitHub repository access…';try{
-  if(!tokenSource.value)throw Error('Select an authorized connection first');discoverPage=1;
-  var result=await api('workspace/github/discover?source='+encodeURIComponent(tokenSource.value)+'&page=1');
-  discoverList.innerHTML='';discoverList.appendChild(h('option',{value:''},'Choose repository'));
-  (result.repositories||[]).forEach(function(repo){discoverList.appendChild(h('option',{value:repo.repo},repo.repo+(repo.private?' · Private':' · Public')+(repo.archived?' · Archived':'')));});
-  discoverStatus.textContent=(result.repositories||[]).length+' repositories on page 1. Only repositories authorized by this GitHub connection appear.';
+  if(!tokenSource.value)throw Error('Select an authorized connection first');var selected=tokenSource.value;
+  var result=await api('workspace/github/discover?source='+encodeURIComponent(selected)+'&page=1');
+  if(selected!==tokenSource.value)throw Error('GitHub identity changed; repeat repository discovery');
+  discoverPage=1;discoveredSource=selected;discoveredBranches={};discoverList.innerHTML='';discoverList.appendChild(h('option',{value:''},'Choose repository'));
+  addDiscoveredRepositories(result.repositories);loadMoreRepos.disabled=!result.hasMore;
+  discoverStatus.textContent=(result.repositories||[]).length+' repositories on page 1. Only authorized repositories appear.';
  }catch(e){discoverStatus.textContent=e.message;}finally{this.disabled=false;}}},'Discover my GitHub repositories'));
- githubAccounts.appendChild(h('button',{onclick:async function(){this.disabled=true;try{if(!tokenSource.value)throw Error('Select an authorized connection first');discoverPage++;
-  var result=await api('workspace/github/discover?source='+encodeURIComponent(tokenSource.value)+'&page='+discoverPage);
-  (result.repositories||[]).forEach(function(repo){if(!Array.from(discoverList.options).some(function(o){return o.value===repo.repo;}))discoverList.appendChild(h('option',{value:repo.repo},repo.repo+(repo.private?' · Private':' · Public')));});
-  discoverStatus.textContent='Loaded through page '+discoverPage+'.';if(!result.hasMore)this.disabled=true;
- }catch(e){discoverPage--;discoverStatus.textContent=e.message;this.disabled=false;}finally{if(discoverPage<20&&this.disabled!==true)this.disabled=false;}}},'Load more authorized repositories'));
- discoverList.onchange=function(){if(this.value){repoInput.value=this.value;repoLabel.value=this.value+' ('+repoBranch.value.trim()+')';}};
+ loadMoreRepos.onclick=async function(){this.disabled=true;try{
+  if(!tokenSource.value||discoveredSource!==tokenSource.value)throw Error('Choose Discover again after changing the GitHub identity');
+  if(discoverPage>=20)throw Error('Discovery page limit reached; narrow the GitHub authorization');
+  var page=discoverPage+1,result=await api('workspace/github/discover?source='+encodeURIComponent(discoveredSource)+'&page='+page);
+  if(discoveredSource!==tokenSource.value)throw Error('GitHub identity changed; repeat discovery');
+  addDiscoveredRepositories(result.repositories);discoverPage=page;
+  discoverStatus.textContent='Loaded through page '+discoverPage+'.';this.disabled=!result.hasMore||discoverPage>=20;
+ }catch(e){discoverStatus.textContent=e.message;this.disabled=false;}};
+ loadMoreRepos.disabled=true;githubAccounts.appendChild(loadMoreRepos);
+ discoverList.onchange=function(){if(this.value){repoInput.value=this.value;repoBranch.value=discoveredBranches[this.value]||'main';repoLabel.value=this.value+' ('+repoBranch.value.trim()+')';}};
  githubAccounts.appendChild(discoverList);githubAccounts.appendChild(discoverStatus);
  source.appendChild(h('option',{value:''},'Choose connected GitHub repository'));data.sources.forEach(function(s){source.appendChild(h('option',{value:s.id},s.label+' · '+s.repo+' · '+s.branch));});
  function reset(){scan=null;report.innerHTML='';preview.innerHTML='';stage.disabled=true;installSummary.textContent='Select a project, scan it, and choose an exact destination to prepare installation.';}
