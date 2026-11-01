@@ -15,6 +15,7 @@ assert.equal(addRepo.tokenReused,true);
 const originalToken=raw.prepare('SELECT secret_enc FROM github_sites WHERE id=1').get().secret_enc;
 const copied=raw.prepare('SELECT repo,secret_enc FROM github_sites WHERE id=?').get(addRepo.id);
 assert.equal(copied.repo,'owner/repo');assert.equal(copied.secret_enc,originalToken);
+await assert.rejects(w.importWorkspaceRoutes(new Request('https://room/api/owner/workspace/github/reuse',{method:'POST',body:JSON.stringify({source:1,repo:'owner/repo',label:'Duplicate',branch:'main'})}),env,user,'workspace/github/reuse','POST'),e=>e.status===409);
 const countConnections=()=>raw.prepare('SELECT count(*) n FROM github_sites').get().n;
 const beforeInvalid=countConnections();
 for(const invalid of [
