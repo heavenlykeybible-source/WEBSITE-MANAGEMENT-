@@ -53,3 +53,10 @@ test('installation wizard shows source revision and requires destination confirm
  assert.match(client,/Prepare this installation for review/);
  assert.match(client,/Owner approval is still required/);
 });
+
+test('GitHub identity discovery selects actual default branch and isolates pagination',()=>{
+ assert.match(client,/discoveredBranches\[repo\.repo\]=repo\.default_branch/);
+ assert.match(client,/repoBranch\.value=discoveredBranches\[this\.value\]\|\|'main'/);
+ assert.match(client,/discoveredSource!==tokenSource\.value/);
+ assert.match(client,/loadMoreRepos\.disabled=!result\.hasMore/);
+});
