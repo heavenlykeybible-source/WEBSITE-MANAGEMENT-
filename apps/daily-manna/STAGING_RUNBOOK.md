@@ -34,3 +34,10 @@ This runbook is for the dedicated Cloudflare Account 1 staging Worker only. Do n
 
 ## Release status
 Code-level work only; until schema application, Worker deployment, and live tests succeed, do **not** report this as launched or globally production-ready. The Studio receiver migration in `onlinebible/migrations/0089_daily_manna_studio_bridge.sql` must be applied on Core staging, and matching server-side bridge configuration is still required.
+
+## Existing Studio integration verification
+- Use the existing Core administrator portal at `/api/admin/social/daily-manna` (added in the `onlinebible` repository) to inspect connected accounts and real platform receipts. It reuses Account 2's media infrastructure.
+- Daily Manna owner page supports manually linking a previously uploaded and validated Studio image ID to the same default or date-specific picture. The corresponding Core service checks that the picture is a completed Studio upload.
+- The Daily Manna editorial dashboard can request signed individual Studio delivery statuses. A successful handoff is **not** proof of publication.
+- The automated image-copy pipeline between the dedicated Daily Manna R2 bucket and Account 2 is not implemented. Use the owner-controlled existing Studio upload + media ID mapping before activating pictures.
+- The public reader JavaScript must be compiled from the final rendered HTML in CI; the generated page previously had broken string and regex escaping, now covered by a regression test.
