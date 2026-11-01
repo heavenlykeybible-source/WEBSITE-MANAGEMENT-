@@ -42,7 +42,7 @@ async function picture(req,env,slug){
  if(!row&&date)row=await env.DB.prepare("SELECT object_key,content_type FROM manna_post_images WHERE image_date=''").first();
  if(!row)return new Response(null,{status:404});
  const object=await env.MANNA_IMAGES.get(row.object_key);if(!object)return new Response(null,{status:404});
- return new Response(object.body,{headers:{'content-type':row.content_type,'cache-control':'public, max-age=60','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'"}});
+ return new Response(object.body,{headers:{'content-type':row.content_type,'cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'"}});
 }
 
 async function audit(env,action,entry,detail){await env.DB.prepare('INSERT INTO manna_audit(id,action,entry_id,detail) VALUES(?,?,?,?)').bind(randomId(),action,entry,detail).run();}
