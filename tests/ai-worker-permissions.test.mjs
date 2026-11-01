@@ -1,0 +1,17 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {validateWorkerPermission,permissionOptionsForUI} from "../integrations/ai-worker-permissions.mjs";
+const accountId="a".repeat(32),worker="strength-for-today-dailyword";
+const req={action:"worker.deploy",accountId,worker,agentId:"assistant-1",changeId:"sha256:reviewed"};
+const grant={status:"approved",...req,expiresAt:"2099-01-01T00:00:00Z"};
+test("exact approved deployment is authorized",()=>assert.equal(validateWorkerPermission(grant,req).authorized,true));
+test("different AI cannot use another AI grant",()=>assert.throws(()=>validateWorkerPermission(grant,{...req,agentId:"assistant-2"}),/identity/i));
+test("different account cannot use grant",()=>assert.throws(()=>validateWorkerPermission(grant,{...req,accountId:"b".repeat(32)}),/target/i));
+test("different Worker cannot use grant",()=>assert.throws(()=>validateWorkerPermission(grant,{...req,worker:"another-worker"}),/target/i));
+test("different change cannot be deployed",()=>assert.throws(()=>validateWorkerPermission(grant,{...req,changeId:"sha256:unreviewed"}),/change/i));
+test("revoked grant is denied",()=>assert.throws(()=>validateWorkerPermission({...grant,revokedAt:"2026-01-01"},req),/active/i));
+test("expired grant is denied",()=>assert.throws(()=>validateWorkerPermission({...grant,expiresAt:"2020-01-01T00:00:00Z"},req),/expired/i));
+test("reused write grant is denied",()=>assert.throws(()=>validateWorkerPermission({...grant,usedAt:"2026-01-01"},req),/already used/i));
+test("unknown operation is denied",()=>assert.throws(()=>validateWorkerPermission(grant,{...req,action:"worker.delete_account"}),/unsupported/i));
+test("read-only permissions do not permit deployment",()=>assert.throws(()=>validateWorkerPermission({...grant,action:"worker.inspect"},req),/not permitted/i));
+test("UI lists all operations as requiring owner approval",()=>{const opts=permissionOptionsForUI();assert.ok(opts.length>=7);assert.ok(opts.every(x=>x.requiresOwnerApproval));});
