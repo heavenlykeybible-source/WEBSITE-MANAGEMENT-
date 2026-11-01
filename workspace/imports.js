@@ -142,12 +142,12 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
     if(!matching.length)fail('GitHub run is not yet discoverable; cancellation cannot be confirmed',409);
     const run=matching[0];
     if(run.status!=='completed')await gh(env,g,'POST','/actions/runs/'+encodeURIComponent(run.id)+'/cancel',{});
-    item.cancelledReviewRun=run.id;
+    item.cancellationRequested=run.status!=='completed';item.cancelledReviewRun=run.id;
    }
-   item.status='cancelled';item.deploymentAuthorized=false;item.cancelledAt=Date.now();
+   item.status=item.cancellationRequested?'review-cancellation-requested':'cancelled';item.deploymentAuthorized=false;item.cancelledAt=Date.now();
    await env.DB.prepare('UPDATE settings SET value_json=? WHERE key=?').bind(JSON.stringify(item),key).run();
    await audit(env,user.username,'application-build-cancel','Cancelled build request '+id);
-   return json({id,status:'cancelled',deploymentAuthorized:false});
+   return json({id,status:item.status,deploymentAuthorized:false});
   });
  }
  if(sub==='workspace/application-build/status'&&m==='GET'){
@@ -158,7 +158,7 @@ async function importWorkspaceRoutes(req,env,user,sub,m){
   const b=JSON.parse(row.value_json);
   if(b.createdBy!==user.id)fail('Build request owner mismatch',403);
   let review=null;
-  if(b.status==='build-dispatched'&&b.repo==='heavenlykeybible-source/WEBSITE-MANAGEMENT-'){
+  if(['build-dispatched','review-cancellation-requested'].includes(b.status)&&b.repo==='heavenlykeybible-source/WEBSITE-MANAGEMENT-'){
    const g=await importSource(env,user,b.source);
    if(g.repo!==b.repo||(g.dir||'')!==(b.root||''))fail('Connected build repository or root no longer matches',409);
    const data=await gh(env,g,'GET','/actions/workflows/review-application-build.yml/runs?event=workflow_dispatch&per_page=50').catch(()=>({workflow_runs:[]}));
