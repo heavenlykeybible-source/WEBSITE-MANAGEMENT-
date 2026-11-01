@@ -41,7 +41,7 @@ async function body(request:Request,max=210000){if(!(request.headers.get('conten
 function imageType(b:Uint8Array){if(b.length>=8&&[137,80,78,71,13,10,26,10].every((n,i)=>b[i]===n))return 'image/png';if(b[0]===255&&b[1]===216&&b[2]===255)return 'image/jpeg';if(String.fromCharCode(...b.slice(0,6)).startsWith('GIF8'))return 'image/gif';if(String.fromCharCode(...b.slice(0,4))==='RIFF'&&String.fromCharCode(...b.slice(8,12))==='WEBP')return 'image/webp';return ''}
 export default {async fetch(request:Request,env:Env):Promise<Response>{
  const u=new URL(request.url);
- const ownerHost=u.hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev';
+ const ownerHost=u.hostname==='heavenlykey-owner-dashboard.emmanuel2026miracle.workers.dev'||u.hostname==='heavenlykey-control-room-import-preview.emmanuel2026miracle.workers.dev';
  if(!ownerHost&&!u.pathname.startsWith('/api/'))return secureAsset(request,env);
  if(ownerHost&&u.pathname==='/api/owner/login'&&request.method==='POST'){
   if(request.headers.get('Origin')!==u.origin)return fail('Invalid sign-in origin.',403);
