@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const verification=fs.readFileSync('workspace/verification.js','utf8');
+const client=fs.readFileSync('workspace/client.js','utf8');
+const assembled=fs.readFileSync('control-room-worker.js','utf8');
+assert.match(verification,/dns-read-verified/);
+assert.match(verification,/domainZoneRead/);
+assert.match(verification,/dns_records\?per_page=1/);
+assert.match(verification,/workers-read-verified/);
+assert.doesNotMatch(client,/dialog\.showModal\(\)/);
+assert.match(assembled,/dns-read-verified/);
+console.log('PASS provider verification DNS scope and nonblocking chat');
