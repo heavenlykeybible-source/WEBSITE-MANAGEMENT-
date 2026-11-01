@@ -27,6 +27,18 @@ async function refreshWaitingRoom(){
  }catch(e){container.textContent='Unable to load Waiting Room: '+e.message;}
 }
 $('project-review-refresh')?.addEventListener('click',refreshWaitingRoom);
+$('account3-github-import')?.addEventListener('click',async()=>{
+ const button=$('account3-github-import');
+ button.disabled=true;
+ tell('Reading the Account 3 GitHub source tree…');
+ try{
+  const result=await request('/api/project-imports/github',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({repository:'heavenlykeybible-source/onlinebible',ref:'main'})});
+  tell('Account 3 source revision '+result.commit.slice(0,12)+' added to Waiting Room ('+result.fileCount+' files). Approval required; nothing published.');
+  await refreshWaitingRoom();
+ }catch(e){tell('GitHub import failed: '+e.message);}
+ finally{button.disabled=false;}
+});
+
 function key(file){return 'hk-project-import:'+file.name+':'+file.size+':'+file.lastModified;}
 pause.onclick=()=>{stopped=true;controller?.abort();tell('Paused. Choose the same archive and select Start / resume to continue.');};
 start.onclick=async()=>{
