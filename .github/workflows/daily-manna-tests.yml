@@ -49,3 +49,6 @@ jobs:
 
       - name: Validate signed central Studio handoff
         run: node studio-bridge.test.mjs
+
+      - name: Verify scheduled release creates central Studio outbox jobs
+        run: node publish-queue.test.mjs
