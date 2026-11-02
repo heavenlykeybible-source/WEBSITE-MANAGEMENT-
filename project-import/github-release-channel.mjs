@@ -36,6 +36,9 @@ export function createGithubReleaseChannel({authorize,listGithubSites,listGithub
   const manifest=await readGithubFile({actor,siteId,path:report.root+'package.json',revision});
   const lock=await readGithubFile({actor,siteId,path:report.root+'package-lock.json',revision});
   if(!lock?.content||!lock.sha)throw Error('Pinned dependency lockfile read failed');
+  const expected=p=>report.files.find(f=>f.path===report.root+p)?.sha;
+  if(manifest.sha!==expected('package.json')||lock.sha!==expected('package-lock.json'))
+   throw Error('Pinned GitHub file SHA differs from inspected inventory');
   if(!manifest?.content||!manifest.sha)throw Error('Pinned source read failed');
   const result=await enqueueWaiting({kind:'github-complete-application',status:'pending',
    title:title||'Complete GitHub application release',actor,
