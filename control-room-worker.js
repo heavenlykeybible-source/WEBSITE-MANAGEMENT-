@@ -2909,11 +2909,13 @@ async function coreProposeCompleteGithubImport(env, actor, b) {
   const head=await ghHead(env,g);
   const tree=await gh(env,g,'GET','/git/trees/'+head.tree+'?recursive=1');
   if(tree.truncated)fail('Incomplete repository inventory',409);
-  const dir=String(b.directory||g.dir||'').replace(/^\\/+|\\/+$/g,'');
+  const dir=String(b.directory||g.dir||'').replace(/^\/+|\/+$/g,'');
   if(dir.split('/').some(x=>x==='..'||x==='.'))fail('Invalid directory',400);
   const prefix=dir?dir+'/':'';
   const files=(tree.tree||[]).filter(x=>x.type==='blob'&&x.path.startsWith(prefix)).map(x=>({path:x.path.slice(prefix.length),sha:x.sha,size:x.size||0}));
   if(!files.length)fail('No application files found',404);
+  if(files.length>10000)fail('Application inventory exceeds safe review size; split the project.',413);
+  if(files.some(f=>!f.path||f.path.split('/').some(p=>!p||p==='.'||p==='..')))fail('Unsafe repository file path',400);
   const total=files.reduce((n,x)=>n+x.size,0);
   const meta={gh_id:g.id,repo:g.repo,branch:g.branch,commit:head.commit,tree:head.tree,directory:dir,files,bytes:total,requires_owner_approval:true,deployment_authorized:false};
   const result=await env.DB.prepare("INSERT INTO proposals (agent_id,kind,title,note,new_content_json,owner_id) VALUES (?,'github_import',?,?,?,?)").bind(actor.agentId,String(b.title||'Complete GitHub application import: '+g.label).slice(0,120),String(b.note||'').slice(0,1000),JSON.stringify(meta),scopeOf(actor).ow).run();
