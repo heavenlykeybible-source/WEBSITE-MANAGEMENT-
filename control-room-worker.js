@@ -1948,6 +1948,7 @@ async function common(req, env, actor, sub, m, u) {
     const r=await driveFetch(t,'/'+id+'?alt=media&supportsAllDrives=true');
     return json(await importWebsiteZip(env,actor,b.site,await readLimited(r,PACKAGE_LIMIT),'Google Drive ZIP '+id,b.scan===true),201);
   }
+  if (sub === 'propose-complete-github-import' && m === 'POST') { await needProp(); return json(await coreProposeCompleteGithubImport(env,actor,await body(req)),201); }
   if (sub === 'github-import' && m === 'POST') { await needProp(); return json(await githubImport(env, actor, await body(req)), 201); }
   if (sub === 'propose-cloudflare-resource' && m === 'POST') { cloudflareActor(actor); await needProp(); return json(await coreProposeResource(env,actor,await body(req)),201); }
   if (sub === 'propose-worker' && m === 'POST') { await needProp(); return json(await coreProposeWorker(env, actor, await body(req)), 201); }
@@ -2954,7 +2955,7 @@ function memberAllowed(sub, m) {
   return sub === 'me' || sub === 'password' || sub === 'summary' || sub === 'account/public' ||
     sub === 'releases' || /^releases\/[a-f0-9-]{36}\/(restore|resolve)$/.test(sub) || sub === 'proposals' || /^proposals\/\d+$/.test(sub) || /^proposals\/\d+\/(decide|stage)$/.test(sub) ||
     sub === 'remote' || /^remote\/\d+\/(posts|post|export|remove|authorize|check|save)$/.test(sub) || sub === 'propose-remote' ||
-    sub === 'github' || /^github\/\d+\/(files|file|remove|check|save)$/.test(sub) || sub === 'propose-github' ||
+    sub === 'github' || /^github\/\d+\/(files|file|remove|check|save)$/.test(sub) || sub === 'propose-complete-github-import' || sub === 'propose-github' ||
     sub === 'ai' || sub === 'ai/accounts' || /^ai\/accounts\/\d+\/(key|test|remove)$/.test(sub) ||
     sub === 'agents' || /^agents\/\d+\/revoke$/.test(sub) || sub === 'identity' || /^identity\/\d+\/(verify|remove)$/.test(sub);
 }
@@ -4360,8 +4361,9 @@ async function github(){try{var d=await api('github');var idn=await api('identit
     var card=h('div',{class:'card'},h('b',{},s.label),h('div',{class:'tag'},s.repo+' \\u2022 '+s.branch+(s.dir?' \\u2022 /'+s.dir:'')),out,h('br'),h('button',{onclick:function(){ghFiles(s);}},'Files'));
     if(own()){card.appendChild(h('button',{class:'sm',onclick:function(){githubSourceBackup(s,out);}},'Back up source to GitHub'));card.appendChild(h('button',{class:'sm',onclick:function(){out.textContent=' Checking...';api('github/'+s.id+'/check','POST').then(function(r){out.textContent=' Connected, latest commit '+r.head;}).catch(function(e){out.textContent=' Problem: '+e.message;});}},'Check'));
       card.appendChild(h('button',{class:'bad',onclick:function(){if(confirm('Remove this connection? The repository is not changed.'))api('github/'+s.id+'/remove','POST').then(github).catch(oops);}},'Remove'));}
+    if(own()){card.appendChild(h('button',{class:'sm',onclick:function(){var directory=prompt('Project folder (leave empty for full repository)',s.dir||'');if(directory===null)return;out.textContent='Preparing Waiting Room review...';api('propose-complete-github-import','POST',{site:String(s.id),directory:directory,title:'Full project release: '+s.label}).then(function(r){out.textContent='Waiting Room proposal #'+r.proposal_id+' ('+r.file_count+' files).';}).catch(function(e){out.textContent='Import failed: '+e.message;});}},'Release full project to Waiting Room'));}
     box.appendChild(card);});
-  var kids=[nav(),h('h3',{},'HTML sites on GitHub'),h('p',{class:'tag'},'Edit the code of a site that lives in a GitHub repository. Approved changes become one commit, and your host (GitHub Pages, Cloudflare Pages, Netlify) redeploys it.'),box];
+  var kids=[nav(),h('h3',{},'GitHub Project Release Center'),h('p',{class:'tag'},'Import complete projects into Waiting Room for owner review. AI releases and manual releases share the same secure review process.'),h('div',{class:'card'},h('b',{},'Two release options'),h('p',{},'AI release: ask a connected AI to stage a complete GitHub project.'),h('p',{},'Manual release: choose a connected repository below and submit its project inventory.')),h('h3',{},'Connected repositories'),h('p',{class:'tag'},'Edit the code of a site that lives in a GitHub repository. Approved changes become one commit, and your host (GitHub Pages, Cloudflare Pages, Netlify) redeploys it.'),box];
   if(own()){var lb=h('input',{placeholder:'Label, e.g. Main website'}),rp=h('input',{placeholder:'Repository, owner/name'}),br=h('input',{placeholder:'Branch (default main)'}),dr=h('input',{placeholder:'Folder with the site (optional)'}),tk=h('input',{type:'password',placeholder:'GitHub token'});
     kids.push(h('b',{},'Registered site for the new connection (optional)'),rg,h('b',{},'Connect a repository'),h('p',{class:'tag'},'In GitHub open Settings, Developer settings, Fine-grained tokens. Choose only this repository and set Contents to Read and write.'),lb,rp,br,dr,tk,
       h('button',{onclick:function(){api('github','POST',{registry_id:rg.value,label:lb.value.trim(),repo:rp.value.trim(),branch:br.value.trim()||'main',dir:dr.value.trim(),token:tk.value.trim()}).then(function(){alert('Connected.');github();}).catch(oops);}},'Connect'));}
