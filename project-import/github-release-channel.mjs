@@ -20,7 +20,9 @@ export function createGithubReleaseChannel({authorize,listGithubSites,listGithub
   });
   const root=site.dir?site.dir.replace(/\/$/,'')+'/':'';
   const has=p=>inventory.some(f=>f.path===root+p);
-  return {siteId,repository:site.repo,branch:site.branch,root,fileCount:inventory.length,
+  const rootFiles=inventory.filter(f=>f.path.startsWith(root));
+  const totalBytes=rootFiles.reduce((sum,f)=>sum+(Number.isSafeInteger(f.size)&&f.size>=0?f.size:0),0);
+  return {siteId,repository:site.repo,branch:site.branch,root,fileCount:rootFiles.length,totalBytes,
    hasPackage:has('package.json'),hasWrangler:has('wrangler.toml')||has('wrangler.jsonc'),
    hasLockfile:has('package-lock.json'),hasFrontend:has('public/index.html'),
    files:inventory};
@@ -36,7 +38,7 @@ export function createGithubReleaseChannel({authorize,listGithubSites,listGithub
   const result=await enqueueWaiting({kind:'github-complete-application',status:'pending',
    title:title||'Complete GitHub application release',actor,
    source:{siteId,repository:report.repository,revision,root:report.root},
-   manifestSha:manifest.sha,inventoryCount:report.fileCount,
+   manifestSha:manifest.sha,inventoryCount:report.fileCount,inventoryBytes:report.totalBytes,
    requiresOwnerApproval:true,deploymentAuthorized:false,
    buildVerified:false,previewVerified:false});
   if(!result?.id)throw Error('Waiting Room did not confirm proposal');
