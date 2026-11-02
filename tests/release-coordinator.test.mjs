@@ -18,7 +18,7 @@ function setup(){
   deploy:async()=>{deployed=true;return {deployed:true}},
   verifyLive:async()=>true,
   rollback:async()=>{},
-  audit:async()=>{}
+  audit:async()=>{},acquireReleaseLock:async()=>({release:async()=>{}})
  });
  return {coordinator,approve:()=>{approved=true},deployed:()=>deployed};
 }
@@ -34,7 +34,7 @@ test('untrusted scan blocks import',async()=>{
  const t=createReleaseCoordinator({
   authorize:async()=>true,scan:async()=>({passed:false}),build:async()=>{},preview:async()=>{},
   enqueueWaiting:async()=>{},loadProposal:async()=>{},verifyApproval:async()=>false,
-  deploy:async()=>{},verifyLive:async()=>false,rollback:async()=>{},audit:async()=>{}
+  deploy:async()=>{},verifyLive:async()=>false,rollback:async()=>{},audit:async()=>{},acquireReleaseLock:async()=>({release:async()=>{}})
  });
  await assert.rejects(t.submit({actor:'owner',source,target,connectedAccounts}));
 });
