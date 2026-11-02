@@ -120,7 +120,7 @@ async function publishToday(env,now=Date.now()){
   const result=await env.DB.prepare("UPDATE manna_entries SET status='published',release_mode=CASE WHEN status='approved' THEN 'reviewed' ELSE 'unreviewed' END,published_at=CURRENT_TIMESTAMP WHERE id=? AND ((status='approved' AND approved_revision=revision) OR (status='draft' AND ?=1))").bind(entry.id,env.ALLOW_UNREVIEWED_PUBLICATION==='true'?1:0).run();
   if(result.meta?.changes!==1)continue;
   published++;
-  for(const destination of ['community','facebook'])await env.DB.prepare("INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,'pending')").bind(randomId(),entry.id,destination).run();
+  for(const destination of ['community','studio'])await env.DB.prepare("INSERT OR IGNORE INTO manna_deliveries(id,entry_id,destination,status) VALUES(?,?,?,'pending')").bind(randomId(),entry.id,destination).run();
   await audit(env,'published',entry.id,entry.publish_date+' release recorded');
  }
  await repairOutbox(env);
