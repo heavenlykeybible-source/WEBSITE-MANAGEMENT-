@@ -132,8 +132,14 @@ async function publishToday(env,now=Date.now()){
 export async function dispatchStudio(env,fetcher=fetch){
  if(!studioReady(env))return {configured:false,processed:0};
  const jobs=await env.DB.prepare("SELECT d.id AS delivery_id,e.publish_date,e.title,e.scripture,e.body,e.prayer,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT studio_media_id FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS studio_media_id FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id WHERE d.destination='studio' AND d.status='pending' AND e.status='published' AND e.publish_date>=? AND e.publish_date<=? ORDER BY e.publish_date LIMIT 10").bind(env.STUDIO_FIRST_POST_DATE,todayLagos()).all();
- let processed=0,sent=0,failed=0;
+ let processed=0,sent=0,failed=0,blocked=0;
  for(const entry of jobs.results||[]){
+  // A selected owner picture must not be silently dropped. Keep the
+  // delivery pending until the identical image is linked in Studio.
+  if(entry.picture_object_key&&(!Number.isSafeInteger(Number(entry.studio_media_id))||Number(entry.studio_media_id)<1)){
+   blocked++;
+   continue;
+  }
   const claimed=await env.DB.prepare("UPDATE manna_deliveries SET status='skipped',attempts=attempts+1,error='Studio submission in progress; reconcile before retry',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='pending' AND destination='studio'").bind(entry.delivery_id).run();
   if(claimed.meta?.changes!==1)continue;
   processed++;
@@ -146,7 +152,7 @@ export async function dispatchStudio(env,fetcher=fetch){
    failed++;
   }
  }
- return {configured:true,processed,sent,failed};
+ return {configured:true,processed,sent,failed,blocked};
 }
 
 export default {
