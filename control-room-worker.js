@@ -1738,7 +1738,7 @@ async function reviewSnapshot(env, P) {
     target = 'site:' + P.site_id;
     checks.push('Immutable object keys and storage ETags recorded', 'Current live file pointers captured');
     warnings.push('Open the sandboxed file preview before approval. Root-relative links may require testing on a separate staging origin.');
-  } else if (P.kind === 'github') {
+  } else if (P.kind === 'github_import') { const m=JSON.parse(P.new_content_json),g=await ghById(env,m.gh_id,{ow:P.owner_id||null,site:null}),h=await ghHead(env,g); if(h.commit!==m.commit)fail('Source changed; import again',409); baseline={commit:h.commit};target='github-import:'+g.id;warnings.push('Inventory only: application deployment is not certified.'); } else if (P.kind === 'github') {
     const m = JSON.parse(P.new_content_json), g = await ghById(env, m.gh_id, { ow: P.owner_id || null, site: null });
     for (const f of m.files) protectSourcePath((g.dir ? g.dir + '/' : '') + f.path);
     ghInput({ files: m.files.map(f => ({ path: f.path, content: f.content, encoding: f.encoding, delete: f.content === null, base_sha: f.base_sha })), message: m.message });
@@ -1898,7 +1898,7 @@ async function applyProposal(env, P) {
     return { worker: meta.name };
   } else if (P.kind === 'remote') {
     return await applyRemote(env, P);
-  } else if (P.kind === 'github') {
+  } else if (P.kind === 'github_import') { fail('Complete project deployment requires a configured build and Cloudflare release adapter; nothing deployed.',409); } else if (P.kind === 'github') {
     return await applyGithub(env, P);
   } else if (P.kind === 'design') {
     const d = cleanDesign(JSON.parse(P.new_content_json));
@@ -2903,6 +2903,23 @@ async function ghCommit(env, g, files, message, expectedCommit) {
   await gh(env, g, 'PATCH', '/git/refs/heads/' + ghEnc(g.branch), { sha: commit.sha, force: false });
   return commit.sha;
 }
+async function coreProposeCompleteGithubImport(env, actor, b) {
+  const g=await ghById(env,b.site,scopeOf(actor));
+  await limitWaiting(env,actor);
+  const head=await ghHead(env,g);
+  const tree=await gh(env,g,'GET','/git/trees/'+head.tree+'?recursive=1');
+  if(tree.truncated)fail('Incomplete repository inventory',409);
+  const dir=String(b.directory||g.dir||'').replace(/^\\/+|\\/+$/g,'');
+  if(dir.split('/').some(x=>x==='..'||x==='.'))fail('Invalid directory',400);
+  const prefix=dir?dir+'/':'';
+  const files=(tree.tree||[]).filter(x=>x.type==='blob'&&x.path.startsWith(prefix)).map(x=>({path:x.path.slice(prefix.length),sha:x.sha,size:x.size||0}));
+  if(!files.length)fail('No application files found',404);
+  const total=files.reduce((n,x)=>n+x.size,0);
+  const meta={gh_id:g.id,repo:g.repo,branch:g.branch,commit:head.commit,tree:head.tree,directory:dir,files,bytes:total,requires_owner_approval:true,deployment_authorized:false};
+  const result=await env.DB.prepare("INSERT INTO proposals (agent_id,kind,title,note,new_content_json,owner_id) VALUES (?,'github_import',?,?,?,?)").bind(actor.agentId,String(b.title||'Complete GitHub application import: '+g.label).slice(0,120),String(b.note||'').slice(0,1000),JSON.stringify(meta),scopeOf(actor).ow).run();
+  await audit(env,actor.kind+':'+actor.agentId,'propose-github-import','proposal '+result.meta.last_row_id);
+  return {ok:true,proposal_id:result.meta.last_row_id,status:'waiting',file_count:files.length,bytes:total,deployed:false};
+}
 async function coreProposeGithub(env, actor, b) {
   const g = await ghById(env, b.site, scopeOf(actor));
   const inp = ghInput(b);
@@ -2923,7 +2940,7 @@ async function applyGithub(env, P) {
 }
 
 // ---------- tenants: every person can own sites, AI accounts and agents that only they can see ----------
-const TENANT_TOOLS = new Set(['list_remote_sites', 'list_remote_posts', 'read_remote_post', 'propose_remote_post', 'list_github_sites', 'list_github_files', 'read_github_file', 'propose_github_changes', 'my_proposals']);
+const TENANT_TOOLS = new Set(['list_remote_sites', 'list_remote_posts', 'read_remote_post', 'propose_remote_post', 'list_github_sites', 'list_github_files', 'read_github_file', 'propose_github_changes', 'propose_complete_github_import', 'my_proposals']);
 const RESERVED = new Set(['admin', 'owner', 'root', 'api', 'site', 'sites', 'preview', 'mcp', 'oauth', 'design', 'system', 'support', 'www', 'help', 'staff', 'team', 'controlroom', 'claude']);
 function scopeOf(actor) {
   if (actor.kind === 'agent') return { ow: (actor.a && actor.a.owner_id) || null, site: (actor.a && actor.a.site_id) || null };
@@ -3167,6 +3184,7 @@ const TOOLS = [
   { name: 'list_github_sites', description: 'List HTML sites connected through GitHub repositories.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_github_files', description: 'List the editable files of a GitHub-backed site.', inputSchema: { type: 'object', properties: { site: { type: 'string' } }, required: ['site'] } },
   { name: 'read_github_file', description: 'Read one file of a GitHub-backed site. Returns its content and sha.', inputSchema: { type: 'object', properties: { site: { type: 'string' }, path: { type: 'string' } }, required: ['site', 'path'] } },
+  { name: 'propose_complete_github_import', description: 'Stage a complete immutable GitHub project inventory in Waiting Room for owner review; does not deploy.', inputSchema:{type:'object',properties:{site:{type:'string'},directory:{type:'string'},title:{type:'string'},note:{type:'string'}},required:['site']} },
   { name: 'propose_github_changes', description: 'Propose adding, changing or deleting text files (max 10) in a GitHub-backed site. Include base_sha (from read_github_file) for files that already exist. Becomes one commit only after the owner approves.', inputSchema: { type: 'object', properties: { site: { type: 'string' }, message: { type: 'string' }, note: { type: 'string' }, files: { type: 'array', items: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' }, delete: { type: 'boolean' }, base_sha: { type: 'string' } }, required: ['path'] } } }, required: ['site', 'files'] } },
   { name: 'my_proposals', description: 'Show the status of your recent proposals and any owner comments.', inputSchema: { type: 'object', properties: {} } }
 ];
@@ -3206,6 +3224,7 @@ async function toolCall(env, actor, name, args) {
     case 'list_github_sites': read(); return { sites: (await env.DB.prepare('SELECT * FROM github_sites WHERE ' + ownSql(sc) + siteSql(sc) + ' ORDER BY label').all()).results.map(ghPublic) };
     case 'list_github_files': { read(); const g = await ghById(env, args.site, sc); return { files: await ghFiles(env, g, await ghHead(env, g)) }; }
     case 'read_github_file': read(); return await ghReadFile(env, await ghById(env, args.site, sc), cleanPath(args.path));
+    case 'propose_complete_github_import': prop(); return await coreProposeCompleteGithubImport(env,actor,args);
     case 'propose_github_changes': prop(); return await coreProposeGithub(env, actor, args);
     case 'my_proposals': return { proposals: (await env.DB.prepare('SELECT id, kind, title, status, owner_comment, created_at FROM proposals WHERE agent_id=? AND sealed=1 ORDER BY id DESC LIMIT 30').bind(a.id).all()).results };
     default: fail('Unknown tool', 404);
