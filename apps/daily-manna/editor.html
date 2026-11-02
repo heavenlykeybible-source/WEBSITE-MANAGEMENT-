@@ -67,6 +67,9 @@ async function refreshOperations(){
   for(const job of jobs){
    const li=document.createElement('li');
    li.append(document.createTextNode(job.publish_date+' · '+job.destination+' · '+(job.destination==='studio'&&job.status==='sent'?'handed to Studio':job.status)+' '));
+   if(job.destination==='studio'&&job.status==='pending'&&job.picture_object_key&&!job.studio_media_id){
+    const notice=document.createElement('strong');notice.textContent=' · Waiting for Studio picture ID';li.append(notice);
+   }
    if(job.destination==='studio'&&job.delivery_id&&job.status==='sent'){
     const check=document.createElement('button');check.type='button';check.className='secondary';check.textContent='Check actual platform results';
     const details=document.createElement('div');check.onclick=async()=>{check.disabled=true;details.textContent='Checking Studio…';try{const data=await api('studio-status?delivery_id='+encodeURIComponent(job.delivery_id));details.replaceChildren();for(const provider of data.jobs){const line=document.createElement('p');line.textContent=(provider.display_name||provider.platform||'Platform')+' · '+provider.status+(provider.provider_post_id?' · Post ID: '+provider.provider_post_id:'')+(provider.error?' · '+provider.error:'');details.append(line)}if(!data.jobs.length)details.textContent='Studio has no provider jobs for this receipt.'}catch(e){details.textContent=e.message}finally{check.disabled=false}};
