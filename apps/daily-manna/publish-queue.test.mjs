@@ -23,7 +23,7 @@ const DB={
    },
    async run(){
     if(sql.includes("INSERT OR IGNORE INTO manna_deliveries")){
-      if(!deliveryRows.has(args[1]))deliveryRows.set(args[1],{id:args[0],entry_id:args[0],destination:args[1],status:'pending'});
+      if(!deliveryRows.has(args[2]))deliveryRows.set(args[2],{id:args[0],entry_id:args[1],destination:args[2],status:'pending'});
       return {meta:{changes:1}};
     }
     if(sql.startsWith('UPDATE manna_entries SET status=')){
