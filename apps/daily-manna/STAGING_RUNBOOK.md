@@ -41,3 +41,8 @@ Code-level work only; until schema application, Worker deployment, and live test
 - The Daily Manna editorial dashboard can request signed individual Studio delivery statuses. A successful handoff is **not** proof of publication.
 - The automated image-copy pipeline between the dedicated Daily Manna R2 bucket and Account 2 is not implemented. Use the owner-controlled existing Studio upload + media ID mapping before activating pictures.
 - The public reader JavaScript must be compiled from the final rendered HTML in CI; the generated page previously had broken string and regex escaping, now covered by a regression test.
+
+## November 2, 2026 automated audit
+- Fixed a serious mismatch: `publishToday` used to insert an obsolete direct `facebook` destination, while the active sender only processes `studio`. It now enqueues `studio` consistently at publication and during recovery. A dedicated `publish-queue.test.mjs` and the editorial invariant test guard against regression.
+- Verified the `Daily Manna checks` GitHub Actions workflow completed successfully after this fix, including the release-to-Studio queue regression (run #115, commit `5e73a43`).
+- This is **not** proof of live dispatch. The current public Core endpoint `/api/admin/social/daily-manna` returned 404 and `/api/admin/social/setup-status` returned 403 without administrator credentials. Apply the dedicated Core D1 migration, deploy the Studio integration and configure matching bridge secrets before running an authorized non-public test post.
