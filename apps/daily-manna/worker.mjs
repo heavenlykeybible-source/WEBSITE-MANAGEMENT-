@@ -208,7 +208,7 @@ export default {
     try{return response(await readStudioStatus(id,env))}catch{return response({error:'Studio delivery status unavailable'},502)}
    }
    if(path==='/api/deliveries'&&method==='GET'&&auth(req,env)){
-    const rows=await env.DB.prepare('SELECT d.id AS delivery_id,d.entry_id,e.publish_date,d.destination,d.status,d.attempts,d.error,d.provider_post_id,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT studio_media_id FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS studio_media_id FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id ORDER BY e.publish_date DESC LIMIT 200').all();
+    const rows=await env.DB.prepare(`SELECT d.id AS delivery_id,d.entry_id,e.publish_date,d.destination,d.status,d.attempts,d.error,d.provider_post_id,(SELECT object_key FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS picture_object_key,(SELECT studio_media_id FROM manna_post_images WHERE image_date=e.publish_date OR image_date='' ORDER BY LENGTH(image_date) DESC LIMIT 1) AS studio_media_id FROM manna_deliveries d JOIN manna_entries e ON e.id=d.entry_id ORDER BY e.publish_date DESC LIMIT 200`).all();
     return response({deliveries:rows.results});
    }
    const archive=path.match(/^\/api\/public\/([0-9]{4}-[0-9]{2}-[0-9]{2})$/);
