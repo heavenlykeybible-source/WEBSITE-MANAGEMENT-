@@ -15,6 +15,8 @@ assert.match(worker,/entries\.length>100/,'Bulk approval limit');
 assert.match(worker,/expected_revision/,'Concurrent edits must be rejected');
 assert.match(worker,/publish_date<=\?/,'Missed release recovery');
 assert.match(worker,/repairOutbox/,'Missing delivery jobs must be recoverable');
+assert.doesNotMatch(worker,/\['community','facebook'\]/,'Publication must never create an obsolete direct-Facebook delivery');
+assert.match(worker,/\['community','studio'\]/,'Publication queues exactly the central Studio social destination');
 assert.match(worker,/Concurrent update/,'Concurrent saves must be rejected');
 assert.ok(worker.includes('api') && worker.includes('public'),'Public archive route must exist');
 assert.match(worker,/manna_audit/,'Editorial audit log');
