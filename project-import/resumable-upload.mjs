@@ -28,12 +28,13 @@ export async function receiveChunk({session,index,bytes,sha256,put,hash}){
  await put(key,bytes,{sha256:digest.toLowerCase()});
  return {index,key,bytes:expected,sha256:digest.toLowerCase()};
 }
-export async function verifyUpload({session,parts,hash,read}){
+export async function verifyUpload({session,parts,hash,read,hashParts}){
  checkSession(session);
  if(!Array.isArray(parts)||typeof read!=='function'||typeof hash!=='function')throw Error('Upload verification unavailable');
  const plan=chunkPlan(session.totalBytes);
  if(parts.length!==plan.chunks)throw Error('Missing upload chunks');
  let total=0;
+ if(typeof hashParts!=='function')throw Error('Streaming package checksum service required');
  const verified=[];
  for(let i=0;i<parts.length;i++){
   const part=parts[i],key='imports/'+session.id+'/parts/'+String(i).padStart(4,'0');
@@ -45,6 +46,8 @@ export async function verifyUpload({session,parts,hash,read}){
   total+=bytes.length;verified.push(bytes);
  }
  if(total!==session.totalBytes)throw Error('Package size mismatch');
- // Full package hash must be verified by a streaming hash service before release.
- return {verifiedChunks:verified.length,totalBytes:total,fullChecksumVerified:false,readyForRelease:false};
+ const fullDigest=await hashParts(verified);
+ if(typeof fullDigest!=='string'||!HEX.test(fullDigest)||fullDigest.toLowerCase()!==session.sha256.toLowerCase())
+  throw Error('Full package checksum mismatch');
+ return {verifiedChunks:verified.length,totalBytes:total,fullChecksumVerified:true,readyForRelease:true,sha256:fullDigest.toLowerCase()};
 }
