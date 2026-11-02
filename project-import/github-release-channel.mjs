@@ -34,11 +34,13 @@ export function createGithubReleaseChannel({authorize,listGithubSites,listGithub
   if(!report.hasPackage||!report.hasWrangler||!report.hasLockfile||!report.hasFrontend)
    throw Error('Complete application files not verified');
   const manifest=await readGithubFile({actor,siteId,path:report.root+'package.json',revision});
+  const lock=await readGithubFile({actor,siteId,path:report.root+'package-lock.json',revision});
+  if(!lock?.content||!lock.sha)throw Error('Pinned dependency lockfile read failed');
   if(!manifest?.content||!manifest.sha)throw Error('Pinned source read failed');
   const result=await enqueueWaiting({kind:'github-complete-application',status:'pending',
    title:title||'Complete GitHub application release',actor,
    source:{siteId,repository:report.repository,revision,root:report.root},
-   manifestSha:manifest.sha,inventoryCount:report.fileCount,inventoryBytes:report.totalBytes,
+   manifestSha:manifest.sha,lockSha:lock.sha,inventoryCount:report.fileCount,inventoryBytes:report.totalBytes,
    requiresOwnerApproval:true,deploymentAuthorized:false,
    buildVerified:false,previewVerified:false});
   if(!result?.id)throw Error('Waiting Room did not confirm proposal');
