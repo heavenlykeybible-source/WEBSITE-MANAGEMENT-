@@ -41,6 +41,6 @@ await submitToStudio({...entry,picture_object_key:'post-banners/foo',studio_medi
 await assert.rejects(submitToStudio({...entry,picture_object_key:'post-banners/image'},env,async(u,opt)=>{
  assert.equal(JSON.parse(opt.body).requires_picture,true);
  return Response.json({error:'Picture must first be imported'}, {status:409});
-}),/Studio rejected delivery/);
+}),/Studio rejected or failed to register delivery/);
 await assert.rejects(submitToStudio({...entry,delivery_id:'unsafe'},env,transport),/stable delivery key/);
 console.log('PASS signed Studio bridge, URL validation, image requirement and handoff receipt');
