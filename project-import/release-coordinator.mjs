@@ -5,8 +5,8 @@
  * build, scan, preview or approval booleans.
  */
 import {queueCompleteRelease} from './complete-release-intake.mjs';
-export function createReleaseCoordinator({authorize,scan,build,preview,enqueueWaiting,loadProposal,verifyApproval,deploy,verifyLive,rollback,audit}){
- const deps=[authorize,scan,build,preview,enqueueWaiting,loadProposal,verifyApproval,deploy,verifyLive,rollback,audit];
+export function createReleaseCoordinator({authorize,scan,build,preview,enqueueWaiting,loadProposal,verifyApproval,deploy,verifyLive,rollback,audit,acquireReleaseLock}){
+ const deps=[authorize,scan,build,preview,enqueueWaiting,loadProposal,verifyApproval,deploy,verifyLive,rollback,audit,acquireReleaseLock];
  if(deps.some(x=>typeof x!=='function'))throw Error('All trusted release services required');
  async function submit({actor,source,target,connectedAccounts}){
   if(!actor)throw Error('Authentication required');
@@ -32,16 +32,23 @@ export function createReleaseCoordinator({authorize,scan,build,preview,enqueueWa
    throw Error('Approved, verified complete application required');
   if(await authorize({actor,action:'complete-release-deploy',target:proposal.target,proposalId})!==true ||
     await verifyApproval({actor,proposal})!==true)throw Error('Owner release approval required');
-  let result;
+  const releaseLock=await acquireReleaseLock({actor,proposalId,target:proposal.target});
+  if(!releaseLock || typeof releaseLock.release!=='function')throw Error('Exclusive deployment lock unavailable');
+  let result,deployAttempted=false;
   try{
+   deployAttempted=true;
    result=await deploy({actor,proposal,artifactDigest:proposal.build.digest});
    if(result?.deployed!==true||await verifyLive({actor,proposal,result})!==true)
     throw Error('Live release verification failed');
   }catch(error){
-   if(result?.deployed===true)await rollback({actor,proposal,result});
+   if(deployAttempted){
+    try{await rollback({actor,proposal,result:result||null});}
+    catch(rollbackError){await audit({event:'complete-release-rollback-failed',actor,proposalId});
+      throw new AggregateError([error,rollbackError],'Deployment failed and rollback requires owner attention');}
+   }
    await audit({event:'complete-release-failed',actor,proposalId});
    throw error;
-  }
+  }finally{await releaseLock.release();}
   await audit({event:'complete-release-verified',actor,proposalId});
   return {proposalId,status:'verified-live'};
  }
