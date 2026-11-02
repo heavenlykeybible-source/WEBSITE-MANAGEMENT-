@@ -20,7 +20,7 @@ const env={DB,STUDIO_BRIDGE_ORIGIN:'https://studio.heavenlykey.org/',STUDIO_BRID
 let sendCount=0;
 const fake=async()=>{sendCount++;return new Response(JSON.stringify({ok:true,job_ids:[456]}),{status:200})};
 let result=await dispatchStudio(env,fake);
-assert.deepEqual(result,{configured:true,processed:1,sent:1,failed:0});
+assert.deepEqual(result,{configured:true,processed:1,sent:1,failed:0,blocked:0});
 assert.equal(postId,'[456]');
 assert.equal(attempts,1);
 await dispatchStudio(env,fake);
@@ -34,4 +34,16 @@ assert.equal((await dispatchStudio({DB},fake)).configured,false,'Requires Studio
 const disabled=await dispatchStudio({...env,STUDIO_FIRST_POST_DATE:''},fake);
 assert.equal(disabled.configured,false,'Unapproved historic backlog cannot post');
 assert.equal(sendCount,1,'Historic backlog gate prevents further posts');
+state='pending';
+one.picture_object_key='post-banners/approved-owner-image';
+one.studio_media_id=null;
+result=await dispatchStudio(env,fake);
+assert.equal(result.blocked,1,'An unlinked owner picture must block Studio posting');
+assert.equal(result.processed,0);
+assert.equal(state,'pending','Owner can link image later without losing the delivery');
+one.studio_media_id=88;
+result=await dispatchStudio(env,fake);
+assert.equal(result.sent,1,'Posting resumes after an existing Studio image is linked');
+assert.equal(sendCount,2);
+
 console.log('PASS Studio social outbox: atomic claim, success, no duplicates, failure hold');
