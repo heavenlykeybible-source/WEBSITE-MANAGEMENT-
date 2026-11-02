@@ -2955,13 +2955,13 @@ function memberAllowed(sub, m) {
   return sub === 'me' || sub === 'password' || sub === 'summary' || sub === 'account/public' ||
     sub === 'releases' || /^releases\/[a-f0-9-]{36}\/(restore|resolve)$/.test(sub) || sub === 'proposals' || /^proposals\/\d+$/.test(sub) || /^proposals\/\d+\/(decide|stage)$/.test(sub) ||
     sub === 'remote' || /^remote\/\d+\/(posts|post|export|remove|authorize|check|save)$/.test(sub) || sub === 'propose-remote' ||
-    sub === 'github' || /^github\/\d+\/(files|file|remove|check|save)$/.test(sub) || sub === 'propose-complete-github-import' || sub === 'propose-complete-github-import' || sub === 'propose-complete-github-import' || sub === 'propose-github' ||
+    sub === 'github' || /^github\/\d+\/(files|file|remove|check|save)$/.test(sub) || sub === 'propose-complete-github-import' || sub === 'propose-github' ||
     sub === 'ai' || sub === 'ai/accounts' || /^ai\/accounts\/\d+\/(key|test|remove)$/.test(sub) ||
     sub === 'agents' || /^agents\/\d+\/revoke$/.test(sub) || sub === 'identity' || /^identity\/\d+\/(verify|remove)$/.test(sub);
 }
 function tenantAgentAllowed(sub, m) {
   return (sub === 'proposals' && m === 'GET') || sub === 'remote' || /^remote\/\d+\/(posts|post)$/.test(sub) || sub === 'propose-remote' ||
-    sub === 'github' || /^github\/\d+\/(files|file)$/.test(sub) || sub === 'propose-github';
+    sub === 'github' || /^github\/\d+\/(files|file)$/.test(sub) || sub === 'propose-complete-github-import' || sub === 'propose-github';
 }
 async function ownRegistry(env, user, id) {
   if (id == null || id === '') return null;
