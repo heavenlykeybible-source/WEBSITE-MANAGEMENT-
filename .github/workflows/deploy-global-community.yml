@@ -50,14 +50,25 @@ jobs:
           test -f public/index.html
           test -f public/app.js
 
-      - name: Install dependencies
+      - name: Install reproducible locked dependencies
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit --no-fund
-          else
-            npm install --no-audit --no-fund --package-lock=false
-          fi
+          test -f package-lock.json || { echo '::error::Complete application lockfile missing'; exit 1; }
+          npm ci --no-audit --no-fund
 
+      - name: Verify complete application assets and exact Cloudflare destination
+        shell: bash
+        env:
+          EXPECTED_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -f wrangler.toml
+          test -f public/index.html
+          test -f public/app.js
+          test -f src/index.ts
+          test -d migrations
+          test -n "$EXPECTED_ACCOUNT_ID" || { echo '::error::Missing Cloudflare account'; exit 1; }
+          CONFIG_ACCOUNT_ID=$(sed -n 's/^account_id[[:space:]]*=[[:space:]]*"\\([a-f0-9]*\\)"/\\1/p' wrangler.toml | head -n 1)
+          test "$CONFIG_ACCOUNT_ID" = "$EXPECTED_ACCOUNT_ID" || { echo '::error::Account 3 target does not match approved Cloudflare credentials'; exit 1; }
+          test "$(find public -type f | wc -l)" -gt 1 || { echo '::error::Complete static asset directory missing'; exit 1; }
       - name: Type check and verify complete application
         run: npm run build
 
