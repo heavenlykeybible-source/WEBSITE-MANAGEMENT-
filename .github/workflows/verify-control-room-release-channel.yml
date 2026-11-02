@@ -1,0 +1,28 @@
+name: Verify existing GitHub to Control Room release channel
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'project-import/**'
+      - 'tests/github-release-channel.test.mjs'
+      - 'tests/release-coordinator.test.mjs'
+      - '.github/workflows/verify-control-room-release-channel.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: account4-release-channel-verification-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify existing GitHub channel and owner-gated release coordinator
+        run: node --test tests/github-release-channel.test.mjs tests/release-coordinator.test.mjs
+      - name: Verify intake and import validations
+        run: node --test tests/github-gateway.test.mjs tests/complete-release-intake.test.mjs tests/unified-import-ui.test.mjs tests/resumable-upload.test.mjs tests/complete-project-preflight.test.mjs
